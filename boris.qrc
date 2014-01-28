@@ -1,0 +1,15 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+<file alias="logo.png">icons/logo_eye.128px.png</file>
+<file alias="play.png">icons/glyphicons_173_play.png</file>
+<file alias="pause.png">icons/glyphicons_174_pause.png</file>
+<file alias="reset.png">icons/glyphicons_170_step_backward.png</file>
+<file alias="jump_backward.png">icons/glyphicons_172_rewind.png</file>
+<file alias="jump_forward.png">icons/glyphicons_176_forward.png</file>
+<file alias="faster.png">icons/glyphicons_190_circle_plus.png</file>
+<file alias="slower.png">icons/glyphicons_191_circle_minus.png</file>
+<file alias="previous.png">icons/glyphicons_171_fast_backward.png</file>
+<file alias="next.png">icons/glyphicons_177_fast_forward.png</file>
+
+</qresource>
+</RCC>
