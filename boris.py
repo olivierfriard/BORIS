@@ -1498,7 +1498,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.observationId = new_obs_id
 
-                self.pj["observations"][self.observationId] = { 'file': [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
+                self.pj['observations'][self.observationId] = { 'file': [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
 
 
             ### check if id changed
@@ -1519,12 +1519,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             ### observation date
-            self.pj["observations"][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
+            self.pj['observations'][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
 
-            self.pj["observations"][new_obs_id]['description'] = observationWindow.teDescription.toPlainText()
+            self.pj['observations'][new_obs_id]['description'] = observationWindow.teDescription.toPlainText()
 
             ### observation type: read project type from tab text
-            self.pj["observations"][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
+            self.pj['observations'][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
 
 
             ### observation time offset
@@ -1536,7 +1536,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 except:
                     QMessageBox.warning(self, programName , '<b>%s</b> is not recognized as a valid time format' % observationWindow.leTimeOffset.text())
 
-            self.pj["observations"][new_obs_id]['time offset'] = self.timeOffset
+            self.pj['observations'][new_obs_id]['time offset'] = self.timeOffset
 
             self.display_timeoffset_statubar()
             
@@ -1547,7 +1547,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             ### media
 
-            if self.pj["observations"][new_obs_id]['type'] in ['MEDIA']:
+            if self.pj['observations'][new_obs_id]['type'] in ['MEDIA']:
                 
                 fileName['1'] = []
                 if observationWindow.lwVideo.count():
@@ -1581,7 +1581,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     
 
 
-                self.pj["observations"][new_obs_id]['file'] = fileName
+                self.pj['observations'][new_obs_id]['file'] = fileName
 
 
             if mode == 'new':
@@ -1726,7 +1726,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         settings.setValue('Automatic_backup', self.automaticBackup )
 
-        if DEBUG: print self.behaviouralStringsSeparator
+        if DEBUG: print 'behaviouralStringsSeparator:', self.behaviouralStringsSeparator
 
         settings.setValue('behavioural_strings_separator', self.behaviouralStringsSeparator )
 
