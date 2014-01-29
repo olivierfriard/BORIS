@@ -43,7 +43,7 @@ pj_events_fields = ['time', 'subject', 'code', 'modifier', 'comment']
 ### create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}
 
-for idx, filed in enumerate(tw_events_fields):
+for idx, field in enumerate(tw_events_fields):
     tw_obs_fields[ field ] = idx
 
 
