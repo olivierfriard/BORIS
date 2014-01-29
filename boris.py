@@ -1819,8 +1819,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             while len(states[code]) >= 2:
                 t1 = states[code].pop(0)
                 t2 = states[code].pop(0)
-                #tot_duration += t2 - t1
-                #count += 1
 
                 if code in states_paired:
                     states_paired[code].append((t1, t2))
@@ -1949,14 +1947,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         allow user to select observations from current project
         add no subject if observations do no contain subject
         '''
-        
 
         subjectsSelection = checkingBox_list()
 
-
         all_subjects = sorted( [  self.pj['subjects_conf'][x][ 'name' ]  for x in self.pj['subjects_conf'] ] )
-
-        #for idx in self.pj['subjects_conf']:
 
         for subject in all_subjects:
 
@@ -1967,7 +1961,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             subjectsSelection.ch = QCheckBox()
 
             subjectsSelection.ch.setText( subject )
-
 
             
             if subject in observed_subjects:
@@ -2191,7 +2184,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         max_time = max( max_time, event )
 
 
-
         if DEBUG: print 'tracks number', track_nb
         if DEBUG: print 'max time', max_time, type(max_time)
         if DEBUG: print '\nstates results', states_results
@@ -2322,7 +2314,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pj = json.loads(s)
         
         if DEBUG: print 'pj', self.pj
-        
+
+        ### check if project file version is newer than current BORIS project file version
         if 'project_format_version' in self.pj and float(self.pj['project_format_version']) > float(project_format_version):
             QMessageBox.critical(self, programName , 'This project file was created with a more recent version of BORIS.\nUpdate your version to load it' )
             self.pj = {"time_format": "hh:mm:ss",\
@@ -2430,22 +2423,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def initialize_new_project(self):
+        '''
+        initialize interface and variables for a new project
+        '''
 
         if DEBUG: print 'initialize new project'
 
         self.lbLogoUnito.setVisible(False)
         self.lbLogoBoris.setVisible(False)        
-
-        '''        
-        self.lbLogoUnito.clear()
-        self.lbLogoBoris.clear()
-
-
-        print self.lbLogoUnito
-        if self.lbLogoUnito:
-            self.lbLogoUnito.deleteLater()
-            self.lbLogoBoris.deleteLater()
-        '''
 
         self.dwConfiguration.setVisible(True)
         self.dwSubjects.setVisible(True)
