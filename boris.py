@@ -809,20 +809,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         check BORIS web site for updates
         '''
-        '''try:'''
-        import urllib2
-        lastVersion = float(urllib2.urlopen('http://penelope.unito.it/boris/ver.dat' ).read().strip())
-        if lastVersion > float(__version__):
-            QMessageBox.information(self, programName , 'The new version (v. <b>%s</b>) is available!<br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a>.' % str(lastVersion))
-        else:
-            QMessageBox.information(self, programName , 'The version you are using is the last one')
-        '''
+        try:
+            import urllib2
+            lastVersion = float(urllib2.urlopen('http://penelope.unito.it/boris/ver.dat' ).read().strip())
+            if lastVersion > float(__version__):
+                QMessageBox.information(self, programName , 'The new version (v. <b>%s</b>) is available!<br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a>.' % str(lastVersion))
+            else:
+                QMessageBox.information(self, programName , 'The version you are using is the last one')
         except:
             QMessageBox.warning(self, programName , 'Can not check for updates...')
-            pass
-        '''
-            
-
 
 
 
@@ -1833,31 +1828,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     states_paired[code] = [(t1, t2)]
             
         return points, states_paired
-
-
-
-    def check_media_duration(self):  ### DEPRECATED
-        '''
-        check if media length is known (if not ask to user)
-        '''
-
-        if not self.mediaTotalLength:
-    
-            text, ok = QInputDialog.getText(self, 'Media length', 'Indicate the total media length (in seconds or h:mm:ss format):', QLineEdit.Normal,'')
-            if ok:
-                if text.count(':') == 2:
-                    i = self.time2seconds(text)
-                elif text.isdigit():
-                    i = int(text)
-                else:
-                    QMessageBox.warning(self, programName , '<b>%s</b> is not recognized as a valid time format' % text)
-                    return False
-                self.mediaTotalLength = i
-                return True
-            else:
-                return False
-        else:
-            return True
 
 
 
