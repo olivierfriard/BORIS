@@ -4415,6 +4415,7 @@ if __name__=="__main__":
     start = time.time() 
     splash = QSplashScreen(QPixmap( os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
     splash.show()
+    splash.raise_()
     while time.time() - start < 1:
         time.sleep(0.001)
         app.processEvents()
