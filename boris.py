@@ -446,13 +446,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNext.setIcon(QIcon(':/next.png'))
 
         self.setWindowTitle('%s (%s)' % (programName, __version__))
-        
-        self.lbLogoBoris.setPixmap(QPixmap( os.path.dirname(os.path.realpath(__file__)) + "/logo_boris_500px.png"))
+      
+        try:
+              datadir = sys._MEIPASS
+        except Exception:
+              datadir = os.path.dirname(os.path.realpath(__file__))
+
+        self.lbLogoBoris.setPixmap(QPixmap( datadir + "/logo_boris_500px.png"))
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
 
         
-        self.lbLogoUnito.setPixmap(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/dbios_unito.png"))
+        self.lbLogoUnito.setPixmap(QPixmap( datadir + "/dbios_unito.png"))
         self.lbLogoUnito.setScaledContents(False)
         self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
