@@ -19,6 +19,7 @@ coll = COLLECT(exe,
                a.datas,
                [('logo_boris_500px.png', 'logo_boris_500px.png', 'DATA')],
                [('dbios_unito.png', 'dbios_unito.png', 'DATA')],
+               [('splash.png', 'splash.png', 'DATA')],
                strip=None,
                upx=False,
                name='boris')
