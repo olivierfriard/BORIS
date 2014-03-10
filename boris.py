@@ -84,7 +84,8 @@ except:
 # import audio_utils
 
 def bytes_to_str(b):
-    """Translate bytes to string.
+    """
+    Translate bytes to string.
     """
     if isinstance(b, bytes):
         
