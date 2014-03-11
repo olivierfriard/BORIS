@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Jan 15 14:22:48 2014
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Tue Mar 11 09:40:35 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -44,15 +44,15 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 362, 405))
+        self.page.setGeometry(QtCore.QRect(0, 0, 352, 403))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
         self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar()
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 20))
+        self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -370,9 +370,12 @@ class Ui_MainWindow(object):
         self.actionMedia_file_information.setText(QtGui.QApplication.translate("MainWindow", "Media file information", None, QtGui.QApplication.UnicodeUTF8))
         self.actionStart_live_observation.setText(QtGui.QApplication.translate("MainWindow", "Start observation without media file", None, QtGui.QApplication.UnicodeUTF8))
         self.actionNew_project.setText(QtGui.QApplication.translate("MainWindow", "New project", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionNew_project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+N", None, QtGui.QApplication.UnicodeUTF8))
         self.actionTime_budget.setText(QtGui.QApplication.translate("MainWindow", "Time budget", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave_project.setText(QtGui.QApplication.translate("MainWindow", "Save project", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionSave_project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+S", None, QtGui.QApplication.UnicodeUTF8))
         self.actionOpen_project.setText(QtGui.QApplication.translate("MainWindow", "Open project", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionOpen_project.setShortcut(QtGui.QApplication.translate("MainWindow", "Ctrl+O", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSet_offset.setText(QtGui.QApplication.translate("MainWindow", "Set time offset", None, QtGui.QApplication.UnicodeUTF8))
         self.actionEdit_project.setText(QtGui.QApplication.translate("MainWindow", "Edit project", None, QtGui.QApplication.UnicodeUTF8))
         self.actionSave_project_as.setText(QtGui.QApplication.translate("MainWindow", "Save project as ...", None, QtGui.QApplication.UnicodeUTF8))
