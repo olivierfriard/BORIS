@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Mar 11 09:40:35 2014
+# Created: Wed Mar 12 13:59:30 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar = QtGui.QMenuBar()
         self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtGui.QMenu(self.menubar)
