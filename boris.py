@@ -1769,7 +1769,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def observation_analysis(self, behaviors):
         '''
         analyze time budget etc
-        behaviors [ [time, code]  ]
+        behaviors [ [time, code, modifier]  ]
         '''
 
         if DEBUG: print 'observation analysis', behaviors
@@ -1779,31 +1779,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for behavior in behaviors:
 
-            time, code = behavior
+            time, code, modifier = behavior
+            #code, modifier = behavior[1].split('|')
 
             ### check if state
-            for o in self.pj['behaviors_conf']:
+            for event in self.pj['behaviors_conf']:
 
-                if self.pj['behaviors_conf'][o]['code'] == code:
+                if code == self.pj['behaviors_conf'][event]['code']:
                     
-                    #descr[code] = self.pj['behaviors_conf'][o]['description']
+                    ### if event has modifiers and no modifier selected
+                    if not modifier and self.pj['behaviors_conf'][event]['modifiers']:
+                        modifier = 'no modifier'
 
-                    #if DEBUG: print 'time:', time,'new behaviour:', code, 'current states:', current_states
-                    
-                    if 'STATE' in self.pj['behaviors_conf'][o]['type'].upper():
+                    if 'STATE' in self.pj['behaviors_conf'][event]['type'].upper():
 
-                        if code in states:
-                            states[code].append( time )
+                        if code +'###' + modifier in states:
+                            states[code +'###' + modifier ].append( time )
                         else:
-                            states[code] = [ time ]
+                            states[code +'###' + modifier] = [ time ]
                             
-                    if 'POINT' in self.pj['behaviors_conf'][o]['type'].upper():
+                    if 'POINT' in self.pj['behaviors_conf'][event]['type'].upper():
 
-                        if code in points:
-                            points[code].append(time)
+                        if code +'###' + modifier in points:
+                            points[code +'###' + modifier ].append(time)
                         else:
-                            points[code] = [time]
+                            points[code +'###' + modifier] = [time]
 
+        if DEBUG: print 'states',states
         ### states stats
         states_paired = {}
         
@@ -1830,7 +1832,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     states_paired[code].append((t1, t2))
                 else:
                     states_paired[code] = [(t1, t2)]
-            
+
+        if DEBUG: print 'states paired',states_paired
         return points, states_paired
 
 
@@ -1839,8 +1842,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         analyze subjects / behaviors
         return 2 dictionaries:
-        { 'subject|behavior': [(t1,t2),(t3,t4),(t5,t6)] }
-        { 'subject|behavior': [t1,t2,t3,t4,t5,t6] }
+        { 'subject|behavior': [(t1,t2),(t3,t4),(t5,t6)] } for state behaviors
+        { 'subject|behavior': [t1,t2,t3,t4,t5,t6] } for point behaviors
         '''
 
         if DEBUG: print 'selected_subjects', selected_subjects
@@ -1858,20 +1861,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for obs_id in selected_observations:
 
+                ### extract time, code and modifier
                 if subject_to_analyze == 'No subject':
-                
-                    behaviors_to_analyze = [[x[0],x[2]] for x in self.pj['observations'][obs_id]['events'] if x[1] == '']   ### pass time and code
+                    behaviors_to_analyze = [[x[0], x[2], x[3] ] for x in self.pj['observations'][obs_id]['events'] if x[1] == '']   ### pass time and code
                 else:
-                    behaviors_to_analyze = [[x[0],x[2]] for x in self.pj['observations'][obs_id]['events'] if x[1] == subject_to_analyze]   ### pass time and code
+                    behaviors_to_analyze = [[x[0], x[2], x[3]] for x in self.pj['observations'][obs_id]['events'] if x[1] == subject_to_analyze]   ### pass time and code
 
-                points, states = self.observation_analysis(behaviors_to_analyze)
+                points, states_paired = self.observation_analysis(behaviors_to_analyze)
 
-                for behavior in states:
+                for behavior in states_paired:
                     if subject_to_analyze + '|' + behavior in states_results:
-                        states_results[ subject_to_analyze + '|' + behavior ].extend( states[behavior] )
+                        states_results[ subject_to_analyze + '|' + behavior ].extend( states_paired[behavior] )
                     else:
-                        states_results[ subject_to_analyze + '|' + behavior ] = states[behavior]
-                    
+                        states_results[ subject_to_analyze + '|' + behavior ] = states_paired[behavior]
+                
+                
+                
                 for behavior in points:
                     if subject_to_analyze + '|' + behavior in points_results:
                         points_results[ subject_to_analyze + '|' + behavior ].extend( points[behavior] )
@@ -2001,8 +2006,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return []
 
+    def combinationsCodeModifier(self):
+        '''
+        returns all code and modifier combinations
+        'no modifier' if event has modifiers but no one selected
+        '''
+        codes = []
+        for event in self.pj['behaviors_conf']:
 
+            if self.pj['behaviors_conf'][event]['modifiers']:
 
+                ### add event without modifier
+                codes.append( self.pj['behaviors_conf'][event]['code'] + '###' + 'no modifier')
+                ### add code with all modifiers
+                for modifier in self.pj['behaviors_conf'][event]['modifiers'].split(','):
+                    codes.append( self.pj['behaviors_conf'][event]['code'] + '###' + modifier)
+            else:   ### event without modifier
+                codes.append( self.pj['behaviors_conf'][event]['code'] + '###' )
+
+        return codes
 
 
     def time_budget(self):
@@ -2010,7 +2032,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         time budget
         '''
 
-        if DEBUG: print 'Time budget'
+        if DEBUG: print 'Time budget function'
 
         ### OBSERVATIONS
 
@@ -2031,7 +2053,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if observed_subjects != ['']:
 
-            ### ask user subject to analyze
+            ### ask user for subjects to analyze
             selected_subjects = self.select_subjects( observed_subjects )
     
             if DEBUG: print '\nselected subjects', selected_subjects
@@ -2053,9 +2075,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = []
         tot_duration = {}
         
-        codes = sorted([ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf']])
+        ### extract all event codes and modifier
+        codes = self.combinationsCodeModifier()
 
-
+        print 'all code modifier combinations', codes
 
         for subject_to_analyze in selected_subjects:
             
@@ -2075,11 +2098,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     tot_duration[ subject_to_analyze ] += duration
 
-                    if number:
-                        out.append( {'subject':subject_to_analyze, 'behavior':behavior,  'number':number, 'duration':duration, 'mean':round( duration/number, 1)  } )
-                    else:
-                        out.append( {'subject': subject_to_analyze, 'behavior':behavior,  'number':0, 'duration':0, 'mean':0 } )
 
+                    if DEBUG: print 'behavior',behavior.split('###')
+
+                    if number:
+                        out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')),  'number': number, 'duration': duration, 'mean': round( duration/number, 1)  } )
+                    else:
+                        out.append( {'subject': subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')),  'number': 0, 'duration': 0, 'mean': 0 } )
 
                 ### point events
                 if subject_to_analyze + '|' + behavior in points_results:
@@ -2087,16 +2112,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     number = len( points_results[ subject_to_analyze + '|' + behavior ] )
                     duration = '-'
 
-                    out.append( {'subject':subject_to_analyze, 'behavior':behavior,  'number':number, 'duration':duration, 'mean':'-' } )
-
+                    out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')) , 'number': number, 'duration':duration, 'mean':'-' } )
 
                 if DEBUG:
                      if out: print out[-1]
 
-
-
             if DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
-
 
         self.tb = timeBudgetResults()
 
@@ -2107,14 +2128,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fields = ['subject', 'behavior', 'number', 'duration', 'mean']
 
         for row in out:
-            print 'row', row
+            if DEBUG: print 'row', row
             self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
 
             column = 0 
 
             for field in fields:
-                print 'field',field
-                item = QTableWidgetItem(str( row[field]) )
+                if DEBUG: print 'field',field
+                item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
                 ### no modif allowed
                 item.setFlags(Qt.ItemIsEnabled)
                 self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
@@ -2131,13 +2152,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             item.setFlags(Qt.ItemIsEnabled)
             self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
 
-
-
-
-
         self.tb.twTB.resizeColumnsToContents()
 
         self.tb.show()
+
 
 
     def visualize_data(self):
@@ -2167,21 +2185,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         states_results, points_results = self.analyze_subject( selected_subjects, selected_observations )
 
-        ### extract highest time and track number
+        ### extract all event codes and modifier
+        codes = self.combinationsCodeModifier()
+        if DEBUG: print 'all code modifier combinations', codes
 
-        max_time = 0
-        track_nb = 0
+        ### extract highest time and track number
+        max_time, track_nb = 0, 0
 
         for subject_to_analyze in selected_subjects:
 
-            for behavior in [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf']]:
+            for behavior in codes:
 
                 if subject_to_analyze + '|' + behavior in states_results:
                     track_nb += 1
 
                     for event in states_results[ subject_to_analyze + '|' + behavior ]:
                         max_time = max( max_time, event[0], event[1] )
-
 
                 if subject_to_analyze + '|' + behavior in points_results:
                     track_nb += 1
@@ -2190,10 +2209,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         max_time = max( max_time, event )
 
 
-        if DEBUG: print 'tracks number', track_nb
-        if DEBUG: print 'max time', max_time, type(max_time)
-        if DEBUG: print '\nstates results', states_results
-        if DEBUG: print '\points results', points_results
+        if DEBUG:
+            print 'tracks number', track_nb
+            print 'max time', max_time, type(max_time)
+            print '\nstates results', states_results
+            print '\points results', points_results
 
         ### figure
 
@@ -2203,7 +2223,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == 's':
              rotation = 0
 
-        
         width = 1000
         #xm = 1000
 
@@ -2257,12 +2276,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                 scene.add( svg.Text(( round(x_init + i * (( width - x_init - right_margin ) /100 * 10)), y_init - h // 4 - 2 ), \
                 self.convertTime( i * round(max_time /100 * 10, 1) ), 12, rotation) )
-                '''
-                scene.add( svg.Text(( round(x_init + i * (( width - x_init - right_margin ) /100 * 10)), y_init - h // 4 - 2 ), \
-                self.convertTime( i * step ), 12) )
-                '''
-                
-
 
         y_init += 30
 
@@ -2272,19 +2285,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             scene.add( svg.Text(( left_margin , y_init ), 'Subject: ' + subject, 14) )
             y_init += h
 
-            for behavior in [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf']]:
+            for behavior in codes:
 
                 if subject + '|' + behavior in points_results:
-                    scene.add( svg.Text(( left_margin, y_init + h - 2), behavior, 16) )
+                    behaviorOut = '%s (%s)' % tuple(behavior.split('###')) 
+                    scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut.replace(' ()','' ), 16) )
 
                     for event in points_results[ subject + '|' + behavior ]:
                         scene.add(svg.Rectangle( (x_init + round(event / max_time * ( width - x_init - right_margin )), y_init), h, w, red) )
 
                     y_init += h + spacer
 
-
                 if subject + '|' + behavior in states_results:
-                    scene.add( svg.Text(( left_margin, y_init + h - 2), behavior, 16) )
+                    behaviorOut = '%s (%s)' % tuple(behavior.split('###'))
+                    scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut.replace(' ()','' ), 16) )
 
                     for event in states_results[ subject + '|' + behavior ]:
                         scene.add(svg.Rectangle( (x_init + round(event[0] / max_time * ( width - x_init - right_margin )), y_init), h,   round((event[1] - event[0]) / max_time * ( width - x_init - right_margin ) )     , blue))
@@ -2295,14 +2309,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             scene.add(svg.Rectangle((left_margin, y_init), 0.5, width - right_margin -left_margin, black))
 
             y_init += h + spacer
-            
 
         svg_text = scene.svg_text()
         
         self.gr = gantResults( svg_text)
         
         self.gr.show()
-
 
 
 
@@ -3303,10 +3315,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for sbc in StateBehaviorsCodes:
                     if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
                         self.currentStates[''].append(sbc)
-                
+
                 ### add states for all configured subjects
                 for idx in self.pj['subjects_conf']:
-                    
+
                     ### add subject index
                     self.currentStates[ idx ] = []
                     for sbc in StateBehaviorsCodes:
@@ -3449,9 +3461,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if DEBUG: print 'add event to observation id:', self.observationId
         
         ### check if a same event is already in events list
-        event_list = [ memTime, self.currentSubject, event['code']  ]
+        event_list = [ memTime, self.currentSubject, event['code'] ]
         if event_list in [[x[0],x[1],x[2]] for x in self.pj['observations'][self.observationId]['events']]:
-            QMessageBox.warning(self, programName, 'The same event already exists')
+            QMessageBox.warning(self, programName, 'The same event already exists!')
             return None
 
         ### check if event has modifiers
@@ -3462,7 +3474,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
 
                 memState = self.mediaListPlayer.get_state()
-                if self.mediaListPlayer.get_state() == vlc.State.Playing:
+                if memState == vlc.State.Playing:
                     self.pause_video()
 
             response = ''
@@ -3488,26 +3500,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if 'STATE' in event['type'].upper():
 
+
+            if DEBUG: print 'current subject:', self.currentSubject
+
+            if self.currentSubject:
+                csj = []
+                for idx in self.currentStates:
+                    if idx in self.pj['subjects_conf'] and self.pj['subjects_conf'][idx]['name'] == self.currentSubject:
+                        csj = self.currentStates[idx]
+                        break
+            else:  ### no focal subject
+                csj = self.currentStates['']
+
+            if DEBUG: print 'current states:',csj
+            if DEBUG: print 'event code', event['code'], event['modifiers']
+
+
+            '''
+            if (event['code'] in csj and modifier_str):
+
+                 ### STOP current state event/modifier if same event with different modifier
+                column = 0
+                self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
+
+                for field in [  self.convertTime( memTime - 0.1 ) , self.currentSubject, event['code'], '', modifier_str, '' ]:
+                
+                    if DEBUG: print self.twEvents.rowCount() - 1, column, field
+                
+                    item = QTableWidgetItem(field)
+                    self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
+                    column += 1
+            '''
+
+
+
+
             if event['excluded']:
                 ### states to remove from current states
 
                 ### extract current states for current subject
-                if self.currentSubject:
-                    csj = []
-                    for idx in self.currentStates:
-                        if idx in self.pj['subjects_conf'] and self.pj['subjects_conf'][idx]['name'] == self.currentSubject:
-                            csj = self.currentStates[idx]
-                            break
-                else:
-                    csj = self.currentStates['']
+                
 
-                if DEBUG: print 'csj',csj
-
-                for cs in csj:
+                for cs in csj :
                     if cs in event['excluded'].split(','):
-                        '''self.currentStates.remove( cs )'''
-                        
-                        ### add excluded behaviors to observations (= STOP them)
+
+                        ### add excluded state event to observations (= STOP them)
                         column = 0
                         self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
                 
@@ -3519,9 +3556,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
                             column += 1
 
-       
 
-        ### add observed behaviors to event table widget
+        ### add event to event table widget
         self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
 
         new_event = { 'time': self.convertTime( memTime ), 'subject': self.currentSubject, 'code': event['code'], 'type': '' ,'modifier': modifier_str, 'comment':'' }
@@ -3556,24 +3592,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def fill_lwDetailed(self, obs_key, memLaps):
         '''
-        fill listwidget with detailed observations available for the key
+        fill listwidget with all events coded by key
         '''
 
         ### check if key duplicated
-        if DEBUG: print 'fill_lwDetail'
+        if DEBUG: print 'fill_lwDetail function'
 
         items = []
         for idx in self.pj['behaviors_conf']:
             if self.pj['behaviors_conf'][idx]['key'] == obs_key:
 
-                txt = self.pj['behaviors_conf'][idx]['code'] + ' - ' + self.pj['behaviors_conf'][idx]['description']
+                txt = self.pj['behaviors_conf'][idx]['code']
+                if  self.pj['behaviors_conf'][idx]['description']:
+                    txt += ' - ' + self.pj['behaviors_conf'][idx]['description']
                 items.append(txt)
 
                 self.detailedObs[txt] = idx
 
         response = ''
 
-        item, ok = QInputDialog.getItem(self, programName, 'The <b>' + obs_key + '</b> key allow various events.<br>Choose the correct one:' , items, 0, False)
+        item, ok = QInputDialog.getItem(self, programName, 'The <b>' + obs_key + '</b> key codes more events.<br>Choose the correct one:' , items, 0, False)
 
         if ok and item:
             if DEBUG:print 'selected code:', item
@@ -3630,7 +3668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print QApplication.keyboardModifiers()
         '''
 
-
+        ### beep
         if self.confirmSound:
             print '\a'
 
@@ -3639,7 +3677,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if DEBUG: print 'keyPressEvent'
-        if DEBUG: print 'player state',self.mediaListPlayer.get_state()
+        if DEBUG: print 'player state', self.mediaListPlayer.get_state()
 
         ek = event.key()
 
@@ -3653,11 +3691,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if DEBUG:
                 if ek in function_keys:
-                    print function_keys[ek]
+                    print 'F key', function_keys[ek]
 
             ### play / pause with space bar
             if ek == Qt.Key_Space and self.pj['observations'][self.observationId]['type'] in ['MEDIA']:   
 
+                if DEBUG: print 'space player #1 state', self.mediaListPlayer.get_state()
                 self.pause_video()
                 return
 
@@ -3687,47 +3726,67 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 count = 0
 
                 if (ek in function_keys):
-                    ek_chr = function_keys[ek]
+                    #ek_chr = function_keys[ek]
                     ek_unichr = function_keys[ek]
                 else:
-                    ek_chr = chr(ek)
+                    #ek_chr = chr(ek)
                     ek_unichr = unichr(ek)
 
+                #if DEBUG: print 'ek_chr ', ek_chr
+                if DEBUG: print 'ek_unichr'  ,ek_unichr
 
                 for o in self.pj['behaviors_conf']:
 
+
+                    if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
+                        if DEBUG: print 'OK', ek_unichr
+
+                        obs_idx = o
+                        count += 1
+                        #obs_key = ek_chr
+                        
+
+                    '''
                     if type( self.pj['behaviors_conf'][o]['key'] ) == type(u''):
 
                         if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
+
+                            if DEBUG: print 'Unicode key', self.pj['behaviors_conf'][o]['key']
+
                             obs_idx = o
                             count += 1
                             obs_key = ek_chr
-
 
                     if type( self.pj['behaviors_conf'][o]['key'] ) == type(''):
 
                         if self.pj['behaviors_conf'][o]['key'] == ek_chr:
 
+                            if DEBUG: print 'str key', self.pj['behaviors_conf'][o]['key']
+
                             obs_idx = o
                             count += 1
                             obs_key = ek_chr
+                    '''
 
-
+                ### check if key codes more events
                 if count > 1:
                     if DEBUG: print 'multi code key'
-                    
-                    if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
-                        self.pause_video()
 
-                    ### fill right list
-                    self.fill_lwDetailed( obs_key, memLaps)
+                    flagPlayerPlaying = False
+                    if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+                        if self.mediaListPlayer.get_state() != vlc.State.Paused:
+                            flagPlayerPlaying = True
+                            self.pause_video()
+
+                    ### let user choose event
+                    self.fill_lwDetailed( ek_unichr, memLaps)
+
+                    if self.pj['observations'][self.observationId]['type'] in ['MEDIA'] and flagPlayerPlaying:
+                        self.play_video()
+
+
 
                 elif count == 1:
-
-                    '''
-                    self.lbKey.setStyleSheet('color: black')
-                    self.lbKey.setText( '%s pressed at %s' % (obs_key, self.convertTime( memLaps )))
-                    '''
 
                     self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
 
@@ -3744,7 +3803,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             ### select or deselect current subject
                             if self.currentSubject == self.pj['subjects_conf'][idx]['name']:
                                 self.currentSubject = ''
-                                ### self.lbSubject.setText( 'No selected subject' )
+
                                 self.lbSubject.clear()
                                 
                                 self.lbFocalSubject.setText( 'No focal subject' )
@@ -3757,12 +3816,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if not flag_subject:
 
                         if DEBUG: print '%s key not assigned' % ek_chr
-                        '''
-                        self.lbKey.setStyleSheet('color: red')
-                        self.lbKey.setText( '%s key not assigned' % ek_chr)
-                        '''
-
-                        #self.statusbar.setStyleSheet('color: red')
                         
                         self.statusbar.showMessage( 'Key not assigned (%s)' % ek_chr , 5000)
 
