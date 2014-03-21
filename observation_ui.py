@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Tue Oct  1 11:27:45 2013
-#      by: pyside-uic 0.2.14 running on PySide 1.1.2
+# Created: Thu Mar 20 21:06:49 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -46,6 +46,20 @@ class Ui_Form(object):
         self.teDescription.setObjectName("teDescription")
         self.verticalLayout_2.addWidget(self.teDescription)
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
+        self.label_3 = QtGui.QLabel(Form)
+        self.label_3.setObjectName("label_3")
+        self.verticalLayout_5.addWidget(self.label_3)
+        self.twIndepVariables = QtGui.QTableWidget(Form)
+        self.twIndepVariables.setObjectName("twIndepVariables")
+        self.twIndepVariables.setColumnCount(3)
+        self.twIndepVariables.setRowCount(0)
+        item = QtGui.QTableWidgetItem()
+        self.twIndepVariables.setHorizontalHeaderItem(0, item)
+        item = QtGui.QTableWidgetItem()
+        self.twIndepVariables.setHorizontalHeaderItem(1, item)
+        item = QtGui.QTableWidgetItem()
+        self.twIndepVariables.setHorizontalHeaderItem(2, item)
+        self.verticalLayout_5.addWidget(self.twIndepVariables)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.lbTimeOffset = QtGui.QLabel(Form)
@@ -144,6 +158,10 @@ class Ui_Form(object):
         self.label_8.setText(QtGui.QApplication.translate("Form", "Date", None, QtGui.QApplication.UnicodeUTF8))
         self.dteDate.setDisplayFormat(QtGui.QApplication.translate("Form", "yyyy-MM-dd hh:mm", None, QtGui.QApplication.UnicodeUTF8))
         self.label_9.setText(QtGui.QApplication.translate("Form", "Description", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_3.setText(QtGui.QApplication.translate("Form", "Independent variables", None, QtGui.QApplication.UnicodeUTF8))
+        self.twIndepVariables.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("Form", "Variable", None, QtGui.QApplication.UnicodeUTF8))
+        self.twIndepVariables.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("Form", "Type", None, QtGui.QApplication.UnicodeUTF8))
+        self.twIndepVariables.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("Form", "Value", None, QtGui.QApplication.UnicodeUTF8))
         self.lbTimeOffset.setText(QtGui.QApplication.translate("Form", "Time offset", None, QtGui.QApplication.UnicodeUTF8))
         self.leTimeOffset.setText(QtGui.QApplication.translate("Form", "0", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("Form", "Media file names", None, QtGui.QApplication.UnicodeUTF8))

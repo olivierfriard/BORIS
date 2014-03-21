@@ -174,6 +174,7 @@ class Waveform(QWidget):
 class timeBudgetResults(QWidget):
     '''
     class for displaying time budget results in new window
+    a function for exporting data in TSV format is implemented
     '''
 
     def __init__(self):
@@ -214,12 +215,11 @@ class timeBudgetResults(QWidget):
 
     def pbClose_clicked(self):
         self.close()
-        #self.reject()
 
     def pbSave_clicked(self):
-        
+
         if DEBUG: print 'save results to file'
-        
+
         fd = QFileDialog(self)
         fileName, filtr = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
 
@@ -228,7 +228,7 @@ class timeBudgetResults(QWidget):
 
             ### write header
             f.write( 'Subject\tBehavior\tTotal number\tTotal duration\tDuration mean\t% of total time\n' )
-            
+
             for row in range( self.twTB.rowCount()):
                 for col in range(self.twTB.columnCount()):
                     f.write( self.twTB.item(row,col).text().encode('utf8') + '\t' )
@@ -239,6 +239,7 @@ class timeBudgetResults(QWidget):
 class gantResults(QWidget):
     '''
     class for displaying time diagram in new window
+    a function for exporting data in SVG format is implemented
     '''
 
     def __init__(self,  svg_text = ''):
@@ -1446,8 +1447,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
 
-        ### mem_obs_id = ''
-        
+        ### add indepvariables
+        if 'independent_variables' in self.pj:
+            observationWindow.twIndepVariables.setRowCount(0)
+            for i in sorted( self.pj['independent_variables'].keys() ):
+                
+                if DEBUG: print 'variable label',  self.pj['independent_variables'][i]['label']
+                
+                observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
+
+                ### label
+                item = QTableWidgetItem()
+                indepVarLabel = self.pj['independent_variables'][i]['label'] 
+                item.setText( indepVarLabel )
+                item.setFlags(Qt.ItemIsEnabled)
+                observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 0, item)
+
+                ### var type
+                item = QTableWidgetItem()
+                item.setText( self.pj['independent_variables'][i]['type']  )
+                item.setFlags(Qt.ItemIsEnabled)   ### not modifiable
+                observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 1, item)
+
+                
+                ### var value
+                item = QTableWidgetItem()
+                ### check if obs has independent variables and var label is a key
+                if mode == 'edit' and 'independent_variables' in self.pj['observations'][obsId] and indepVarLabel in self.pj['observations'][obsId]['independent_variables']:
+                    txt = self.pj['observations'][obsId]['independent_variables'][indepVarLabel]
+                else:
+                    txt = ''
+
+                item.setText( txt )
+                observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2, item)
+
+
+            observationWindow.twIndepVariables.resizeColumnsToContents()
+
         if mode == 'edit':
 
             observationWindow.setWindowTitle('Edit observation ' + obsId )
@@ -1532,6 +1568,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### observation type: read project type from tab text
             self.pj['observations'][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
 
+            ### independent variables for observation
+            self.pj['observations'][new_obs_id]['independent_variables'] = {}
+            for r in range(0, observationWindow.twIndepVariables.rowCount()):
+
+                ### set dictionary as label (col 0) => value (col 2)
+                self.pj['observations'][new_obs_id]['independent_variables'][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
+
 
             ### observation time offset
             if observationWindow.leTimeOffset.text().count(':') == 2:
@@ -1548,11 +1591,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             ### media file
             fileName = {}
-            
-            
-            
-            ### media
 
+            ### media
             if self.pj['observations'][new_obs_id]['type'] in ['MEDIA']:
                 
                 fileName['1'] = []
@@ -1780,13 +1820,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for behavior in behaviors:
 
             time, code, modifier = behavior
-            #code, modifier = behavior[1].split('|')
 
-            ### check if state
             for event in self.pj['behaviors_conf']:
 
                 if code == self.pj['behaviors_conf'][event]['code']:
-                    
+
                     ### if event has modifiers and no modifier selected
                     if not modifier and self.pj['behaviors_conf'][event]['modifiers']:
                         modifier = 'no modifier'
@@ -1815,13 +1853,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### check if values are paired
             if len(states[code]) % 2:
-                print 'values not paired'
-                '''
-                if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
-                    tb[code].append(self.mediaplayer.get_length() / 1000.0)
-                else:
-                    tb[code].append(self.mediaTotalLength)
-                '''
+                if DEBUG: print 'Events are not paired for ' + code.replace('###',' ')
+                QMessageBox.warning(self, programName , 'Events are not paired for the <b>%s</b> event' % code.replace('###',' ') )
 
             count = 0
             while len(states[code]) >= 2:
@@ -1883,10 +1916,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         points_results[ subject_to_analyze + '|' + behavior ] = points[behavior]
 
-
-        print 'states results', states_results
-        
-        print 'points results', points_results
+        if DEBUG:
+            print 'states results', states_results
+            print 'points results', points_results
 
         return states_results, points_results
 
@@ -1919,36 +1951,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         obs_sel = self.observations_list( 'select')
-
-        '''
-        obsSelection = Observations_list()
-
-        for obs_id in self.pj['observations']:
-            print obs_id
-
-            obsSelection.item = QListWidgetItem(obsSelection.lwObservations)
-            obsSelection.ch = QCheckBox()
-
-            obsSelection.ch.setChecked(True)
-
-            obsSelection.ch.setText(obs_id)
-
-            obsSelection.lwObservations.setItemWidget(obsSelection.item, obsSelection.ch)
-
-        obsSelection.setWindowTitle('Select observations to analyze')
-
-        obs_sel = []
-
-        if obsSelection.exec_():
-
-            for idx in xrange(obsSelection.lwObservations.count()):
-
-                check_box = obsSelection.lwObservations.itemWidget(obsSelection.lwObservations.item(idx))
-                if check_box.isChecked():
-                    obs_sel.append( check_box.text() )
-        '''
-
-
         return obs_sel
         
 
@@ -2698,8 +2700,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             for observation in observation_types:
                                 comboBox.addItem(observation)
                             comboBox.setCurrentIndex( observation_types.index(self.pj['behaviors_conf'][i][field]) )
-                            
-                                
+
                             newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, 0, comboBox)
 
                         else:
@@ -2711,6 +2712,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, fields[field] ,item)
 
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
+
+            ### load independent variables 
+            if 'independent_variables' in self.pj:
+                for i in sorted( self.pj['independent_variables'].keys() ):
+                    newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
+
+                    for idx, field in enumerate( tw_indVarFields ):
+
+                        if field == 'type':
+
+                            comboBox = QComboBox()
+                            comboBox.addItem(NUMERIC)
+                            comboBox.addItem(TEXT)
+
+                            comboBox.setCurrentIndex(  int(self.pj['independent_variables'][i][field] == TEXT) )
+
+                            newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, comboBox)
+
+                        else:
+
+                            item = QTableWidgetItem()
+                            item.setText( self.pj['independent_variables'][i][field] )
+                            newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx,item)
+
+                newProjectWindow.twVariables.resizeColumnsToContents()
+                    
+
 
 
         newProjectWindow.dteDate.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
@@ -2770,6 +2798,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if DEBUG: print 'subjects', self.pj['subjects_conf']
 
                 self.load_subjects_in_twSubjects()
+                
+                ### load variables
+                self.pj['independent_variables'] =  newProjectWindow.indVar
+
+                if DEBUG: print 'independent_variables', self.pj['independent_variables']
 
             ### observations (check if observation deleted)
             '''

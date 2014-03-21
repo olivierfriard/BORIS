@@ -29,48 +29,6 @@ from config import *
 from PySide.QtCore import *
 from PySide.QtGui import *
 
-'''
-class Exclude(QDialog):
-
-    def __init__(self):
-        super(Exclude, self).__init__()
-
-        self.label = QLabel()
-        self.label.setText('Check behaviors excluded by')
-
-        self.lwExcluded = QListWidget()
-
-        hbox = QVBoxLayout(self)
-
-        hbox.addWidget(self.label)
-        hbox.addWidget(self.lwExcluded)
-
-        self.pbOK = QPushButton('OK')
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel = QPushButton('Cancel')
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-
-        hbox2 = QHBoxLayout(self)
-
-        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        hbox2.addItem(spacerItem)
-
-        hbox2.addWidget(self.pbCancel)
-        hbox2.addWidget(self.pbOK)
-
-        hbox.addLayout(hbox2)
-
-        self.setLayout(hbox)
-
-        self.setWindowTitle('Exclude behaviors')
-
-
-    def pbOK_clicked(self):
-        self.accept()
-
-    def pbCancel_clicked(self):
-        self.reject()
-'''
 
 class ExclusionMatrix(QDialog):
 
@@ -171,12 +129,55 @@ class DlgProject(QDialog, Ui_dlgProject):
         self.pbSaveSubjects.clicked.connect(self.pbSaveSubjects_clicked)
         self.pbLoadSubjects.clicked.connect(self.pbLoadSubjects_clicked)
 
+        ### independent variables tab
+        self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
+        self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
+
         ### observations
         self.pbRemoveObservation.clicked.connect(self.pbRemoveObservation_clicked)
 
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
+
+
+    def pbAddVariable_clicked(self):
+        '''
+        add an independent variable
+        '''
+        if DEBUG: print 'add an independent variable'
+
+        self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
+
+        for idx, field in enumerate(tw_indVarFields):
+
+            if field == 'type':
+                ### add type combobox
+                comboBox = QComboBox()
+                comboBox.addItem( NUMERIC )
+                comboBox.addItem( TEXT )
+
+                comboBox.setCurrentIndex( 0 )
+        
+                self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
+            else:
+                self.twVariables.setItem(self.twVariables.rowCount() - 1, idx , QTableWidgetItem(''))
+
+    def pbRemoveVariable_clicked(self):
+        '''
+        remove the selected independent variable
+        '''
+        if DEBUG: print 'remove selected independent variable'
+
+        if not self.twVariables.selectedIndexes():
+            QMessageBox.warning(self, programName, 'First select a variable to remove')
+        else:
+
+            response = dialog.MessageDialog(programName, 'Remove the selected variable?', ['Yes', 'Cancel'])
+            if response == 'Yes':
+                self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
+
+
 
 
     def cbAlphabeticalOrder_stateChanged(self):
@@ -1024,6 +1025,33 @@ class DlgProject(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, 'Missing data in behaviors configuration at row %s !' % (','.join(missing_data)))
             return
         
+        
+        ### check independent variables
+        self.indVar = {}
+        for r in range(0, self.twVariables.rowCount()):
+            row = {}
+            for idx, field in enumerate(tw_indVarFields):
+                
+                if field == 'type':
+
+                    combobox = self.twVariables.cellWidget(r, idx)
+
+                    if combobox.currentIndex() == 0:
+                        row[field] = TEXT
+
+                    if combobox.currentIndex() == 1:
+                        row[field] = NUMERIC
+
+                else:
+                
+                    if self.twVariables.item(r, idx):
+                        row[field] = self.twVariables.item(r, idx).text()
+                    else:
+                        row[field] = ''
+
+            self.indVar[ len(self.indVar) ] = row
+
+        print 'ind var', self.indVar
         self.accept()
 
 

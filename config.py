@@ -39,6 +39,7 @@ observation_types = ['Point event', 'State event']
 tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
 pj_events_fields = ['time', 'subject', 'code', 'modifier', 'comment']
 
+tw_indVarFields = ['label','description', 'type', 'default value']
 
 ### create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}
@@ -51,4 +52,5 @@ for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[ field ] = idx
 
 
-
+NUMERIC = 'numeric'
+TEXT = 'text'

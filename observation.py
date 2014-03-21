@@ -35,7 +35,7 @@ import os
 class Observation(QDialog, Ui_Form):
 
     def __init__(self, parent=None):
-        
+
         super(Observation, self).__init__(parent)
         self.setupUi(self)
 
@@ -52,6 +52,22 @@ class Observation(QDialog, Ui_Form):
 
     def pbOK_clicked(self):
         
+        def is_numeric(s):
+            try:
+                float(s)
+                return True
+            except ValueError:
+                return False
+
+        ### check if indep variables are correct type
+        for row in range(0, self.twIndepVariables.rowCount()):
+
+            if self.twIndepVariables.item(row, 1).text() == 'numeric':
+                if not is_numeric( self.twIndepVariables.item(row, 2).text() ):
+                    QMessageBox.critical(self, programName , 'The <b>%s</b> variable must be numeric!' %  self.twIndepVariables.item(row, 0).text())
+                    return
+
+
         ### check if observation id not empty
         if not self.leObservationId.text():
             QMessageBox.warning(self, programName , 'The <b>observation id</b> is mandatory and must be unique!' )
@@ -59,7 +75,6 @@ class Observation(QDialog, Ui_Form):
 
         ### check if new obs and observation id already present
         if self.mode == 'new':
-        
             if self.leObservationId.text() in self.pj['observations']:
                 QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
                 return
@@ -75,7 +90,6 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, programName , 'Add a media file in the first list!' )
             return
 
-
         self.accept()
 
 
@@ -83,15 +97,15 @@ class Observation(QDialog, Ui_Form):
         self.reject()
 
 
-
     def add_media(self):
         fd = QFileDialog(self)
-        
+
         os.chdir( os.path.expanduser("~")  )
-        
+
         fileName, filter_ = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
             self.lwVideo.addItems( [fileName] )
+
 
     def add_media_2(self):
         fd = QFileDialog(self)
