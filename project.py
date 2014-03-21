@@ -123,7 +123,6 @@ class DlgProject(QDialog, Ui_dlgProject):
         self.pbUp.clicked.connect(self.pbUp_clicked)
         self.pbDown.clicked.connect(self.pbDown_clicked)        
 
-
         self.pbImportSubjectsFromProject.clicked.connect(self.pbImportSubjectsFromProject_clicked)
 
         self.pbSaveSubjects.clicked.connect(self.pbSaveSubjects_clicked)
@@ -132,6 +131,12 @@ class DlgProject(QDialog, Ui_dlgProject):
         ### independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
+
+        self.cbAlphabeticalOrderVar.stateChanged.connect(self.cbAlphabeticalOrderVar_stateChanged)
+        self.pbUpVar.clicked.connect(self.pbUpVar_clicked)
+        self.pbDownVar.clicked.connect(self.pbDownVar_clicked)
+
+        self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
         ### observations
         self.pbRemoveObservation.clicked.connect(self.pbRemoveObservation_clicked)
@@ -177,12 +182,138 @@ class DlgProject(QDialog, Ui_dlgProject):
             if response == 'Yes':
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
+    def cbAlphabeticalOrderVar_stateChanged(self):
+        '''
+        change order of independent variables
+        '''
+        self.pbUpVar.setEnabled( not self.cbAlphabeticalOrderVar.isChecked())
+        self.pbDownVar.setEnabled( not self.cbAlphabeticalOrderVar.isChecked())
+        if self.cbAlphabeticalOrderVar.isChecked():
+            self.twVariables.sortByColumn(0, Qt.AscendingOrder)   ### order by variable label
+
+    def pbUpVar_clicked(self):
+        '''
+        move selected variable up
+        '''
+        if self.twVariables.selectedIndexes() and self.twVariables.selectedIndexes()[0].row() > 0:
+
+            selectedRow = self.twVariables.selectedIndexes()[0].row()
+
+            subjectToMoveUp, subjectToMoveDown = [], []
+
+            for x in range(len(tw_indVarFields)):
+                if x == 2:   ### type
+                    subjectToMoveUp.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
+                    subjectToMoveDown.append( self.twVariables.cellWidget(selectedRow - 1, x).currentIndex() )
+                else:
+                    subjectToMoveUp.append( self.twVariables.item( selectedRow , x).text() )
+                    subjectToMoveDown.append( self.twVariables.item( selectedRow - 1, x).text() )
+
+            for x in range(len(tw_indVarFields)):
+                if x == 2:   ### type
+                    self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( subjectToMoveDown[x] )
+                    self.twVariables.cellWidget(selectedRow - 1, x).setCurrentIndex( subjectToMoveUp[x] )
+
+                else:
+                    self.twVariables.item( selectedRow , x).setText(subjectToMoveDown[x])
+                    self.twVariables.item( selectedRow - 1, x).setText(subjectToMoveUp[x])
+
+            self.twVariables.selectRow(selectedRow - 1)
+
+
+    def pbDownVar_clicked(self):
+        '''
+        move selected variable down
+        '''
+        if self.twVariables.selectedIndexes() and self.twVariables.selectedIndexes()[0].row() < self.twVariables.rowCount() -1:
+            selectedRow = self.twVariables.selectedIndexes()[0].row()
+            subjectToMoveDown, subjectToMoveUp = [], []
+
+            for x in range(len(tw_indVarFields)):
+                if x == 2:   ### type
+                    subjectToMoveDown.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
+                    subjectToMoveUp.append( self.twVariables.cellWidget(selectedRow + 1, x).currentIndex() )
+                else:
+                    subjectToMoveDown.append( self.twVariables.item( selectedRow , x).text() )
+                    subjectToMoveUp.append( self.twVariables.item( selectedRow+1, x).text() )
+
+            for x in range(len(tw_indVarFields)):
+                if x == 2:   ### type
+                    self.twVariables.cellWidget(selectedRow + 1, x).setCurrentIndex( subjectToMoveDown[x] )
+                    self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( subjectToMoveUp[x] )
+
+                else:
+                    self.twVariables.item( selectedRow + 1, x).setText(subjectToMoveDown[x])
+                    self.twVariables.item( selectedRow , x).setText(subjectToMoveUp[x])
+
+            self.twVariables.selectRow(selectedRow + 1)
+
+    def pbImportVarFromProject_clicked(self):
+        '''
+        import independent variables from another project
+        '''
+
+        fd = QFileDialog(self)
+        fileName, dummy = fd.getOpenFileName(self, 'Import independent variables from project file', '', 'Project files (*.boris);;All files (*)')
+        if fileName:
+
+            import json
+            s = open(fileName, 'r').read()
+
+            project = json.loads(s)
+
+            ### independent variables
+            if project[ INDEPENDENT_VARIABLES ]:
+
+                ### check if variables are already present
+                if self.twVariables.rowCount():
+    
+                    response = dialog.MessageDialog(programName, 'There are independent variables already configured. Do you want to append independent variables or replace them?', ['Append', 'Replace', 'Cancel'])
+        
+                    if response == 'Replace':
+                        self.twVariables.setRowCount(0)
+        
+                    if response == 'Cancel':
+                        return
+
+                for i in sorted( project[ INDEPENDENT_VARIABLES ].keys() ):
+
+                    self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
+    
+                    for idx,field in enumerate( tw_indVarFields ):
+
+                        item = QTableWidgetItem()
+
+                        if field == 'type':
+
+                            comboBox = QComboBox()
+                            comboBox.addItem(NUMERIC)
+                            comboBox.addItem(TEXT)
+                            if project[INDEPENDENT_VARIABLES][i][field] == NUMERIC:
+                                comboBox.setCurrentIndex( 0 )
+                            if project[INDEPENDENT_VARIABLES][i][field] == TEXT:
+                                comboBox.setCurrentIndex( 1 )
+
+                            self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
+
+                        else:
+                            item.setText( project[INDEPENDENT_VARIABLES][i][field] )
+
+                            self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
+
+                self.twVariables.resizeColumnsToContents()
+
+            else:
+                QMessageBox.warning(self, programName,  'No independent variables found in project' )
+
+
 
 
 
     def cbAlphabeticalOrder_stateChanged(self):
-        #self.twSubjects.setSortingEnabled( self.cbAlphabeticalOrder.isChecked() )
-
+        '''
+        change order of subject
+        '''
         self.pbUp.setEnabled( not self.cbAlphabeticalOrder.isChecked())
         self.pbDown.setEnabled( not self.cbAlphabeticalOrder.isChecked())
         if self.cbAlphabeticalOrder.isChecked():
@@ -206,16 +337,6 @@ class DlgProject(QDialog, Ui_dlgProject):
 
         if fileName:
 
-            if self.twSubjects.rowCount():
-    
-                response = dialog.MessageDialog(programName, 'There are subjects already configured. Do you want to append subjects or replace them?', ['Append', 'Replace', 'Cancel'])
-    
-                if response == 'Replace':
-                    self.twSubjects.setRowCount(0)
-    
-                if response == 'Cancel':
-                    return
-
             import json
             s = open(fileName, 'r').read()
 
@@ -224,6 +345,17 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             ### configuration of behaviours
             if project['subjects_conf']:
+
+                if self.twSubjects.rowCount():
+        
+                    response = dialog.MessageDialog(programName, 'There are subjects already configured. Do you want to append subjects or replace them?', ['Append', 'Replace', 'Cancel'])
+        
+                    if response == 'Replace':
+                        self.twSubjects.setRowCount(0)
+        
+                    if response == 'Cancel':
+                        return
+
 
                 for i in sorted( project['subjects_conf'].keys() ):
 
@@ -240,11 +372,11 @@ class DlgProject(QDialog, Ui_dlgProject):
 
 
                 self.twSubjects.resizeColumnsToContents()
-
+            else:
+                QMessageBox.warning(self, programName,  'No subjects configuration found in project' )
 
 
     def pbImportBehaviorsFromProject_clicked(self):
-
         '''
         import behaviors from another project
         '''
@@ -252,16 +384,6 @@ class DlgProject(QDialog, Ui_dlgProject):
         fd = QFileDialog(self)
         fileName, dummy = fd.getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
         if fileName:
-
-            if self.twBehaviors.rowCount():
-    
-                response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', 'Cancel'])
-    
-                if response == 'Replace':
-                    self.twBehaviors.setRowCount(0)
-    
-                if response == 'Cancel':
-                    return
 
             import json
             s = open(fileName, 'r').read()
@@ -271,6 +393,18 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             ### configuration of behaviours
             if project['behaviors_conf']:
+
+                if self.twBehaviors.rowCount():
+
+                    response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', 'Cancel'])
+        
+                    if response == 'Replace':
+                        self.twBehaviors.setRowCount(0)
+        
+                    if response == 'Cancel':
+                        return
+
+
                 for i in sorted( project['behaviors_conf'].keys() ):
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
@@ -285,8 +419,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                             for observation in observation_types:
                                 comboBox.addItem(observation)
                             comboBox.setCurrentIndex( observation_types.index(project['behaviors_conf'][i][field]) )
-                            
-                                
+
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, 0, comboBox)
 
                         else:
@@ -294,13 +427,13 @@ class DlgProject(QDialog, Ui_dlgProject):
                             
                             if field == 'excluded':
                                 item.setFlags(Qt.ItemIsEnabled)
-                                
+
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field] ,item)
 
                 self.twBehaviors.resizeColumnsToContents()
 
-
-
+            else:
+                QMessageBox.warning(self, programName,  'No behaviors configuration found in project' )
 
 
     def pbExclusionMatrix_clicked(self):
@@ -374,7 +507,6 @@ class DlgProject(QDialog, Ui_dlgProject):
                         self.twBehaviors.setItem(r, fields['excluded'] , item)
 
 
-
     def pbRemoveAllBehaviors_clicked(self):
 
         if self.twBehaviors.rowCount():
@@ -406,7 +538,6 @@ class DlgProject(QDialog, Ui_dlgProject):
                             self.twBehaviors.removeRow(row_mem[ codeToDelete ] )
                     else: ### remove without asking
                         self.twBehaviors.removeRow(row_mem[ codeToDelete ] )
-
 
 
     def pbImportConfiguration_clicked(self):
@@ -731,7 +862,7 @@ class DlgProject(QDialog, Ui_dlgProject):
         '''
 
         if DEBUG: print 'add behavior configuration'
-        
+
         response = dialog.MessageDialog(programName, 'Choose a type of behavior', ['Cancel'] + observation_types)
         
         if response == 'Cancel':
@@ -741,22 +872,22 @@ class DlgProject(QDialog, Ui_dlgProject):
 
 
         for field_type in fields:
-            
+
             item = QTableWidgetItem()
             
             if field_type == 'type':
 
                 ### add type combobox
                 comboBox = QComboBox()
-        
+
                 for observation in observation_types:
                     comboBox.addItem(observation)
                 comboBox.setCurrentIndex( observation_types.index(response) )
-        
+
                 self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, 0, comboBox)
             else:
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field_type] , QTableWidgetItem(''))
-        
+
 
     def pbAddSubject_clicked(self):
         '''
@@ -768,7 +899,6 @@ class DlgProject(QDialog, Ui_dlgProject):
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
         item = QTableWidgetItem('')
         self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 0 ,item)
-
 
     def pbRemoveSubject_clicked(self):
         if not self.twSubjects.selectedIndexes():
@@ -821,9 +951,11 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             self.twBehaviors.selectRow(selectedRow - 1)
 
-
     def pbDown_behavior_clicked(self):
-        ### move up selected behavior
+        '''
+        move selected event up
+        '''
+        
 
         if self.twBehaviors.selectedIndexes() and self.twBehaviors.selectedIndexes()[0].row() < self.twBehaviors.rowCount() -1:
             selectedRow = self.twBehaviors.selectedIndexes()[0].row()
@@ -843,10 +975,10 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             self.twBehaviors.selectRow(selectedRow + 1)
 
-
-
     def pbUp_clicked(self):
-        ### move up selected subject
+        '''
+        move selected subject up
+        '''
 
         if self.twSubjects.selectedIndexes() and self.twSubjects.selectedIndexes()[0].row() > 0:
 
@@ -861,9 +993,10 @@ class DlgProject(QDialog, Ui_dlgProject):
             
             self.twSubjects.selectRow(self.twSubjects.selectedIndexes()[0].row() - 1)
 
-
     def pbDown_clicked(self):
-        ### move up selected subject
+        '''
+        move selected subject down
+        '''
 
         if self.twSubjects.selectedIndexes() and self.twSubjects.selectedIndexes()[0].row() < self.twSubjects.rowCount() -1:
 
@@ -877,7 +1010,6 @@ class DlgProject(QDialog, Ui_dlgProject):
             self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 1).setText(subjectToMoveUp[1])
 
             self.twSubjects.selectRow(self.twSubjects.selectedIndexes()[0].row() + 1)
-
 
 
     def twSubjects_cellChanged(self, row, column):
@@ -957,9 +1089,9 @@ class DlgProject(QDialog, Ui_dlgProject):
 
     def pbOK_clicked(self):
         '''
-        verify behaviours and subjects configuration 
+        verify behaviours and subjects configuration
         '''
-        
+
         if self.lbObservationsState.text():
             QMessageBox.warning(self, programName, self.lbObservationsState.text())
             return
@@ -982,24 +1114,28 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             ### check subject name
             if self.twSubjects.item(row, 1):
-                name = self.twSubjects.item(row, 1).text()
+                subjectName = self.twSubjects.item(row, 1).text()
+                if '|' in subjectName:
+                    QMessageBox.warning(self, programName, 'The pipe (|) character is not allowed in subject name <b>%s</b> !' % subjectName)
+                    return
+
             else:
                 QMessageBox.warning(self, programName, 'Missing subject name in subjects configuration at row %d !' % row)
                 return
 
-            self.subjects_conf[ len(self.subjects_conf) ] = { 'key':key, 'name':name }
+            self.subjects_conf[ len(self.subjects_conf) ] = { 'key': key, 'name': subjectName }
 
 
         ### store behaviors
         missing_data = []
-        
+
         self.obs = {}
-        
+
         for r in range(0, self.twBehaviors.rowCount()):
 
             row = {}
             for field in fields:
-                
+
                 if field == 'type':
                     combobox = self.twBehaviors.cellWidget(r,0)
 
@@ -1009,6 +1145,12 @@ class DlgProject(QDialog, Ui_dlgProject):
 
                 else:
                     if self.twBehaviors.item(r, fields[field]):
+
+                        ### check for | char in code
+                        if field == 'code' and '|' in self.twBehaviors.item(r, fields[field]).text():
+                            QMessageBox.warning(self, programName, 'The pipe (|) character is not allowed in code <b>%s</b> !' % self.twBehaviors.item(r, fields[field]).text())
+                            return
+
                         row[field] = self.twBehaviors.item(r, fields[field]).text()
                     else:
                         row[field] = ''
@@ -1024,23 +1166,23 @@ class DlgProject(QDialog, Ui_dlgProject):
         if missing_data:
             QMessageBox.warning(self, programName, 'Missing data in behaviors configuration at row %s !' % (','.join(missing_data)))
             return
-        
-        
+
+
         ### check independent variables
         self.indVar = {}
         for r in range(0, self.twVariables.rowCount()):
             row = {}
             for idx, field in enumerate(tw_indVarFields):
-                
+
                 if field == 'type':
 
                     combobox = self.twVariables.cellWidget(r, idx)
 
                     if combobox.currentIndex() == 0:
-                        row[field] = TEXT
+                        row[field] = NUMERIC
 
                     if combobox.currentIndex() == 1:
-                        row[field] = NUMERIC
+                        row[field] = TEXT
 
                 else:
                 
@@ -1051,7 +1193,7 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             self.indVar[ len(self.indVar) ] = row
 
-        print 'ind var', self.indVar
+        if DEBUG: print 'ind var', self.indVar
         self.accept()
 
 

@@ -182,12 +182,14 @@ class timeBudgetResults(QWidget):
 
         self.label = QLabel()
         self.label.setText('')
-
+        self.lw = QListWidget()
+        self.lw.setEnabled(False)
         self.twTB = QTableWidget()
                 
         hbox = QVBoxLayout(self)
 
         hbox.addWidget(self.label)
+        hbox.addWidget(self.lw)
         hbox.addWidget(self.twTB)
 
         hbox2 = QHBoxLayout(self)
@@ -217,8 +219,11 @@ class timeBudgetResults(QWidget):
         self.close()
 
     def pbSave_clicked(self):
+        '''
+        save time budget analysis results in TSV format
+        '''
 
-        if DEBUG: print 'save results to file'
+        if DEBUG: print 'save time budget results to file in TSV format'
 
         fd = QFileDialog(self)
         fileName, filtr = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
@@ -226,6 +231,24 @@ class timeBudgetResults(QWidget):
         if fileName:
             f = open(fileName, 'w')
 
+            ### observations list
+            f.write('Observations:\n')
+            for idx in xrange(self.lw.count()):
+                f.write(self.lw.item(idx).text() + '\n')
+
+            ### check if only one observation was selected
+            if self.lw.count() == 1:
+                f.write('\n')
+
+                ### write independant variables to file
+                if INDEPENDENT_VARIABLES in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
+                    if DEBUG: print 'indep var of selected observation ' , window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
+
+                    for var in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
+                        f.write( var + '\t' + window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
+                
+                
+            f.write('\n\nTime budget:\n')
             ### write header
             f.write( 'Subject\tBehavior\tTotal number\tTotal duration\tDuration mean\t% of total time\n' )
 
@@ -251,7 +274,6 @@ class gantResults(QWidget):
         self.label = QLabel()
         self.label.setText('')
 
-        ###### if DEBUG: print 'SVG File Name (gantt)', self.fname
         
         ### load image
 
@@ -304,6 +326,9 @@ class gantResults(QWidget):
 
 
 class checkingBox_list(QDialog):
+    '''
+    class for selecting iems from a ListWidget
+    '''
 
     def __init__(self):
         super(checkingBox_list, self).__init__()
@@ -311,13 +336,13 @@ class checkingBox_list(QDialog):
         self.label = QLabel()
         self.label.setText('Available observations')
 
-        self.lwObservations = QListWidget()
-        self.lwObservations.doubleClicked.connect(self.pbOK_clicked)
+        self.lw = QListWidget()
+        self.lw.doubleClicked.connect(self.pbOK_clicked)
 
         hbox = QVBoxLayout(self)
 
         hbox.addWidget(self.label)
-        hbox.addWidget(self.lwObservations)
+        hbox.addWidget(self.lw)
 
         self.pbOK = QPushButton('OK')
         self.pbOK.clicked.connect(self.pbOK_clicked)
@@ -333,7 +358,7 @@ class checkingBox_list(QDialog):
 
         self.setLayout(hbox)
 
-        self.setWindowTitle('Observations')
+        self.setWindowTitle('')
 
     def pbOK_clicked(self):
         self.accept()
@@ -1104,7 +1129,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.close_observation()
 
                         self.new_observation( 'edit', memObsId)
-                        #self.observations_list( 'edit')
                         return False
 
 
@@ -1283,7 +1307,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         select: allow user to select the one or more observations
         '''
 
-        if DEBUG: print 'open observation', self.pj['observations']
     
         if self.pj['observations']:
 
@@ -1294,6 +1317,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.twObservations.setRowCount(0)
 
             if mode == 'open':
+
+                if DEBUG: print 'open observation', self.pj['observations']
                 obsList.twObservations.setSelectionMode( QAbstractItemView.SingleSelection )
                 obsList.pbEdit.setVisible(False)
                 obsList.pbOK.setVisible(False)
@@ -1364,7 +1389,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if obsList.twObservations.item( i.row(), 0).text() not in selected_obsId:
                                 selected_obsId.append( obsList.twObservations.item( i.row(), 0).text() )
 
-                        print 'selected_obsId', selected_obsId
+                        if DEBUG: print 'selected observations id', selected_obsId
                         return selected_obsId
 
                     ### open observation
@@ -1448,24 +1473,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
 
         ### add indepvariables
-        if 'independent_variables' in self.pj:
+        if INDEPENDENT_VARIABLES in self.pj:
             observationWindow.twIndepVariables.setRowCount(0)
-            for i in sorted( self.pj['independent_variables'].keys() ):
+            for i in sorted( self.pj[INDEPENDENT_VARIABLES].keys() ):
                 
-                if DEBUG: print 'variable label',  self.pj['independent_variables'][i]['label']
+                if DEBUG: print 'variable label',  self.pj[INDEPENDENT_VARIABLES][i]['label']
                 
                 observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
                 ### label
                 item = QTableWidgetItem()
-                indepVarLabel = self.pj['independent_variables'][i]['label'] 
+                indepVarLabel = self.pj[INDEPENDENT_VARIABLES][i]['label'] 
                 item.setText( indepVarLabel )
                 item.setFlags(Qt.ItemIsEnabled)
                 observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 0, item)
 
                 ### var type
                 item = QTableWidgetItem()
-                item.setText( self.pj['independent_variables'][i]['type']  )
+                item.setText( self.pj[INDEPENDENT_VARIABLES][i]['type']  )
                 item.setFlags(Qt.ItemIsEnabled)   ### not modifiable
                 observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 1, item)
 
@@ -1473,8 +1498,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### var value
                 item = QTableWidgetItem()
                 ### check if obs has independent variables and var label is a key
-                if mode == 'edit' and 'independent_variables' in self.pj['observations'][obsId] and indepVarLabel in self.pj['observations'][obsId]['independent_variables']:
-                    txt = self.pj['observations'][obsId]['independent_variables'][indepVarLabel]
+                if mode == 'edit' and INDEPENDENT_VARIABLES in self.pj['observations'][obsId] and indepVarLabel in self.pj['observations'][obsId][INDEPENDENT_VARIABLES]:
+                    txt = self.pj['observations'][obsId][INDEPENDENT_VARIABLES][indepVarLabel]
+
+                elif mode == 'new':
+                    txt = self.pj[INDEPENDENT_VARIABLES][i]['default value']
                 else:
                     txt = ''
 
@@ -1569,11 +1597,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj['observations'][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
 
             ### independent variables for observation
-            self.pj['observations'][new_obs_id]['independent_variables'] = {}
+            self.pj['observations'][new_obs_id][INDEPENDENT_VARIABLES] = {}
             for r in range(0, observationWindow.twIndepVariables.rowCount()):
 
                 ### set dictionary as label (col 0) => value (col 2)
-                self.pj['observations'][new_obs_id]['independent_variables'][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
+                self.pj['observations'][new_obs_id][INDEPENDENT_VARIABLES][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
 
 
             ### observation time offset
@@ -1944,17 +1972,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return observed_subjects
 
 
-
-    def select_observations(self):
-        '''
-        allow user to select observations from current project
-        '''
-
-        obs_sel = self.observations_list( 'select')
-        return obs_sel
-        
-
-
     def select_subjects(self, observed_subjects):
         '''
         allow user to select observations from current project
@@ -1969,7 +1986,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if DEBUG: print subject    #### subject code
 
-            subjectsSelection.item = QListWidgetItem(subjectsSelection.lwObservations)
+            subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
 
             subjectsSelection.ch = QCheckBox()
 
@@ -1980,15 +1997,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 subjectsSelection.ch.setChecked(True)
 
-            subjectsSelection.lwObservations.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
+            subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
 
         ### add 'No subject'
         if '' in observed_subjects:
             
-            subjectsSelection.item = QListWidgetItem(subjectsSelection.lwObservations)
+            subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
             subjectsSelection.ch = QCheckBox()
             subjectsSelection.ch.setText( 'No subject' )
-            subjectsSelection.lwObservations.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
+            subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
 
 
         subjectsSelection.setWindowTitle('Select subjects to analyze')
@@ -1998,9 +2015,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if subjectsSelection.exec_():
 
-            for idx in xrange(subjectsSelection.lwObservations.count()):
+            for idx in xrange(subjectsSelection.lw.count()):
 
-                check_box = subjectsSelection.lwObservations.itemWidget(subjectsSelection.lwObservations.item(idx))
+                check_box = subjectsSelection.lw.itemWidget(subjectsSelection.lw.item(idx))
                 if check_box.isChecked():
                     subj_sel.append( check_box.text() )
 
@@ -2039,10 +2056,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### OBSERVATIONS
 
         ### ask user observations to analyze
-        selected_observations = self.select_observations()
-        
-        if DEBUG: print 'selected observations', selected_observations
-        
+        selected_observations = self.observations_list( 'select')
+
         if not selected_observations:
             return
 
@@ -2121,7 +2136,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
 
+        ### widget for results visualization
         self.tb = timeBudgetResults()
+
+        ### observations list
+        self.tb.label.setText( 'Selected observations' )
+        for obs in selected_observations:
+            self.tb.lw.addItem(obs)
+
 
         tb_fields = ['Subject', 'Behavior', 'Total number', 'Total duration', 'Duration mean', '% of total time']
         self.tb.twTB.setColumnCount( len( tb_fields ) )
@@ -2164,7 +2186,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         ### ask user for observations to analyze
-        selected_observations = self.select_observations()
+        selected_observations = self.observations_list( 'select')
         if not selected_observations:
             return
 
@@ -2714,8 +2736,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
 
             ### load independent variables 
-            if 'independent_variables' in self.pj:
-                for i in sorted( self.pj['independent_variables'].keys() ):
+            if INDEPENDENT_VARIABLES in self.pj:
+                for i in sorted( self.pj[ INDEPENDENT_VARIABLES ].keys() ):
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
                     for idx, field in enumerate( tw_indVarFields ):
@@ -2726,14 +2748,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             comboBox.addItem(NUMERIC)
                             comboBox.addItem(TEXT)
 
-                            comboBox.setCurrentIndex(  int(self.pj['independent_variables'][i][field] == TEXT) )
+                            comboBox.setCurrentIndex( 0 )
+                            if self.pj[ INDEPENDENT_VARIABLES ][i][field] == TEXT:
+                                comboBox.setCurrentIndex( 1 )
 
                             newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, comboBox)
 
                         else:
 
                             item = QTableWidgetItem()
-                            item.setText( self.pj['independent_variables'][i][field] )
+                            item.setText( self.pj[INDEPENDENT_VARIABLES][i][field] )
                             newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx,item)
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
@@ -2800,15 +2824,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.load_subjects_in_twSubjects()
                 
                 ### load variables
-                self.pj['independent_variables'] =  newProjectWindow.indVar
+                self.pj[ INDEPENDENT_VARIABLES ] =  newProjectWindow.indVar
 
-                if DEBUG: print 'independent_variables', self.pj['independent_variables']
+                if DEBUG: print INDEPENDENT_VARIABLES, self.pj[INDEPENDENT_VARIABLES]
 
             ### observations (check if observation deleted)
-            '''
-            if self.twEvents.rowCount() != len(self.pj['observations']) :
-            '''
-
             self.toolBar.setEnabled(True)
 
             self.initialize_new_project()
@@ -4182,7 +4202,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         ### ask user for observations to analyze
-        selected_observations = self.select_observations()
+        selected_observations = self.observations_list( 'select')
+        
         if not selected_observations:
             return
             

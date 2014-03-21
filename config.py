@@ -54,3 +54,5 @@ for idx, field in enumerate(pj_events_fields):
 
 NUMERIC = 'numeric'
 TEXT = 'text'
+INDEPENDENT_VARIABLES = 'independent_variables'
+OBSERVATIONS = 'observations'

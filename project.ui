@@ -519,21 +519,21 @@
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_17">
                   <item>
-                   <widget class="QCheckBox" name="cbAlphabeticalOrder_behavior_2">
+                   <widget class="QCheckBox" name="cbAlphabeticalOrderVar">
                     <property name="text">
                      <string>Alphabetical order</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="pbUp_behavior_2">
+                   <widget class="QPushButton" name="pbUpVar">
                     <property name="text">
                      <string>Move up</string>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="pbDown_behavior_2">
+                   <widget class="QPushButton" name="pbDownVar">
                     <property name="text">
                      <string>Move down</string>
                     </property>
@@ -558,23 +558,9 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pbImportBehaviorsFromProject_2">
+              <widget class="QPushButton" name="pbImportVarFromProject">
                <property name="text">
                 <string>Import from project</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbLoadConfiguration_2">
-               <property name="text">
-                <string>Load variables from file</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pbSaveConfiguration_2">
-               <property name="text">
-                <string>Save variables to file</string>
                </property>
               </widget>
              </item>
