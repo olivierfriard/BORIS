@@ -84,9 +84,9 @@ except:
 # import audio_utils
 
 def bytes_to_str(b):
-    """
+    '''
     Translate bytes to string.
-    """
+    '''
     if isinstance(b, bytes):
         
         fileSystemEncoding = sys.getfilesystemencoding()
@@ -184,6 +184,7 @@ class timeBudgetResults(QWidget):
         self.label.setText('')
         self.lw = QListWidget()
         self.lw.setEnabled(False)
+        self.lw.setMaximumHeight(100)
         self.twTB = QTableWidget()
                 
         hbox = QVBoxLayout(self)
@@ -409,27 +410,25 @@ class JumpTo(QDialog):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    ### {"time_format": "hh:mm:ss", "project_date": "2013-03-26T12:48:42", "project_name": "nnnnn", "project_description": "ddd\ndd\ndd\nd\nd\nd\n"}
     pj = {"time_format": "hh:mm:ss", "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {}  }
     project = False
 
-    observationId = ''
-    
-    
+    observationId = ''   ### current observation id
+
     timeOffset = 0.0
     saveMediaFilePath = True
-    confirmSound = False
-    embedPlayer = True
-    timeFormat = 'hh:mm:ss'  ### 's' or 'hh:mm:ss'
+    confirmSound = False          ### if True a beep will confirm each keypress
+    embedPlayer = True            ### if True the VLC player will be embedded in the main window
+    timeFormat = 'hh:mm:ss'       ### 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
-    
+
     #ObservationsChanged = False
     projectChanged = False
     
     liveObservationStarted = False
     
-    fileName = ''
-    ### to delete configurationFileName = ''
+    #fileName = ''
+
     projectFileName = ''
     mediaTotalLength = None
     
@@ -854,13 +853,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def jump_to(self):
-        
+        '''
+        jump to the user specified video position
+        '''
         jt = JumpTo()
-        '''
-        if self.media_list.count():
-            jt.te.setMaximumTime( self.seconds2time( int(self.mediaplayer.get_length() /1000) ) )
-        '''
-        
         if jt.exec_():
 
             if DEBUG: print '\njump to time:', jt.te.time().toString('hh:mm:ss')
@@ -1101,9 +1097,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if DEBUG: print 'init video coding. obs id:', self.observationId
 
-            self.fileName = self.pj['observations'][self.observationId]['file']
-
-            if DEBUG: print 'self.fileName', self.fileName
+            #self.fileName = self.pj['observations'][self.observationId]['file']
 
             ### check file for mediaplayer #1
             if '1' in self.pj['observations'][self.observationId]['file'] and self.pj['observations'][self.observationId]['file']['1']:
@@ -2745,8 +2739,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if field == 'type':
 
                             comboBox = QComboBox()
-                            comboBox.addItem(NUMERIC)
-                            comboBox.addItem(TEXT)
+                            comboBox.addItems([NUMERIC, TEXT])
 
                             comboBox.setCurrentIndex( 0 )
                             if self.pj[ INDEPENDENT_VARIABLES ][i][field] == TEXT:
@@ -4508,8 +4501,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.mediaplayer2.set_time(0)
 
 
-
-
     def stopClicked(self):
         
         if DEBUG: print 'Stop'
@@ -4535,11 +4526,11 @@ if __name__=="__main__":
 
     app.setApplicationName(programName)
     window = MainWindow()
-    
+
     ### check if argument
     if len(sys.argv) > 1:
         window.open_project_json( sys.argv[1] )
-    
+
     window.show()
     window.raise_()
     splash.finish(window)

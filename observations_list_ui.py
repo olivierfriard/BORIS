@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'observations_list.ui'
 #
-# Created: Mon Oct  7 14:03:52 2013
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Fri Mar 28 00:29:53 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -70,8 +70,8 @@ class Ui_observationsList(object):
         self.twObservations.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("observationsList", "id", None, QtGui.QApplication.UnicodeUTF8))
         self.twObservations.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("observationsList", "Date", None, QtGui.QApplication.UnicodeUTF8))
         self.twObservations.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("observationsList", "Description", None, QtGui.QApplication.UnicodeUTF8))
-        self.twObservations.horizontalHeaderItem(3).setText(QtGui.QApplication.translate("observationsList", "Player #1", None, QtGui.QApplication.UnicodeUTF8))
-        self.twObservations.horizontalHeaderItem(4).setText(QtGui.QApplication.translate("observationsList", "Player #2", None, QtGui.QApplication.UnicodeUTF8))
+        self.twObservations.horizontalHeaderItem(3).setText(QtGui.QApplication.translate("observationsList", "Media #1", None, QtGui.QApplication.UnicodeUTF8))
+        self.twObservations.horizontalHeaderItem(4).setText(QtGui.QApplication.translate("observationsList", "Media #2", None, QtGui.QApplication.UnicodeUTF8))
         self.pbCancel.setText(QtGui.QApplication.translate("observationsList", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.pbSelectAll.setText(QtGui.QApplication.translate("observationsList", "Select all", None, QtGui.QApplication.UnicodeUTF8))
         self.pbUnSelectAll.setText(QtGui.QApplication.translate("observationsList", "Unselect all", None, QtGui.QApplication.UnicodeUTF8))
