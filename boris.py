@@ -169,161 +169,9 @@ class Waveform(QWidget):
 """
 
 
+from time_budget_widget import *
 
-
-class timeBudgetResults(QWidget):
-    '''
-    class for displaying time budget results in new window
-    a function for exporting data in TSV format is implemented
-    '''
-
-    def __init__(self):
-        super(timeBudgetResults, self).__init__()
-
-        self.label = QLabel()
-        self.label.setText('')
-        self.lw = QListWidget()
-        self.lw.setEnabled(False)
-        self.lw.setMaximumHeight(100)
-        self.twTB = QTableWidget()
-                
-        hbox = QVBoxLayout(self)
-
-        hbox.addWidget(self.label)
-        hbox.addWidget(self.lw)
-        hbox.addWidget(self.twTB)
-
-        hbox2 = QHBoxLayout(self)
-
-
-        self.pbSave = QPushButton('Save results')
-        hbox2.addWidget(self.pbSave)
-
-        spacerItem = QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        hbox2.addItem(spacerItem)
-
-
-        self.pbClose = QPushButton('Close')
-        hbox2.addWidget(self.pbClose)
-
-        hbox.addLayout(hbox2)
-
-        self.setWindowTitle('Time budget')
-
-
-        self.pbClose.clicked.connect(self.pbClose_clicked)
-        self.pbSave.clicked.connect(self.pbSave_clicked)
-
-
-
-    def pbClose_clicked(self):
-        self.close()
-
-    def pbSave_clicked(self):
-        '''
-        save time budget analysis results in TSV format
-        '''
-
-        if DEBUG: print 'save time budget results to file in TSV format'
-
-        fd = QFileDialog(self)
-        fileName, filtr = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
-
-        if fileName:
-            f = open(fileName, 'w')
-
-            ### observations list
-            f.write('Observations:\n')
-            for idx in xrange(self.lw.count()):
-                f.write(self.lw.item(idx).text() + '\n')
-
-            ### check if only one observation was selected
-            if self.lw.count() == 1:
-                f.write('\n')
-
-                ### write independant variables to file
-                if INDEPENDENT_VARIABLES in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
-                    if DEBUG: print 'indep var of selected observation ' , window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
-
-                    for var in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
-                        f.write( var + '\t' + window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
-                
-                
-            f.write('\n\nTime budget:\n')
-            ### write header
-            f.write( 'Subject\tBehavior\tTotal number\tTotal duration\tDuration mean\t% of total time\n' )
-
-            for row in range( self.twTB.rowCount()):
-                for col in range(self.twTB.columnCount()):
-                    f.write( self.twTB.item(row,col).text().encode('utf8') + '\t' )
-                f.write('\n')
-            f.close()
-
-
-class gantResults(QWidget):
-    '''
-    class for displaying time diagram in new window
-    a function for exporting data in SVG format is implemented
-    '''
-
-    def __init__(self,  svg_text = ''):
-
-        self.svg_text = svg_text
-
-        super(gantResults, self).__init__()
-
-        self.label = QLabel()
-        self.label.setText('')
-
-        
-        ### load image
-
-        self.webview = PySide.QtWebKit.QWebView()
-
-        self.webview.setHtml(svg_text)
-
-        hbox = QVBoxLayout(self)
-
-        hbox.addWidget(self.webview)
-
-        hbox2 = QHBoxLayout(self)
-
-
-        self.pbSave = QPushButton('Save diagram')
-        hbox2.addWidget(self.pbSave)
-
-        spacerItem = QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        hbox2.addItem(spacerItem)
-
-
-        self.pbClose = QPushButton('Close')
-        hbox2.addWidget(self.pbClose)
-
-
-        hbox.addLayout(hbox2)
-
-        self.setWindowTitle('Time diagram')
-
-        self.pbClose.clicked.connect(self.pbClose_clicked)
-        self.pbSave.clicked.connect(self.pbSave_clicked)
-
-
-    def pbClose_clicked(self):
-        self.close()
-
-
-    def pbSave_clicked(self):
-        
-        if DEBUG: print 'save time diagram to a SVG file'
-        fd = QFileDialog(self)
-        fileName, filtr = fd.getSaveFileName(self, 'Save time diagram', '', 'SVG file (*.svg);;All files (*)')
-
-        if fileName:
-            f = open(fileName, 'w')
-            f.write(self.svg_text)
-            f.close()
-
-
+from diagram_widget import *
 
 
 class checkingBox_list(QDialog):
@@ -409,6 +257,8 @@ class JumpTo(QDialog):
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
+
+    DEBUG = False
 
     pj = {"time_format": "hh:mm:ss", "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {}  }
     project = False
@@ -650,7 +500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mediaplayer.pause()
         self.mediaplayer.set_position(0)
 
-        if DEBUG: print 'Ended'
+        if self.DEBUG: print 'Ended'
 
 
 
@@ -859,11 +709,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt = JumpTo()
         if jt.exec_():
 
-            if DEBUG: print '\njump to time:', jt.te.time().toString('hh:mm:ss')
+            if self.DEBUG: print '\njump to time:', jt.te.time().toString('hh:mm:ss')
             
             new_time = int( self.time2seconds( jt.te.time().toString('hh:mm:ss') ) * 1000)
             
-            if DEBUG: print '\new time:', new_time
+            if self.DEBUG: print '\new time:', new_time
 
             if self.media_list.count():
                 if new_time < self.mediaplayer.get_length():
@@ -909,7 +759,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### remember if player paused (go previous will start playing)
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
             
-            if DEBUG: print 'flagPaused', flagPaused
+            if self.DEBUG: print 'flagPaused', flagPaused
             
             self.mediaListPlayer.next()
 
@@ -917,7 +767,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
                 
             if flagPaused:
-                if DEBUG: print self.mediaListPlayer.get_state()
+                if self.DEBUG: print self.mediaListPlayer.get_state()
                 self.mediaListPlayer.pause()
         
         else:
@@ -929,11 +779,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def setVolume(self):
-        if DEBUG: print 'Volume player #1:', self.volumeslider.value()
+        if self.DEBUG: print 'Volume player #1:', self.volumeslider.value()
         self.mediaplayer.audio_set_volume( self.volumeslider.value() )
 
     def setVolume2(self):
-        if DEBUG: print 'Volume player #2:', self.volumeslider2.value()
+        if self.DEBUG: print 'Volume player #2:', self.volumeslider2.value()
         self.mediaplayer2.audio_set_volume(self.volumeslider2.value() )
 
 
@@ -943,7 +793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         if self.observationId:
-            if DEBUG: print 'automatic backup'
+            if self.DEBUG: print 'automatic backup'
             self.save_project_activated()
 
 
@@ -972,7 +822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         preferencesWindow.sbRepositionTimeOffset.setValue( self.repositioningTimeOffset )
         
-        if DEBUG: print self.saveMediaFilePath, type(self.saveMediaFilePath)
+        if self.DEBUG: print self.saveMediaFilePath, type(self.saveMediaFilePath)
         preferencesWindow.cbSaveMediaFilePath.setChecked( self.saveMediaFilePath )
 
         ### automatic backup
@@ -1030,7 +880,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         initialize new observation
         '''
 
-        if DEBUG: print 'initialize new observation'
+        if self.DEBUG: print 'initialize new observation'
         
         self.toolBar.setEnabled(True)
         self.dwObservations.setVisible(True)
@@ -1047,7 +897,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mediaListPlayer.set_media_list(self.media_list)
 
 
-        if DEBUG: print 'self.media_list.count()', self.media_list.count()
+        if self.DEBUG: print 'self.media_list.count()', self.media_list.count()
 
         ### empty media list
         while self.media_list2.count():
@@ -1075,7 +925,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj['observations'][self.observationId]['type'] in ['LIVE']:
 
-            if DEBUG: print 'set up live observation', live
+            if self.DEBUG: print 'set up live observation', live
 
             self.liveTab.setEnabled(True)
             self.toolBox.setItemEnabled (live_tab_index, True)   ### enable live tab
@@ -1095,7 +945,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
 
-            if DEBUG: print 'init video coding. obs id:', self.observationId
+            if self.DEBUG: print 'init video coding. obs id:', self.observationId
 
             #self.fileName = self.pj['observations'][self.observationId]['file']
 
@@ -1104,13 +954,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for mediaFile in self.pj['observations'][self.observationId]['file']['1']:
 
-                    if DEBUG: print 'media file', mediaFile, 'is file', os.path.isfile( mediaFile )
+                    if self.DEBUG: print 'media file', mediaFile, 'is file', os.path.isfile( mediaFile )
 
                     if os.path.isfile( mediaFile ):
 
                         media = self.instance.media_new( mediaFile )
                         media.parse()
-                        if DEBUG: print 'media file',mediaFile ,'duration', media.get_duration()
+                        if self.DEBUG: print 'media file',mediaFile ,'duration', media.get_duration()
 
                         self.duration.append(media.get_duration())
 
@@ -1127,11 +977,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                 self.mediaListPlayer.set_media_list(self.media_list)
-                if DEBUG: print 'duration', self.duration
+                if self.DEBUG: print 'duration', self.duration
 
                 ### display media player in videofram
 
-                if DEBUG: print 'embed player:', self.embedPlayer
+                if self.DEBUG: print 'embed player:', self.embedPlayer
                 if self.embedPlayer:
                     if sys.platform == "linux2": # for Linux using the X Server
                         self.mediaplayer.set_xwindow(self.videoframe.winId())
@@ -1151,7 +1001,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                 ### show first frame of video
-                if DEBUG: print   'app.hasPendingEvents()', app.hasPendingEvents()
+                if self.DEBUG: print   'app.hasPendingEvents()', app.hasPendingEvents()
                 app.processEvents()
                 
                 #self.mediaListPlayer.play()
@@ -1221,7 +1071,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                             media = self.instance.media_new( mediaFile )
                             media.parse()
-                            if DEBUG: print 'media file 2',mediaFile ,'duration', media.get_duration()
+                            if self.DEBUG: print 'media file 2',mediaFile ,'duration', media.get_duration()
     
                             #self.duration.append(media.get_duration())
     
@@ -1230,7 +1080,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                     self.mediaListPlayer2.set_media_list(self.media_list2)
                     
-                    #if DEBUG: print 'duration', self.duration
+                    #if self.DEBUG: print 'duration', self.duration
     
                     if self.embedPlayer:
                         if sys.platform == "linux2": # for Linux using the X Server
@@ -1253,7 +1103,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.mediaplayer2.set_nsobject(self.videoframe2.windId())
     
                     ### show first frame of video
-                    if DEBUG: print   'app.hasPendingEvents()',       app.hasPendingEvents()
+                    if self.DEBUG: print   'app.hasPendingEvents()',       app.hasPendingEvents()
                     app.processEvents()
 
 
@@ -1312,7 +1162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == 'open':
 
-                if DEBUG: print 'open observation', self.pj['observations']
+                if self.DEBUG: print 'open observation', self.pj['observations']
                 obsList.twObservations.setSelectionMode( QAbstractItemView.SingleSelection )
                 obsList.pbEdit.setVisible(False)
                 obsList.pbOK.setVisible(False)
@@ -1335,7 +1185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #if self.pj['observations']:
             for obs in sorted( self.pj['observations'].keys() ):
 
-                if DEBUG: print 'observation:', obs
+                if self.DEBUG: print 'observation:', obs
 
                 obsList.twObservations.setRowCount(obsList.twObservations.rowCount() + 1)
 
@@ -1383,7 +1233,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if obsList.twObservations.item( i.row(), 0).text() not in selected_obsId:
                                 selected_obsId.append( obsList.twObservations.item( i.row(), 0).text() )
 
-                        if DEBUG: print 'selected observations id', selected_obsId
+                        if self.DEBUG: print 'selected observations id', selected_obsId
                         return selected_obsId
 
                     ### open observation
@@ -1444,7 +1294,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         define a new observation or edit current observation
         '''
 
-        if DEBUG: print 'mode', mode
+        if self.DEBUG: print 'mode', mode
 
         ### check if current observation must be closed to create a new one
         if mode == 'new' and self.observationId:
@@ -1471,7 +1321,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.twIndepVariables.setRowCount(0)
             for i in sorted( self.pj[INDEPENDENT_VARIABLES].keys() ):
                 
-                if DEBUG: print 'variable label',  self.pj[INDEPENDENT_VARIABLES][i]['label']
+                if self.DEBUG: print 'variable label',  self.pj[INDEPENDENT_VARIABLES][i]['label']
                 
                 observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
@@ -1576,7 +1426,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 '''
 
                 ### self.observationId = new_obs_id
-                if DEBUG: 'observation id', obsId, 'changed in', new_obs_id
+                if self.DEBUG: 'observation id', obsId, 'changed in', new_obs_id
 
                 self.pj['observations'][ new_obs_id ] = self.pj['observations'][ obsId ]
                 del self.pj['observations'][ obsId ]
@@ -1645,7 +1495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-                if DEBUG: print 'media fileName', fileName
+                if self.DEBUG: print 'media fileName', fileName
                     
 
 
@@ -1667,7 +1517,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close current observation
         '''
 
-        if DEBUG: print '\nClose observation'
+        if self.DEBUG: print '\nClose observation'
 
         self.observationId = ''
 
@@ -1710,7 +1560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         read config file
         '''
-        if DEBUG: print 'read config file'
+        if self.DEBUG: print 'read config file'
         
 
         if os.path.isfile( os.path.expanduser('~') + os.sep + '.boris' ):
@@ -1778,7 +1628,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save config file
         '''
 
-        if DEBUG: print 'save config file'
+        if self.DEBUG: print 'save config file'
 
         settings = QSettings(os.path.expanduser('~') + os.sep + '.boris', QSettings.IniFormat)
 
@@ -1794,7 +1644,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         settings.setValue('Automatic_backup', self.automaticBackup )
 
-        if DEBUG: print 'behaviouralStringsSeparator:', self.behaviouralStringsSeparator
+        if self.DEBUG: print 'behaviouralStringsSeparator:', self.behaviouralStringsSeparator
 
         settings.setValue('behavioural_strings_separator', self.behaviouralStringsSeparator )
 
@@ -1834,7 +1684,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         behaviors [ [time, code, modifier]  ]
         '''
 
-        if DEBUG: print 'observation analysis', behaviors
+        if self.DEBUG: print 'observation analysis', behaviors
 
         states = {}
         points = {}
@@ -1865,7 +1715,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             points[code +'###' + modifier] = [time]
 
-        if DEBUG: print 'states',states
+        if self.DEBUG: print 'states',states
         ### states stats
         states_paired = {}
         
@@ -1875,7 +1725,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### check if values are paired
             if len(states[code]) % 2:
-                if DEBUG: print 'Events are not paired for ' + code.replace('###',' ')
+                if self.DEBUG: print 'Events are not paired for ' + code.replace('###',' ')
                 QMessageBox.warning(self, programName , 'Events are not paired for the <b>%s</b> event' % code.replace('###',' ') )
 
             count = 0
@@ -1888,7 +1738,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     states_paired[code] = [(t1, t2)]
 
-        if DEBUG: print 'states paired',states_paired
+        if self.DEBUG: print 'states paired',states_paired
         return points, states_paired
 
 
@@ -1901,7 +1751,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         { 'subject|behavior': [t1,t2,t3,t4,t5,t6] } for point behaviors
         '''
 
-        if DEBUG: print 'selected_subjects', selected_subjects
+        if self.DEBUG: print 'selected_subjects', selected_subjects
         
         ### filter observations by selected subject
 
@@ -1910,7 +1760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for subject_to_analyze in selected_subjects:
             
-            #if DEBUG: print 'subject to analyze:', subject_to_analyze
+            #if self.DEBUG: print 'subject to analyze:', subject_to_analyze
             
             subject_states = {}
 
@@ -1938,7 +1788,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         points_results[ subject_to_analyze + '|' + behavior ] = points[behavior]
 
-        if DEBUG:
+        if self.DEBUG:
             print 'states results', states_results
             print 'points results', points_results
 
@@ -1978,7 +1828,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for subject in all_subjects:
 
-            if DEBUG: print subject    #### subject code
+            if self.DEBUG: print subject    #### subject code
 
             subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
 
@@ -2045,7 +1895,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         time budget
         '''
 
-        if DEBUG: print 'Time budget function'
+        if self.DEBUG: print 'Time budget function'
 
         ### OBSERVATIONS
 
@@ -2060,14 +1910,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### extract subjects present in observations
         observed_subjects = self.extract_observed_subjects( selected_observations )
         
-        if DEBUG: print '\nobserved subjects', observed_subjects
+        if self.DEBUG: print '\nobserved subjects', observed_subjects
 
         if observed_subjects != ['']:
 
             ### ask user for subjects to analyze
             selected_subjects = self.select_subjects( observed_subjects )
     
-            if DEBUG: print '\nselected subjects', selected_subjects
+            if self.DEBUG: print '\nselected subjects', selected_subjects
     
             if not selected_subjects:
                 return
@@ -2079,9 +1929,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         states_results, points_results = self.analyze_subject( selected_subjects, selected_observations )
 
-        if DEBUG: print '\nstates_results', states_results
+        if self.DEBUG: print '\nstates_results', states_results
         
-        if DEBUG: print '\npoint_results', points_results
+        if self.DEBUG: print '\npoint_results', points_results
 
         out = []
         tot_duration = {}
@@ -2110,7 +1960,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     tot_duration[ subject_to_analyze ] += duration
 
 
-                    if DEBUG: print 'behavior',behavior.split('###')
+                    if self.DEBUG: print 'behavior',behavior.split('###')
 
                     if number:
                         out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')),  'number': number, 'duration': duration, 'mean': round( duration/number, 1)  } )
@@ -2125,10 +1975,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')) , 'number': number, 'duration':duration, 'mean':'-' } )
 
-                if DEBUG:
+                if self.DEBUG:
                      if out: print out[-1]
 
-            if DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
+            if self.DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
 
         ### widget for results visualization
         self.tb = timeBudgetResults()
@@ -2146,13 +1996,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fields = ['subject', 'behavior', 'number', 'duration', 'mean']
 
         for row in out:
-            if DEBUG: print 'row', row
+            if self.DEBUG: print 'row', row
             self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
 
             column = 0 
 
             for field in fields:
-                if DEBUG: print 'field',field
+                if self.DEBUG: print 'field',field
                 item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
                 ### no modif allowed
                 item.setFlags(Qt.ItemIsEnabled)
@@ -2160,7 +2010,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 column += 1
                 
-            if DEBUG: print 'tot_duration[ row[0] ]', tot_duration[ row['subject'] ]
+            if self.DEBUG: print 'tot_duration[ row[0] ]', tot_duration[ row['subject'] ]
                 
             if row['duration'] != '-' and tot_duration[ row['subject'] ]: 
                 item = QTableWidgetItem(str( round( row['duration'] / tot_duration[ row['subject']  ] * 100,1)  ) )
@@ -2192,7 +2042,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### ask user subject to analyze
             selected_subjects = self.select_subjects( observed_subjects )
     
-            if DEBUG: print '\nselected subjects', selected_subjects
+            if self.DEBUG: print '\nselected subjects', selected_subjects
     
             if not selected_subjects:
                 return
@@ -2205,7 +2055,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ### extract all event codes and modifier
         codes = self.combinationsCodeModifier()
-        if DEBUG: print 'all code modifier combinations', codes
+        if self.DEBUG: print 'all code modifier combinations', codes
 
         ### extract highest time and track number
         max_time, track_nb = 0, 0
@@ -2227,7 +2077,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         max_time = max( max_time, event )
 
 
-        if DEBUG:
+        if self.DEBUG:
             print 'tracks number', track_nb
             print 'max time', max_time, type(max_time)
             print '\nstates results', states_results
@@ -2280,12 +2130,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #scene.add(svg.Rectangle((x_init, y_init), 1, ( width - x_init - right_margin ) , black))
 
         step = round(max_time /100 * 10)
-        if DEBUG: print 'step', step
+        if self.DEBUG: print 'step', step
 
         ### draw tick
         for i in range(10 + 1 ):   ### every tenth of total time
             
-            ### if DEBUG: print round(x_init + i * (( width - x_init - right_margin ) /100 * 10))
+            ### if self.DEBUG: print round(x_init + i * (( width - x_init - right_margin ) /100 * 10))
 
             scene.add(svg.Line((round(x_init + i * (( width - x_init - right_margin ) /100 * 10)), y_init - h // 4), \
                                (round(x_init + i * (( width - x_init - right_margin ) /100 * 10)), y_init), black ))
@@ -2349,7 +2199,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pj = json.loads(s)
         
-        if DEBUG: print 'pj', self.pj
+        if self.DEBUG: print 'pj', self.pj
 
         ### check if project file version is newer than current BORIS project file version
         if 'project_format_version' in self.pj and float(self.pj['project_format_version']) > float(project_format_version):
@@ -2366,7 +2216,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ### check if old version  v. 0 *.obs
         if 'project_format_version' not in self.pj:
-            if DEBUG: print 'project format version:', 0
+            if self.DEBUG: print 'project format version:', 0
 
             ### convert VIDEO, AUDIO -> MEDIA
             self.pj['project_format_version'] = project_format_version
@@ -2389,7 +2239,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj['observations'][obs]['file'] = d1
 
-                if DEBUG: print "self.pj['observations'][obs]['file']", self.pj['observations'][obs]['file']
+                if self.DEBUG: print "self.pj['observations'][obs]['file']", self.pj['observations'][obs]['file']
 
             ### convert VIDEO, AUDIO -> MEDIA
 
@@ -2463,7 +2313,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         initialize interface and variables for a new project
         '''
 
-        if DEBUG: print 'initialize new project'
+        if self.DEBUG: print 'initialize new project'
 
         self.lbLogoUnito.setVisible(False)
         self.lbLogoBoris.setVisible(False)        
@@ -2647,7 +2497,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj['project_date']:
 
-                if DEBUG: print 'project date:', self.pj['project_date']
+                if self.DEBUG: print 'project date:', self.pj['project_date']
 
                 q = QDateTime.fromString(self.pj['project_date'], 'yyyy-MM-ddThh:mm:ss')
 
@@ -2680,7 +2530,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for obs in sorted( self.pj['observations'].keys() ):
 
-                    if DEBUG: print 'observation:', obs
+                    if self.DEBUG: print 'observation:', obs
 
                     newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
 
@@ -2801,25 +2651,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
 
-                if DEBUG: print 'behaviors config', newProjectWindow.obs
+                if self.DEBUG: print 'behaviors config', newProjectWindow.obs
 
                 self.twConfiguration.setRowCount(0)
 
                 self.pj['behaviors_conf'] =  newProjectWindow.obs
-                if DEBUG: print 'behaviours configuration', self.pj['behaviors_conf']
+                if self.DEBUG: print 'behaviours configuration', self.pj['behaviors_conf']
 
                 self.load_obs_in_lwConfiguration()
 
                 self.pj['subjects_conf'] =  newProjectWindow.subjects_conf
 
-                if DEBUG: print 'subjects', self.pj['subjects_conf']
+                if self.DEBUG: print 'subjects', self.pj['subjects_conf']
 
                 self.load_subjects_in_twSubjects()
                 
                 ### load variables
                 self.pj[ INDEPENDENT_VARIABLES ] =  newProjectWindow.indVar
 
-                if DEBUG: print INDEPENDENT_VARIABLES, self.pj[INDEPENDENT_VARIABLES]
+                if self.DEBUG: print INDEPENDENT_VARIABLES, self.pj[INDEPENDENT_VARIABLES]
 
             ### observations (check if observation deleted)
             self.toolBar.setEnabled(True)
@@ -2830,7 +2680,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def new_project_activated(self):
 
-        if DEBUG: print 'new project'
+        if self.DEBUG: print 'new project'
         self.edit_project('new')
 
 
@@ -2839,7 +2689,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save project to JSON file
         '''
 
-        if DEBUG: print 'save project json'
+        if self.DEBUG: print 'save project json'
 
         self.sort_events()
         
@@ -2915,7 +2765,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         activate the live observation mode (without media file)
         '''
 
-        if DEBUG: print 'start live observation, self.liveObservationStarted:', self.liveObservationStarted
+        if self.DEBUG: print 'start live observation, self.liveObservationStarted:', self.liveObservationStarted
 
         if not self.liveObservationStarted:
 
@@ -2963,7 +2813,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for f in self.pj['observations'][self.observationId]['file']:
 
-                    if DEBUG: print 'file:', f
+                    if self.DEBUG: print 'file:', f
 
                     r = os.system( 'file -b ' + f )
 
@@ -3010,7 +2860,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.lbSpeed.setText('x' + str(self.play_rate))
 
-        if DEBUG: print 'play rate:', self.play_rate
+        if self.DEBUG: print 'play rate:', self.play_rate
 
 
     def video_slower_activated(self):
@@ -3024,7 +2874,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.lbSpeed.setText('x' + str(self.play_rate))
 
-        if DEBUG: print 'play rate:',self.play_rate
+        if self.DEBUG: print 'play rate:',self.play_rate
 
 
 
@@ -3032,7 +2882,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         manually add event to observation
         '''
-        if DEBUG: print 'manually add new event'
+        if self.DEBUG: print 'manually add new event'
 
         if not self.observationId:
             self.no_observation()
@@ -3100,19 +2950,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
             for field in tw_events_fields:      #### [  self.convertTime( memTime ) , self.currentSubject, event['code'], modifier_str, '' ]:
     
-                if DEBUG: print self.twEvents.rowCount() - 1, tw_obs_fields[ field ], field, new_event[field]
+                if self.DEBUG: print self.twEvents.rowCount() - 1, tw_obs_fields[ field ], field, new_event[field]
     
                 item = QTableWidgetItem( new_event[field] )
     
                 self.twEvents.setItem(self.twEvents.rowCount() - 1, tw_obs_fields[ field ], item)
 
 
-            if DEBUG:
+            if self.DEBUG:
                 print 'EVENTS:', self.pj['observations'][self.observationId]['events']
 
             self.sort_events()
 
-            if DEBUG:
+            if self.DEBUG:
                 print 'EVENTS:', self.pj['observations'][self.observationId]['events']
 
             ### get item from twEvents at memTime row position
@@ -3142,7 +2992,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             row = self.twEvents.selectedItems()[0].row()   ### first selected event
 
-            if DEBUG: print 'row to edit:', row
+            if self.DEBUG: print 'row to edit:', row
 
             ''' editWindow.leTime.setText( self.twEvents.item(row, tw_obs_fields['time']).text()) '''
 
@@ -3261,10 +3111,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                 code = self.twConfiguration.item(obs_idx, 1).text()
                 
-                if DEBUG: print 'obs_idx', obs_idx
+                if self.DEBUG: print 'obs_idx', obs_idx
             
-                if DEBUG: print 'behavior code',  code
-                if DEBUG: print 'behavior', self.pj['behaviors_conf'] [ [ x for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] == code][0] ]
+                if self.DEBUG: print 'behavior code',  code
+                if self.DEBUG: print 'behavior', self.pj['behaviors_conf'] [ [ x for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] == code][0] ]
 
                 self.writeEvent(  self.pj['behaviors_conf'] [ [ x for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] == code][0] ], self.getLaps())
         else: 
@@ -3277,7 +3127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         about window
         '''
 
-        if DEBUG: print 'self.observationId', self.observationId
+        if self.DEBUG: print 'self.observationId', self.observationId
 
         import platform
 
@@ -3303,7 +3153,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
             videoPosition = self.hsVideo.value() / (slider_maximum - 1) * self.mediaplayer.get_length()
 
-            if DEBUG: print 'video position', videoPosition
+            if self.DEBUG: print 'video position', videoPosition
 
             self.mediaplayer.set_time( int(videoPosition) )
 
@@ -3326,7 +3176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### get cumulative current time
             '''
-            if DEBUG:
+            if self.DEBUG:
                 print 'media list count', self.media_list.count()
                 
                 print 'self.mediaplayer',self.mediaplayer
@@ -3425,7 +3275,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fill behaviors configuration table widget with behaviors from pj
         '''
         
-        if DEBUG: print 'load behaviors conf',self.pj['behaviors_conf']
+        if self.DEBUG: print 'load behaviors conf',self.pj['behaviors_conf']
 
         self.twConfiguration.setRowCount(0)
 
@@ -3433,7 +3283,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for idx in sorted(self.pj['behaviors_conf'].keys()):
 
-                if DEBUG: print 'conf', idx
+                if self.DEBUG: print 'conf', idx
 
                 self.twConfiguration.setRowCount(self.twConfiguration.rowCount() + 1)
                 
@@ -3446,13 +3296,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fill subjects table widget with subjects from self.subjects_conf
         '''
         
-        if DEBUG: print 'load subjects conf',self.pj['subjects_conf']
+        if self.DEBUG: print 'load subjects conf',self.pj['subjects_conf']
         
         self.twSubjects.setRowCount(0)
         
         for idx in sorted( self.pj['subjects_conf'].keys() ):
 
-            if DEBUG: print 'row', idx
+            if self.DEBUG: print 'row', idx
 
             self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
                 
@@ -3470,7 +3320,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         take consideration of subject
         '''
         
-        if DEBUG: print '\nupdate events for start/stop'
+        if self.DEBUG: print '\nupdate events for start/stop'
         
         for row in range(0, self.twEvents.rowCount()):
 
@@ -3482,7 +3332,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 time = float(t)
             
-            if DEBUG: print 'update events start/stop  time:', time
+            if self.DEBUG: print 'update events start/stop  time:', time
             
             code = self.twEvents.item(row, tw_obs_fields['code'] ).text()
             subject = self.twEvents.item(row, tw_obs_fields['subject'] ).text()
@@ -3504,7 +3354,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         add event from pressed key to observation
         '''
 
-        if DEBUG: print 'add event to observation id:', self.observationId
+        if self.DEBUG: print 'add event to observation id:', self.observationId
         
         ### check if a same event is already in events list
         event_list = [ memTime, self.currentSubject, event['code'] ]
@@ -3534,12 +3384,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
 
-                if DEBUG: print 'media state:', memState
+                if self.DEBUG: print 'media state:', memState
 
                 if memState == vlc.State.Playing:
                     self.play_video()
 
-            if DEBUG: print 'modifier', modifier_str
+            if self.DEBUG: print 'modifier', modifier_str
 
 
         ### update current state
@@ -3547,7 +3397,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if 'STATE' in event['type'].upper():
 
 
-            if DEBUG: print 'current subject:', self.currentSubject
+            if self.DEBUG: print 'current subject:', self.currentSubject
 
             if self.currentSubject:
                 csj = []
@@ -3558,8 +3408,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:  ### no focal subject
                 csj = self.currentStates['']
 
-            if DEBUG: print 'current states:',csj
-            if DEBUG: print 'event code', event['code'], event['modifiers']
+            if self.DEBUG: print 'current states:',csj
+            if self.DEBUG: print 'event code', event['code'], event['modifiers']
 
 
             '''
@@ -3571,7 +3421,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for field in [  self.convertTime( memTime - 0.1 ) , self.currentSubject, event['code'], '', modifier_str, '' ]:
                 
-                    if DEBUG: print self.twEvents.rowCount() - 1, column, field
+                    if self.DEBUG: print self.twEvents.rowCount() - 1, column, field
                 
                     item = QTableWidgetItem(field)
                     self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
@@ -3596,7 +3446,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                         for field in [  self.convertTime( memTime - 0.1 ) , self.currentSubject, cs, '','', '' ]:
                 
-                            if DEBUG: print self.twEvents.rowCount() - 1, column, field
+                            if self.DEBUG: print self.twEvents.rowCount() - 1, column, field
                 
                             item = QTableWidgetItem(field)
                             self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
@@ -3607,11 +3457,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
 
         new_event = { 'time': self.convertTime( memTime ), 'subject': self.currentSubject, 'code': event['code'], 'type': '' ,'modifier': modifier_str, 'comment':'' }
-        if DEBUG: print 'new event', new_event
+        if self.DEBUG: print 'new event', new_event
 
         for field in tw_events_fields:      #### [  self.convertTime( memTime ) , self.currentSubject, event['code'], modifier_str, '' ]:
 
-            if DEBUG: print self.twEvents.rowCount() - 1, tw_obs_fields[ field ], field, new_event[field]
+            if self.DEBUG: print self.twEvents.rowCount() - 1, tw_obs_fields[ field ], field, new_event[field]
 
             item = QTableWidgetItem( new_event[field] )
 
@@ -3642,7 +3492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         ### check if key duplicated
-        if DEBUG: print 'fill_lwDetail function'
+        if self.DEBUG: print 'fill_lwDetail function'
 
         items = []
         for idx in self.pj['behaviors_conf']:
@@ -3660,7 +3510,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         item, ok = QInputDialog.getItem(self, programName, 'The <b>' + obs_key + '</b> key codes more events.<br>Choose the correct one:' , items, 0, False)
 
         if ok and item:
-            if DEBUG:print 'selected code:', item
+            if self.DEBUG:print 'selected code:', item
 
             obs_idx = self.detailedObs[ item ]
             
@@ -3673,7 +3523,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         in seconds (float))
         add time offset for video observation if any
         '''
-        ###  if DEBUG: print 'self.observationId', self.observationId
+        ###  if self.DEBUG: print 'self.observationId', self.observationId
         
         
         if self.pj['observations'][self.observationId]['type'] in ['LIVE']:
@@ -3700,7 +3550,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
 
 
-        if DEBUG: print 'mem laps', round(memLaps, 1), memLaps
+        if self.DEBUG: print 'mem laps', round(memLaps, 1), memLaps
 
         return round(memLaps, 1)
 
@@ -3722,12 +3572,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.mediaListPlayer.get_state() == vlc.State.NothingSpecial:
             return
 
-        if DEBUG: print 'keyPressEvent'
-        if DEBUG: print 'player state', self.mediaListPlayer.get_state()
+        if self.DEBUG: print 'keyPressEvent'
+        if self.DEBUG: print 'player state', self.mediaListPlayer.get_state()
 
         ek = event.key()
 
-        if DEBUG: print 'key event:', ek
+        if self.DEBUG: print 'key event:', ek
 
         if ek in [16777248,  16777249, 16777217, 16781571]: ### shift tab ctrl
             return
@@ -3735,14 +3585,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.observationId:
 
-            if DEBUG:
+            if self.DEBUG:
                 if ek in function_keys:
                     print 'F key', function_keys[ek]
 
             ### play / pause with space bar
             if ek == Qt.Key_Space and self.pj['observations'][self.observationId]['type'] in ['MEDIA']:   
 
-                if DEBUG: print 'space player #1 state', self.mediaListPlayer.get_state()
+                if self.DEBUG: print 'space player #1 state', self.mediaListPlayer.get_state()
                 self.pause_video()
                 return
 
@@ -3778,14 +3628,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     #ek_chr = chr(ek)
                     ek_unichr = unichr(ek)
 
-                #if DEBUG: print 'ek_chr ', ek_chr
-                if DEBUG: print 'ek_unichr'  ,ek_unichr
+                #if self.DEBUG: print 'ek_chr ', ek_chr
+                if self.DEBUG: print 'ek_unichr'  ,ek_unichr
 
                 for o in self.pj['behaviors_conf']:
 
 
                     if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
-                        if DEBUG: print 'OK', ek_unichr
+                        if self.DEBUG: print 'OK', ek_unichr
 
                         obs_idx = o
                         count += 1
@@ -3797,7 +3647,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
 
-                            if DEBUG: print 'Unicode key', self.pj['behaviors_conf'][o]['key']
+                            if self.DEBUG: print 'Unicode key', self.pj['behaviors_conf'][o]['key']
 
                             obs_idx = o
                             count += 1
@@ -3807,7 +3657,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if self.pj['behaviors_conf'][o]['key'] == ek_chr:
 
-                            if DEBUG: print 'str key', self.pj['behaviors_conf'][o]['key']
+                            if self.DEBUG: print 'str key', self.pj['behaviors_conf'][o]['key']
 
                             obs_idx = o
                             count += 1
@@ -3816,7 +3666,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 ### check if key codes more events
                 if count > 1:
-                    if DEBUG: print 'multi code key'
+                    if self.DEBUG: print 'multi code key'
 
                     flagPlayerPlaying = False
                     if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
@@ -3844,7 +3694,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     
                         if ek_unichr == self.pj['subjects_conf'][idx]['key']:
                             flag_subject = True
-                            if DEBUG: print 'subject', ek_unichr , self.pj['subjects_conf'][idx]['name']
+                            if self.DEBUG: print 'subject', ek_unichr , self.pj['subjects_conf'][idx]['name']
                             
                             ### select or deselect current subject
                             if self.currentSubject == self.pj['subjects_conf'][idx]['name']:
@@ -3861,7 +3711,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if not flag_subject:
 
-                        if DEBUG: print '%s key not assigned' % ek_chr
+                        if self.DEBUG: print '%s key not assigned' % ek_chr
                         
                         self.statusbar.showMessage( 'Key not assigned (%s)' % ek_chr , 5000)
 
@@ -3876,7 +3726,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         substract time offset if any
         '''
 
-        if DEBUG: print 'twEvents_doubleClicked'
+        if self.DEBUG: print 'twEvents_doubleClicked'
 
         if self.twEvents.selectedIndexes():
 
@@ -3897,21 +3747,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             
-            if DEBUG: print 'self.mediaListPlayer.get_state()', self.mediaListPlayer.get_state()
+            if self.DEBUG: print 'self.mediaListPlayer.get_state()', self.mediaListPlayer.get_state()
 
             ### remember if player paused (go previous will start playing)
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
 
-            if DEBUG: print 'newtime', newtime
+            if self.DEBUG: print 'newtime', newtime
 
             if len(self.duration) > 1:
-                if DEBUG: print 'durations:', self.duration
+                if self.DEBUG: print 'durations:', self.duration
                 tot = 0
                 for idx, d in enumerate(self.duration):
                     if newtime >= tot and newtime < d:
-                        if DEBUG: print 'video index:', idx
+                        if self.DEBUG: print 'video index:', idx
                         self.mediaListPlayer.play_item_at_index( idx )
-                        if DEBUG: print 'newtime - tot:',  int(newtime) - tot
+                        if self.DEBUG: print 'newtime - tot:',  int(newtime) - tot
                         self.mediaplayer.set_time( int(newtime) - tot )
                     tot += d
 
@@ -3925,9 +3775,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if flagPaused and self.mediaListPlayer.get_state() != vlc.State.Paused:
 
-                if DEBUG: print 'new state',self.mediaListPlayer.get_state()
+                if self.DEBUG: print 'new state',self.mediaListPlayer.get_state()
                 while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                    if DEBUG: print 'state (while)',self.mediaListPlayer.get_state()
+                    if self.DEBUG: print 'state (while)',self.mediaListPlayer.get_state()
                     pass
 
                 self.mediaListPlayer.pause()
@@ -4025,7 +3875,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         update self.pj
         '''
 
-        if DEBUG: print 'sort events'
+        if self.DEBUG: print 'sort events'
 
         if not self.observationId:
             return
@@ -4057,7 +3907,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observ_list.sort()
 
 
-            if DEBUG: print observ_list
+            if self.DEBUG: print observ_list
 
             self.twEvents.setRowCount(0)
 
@@ -4200,7 +4050,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
             
-        if DEBUG: print 'observations to export:', selected_observations
+        if self.DEBUG: print 'observations to export:', selected_observations
 
 
         fd = QFileDialog(self)
@@ -4300,7 +4150,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         update events in pj
         '''
-        if DEBUG: print 'update_observations (events)'
+        if self.DEBUG: print 'update_observations (events)'
 
         events = []
         for r in range(0, self.twEvents.rowCount()):
@@ -4322,7 +4172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     row.append('')
 
-            #if DEBUG: print 'event:', row
+            #if self.DEBUG: print 'event:', row
             events.append(row)
 
         self.pj['observations'][self.observationId]['events'] = events
@@ -4393,16 +4243,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         play video
         '''
 
-        if DEBUG: print 'self.media_list.count()', self.media_list.count()
+        if self.DEBUG: print 'self.media_list.count()', self.media_list.count()
 
         if self.media_list.count():
             self.mediaListPlayer.play()
-            if DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
+            if self.DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
             
             if self.media_list2.count():   ### second video together
                 self.mediaListPlayer2.play()
 
-                if DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
+                if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
         else:
             self.no_media()
 
@@ -4415,12 +4265,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.media_list.count():
             self.mediaListPlayer.pause()  ### play if paused
             
-            if DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
+            if self.DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
             
             if self.media_list2.count():
                 self.mediaListPlayer2.pause() 
     
-                if DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
+                if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
         else:
             self.no_media()
 
@@ -4491,7 +4341,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         reset video to beginning
         '''
-        if DEBUG: print 'Reset'
+        if self.DEBUG: print 'Reset'
 
         self.mediaplayer.pause()
         self.mediaplayer.set_time(0)
@@ -4503,7 +4353,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def stopClicked(self):
         
-        if DEBUG: print 'Stop'
+        if self.DEBUG: print 'Stop'
         
         self.mediaplayer.stop()
 
@@ -4528,8 +4378,19 @@ if __name__=="__main__":
     window = MainWindow()
 
     ### check if argument
-    if len(sys.argv) > 1:
-        window.open_project_json( sys.argv[1] )
+    from optparse import OptionParser
+    usage = "usage: %prog [options]"
+    parser = OptionParser(usage=usage)
+    
+    parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
+    
+    (options, args) = parser.parse_args()
+
+    window.DEBUG = options.debug
+
+    if args:
+        window.open_project_json( args[0] )
+
 
     window.show()
     window.raise_()
