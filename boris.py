@@ -194,7 +194,6 @@ class timeBudgetResults(QWidget):
 
         hbox2 = QHBoxLayout(self)
 
-
         self.pbSave = QPushButton('Save results')
         hbox2.addWidget(self.pbSave)
 
