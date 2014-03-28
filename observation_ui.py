@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Thu Mar 20 21:06:49 2014
+# Created: Sun Mar 23 00:20:39 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -43,6 +43,7 @@ class Ui_Form(object):
         self.label_9.setObjectName("label_9")
         self.verticalLayout_2.addWidget(self.label_9)
         self.teDescription = QtGui.QPlainTextEdit(Form)
+        self.teDescription.setMaximumSize(QtCore.QSize(16777215, 50))
         self.teDescription.setObjectName("teDescription")
         self.verticalLayout_2.addWidget(self.teDescription)
         self.verticalLayout_5.addLayout(self.verticalLayout_2)

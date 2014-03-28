@@ -23,8 +23,6 @@ Copyright 2012-2014 Olivier Friard
 
 """
 
-DEBUG = True
-
 programName = 'BORIS'
 
 project_format_version = '1'

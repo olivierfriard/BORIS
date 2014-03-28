@@ -50,12 +50,12 @@
        </column>
        <column>
         <property name="text">
-         <string>Player #1</string>
+         <string>Media #1</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>Player #2</string>
+         <string>Media #2</string>
         </property>
        </column>
       </widget>

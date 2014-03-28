@@ -75,7 +75,14 @@
       </widget>
      </item>
      <item>
-      <widget class="QPlainTextEdit" name="teDescription"/>
+      <widget class="QPlainTextEdit" name="teDescription">
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>50</height>
+        </size>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
