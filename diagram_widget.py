@@ -22,28 +22,29 @@ Copyright 2012-2014 Olivier Friard
 
 """
 
-
 import PySide
 from PySide.QtCore import *
 from PySide.QtGui import *
 
 
-class gantResults(QWidget):
+class diagram(QWidget):
     '''
     class for displaying time diagram in new window
     a function for exporting data in SVG format is implemented
     '''
 
-    def __init__(self,  svg_text = ''):
+    def __init__(self, debug, svg_text = ''):
 
         self.svg_text = svg_text
 
-        super(gantResults, self).__init__()
+        super(diagram, self).__init__()
+
+        self.DEBUG = debug
 
         self.label = QLabel()
         self.label.setText('')
 
-        
+
         ### load image
 
         self.webview = PySide.QtWebKit.QWebView()
@@ -82,7 +83,7 @@ class gantResults(QWidget):
 
     def pbSave_clicked(self):
         
-        if DEBUG: print 'save time diagram to a SVG file'
+        if self.DEBUG: print 'save time diagram to a SVG file'
         fd = QFileDialog(self)
         fileName, filtr = fd.getSaveFileName(self, 'Save time diagram', '', 'SVG file (*.svg);;All files (*)')
 

@@ -24,6 +24,8 @@ Copyright 2012-2014 Olivier Friard
 
 """
 
+DEBUG = True
+
 from config import *
 
 from PySide.QtCore import *
@@ -34,8 +36,6 @@ class ExclusionMatrix(QDialog):
 
     def __init__(self):
         super(ExclusionMatrix, self).__init__()
-
-        #frameStyle = QtGui.QFrame.Sunken | QtGui.QFrame.Panel
 
         self.label = QLabel()
         self.label.setText('Check behaviors excluded by')
@@ -81,10 +81,12 @@ from project_ui import Ui_dlgProject
 
 class DlgProject(QDialog, Ui_dlgProject):
 
-    def __init__(self, parent=None):
+    def __init__(self, debug, parent=None ):
 
         super(DlgProject, self).__init__(parent)
         self.setupUi(self)
+
+        self.DEBUG = debug
 
         self.lbObservationsState.setText('')
         self.lbSubjectsState.setText('')
@@ -150,7 +152,7 @@ class DlgProject(QDialog, Ui_dlgProject):
         '''
         add an independent variable
         '''
-        if DEBUG: print 'add an independent variable'
+        if self.DEBUG: print 'add an independent variable'
 
         self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
 
@@ -172,7 +174,7 @@ class DlgProject(QDialog, Ui_dlgProject):
         '''
         remove the selected independent variable
         '''
-        if DEBUG: print 'remove selected independent variable'
+        if self.DEBUG: print 'remove selected independent variable'
 
         if not self.twVariables.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select a variable to remove')
@@ -341,7 +343,7 @@ class DlgProject(QDialog, Ui_dlgProject):
             s = open(fileName, 'r').read()
 
             project = json.loads(s)
-            if DEBUG: print project['subjects_conf']
+            if self.DEBUG: print project['subjects_conf']
 
             ### configuration of behaviours
             if project['subjects_conf']:
@@ -389,7 +391,7 @@ class DlgProject(QDialog, Ui_dlgProject):
             s = open(fileName, 'r').read()
 
             project = json.loads(s)
-            if DEBUG: print project['behaviors_conf']
+            if self.DEBUG: print project['behaviors_conf']
 
             ### configuration of behaviours
             if project['behaviors_conf']:
@@ -438,7 +440,7 @@ class DlgProject(QDialog, Ui_dlgProject):
 
     def pbExclusionMatrix_clicked(self):
 
-        if DEBUG: print 'exclusion matrix'
+        if self.DEBUG: print 'exclusion matrix'
 
         ex = ExclusionMatrix()
 
@@ -457,7 +459,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                     excl[ self.twBehaviors.item(r, fields['code']).text() ] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
                     new_excl[ self.twBehaviors.item(r, fields['code']).text() ] = []
 
-        if DEBUG: print 'exclusion matrix', excl
+        if self.DEBUG: print 'exclusion matrix', excl
 
         ex.twExclusions.setColumnCount( len( headers ) )
         
@@ -498,7 +500,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                             if not s1 in new_excl[s2]:
                                 new_excl[s2].append(s1)
 
-            if DEBUG: print 'new exclusion matrix', new_excl
+            if self.DEBUG: print 'new exclusion matrix', new_excl
 
             for r in range(0, self.twBehaviors.rowCount()):
                 for e in excl:
@@ -571,7 +573,7 @@ class DlgProject(QDialog, Ui_dlgProject):
             for row in rows:
                 lineRow += 1
 
-                if DEBUG: print row
+                if self.DEBUG: print row
 
                 if row.strip() and row.strip()[0] != '#':
                     if '\t' in row:
@@ -650,7 +652,7 @@ class DlgProject(QDialog, Ui_dlgProject):
 
                     if field == 'type':
                         combobox = self.twBehaviors.cellWidget(r,0)
-                        if DEBUG: print 'combo', observation_types[combobox.currentIndex()]
+                        if self.DEBUG: print 'combo', observation_types[combobox.currentIndex()]
                         
                         row[field] = observation_types[combobox.currentIndex()]
                     else:
@@ -729,7 +731,7 @@ class DlgProject(QDialog, Ui_dlgProject):
             for row in rows:
                 lineRow += 1
 
-                if DEBUG: print row
+                if self.DEBUG: print row
 
                 if row.strip() and row.strip()[0] != '#':
                     if '\t' in row:
@@ -781,7 +783,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(r, fields['code']).text():
                         codes.append(self.twBehaviors.item(r, fields['code']).text())
 
-        if DEBUG: print keys
+        if self.DEBUG: print keys
 
         ### check subjects for key duplication
         for r in range(0, self.twSubjects.rowCount()):
@@ -825,7 +827,7 @@ class DlgProject(QDialog, Ui_dlgProject):
     def pbRemoveBehavior_clicked(self):
         
         
-        if DEBUG: print 'remove behavior'
+        if self.DEBUG: print 'remove behavior'
 
         if not self.twBehaviors.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select a behaviour to remove')
@@ -844,7 +846,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                     for event in events:
                         codesInObs.append( event[2] )
                         
-                if DEBUG: print 'all codes in observations',  codesInObs
+                if self.DEBUG: print 'all codes in observations',  codesInObs
 
                 if codeToDelete in codesInObs:
                     response = dialog.MessageDialog(programName, 'The code to remove is used in observations!', ['Remove', 'Cancel'])
@@ -861,7 +863,7 @@ class DlgProject(QDialog, Ui_dlgProject):
         add a behavior
         '''
 
-        if DEBUG: print 'add behavior configuration'
+        if self.DEBUG: print 'add behavior configuration'
 
         response = dialog.MessageDialog(programName, 'Choose a type of behavior', ['Cancel'] + observation_types)
         
@@ -894,7 +896,7 @@ class DlgProject(QDialog, Ui_dlgProject):
         add a subject
         '''
 
-        if DEBUG: print 'add subject'
+        if self.DEBUG: print 'add subject'
 
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
         item = QTableWidgetItem('')
@@ -910,7 +912,7 @@ class DlgProject(QDialog, Ui_dlgProject):
 
                 subjectToDelete = self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1).text()  ### 1: subject name
 
-                if DEBUG: print 'subject to delete', subjectToDelete
+                if self.DEBUG: print 'subject to delete', subjectToDelete
 
                 subjectsInObs = []
                 for obs in  self.pj['observations']:
@@ -918,7 +920,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                     for event in events:
                         subjectsInObs.append( event[ 1 ] )  ### 1: subject name
                         
-                if DEBUG: print 'all subjects in observations',  subjectsInObs
+                if self.DEBUG: print 'all subjects in observations',  subjectsInObs
 
                 if subjectToDelete in subjectsInObs:
                     response = dialog.MessageDialog(programName, 'The subject to remove is used in observations!', ['Remove', 'Cancel'])
@@ -1017,7 +1019,7 @@ class DlgProject(QDialog, Ui_dlgProject):
         check if subject not unique
         '''
         
-        if DEBUG: print 'subject cell changed', row, column
+        if self.DEBUG: print 'subject cell changed', row, column
         
         subjects = []
         keys = []
@@ -1069,8 +1071,9 @@ class DlgProject(QDialog, Ui_dlgProject):
         remove first selected observation
         '''
         
-        if DEBUG: print 'remove observation'
-        if DEBUG: print 'self.pj', self.pj
+        if self.DEBUG:
+            print 'remove observation'
+            print 'self.pj', self.pj
         
         if not self.twObservations.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select an observation to remove')
@@ -1082,7 +1085,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                 
                 obs_id = self.twObservations.item( self.twObservations.selectedIndexes()[0].row(), 0).text()
                 
-                if DEBUG: print 'obs to delete', obs_id
+                if self.DEBUG: print 'obs to delete', obs_id
                 del self.pj['observations'][ obs_id ]
                 self.twObservations.removeRow(self.twObservations.selectedIndexes()[0].row())
 
@@ -1139,8 +1142,8 @@ class DlgProject(QDialog, Ui_dlgProject):
                 if field == 'type':
                     combobox = self.twBehaviors.cellWidget(r,0)
 
-                    if DEBUG: print 'combo', observation_types[combobox.currentIndex()]
-                    
+                    if self.DEBUG: print 'combo', observation_types[combobox.currentIndex()]
+
                     row[field] = observation_types[combobox.currentIndex()]
 
                 else:
@@ -1193,7 +1196,7 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             self.indVar[ len(self.indVar) ] = row
 
-        if DEBUG: print 'ind var', self.indVar
+        if self.DEBUG: print 'ind var', self.indVar
         self.accept()
 
 

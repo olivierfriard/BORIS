@@ -32,9 +32,10 @@ class timeBudgetResults(QWidget):
     a function for exporting data in TSV format is implemented
     '''
 
-    def __init__(self):
+    def __init__(self, debug):
         super(timeBudgetResults, self).__init__()
 
+        self.DEBUG = debug
         self.label = QLabel()
         self.label.setText('')
         self.lw = QListWidget()
@@ -79,7 +80,7 @@ class timeBudgetResults(QWidget):
         save time budget analysis results in TSV format
         '''
 
-        if DEBUG: print 'save time budget results to file in TSV format'
+        if self.DEBUG: print 'save time budget results to file in TSV format'
 
         fd = QFileDialog(self)
         fileName, filtr = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
@@ -98,12 +99,11 @@ class timeBudgetResults(QWidget):
 
                 ### write independant variables to file
                 if INDEPENDENT_VARIABLES in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
-                    if DEBUG: print 'indep var of selected observation ' , window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
+                    if self.DEBUG: print 'indep var of selected observation ' , window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
 
                     for var in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
                         f.write( var + '\t' + window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
-                
-                
+
             f.write('\n\nTime budget:\n')
             ### write header
             f.write( 'Subject\tBehavior\tTotal number\tTotal duration\tDuration mean\t% of total time\n' )

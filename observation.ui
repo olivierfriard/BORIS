@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>621</width>
-    <height>581</height>
+    <width>574</width>
+    <height>714</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>New observation</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_5">
+  <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -113,7 +113,7 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_7">
+    <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
       <widget class="QLabel" name="lbTimeOffset">
        <property name="text">
@@ -125,6 +125,13 @@
       <widget class="QLineEdit" name="leTimeOffset">
        <property name="text">
         <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QTimeEdit" name="teTimeOffset">
+       <property name="displayFormat">
+        <string>hh:mm:ss.zzz</string>
        </property>
       </widget>
      </item>
@@ -179,6 +186,29 @@
          <string>Media</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <widget class="QRadioButton" name="rbVLC">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>VLC media player</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="rbOpenCV">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>OpenCV</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QLabel" name="label_5">
            <property name="text">

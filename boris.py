@@ -25,9 +25,19 @@ Copyright 2012-2014 Olivier Friard
 
 """
 
+'''
+TODO: check if observation has many media and OpenCV player selected
+
+frame by frame problem with OpenCV:
+http://stackoverflow.com/questions/11260042/reverse-video-playback-in-opencv
+
+show on VLC:
+http://mih.voxindeserto.de/vlc_movieoverlays.html
+
+'''
 
 
-__version__ = '1.24 development version'
+__version__ = '1.3'
 __version_date__ = 'development version-'
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -50,7 +60,6 @@ import os
 from encodings import hex_codec
 import json
 
-import PySide
 from PySide.QtCore import *
 from PySide.QtGui import *
 
@@ -63,25 +72,15 @@ from edit_event import *
 from project import *
 import preferences
 import observation
-import observations_list
+#import observations_list
+
+import obs_list2
 
 import svg
 
 import PySide.QtNetwork
 import PySide.QtWebKit
 
-try:
-    import vlc
-except:
-    print 'This version of ' + programName + ' requires VLC media player and it seems that it is not installed on your system.'
-    print 'Go to http://www.videolan.org/vlc to install it.'
-    
-    app = QApplication(sys.argv)
-    QMessageBox.critical(None, programName, 'This version of ' + programName + ' requires VLC media player and it seems that it is not installed on your system.<br>Go to http://www.videolan.org/vlc to install it', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-    sys.exit(1)
-
-# import audio_utils
 
 def bytes_to_str(b):
     '''
@@ -98,75 +97,6 @@ def bytes_to_str(b):
         return b.decode( fileSystemEncoding )
     else:
         return b
-
-"""
-class Waveform(QWidget):
-    '''
-    draw waveform 
-    '''
-    
-    duration = 0
-
-    def __init__(self, filename, w, parent=None):
-
-        super(Waveform, self).__init__(parent)
-
-        #self.wf = [int(x.strip()) for x in open(sys.argv[1] + '.out','r').readlines()]
-        self.wf, dummy, self.fr = audio_utils.readWave( filename )
-        
-        self.min_w = min(self.wf)
-        self.max_w = max(self.wf)
-        self.amplitude = max( abs(self.min_w) , abs(self.max_w) )
-        self.duration = len(self.wf) / self.fr
-        print 'amplitude', self.amplitude
-        print 'duration', self.duration
-        
-        self.window = 2  # 1sec
-        
-        self.pos = 0  # in sec
-        print self.pos
-        
-        self.timerInt = 100
-        self.ctimer = QTimer()
-        QObject.connect(self.ctimer, SIGNAL("timeout()"), self.timeOut)
-        self.ctimer.start(self.timerInt)
-    
-
-    def timeOut(self):
-
-        #self.pos +=  self.timerInt /1000
-        
-        self.pos = w.player.currentTime() / 1000
-        
-        if self.pos > self.duration:
-            self.ctimer.stop()
-        self.update()
-
-
-        #print 'current time', w.player.currentTime() / 1000
-
-
-
-    def poly(self, pts):
-        return QPolygonF(map(lambda p: QPointF(*p), pts))
-
-
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        pts = []
-        
-        x = 0
-        while x < self.width():
-
-            #print int( self.pos  + x/self.width() *  self.window   * fr)
-            if int( (self.pos  + (x/self.width()) *  self.window)   * self.fr) < len(self.wf):
-                pts.append([ x, int(self.height()/2) -  self.wf[ int( (self.pos  + (x/self.width()) *  self.window)   * self.fr) ] / self.amplitude * 100  ] )
-                x += 1
-            else:
-                break
-
-        painter.drawPolyline(self.poly(pts))
-"""
 
 
 from time_budget_widget import *
@@ -259,7 +189,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     DEBUG = False
 
-    pj = {"time_format": "hh:mm:ss", "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {}  }
+    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {}  }
     project = False
 
     observationId = ''   ### current observation id
@@ -268,15 +198,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     saveMediaFilePath = True
     confirmSound = False          ### if True a beep will confirm each keypress
     embedPlayer = True            ### if True the VLC player will be embedded in the main window
-    timeFormat = 'hh:mm:ss'       ### 's' or 'hh:mm:ss'
+    timeFormat = HHMMSS       ### 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
 
     #ObservationsChanged = False
     projectChanged = False
-    
+
     liveObservationStarted = False
-    
-    #fileName = ''
 
     projectFileName = ''
     mediaTotalLength = None
@@ -292,7 +220,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ### time laps
     fast = 10
 
-    #time_display = 'hh:mm:ss'   ### 's' or 'hh:mm:ss'
     currentStates = {}
     flag_slow = False
     play_rate = 1
@@ -302,11 +229,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     detailedObs = {}
 
-    def __init__(self, parent = None):
+    def __init__(self, availablePlayers , parent = None):
 
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
+        #self.playerType = ''
+        self.availablePlayers = availablePlayers
+        self.installEventFilter(self)
         ### set icons
         self.setWindowIcon(QIcon(':/logo.png'))
         self.actionPlay.setIcon(QIcon(':/play.png'))
@@ -323,9 +253,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setWindowTitle('%s (%s)' % (programName, __version__))
       
         try:
-              datadir = sys._MEIPASS
+            datadir = sys._MEIPASS
         except Exception:
-              datadir = os.path.dirname(os.path.realpath(__file__))
+            datadir = os.path.dirname(os.path.realpath(__file__))
 
         self.lbLogoBoris.setPixmap(QPixmap( datadir + "/logo_boris_500px.png"))
         self.lbLogoBoris.setScaledContents(False)
@@ -358,52 +288,84 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setFont(font)
         self.lbCurrentStates.setFont(font)
 
-        # creating a basic vlc instance
-
-        self.instance = vlc.Instance()
-
-        # creating an empty vlc media player
-        self.mediaplayer = self.instance.media_player_new()
-
-        self.mediaListPlayer = self.instance.media_list_player_new()
-        self.mediaListPlayer.set_media_player(self.mediaplayer)
-
-        self.media_list = self.instance.media_list_new()
-
-        self.media_list2 = self.instance.media_list_new()
-
-        # In this widget, the video will be drawn
-        self.videoframe = QtGui.QFrame()
-        self.palette = self.videoframe.palette()
-        self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0,0,0))
-        self.videoframe.setPalette(self.palette)
-        self.videoframe.setAutoFillBackground(True)
-
-        self.volumeslider = QtGui.QSlider(QtCore.Qt.Vertical, self)
-        self.volumeslider.setMaximum(100)
-        self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
-        self.volumeslider.setToolTip("Volume")
-        self.volumeslider.sliderMoved.connect(self.setVolume)
-
-
+        '''
         self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
         self.hsVideo.setMaximum(slider_maximum)
+        self.hsVideo.setVisible(False)
+        '''
 
-        self.video1layout = QtGui.QHBoxLayout()
-        self.video1layout.addWidget(self.videoframe)
-        self.video1layout.addWidget(self.volumeslider)
 
-        self.vboxlayout = QtGui.QVBoxLayout()
+        '''
+        if self.playerType == OPENCV:
+            
+            self.hsVideo = QSlider(Qt.Horizontal, self)
+            self.hsVideo.setMaximum(slider_maximum)
+    
+            self.video1layout = QHBoxLayout()
 
-        self.vboxlayout.addLayout(self.video1layout)
+            self.lbOpenCV = QLabel(self)
+            self.lbOpenCV.setBackgroundRole(QPalette.Base)
 
-        self.vboxlayout.addWidget(self.hsVideo)
+            self.video1layout.addWidget(self.lbOpenCV)
+    
+            self.vboxlayout = QtGui.QVBoxLayout()
+            self.vboxlayout.addLayout(self.video1layout)
+            self.vboxlayout.addWidget(self.hsVideo)
+    
+            self.videoTab = QtGui.QWidget()
+            
+            self.videoTab.setLayout(self.vboxlayout)
+    
+            self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
+        '''
+        '''
+        if self.playerType == VLC:
+            ### creating a basic vlc instance
+    
+            self.instance = vlc.Instance()
+    
+            ### creating an empty vlc media player
+            self.mediaplayer = self.instance.media_player_new()
+    
+            self.mediaListPlayer = self.instance.media_list_player_new()
+            self.mediaListPlayer.set_media_player(self.mediaplayer)
+    
+            self.media_list = self.instance.media_list_new()
+    
+            self.media_list2 = self.instance.media_list_new()
+    
+            # In this widget, the video will be drawn
+            self.videoframe = QtGui.QFrame()
+            self.palette = self.videoframe.palette()
+            self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0,0,0))
+            self.videoframe.setPalette(self.palette)
+            self.videoframe.setAutoFillBackground(True)
+    
+            self.volumeslider = QtGui.QSlider(QtCore.Qt.Vertical, self)
+            self.volumeslider.setMaximum(100)
+            self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
+            self.volumeslider.setToolTip("Volume")
+            self.volumeslider.sliderMoved.connect(self.setVolume)
 
-        self.videoTab = QtGui.QWidget()
-        
-        self.videoTab.setLayout(self.vboxlayout)
+            self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
+            self.hsVideo.setMaximum(slider_maximum)
 
-        self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
+            self.video1layout = QtGui.QHBoxLayout()
+            self.video1layout.addWidget(self.videoframe)
+            self.video1layout.addWidget(self.volumeslider)
+    
+            self.vboxlayout = QtGui.QVBoxLayout()
+    
+            self.vboxlayout.addLayout(self.video1layout)
+    
+            self.vboxlayout.addWidget(self.hsVideo)
+    
+            self.videoTab = QtGui.QWidget()
+            
+            self.videoTab.setLayout(self.vboxlayout)
+    
+            self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
+        '''
 
 
         ### live tab
@@ -425,8 +387,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.toolBox.insertItem(2, self.liveTab, 'Live')
 
-
+        '''
         self.videoTab.setEnabled(False)
+
         self.liveTab.setEnabled(False)
 
         self.toolBox.setItemEnabled (video, False)
@@ -435,6 +398,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ###default tab
         self.toolBox.setCurrentIndex(video)
+        '''
 
 
         ### add label to status bar
@@ -599,7 +563,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
 
-        self.actionSort_observations.triggered.connect(self.sort_events)
+        #self.actionSort_observations.triggered.connect(self.sort_events)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
@@ -645,7 +609,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         ### player
-        self.hsVideo.sliderMoved.connect(self.hsVideo_sliderMoved)
+        '''self.hsVideo.sliderMoved.connect(self.hsVideo_sliderMoved)'''
 
 
         ### Actions for twEvents context menu
@@ -725,56 +689,65 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         go to previous media file (if any)
         '''
-        ### check if media not first media
-        if self.media_list.index_of_item(self.mediaplayer.get_media()) > 0:
-        
-            ### remember if player paused (go previous will start playing)
-            flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
-                
-            self.mediaListPlayer.previous()
-
-            while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                pass
-
-            if flagPaused:
-                self.mediaListPlayer.pause()
-        else:
-
-            if self.media_list.count() == 1:
-                self.statusbar.showMessage('There is only one media file', 5000)
+        if self.playerType == VLC:
+            ### check if media not first media
+            if self.media_list.index_of_item(self.mediaplayer.get_media()) > 0:
+            
+                ### remember if player paused (go previous will start playing)
+                flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
+                    
+                self.mediaListPlayer.previous()
+    
+                while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                    pass
+    
+                if flagPaused:
+                    self.mediaListPlayer.pause()
             else:
-                if self.media_list.index_of_item(self.mediaplayer.get_media()) == 0:
-                    self.statusbar.showMessage('The first media is playing', 5000)
-                
+    
+                if self.media_list.count() == 1:
+                    self.statusbar.showMessage('There is only one media file', 5000)
+                else:
+                    if self.media_list.index_of_item(self.mediaplayer.get_media()) == 0:
+                        self.statusbar.showMessage('The first media is playing', 5000)
+
+        if self.playerType == OPENCV:
+            self.statusbar.showMessage('Function not yet implemented for OpenCV player', 5000)
+
 
 
     def next_media_file(self):
         '''
         go to previous media file (if any)
         '''
-        ### check if media not first media
-        if self.media_list.index_of_item(self.mediaplayer.get_media()) <  self.media_list.count() - 1:
-        
-            ### remember if player paused (go previous will start playing)
-            flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
+        if self.playerType == VLC:
+            ### check if media not first media
+            if self.media_list.index_of_item(self.mediaplayer.get_media()) <  self.media_list.count() - 1:
             
-            if self.DEBUG: print 'flagPaused', flagPaused
-            
-            self.mediaListPlayer.next()
-
-            while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                pass
+                ### remember if player paused (go previous will start playing)
+                flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
                 
-            if flagPaused:
-                if self.DEBUG: print self.mediaListPlayer.get_state()
-                self.mediaListPlayer.pause()
-        
-        else:
-            if self.media_list.count() == 1:
-                self.statusbar.showMessage('There is only one media file', 5000)
+                if self.DEBUG: print 'flagPaused', flagPaused
+                
+                self.mediaListPlayer.next()
+    
+                while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                    pass
+                    
+                if flagPaused:
+                    if self.DEBUG: print self.mediaListPlayer.get_state()
+                    self.mediaListPlayer.pause()
+            
             else:
-                if self.media_list.index_of_item(self.mediaplayer.get_media()) == self.media_list.count() - 1:
-                    self.statusbar.showMessage('The last media is playing', 5000)
+                if self.media_list.count() == 1:
+                    self.statusbar.showMessage('There is only one media file', 5000)
+                else:
+                    if self.media_list.index_of_item(self.mediaplayer.get_media()) == self.media_list.count() - 1:
+                        self.statusbar.showMessage('The last media is playing', 5000)
+
+        if self.playerType == OPENCV:
+            self.statusbar.showMessage('Function not yet implemented for OpenCV player', 5000)
+
 
 
     def setVolume(self):
@@ -811,10 +784,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         preferencesWindow = preferences.Preferences()
 
-        if self.timeFormat == 's':
+        if self.timeFormat == S:
             preferencesWindow.cbTimeFormat.setCurrentIndex(0)
 
-        if self.timeFormat == 'hh:mm:ss':
+        if self.timeFormat == HHMMSS:
             preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
         preferencesWindow.sbffSpeed.setValue( self.fast )
@@ -841,10 +814,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if preferencesWindow.exec_():
 
             if preferencesWindow.cbTimeFormat.currentIndex() == 0:
-                self.timeFormat = 's'
+                self.timeFormat = S
 
             if preferencesWindow.cbTimeFormat.currentIndex() == 1:
-                self.timeFormat = 'hh:mm:ss'
+                self.timeFormat = HHMMSS
 
             self.fast = preferencesWindow.sbffSpeed.value()
 
@@ -866,21 +839,231 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             if self.observationId:
-                self.sort_events()
+                self.loadEventsInTW( self.observationId )
                 self.display_timeoffset_statubar()
 
             self.saveConfigFile()
         
 
-
-
-    def initialize_new_observation(self):
+    def initialize_new_observation_opencv(self):
         '''
-        initialize new observation
+        initialize new observation for OpenCV
         '''
+        if self.DEBUG: print 'initialize new observation for OpenCV'
 
-        if self.DEBUG: print 'initialize new observation'
+
+        #self.hsVideo = QSlider(Qt.Horizontal, self)
+        #self.hsVideo.setMaximum(slider_maximum)
+
+        self.video1layout = QHBoxLayout()
+
+        self.lbOpenCV = QLabel(self)
+        self.lbOpenCV.setBackgroundRole(QPalette.Base)
+
         
+        self.video1layout.addWidget(self.lbOpenCV)
+
+
+        self.vboxlayout = QtGui.QVBoxLayout()
+        self.vboxlayout.addLayout(self.video1layout)
+        self.vboxlayout.addWidget(self.hsVideo)
+        self.hsVideo.setVisible(True)
+
+        self.videoTab = QtGui.QWidget()
+        
+        self.videoTab.setLayout(self.vboxlayout)
+
+        self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
+        
+        self.toolBar.setEnabled(True)
+        self.dwObservations.setVisible(True)
+        self.toolBox.setVisible(True)
+        self.lbFocalSubject.setVisible(True)
+        self.lbCurrentStates.setVisible(True)
+        
+        self.lbOpenCV.setVisible(True)
+
+        ### check file for mediaplayer #1
+        if '1' in self.pj['observations'][self.observationId]['file'] and self.pj['observations'][self.observationId]['file']['1']:
+
+            for mediaFile in self.pj['observations'][self.observationId]['file']['1']:
+
+                if self.DEBUG: print 'media file', mediaFile, 'is file', os.path.isfile( mediaFile )
+
+                if os.path.isfile( mediaFile ):
+
+                    if self.DEBUG: print 'open media file with open cv'
+                    self.cap = cv2.VideoCapture(mediaFile)
+                    
+                    if self.DEBUG:
+                        print "Video Properties:"
+                        print "\t Width: ",self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH)
+                        print "\t Height: ",self.cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
+                        print "\t FourCC: ",self.cap.get(cv2.cv.CV_CAP_PROP_FOURCC)
+                        print "\t Framerate: ",self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+                        print "\t Number of Frames: ",self.cap.get(7)
+                    
+                        print "\t Total length (s) ",self.cap.get(7) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+                    
+                    self.mediaTotalLength = self.cap.get(7) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS)   ### in seconds
+
+                else:
+
+                    QMessageBox.critical(self, programName, '%s not found!<br>Fix the media path in the observation before playing it' % mediaFile, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    memObsId = self.observationId
+                    self.close_observation()
+
+                    self.new_observation( 'edit', memObsId)
+                    return False
+
+        
+        self.videoTab.setEnabled(True)
+        self.toolBox.setItemEnabled (video, True)
+        self.toolBox.setCurrentIndex(video)
+        
+
+
+
+        self.openCVtimer = QTimer(self)
+        self.openCVtimer.timeout.connect(self.openCVtimerOut)
+        if self.DEBUG: print 'start opencv timer'
+        self.openCVtick = 40
+        self.openCVtimer.setInterval(self.openCVtick)
+
+        ### show first frame
+        self.openCVtimerOut()
+        
+        ### reset to init
+        self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)
+
+        self.lbTime.setText( self.convertTime( 0 ))
+        self.hsVideo.setValue( 0)
+
+
+
+    def openCVtimerOut(self):
+        '''
+        read frame and update image
+        '''
+
+        if self.cap.isOpened():
+            ret, frame = self.cap.read()
+            print 'ret', ret
+
+            if frame == None:
+                print 'frame error'
+                return
+
+            height, width, bytesPerComponent = frame.shape
+            bytesPerLine = 3 * width
+            # Convert to RGB for QImage
+            cv2.cvtColor(frame, cv.CV_BGR2RGB, frame)
+        
+            qimage = QImage(frame.data, width, height, bytesPerLine, QImage.Format_RGB888)
+
+            pixmap = QPixmap.fromImage( qimage )
+            
+            self.lbOpenCV.setPixmap(pixmap)
+            
+            currentTime = self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS)   ### in sec
+
+            ### extract State events
+            StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf'] if 'State' in self.pj['behaviors_conf'][y]['type']] ]
+
+            self.currentStates = {}
+            
+            ### add states for no focal subject
+            self.currentStates[ '' ] = []
+            for sbc in StateBehaviorsCodes:
+                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
+                    self.currentStates[''].append(sbc)
+
+            ### add states for all configured subjects
+            for idx in self.pj['subjects_conf']:
+
+                ### add subject index
+                self.currentStates[ idx ] = []
+                for sbc in StateBehaviorsCodes:
+                    if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
+                        self.currentStates[idx].append(sbc)
+
+            if self.currentStates[ '' ]:
+                self.lbState.setText('Current state(s): <b>' + '</b> ,<b> '.join(self.currentStates[ '' ]) + '</b>' )
+
+            else:
+                self.lbState.clear()
+
+            ### show current states
+            if self.currentSubject:
+                ### get index of focal subject (by name)
+                idx = [idx for idx in self.pj['subjects_conf'] if self.pj['subjects_conf'][idx]['name'] == self.currentSubject][0]
+                self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ idx ]))) 
+            else:
+                self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ]))) 
+
+            ### show selected subjects
+            for idx in sorted( self.pj['subjects_conf'].keys() ):
+
+                self.twSubjects.item(int(idx), 2 ).setText( ','.join(self.currentStates[idx]) )
+
+            self.lbTime.setText( self.convertTime( currentTime ))
+            self.hsVideo.setValue( currentTime / self.mediaTotalLength * (slider_maximum - 1))
+
+
+    def initialize_new_observation_vlc(self):
+        '''
+        initialize new observation for VLC
+        '''
+
+        if self.DEBUG: print 'initialize new observation for VLC'
+        
+        ### creating a basic vlc instance
+        self.instance = vlc.Instance()
+
+        ### creating an empty vlc media player
+        self.mediaplayer = self.instance.media_player_new()
+
+        self.mediaListPlayer = self.instance.media_list_player_new()
+        self.mediaListPlayer.set_media_player(self.mediaplayer)
+
+        self.media_list = self.instance.media_list_new()
+
+        self.media_list2 = self.instance.media_list_new()
+
+        # In this widget, the video will be drawn
+        self.videoframe = QtGui.QFrame()
+        self.palette = self.videoframe.palette()
+        self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0,0,0))
+        self.videoframe.setPalette(self.palette)
+        self.videoframe.setAutoFillBackground(True)
+
+        self.volumeslider = QtGui.QSlider(QtCore.Qt.Vertical, self)
+        self.volumeslider.setMaximum(100)
+        self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
+        self.volumeslider.setToolTip("Volume")
+        self.volumeslider.sliderMoved.connect(self.setVolume)
+
+        self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
+        self.hsVideo.setMaximum(slider_maximum)
+        self.hsVideo.sliderMoved.connect(self.hsVideo_sliderMoved)
+
+        self.video1layout = QtGui.QHBoxLayout()
+        self.video1layout.addWidget(self.videoframe)
+        self.video1layout.addWidget(self.volumeslider)
+
+        self.vboxlayout = QtGui.QVBoxLayout()
+
+        self.vboxlayout.addLayout(self.video1layout)
+
+        self.vboxlayout.addWidget(self.hsVideo)
+        self.hsVideo.setVisible(True)
+
+        self.videoTab = QWidget()
+
+        self.videoTab.setLayout(self.vboxlayout)
+
+        self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
+
         self.toolBar.setEnabled(True)
         self.dwObservations.setVisible(True)
         self.toolBox.setVisible(True)
@@ -895,7 +1078,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.mediaListPlayer.set_media_list(self.media_list)
 
-
         if self.DEBUG: print 'self.media_list.count()', self.media_list.count()
 
         ### empty media list
@@ -904,6 +1086,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         ### delete second player
+        '''
         if self.simultaneousMedia:
 
             del self.mediaplayer2
@@ -916,15 +1099,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.volumeslider2.deleteLater()
             
             self.simultaneousMedia = False
+        '''
 
 
 
         ### init duration of media file
         del self.duration[0: len(self.duration)]
 
-        if self.pj['observations'][self.observationId]['type'] in ['LIVE']:
+        if self.pj['observations'][self.observationId]['type'] in [LIVE]:
 
-            if self.DEBUG: print 'set up live observation', live
+            #if self.DEBUG: print 'set up live observation', live
 
             self.liveTab.setEnabled(True)
             self.toolBox.setItemEnabled (live_tab_index, True)   ### enable live tab
@@ -942,7 +1126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ### MEDIA CODING
 
-        if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
             if self.DEBUG: print 'init video coding. obs id:', self.observationId
 
@@ -1002,12 +1186,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### show first frame of video
                 if self.DEBUG: print   'app.hasPendingEvents()', app.hasPendingEvents()
                 app.processEvents()
-                
+
                 #self.mediaListPlayer.play()
-                
-                self.mediaListPlayer.play_item_at_index( 0 )                
+
+                self.mediaListPlayer.play_item_at_index( 0 )
                 app.processEvents()
-                
+
                 ### self.mediaListPlayer.play()
                 while self.mediaListPlayer.get_state() != vlc.State.Playing:
                     pass
@@ -1052,10 +1236,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.volumeslider2.setMaximum(100)
                     self.volumeslider2.setValue(self.mediaplayer2.audio_get_volume())
                     self.volumeslider2.setToolTip("Volume")
-                    ### self.connect(self.volumeslider2, QtCore.SIGNAL("valueChanged(int)"), self.setVolume2)
+
                     self.volumeslider2.sliderMoved.connect(self.setVolume2)
-            
-            
+
                     self.video2layout = QtGui.QHBoxLayout()
                     self.video2layout.addWidget(self.videoframe2)
                     self.video2layout.addWidget(self.volumeslider2)
@@ -1072,15 +1255,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             media.parse()
                             if self.DEBUG: print 'media file 2',mediaFile ,'duration', media.get_duration()
     
-                            #self.duration.append(media.get_duration())
-    
                             self.media_list2.add_media(media)
     
     
                     self.mediaListPlayer2.set_media_list(self.media_list2)
                     
-                    #if self.DEBUG: print 'duration', self.duration
-    
                     if self.embedPlayer:
                         if sys.platform == "linux2": # for Linux using the X Server
                             self.mediaplayer2.set_xwindow(self.videoframe2.winId())
@@ -1129,7 +1308,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def edit_observation(self):
-        self.observations_list( 'edit')
+        
+        
+        ### let user choose one observation to edit
+        selectedObs = self.selectObservations( EDIT )
+        
+        ### check if observation to edit is running
+        if selectedObs:
+            if self.observationId != selectedObs[0]:
+    
+                self.new_observation( EDIT, selectedObs[0])   ### observation id to edit
+            else:
+                QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
+
+    
+    def loadEventsInTW(self, obsId):
+        ### load events in table widget
+        self.twEvents.setRowCount(len( self.pj['observations'][obsId]['events'] ))
+        row = 0
+
+        for event in self.pj['observations'][obsId]['events']:
+
+            for field_type in tw_events_fields:
+                
+                if field_type in pj_events_fields:
+
+                    field = event[ pj_obs_fields[field_type]  ]
+                    if field_type == 'time':
+                        field = self.convertTime( field) 
+                        
+                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(str(field)))
+
+                else:
+                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(''))
+
+            row += 1
+
+        self.update_events_start_stop()
 
     def open_observation(self):
 
@@ -1138,10 +1353,114 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, programName , 'You must close the running observation before.' )
             return
 
-        self.observations_list( 'open')
+        selectedObs = self.selectObservations( OPEN )
+
+        if selectedObs:
+            self.observationId = selectedObs[0]
+
+            ### load events in table widget
+            self.loadEventsInTW(self.observationId)
+
+            ### set player type
+            '''
+            FIXME
+            
+            
+            if 'playertype' in self.pj['observations'][self.observationId]:
+                self.playerType = self.pj['observations'][self.observationId][ 'playertype' ]
+            else:   ### set first player available (VLC by default)
+                self.playerType = self.availablePlayers[0]
+            '''
+            self.playerType = VLC
+            
+            
+            if self.playerType == VLC:
+                if self.initialize_new_observation_vlc():
+   
+                    self.menu_options()
+    
+                    ### title of dock widget
+                    self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
+    
+                    #self.sort_events()
+    
+                else:
+    
+                    self.observationId = ''
+                    self.twEvents.setRowCount(0)
+                    self.menu_options()
+
+            if self.playerType == OPENCV:
+                print 'opencv'
+                self.initialize_new_observation_opencv()
+                self.menu_options()
+                ### title of dock widget
+                self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
 
 
 
+    def selectObservations(self, mode):
+
+        obsList = obs_list2.observationsList_widget()
+        obsList.pb.setText(mode)
+
+        if mode in [EDIT, OPEN]:
+            obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
+
+        obsList.pbSelectAll.setVisible(False)
+        obsList.pbUnSelectAll.setVisible(False)
+        
+        obsListFields = ['id','date','description','media']
+        indepVarHeader = []
+        if INDEPENDENT_VARIABLES in self.pj:
+            
+            if self.DEBUG: print self.pj[ INDEPENDENT_VARIABLES ]
+            
+            for idx in sorted( list(self.pj[ INDEPENDENT_VARIABLES ].keys())  ):
+                print idx, self.pj[ INDEPENDENT_VARIABLES ][ idx ]['label']
+                indepVarHeader.append(  self.pj[ INDEPENDENT_VARIABLES ][ idx ]['label'] )
+
+        if self.DEBUG: print obsListFields
+        
+        obsList.model.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
+        obsList.comboBox.addItems(obsListFields + indepVarHeader)
+
+        for obs in sorted( list(self.pj['observations'].keys()) ):
+            
+            date = self.pj['observations'][obs]['date'].replace('T',' ')
+            descr = self.pj['observations'][obs]['description']
+
+            media = ''
+            if self.pj['observations'][obs]['type'] in [MEDIA]:
+                media =  '  '.join(   [ os.path.basename(x) for x in self.pj['observations'][obs]['file']['1']  ]    )
+            elif self.pj['observations'][obs]['type'] in [LIVE]:
+                media = LIVE
+
+            ### indep var
+            indepVar = []
+            if INDEPENDENT_VARIABLES in self.pj['observations'][obs]:
+                for var in indepVarHeader:
+                    if var in self.pj['observations'][obs][ INDEPENDENT_VARIABLES ]:
+                        indepVar.append( QStandardItem( self.pj['observations'][obs][ INDEPENDENT_VARIABLES ][var] ) )
+
+            obsList.model.invisibleRootItem().appendRow( [ QStandardItem(obs), QStandardItem(date), QStandardItem(descr) , QStandardItem( media )]  +  indepVar )
+
+        obsList.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
+        obsList.label.setText( '%d observation(s)' % obsList.model.rowCount())
+
+        obsList.resize(800, 600)
+
+        selectedObs = []
+        if obsList.exec_():
+            if obsList.view.selectedIndexes():
+                for idx in obsList.view.selectedIndexes():
+                    if idx.column() == 0:   ### first column
+                        selectedObs.append( idx.data() )
+
+        return selectedObs
+
+
+    """
     def observations_list(self, mode):
         '''
         show observations list window
@@ -1182,7 +1501,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             #if self.pj['observations']:
-            for obs in sorted( self.pj['observations'].keys() ):
+            for obs in sorted( list(self.pj['observations'].keys()) ):
 
                 if self.DEBUG: print 'observation:', obs
 
@@ -1285,7 +1604,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.new_observation( 'edit', obsList.twObservations.item( obsList.twObservations.selectedIndexes()[0].row(), 0).text())   ### observation id to edit
                         else:
                             QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
-
+    """
 
 
     def new_observation(self, mode = 'new', obsId = ''):
@@ -1355,6 +1674,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             observationWindow.twIndepVariables.resizeColumnsToContents()
 
+        ### set player type
+        observationWindow.rbVLC.setEnabled( VLC in self.availablePlayers )
+        observationWindow.rbOpenCV.setEnabled(OPENCV in self.availablePlayers)
+
+        if mode == 'new':
+            if self.timeFormat == S:
+                observationWindow.teTimeOffset.setVisible(False)
+            if self.timeFormat == HHMMSS:
+                observationWindow.leTimeOffset.setVisible(False)
+
         if mode == 'edit':
 
             observationWindow.setWindowTitle('Edit observation ' + obsId )
@@ -1362,8 +1691,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.leObservationId.setText( obsId )
             observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj['observations'][obsId]['date'], 'yyyy-MM-ddThh:mm:ss') )
             observationWindow.teDescription.setPlainText( self.pj['observations'][obsId]['description'] )
-            observationWindow.leTimeOffset.setText( self.convertTime( self.pj['observations'][obsId]['time offset'] ))
-            
+
+            if self.timeFormat == S:
+                observationWindow.teTimeOffset.setVisible(False)
+                observationWindow.leTimeOffset.setText( self.convertTime( self.pj['observations'][obsId]['time offset'] ))
+
+            if self.timeFormat == HHMMSS:
+                observationWindow.leTimeOffset.setVisible(False)
+
+                time = QTime()
+                h,m,s_dec = self.seconds2time( self.pj['observations'][obsId]['time offset']).split(':')
+                s, ms = s_dec.split('.')
+                time.setHMS(int(h),int(m),int(s),int(ms))
+                observationWindow.teTimeOffset.setTime( time )
+
+
             if '1' in self.pj['observations'][obsId]['file'] and self.pj['observations'][obsId]['file']['1']:
 
                 observationWindow.lwVideo.addItems( self.pj['observations'][obsId]['file']['1'] )
@@ -1374,11 +1716,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 observationWindow.lwVideo_2.addItems( self.pj['observations'][obsId]['file']['2'] )
 
 
-            if self.pj["observations"][obsId]['type'] in ['MEDIA']:
+            if self.pj["observations"][obsId]['type'] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
-    
-    
-            if self.pj["observations"][obsId]['type'] in ['LIVE']:
+
+                '''
+                FIXME no more player type
+                if 'playertype' in self.pj["observations"][obsId]:
+                    observationWindow.rbVLC.setChecked(self.pj["observations"][obsId]['playertype'] == VLC)
+                    observationWindow.rbOpenCV.setChecked(self.pj["observations"][obsId]['playertype'] == OPENCV)
+                '''
+
+            if self.pj["observations"][obsId]['type'] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
 
 
@@ -1395,6 +1743,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
             '''
 
+            ### check VLC
+            '''
+            FIXME no more player type
+            if observationWindow.rbVLC.isChecked():
+                self.playerType = VLC
+
+            if observationWindow.rbOpenCV.isChecked():
+                self.playerType = OPENCV
+            '''
+
+            self.playerType = VLC
+
             self.projectChanged = True
 
             ### check if new id already used
@@ -1406,6 +1766,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             '''
 
             new_obs_id = observationWindow.leObservationId.text()
+
 
             if mode == 'new':
 
@@ -1431,6 +1792,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 del self.pj['observations'][ obsId ]
 
 
+            '''
+            FIXME
+            self.pj['observations'][new_obs_id]['playertype'] = self.playerType'''
+
             ### observation date
             self.pj['observations'][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
 
@@ -1448,23 +1813,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             ### observation time offset
-            if observationWindow.leTimeOffset.text().count(':') == 2:
-                self.timeOffset = self.time2seconds(observationWindow.leTimeOffset.text())
-            else:
-                try:
-                    self.timeOffset = float( observationWindow.leTimeOffset.text() )
-                except:
-                    QMessageBox.warning(self, programName , '<b>%s</b> is not recognized as a valid time format' % observationWindow.leTimeOffset.text())
+
+            if self.timeFormat == HHMMSS:
+                self.timeOffset = self.time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
+
+            if self.timeFormat == S:
+                self.timeOffset = float( observationWindow.leTimeOffset.text() )
 
             self.pj['observations'][new_obs_id]['time offset'] = self.timeOffset
 
             self.display_timeoffset_statubar()
-            
+
             ### media file
             fileName = {}
 
             ### media
-            if self.pj['observations'][new_obs_id]['type'] in ['MEDIA']:
+            if self.pj['observations'][new_obs_id]['type'] in [MEDIA]:
                 
                 fileName['1'] = []
                 if observationWindow.lwVideo.count():
@@ -1493,10 +1857,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             fileName['2'].append ( os.path.basename( observationWindow.lwVideo_2.item(i).text() ) )
 
 
-
                 if self.DEBUG: print 'media fileName', fileName
-                    
-
 
                 self.pj['observations'][new_obs_id]['file'] = fileName
 
@@ -1508,7 +1869,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### title of dock widget
                 self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
                 
-                self.initialize_new_observation()
+                if self.playerType == VLC:
+                    self.initialize_new_observation_vlc()
+
+                if self.playerType == OPENCV:
+                    self.initialize_new_observation_opencv()
 
 
     def close_observation(self):
@@ -1516,37 +1881,61 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close current observation
         '''
 
-        if self.DEBUG: print '\nClose observation'
+        if self.DEBUG: print '\nClose observation', self.playerType
 
         self.observationId = ''
 
-        self.timer.stop()
-        self.mediaplayer.stop()
-        ### empty media list
-        while self.media_list.count():
-            self.media_list.remove_index(0)
+        if self.playerType == VLC:
+            self.timer.stop()
+            self.mediaplayer.stop()
+            ### empty media list
+            while self.media_list.count():
+                self.media_list.remove_index(0)
 
+            if self.simultaneousMedia:
+                self.mediaplayer2.stop()
+                while self.media_list2.count():
+                    self.media_list2.remove_index(0)
 
-        if self.simultaneousMedia:
-            self.mediaplayer2.stop()
-            while self.media_list2.count():
-                self.media_list2.remove_index(0)
+        if self.playerType == OPENCV:
 
+            self.openCVtimer.stop()
+
+            self.cap.release()
+            #cv2.destroyAllWindows()
 
         self.statusbar.showMessage('',0)
+
+        ### delete layout
+
+        while self.video1layout.count():
+            item = self.video1layout.takeAt(0)
+            item.widget().deleteLater()
+
+        '''
+        while self.vboxlayout.count():
+            item = self.vboxlayout.takeAt(0)
+            item.widget().deleteLater()
+        '''
+        if self.simultaneousMedia:
+            while self.video2layout.count():
+                item = self.video2layout.takeAt(0)
+                item.widget().deleteLater()
+
+
+        self.videoTab.deleteLater()
 
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(False)
         self.toolBox.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
-        
 
         self.twEvents.setRowCount(0)
 
         self.lbTime.clear()
         self.lbSubject.clear()
-        '''self.lbKey.clear()'''
+
         self.lbState.clear()
         self.lbTimeOffset.clear()
         self.lbSpeed.clear()
@@ -1566,21 +1955,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             settings = QSettings(os.path.expanduser('~') + os.sep + '.boris' , QSettings.IniFormat)
 
             size = settings.value('MainWindow/Size')
-            self.resize(size)
-            self.move(settings.value('MainWindow/Position'))
-            #self.restoreState(settings.value('MainWindow/State'))
+            if size:
+                self.resize(size)
+                self.move(settings.value('MainWindow/Position'))
+
+            self.timeFormat = HHMMSS
             try:
                 self.timeFormat = settings.value('Time/Format')
             except:
-                self.timeFormat = 'hh:mm:ss'
+                self.timeFormat = HHMMSS
 
-
+            self.fast = 10
             try:
                 self.fast = int(settings.value('Time/fast_forward_speed'))
 
             except:
                 self.fast = 10
 
+            self.repositioningTimeOffset = 0
             try:
                 self.repositioningTimeOffset = int(settings.value('Time/Repositioning_time_offset'))
 
@@ -1597,11 +1989,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.saveMediaFilePath = True
 
+            self.automaticBackup = 0
             try:
                 self.automaticBackup  = int(settings.value('Automatic_backup'))
             except:
                 self.automaticBackup = 0
 
+            self.behaviouralStringsSeparator = '|'
             try:
                 self.behaviouralStringsSeparator = settings.value('behavioural_strings_separator')
                 if not self.behaviouralStringsSeparator:
@@ -1610,12 +2004,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.behaviouralStringsSeparator = '|'
 
-
+            self.confirmSound = False
             try:
                 self.confirmSound = (settings.value('confirm_sound') == 'true')
             except:
                 self.confirmSound = False
 
+            self.embedPlayer = True
             try:
                 self.embedPlayer = ( settings.value('embed_player') == 'true' )
             except:
@@ -1665,10 +2060,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### display in status bar
         if self.timeOffset:
         
-            if self.timeFormat == 's':
+            if self.timeFormat == S:
                 timeOffset = str( self.timeOffset ) 
             
-            elif self.timeFormat == 'hh:mm:ss':
+            elif self.timeFormat == HHMMSS:
 
                 timeOffset = self.seconds2time( self.timeOffset )
                 
@@ -1899,7 +2294,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### OBSERVATIONS
 
         ### ask user observations to analyze
-        selected_observations = self.observations_list( 'select')
+        selected_observations = self.selectObservations( SELECT )
 
         if not selected_observations:
             return
@@ -2029,7 +2424,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         ### ask user for observations to analyze
-        selected_observations = self.observations_list( 'select')
+        selected_observations = self.selectObservations( SELECT )
         if not selected_observations:
             return
 
@@ -2085,9 +2480,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### figure
 
         ### set rotation
-        if self.timeFormat == 'hh:mm:ss':
+        if self.timeFormat == HHMMSS:
              rotation = -45
-        if self.timeFormat == 's':
+        if self.timeFormat == S:
              rotation = 0
 
         width = 1000
@@ -2179,8 +2574,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         svg_text = scene.svg_text()
         
-        self.gr = gantResults( svg_text)
-        
+        self.gr = diagram(self.DEBUG, svg_text)
+
         self.gr.show()
 
 
@@ -2227,7 +2622,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     del self.pj['observations'][obs]['replace audio']
 
                 if self.pj['observations'][obs]['type'] in ['VIDEO','AUDIO']:
-                    self.pj['observations'][obs]['type'] = 'MEDIA'
+                    self.pj['observations'][obs]['type'] = MEDIA
 
                 ### convert old media list in new one
                 if len( self.pj['observations'][obs]['file'] ):
@@ -2263,9 +2658,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.load_obs_in_lwConfiguration()
         
         self.load_subjects_in_twSubjects()
-        
+
         self.projectFileName = projectFileName
-        
+
         self.project = True
         
         self.menu_options()
@@ -2391,27 +2786,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def seconds2time(self, sec):
         '''
-        convert seconds to hh:mm:ss.s format
+        convert seconds to hh:mm:ss.sss format
         '''
         
         flagNeg = sec < 0
         sec = abs(sec)
         
         hours = 0
-        
-        #rest = sec % 60
-        
+       
         minutes = int(sec / 60)
         if minutes >= 60:
             hours = int(minutes /60)
             minutes = minutes % 60
 
-        secs = round(sec - hours*3600 - minutes * 60, 1)
-
-        if secs < 10:
-            ssecs = '0' + str(secs)
-        else:
-            ssecs = str(secs)
+        secs = sec - hours*3600 - minutes * 60
+        ssecs = '%06.3f' % secs
 
         return  "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs )
 
@@ -2425,10 +2814,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             sec += self.timeOffset
         '''
 
-        if self.timeFormat == 's':
-            return '%.1f' % sec
+        if self.timeFormat == S:
 
-        if self.timeFormat == 'hh:mm:ss':
+            return '%.3f' % sec
+            '''
+            if self.playerType == VLC:
+                return '%.1f' % sec
+
+            if self.playerType == OPENCV:
+                return '%.3f' % sec
+            '''
+
+        if self.timeFormat == HHMMSS:
             return self.seconds2time(sec)
 
 
@@ -2463,7 +2860,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twEvents.setRowCount(0)
 
 
-        newProjectWindow = DlgProject()
+        newProjectWindow = DlgProject(self.DEBUG)
         
         newProjectWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
 
@@ -2473,10 +2870,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow.obs = self.pj['behaviors_conf']
         newProjectWindow.subjects_conf = self.pj['subjects_conf']
 
-        if self.pj['time_format'] == 's':
+        if self.pj['time_format'] == S:
             newProjectWindow.rbSeconds.setChecked(True)
             
-        if self.pj['time_format'] == 'hh:mm:ss':
+        if self.pj['time_format'] == HHMMSS:
             newProjectWindow.rbHMS.setChecked(True)
 
         ### memorize video file name
@@ -2490,6 +2887,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj['project_name']: 
                 newProjectWindow.leProjectName.setText(self.pj["project_name"])
+
+            newProjectWindow.lbProjectFilePath.setText( 'Project file path: ' + self.projectFileName )
 
             if self.pj['project_description']: 
                 newProjectWindow.teDescription.setPlainText(self.pj["project_description"])
@@ -2542,7 +2941,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     item = QTableWidgetItem( self.pj['observations'][obs]['description'] ) 
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 2, item)
 
-                    item = QTableWidgetItem( '  '.join( self.pj['observations'][obs]['file'] )) 
+                    ### FIXME
+                    mediaList = []
+                    for idx in self.pj['observations'][obs]['file']:
+                        for media in self.pj['observations'][obs]['file'][idx]:
+                            mediaList.append('#%s: %s' % (idx , media))
+
+                    item = QTableWidgetItem('\n'.join( mediaList )) 
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 3, item)
 
                 newProjectWindow.twObservations.resizeColumnsToContents()
@@ -2554,7 +2959,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for i in sorted( self.pj['behaviors_conf'].keys() ):
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
-    
+
                     for field in self.pj['behaviors_conf'][i]:
 
                         item = QTableWidgetItem()
@@ -2570,10 +2975,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         else:
                             item.setText( self.pj['behaviors_conf'][i][field] )
-                            
+
                             if field == 'excluded':
                                 item.setFlags(Qt.ItemIsEnabled)
-                                
+
                             newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, fields[field] ,item)
 
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
@@ -2637,10 +3042,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### time format
             if newProjectWindow.rbSeconds.isChecked():
-                self.timeFormat = 's'
+                self.timeFormat = S
 
             if newProjectWindow.rbHMS.isChecked():
-                self.timeFormat = 'hh:mm:ss'
+                self.timeFormat = HHMMSS
 
             self.pj["time_format"] = self.timeFormat
 
@@ -2688,9 +3093,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save project to JSON file
         '''
 
-        if self.DEBUG: print 'save project json'
+        if self.DEBUG: print 'save project json projectFileName:',  projectFileName
 
-        self.sort_events()
+        #self.sort_events()
         
         self.pj['project_format_version'] = project_format_version
         
@@ -2706,10 +3111,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def save_project_as_activated(self):
+        '''save current project asking for a new file name'''
 
+        if self.DEBUG: print 'save project as function'
         fd = QFileDialog(self)
-        self.projectFileName, filtr = fd.getSaveFileName(self, 'Save project as', '', 'Projects file (*.boris);;All files (*)')
-        
+        self.projectFileName, filtr = fd.getSaveFileName(self, 'Save project as', os.path.dirname(self.projectFileName), 'Projects file (*.boris);;All files (*)')
+
         if not self.projectFileName:
             return 'Not saved'
 
@@ -2724,6 +3131,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def save_project_activated(self):
         '''save current project'''
 
+        print 'self.projectFileName', self.projectFileName
+
+        if self.DEBUG: print 'save project function'
         if not self.projectFileName:
 
             fd = QFileDialog(self)
@@ -2750,13 +3160,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.save_project_json(self.projectFileName)
 
         return ''
-            
+
 
     def liveTimer_out(self):
 
-        t = self.seconds2time(self.getLaps())
+        currentTime = self.getLaps()
+
+        t = self.seconds2time(currentTime)
 
         self.lbTimeLive.setText(t)
+
+        ### current state(s)
+
+        ### extract State events
+        StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf'] if 'State' in self.pj['behaviors_conf'][y]['type']] ]
+
+        self.currentStates = {}
+        
+        ### add states for no focal subject
+        self.currentStates[ '' ] = []
+        for sbc in StateBehaviorsCodes:
+            if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: ### test if odd
+                self.currentStates[''].append(sbc)
+
+        ### add states for all configured subjects
+        for idx in self.pj['subjects_conf']:
+
+            ### add subject index
+            self.currentStates[ idx ] = []
+            for sbc in StateBehaviorsCodes:
+                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: ### test if odd
+                    self.currentStates[idx].append(sbc)
+
+        if self.currentStates[ '' ]:
+            self.lbState.setText('Current state(s): <b>' + '</b> ,<b> '.join(self.currentStates[ '' ]) + '</b>' )
+
+        else:
+            self.lbState.clear()
+
+
+        ### show current states
+        if self.currentSubject:
+            ### get index of focal subject (by name)
+            idx = [idx for idx in self.pj['subjects_conf'] if self.pj['subjects_conf'][idx]['name'] == self.currentSubject][0]
+            self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ idx ]))) 
+        else:
+            self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ]))) 
+
+        ### show selected subjects
+        for idx in sorted( self.pj['subjects_conf'].keys() ):
+
+            self.twSubjects.item(int(idx), 2 ).setText( ','.join(self.currentStates[idx]) )
+
 
 
     def start_live_observation(self):
@@ -2820,7 +3275,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         out += '<b>'+os.path.basename(f) + '</b><br>'
                         out += commands.getoutput('file -b ' + f ) + '<br>'
 
-            if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+            if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
                 QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s<br>Video: %s<br>Is seekable: %s' \
                 % (self.convertTime(self.mediaplayer.get_length()/1000), str(self.player.hasVideo()), str(self.player.isSeekable()) ) )
 
@@ -2848,32 +3303,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def video_faster_activated(self):
+        '''
+        increase playing speed
+        '''
+        if self.playerType == VLC:
+            if self.play_rate < 8:
+                self.play_rate += 0.1
+                self.mediaplayer.set_rate(self.play_rate)
+                
+                if self.media_list2.count():
+                    self.mediaplayer2.set_rate(self.play_rate)
+                
+                self.lbSpeed.setText('x' + str(self.play_rate))
+    
+            if self.DEBUG: print 'play rate:', self.play_rate
 
-       
-        if self.play_rate < 8:
-            self.play_rate += 0.1
-            self.mediaplayer.set_rate(self.play_rate)
-            
-            if self.media_list2.count():
-                self.mediaplayer2.set_rate(self.play_rate)
-            
-            self.lbSpeed.setText('x' + str(self.play_rate))
+        if self.playerType == OPENCV:
 
-        if self.DEBUG: print 'play rate:', self.play_rate
+            if self.openCVtimer.interval() > 0:
+                self.openCVtimer.setInterval( self.openCVtimer.interval() - 2 )
+            self.lbSpeed.setText('x%.3f' %  (1/self.openCVtimer.interval()/ (self.cap.get(cv2.cv.CV_CAP_PROP_FPS)/1000)))
+
 
 
     def video_slower_activated(self):
+        '''
+        decrease playing speed
+        '''
 
-        if self.play_rate > 0.2:
-            self.play_rate -= 0.1
-            self.mediaplayer.set_rate(self.play_rate)
+        if self.playerType == VLC:
+            if self.play_rate > 0.2:
+                self.play_rate -= 0.1
+                self.mediaplayer.set_rate(self.play_rate)
+    
+                if self.media_list2.count():
+                    self.mediaplayer2.set_rate(self.play_rate)
+    
+                self.lbSpeed.setText('x' + str(self.play_rate))
+    
+            if self.DEBUG: print 'play rate:',self.play_rate
 
-            if self.media_list2.count():
-                self.mediaplayer2.set_rate(self.play_rate)
-
-            self.lbSpeed.setText('x' + str(self.play_rate))
-
-        if self.DEBUG: print 'play rate:',self.play_rate
+        if self.playerType == OPENCV:
+            if self.openCVtimer.interval() < 10000:
+                self.openCVtimer.setInterval( self.openCVtimer.interval() + 2 )
+            self.lbSpeed.setText('x%.3f' %  (1/self.openCVtimer.interval()/ (self.cap.get(cv2.cv.CV_CAP_PROP_FPS)/1000)))
 
 
 
@@ -2887,17 +3360,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.no_observation()
             return
 
-        editWindow = DlgEditEvent()
+        editWindow = DlgEditEvent(self.DEBUG)
         editWindow.setWindowTitle('Add a new event')
 
         ### send pj to edit_event window
         editWindow.pj = self.pj
 
-        if self.timeFormat == 'hh:mm:ss':
+        if self.timeFormat == HHMMSS:
 
             editWindow.dsbTime.setVisible(False)
 
-        if self.timeFormat == 's':
+        if self.timeFormat == S:
 
             editWindow.teTime.setVisible(False)
             editWindow.sbTimeDecimal.setVisible(False)
@@ -2915,9 +3388,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if editWindow.exec_():  #button OK
 
-            self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
 
-            if self.timeFormat == 'hh:mm:ss':
+            #self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
+
+            if self.timeFormat == HHMMSS:
                 t1 = editWindow.teTime.time().toString('hh:mm:ss')
                 t2 = str(editWindow.sbTimeDecimal.value())
 
@@ -2925,7 +3399,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 #self.twEvents.item(row, tw_obs_fields['time']).setText( t1 + '.' + t2 )
 
-            if self.timeFormat == 's':
+            if self.timeFormat == S:
                 
                 time = editWindow.dsbTime.value()
                 #self.twEvents.item(row, tw_obs_fields['time']).setText( str( editWindow.dsbTime.value() ) )
@@ -2946,7 +3420,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             'modifier': editWindow.cobModifier.currentText(),\
             'comment': editWindow.leComment.toPlainText() }
 
-    
+            
+            self.pj['observations'][self.observationId]['events'].append( [ time, editWindow.cobSubject.currentText(),  editWindow.cobCode.currentText() , editWindow.cobModifier.currentText(), editWindow.leComment.toPlainText()]  )
+            
+            self.pj['observations'][self.observationId]['events'].sort()
+            
+            self.loadEventsInTW( self.observationId )
+            
+            #[memTime, self.currentSubject, event['code'], modifier_str, ''] 
+            
+            '''
             for field in tw_events_fields:      #### [  self.convertTime( memTime ) , self.currentSubject, event['code'], modifier_str, '' ]:
     
                 if self.DEBUG: print self.twEvents.rowCount() - 1, tw_obs_fields[ field ], field, new_event[field]
@@ -2954,15 +3437,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item = QTableWidgetItem( new_event[field] )
     
                 self.twEvents.setItem(self.twEvents.rowCount() - 1, tw_obs_fields[ field ], item)
+            '''
 
 
             if self.DEBUG:
                 print 'EVENTS:', self.pj['observations'][self.observationId]['events']
 
-            self.sort_events()
-
-            if self.DEBUG:
-                print 'EVENTS:', self.pj['observations'][self.observationId]['events']
+            #self.sort_events()
 
             ### get item from twEvents at memTime row position
             item = self.twEvents.item(  [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
@@ -2984,7 +3465,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.twEvents.selectedItems():
 
-            editWindow = DlgEditEvent()
+            editWindow = DlgEditEvent(self.DEBUG)
             editWindow.setWindowTitle('Edit event parameters')
 
             editWindow.pj = self.pj 
@@ -2992,39 +3473,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             row = self.twEvents.selectedItems()[0].row()   ### first selected event
 
             if self.DEBUG: print 'row to edit:', row
+            if self.DEBUG: print 'self.pj[observations][events][row]', self.pj['observations'][self.observationId]['events'][row]
 
-            ''' editWindow.leTime.setText( self.twEvents.item(row, tw_obs_fields['time']).text()) '''
 
-            if ':' in self.twEvents.item(row, tw_obs_fields['time']).text():
-
+            if self.timeFormat == HHMMSS:
                 editWindow.dsbTime.setVisible(False)
 
-                t1,t2 = self.twEvents.item(row, tw_obs_fields['time']).text().split('.')
+                time = QTime()
+                h,m,s = self.seconds2time( self.pj['observations'][self.observationId]['events'][row][ 0 ] ).split(':')
+                s, ms = s.split('.')
+                time.setHMS(int(h),int(m),int(s),int(ms))
+                editWindow.teTime.setTime( time )
 
-                q = QTime.fromString(t1, 'hh:mm:ss')   ### valid also for '12:34:56'
-
-                editWindow.teTime.setTime( q )
-
-                '''editWindow.leTimeDecimal.setText( t2 )'''
-                
-                editWindow.sbTimeDecimal.setValue( int(t2) )
-
-            else:
-                
+            if self.timeFormat == S:
                 editWindow.teTime.setVisible(False)
-                editWindow.sbTimeDecimal.setVisible(False)
-                
-                editWindow.dsbTime.setValue( float( self.twEvents.item(row, tw_obs_fields['time']).text() ) )
+
+                editWindow.dsbTime.setValue( self.pj['observations'][self.observationId]['events'][row][ 0 ] )
 
 
             sortedSubjects = [''] + sorted( [ self.pj['subjects_conf'][x]['name'] for x in self.pj['subjects_conf'] ])
             
             editWindow.cobSubject.addItems( sortedSubjects )
             
-            if self.twEvents.item(row, tw_obs_fields['subject']).text() in sortedSubjects:
-                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.twEvents.item(row, tw_obs_fields['subject']).text() ) )
+            if self.pj['observations'][self.observationId]['events'][row][ 1 ] in sortedSubjects:
+                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj['observations'][self.observationId]['events'][row][ 1 ] ) )
             else:
-                QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' % self.twEvents.item(row, tw_obs_fields['subject']).text())
+                QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' %   self.pj['observations'][self.observationId]['events'][row][ 1 ]  )
                 editWindow.cobSubject.setCurrentIndex( 0 )
 
 
@@ -3033,63 +3507,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             editWindow.cobCode.addItems( sortedCodes )
 
             ### check if selected code is in code's list (no modification of codes)
-            if self.twEvents.item(row, tw_obs_fields['code']).text() in sortedCodes:
-                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.twEvents.item(row, tw_obs_fields['code']).text() ) )
+            if self.pj['observations'][self.observationId]['events'][row][ 2 ] in sortedCodes:
+                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj['observations'][self.observationId]['events'][row][ 2 ] ) )
             else:
-                QMessageBox.warning(self, programName, 'The code <b>%s</b> do not exists more in the code\'s list' % self.twEvents.item(row, tw_obs_fields['code']).text())
+                QMessageBox.warning(self, programName, 'The code <b>%s</b> do not exists more in the code\'s list' % self.pj['observations'][self.observationId]['events'][row][ 2 ])
                 editWindow.cobCode.setCurrentIndex( 0 )
 
             '''editWindow.leModifier.setText( self.twEvents.item(row, tw_obs_fields['modifier']).text())'''
-            
-            
-            
-            editWindow.leComment.setPlainText( self.twEvents.item(row, tw_obs_fields['comment']).text())
+
+            ### comment
+            editWindow.leComment.setPlainText( self.pj['observations'][self.observationId]['events'][row][ 4 ])
 
             ### load modifiers
             editWindow.codeChanged()
-            
+
             ### extract modifers for current code
-            
-            modif = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] ==  self.twEvents.item(row, tw_obs_fields['code']).text() ]
+
+            modif = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] ==  self.pj['observations'][self.observationId]['events'][row][ 2 ] ]
             if modif:
-                editWindow.cobModifier.setCurrentIndex( ([''] + modif[0].split(',')).index( self.twEvents.item(row, tw_obs_fields['modifier']).text() ) )
+                editWindow.cobModifier.setCurrentIndex( ([''] + modif[0].split(',')).index( self.pj['observations'][self.observationId]['events'][row][ 3 ] ) )
             else:
                 editWindow.cobModifier.setCurrentIndex( 0 )
-
-            '''editWindow.cobModifier.setEditText( self.twEvents.item(row, tw_obs_fields['modifier']).text() )'''
 
             if editWindow.exec_():  #button OK
             
                 self.projectChanged = True
-                
-                if self.timeFormat == 'hh:mm:ss':
-                    t1 = editWindow.teTime.time().toString('hh:mm:ss')
-                    t2 = str(editWindow.sbTimeDecimal.value())
 
-                    self.twEvents.item(row, tw_obs_fields['time']).setText( t1 + '.' + t2 )
+                if self.timeFormat == HHMMSS:
+                    newTime = self.time2seconds(editWindow.teTime.time().toString('hh:mm:ss.zzz'))
 
-                if self.timeFormat == 's':
-                    self.twEvents.item(row, tw_obs_fields['time']).setText( str( editWindow.dsbTime.value() ) )
-                    
+                    #self.twEvents.item(row, tw_obs_fields['time']).setText( t1  )
 
-                self.twEvents.item(row, tw_obs_fields['subject']).setText( editWindow.cobSubject.currentText() )
+                if self.timeFormat == S:
 
-                self.twEvents.item(row, tw_obs_fields['code']).setText( editWindow.cobCode.currentText() )
+                    newTime = editWindow.dsbTime.value()
 
-                self.twEvents.item(row, tw_obs_fields['modifier']).setText( editWindow.cobModifier.currentText() )
-                
-                
-                self.twEvents.item(row, tw_obs_fields['comment']).setText( editWindow.leComment.toPlainText() )
+                self.pj['observations'][self.observationId]['events'][row] = [newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText(), editWindow.cobModifier.currentText() ,editWindow.leComment.toPlainText()]
+                self.pj['observations'][self.observationId]['events'].sort()
+                self.loadEventsInTW( self.observationId )
 
-                self.sort_events()
-                
         else:
             QMessageBox.warning(self, programName, 'Select an event to edit')
 
-
     def no_media(self):
         QMessageBox.warning(self, programName, 'There is no media available')
-
 
     def no_project(self):
         QMessageBox.warning(self, programName, 'There is no project')
@@ -3118,17 +3579,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.writeEvent(  self.pj['behaviors_conf'] [ [ x for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] == code][0] ], self.getLaps())
         else: 
             self.no_observation()
-        
-
 
     def actionAbout_activated(self):
         '''
         about window
         '''
-
-        if self.DEBUG: print 'self.observationId', self.observationId
-
         import platform
+
+        players = []
+        if VLC in self.availablePlayers:
+            players.append( "VLC media player v. %s" % bytes_to_str(vlc.libvlc_get_version()))
+        if OPENCV in self.availablePlayers:
+            players.append('OpenCV 2')
+
 
         QMessageBox.about(self, "About " + programName,
         """<b>%s</b> v. %s
@@ -3137,39 +3600,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         The author would like to acknowledge Sergio Castellano, Marco Gamba and Valentina Matteucci for their precious help.<br>
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
-        <p>Python %s - Qt %s - PySide %s on %s<br>
-        VLC media player v. %s""" % \
-        (programName, __version__, platform.python_version(), PySide.QtCore.__version__, PySide.__version__, platform.system(), bytes_to_str(vlc.libvlc_get_version())))
+        <p>Python %s - Qt %s - PySide %s on %s<br><br>
+        Available player(s):<br>%s""" % \
+        (programName, __version__, platform.python_version(), PySide.QtCore.__version__, PySide.__version__, platform.system(), '<br>'.join(players)))
 
 
 
     def hsVideo_sliderMoved(self):
 
-        ''' media position slider moved
+        '''
+        media position slider moved
         adjust media position
         '''
 
-        if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
-            videoPosition = self.hsVideo.value() / (slider_maximum - 1) * self.mediaplayer.get_length()
+        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
-            if self.DEBUG: print 'video position', videoPosition
+            sliderPos = self.hsVideo.value() / (slider_maximum - 1)
 
-            self.mediaplayer.set_time( int(videoPosition) )
+            if self.playerType == VLC:
+                videoPosition = sliderPos * self.mediaplayer.get_length()
+    
+                if self.DEBUG: print 'video position', videoPosition
+    
+                self.mediaplayer.set_time( int(videoPosition) )
+    
+                if self.media_list2.count():
+                    if videoPosition <= self.mediaplayer2.get_length():
+                        self.mediaplayer2.set_time( int(videoPosition) )
+                    else:
+                        self.mediaplayer2.set_time( self.mediaplayer2.get_length() )
 
-            if self.media_list2.count():
-                if videoPosition <= self.mediaplayer2.get_length():
-                    self.mediaplayer2.set_time( int(videoPosition) )
-                else:
-                    self.mediaplayer2.set_time( self.mediaplayer2.get_length() )
+            if self.playerType == OPENCV:
 
+                self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,  sliderPos * self.mediaTotalLength * self.cap.get(cv2.cv.CV_CAP_PROP_FPS) )
 
 
     def timer_out(self):
         '''
-        indicate the video current position and total length
+        indicate the video current position and total length for VLC player
         '''
 
-        if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
             currentTime = self.mediaplayer.get_time()
 
@@ -3189,10 +3660,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             globalCurrentTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time())
 
             totalGlobalTime = sum(self.duration)
-
-            displayTime = QTime(0, 0, 0, 0)
-
-            displayTime = displayTime.addMSecs( currentTime )
 
             if self.mediaplayer.get_length():
 
@@ -3251,7 +3718,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.mediaListPlayer.get_state() == vlc.State.Paused:
                         msg += ' (paused)'
 
-
                 if msg:
 
                     ### show time on status bar
@@ -3259,9 +3725,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     ### set video scroll bar
                     self.hsVideo.setValue( currentTime / self.mediaplayer.get_length() * (slider_maximum - 1))
-
-                ### set focus on main windows for keyboard events
-                #self.setFocus()
 
             else:
 
@@ -3366,11 +3829,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if event['modifiers']:
             
-            if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+            if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
-                memState = self.mediaListPlayer.get_state()
-                if memState == vlc.State.Playing:
-                    self.pause_video()
+                if self.playerType == VLC:
+                    memState = self.mediaListPlayer.get_state()
+                    if memState == vlc.State.Playing:
+                        self.pause_video()
+
+                if self.playerType == OPENCV:
+                    memState = self.openCVtimerOut.isActive()
+                    if memState:
+                        self.pause_video()
+
 
             response = ''
             items =  [''] + [s.strip() for s in event['modifiers'].split(',')]
@@ -3381,12 +3851,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 modifier_str = item
 
 
-            if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+            if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
                 if self.DEBUG: print 'media state:', memState
 
-                if memState == vlc.State.Playing:
-                    self.play_video()
+                if self.playerType == VLC:
+                    if memState == vlc.State.Playing:
+                        self.play_video()
+
+                if self.playerType == OPENCV:
+                    if memState:
+                        self.play_video()
 
             if self.DEBUG: print 'modifier', modifier_str
 
@@ -3405,6 +3880,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         csj = self.currentStates[idx]
                         break
             else:  ### no focal subject
+                if self.DEBUG: print 'self.currentStates', self.currentStates
                 csj = self.currentStates['']
 
             if self.DEBUG: print 'current states:',csj
@@ -3440,6 +3916,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if cs in event['excluded'].split(','):
 
                         ### add excluded state event to observations (= STOP them)
+                        
+                        self.pj['observations'][self.observationId]['events'].append( [memTime - 0.1, self.currentSubject, cs, '', ''] )
+                        '''
                         column = 0
                         self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
                 
@@ -3450,39 +3929,56 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             item = QTableWidgetItem(field)
                             self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
                             column += 1
+                        '''
 
 
-        ### add event to event table widget
-        self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
+        ### add event to pj
+        self.pj['observations'][self.observationId]['events'].append( [memTime, self.currentSubject, event['code'], modifier_str, ''] )
 
-        new_event = { 'time': self.convertTime( memTime ), 'subject': self.currentSubject, 'code': event['code'], 'type': '' ,'modifier': modifier_str, 'comment':'' }
-        if self.DEBUG: print 'new event', new_event
+        ### sort events in pj
+        self.pj['observations'][self.observationId]['events'].sort()
 
-        for field in tw_events_fields:      #### [  self.convertTime( memTime ) , self.currentSubject, event['code'], modifier_str, '' ]:
+        self.twEvents.setRowCount(0)
+        for o in self.pj['observations'][self.observationId]['events']:
 
-            if self.DEBUG: print self.twEvents.rowCount() - 1, tw_obs_fields[ field ], field, new_event[field]
+            self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
 
-            item = QTableWidgetItem( new_event[field] )
+            ### time
+            item = QTableWidgetItem( self.convertTime(o[ 0] ) )
+            self.twEvents.setItem(self.twEvents.rowCount() - 1, 0, item)
+            ### subject
+            item = QTableWidgetItem( o[ 1]  )
+            self.twEvents.setItem(self.twEvents.rowCount() - 1, 1, item)
+            ### code
+            item = QTableWidgetItem( o[ 2]  )
+            self.twEvents.setItem(self.twEvents.rowCount() - 1, 2, item)
+            
+            ### type
+            item = QTableWidgetItem( ''  )
+            self.twEvents.setItem(self.twEvents.rowCount() - 1, 3, item)
 
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, tw_obs_fields[ field ], item)
+            ### modifier
+            item = QTableWidgetItem( o[ 3]  )
+            self.twEvents.setItem(self.twEvents.rowCount() - 1, 4, item)
 
+            ### modifier
+            item = QTableWidgetItem( o[ 4]  )
+            self.twEvents.setItem(self.twEvents.rowCount() - 1, 5, item)
 
-        self.sort_events()
+        self.update_events_start_stop()
 
         ### get item from twEvents at memTime row position
+        print
+        print 'memtime', memTime
+        print self.pj['observations'][self.observationId]['events'] 
+        print  
+        print [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime]
         item = self.twEvents.item(  [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
 
         self.twEvents.scrollToItem( item )
 
-
-
-        
+       
         self.projectChanged = True
-
-        '''
-        ### sound to confirm key pressed
-        self.confirm_player.play()
-        '''
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
@@ -3519,18 +4015,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def getLaps(self):
         '''
         return cumulative laps time from begining of observation
+
         in seconds (float))
+        
+        
         add time offset for video observation if any
         '''
         ###  if self.DEBUG: print 'self.observationId', self.observationId
         
         
-        if self.pj['observations'][self.observationId]['type'] in ['LIVE']:
+        if self.pj['observations'][self.observationId]['type'] in [LIVE]:
 
             if self.liveObservationStarted:
                 now = QTime()
                 now.start()
                 memLaps = self.liveStartTime.msecsTo(now) / 1000
+                return round(memLaps, 1)
 
             else:
 
@@ -3539,183 +4039,216 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-
-        if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
-            
+        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
             ### remove for global time: memLaps = self.mediaplayer.get_time() / 1000 + self.timeOffset
             
-            memLaps = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) / 1000 + self.timeOffset
-            
+            if self.playerType == VLC:
+                memLaps = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) / 1000 + self.timeOffset
+                return round(memLaps, 3)
 
+            if self.playerType == OPENCV:
+                if self.cap.isOpened():
+                    return round(self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS) ,3)
 
-        if self.DEBUG: print 'mem laps', round(memLaps, 1), memLaps
-
-        return round(memLaps, 1)
+    '''
+    def eventFilter(self, widget, event):
+        
+        if (event.type() == QEvent.KeyPress):
+            print 'keypressed' , widget, event.key()
+    '''
 
 
     def keyPressEvent(self, event):
+        
+        if self.DEBUG: print 'keyPressEvent function'
         '''
         if (event.modifiers() & Qt.ShiftModifier):
-
             print 'Shift!'
 
         print QApplication.keyboardModifiers()
+        
+        http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
         '''
 
+        if not self.observationId:
+            return
+        
         ### beep
         if self.confirmSound:
             print '\a'
 
         ### check if media ever played
-        if self.mediaListPlayer.get_state() == vlc.State.NothingSpecial:
-            return
+        if self.playerType == VLC:
+            if self.mediaListPlayer.get_state() == vlc.State.NothingSpecial:
+                return
 
-        if self.DEBUG: print 'keyPressEvent'
-        if self.DEBUG: print 'player state', self.mediaListPlayer.get_state()
+            if self.DEBUG:
+                print 'player state', self.mediaListPlayer.get_state()
 
         ek = event.key()
 
-        if self.DEBUG: print 'key event:', ek
+        if self.DEBUG:
+            print 'key event:', ek
+            if ek in function_keys:
+                print 'F key', function_keys[ek]
+
+            
 
         if ek in [16777248,  16777249, 16777217, 16781571]: ### shift tab ctrl
             return
 
-
-        if self.observationId:
+        ### play / pause with space bar
+        if ek == Qt.Key_Space and self.pj['observations'][self.observationId]['type'] in [MEDIA]:   
 
             if self.DEBUG:
-                if ek in function_keys:
-                    print 'F key', function_keys[ek]
+                if self.playerType == VLC:
+                    print 'space player #1 state', self.mediaListPlayer.get_state()
 
-            ### play / pause with space bar
-            if ek == Qt.Key_Space and self.pj['observations'][self.observationId]['type'] in ['MEDIA']:   
+            self.pause_video()
+            return
 
-                if self.DEBUG: print 'space player #1 state', self.mediaListPlayer.get_state()
-                self.pause_video()
-                return
+        ### jump with arrow keys
+        '''
+        FIXME
+        if ek in [Qt.Key_Left, Qt.Key_Right, Qt.Key_Down, Qt.Key_Up, Qt.Key_PageUp, Qt.Key_PageDown]:
 
+            if ek == Qt.Key_Up or ek == Qt.Key_PageUp :
+                self.jumpForward_activated()
 
-            if not self.pj['behaviors_conf']:
-                QMessageBox.about(self, programName, 'Behaviours are not configured')
-                return
-
-            obs_key = None
+            if ek == Qt.Key_Down or ek == Qt.Key_PageDown:
+                self.jumpBackward_activated()
             
-            ### check if key is function key
+            if ek == Qt.Key_Left:
+                pass
+            
+            if ek == Qt.Key_Right:
+                if self.playerType == OPENCV:
+                    self.openCVtimerOut()
+
+            return
+        '''
+        
+        
+        if  self.playerType == OPENCV:
+            if ek == 47:  ### /   one frame back
+                print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
+                newFrame = self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) - 2
+
+                newTime = 1000.0 * newFrame / self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+
+                print 'newFrame', newFrame
+                
+                self.cap.set(cv2.cv.CV_CAP_PROP_POS_MSEC, newTime);
+                
+                #self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, newFrame )
+
+                #self.openCVtimerOut()
+
+                print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)                
+
+                return
+                
+            if ek == 42:  ### *  read next frame
+                print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
+                self.openCVtimerOut()
+                return
+            
+
+        if not self.pj['behaviors_conf']:
+            QMessageBox.about(self, programName, 'Behaviours are not configured')
+            return
+
+        obs_key = None
+        
+        ### check if key is function key
+        if (ek in function_keys):
+            flag_function = True
+            if function_keys[ ek ] in [self.pj['behaviors_conf'][x]['key'] for x in self.pj['behaviors_conf']]:
+                obs_key = function_keys[ek]
+        else:
+            flag_function = False
+
+
+        if (ek in function_keys) or ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])):
+
+            memLaps = self.getLaps()
+            if memLaps == None:
+                return
+
+            obs_idx = -1
+            count = 0
+
             if (ek in function_keys):
-                flag_function = True
-                if function_keys[ ek ] in [self.pj['behaviors_conf'][x]['key'] for x in self.pj['behaviors_conf']]:
-                    obs_key = function_keys[ek]
+                ek_unichr = function_keys[ek]
             else:
-                flag_function = False
+                ek_unichr = unichr(ek)
 
+            if self.DEBUG: print 'ek_unichr'  ,ek_unichr
 
-            if (ek in function_keys) or ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])):
+            for o in self.pj['behaviors_conf']:
 
-                memLaps = self.getLaps()
-                if memLaps == None:
-                    return
+                if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
+                    if self.DEBUG: print 'OK', ek_unichr
 
-                obs_idx = -1
-                count = 0
+                    obs_idx = o
+                    count += 1
 
-                if (ek in function_keys):
-                    #ek_chr = function_keys[ek]
-                    ek_unichr = function_keys[ek]
-                else:
-                    #ek_chr = chr(ek)
-                    ek_unichr = unichr(ek)
+            ### check if key codes more events
+            if count > 1:
+                if self.DEBUG: print 'multi code key'
 
-                #if self.DEBUG: print 'ek_chr ', ek_chr
-                if self.DEBUG: print 'ek_unichr'  ,ek_unichr
-
-                for o in self.pj['behaviors_conf']:
-
-
-                    if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
-                        if self.DEBUG: print 'OK', ek_unichr
-
-                        obs_idx = o
-                        count += 1
-                        #obs_key = ek_chr
-                        
-
-                    '''
-                    if type( self.pj['behaviors_conf'][o]['key'] ) == type(u''):
-
-                        if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
-
-                            if self.DEBUG: print 'Unicode key', self.pj['behaviors_conf'][o]['key']
-
-                            obs_idx = o
-                            count += 1
-                            obs_key = ek_chr
-
-                    if type( self.pj['behaviors_conf'][o]['key'] ) == type(''):
-
-                        if self.pj['behaviors_conf'][o]['key'] == ek_chr:
-
-                            if self.DEBUG: print 'str key', self.pj['behaviors_conf'][o]['key']
-
-                            obs_idx = o
-                            count += 1
-                            obs_key = ek_chr
-                    '''
-
-                ### check if key codes more events
-                if count > 1:
-                    if self.DEBUG: print 'multi code key'
-
-                    flagPlayerPlaying = False
-                    if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+                flagPlayerPlaying = False
+                if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+                    
+                    if self.playerType == VLC:
                         if self.mediaListPlayer.get_state() != vlc.State.Paused:
                             flagPlayerPlaying = True
                             self.pause_video()
 
-                    ### let user choose event
-                    self.fill_lwDetailed( ek_unichr, memLaps)
+                    if self.playerType == OPENCV:
+                        self.pause_video()
 
-                    if self.pj['observations'][self.observationId]['type'] in ['MEDIA'] and flagPlayerPlaying:
-                        self.play_video()
+                ### let user choose event
+                self.fill_lwDetailed( ek_unichr, memLaps)
 
+                if self.pj['observations'][self.observationId]['type'] in [MEDIA] and flagPlayerPlaying:
+                    self.play_video()
 
+            elif count == 1:
 
-                elif count == 1:
+                self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
 
-                    self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
+            else:
 
-                else:
-
-                    ### check if key defines a suject
-                    flag_subject = False
-                    for idx in self.pj['subjects_conf']:
-                    
-                        if ek_unichr == self.pj['subjects_conf'][idx]['key']:
-                            flag_subject = True
-                            if self.DEBUG: print 'subject', ek_unichr , self.pj['subjects_conf'][idx]['name']
-                            
-                            ### select or deselect current subject
-                            if self.currentSubject == self.pj['subjects_conf'][idx]['name']:
-                                self.currentSubject = ''
-
-                                self.lbSubject.clear()
-                                
-                                self.lbFocalSubject.setText( 'No focal subject' )
-                            else:
-                                self.currentSubject = self.pj['subjects_conf'][idx]['name']
-                                self.lbSubject.setText( 'Focal subject: <b>%s</b>' % (self.currentSubject))
-                                
-                                self.lbFocalSubject.setText( ' Focal subject: <b>%s</b>' % (self.currentSubject) )
-
-                    if not flag_subject:
-
-                        if self.DEBUG: print '%s key not assigned' % ek_chr
+                ### check if key defines a suject
+                flag_subject = False
+                for idx in self.pj['subjects_conf']:
+                
+                    if ek_unichr == self.pj['subjects_conf'][idx]['key']:
+                        flag_subject = True
+                        if self.DEBUG: print 'subject', ek_unichr , self.pj['subjects_conf'][idx]['name']
                         
-                        self.statusbar.showMessage( 'Key not assigned (%s)' % ek_chr , 5000)
+                        ### select or deselect current subject
+                        if self.currentSubject == self.pj['subjects_conf'][idx]['name']:
+                            self.currentSubject = ''
 
-        else:
-            self.no_observation()
+                            self.lbSubject.clear()
+                            
+                            self.lbFocalSubject.setText( 'No focal subject' )
+                        else:
+                            self.currentSubject = self.pj['subjects_conf'][idx]['name']
+                            self.lbSubject.setText( 'Focal subject: <b>%s</b>' % (self.currentSubject))
+                            
+                            self.lbFocalSubject.setText( ' Focal subject: <b>%s</b>' % (self.currentSubject) )
+
+                if not flag_subject:
+
+                    if self.DEBUG: print '%s key not assigned' % ek_unichr
+                    
+                    self.statusbar.showMessage( 'Key not assigned (%s)' % ek_unichr , 5000)
+
+
 
 
 
@@ -3724,7 +4257,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         seek video to double clicked position ( add self.repositioningTimeOffset value)
         substract time offset if any
         '''
-
         if self.DEBUG: print 'twEvents_doubleClicked'
 
         if self.twEvents.selectedIndexes():
@@ -3745,7 +4277,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newtime = 0
 
 
-            
+            ### FIXME
             if self.DEBUG: print 'self.mediaListPlayer.get_state()', self.mediaListPlayer.get_state()
 
             ### remember if player paused (go previous will start playing)
@@ -3867,12 +4399,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'There are no observations to select!')
         '''
 
+    '''
     def sort_events(self):
-        '''
+        
         sort events chronologically
         and
         update self.pj
-        '''
+        
 
         if self.DEBUG: print 'sort events'
 
@@ -3905,7 +4438,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             observ_list.sort()
 
-
             if self.DEBUG: print observ_list
 
             self.twEvents.setRowCount(0)
@@ -3927,6 +4459,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### update pj
         self.update_observations()
         self.update_events_start_stop()
+    '''
 
 
     def delete_all_events(self):
@@ -3941,9 +4474,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         response = dialog.MessageDialog(programName, 'Do you really want to delete all events from the current observation?', ['Yes', 'No'])
 
         if response == 'Yes':
+            self.pj['observations'][self.observationId]['events'] = []
+            self.projectChanged = True
+            self.loadEventsInTW(self.observationId)
+            
+            '''
             self.twEvents.setRowCount(0)
             self.projectChanged = True
             self.update_observations()
+            '''
 
 
 
@@ -3960,21 +4499,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'No event selected!')
         else:
             
-            ### list of rows to delete 
-            rows = []
-            for idx in self.twEvents.selectedIndexes():
-                if idx.row() not in rows:
-                    rows.append(idx.row())
-
-            rows.sort(reverse = True)
+            ### list of rows to delete (set for unique)
+            rows = set( [ item.row() for item in self.twEvents.selectedIndexes() ])
             
-            for r in rows:
-                self.twEvents.removeRow(r)
+            if self.DEBUG: print [ event for idx,event in enumerate(self.pj['observations'][self.observationId]['events']) if not idx in rows]
+            
+            self.pj['observations'][self.observationId]['events'] = [ event for idx,event in enumerate(self.pj['observations'][self.observationId]['events']) if not idx in rows]
 
             self.projectChanged = True
 
-            self.update_observations()
-            self.update_events_start_stop()
+            self.loadEventsInTW( self.observationId )
+
+
 
 
     def export_tabular_events(self):
@@ -3992,10 +4528,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 f = open(fileName, 'w')
 
                 ### media file name
-                if self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+                f.write('#Media file(s):\n')
+                if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
-                    f.write('# Media file name: %s\n\n' % (', '.join(   [ os.path.basename(x) for x in self.pj['observations'][self.observationId]['file']['1']  ]  )  ) )
+                    for idx in self.pj['observations'][self.observationId]['file']:
+                        for media in self.pj['observations'][self.observationId]['file'][idx]:
+                            f.write('#Player #%s\t%s\n' % (idx, media) )
 
+                f.write('#\n#\n')
 
                 ### write video length
                 '''  TO DO: replace with total length if any
@@ -4003,19 +4543,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     f.write('#media total length\t%f\n' % ( self.mediaplayer.get_length() / 1000.0 ))
                 '''
 
-
                 ### write header
                 f.write('#%s\n' % ( '\t'.join(  tw_events_fields ) ))
 
-                
                 for r in range(0, self.twEvents.rowCount()):
 
                     row = []
-                    #obs_fields = {'time': 0, 'code': 1, 'modifier': 2, 'comment': 3}
                     
                     for c in tw_events_fields:
                         if self.twEvents.item(r, tw_obs_fields[c]):
-                            if c == 'time' and self.timeFormat == 'hh:mm:ss':
+                            if c == 'time' and self.timeFormat == HHMMSS:
                                 s = str(self.time2seconds( self.twEvents.item(r, tw_obs_fields[c]).text() ))
                             else:
                                 s = self.twEvents.item(r, tw_obs_fields[c]).text()
@@ -4023,7 +4560,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             row.append( s )
                         else:
                             row.append('')
-                    #print 'row to save', row
 
                     s = '\t'.join(row) + '\n'
                     s2 = s.encode('UTF-8')
@@ -4043,8 +4579,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         behaviors are separated by pipe character (|) for use with BSA
         '''
 
-        ### ask user for observations to analyze
-        selected_observations = self.observations_list( 'select')
+        ### ask user to select observations
+        selected_observations = self.selectObservations( SELECT )
         
         if not selected_observations:
             return
@@ -4069,18 +4605,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                 ### media file name
-                if self.pj['observations'][obs]['type'] in ['MEDIA']:
+                if self.pj['observations'][obs]['type'] in [MEDIA]:
 
                     f.write('# Media file name: %s\n\n' % (', '.join(   [ os.path.basename(x) for x in self.pj['observations'][obs]['file']['1']  ]  )  ) )
 
-                if self.pj['observations'][obs]['type'] in ['LIVE']:
+                if self.pj['observations'][obs]['type'] in [LIVE]:
                     f.write('# Live observation')
 
-                ### write video length
-                '''
-                if self.pj['observations'][self.observationId]['type'] == 'MEDIA':
-                    f.write('#media total length\t%f\n' % ( self.mediaplayer.get_length() / 1000.0 ))
-                '''
 
             sortedSubjects = [''] + sorted( [ self.pj['subjects_conf'][x]['name'] for x in self.pj['subjects_conf'] ])
 
@@ -4109,9 +4640,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                     ### remove last separator (if separator not empty)
                     if self.behaviouralStringsSeparator:
-                        s = s[0:-len(self.behaviouralStringsSeparator)]
+                        s = s[0 : -len(self.behaviouralStringsSeparator)]
     
-                    if s :
+                    if s:
 
                         f.write( s.encode('UTF-8') + '\n')
 
@@ -4144,11 +4675,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.close()
 
 
-
+    '''
     def update_observations(self):
-        '''
-        update events in pj
-        '''
+        
+        ### update events in pj
+        
         if self.DEBUG: print 'update_observations (events)'
 
         events = []
@@ -4171,10 +4702,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     row.append('')
 
-            #if self.DEBUG: print 'event:', row
+            if self.DEBUG: print 'event:', row
             events.append(row)
 
         self.pj['observations'][self.observationId]['events'] = events
+        '''
 
 
 
@@ -4184,6 +4716,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         import events from file
         '''
 
+        self.statusbar.showMessage('Function not yet implemented for OpenCV player', 5000)        
+
+        '''
+        FIXME import observations
+        
         if not self.observationId:
             self.no_observation()
             return ''
@@ -4214,7 +4751,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if row and '#media total length' in row:
                     self.mediaTotalLength = float(row.split('\t')[1].strip())
-                    self.statusbar.showMessage(str(self.mediaTotalLength), 0)
+                    #self.statusbar.showMessage(str(self.mediaTotalLength), 0)
 
                 if row and row[0] == '#':
                     continue
@@ -4231,8 +4768,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
                     column += 1
 
-            self.sort_events()
+            
+            self.pj['observations'][self.observationId]['events'].sort()
             self.projectChanged = True
+        '''
             
 
 
@@ -4242,18 +4781,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         play video
         '''
 
-        if self.DEBUG: print 'self.media_list.count()', self.media_list.count()
+        if self.playerType == VLC:
+            if self.DEBUG: print 'self.media_list.count()', self.media_list.count()
+            if self.media_list.count():
+                self.mediaListPlayer.play()
+                if self.DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
+                
+                if self.media_list2.count():   ### second video together
+                    self.mediaListPlayer2.play()
+    
+                    if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
+            else:
+                self.no_media()
 
-        if self.media_list.count():
-            self.mediaListPlayer.play()
-            if self.DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
-            
-            if self.media_list2.count():   ### second video together
-                self.mediaListPlayer2.play()
+        if self.playerType == OPENCV:
+            self.openCVtimer.start() 
 
-                if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
-        else:
-            self.no_media()
 
 
     def pause_video(self):
@@ -4261,23 +4804,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pause media
         '''
 
-        if self.media_list.count():
-            self.mediaListPlayer.pause()  ### play if paused
-            
-            if self.DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
-            
-            if self.media_list2.count():
-                self.mediaListPlayer2.pause() 
-    
-                if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
-        else:
-            self.no_media()
+        if self.playerType == VLC:
+            if self.media_list.count():
+                self.mediaListPlayer.pause()  ### play if paused
+                
+                if self.DEBUG: print 'player #1 state', self.mediaListPlayer.get_state()
+                
+                if self.media_list2.count():
+                    self.mediaListPlayer2.pause() 
+        
+                    if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
+            else:
+                self.no_media()
+
+        if self.playerType == OPENCV:
+            if self.openCVtimer.isActive():
+                self.openCVtimer.stop()   ### stop
+            else:
+                self.openCVtimer.start()   ### start
 
 
 
     def play_activated(self):
 
-        if self.observationId and self.pj['observations'][self.observationId]['type'] in ['MEDIA']:
+        if self.observationId and self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
             self.play_video()
             
@@ -4287,53 +4837,81 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         rewind from current position 
         '''
-        if self.media_list.count():
-            if self.mediaplayer.get_time() >= self.fast * 1000:
-
-                self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000 )
-                
-            else:
-                self.mediaplayer.set_time(0)
-
-
-            if self.media_list2.count():
-                if self.mediaplayer2.get_time() >= self.fast * 1000:
-    
-                    self.mediaplayer2.set_time( self.mediaplayer2.get_time() - self.fast * 1000 )
-    
+        if self.playerType == VLC:
+            if self.media_list.count():
+                if self.mediaplayer.get_time() >= self.fast * 1000:
+                    self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000 )
                 else:
-                    self.mediaplayer2.set_time(0)
+                    self.mediaplayer.set_time(0)
+                if self.media_list2.count():
+                    if self.mediaplayer2.get_time() >= self.fast * 1000:
+        
+                        self.mediaplayer2.set_time( self.mediaplayer2.get_time() - self.fast * 1000 )
+       
+                    else:
+                        self.mediaplayer2.set_time(0)
+            else:
+                self.no_media()
 
+        if self.playerType == OPENCV:
+            currentTime = self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS) 
 
-        else:
+            if self.DEBUG:
+                print 'currentTime', currentTime
+                print 'new time', currentTime - self.fast 
+                print 'new frame', (currentTime - self.fast )  *self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+                print 'total', self.cap.get(7)
 
-            self.no_media()
+            if (currentTime - self.fast )  *self.cap.get(cv2.cv.CV_CAP_PROP_FPS) > 0:
+                self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, (currentTime - self.fast )  *self.cap.get(cv2.cv.CV_CAP_PROP_FPS) )
+            else:
+                self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, 0)   #### position to init
+            self.openCVtimerOut()
 
 
     def jumpForward_activated(self):
         '''
         forward from current position 
         '''
-        if self.media_list.count():
-            if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
 
-                self.mediaplayer.set_time(self.mediaplayer.get_length())
+        if self.playerType == VLC:
 
-            else:
-                self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000 )
-
-
-            if self.media_list2.count():
-                if self.mediaplayer2.get_time() >= self.mediaplayer2.get_length() - self.fast * 1000:
+            if self.media_list.count():
+                if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
     
-                    self.mediaplayer2.set_time(self.mediaplayer2.get_length())
+                    self.mediaplayer.set_time(self.mediaplayer.get_length())
     
                 else:
-                    self.mediaplayer2.set_time( self.mediaplayer2.get_time() + self.fast * 1000 )
-            
+                    self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000 )
+    
+    
+                if self.media_list2.count():
+                    if self.mediaplayer2.get_time() >= self.mediaplayer2.get_length() - self.fast * 1000:
+        
+                        self.mediaplayer2.set_time(self.mediaplayer2.get_length())
+        
+                    else:
+                        self.mediaplayer2.set_time( self.mediaplayer2.get_time() + self.fast * 1000 )
+    
+            else:
+                self.no_media()
+        
+        if self.playerType == OPENCV:
+            currentTime = self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS) 
 
-        else:
-            self.no_media()
+            print 'currentTime', currentTime
+            print 'new time', currentTime + self.fast 
+            print 'new frame', (currentTime + self.fast )  *self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
+            print 'total', self.cap.get(7)
+            
+                        
+            if (currentTime + self.fast )  *self.cap.get(cv2.cv.CV_CAP_PROP_FPS) < self.cap.get(7):
+                self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,  (currentTime + self.fast )  *self.cap.get(cv2.cv.CV_CAP_PROP_FPS) )
+            else:
+                self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES, self.cap.get(7))   #### position to end
+            self.openCVtimerOut()
+
+
 
 
     def reset_activated(self):
@@ -4373,8 +4951,6 @@ if __name__=="__main__":
         time.sleep(0.001)
         app.processEvents()
 
-    app.setApplicationName(programName)
-    window = MainWindow()
 
     ### check if argument
     from optparse import OptionParser
@@ -4382,14 +4958,45 @@ if __name__=="__main__":
     parser = OptionParser(usage=usage)
     
     parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
+    #parser.add_option("-o", "--opencv", action = "store_true", default = False, dest = "opencv", help = "Use OpenCV (useful for frame access)")
     
     (options, args) = parser.parse_args()
+
+    availablePlayers = []
+
+    ### load VLC
+    try:
+        import vlc
+        availablePlayers.append(VLC)
+    except:
+        print 'The VLC media player can not be loaded.'
+
+
+    ### load OpenCV
+    ''' DISABLED FOR NOW
+    try:
+        import numpy
+        import cv2
+        from cv2 import cv
+        availablePlayers.append(OPENCV)
+
+    except:
+        print 'OpenCV can not be loaded.'
+    '''
+
+    if not availablePlayers:
+        QMessageBox.critical(None, programName, 'This program requires the VLC media player library or the OpenCV Python module and it seems that they are not installed on your system.<br>Go to http://www.videolan.org/vlc to install it', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        sys.exit(1)
+
+    app.setApplicationName(programName)
+    window = MainWindow(availablePlayers)
 
     window.DEBUG = options.debug
 
     if args:
-        window.open_project_json( args[0] )
 
+        print os.path.abspath(args[0])
+        window.open_project_json( os.path.abspath(args[0]) )
 
     window.show()
     window.raise_()

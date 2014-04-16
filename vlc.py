@@ -86,10 +86,8 @@ else:
         """Translate string or bytes to bytes.
         """
 
-        if DEBUG: print 's',s,type(s)
-        
         if isinstance(s, unicode):
-            
+
             fileSystemEncoding = sys.getfilesystemencoding()
             ### hack for PyInstaller
             if fileSystemEncoding == None:
@@ -101,7 +99,7 @@ else:
     def bytes_to_str(b):
         """Translate bytes to unicode string.
         """
-        
+
         if isinstance(b, bytes):
             
             fileSystemEncoding = sys.getfilesystemencoding()
@@ -1311,22 +1309,16 @@ class EventManager(_Ctype):
             libvlc_event_detach(self, k, self._callback_handler, k)
 
 class Instance(_Ctype):
-    '''Create a new Instance instance.
+    '''
+    Create a new Instance instance.
 
     It may take as parameter either:
       - a string
       - a list of strings as first parameters
       - the parameters given as the constructor parameters (must be strings)
-    
     '''
 
     def __new__(cls, *args):
-    
-        if DEBUG:
-            print 'Instance'
-            print cls
-            print 'args', args
-            print 'plugin path (instance)', plugin_path
 
         if len(args) == 1:
             # Only 1 arg. It is either a C pointer, or an arg string,
@@ -1355,9 +1347,6 @@ class Instance(_Ctype):
 
         ### print 'vlc.py instance',libvlc_new(len(args), args)
 
-        if DEBUG:
-            print 'return'
-            print args
         return libvlc_new(len(args), args)
 
     def media_player_new(self, uri=None):
@@ -1401,11 +1390,6 @@ class Instance(_Ctype):
             m = libvlc_media_new_location(self, str_to_bytes(mrl))
         else:
             # Else it should be a local path.
-            
-            if DEBUG:
-                print 'mrl',mrl,type(mrl)
-                print os.path.normpath(mrl), type( os.path.normpath(mrl) )
-            
             m = libvlc_media_new_path(self, str_to_bytes(os.path.normpath(mrl)))
         for o in options:
             libvlc_media_add_option(m, str_to_bytes(o))

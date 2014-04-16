@@ -51,7 +51,7 @@ class Observation(QDialog, Ui_Form):
 
 
     def pbOK_clicked(self):
-        
+
         def is_numeric(s):
             try:
                 float(s)
@@ -59,11 +59,16 @@ class Observation(QDialog, Ui_Form):
             except ValueError:
                 return False
 
+        ### check time offset
+        if not is_numeric(self.leTimeOffset.text()):
+            QMessageBox.warning(self, programName , '<b>%s</b> is not recognized as a valid time offset format' % self.leTimeOffset.text())
+            return
+
         ### check if indep variables are correct type
         for row in range(0, self.twIndepVariables.rowCount()):
 
-            if self.twIndepVariables.item(row, 1).text() == 'numeric':
-                if not is_numeric( self.twIndepVariables.item(row, 2).text() ):
+            if self.twIndepVariables.item(row, 1).text() == NUMERIC:
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
                     QMessageBox.critical(self, programName , 'The <b>%s</b> variable must be numeric!' %  self.twIndepVariables.item(row, 0).text())
                     return
 
@@ -86,7 +91,7 @@ class Observation(QDialog, Ui_Form):
                 return
 
         ### check if media list #2 popolated and media list #1 empty
-        if not self.lwVideo.count():
+        if self.tabProjectType.currentIndex() == 0 and not self.lwVideo.count():
             QMessageBox.critical(self, programName , 'Add a media file in the first list!' )
             return
 
@@ -123,4 +128,3 @@ class Observation(QDialog, Ui_Form):
 
         for SelectedItem in self.lwVideo_2.selectedItems():
             self.lwVideo_2.takeItem(self.lwVideo_2.row(SelectedItem))
-

@@ -35,10 +35,12 @@ import re
 
 class DlgEditEvent(QDialog, Ui_Form):
 
-    def __init__(self, parent=None):
+    def __init__(self, debug, parent=None):
 
         super(DlgEditEvent, self).__init__(parent)
         self.setupUi(self)
+
+        self.DEBUG = debug
 
         self.cobCode.currentIndexChanged.connect(self.codeChanged)
         self.pbOK.clicked.connect(self.pbOK_clicked)
@@ -46,22 +48,20 @@ class DlgEditEvent(QDialog, Ui_Form):
 
 
     def codeChanged(self):
-        
-        
-        if DEBUG: print 'cobCode current index', self.cobCode.currentText()
-        
+
+        if self.DEBUG: print 'cobCode current index', self.cobCode.currentText()
+
         ### selected code
         ### selectedCode = sorted( [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf']   ])[ self.cobCode.currentIndex() ]
         
         # selectedCode = self.cobCode.currentText()
-        
-        
+
         modif = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText()]
-        
-        if DEBUG: print 'modif', modif
-        
+
+        if self.DEBUG: print 'modif', modif
+
         self.cobModifier.clear()
-        
+
         self.cobModifier.addItems( [''] + modif[0].split(',') )
 
 
@@ -110,7 +110,6 @@ class DlgEditEvent(QDialog, Ui_Form):
             QMessageBox.warning(self, programName, 'The <b>%s</b> code is not in the list of codes:<br>' % (self.leCode.text()) + ', '.join([ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] ]))
             return
         '''
-
 
         self.accept()
 

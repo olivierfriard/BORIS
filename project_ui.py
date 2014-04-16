@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Fri Mar 21 23:04:10 2014
+# Created: Sun Apr 13 10:59:46 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,10 +21,7 @@ class Ui_dlgProject(object):
         self.tabProject.setObjectName("tabProject")
         self.tabInformation = QtGui.QWidget()
         self.tabInformation.setObjectName("tabInformation")
-        self.verticalLayout_2 = QtGui.QVBoxLayout(self.tabInformation)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.formLayout = QtGui.QFormLayout()
-        self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout = QtGui.QFormLayout(self.tabInformation)
         self.formLayout.setObjectName("formLayout")
         self.label = QtGui.QLabel(self.tabInformation)
         self.label.setObjectName("label")
@@ -32,12 +29,16 @@ class Ui_dlgProject(object):
         self.leProjectName = QtGui.QLineEdit(self.tabInformation)
         self.leProjectName.setObjectName("leProjectName")
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.leProjectName)
+        self.lbProjectFilePath = QtGui.QLabel(self.tabInformation)
+        self.lbProjectFilePath.setObjectName("lbProjectFilePath")
+        self.formLayout.setWidget(2, QtGui.QFormLayout.SpanningRole, self.lbProjectFilePath)
         self.label_7 = QtGui.QLabel(self.tabInformation)
         self.label_7.setObjectName("label_7")
         self.formLayout.setWidget(3, QtGui.QFormLayout.LabelRole, self.label_7)
         self.dteDate = QtGui.QDateTimeEdit(self.tabInformation)
+        self.dteDate.setCalendarPopup(True)
         self.dteDate.setObjectName("dteDate")
-        self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.dteDate)
+        self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.dteDate)
         self.label_6 = QtGui.QLabel(self.tabInformation)
         self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.label_6.setObjectName("label_6")
@@ -47,15 +48,14 @@ class Ui_dlgProject(object):
         self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.teDescription)
         self.lbTimeFormat = QtGui.QLabel(self.tabInformation)
         self.lbTimeFormat.setObjectName("lbTimeFormat")
-        self.formLayout.setWidget(8, QtGui.QFormLayout.SpanningRole, self.lbTimeFormat)
+        self.formLayout.setWidget(7, QtGui.QFormLayout.SpanningRole, self.lbTimeFormat)
         self.rbSeconds = QtGui.QRadioButton(self.tabInformation)
         self.rbSeconds.setChecked(True)
         self.rbSeconds.setObjectName("rbSeconds")
-        self.formLayout.setWidget(10, QtGui.QFormLayout.FieldRole, self.rbSeconds)
+        self.formLayout.setWidget(8, QtGui.QFormLayout.FieldRole, self.rbSeconds)
         self.rbHMS = QtGui.QRadioButton(self.tabInformation)
         self.rbHMS.setObjectName("rbHMS")
-        self.formLayout.setWidget(11, QtGui.QFormLayout.FieldRole, self.rbHMS)
-        self.verticalLayout_2.addLayout(self.formLayout)
+        self.formLayout.setWidget(9, QtGui.QFormLayout.FieldRole, self.rbHMS)
         self.tabProject.addTab(self.tabInformation, "")
         self.tabSubjects = QtGui.QWidget()
         self.tabSubjects.setObjectName("tabSubjects")
@@ -317,13 +317,15 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(3)
+        self.tabProject.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
         dlgProject.setWindowTitle(QtGui.QApplication.translate("dlgProject", "Project", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("dlgProject", "Project name", None, QtGui.QApplication.UnicodeUTF8))
+        self.lbProjectFilePath.setText(QtGui.QApplication.translate("dlgProject", "Project file path:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_7.setText(QtGui.QApplication.translate("dlgProject", "Date", None, QtGui.QApplication.UnicodeUTF8))
+        self.dteDate.setDisplayFormat(QtGui.QApplication.translate("dlgProject", "yyyy-MM-dd hh:mm", None, QtGui.QApplication.UnicodeUTF8))
         self.label_6.setText(QtGui.QApplication.translate("dlgProject", "Description", None, QtGui.QApplication.UnicodeUTF8))
         self.lbTimeFormat.setText(QtGui.QApplication.translate("dlgProject", "Time format", None, QtGui.QApplication.UnicodeUTF8))
         self.rbSeconds.setText(QtGui.QApplication.translate("dlgProject", "seconds", None, QtGui.QApplication.UnicodeUTF8))

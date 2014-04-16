@@ -23,6 +23,8 @@ Copyright 2012-2014 Olivier Friard
 
 """
 
+#DEBUG = True
+
 programName = 'BORIS'
 
 project_format_version = '1'
@@ -49,8 +51,20 @@ for idx, field in enumerate(tw_events_fields):
 for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[ field ] = idx
 
+LIVE = 'LIVE'
+MEDIA = 'MEDIA'
+
+HHMMSS = 'hh:mm:ss'
+S = 's'
+
+EDIT = 'edit'
+OPEN = 'open'
+SELECT = 'select'
 
 NUMERIC = 'numeric'
 TEXT = 'text'
 INDEPENDENT_VARIABLES = 'independent_variables'
 OBSERVATIONS = 'observations'
+
+OPENCV = 'opencv'
+VLC = 'vlc'

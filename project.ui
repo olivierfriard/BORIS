@@ -19,76 +19,83 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
          <string>Information</string>
         </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <layout class="QFormLayout" name="formLayout">
-           <property name="fieldGrowthPolicy">
-            <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        <layout class="QFormLayout" name="formLayout">
+         <item row="0" column="0" colspan="2">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Project name</string>
            </property>
-           <item row="0" column="0" colspan="2">
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Project name</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLineEdit" name="leProjectName"/>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>Date</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QDateTimeEdit" name="dteDate"/>
-           </item>
-           <item row="5" column="0" colspan="2">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Description</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="1">
-            <widget class="QPlainTextEdit" name="teDescription"/>
-           </item>
-           <item row="8" column="0" colspan="2">
-            <widget class="QLabel" name="lbTimeFormat">
-             <property name="text">
-              <string>Time format</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="1">
-            <widget class="QRadioButton" name="rbSeconds">
-             <property name="text">
-              <string>seconds</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="1">
-            <widget class="QRadioButton" name="rbHMS">
-             <property name="text">
-              <string>hh:mm:ss</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="leProjectName"/>
+         </item>
+         <item row="2" column="0" colspan="2">
+          <widget class="QLabel" name="lbProjectFilePath">
+           <property name="text">
+            <string>Project file path:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Date</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QDateTimeEdit" name="dteDate">
+           <property name="displayFormat">
+            <string>yyyy-MM-dd hh:mm</string>
+           </property>
+           <property name="calendarPopup">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="2">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Description</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QPlainTextEdit" name="teDescription"/>
+         </item>
+         <item row="7" column="0" colspan="2">
+          <widget class="QLabel" name="lbTimeFormat">
+           <property name="text">
+            <string>Time format</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QRadioButton" name="rbSeconds">
+           <property name="text">
+            <string>seconds</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QRadioButton" name="rbHMS">
+           <property name="text">
+            <string>hh:mm:ss</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>

@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'edit_event.ui'
 #
-# Created: Thu Oct  3 10:44:47 2013
-#      by: pyside-uic 0.2.14 running on PySide 1.1.2
+# Created: Tue Apr  1 13:11:18 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -25,12 +25,8 @@ class Ui_Form(object):
         self.teTime = QtGui.QTimeEdit(Form)
         self.teTime.setObjectName("teTime")
         self.horizontalLayout_2.addWidget(self.teTime)
-        self.sbTimeDecimal = QtGui.QSpinBox(Form)
-        self.sbTimeDecimal.setMaximum(9)
-        self.sbTimeDecimal.setObjectName("sbTimeDecimal")
-        self.horizontalLayout_2.addWidget(self.sbTimeDecimal)
         self.dsbTime = QtGui.QDoubleSpinBox(Form)
-        self.dsbTime.setDecimals(1)
+        self.dsbTime.setDecimals(3)
         self.dsbTime.setMaximum(9999999.0)
         self.dsbTime.setObjectName("dsbTime")
         self.horizontalLayout_2.addWidget(self.dsbTime)
@@ -78,7 +74,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QtGui.QApplication.translate("Form", "Edit event", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Form", "Time", None, QtGui.QApplication.UnicodeUTF8))
-        self.teTime.setDisplayFormat(QtGui.QApplication.translate("Form", "hh:mm:ss", None, QtGui.QApplication.UnicodeUTF8))
+        self.teTime.setDisplayFormat(QtGui.QApplication.translate("Form", "hh:mm:ss.zzz", None, QtGui.QApplication.UnicodeUTF8))
         self.lbSubject.setText(QtGui.QApplication.translate("Form", "Subject", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Form", "Code", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("Form", "Modifier", None, QtGui.QApplication.UnicodeUTF8))
