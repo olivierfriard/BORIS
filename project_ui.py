@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Sun Apr 13 10:59:46 2014
+# Created: Mon Apr 28 13:05:13 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -112,11 +112,11 @@ class Ui_dlgProject(object):
         self.pbImportSubjectsFromProject.setObjectName("pbImportSubjectsFromProject")
         self.verticalLayout_15.addWidget(self.pbImportSubjectsFromProject)
         self.pbLoadSubjects = QtGui.QPushButton(self.tabSubjects)
-        self.pbLoadSubjects.setEnabled(True)
+        self.pbLoadSubjects.setEnabled(False)
         self.pbLoadSubjects.setObjectName("pbLoadSubjects")
         self.verticalLayout_15.addWidget(self.pbLoadSubjects)
         self.pbSaveSubjects = QtGui.QPushButton(self.tabSubjects)
-        self.pbSaveSubjects.setEnabled(True)
+        self.pbSaveSubjects.setEnabled(False)
         self.pbSaveSubjects.setObjectName("pbSaveSubjects")
         self.verticalLayout_15.addWidget(self.pbSaveSubjects)
         self.horizontalLayout_12.addLayout(self.verticalLayout_15)
@@ -198,9 +198,11 @@ class Ui_dlgProject(object):
         self.pbImportBehaviorsFromProject.setObjectName("pbImportBehaviorsFromProject")
         self.verticalLayout_11.addWidget(self.pbImportBehaviorsFromProject)
         self.pbLoadConfiguration = QtGui.QPushButton(self.tabConfiguration)
+        self.pbLoadConfiguration.setEnabled(True)
         self.pbLoadConfiguration.setObjectName("pbLoadConfiguration")
         self.verticalLayout_11.addWidget(self.pbLoadConfiguration)
         self.pbSaveConfiguration = QtGui.QPushButton(self.tabConfiguration)
+        self.pbSaveConfiguration.setEnabled(True)
         self.pbSaveConfiguration.setObjectName("pbSaveConfiguration")
         self.verticalLayout_11.addWidget(self.pbSaveConfiguration)
         self.horizontalLayout_11.addLayout(self.verticalLayout_11)
@@ -317,7 +319,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(0)
+        self.tabProject.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -340,12 +342,13 @@ class Ui_dlgProject(object):
         self.cbAlphabeticalOrder.setText(QtGui.QApplication.translate("dlgProject", "Alphabetical order", None, QtGui.QApplication.UnicodeUTF8))
         self.pbUp.setText(QtGui.QApplication.translate("dlgProject", "Move up", None, QtGui.QApplication.UnicodeUTF8))
         self.pbDown.setText(QtGui.QApplication.translate("dlgProject", "Move down", None, QtGui.QApplication.UnicodeUTF8))
-        self.pbImportSubjectsFromProject.setText(QtGui.QApplication.translate("dlgProject", "Import from project", None, QtGui.QApplication.UnicodeUTF8))
+        self.pbImportSubjectsFromProject.setText(QtGui.QApplication.translate("dlgProject", "Import subjects\n"
+"from a BORIS project", None, QtGui.QApplication.UnicodeUTF8))
         self.pbLoadSubjects.setText(QtGui.QApplication.translate("dlgProject", "Load subjects from file", None, QtGui.QApplication.UnicodeUTF8))
         self.pbSaveSubjects.setText(QtGui.QApplication.translate("dlgProject", "Save subjects to file", None, QtGui.QApplication.UnicodeUTF8))
         self.lbSubjectsState.setText(QtGui.QApplication.translate("dlgProject", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabSubjects), QtGui.QApplication.translate("dlgProject", "Subjects", None, QtGui.QApplication.UnicodeUTF8))
-        self.twBehaviors.setSortingEnabled(True)
+        self.twBehaviors.setSortingEnabled(False)
         self.twBehaviors.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("dlgProject", "Behavior type", None, QtGui.QApplication.UnicodeUTF8))
         self.twBehaviors.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("dlgProject", "Key", None, QtGui.QApplication.UnicodeUTF8))
         self.twBehaviors.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("dlgProject", "Code", None, QtGui.QApplication.UnicodeUTF8))
@@ -361,12 +364,13 @@ class Ui_dlgProject(object):
         self.cbAlphabeticalOrder_behavior.setText(QtGui.QApplication.translate("dlgProject", "Alphabetical order", None, QtGui.QApplication.UnicodeUTF8))
         self.pbUp_behavior.setText(QtGui.QApplication.translate("dlgProject", "Move up", None, QtGui.QApplication.UnicodeUTF8))
         self.pbDown_behavior.setText(QtGui.QApplication.translate("dlgProject", "Move down", None, QtGui.QApplication.UnicodeUTF8))
-        self.pbImportBehaviorsFromProject.setText(QtGui.QApplication.translate("dlgProject", "Import from project", None, QtGui.QApplication.UnicodeUTF8))
+        self.pbImportBehaviorsFromProject.setText(QtGui.QApplication.translate("dlgProject", "Import behaviors\n"
+"from a BORIS project", None, QtGui.QApplication.UnicodeUTF8))
         self.pbLoadConfiguration.setText(QtGui.QApplication.translate("dlgProject", "Load behaviors from file", None, QtGui.QApplication.UnicodeUTF8))
         self.pbSaveConfiguration.setText(QtGui.QApplication.translate("dlgProject", "Save behaviors to file", None, QtGui.QApplication.UnicodeUTF8))
         self.lbObservationsState.setText(QtGui.QApplication.translate("dlgProject", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabConfiguration), QtGui.QApplication.translate("dlgProject", "Configuration of behaviors", None, QtGui.QApplication.UnicodeUTF8))
-        self.twVariables.setSortingEnabled(True)
+        self.twVariables.setSortingEnabled(False)
         self.twVariables.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("dlgProject", "Label", None, QtGui.QApplication.UnicodeUTF8))
         self.twVariables.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("dlgProject", "Description", None, QtGui.QApplication.UnicodeUTF8))
         self.twVariables.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("dlgProject", "Type", None, QtGui.QApplication.UnicodeUTF8))
@@ -377,7 +381,8 @@ class Ui_dlgProject(object):
         self.cbAlphabeticalOrderVar.setText(QtGui.QApplication.translate("dlgProject", "Alphabetical order", None, QtGui.QApplication.UnicodeUTF8))
         self.pbUpVar.setText(QtGui.QApplication.translate("dlgProject", "Move up", None, QtGui.QApplication.UnicodeUTF8))
         self.pbDownVar.setText(QtGui.QApplication.translate("dlgProject", "Move down", None, QtGui.QApplication.UnicodeUTF8))
-        self.pbImportVarFromProject.setText(QtGui.QApplication.translate("dlgProject", "Import from project", None, QtGui.QApplication.UnicodeUTF8))
+        self.pbImportVarFromProject.setText(QtGui.QApplication.translate("dlgProject", "Import variables\n"
+"from a BORIS project", None, QtGui.QApplication.UnicodeUTF8))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabIndependentVariables), QtGui.QApplication.translate("dlgProject", "Independent variables", None, QtGui.QApplication.UnicodeUTF8))
         self.twObservations.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("dlgProject", "id", None, QtGui.QApplication.UnicodeUTF8))
         self.twObservations.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("dlgProject", "Date", None, QtGui.QApplication.UnicodeUTF8))

@@ -134,6 +134,7 @@
      <addaction name="actionExportEventString"/>
     </widget>
     <addaction name="actionNew_observation"/>
+    <addaction name="actionObservationsList"/>
     <addaction name="actionOpen_observation_2"/>
     <addaction name="actionEdit_observation"/>
     <addaction name="separator"/>
@@ -580,8 +581,14 @@
    </property>
   </action>
   <action name="actionOpen_observation_2">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Open observation</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionAdd_event">
@@ -630,8 +637,14 @@
    </property>
   </action>
   <action name="actionEdit_observation">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Edit observation</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
    </property>
   </action>
   <action name="actionCheckUpdate">
@@ -652,6 +665,11 @@
   <action name="actionClose_project">
    <property name="text">
     <string>Close project</string>
+   </property>
+  </action>
+  <action name="actionObservationsList">
+   <property name="text">
+    <string>Observations list</string>
    </property>
   </action>
  </widget>

@@ -212,7 +212,7 @@
          <item>
           <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Media file names</string>
+            <string>Media file paths</string>
            </property>
           </widget>
          </item>
@@ -264,7 +264,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Media file names for second player (will be played simultaneously)</string>
+            <string>Media file paths for second player (will be played simultaneously)</string>
            </property>
           </widget>
          </item>

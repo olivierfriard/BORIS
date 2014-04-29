@@ -60,8 +60,14 @@ class observationsList_widget(QDialog):
         hbox2.addWidget(self.pbUnSelectAll)
 
 
-        self.pbClose = QPushButton('Close')
-        hbox2.addWidget(self.pbClose)
+        self.pbCancel = QPushButton('Cancel')
+        hbox2.addWidget(self.pbCancel)
+
+        self.pbOpen = QPushButton('Open')
+        hbox2.addWidget(self.pbOpen)
+        
+        self.pbEdit = QPushButton('Edit')
+        hbox2.addWidget(self.pbEdit)
 
         self.pb = QPushButton('')
         hbox2.addWidget(self.pb)
@@ -87,8 +93,10 @@ class observationsList_widget(QDialog):
         self.pbUnSelectAll.clicked.connect(self.pbUnSelectAll_clicked)
         '''
 
-        self.pbClose.clicked.connect(self.pbClose_clicked)
+        self.pbCancel.clicked.connect(self.pbCancel_clicked)
         self.pb.clicked.connect(self.pb_clicked)
+        self.pbOpen.clicked.connect(self.pbOpen_clicked)
+        self.pbEdit.clicked.connect(self.pbEdit_clicked)
 
     '''
     def pbSelectAll_clicked(self):
@@ -102,11 +110,17 @@ class observationsList_widget(QDialog):
         pass
     '''
 
-    def pbClose_clicked(self):
+    def pbCancel_clicked(self):
         self.close()
 
     def pb_clicked(self):
         self.accept()
+
+    def pbOpen_clicked(self):
+        self.done(2)
+
+    def pbEdit_clicked(self):
+        self.done(3)
 
 
 
@@ -169,6 +183,3 @@ class observationsList_widget(QDialog):
     def on_comboBox_currentIndexChanged(self, index):
         '''combo box changed'''
         self.proxy.setFilterKeyColumn(index)
-
-
-

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Mar 12 13:59:30 2014
+# Created: Tue Apr 29 13:01:16 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -237,6 +237,8 @@ class Ui_MainWindow(object):
         self.actionEdit_current_observation.setEnabled(False)
         self.actionEdit_current_observation.setObjectName("actionEdit_current_observation")
         self.actionOpen_observation_2 = QtGui.QAction(MainWindow)
+        self.actionOpen_observation_2.setEnabled(False)
+        self.actionOpen_observation_2.setVisible(False)
         self.actionOpen_observation_2.setObjectName("actionOpen_observation_2")
         self.actionAdd_event = QtGui.QAction(MainWindow)
         self.actionAdd_event.setObjectName("actionAdd_event")
@@ -253,6 +255,8 @@ class Ui_MainWindow(object):
         self.actionJumpBackward = QtGui.QAction(MainWindow)
         self.actionJumpBackward.setObjectName("actionJumpBackward")
         self.actionEdit_observation = QtGui.QAction(MainWindow)
+        self.actionEdit_observation.setEnabled(False)
+        self.actionEdit_observation.setVisible(False)
         self.actionEdit_observation.setObjectName("actionEdit_observation")
         self.actionCheckUpdate = QtGui.QAction(MainWindow)
         self.actionCheckUpdate.setObjectName("actionCheckUpdate")
@@ -262,6 +266,8 @@ class Ui_MainWindow(object):
         self.actionExportEventString.setObjectName("actionExportEventString")
         self.actionClose_project = QtGui.QAction(MainWindow)
         self.actionClose_project.setObjectName("actionClose_project")
+        self.actionObservationsList = QtGui.QAction(MainWindow)
+        self.actionObservationsList.setObjectName("actionObservationsList")
         self.menuHelp.addAction(self.actionAbout)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuFile.addAction(self.actionNew_project)
@@ -277,6 +283,7 @@ class Ui_MainWindow(object):
         self.menuExport_events.addAction(self.actionExportEventTabular)
         self.menuExport_events.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionNew_observation)
+        self.menuObservations.addAction(self.actionObservationsList)
         self.menuObservations.addAction(self.actionOpen_observation_2)
         self.menuObservations.addAction(self.actionEdit_observation)
         self.menuObservations.addSeparator()
@@ -400,4 +407,5 @@ class Ui_MainWindow(object):
         self.actionExportEventTabular.setText(QtGui.QApplication.translate("MainWindow", "Tabular format", None, QtGui.QApplication.UnicodeUTF8))
         self.actionExportEventString.setText(QtGui.QApplication.translate("MainWindow", "Behavioural strings format", None, QtGui.QApplication.UnicodeUTF8))
         self.actionClose_project.setText(QtGui.QApplication.translate("MainWindow", "Close project", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionObservationsList.setText(QtGui.QApplication.translate("MainWindow", "Observations list", None, QtGui.QApplication.UnicodeUTF8))
 

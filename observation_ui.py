@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Wed Apr 16 14:59:05 2014
+# Created: Mon Apr 28 14:41:44 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -180,10 +180,10 @@ class Ui_Form(object):
         self.teTimeOffset.setDisplayFormat(QtGui.QApplication.translate("Form", "hh:mm:ss.zzz", None, QtGui.QApplication.UnicodeUTF8))
         self.rbVLC.setText(QtGui.QApplication.translate("Form", "VLC media player", None, QtGui.QApplication.UnicodeUTF8))
         self.rbOpenCV.setText(QtGui.QApplication.translate("Form", "OpenCV", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_5.setText(QtGui.QApplication.translate("Form", "Media file names", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_5.setText(QtGui.QApplication.translate("Form", "Media file paths", None, QtGui.QApplication.UnicodeUTF8))
         self.pbAddVideo.setText(QtGui.QApplication.translate("Form", "Add media", None, QtGui.QApplication.UnicodeUTF8))
         self.pbRemoveVideo.setText(QtGui.QApplication.translate("Form", "Remove media", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("Form", "Media file names for second player (will be played simultaneously)", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("Form", "Media file paths for second player (will be played simultaneously)", None, QtGui.QApplication.UnicodeUTF8))
         self.pbAddVideo_2.setText(QtGui.QApplication.translate("Form", "Add media", None, QtGui.QApplication.UnicodeUTF8))
         self.pbRemoveVideo_2.setText(QtGui.QApplication.translate("Form", "Remove media", None, QtGui.QApplication.UnicodeUTF8))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabVideo), QtGui.QApplication.translate("Form", "Media", None, QtGui.QApplication.UnicodeUTF8))

@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -220,14 +220,15 @@
                <item>
                 <widget class="QPushButton" name="pbImportSubjectsFromProject">
                  <property name="text">
-                  <string>Import from project</string>
+                  <string>Import subjects
+from a BORIS project</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="pbLoadSubjects">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="text">
                   <string>Load subjects from file</string>
@@ -237,7 +238,7 @@
                <item>
                 <widget class="QPushButton" name="pbSaveSubjects">
                  <property name="enabled">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="text">
                   <string>Save subjects to file</string>
@@ -289,7 +290,7 @@
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="sortingEnabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
                 <bool>false</bool>
@@ -413,12 +414,16 @@
                <item>
                 <widget class="QPushButton" name="pbImportBehaviorsFromProject">
                  <property name="text">
-                  <string>Import from project</string>
+                  <string>Import behaviors
+from a BORIS project</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="pbLoadConfiguration">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>Load behaviors from file</string>
                  </property>
@@ -426,6 +431,9 @@
                </item>
                <item>
                 <widget class="QPushButton" name="pbSaveConfiguration">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
                  <property name="text">
                   <string>Save behaviors to file</string>
                  </property>
@@ -474,7 +482,7 @@
               <enum>QAbstractItemView::SelectRows</enum>
              </property>
              <property name="sortingEnabled">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
              <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
               <bool>false</bool>
@@ -567,7 +575,8 @@
              <item>
               <widget class="QPushButton" name="pbImportVarFromProject">
                <property name="text">
-                <string>Import from project</string>
+                <string>Import variables
+from a BORIS project</string>
                </property>
               </widget>
              </item>

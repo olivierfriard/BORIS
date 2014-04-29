@@ -29,6 +29,8 @@ programName = 'BORIS'
 
 project_format_version = '1'
 
+OBSERVATIONS = 'observations'
+
 subjects_config = ['key', 'id']
 
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5}
@@ -57,6 +59,7 @@ MEDIA = 'MEDIA'
 HHMMSS = 'hh:mm:ss'
 S = 's'
 
+LIST = 'list'
 EDIT = 'edit'
 OPEN = 'open'
 SELECT = 'select'

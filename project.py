@@ -105,9 +105,15 @@ class DlgProject(QDialog, Ui_dlgProject):
         self.pbRemoveAllBehaviors.clicked.connect(self.pbRemoveAllBehaviors_clicked)
 
         self.pbImportBehaviorsFromProject.clicked.connect(self.pbImportBehaviorsFromProject_clicked)
-
+ 
+ 
+        ''' FIXME 2014-04-28 set buttons to not visible'''
+        #self.pbSaveConfiguration.setVisible(False)
+        #self.pbLoadConfiguration.setVisible(False)
+        
         self.pbSaveConfiguration.clicked.connect(self.pbExportConfiguration_clicked)
         self.pbLoadConfiguration.clicked.connect(self.pbImportConfiguration_clicked)
+        
 
         self.twBehaviors.cellChanged[int, int].connect(self.twObservations_cellChanged)
 
@@ -127,8 +133,16 @@ class DlgProject(QDialog, Ui_dlgProject):
 
         self.pbImportSubjectsFromProject.clicked.connect(self.pbImportSubjectsFromProject_clicked)
 
+        ''' FIXME 2014-04-28 set buttons to not visible'''
+        self.pbSaveSubjects.setVisible(False)
+        self.pbLoadSubjects.setVisible(False)
+        
+
+        ''' FIXME 2014-04-28 buttons are not more available
+        use import from project instead 
         self.pbSaveSubjects.clicked.connect(self.pbSaveSubjects_clicked)
         self.pbLoadSubjects.clicked.connect(self.pbLoadSubjects_clicked)
+        '''
 
         ### independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
@@ -193,6 +207,31 @@ class DlgProject(QDialog, Ui_dlgProject):
         if self.cbAlphabeticalOrderVar.isChecked():
             self.twVariables.sortByColumn(0, Qt.AscendingOrder)   ### order by variable label
 
+
+    def pbUp_behavior_clicked(self):
+        ### move up selected behavior
+
+        if self.twBehaviors.selectedIndexes() and self.twBehaviors.selectedIndexes()[0].row() > 0:
+
+            selectedRow = self.twBehaviors.selectedIndexes()[0].row()
+            subjectToMoveUp = [ self.twBehaviors.cellWidget(selectedRow, 0).currentIndex() ]
+            subjectToMoveDown = [self.twBehaviors.cellWidget(selectedRow - 1, 0).currentIndex() ]
+
+            for x in range(1, 5+1):
+                subjectToMoveUp.append( self.twBehaviors.item( selectedRow , x).text() )
+                subjectToMoveDown.append( self.twBehaviors.item( selectedRow - 1, x).text() )
+
+            self.twBehaviors.cellWidget(selectedRow , 0).setCurrentIndex( subjectToMoveDown[0] )
+            self.twBehaviors.cellWidget(selectedRow - 1, 0).setCurrentIndex( subjectToMoveUp[0] )
+
+            for x in range(1, 5+1):
+                self.twBehaviors.item( selectedRow , x).setText(subjectToMoveDown[x])
+                self.twBehaviors.item( selectedRow - 1, x).setText(subjectToMoveUp[x])
+
+            self.twBehaviors.selectRow(selectedRow - 1)
+
+
+
     def pbUpVar_clicked(self):
         '''
         move selected variable up
@@ -201,24 +240,24 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             selectedRow = self.twVariables.selectedIndexes()[0].row()
 
-            subjectToMoveUp, subjectToMoveDown = [], []
+            varToMoveUp, varToMoveDown = [], []
 
             for x in range(len(tw_indVarFields)):
                 if x == 2:   ### type
-                    subjectToMoveUp.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
-                    subjectToMoveDown.append( self.twVariables.cellWidget(selectedRow - 1, x).currentIndex() )
+                    varToMoveUp.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
+                    varToMoveDown.append( self.twVariables.cellWidget(selectedRow - 1, x).currentIndex() )
                 else:
-                    subjectToMoveUp.append( self.twVariables.item( selectedRow , x).text() )
-                    subjectToMoveDown.append( self.twVariables.item( selectedRow - 1, x).text() )
+                    varToMoveUp.append( self.twVariables.item( selectedRow , x).text() )
+                    varToMoveDown.append( self.twVariables.item( selectedRow - 1, x).text() )
 
             for x in range(len(tw_indVarFields)):
                 if x == 2:   ### type
-                    self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( subjectToMoveDown[x] )
-                    self.twVariables.cellWidget(selectedRow - 1, x).setCurrentIndex( subjectToMoveUp[x] )
+                    self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( varToMoveDown[x] )
+                    self.twVariables.cellWidget(selectedRow - 1, x).setCurrentIndex( varToMoveUp[x] )
 
                 else:
-                    self.twVariables.item( selectedRow , x).setText(subjectToMoveDown[x])
-                    self.twVariables.item( selectedRow - 1, x).setText(subjectToMoveUp[x])
+                    self.twVariables.item( selectedRow , x).setText(varToMoveDown[x])
+                    self.twVariables.item( selectedRow - 1, x).setText(varToMoveUp[x])
 
             self.twVariables.selectRow(selectedRow - 1)
 
@@ -673,11 +712,11 @@ class DlgProject(QDialog, Ui_dlgProject):
 
             f.close()
 
-
+    ''' FIXME 2014-04-28 bug in import subjects from file
     def pbSaveSubjects_clicked(self):
-        '''
-        export subjects to plain text file
-        '''
+        
+        #export subjects to plain text file
+        
         fd = QFileDialog(self)
 
         fileName, filter = fd.getSaveFileName(self, 'Export subjects configuration', '', 'Text files (*.txt *.tsv);;All files (*)')
@@ -701,9 +740,9 @@ class DlgProject(QDialog, Ui_dlgProject):
 
 
     def pbLoadSubjects_clicked(self):
-        '''
-        open and parse a subjects configuration file
-        '''
+
+        #import subjects from file
+
         if self.twSubjects.rowCount():
 
             response = dialog.MessageDialog(programName, 'There are subjects already configured. Do you want to append subjects or replace them?', ['Append', 'Replace', 'Cancel'])
@@ -750,6 +789,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                         item = QTableWidgetItem( suject_name )
                         self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 1 , item)
 
+    '''
 
     def twObservations_cellChanged(self, row, column):
 
@@ -931,27 +971,6 @@ class DlgProject(QDialog, Ui_dlgProject):
                     ### code not used
                     self.twSubjects.removeRow(self.twSubjects.selectedIndexes()[0].row())
 
-    def pbUp_behavior_clicked(self):
-        ### move up selected behavior
-
-        if self.twBehaviors.selectedIndexes() and self.twBehaviors.selectedIndexes()[0].row() > 0:
-
-            selectedRow = self.twBehaviors.selectedIndexes()[0].row()
-            subjectToMoveUp = [ self.twBehaviors.cellWidget(selectedRow, 0).currentIndex() ]
-            subjectToMoveDown = [self.twBehaviors.cellWidget(selectedRow - 1, 0).currentIndex() ]
-
-            for x in range(1, 5+1):
-                subjectToMoveUp.append( self.twBehaviors.item( selectedRow , x).text() )
-                subjectToMoveDown.append( self.twBehaviors.item( selectedRow - 1, x).text() )
-
-            self.twBehaviors.cellWidget(selectedRow , 0).setCurrentIndex( subjectToMoveDown[0] )
-            self.twBehaviors.cellWidget(selectedRow - 1, 0).setCurrentIndex( subjectToMoveUp[0] )
-
-            for x in range(1, 5+1):
-                self.twBehaviors.item( selectedRow , x).setText(subjectToMoveDown[x])
-                self.twBehaviors.item( selectedRow - 1, x).setText(subjectToMoveUp[x])
-
-            self.twBehaviors.selectRow(selectedRow - 1)
 
     def pbDown_behavior_clicked(self):
         '''
@@ -976,6 +995,9 @@ class DlgProject(QDialog, Ui_dlgProject):
                 self.twBehaviors.item( selectedRow , x).setText(subjectToMoveUp[x])
 
             self.twBehaviors.selectRow(selectedRow + 1)
+
+
+
 
     def pbUp_clicked(self):
         '''
