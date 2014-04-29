@@ -1,0 +1,456 @@
+BORIS User Manual
+=================
+:Author: Olivier_Friard_(Università_degli_Studi_di_Torino)
+:Email:     olivier.friard@unito.it
+:v1.0, 2012-2013:
+
+
+////
+a2x --icons-dir=. --icons -f pdf --fop index.asciidoc
+a2x --icons-dir=. --icons -f xhtml index.asciidoc
+////
+
+
+== Introduction
+
+This program is intended to log and analyze behaviours and events observed from a media file (audio / video) or in real-time.
+
+
+
+
+== Legal
+
+*BORIS* is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or any later version.
+
+*BORIS* is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+http://www.gnu.org/copyleft/gpl.html[GNU General Public License] for more details.
+
+
+
+
+== Install BORIS
+
+
+BORIS is available for GNU/Linux, Microsoft-Windows and Mac OS X platforms at http://penelope.unito.it/boris.
+
+BORIS requires the http://www.videolan.org/vlc/[VLC Media Player] from the VideoLAN Organization.
+_VLC is a free and open source cross-platform multimedia player and framework that plays most multimedia files as well as DVD, Audio CD, VCD, and various streaming protocols._
+
+
+=== Linux
+
+See instructions on the download page.
+
+
+=== Mac OS X
+
+
+==== Auto-install version
+
+An Apple Disk Image (DMG package) is available for a quick install of BORIS and all its dependencies.
+
+You can also run BORIS from sources. In this case you must first install the *Qt application framework* and *PySide - Python binding for Qt*.
+See instructions on the download page.
+
+
+=== Microsoft(TM)-Windows(R)
+
+==== Auto-install version
+
+Download the Microsoft(TM)-Windows(R) installer and follow the instructions.
+
+If you have administrator privileges the program will install system-wide otherwise
+ it will install in the Local Application directory.
+
+
+
+==== Bundle version
+
+Choose this version if you do not want to install BORIS but just use it.
+ In this way, BORIS can also be launched from an USB key.
+
+
+
+== Getting started
+
+To begin to observe, you must first:
+
+1) Create a new project
+
+2) Configure the subjects (if any)
+
+3) Configure the behaviours
+
+4) Configure the independent variables (if any)
+
+
+
+
+
+=== Creating a new project
+
+The project is the container of all your data: coding scheme, observations and events.
+
+
+To create the project choose the *File / New project* menu option. The *New project* window will open:
+
+image::new_project1.png[]
+
+You can set up your project, by inserting a project name, a date, a description
+ and select your favorite time format. All these fields are not mandatory but may be useful to you.
+
+
+
+
+
+=== Configurating subjects
+
+You can add or remove a subject by using the *Add* and *Remove* buttons.
+
+
+NOTE: The *key* field is not mandatory, you can live the cell empty. In this case
+ the subject selection will be made only with the mouse (by double-clicking the subject row).
+
+You can order the subject key alphabetically (by checking the *Alphabetical order* checkbox) or manually using the *Move up* and *Move down* buttons.
+
+image::subjects_config.png[]
+
+The behaviors can be imported from another BORIS project. Use the *Import subjects from a BORIS project* button.
+If some subjects are already configured, the program will ask you for erasing them or appending the new ones.
+
+
+
+
+
+=== Configurating behaviors
+
+You can add a behavior by clicking the *Add behavior* button.
+The program will ask you what type of event do you want to configure: a *State event*
+ (event with duration) or a *Point event* (for short events).
+
+image::behaviors_config.png[]
+
+Then you must insert a *key* that will trigger the event recording and a unique *code*.
+
+NOTE: If the *Key* field is repeated in more behaviors, the program
+ will ask you during the observation to select the correct event to insert.
+
+You can also input a *description* that will help you to remember the details of the behaviour.
+
+You can set *modifiers* for the behaviour. In this case you must separate them by a comma:
+----
+self,others
+----
+
+Every time this event will be recorded, the program will ask you for the modifier.
+
+
+
+
+
+In case of exclusion of events by *State events* use the *Exclusion matrix* utility
+ to set up these exclusions:
+
+* press the *Exclusion matrix* button
+* Check events that are mutually exclusive
+
+image::exclusion_matrix.png[]
+
+The behaviors can be imported from another BORIS project. Use the *Import behaviors from a BORIS project* button.
+If some behaviours are already configured, the program will ask you for erasing them or appending the new ones.
+
+
+
+
+
+
+
+=== Configurating independent variables
+
+You can add independent variables that will be asked to the user during the observation creation.
+
+Variables can be of 2 types: *numeric* or *text* and can have a *Predefined value*.
+
+image::independent_variables.png[]
+
+The independent variables can be imported from another BORIS project. Use the *Import from project* button.
+
+
+
+
+=== Saving your project
+
+
+Once the project set up is done, press the *OK* button to create your project
+
+
+The following window will appear, giving you access to the behaviors and subjects you configured before.
+
+image::open_project.png[]
+
+You can now save your project (*File / Save project* menu option)
+
+All parameters are saved into a unique file in http://en.wikipedia.org/wiki/JSON[JSON format]. 
+
+
+
+=== Creating a new observation
+
+Create an observation by selecting the *Observations / New observation* menu option
+
+image::new_observation.png[]
+
+You can set up your observation, by inserting an *Observation id* that must be unique (mandatory), the date of observation, a description and the independent variables
+ (if you defined them in the project).
+
+You can indicate a time offset that will be added to the video/audio position for the event insertion (negative value is allowed)
+
+
+=== Media coding 
+
+
+===== Selecting a media file
+
+Use the *browse* button to select a media file. All media that will play with VLC are allowed.
+
+IMPORTANT: The absolute path of your media will be saved in the file project. If the media are then moved you must reselect the correct position of your media before making a coding.
+Your media are not saved into the BORIS project file!
+
+You can enqueue more media in the first window #1.
+In this case the media will be successively played and the event recording time will be the cumulative time along all the media.
+
+
+===== Add a second video player to be played synchronously to the first one
+
+
+You can add a second media file in the window #2. This media will be played synchronously to the first one. All operations (play, stop, jump...) will apply to the 2 media.
+
+
+=== Live coding
+
+If you want to code from living situation choose the second tab (*Live*).
+
+image::live_observation.png[]
+
+
+=== Start the observation
+
+
+When your observation set up is done, click the *OK* button to proceed with the coding.
+
+
+==== Media coding
+
+The media will be played for one second and will be paused at the beginning.
+
+image::open_observation_mw.png[height=700]
+
+The various windows (*Configuration of behaviors*, *Subjects* and *Events*) can be undocked from the main window and repositioned on a convenient place on your desktop.
+
+
+===== Play the media
+
+The media can be controlled with the toolbar at the top of the main window.
+
+image::toolbar.png[]
+
+
+* Use *Space bar* to pause or play the video
+
+* Use the *slider* below the media player to move into the media
+
+* Use the image:playback_speed.png[] buttons to change the speed of video playback
+
+* *Double-click on an event* in the *Events* window will seek the media X seconds before the event position.
+
+See link:index.html#_time_offset_for_media_reposition[See parameters for setting the time offset]
+
+
+
+* Use the *volume slider* to set the desired volume. Audio can be turn off by clicking on the speaker at left of the slider.
+
+
+==== Live coding
+
+Press the *Start live observation* button to begin to code.
+
+image::live_coding.png[]
+
+
+
+==== Recording an event
+
+An event can be recorded in two ways:
+
+* by pressing the key corresponding to the event (defined during behaviors configuration)
+* by double-click on the row in the *Configuration of behaviors* window
+
+The current behavior will be displayed above the video player, in the status bar and in the *Subjects* window.
+
+image::config_behaviors_shadowed.png[]
+
+IMPORTANT: If your *Events* window is undocked and if you want to use the keyboard for recording event remember that the *main window must be focused* (active).
+
+
+
+==== Modifiers
+
+If modifiers are defined in the behaviours configuration, the program will pause the media and ask you for the modifier.
+
+image::modifiers_shadowed.png[]
+
+
+
+If the pressed key corresponds to more events the program will ask you to choose the correct event.
+
+
+image::various_events_shadowed.png[]
+
+
+
+===== Selecting the focal subject
+
+The focal subject can be selected in two ways:
+
+* by pressing the key corresponding to the subject (if you defined any during subjects configuration)
+* by double-click on the row in the *Subjects* window
+
+The selected subject will be displayed above the video player and in the status bar:
+
+image::statusbar.png[]
+
+The focal subject is deselected with the same operation.
+
+== Events
+
+=== Editing an event
+
+Event can be edited manually:
+
+* Select the event to edit in the *Events* window
+* select the *Observations / Edit event* menu option or right-click and select *Edit event* option
+
+image::edit_event.png[]
+
+You can edit all event parameters.
+
+=== Adding an event
+
+The option *Observations / Add event* allow you to add an event without using the behaviors configuration.
+
+
+
+
+=== Exporting the events
+
+The events from the current observation can be exported in a plain text file (tab separated values):
+
+* *Observations / Export events*
+
+The exported data can be imported with other analysis software.
+
+The format is as below:
+
+----
+#Media file name	/home/user/Desktop/MOV001.MOD
+#media total length	622.960000
+#time	subject	code	type	modifier	comment
+9.1	Foo	eat	START	tree leaf	
+11.1	Foo	eat	STOP		
+11.2	Foo	charge	START		
+12.8	Foo	charge	STOP		
+17.8	Foo	charge	START		
+22.7	Foo	charge	STOP		
+24.3	Foo	charge	START		
+25.2	Foo	charge	STOP		
+26.8	Foo	charge	START		
+28.8	Foo	charge	STOP		
+34.0	Foo	charge	START		
+34.6	Foo	charge	STOP		
+46.8	Foo	charge	START		
+47.5	Foo	charge	STOP		
+48.0	Foo	charge	START		
+48.9	Foo	charge	STOP		
+144.3	Foo	eat	START	fruit	
+159.6	Bar	eat	START	fruit	
+170.7	Bar	eat	STOP	fruit	
+181.2	Foo	eat	STOP	fruit	
+192.1	Foo	charge	START		
+196.3	Foo	charge	STOP		
+----
+
+Events can also be imported from a previous observation ( *Observations / Import events* ). The program will ask if you want to append events to existing ones or replace them.
+
+
+== Manage observations
+
+=== Open an observation
+
+open
+
+=== Edit an observation
+
+edit
+
+== Analysis
+
+A raw time budget can be obtained from one or more observations (*Analysis / Time budget* menu option):
+
+* Select the observations you want to analyze in the checkboxes list
+* Select the subjects you want to analyze in the checkboxes list
+
+
+image::time_budget_shadowed.png[]
+
+The time budget data can be exported to a plain text file (in tab separated values format) in order to be further analyzed.
+
+
+
+== Time diagram
+
+An observation time diagram can be produced using the *Analysis / Visualize data* menu option.
+
+image::diagram_shadowed.png[]
+
+The diagram can be saved in SVG format.
+
+
+
+== Program preferences
+
+Some parameters can be modified by the user using the *File / Preferences* menu option.
+
+
+==== Default project time format
+
+Choose the default time format between *seconds* and *hh:mm:ss.s*
+
+
+==== Automatic backup
+
+An automatic backup can be activated. For this you must set the value between each backup in minutes (0 -> no backup).
+During an observation BORIS will save your events in the project file automatically.
+
+==== Fast forward/backward speed
+
+Fix the number of seconds the program will jump into your media when fast tastes will be pressed.
+
+
+==== Time offset for media repositioning after double-click on an event
+
+Fix the number of seconds the media will be seeked before the event.
+
+
+==== Play a beep everytime a key is pressed
+
+Check the *Play sound when key pressed* checkbox.
+
+==== Undock the media player
+
+Uncheck the *Embed media player in main window* checkbox.
+
+The program must be restarted 
