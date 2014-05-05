@@ -37,8 +37,8 @@ http://mih.voxindeserto.de/vlc_movieoverlays.html
 '''
 
 
-__version__ = '1.3'
-__version_date__ = 'development version-'
+__version__ = '1.5'
+__version_date__ = 'RC1'
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
@@ -3744,7 +3744,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         QMessageBox.about(self, "About " + programName,
-        """<b>%s</b> v. %s
+        """<b>%s</b> v. %s - %s
         <p>Copyright &copy; 2012-2014 Olivier Friard - Universit&agrave; degli Studi di Torino.<br>
         <br>
         The author would like to acknowledge Sergio Castellano, Marco Gamba, Valentina Matteucci and Laura Ozella for their precious help.<br>
@@ -3752,7 +3752,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python %s - Qt %s - PySide %s on %s<br><br>
         Available player(s):<br>%s""" % \
-        (programName, __version__, platform.python_version(), PySide.QtCore.__version__, PySide.__version__, platform.system(), '<br>'.join(players)))
+        (programName, __version__, __version_date__, platform.python_version(), PySide.QtCore.__version__, PySide.__version__, platform.system(), '<br>'.join(players)))
 
 
 
@@ -5206,6 +5206,10 @@ if __name__=="__main__":
     if not availablePlayers:
         QMessageBox.critical(None, programName, 'This program requires the VLC media player library or the OpenCV Python module and it seems that they are not installed on your system.<br>Go to http://www.videolan.org/vlc to install it', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
+
+    if 'RC' in __version_date__:
+        QMessageBox.warning(None, programName, 'This version is a release candidate and must be used only for testing.\nPlease report all bugs', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers)
