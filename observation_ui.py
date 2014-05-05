@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Mon Apr 28 14:41:44 2014
+# Created: Mon May  5 10:43:06 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,6 +66,13 @@ class Ui_Form(object):
         self.lbTimeOffset = QtGui.QLabel(Form)
         self.lbTimeOffset.setObjectName("lbTimeOffset")
         self.horizontalLayout_6.addWidget(self.lbTimeOffset)
+        self.rbAdd = QtGui.QRadioButton(Form)
+        self.rbAdd.setChecked(True)
+        self.rbAdd.setObjectName("rbAdd")
+        self.horizontalLayout_6.addWidget(self.rbAdd)
+        self.rbSubstract = QtGui.QRadioButton(Form)
+        self.rbSubstract.setObjectName("rbSubstract")
+        self.horizontalLayout_6.addWidget(self.rbSubstract)
         self.leTimeOffset = QtGui.QLineEdit(Form)
         self.leTimeOffset.setObjectName("leTimeOffset")
         self.horizontalLayout_6.addWidget(self.leTimeOffset)
@@ -176,6 +183,8 @@ class Ui_Form(object):
         self.twIndepVariables.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("Form", "Type", None, QtGui.QApplication.UnicodeUTF8))
         self.twIndepVariables.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("Form", "Value", None, QtGui.QApplication.UnicodeUTF8))
         self.lbTimeOffset.setText(QtGui.QApplication.translate("Form", "Time offset", None, QtGui.QApplication.UnicodeUTF8))
+        self.rbAdd.setText(QtGui.QApplication.translate("Form", "Add", None, QtGui.QApplication.UnicodeUTF8))
+        self.rbSubstract.setText(QtGui.QApplication.translate("Form", "Substract", None, QtGui.QApplication.UnicodeUTF8))
         self.leTimeOffset.setText(QtGui.QApplication.translate("Form", "0", None, QtGui.QApplication.UnicodeUTF8))
         self.teTimeOffset.setDisplayFormat(QtGui.QApplication.translate("Form", "hh:mm:ss.zzz", None, QtGui.QApplication.UnicodeUTF8))
         self.rbVLC.setText(QtGui.QApplication.translate("Form", "VLC media player", None, QtGui.QApplication.UnicodeUTF8))

@@ -1774,7 +1774,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def new_observation(self, mode = 'new', obsId = ''):
         '''
-        define a new observation or edit current observation
+        define a new observation or edit an observation
         '''
 
         if self.DEBUG: print 'mode', mode
@@ -1843,45 +1843,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.rbVLC.setEnabled( VLC in self.availablePlayers )
         observationWindow.rbOpenCV.setEnabled(OPENCV in self.availablePlayers)
 
+        '''FIXME to be removed
         if mode == 'new':
             if self.timeFormat == S:
                 observationWindow.teTimeOffset.setVisible(False)
             if self.timeFormat == HHMMSS:
                 observationWindow.leTimeOffset.setVisible(False)
+        '''
+        if self.timeFormat == S:
+            observationWindow.teTimeOffset.setVisible(False)
+        if self.timeFormat == HHMMSS:
+            observationWindow.leTimeOffset.setVisible(False)
+        
+        if self.pj[OBSERVATIONS][obsId]['time offset'] < 0:
+            observationWindow.rbSubstract.setChecked(True)
 
         if mode == 'edit':
 
             observationWindow.setWindowTitle('Edit observation ' + obsId )
             mem_obs_id = obsId
             observationWindow.leObservationId.setText( obsId )
-            observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj['observations'][obsId]['date'], 'yyyy-MM-ddThh:mm:ss') )
-            observationWindow.teDescription.setPlainText( self.pj['observations'][obsId]['description'] )
+            observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj[OBSERVATIONS][obsId]['date'], 'yyyy-MM-ddThh:mm:ss') )
+            observationWindow.teDescription.setPlainText( self.pj[OBSERVATIONS][obsId]['description'] )
 
             if self.timeFormat == S:
-                observationWindow.teTimeOffset.setVisible(False)
-                observationWindow.leTimeOffset.setText( self.convertTime( self.pj['observations'][obsId]['time offset'] ))
+                '''observationWindow.teTimeOffset.setVisible(False)'''
+                observationWindow.leTimeOffset.setText( self.convertTime( abs(self.pj[OBSERVATIONS][obsId]['time offset']) ))
 
             if self.timeFormat == HHMMSS:
-                observationWindow.leTimeOffset.setVisible(False)
+                '''observationWindow.leTimeOffset.setVisible(False)'''
 
                 time = QTime()
-                h,m,s_dec = self.seconds2time( self.pj['observations'][obsId]['time offset']).split(':')
+                h,m,s_dec = self.seconds2time( abs(self.pj[OBSERVATIONS][obsId]['time offset'])).split(':')
                 s, ms = s_dec.split('.')
                 time.setHMS(int(h),int(m),int(s),int(ms))
                 observationWindow.teTimeOffset.setTime( time )
 
 
-            if '1' in self.pj['observations'][obsId]['file'] and self.pj['observations'][obsId]['file']['1']:
+            if '1' in self.pj[OBSERVATIONS][obsId]['file'] and self.pj[OBSERVATIONS][obsId]['file']['1']:
 
-                observationWindow.lwVideo.addItems( self.pj['observations'][obsId]['file']['1'] )
+                observationWindow.lwVideo.addItems( self.pj[OBSERVATIONS][obsId]['file']['1'] )
 
             ### check if simultaneous 2nd media
-            if '2' in self.pj['observations'][obsId]['file'] and self.pj['observations'][obsId]['file']['2']:   ### media for 2nd player
+            if '2' in self.pj[OBSERVATIONS][obsId]['file'] and self.pj[OBSERVATIONS][obsId]['file']['2']:   ### media for 2nd player
 
-                observationWindow.lwVideo_2.addItems( self.pj['observations'][obsId]['file']['2'] )
+                observationWindow.lwVideo_2.addItems( self.pj[OBSERVATIONS][obsId]['file']['2'] )
 
 
-            if self.pj["observations"][obsId]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
 
                 '''
@@ -1891,7 +1900,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     observationWindow.rbOpenCV.setChecked(self.pj["observations"][obsId]['playertype'] == OPENCV)
                 '''
 
-            if self.pj["observations"][obsId]['type'] in [LIVE]:
+            if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
 
 
@@ -1983,7 +1992,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timeOffset = self.time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
 
             if self.timeFormat == S:
-                self.timeOffset = float( observationWindow.leTimeOffset.text() )
+                self.timeOffset = abs( float( observationWindow.leTimeOffset.text() ))
+
+            if observationWindow.rbSubstract.isChecked():
+                self.timeOffset = - self.timeOffset
 
             self.pj['observations'][new_obs_id]['time offset'] = self.timeOffset
 
@@ -3735,7 +3747,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """<b>%s</b> v. %s
         <p>Copyright &copy; 2012-2014 Olivier Friard - Universit&agrave; degli Studi di Torino.<br>
         <br>
-        The author would like to acknowledge Sergio Castellano, Marco Gamba and Valentina Matteucci for their precious help.<br>
+        The author would like to acknowledge Sergio Castellano, Marco Gamba, Valentina Matteucci and Laura Ozella for their precious help.<br>
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python %s - Qt %s - PySide %s on %s<br><br>
