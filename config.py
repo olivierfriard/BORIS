@@ -30,6 +30,7 @@ programName = 'BORIS'
 project_format_version = '1'
 
 OBSERVATIONS = 'observations'
+TIME_OFFSET='time offset'
 
 subjects_config = ['key', 'id']
 

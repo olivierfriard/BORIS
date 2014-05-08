@@ -38,7 +38,7 @@ http://mih.voxindeserto.de/vlc_movieoverlays.html
 
 
 __version__ = '1.5'
-__version_date__ = 'RC1'
+__version_date__ = 'RC2'
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
@@ -59,6 +59,8 @@ import time
 import os
 from encodings import hex_codec
 import json
+
+from decimal import *
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -723,8 +725,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         try:
             import urllib2
-            lastVersion = float(urllib2.urlopen('http://penelope.unito.it/boris/ver.dat' ).read().strip())
-            if lastVersion > float(__version__):
+            lastVersion = Decimal(urllib2.urlopen('http://penelope.unito.it/boris/ver.dat' ).read().strip())
+            if lastVersion > Decimal(__version__):
                 QMessageBox.information(self, programName , 'The new version (v. <b>%s</b>) is available!<br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a>.' % str(lastVersion))
             else:
                 QMessageBox.information(self, programName , 'The version you are using is the last one')
@@ -1854,11 +1856,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.teTimeOffset.setVisible(False)
         if self.timeFormat == HHMMSS:
             observationWindow.leTimeOffset.setVisible(False)
-        
-        if self.pj[OBSERVATIONS][obsId]['time offset'] < 0:
-            observationWindow.rbSubstract.setChecked(True)
+
 
         if mode == 'edit':
+
 
             observationWindow.setWindowTitle('Edit observation ' + obsId )
             mem_obs_id = obsId
@@ -1878,6 +1879,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 s, ms = s_dec.split('.')
                 time.setHMS(int(h),int(m),int(s),int(ms))
                 observationWindow.teTimeOffset.setTime( time )
+
+            if self.pj[OBSERVATIONS][obsId]['time offset'] < 0:
+                observationWindow.rbSubstract.setChecked(True)
 
 
             if '1' in self.pj[OBSERVATIONS][obsId]['file'] and self.pj[OBSERVATIONS][obsId]['file']['1']:
@@ -1989,17 +1993,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### observation time offset
 
             if self.timeFormat == HHMMSS:
-                self.timeOffset = self.time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
+                self.pj['observations'][new_obs_id][TIME_OFFSET]  = self.time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
 
             if self.timeFormat == S:
-                self.timeOffset = abs( float( observationWindow.leTimeOffset.text() ))
+                self.pj['observations'][new_obs_id][TIME_OFFSET] =  abs(Decimal( observationWindow.leTimeOffset.text() ))
 
             if observationWindow.rbSubstract.isChecked():
-                self.timeOffset = - self.timeOffset
+                self.pj['observations'][new_obs_id][TIME_OFFSET]  = - self.pj['observations'][new_obs_id][TIME_OFFSET] 
 
-            self.pj['observations'][new_obs_id]['time offset'] = self.timeOffset
-
-            self.display_timeoffset_statubar()
+            self.display_timeoffset_statubar(self.pj['observations'][new_obs_id][TIME_OFFSET])
 
             ### media file
             fileName = {}
@@ -2234,18 +2236,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def display_timeoffset_statubar(self):
+    def display_timeoffset_statubar(self, timeOffset):
         ### display in status bar
-        if self.timeOffset:
+        if timeOffset:
         
             if self.timeFormat == S:
-                timeOffset = str( self.timeOffset ) 
+                r = str( timeOffset ) 
             
             elif self.timeFormat == HHMMSS:
 
-                timeOffset = self.seconds2time( self.timeOffset )
+                r = self.seconds2time( timeOffset )
                 
-            self.lbTimeOffset.setText('Time offset: <b>%s</b>' % timeOffset )
+            self.lbTimeOffset.setText('Time offset: <b>%s</b>' % r )
         else:
             self.lbTimeOffset.clear()
 
@@ -2771,10 +2773,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pj = json.loads(s)
         
+        ### transform time to decimal
+        for obs in self.pj['observations']:
+            self.pj['observations'][obs]['time offset'] = Decimal( str(self.pj['observations'][obs]['time offset']) )
+
+            for idx,event in enumerate(self.pj['observations'][obs]['events']):
+
+                self.pj['observations'][obs]['events'][idx][ pj_obs_fields['time'] ] = Decimal(str(self.pj['observations'][obs]['events'][idx][ pj_obs_fields['time'] ]))
+                
+
+
         if self.DEBUG: print 'pj', self.pj
 
         ### check if project file version is newer than current BORIS project file version
-        if 'project_format_version' in self.pj and float(self.pj['project_format_version']) > float(project_format_version):
+        if 'project_format_version' in self.pj and Decimal(self.pj['project_format_version']) > Decimal(project_format_version):
             QMessageBox.critical(self, programName , 'This project file was created with a more recent version of BORIS.\nUpdate your version of BORIS to load it' )
             self.pj = {"time_format": "hh:mm:ss",\
             "project_date": "",\
@@ -2830,6 +2842,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if 'program_version' in self.pj:
             if float(self.pj['program_version']) <  :
         '''
+
+
 
         self.initialize_new_project()
         
@@ -2944,22 +2958,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def time2seconds(self, time):
         '''
-        convert hh:mm:ss.s to number of seconds (float)
+        convert hh:mm:ss.s to number of seconds (decimal)
         '''
         flagNeg = '-' in time
         time = time.replace('-','')
 
         tsplit= time.split(':')
         
-        h, m, s = int( tsplit[0] ), int( tsplit[1] ), float( tsplit[2] )
+        h, m, s = int( tsplit[0] ), int( tsplit[1] ), Decimal( tsplit[2] )
         
 
         #h, m, s = [ int(t) for t in time.split(':')]
 
         if flagNeg:
-            return -(h * 3600 + m * 60 + s)
+            return Decimal(-(h * 3600 + m * 60 + s))
         else:
-            return h * 3600 + m * 60 + s
+            return Decimal(h * 3600 + m * 60 + s)
 
 
     def seconds2time(self, sec):
@@ -2986,10 +3000,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def convertTime(self, sec):
         '''
         convert time in base of current format
-        '''
-        '''
-        if self.timeOffset:
-            sec += self.timeOffset
         '''
 
         if self.timeFormat == S:
@@ -3274,6 +3284,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         save project to JSON file
         '''
+        def decimal_default(obj):
+            if isinstance(obj, Decimal):
+                return float(obj)
+            raise TypeError
+
 
         if self.DEBUG: print 'save project json projectFileName:',  projectFileName
 
@@ -3281,7 +3296,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.pj['project_format_version'] = project_format_version
         
-        s = json.dumps(self.pj, indent=4)
+        s = json.dumps(self.pj, indent=4, default=decimal_default)
 
         f = open(projectFileName, 'w')
 
@@ -3863,7 +3878,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     msg = '%s: <b>%s / %s</b>' % ( self.mediaplayer.get_media().get_meta(0), self.convertTime(self.mediaplayer.get_time() / 1000), self.convertTime(self.mediaplayer.get_length() / 1000) )
 
                     if self.media_list.count() > 1:
-                        msg += ' | total: <b>%s / %s</b>' % ( (self.convertTime( globalCurrentTime/1000 + self.timeOffset), self.convertTime( totalGlobalTime / 1000) ) )
+                        msg += ' | total: <b>%s / %s</b>' % ( (self.convertTime( Decimal(globalCurrentTime/1000) + self.pj['observations'][self.observationId]['time offset']), self.convertTime( totalGlobalTime / 1000) ) )
 
                     if self.mediaListPlayer.get_state() == vlc.State.Paused:
                         msg += ' (paused)'
@@ -3931,8 +3946,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         update status start/stop of events
         take consideration of subject
         '''
-        
+
         if self.DEBUG: print '\nupdate events for start/stop'
+        stateEventsList = [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] if 'STATE' in self.pj['behaviors_conf'][x]['type'].upper() ]
+        print 'state events', stateEventsList
         
         for row in range(0, self.twEvents.rowCount()):
 
@@ -3940,19 +3957,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             t = self.twEvents.item(row, tw_obs_fields['time'] ).text()
 
             if ':' in t:
-                time = float(self.time2seconds(t))
+                time = self.time2seconds(t)
             else:
-                time = float(t)
-            
-            if self.DEBUG: print 'update events start/stop  time:', time
+                time = Decimal(t)
             
             code = self.twEvents.item(row, tw_obs_fields['code'] ).text()
             subject = self.twEvents.item(row, tw_obs_fields['subject'] ).text()
+
+            if self.DEBUG: print 'update events start/stop ', time, code, subject
             
             ### check if code is state
-            if code in [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] if 'STATE' in self.pj['behaviors_conf'][x]['type'].upper() ]:
-
+            if code in stateEventsList:
+                if self.DEBUG: print 'is STATE'
                 ### how many code before with same subject?
+
+                for x in self.pj['observations'][self.observationId]['events' ] :
+
+                    print 'code', code, x[ pj_obs_fields['code'] ],  x[ pj_obs_fields['code'] ] == code
+                    print 'time', time, x[ pj_obs_fields['time'] ], x[ pj_obs_fields['time'] ]  < time, type(x[ pj_obs_fields['time'] ])
+                    
+                    #print Decimal( str(time) ), Decimal( str(x[ pj_obs_fields['time'] ]) ), Decimal( str(x[ pj_obs_fields['time'] ]) )  < Decimal( str(time) )
+                    
+                    #print 'subject', subject, x[ pj_obs_fields['subject'] ], x[ pj_obs_fields['subject'] ] == subject
+                    
+                    if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject:
+                        pass
+                    
+                print 'id code id subject before:', [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]
 
                 if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]) % 2: ### test if odd
 
@@ -4019,7 +4050,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### update current state
 
         if 'STATE' in event['type'].upper():
-
 
             if self.DEBUG: print 'current subject:', self.currentSubject
 
@@ -4118,11 +4148,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_events_start_stop()
 
         ### get item from twEvents at memTime row position
-        print
-        print 'memtime', memTime
-        print self.pj['observations'][self.observationId]['events'] 
-        print  
-        print [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime]
+        if self.DEBUG:
+            print
+            print 'memtime', memTime
+            print self.pj['observations'][self.observationId]['events'] 
+            print  
+            print [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime]
+
         item = self.twEvents.item(  [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
 
         self.twEvents.scrollToItem( item )
@@ -4166,8 +4198,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         return cumulative laps time from begining of observation
 
-        in seconds (float))
-        
+        as Decimal
         
         add time offset for video observation if any
         '''
@@ -4179,8 +4210,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.liveObservationStarted:
                 now = QTime()
                 now.start()
-                memLaps = self.liveStartTime.msecsTo(now) / 1000
-                return round(memLaps, 1)
+                memLaps = Decimal(str(round( self.liveStartTime.msecsTo(now) / 1000, 3)))
+                
+                return memLaps
 
             else:
 
@@ -4191,16 +4223,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
 
-            ### remove for global time: memLaps = self.mediaplayer.get_time() / 1000 + self.timeOffset
             
             if self.playerType == VLC:
                 ### cumulative time
-                memLaps = ( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) / 1000 + self.timeOffset
-                return round(memLaps, 3)
+                
+                print self.pj['observations'][self.observationId]['time offset']
+                print type(self.pj['observations'][self.observationId]['time offset'])
+                
+                memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) / 1000 ,3)))+ self.pj['observations'][self.observationId]['time offset']
+                return memLaps
 
             if self.playerType == OPENCV:
                 if self.cap.isOpened():
-                    return round(self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS) ,3)
+                    return Decimal(str(round(self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) / self.cap.get(cv2.cv.CV_CAP_PROP_FPS) ,3)))
 
     '''
     def eventFilter(self, widget, event):
@@ -4320,10 +4355,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             flag_function = False
 
+        if self.DEBUG: print 'function key', flag_function
 
         if (ek in function_keys) or ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])):
 
             memLaps = self.getLaps()
+            print memLaps
             if memLaps == None:
                 return
 
@@ -4415,10 +4452,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if ':' in self.twEvents.item(row, 0).text():
                 time = self.time2seconds(  self.twEvents.item(row, 0).text()  )
             else:
-                time  = float( self.twEvents.item(row, 0).text() )
+                time  = Decimal( self.twEvents.item(row, 0).text() )
 
             ### substract time offset
-            time -= self.timeOffset
+            time -= self.pj['observations'][self.observationId][TIME_OFFSET]
 
             if time + self.repositioningTimeOffset >= 0:
                 newtime = (time + self.repositioningTimeOffset ) * 1000
@@ -4481,7 +4518,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.currentSubject == self.twSubjects.item(row, 1).text():
                     self.deselectSubject()
                 else:
-                    self.deselectSubject(self.twSubjects.item(row, 1).text())
+                    self.selectSubject(self.twSubjects.item(row, 1).text())
         else: 
             self.no_observation()
 
@@ -4491,6 +4528,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def select_events_between_activated(self):
         '''
         select observations between a time interval
+        FIXME
         '''
 
         QMessageBox.warning(self, programName, 'Not available yet!')
@@ -4512,7 +4550,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if ':' in self.twEvents.item(r, 0).text():
                         time = self.time2seconds( self.twEvents.item(r, 0).text() )
                     else:
-                        time = float(self.twEvents.item(r, 0).text())
+                        time = Decimal(self.twEvents.item(r, 0).text())
                         
                     if time >= from_ and time <= to_:
                         #self.twEvents.setItemSelected(self.twEvents.item(r, 0), True)
