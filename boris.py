@@ -37,8 +37,8 @@ http://mih.voxindeserto.de/vlc_movieoverlays.html
 '''
 
 
-__version__ = '1.5'
-__version_date__ = '2014-05-15'
+__version__ = '1.51'
+__version_date__ = '2014-05-16'
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
@@ -4095,9 +4095,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for cs in csj :
                     if cs in event['excluded'].split(','):
 
+                        ### current modifiers
+                        cm = ''
+                        for ev in self.pj['observations'][self.observationId]['events' ]:
+                            if ev[0] > memTime:   #time
+                                break
+    
+                            if ev[1] == self.currentSubject:   # current subject name
+                                if ev[2] == cs:   #code
+                                    cm = ev[3]
+        
+                        print 'cm', cm
+
+
                         ### add excluded state event to observations (= STOP them)
-                        
-                        self.pj['observations'][self.observationId]['events'].append( [memTime - 0.1, self.currentSubject, cs, '', ''] )
+                        self.pj['observations'][self.observationId]['events'].append( [memTime - Decimal('0.1'), self.currentSubject, cs, cm, ''] )
                         '''
                         column = 0
                         self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
