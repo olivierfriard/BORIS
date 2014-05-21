@@ -37,8 +37,8 @@ http://mih.voxindeserto.de/vlc_movieoverlays.html
 '''
 
 
-__version__ = '1.51'
-__version_date__ = '2014-05-16'
+__version__ = '1.52'
+__version_date__ = '2014-05-21'
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
@@ -2555,7 +2555,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
 
         ### widget for results visualization
-        self.tb = timeBudgetResults(self.DEBUG)
+        self.tb = timeBudgetResults(self.DEBUG, self.pj)
 
         ### observations list
         self.tb.label.setText( 'Selected observations' )
@@ -4105,7 +4105,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if ev[2] == cs:   #code
                                     cm = ev[3]
         
-                        print 'cm', cm
+                        if self.DEBUG: print 'cm', cm
 
 
                         ### add excluded state event to observations (= STOP them)

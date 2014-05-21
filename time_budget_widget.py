@@ -25,6 +25,7 @@ Copyright 2012-2014 Olivier Friard
 from PySide.QtCore import *
 from PySide.QtGui import *
 
+from config import *
 
 class timeBudgetResults(QWidget):
     '''
@@ -32,10 +33,11 @@ class timeBudgetResults(QWidget):
     a function for exporting data in TSV format is implemented
     '''
 
-    def __init__(self, debug):
+    def __init__(self, debug, pj):
         super(timeBudgetResults, self).__init__()
 
         self.DEBUG = debug
+        self.pj = pj
         self.label = QLabel()
         self.label.setText('')
         self.lw = QListWidget()
@@ -98,11 +100,11 @@ class timeBudgetResults(QWidget):
                 f.write('\n')
 
                 ### write independant variables to file
-                if INDEPENDENT_VARIABLES in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
-                    if self.DEBUG: print 'indep var of selected observation ' , window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
+                if INDEPENDENT_VARIABLES in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
+                    if self.DEBUG: print 'indep var of selected observation ' , self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
 
-                    for var in window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
-                        f.write( var + '\t' + window.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
+                    for var in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
+                        f.write( var + '\t' + self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
 
             f.write('\n\nTime budget:\n')
             ### write header
