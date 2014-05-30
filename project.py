@@ -545,6 +545,7 @@ class DlgProject(QDialog, Ui_dlgProject):
                 for e in excl:
                     if e == self.twBehaviors.item(r, fields['code']).text():
                         item = QTableWidgetItem( ','.join(new_excl[e]) )
+                        item.setFlags(Qt.ItemIsEnabled)
                         self.twBehaviors.setItem(r, fields['excluded'] , item)
 
 
