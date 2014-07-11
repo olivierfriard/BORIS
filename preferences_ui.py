@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Wed Jan 15 16:12:48 2014
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Thu Jun 12 09:38:07 2014
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -90,7 +90,7 @@ class Ui_prefDialog(object):
         prefDialog.setWindowTitle(QtGui.QApplication.translate("prefDialog", "Preferences", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("prefDialog", "Default project time format", None, QtGui.QApplication.UnicodeUTF8))
         self.cbTimeFormat.setItemText(0, QtGui.QApplication.translate("prefDialog", "seconds", None, QtGui.QApplication.UnicodeUTF8))
-        self.cbTimeFormat.setItemText(1, QtGui.QApplication.translate("prefDialog", "hh:mm:ss.s", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbTimeFormat.setItemText(1, QtGui.QApplication.translate("prefDialog", "hh:mm:ss.mss", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("prefDialog", "Fast forward/backward speed (seconds)", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("prefDialog", "Time offset for video/audio reposition (seconds)", None, QtGui.QApplication.UnicodeUTF8))
         self.label_6.setText(QtGui.QApplication.translate("prefDialog", "Automatic backup every (minutes)", None, QtGui.QApplication.UnicodeUTF8))

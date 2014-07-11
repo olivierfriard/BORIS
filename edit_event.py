@@ -3,24 +3,22 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2013 Olivier Friard
+Copyright 2012-2014 Olivier Friard
 
+This file is part of BORIS.
 
-  This program is free software; you can redistribute it and/or modify
+  BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
   
-  This program is distributed in the hope that it will be useful,
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
   
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
-  
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
@@ -33,6 +31,9 @@ from edit_event_ui import Ui_Form
 
 import re
 
+import select_modifiers
+import coding_map
+
 class DlgEditEvent(QDialog, Ui_Form):
 
     def __init__(self, debug, parent=None):
@@ -41,79 +42,82 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.setupUi(self)
 
         self.DEBUG = debug
+        self.currentModifier = ''
 
-        self.cobCode.currentIndexChanged.connect(self.codeChanged)
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
+        #self.cobCode.currentIndexChanged.connect(self.codeChanged)
+        self.pbOK.clicked.connect(self.accept)
+        self.pbCancel.clicked.connect(self.reject)
+
+        ### embed modifiers selection
+        self.mod = select_modifiers.ModifiersRadioButton('', [], '', 'embedded')
+        self.VBoxLayout = QVBoxLayout()
+        self.VBoxLayout.addWidget(self.mod)
+
+        self.groupBox.setLayout(self.VBoxLayout)
+
+
+    def codeMap_clicked(self):
+        '''
+        show a coding map window
+        '''
+        codingMap = [ self.pj['behaviors_conf'][x]['coding map'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText() and self.pj['behaviors_conf'][x]['coding map']]
+        
+        codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ codingMap[0] ] )
+
+        codingMapWindow.resize(640, 640)
+        '''
+        if self.codingMapWindowGeometry:
+             self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
+        '''
+
+        if not codingMapWindow.exec_():
+            return
+
+        '''self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()'''
+
+        self.mod.setText( codingMap[0] + '\nArea(s): ' + codingMapWindow.getCodes() )
 
 
     def codeChanged(self):
 
         if self.DEBUG: print 'cobCode current index', self.cobCode.currentText()
 
-        ### selected code
-        ### selectedCode = sorted( [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf']   ])[ self.cobCode.currentIndex() ]
-        
-        # selectedCode = self.cobCode.currentText()
+        ### check if selected code has coding map
+        codingMap = [ self.pj['behaviors_conf'][x]['coding map'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText() and self.pj['behaviors_conf'][x]['coding map']]
+        if codingMap:
 
-        modif = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText()]
+            self.groupBox.setTitle('Coding map')
+            ### delete widget
+            self.mod.setParent(None)
+            self.mod = QPushButton( codingMap[0] + '\nArea(s): ' + self.currentModifier)
+            self.mod.clicked.connect(self.codeMap_clicked)
+            self.VBoxLayout.addWidget(self.mod)
 
-        if self.DEBUG: print 'modif', modif
+        else:   ### no coding map
 
-        self.cobModifier.clear()
+            modifiers = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText()][0]
 
-        self.cobModifier.addItems( [''] + modif[0].split(',') )
-
-
-
-    def pbOK_clicked(self):
-
-        ### check time format
-        '''
-        if ':' in self.leTime.text():
-            if re.match('^\d+:\d\d:\d\d\.\d$', self.leTime.text().strip()) or re.match('^\d+:\d\d:\d\d$', self.leTime.text().strip()):
-
-                ssplit = self.leTime.text().strip().split(':')
-                h, m, s = int(ssplit[0]), int(ssplit[1]), float(ssplit[2])
-                print h,m,s
-
-                if m > 59 or s > 59:
-                    QMessageBox.warning(self, programName, self.leTime.text() + ' do not respect the hh:mm:ss.s format')
-                    return
-            
+            modifiersList = []
+            if '|' in modifiers:
+                modifiersStringsList = modifiers.split('|')
+                for modifiersString in modifiersStringsList:
+                    modifiersList.append([s.strip() for s in modifiersString.split(',')])
+                
             else:
-                QMessageBox.warning(self, programName, self.leTime.text() + ' do not respect hh:mm:ss nor hh:mm:ss.s format')
-                return
+                modifiersList.append([s.strip() for s in modifiers.split(',')])
 
+            if self.DEBUG: print 'modifiersList (codeChanged)', modifiersList
 
-        elif not self.leTime.text().replace('.', '' , 1).isdigit():
-            QMessageBox.warning(self, programName, self.leTime.text() + ' is not a floating value')
-            return
-        '''
-
-
-        ### check subject
-        '''
-        if self.leSubject.text() and self.leSubject.text().upper() not in [ self.pj['subjects_conf'][x]['name'].upper() for x in self.pj['behaviors_conf'] ]:
-            QMessageBox.warning(self, programName, 'The subject <b>%s</b> is not in the list of available subjects' % (self.leSubject.text()))
-            return
-        '''
-        '''
-        if not self.leCode.text():
-            QMessageBox.warning(self, programName, 'The event code is mandatory!')
-            return
-        '''
-
-        #print [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] ]
-        '''
-        if not self.leCode.text().upper() in [ self.pj['behaviors_conf'][x]['code'].upper() for x in self.pj['behaviors_conf'] ]:
-            QMessageBox.warning(self, programName, 'The <b>%s</b> code is not in the list of codes:<br>' % (self.leCode.text()) + ', '.join([ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] ]))
-            return
-        '''
-
-        self.accept()
-
-
-    def pbCancel_clicked(self):
-        self.reject()
-
+            ### delete widget
+            self.mod.setParent(None)
+            if modifiersList != [['']]:
+                self.groupBox.setTitle('Modifiers')
+                
+                print 'modifiersList, self.currentModifier',modifiersList, self.currentModifier
+                
+                self.mod = select_modifiers.ModifiersRadioButton(self.cobCode.currentText(), modifiersList, self.currentModifier, 'embedded')
+            else:
+                self.groupBox.setTitle('')
+                self.mod = select_modifiers.ModifiersRadioButton('', [], '', 'embedded')
+    
+            self.VBoxLayout.addWidget(self.mod)

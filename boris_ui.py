@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Apr 29 13:01:16 2014
+# Created: Thu Jun 19 11:26:49 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,6 +66,8 @@ class Ui_MainWindow(object):
         self.menuAnalyze.setObjectName("menuAnalyze")
         self.menuPlayback = QtGui.QMenu(self.menubar)
         self.menuPlayback.setObjectName("menuPlayback")
+        self.menuTools = QtGui.QMenu(self.menubar)
+        self.menuTools.setObjectName("menuTools")
         MainWindow.setMenuBar(self.menubar)
         self.toolBar = QtGui.QToolBar(MainWindow)
         self.toolBar.setEnabled(True)
@@ -153,7 +155,7 @@ class Ui_MainWindow(object):
         self.twSubjects.setAlternatingRowColors(True)
         self.twSubjects.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.twSubjects.setObjectName("twSubjects")
-        self.twSubjects.setColumnCount(3)
+        self.twSubjects.setColumnCount(4)
         self.twSubjects.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.twSubjects.setHorizontalHeaderItem(0, item)
@@ -161,6 +163,8 @@ class Ui_MainWindow(object):
         self.twSubjects.setHorizontalHeaderItem(1, item)
         item = QtGui.QTableWidgetItem()
         self.twSubjects.setHorizontalHeaderItem(2, item)
+        item = QtGui.QTableWidgetItem()
+        self.twSubjects.setHorizontalHeaderItem(3, item)
         self.verticalLayout_2.addWidget(self.twSubjects)
         self.dwSubjects.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dwSubjects)
@@ -268,6 +272,8 @@ class Ui_MainWindow(object):
         self.actionClose_project.setObjectName("actionClose_project")
         self.actionObservationsList = QtGui.QAction(MainWindow)
         self.actionObservationsList.setObjectName("actionObservationsList")
+        self.actionMapCreator = QtGui.QAction(MainWindow)
+        self.actionMapCreator.setObjectName("actionMapCreator")
         self.menuHelp.addAction(self.actionAbout)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuFile.addAction(self.actionNew_project)
@@ -291,7 +297,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_event)
-        self.menuObservations.addAction(self.actionSort_observations)
         self.menuObservations.addAction(self.actionSelect_observations)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionDelete_selected_observations)
@@ -311,9 +316,11 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionPause)
         self.menuPlayback.addAction(self.actionPrevious)
         self.menuPlayback.addAction(self.actionNext)
+        self.menuTools.addAction(self.actionMapCreator)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
+        self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menuAnalyze.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
         self.toolBar.addAction(self.actionPlay)
@@ -341,8 +348,9 @@ class Ui_MainWindow(object):
         self.menuExport_events.setTitle(QtGui.QApplication.translate("MainWindow", "Export events", None, QtGui.QApplication.UnicodeUTF8))
         self.menuAnalyze.setTitle(QtGui.QApplication.translate("MainWindow", "Analyze", None, QtGui.QApplication.UnicodeUTF8))
         self.menuPlayback.setTitle(QtGui.QApplication.translate("MainWindow", "Playback", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuTools.setTitle(QtGui.QApplication.translate("MainWindow", "Tools", None, QtGui.QApplication.UnicodeUTF8))
         self.toolBar.setWindowTitle(QtGui.QApplication.translate("MainWindow", "toolBar", None, QtGui.QApplication.UnicodeUTF8))
-        self.dwConfiguration.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Configuration of behaviours", None, QtGui.QApplication.UnicodeUTF8))
+        self.dwConfiguration.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Ethogram", None, QtGui.QApplication.UnicodeUTF8))
         self.twConfiguration.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("MainWindow", "Key", None, QtGui.QApplication.UnicodeUTF8))
         self.twConfiguration.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("MainWindow", "Code", None, QtGui.QApplication.UnicodeUTF8))
         self.twConfiguration.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("MainWindow", "Type", None, QtGui.QApplication.UnicodeUTF8))
@@ -353,7 +361,8 @@ class Ui_MainWindow(object):
         self.dwSubjects.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Subjects", None, QtGui.QApplication.UnicodeUTF8))
         self.twSubjects.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("MainWindow", "Key", None, QtGui.QApplication.UnicodeUTF8))
         self.twSubjects.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("MainWindow", "Name", None, QtGui.QApplication.UnicodeUTF8))
-        self.twSubjects.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("MainWindow", "Current state(s)", None, QtGui.QApplication.UnicodeUTF8))
+        self.twSubjects.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("MainWindow", "Description", None, QtGui.QApplication.UnicodeUTF8))
+        self.twSubjects.horizontalHeaderItem(3).setText(QtGui.QApplication.translate("MainWindow", "Current state(s)", None, QtGui.QApplication.UnicodeUTF8))
         self.actionDocumentation.setText(QtGui.QApplication.translate("MainWindow", "Documentation", None, QtGui.QApplication.UnicodeUTF8))
         self.actionAbout.setText(QtGui.QApplication.translate("MainWindow", "About", None, QtGui.QApplication.UnicodeUTF8))
         self.actionQuit.setText(QtGui.QApplication.translate("MainWindow", "Quit", None, QtGui.QApplication.UnicodeUTF8))
@@ -408,4 +417,5 @@ class Ui_MainWindow(object):
         self.actionExportEventString.setText(QtGui.QApplication.translate("MainWindow", "Behavioural strings format", None, QtGui.QApplication.UnicodeUTF8))
         self.actionClose_project.setText(QtGui.QApplication.translate("MainWindow", "Close project", None, QtGui.QApplication.UnicodeUTF8))
         self.actionObservationsList.setText(QtGui.QApplication.translate("MainWindow", "Observations list", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionMapCreator.setText(QtGui.QApplication.translate("MainWindow", "Map creator", None, QtGui.QApplication.UnicodeUTF8))
 

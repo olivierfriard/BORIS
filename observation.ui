@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>574</width>
-    <height>714</height>
+    <width>601</width>
+    <height>577</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,10 +26,6 @@
      <item>
       <widget class="QLineEdit" name="leObservationId"/>
      </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <widget class="QLabel" name="label_8">
        <property name="text">
@@ -46,19 +42,6 @@
         <bool>true</bool>
        </property>
       </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
      </item>
     </layout>
    </item>
@@ -203,29 +186,6 @@
          <string>Media</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_7">
-         <item>
-          <widget class="QRadioButton" name="rbVLC">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>VLC media player</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="rbOpenCV">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>OpenCV</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QLabel" name="label_5">
            <property name="text">

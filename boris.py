@@ -7,38 +7,26 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2014 Olivier Friard
 
+This file is part of BORIS.
 
-  This program is free software; you can redistribute it and/or modify
+  BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
   
-  This program is distributed in the hope that it will be useful,
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
   
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
-'''
-TODO: check if observation has many media and OpenCV player selected
-
-frame by frame problem with OpenCV:
-http://stackoverflow.com/questions/11260042/reverse-video-playback-in-opencv
-
-show on VLC:
-http://mih.voxindeserto.de/vlc_movieoverlays.html
-
-'''
-
-
-__version__ = '1.521'
-__version_date__ = '2014-05-30'
+__version__ = '1.6'
+__version_date__ = '2014-07-11'
+__RC__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
@@ -59,8 +47,9 @@ import time
 import os
 from encodings import hex_codec
 import json
-
 from decimal import *
+import itertools
+import re
 
 from PySide.QtCore import *
 from PySide.QtGui import *
@@ -74,7 +63,9 @@ from edit_event import *
 from project import *
 import preferences
 import observation
-#import observations_list
+import coding_map
+import map_creator
+import select_modifiers
 
 import obs_list2
 
@@ -104,6 +95,9 @@ def bytes_to_str(b):
 from time_budget_widget import *
 
 from diagram_widget import *
+
+import select_modifiers
+
 
 class checkingBox_list(QDialog):
     '''
@@ -191,7 +185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     DEBUG = False
 
-    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {}  }
+    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, OBSERVATIONS: {} , 'coding_map':{} }
     project = False
 
     observationId = ''   ### current observation id
@@ -228,8 +222,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
     currentSubject = ''  ### contains the current subject of observation
     
-
     detailedObs = {}
+
+    codingMapWindowGeometry = 0
+    
+    projectWindowGeometry = 0   ### memorize size of project window
 
     def __init__(self, availablePlayers , parent = None):
 
@@ -290,86 +287,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setFont(font)
         self.lbCurrentStates.setFont(font)
 
-        '''
-        self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
-        self.hsVideo.setMaximum(slider_maximum)
-        self.hsVideo.setVisible(False)
-        '''
-
-
-        '''
-        if self.playerType == OPENCV:
-            
-            self.hsVideo = QSlider(Qt.Horizontal, self)
-            self.hsVideo.setMaximum(slider_maximum)
-    
-            self.video1layout = QHBoxLayout()
-
-            self.lbOpenCV = QLabel(self)
-            self.lbOpenCV.setBackgroundRole(QPalette.Base)
-
-            self.video1layout.addWidget(self.lbOpenCV)
-    
-            self.vboxlayout = QtGui.QVBoxLayout()
-            self.vboxlayout.addLayout(self.video1layout)
-            self.vboxlayout.addWidget(self.hsVideo)
-    
-            self.videoTab = QtGui.QWidget()
-            
-            self.videoTab.setLayout(self.vboxlayout)
-    
-            self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
-        '''
-        '''
-        if self.playerType == VLC:
-            ### creating a basic vlc instance
-    
-            self.instance = vlc.Instance()
-    
-            ### creating an empty vlc media player
-            self.mediaplayer = self.instance.media_player_new()
-    
-            self.mediaListPlayer = self.instance.media_list_player_new()
-            self.mediaListPlayer.set_media_player(self.mediaplayer)
-    
-            self.media_list = self.instance.media_list_new()
-    
-            self.media_list2 = self.instance.media_list_new()
-    
-            # In this widget, the video will be drawn
-            self.videoframe = QtGui.QFrame()
-            self.palette = self.videoframe.palette()
-            self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0,0,0))
-            self.videoframe.setPalette(self.palette)
-            self.videoframe.setAutoFillBackground(True)
-    
-            self.volumeslider = QtGui.QSlider(QtCore.Qt.Vertical, self)
-            self.volumeslider.setMaximum(100)
-            self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
-            self.volumeslider.setToolTip("Volume")
-            self.volumeslider.sliderMoved.connect(self.setVolume)
-
-            self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
-            self.hsVideo.setMaximum(slider_maximum)
-
-            self.video1layout = QtGui.QHBoxLayout()
-            self.video1layout.addWidget(self.videoframe)
-            self.video1layout.addWidget(self.volumeslider)
-    
-            self.vboxlayout = QtGui.QVBoxLayout()
-    
-            self.vboxlayout.addLayout(self.video1layout)
-    
-            self.vboxlayout.addWidget(self.hsVideo)
-    
-            self.videoTab = QtGui.QWidget()
-            
-            self.videoTab.setLayout(self.vboxlayout)
-    
-            self.toolBox.insertItem(0, self.videoTab, 'Audio/Video')
-        '''
-
-
         ### live tab
         self.liveLayout = QtGui.QGridLayout()
         self.textButton = QPushButton('Start live observation')
@@ -389,42 +306,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.toolBox.insertItem(2, self.liveTab, 'Live')
 
-        '''
-        self.videoTab.setEnabled(False)
-
-        self.liveTab.setEnabled(False)
-
-        self.toolBox.setItemEnabled (video, False)
-        self.toolBox.setItemEnabled (audio, False)
-        self.toolBox.setItemEnabled (live, False)
-
-        ###default tab
-        self.toolBox.setCurrentIndex(video)
-        '''
-
-
         ### add label to status bar
-        #self.statusbar.setMinimumHeight(40)
-        
         self.lbTime = QLabel()
         self.lbTime.setFrameStyle(QFrame.StyledPanel)
         self.lbTime.setMinimumWidth(160)
-        #self.lbTime.setText('Position: <font size=5><b>0:00:00.0</b></font>')
-        
         
         ### current subjects
         self.lbSubject = QLabel()
         self.lbSubject.setFrameStyle(QFrame.StyledPanel)
         self.lbSubject.setMinimumWidth(160)
-        #self.lbSubject.setMinimumHeight(40)
-
-
-        ### current states
-        self.lbState = QLabel()
-        self.lbState.setFrameStyle(QFrame.StyledPanel)
-        
-        self.lbState.setMinimumWidth(220)
-
 
         ### time offset
         self.lbTimeOffset = QLabel()
@@ -435,23 +325,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbSpeed = QLabel()
         self.lbSpeed.setFrameStyle(QFrame.StyledPanel)
         self.lbSpeed.setMinimumWidth(40)
-        #self.lbSpeed.setText('x1')
 
         self.statusbar.addPermanentWidget(self.lbTime)
         self.statusbar.addPermanentWidget(self.lbSubject)
 
-        self.statusbar.addPermanentWidget(self.lbState)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
         self.statusbar.addPermanentWidget(self.lbSpeed)
-
-
-        ##self.verticalHeader = QHeaderView(Qt.Vertical)
-        ##self.verticalHeader.sectionDoubleClicked.connect(self.twEvents_doubleClicked)
-        
-        ##self.twEvents.setVerticalHeader(self.verticalHeader)
-
-        #self.horizontalHeader = QHeaderView(Qt.Horizontal)
-        #self.twEvents.setHorizontalHeader(self.horizontalHeader)
 
         self.twEvents.setColumnCount( len(tw_events_fields) )
         self.twEvents.setHorizontalHeaderLabels(tw_events_fields)
@@ -499,10 +378,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### enabled if project
         self.actionNew_observation.setEnabled(flag)
 
-        self.actionObservationsList.setEnabled( self.pj['observations'] != {})
-        self.actionOpen_observation_2.setEnabled( self.pj['observations'] != {})
-        self.actionEdit_observation.setEnabled( self.pj['observations'] != {})
-
+        self.actionObservationsList.setEnabled( self.pj[OBSERVATIONS] != {})
 
         ### enabled if observation
         flagObs = self.observationId != ''
@@ -512,10 +388,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionLoad_observations_file.setEnabled(flagObs)
         
         self.menuExport_events.setEnabled(flag)
-        self.actionExportEventTabular.setEnabled(flagObs)
 
         self.actionDelete_all_observations.setEnabled(flagObs)
-        self.actionSort_observations.setEnabled(flagObs)
         self.actionSelect_observations.setEnabled(flagObs)
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
@@ -534,8 +408,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNext.setEnabled( flagObs)
 
 
-        self.actionTime_budget.setEnabled( self.pj['observations'] != {} )
-        self.actionVisualize_data.setEnabled( self.pj['observations'] != {} )
+        self.actionTime_budget.setEnabled( self.pj[OBSERVATIONS] != {} )
+        self.actionVisualize_data.setEnabled( self.pj[OBSERVATIONS] != {} )
 
 
     def connections(self):
@@ -561,15 +435,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionObservationsList.triggered.connect(self.observations_list)
         
-        self.actionOpen_observation_2.triggered.connect(self.open_observation)
-        self.actionEdit_observation.triggered.connect(self.edit_observation)
         self.actionClose_observation.triggered.connect(self.close_observation)
                 
 
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
-
-        #self.actionSort_observations.triggered.connect(self.sort_events)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
@@ -581,8 +451,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExportEventTabular.triggered.connect(self.export_tabular_events)
         self.actionExportEventString.triggered.connect(self.export_string_events)
 
-        ### playback
+        ### menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
+
+        ### menu Tools
+        self.actionMapCreator.triggered.connect(self.map_creator)
 
         ### menu Analyze
         self.actionTime_budget.triggered.connect(self.time_budget)
@@ -652,6 +525,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start( self.automaticBackup * 60000 )
 
+    def map_creator(self):
+        '''
+        show map creator window and hide program main window
+        '''
+        self.mapCreatorWindow = map_creator.MapCreatorWindow()
+        self.mapCreatorWindow.move(self.pos())
+        self.mapCreatorWindow.resize(640, 640)
+        self.mapCreatorWindow.closed.connect(self.show)
+        self.mapCreatorWindow.show()
+        self.hide()
+
+
 
     def observations_list(self):
         '''
@@ -662,7 +547,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, programName , 'You must close the running observation before.' )
             return
 
-        result, selectedObs = self.selectObservations( LIST )
+        result, selectedObs = self.selectObservations( SINGLE )
         
         if selectedObs:
 
@@ -677,9 +562,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 '''
                 FIXME
                 
-                
-                if 'playertype' in self.pj['observations'][self.observationId]:
-                    self.playerType = self.pj['observations'][self.observationId][ 'playertype' ]
+                if 'playertype' in self.pj[OBSERVATIONS][self.observationId]:
+                    self.playerType = self.pj[OBSERVATIONS][self.observationId][ 'playertype' ]
                 else:   ### set first player available (VLC by default)
                     self.playerType = self.availablePlayers[0]
                 '''
@@ -694,8 +578,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ### title of dock widget
                         self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
         
-                        #self.sort_events()
-        
                     else:
         
                         self.observationId = ''
@@ -703,7 +585,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.menu_options()
     
                 if self.playerType == OPENCV:
-                    print 'opencv'
+
                     self.initialize_new_observation_opencv()
                     self.menu_options()
                     ### title of dock widget
@@ -725,11 +607,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         try:
             import urllib2
-            lastVersion = Decimal(urllib2.urlopen('http://penelope.unito.it/boris/ver.dat' ).read().strip())
-            if lastVersion > Decimal(__version__):
-                QMessageBox.information(self, programName , 'The new version (v. <b>%s</b>) is available!<br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a>.' % str(lastVersion))
+            msg = 'The version you are using is the last one: <b>%s</b>' %  __version__
+
+            if __RC__:
+                msg += '<b> RC%s</b>' % __RC__
+
+                versionURL = 'http://penelope.unito.it/boris/static/ver.rc.dat'
+                newRCdate, newRCversion = urllib2.urlopen( versionURL ).read().strip().split(':')
+                if newRCdate > __version_date__:
+                    msg = 'A new Release Candidate is available: <b>RC%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.<br><br>Remember to report all bugs you will find! ;-)' % newRCversion
+
             else:
-                QMessageBox.information(self, programName , 'The version you are using is the last one')
+                versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
+                lastVersion = Decimal(urllib2.urlopen( versionURL ).read().strip())
+
+                if lastVersion > Decimal(__version__):
+                    msg = 'A new version is available: v. <b>%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.' % str(lastVersion)
+
+            QMessageBox.information(self, programName , msg)
+   
         except:
             QMessageBox.warning(self, programName , 'Can not check for updates...')
 
@@ -742,11 +638,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jt = JumpTo()
         if jt.exec_():
 
-            if self.DEBUG: print '\njump to time:', jt.te.time().toString('hh:mm:ss')
-            
-            ### newTime = int( self.time2seconds( jt.te.time().toString('hh:mm:ss') ) * 1000)
-            
-            
             newTime = int(self.time2seconds(jt.te.time().toString('hh:mm:ss.zzz')) * 1000)
             
             if self.DEBUG: print '\new time:', newTime
@@ -786,7 +677,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.mediaListPlayer.pause()
                             
                             #time.sleep(0.5)
-                            print newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ])
                             self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
                             
                             break
@@ -963,7 +853,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.observationId:
                 self.loadEventsInTW( self.observationId )
-                self.display_timeoffset_statubar()
+                self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
 
             self.saveConfigFile()
         
@@ -1007,9 +897,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbOpenCV.setVisible(True)
 
         ### check file for mediaplayer #1
-        if '1' in self.pj['observations'][self.observationId]['file'] and self.pj['observations'][self.observationId]['file']['1']:
+        if '1' in self.pj[OBSERVATIONS][self.observationId]['file'] and self.pj[OBSERVATIONS][self.observationId]['file']['1']:
 
-            for mediaFile in self.pj['observations'][self.observationId]['file']['1']:
+            for mediaFile in self.pj[OBSERVATIONS][self.observationId]['file']['1']:
 
                 if self.DEBUG: print 'media file', mediaFile, 'is file', os.path.isfile( mediaFile )
 
@@ -1036,7 +926,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     memObsId = self.observationId
                     self.close_observation()
 
-                    self.new_observation( 'edit', memObsId)
+                    self.new_observation( EDIT, memObsId)
                     return False
 
         
@@ -1071,10 +961,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.cap.isOpened():
             ret, frame = self.cap.read()
-            print 'ret', ret
 
             if frame == None:
-                print 'frame error'
+                if self.DEBUG: print 'frame error'
                 return
 
             height, width, bytesPerComponent = frame.shape
@@ -1098,7 +987,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### add states for no focal subject
             self.currentStates[ '' ] = []
             for sbc in StateBehaviorsCodes:
-                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
+                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
                     self.currentStates[''].append(sbc)
 
             ### add states for all configured subjects
@@ -1107,14 +996,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### add subject index
                 self.currentStates[ idx ] = []
                 for sbc in StateBehaviorsCodes:
-                    if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
+                    if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
                         self.currentStates[idx].append(sbc)
-
-            if self.currentStates[ '' ]:
-                self.lbState.setText('Current state(s): <b>' + '</b> ,<b> '.join(self.currentStates[ '' ]) + '</b>' )
-
-            else:
-                self.lbState.clear()
 
             ### show current states
             if self.currentSubject:
@@ -1127,7 +1010,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### show selected subjects
             for idx in sorted( self.pj['subjects_conf'].keys() ):
 
-                self.twSubjects.item(int(idx), 2 ).setText( ','.join(self.currentStates[idx]) )
+                self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
 
             self.lbTime.setText( self.convertTime( currentTime ))
             self.hsVideo.setValue( currentTime / self.mediaTotalLength * (slider_maximum - 1))
@@ -1230,7 +1113,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### init duration of media file
         del self.duration[0: len(self.duration)]
 
-        if self.pj['observations'][self.observationId]['type'] in [LIVE]:
+        if self.pj[OBSERVATIONS][self.observationId]['type'] in [LIVE]:
 
             #if self.DEBUG: print 'set up live observation', live
             self.simultaneousMedia = False
@@ -1253,17 +1136,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         ### MEDIA CODING
 
-        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             if self.DEBUG: print 'init video coding. obs id:', self.observationId
 
-            #self.fileName = self.pj['observations'][self.observationId]['file']
+            #self.fileName = self.pj[OBSERVATIONS][self.observationId]['file']
 
             ### check file for mediaplayer #1
-            if '1' in self.pj['observations'][self.observationId]['file'] and self.pj['observations'][self.observationId]['file']['1']:
+            if '1' in self.pj[OBSERVATIONS][self.observationId]['file'] and self.pj[OBSERVATIONS][self.observationId]['file']['1']:
 
                 self.simultaneousMedia = False
-                for mediaFile in self.pj['observations'][self.observationId]['file']['1']:
+                for mediaFile in self.pj[OBSERVATIONS][self.observationId]['file']['1']:
 
                     if self.DEBUG: print 'media file', mediaFile, 'is file', os.path.isfile( mediaFile )
 
@@ -1283,7 +1166,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         memObsId = self.observationId
                         self.close_observation()
 
-                        self.new_observation( 'edit', memObsId)
+                        self.new_observation( EDIT, memObsId)
                         return False
 
 
@@ -1335,14 +1218,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             ### check if media list player 1 contains more than 1 media
-            if '1' in self.pj['observations'][self.observationId]['file'] and len(self.pj['observations'][self.observationId]['file']['1']) > 1 and \
-               '2' in self.pj['observations'][self.observationId]['file'] and  self.pj['observations'][self.observationId]['file']['2']:
+            if '1' in self.pj[OBSERVATIONS][self.observationId]['file'] and len(self.pj[OBSERVATIONS][self.observationId]['file']['1']) > 1 and \
+               '2' in self.pj[OBSERVATIONS][self.observationId]['file'] and  self.pj[OBSERVATIONS][self.observationId]['file']['2']:
                    QMessageBox.warning(self, programName , 'It is not yet possible to play a second media when many media are loaded in the first media player' )
                    
 
 
             ### check for second media to be played together
-            elif '2' in self.pj['observations'][self.observationId]['file'] and  self.pj['observations'][self.observationId]['file']['2']:
+            elif '2' in self.pj[OBSERVATIONS][self.observationId]['file'] and  self.pj[OBSERVATIONS][self.observationId]['file']['2']:
                     
                     ### create 2nd mediaplayer
                     self.simultaneousMedia = True
@@ -1375,7 +1258,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     
                     
                     ### add media file
-                    for mediaFile in self.pj['observations'][self.observationId]['file']['2']:
+                    for mediaFile in self.pj[OBSERVATIONS][self.observationId]['file']['2']:
     
                         if os.path.isfile( mediaFile ):    
     
@@ -1435,27 +1318,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return True
 
-
-    def edit_observation(self):
-        
-        ### let user choose one observation to edit
-        result, selectedObs = self.selectObservations( EDIT )
-        
-        ### check if observation to edit is running
-        if selectedObs:
-            if self.observationId != selectedObs[0]:
-    
-                self.new_observation( EDIT, selectedObs[0])   ### observation id to edit
-            else:
-                QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
-
     
     def loadEventsInTW(self, obsId):
         ### load events in table widget
-        self.twEvents.setRowCount(len( self.pj['observations'][obsId]['events'] ))
+        self.twEvents.setRowCount(len( self.pj[OBSERVATIONS][obsId]['events'] ))
         row = 0
 
-        for event in self.pj['observations'][obsId]['events']:
+        for event in self.pj[OBSERVATIONS][obsId]['events']:
 
             for field_type in tw_events_fields:
                 
@@ -1474,83 +1343,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.update_events_start_stop()
 
-    def open_observation(self):
-
-        ### check if curretn observation is running
-        if self.observationId:
-            QMessageBox.critical(self, programName , 'You must close the running observation before.' )
-            return
-
-        result, selectedObs = self.selectObservations( OPEN )
-
-        if selectedObs:
-            self.observationId = selectedObs[0]
-
-            ### load events in table widget
-            self.loadEventsInTW(self.observationId)
-
-            ### set player type
-            '''
-            FIXME
-            
-            
-            if 'playertype' in self.pj['observations'][self.observationId]:
-                self.playerType = self.pj['observations'][self.observationId][ 'playertype' ]
-            else:   ### set first player available (VLC by default)
-                self.playerType = self.availablePlayers[0]
-            '''
-            self.playerType = VLC
-            
-            
-            if self.playerType == VLC:
-                if self.initialize_new_observation_vlc():
-   
-                    self.menu_options()
-    
-                    ### title of dock widget
-                    self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
-    
-                    #self.sort_events()
-    
-                else:
-    
-                    self.observationId = ''
-                    self.twEvents.setRowCount(0)
-                    self.menu_options()
-
-            if self.playerType == OPENCV:
-                print 'opencv'
-                self.initialize_new_observation_opencv()
-                self.menu_options()
-                ### title of dock widget
-                self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
-
 
 
     def selectObservations(self, mode):
         '''
         show observations list window
-        mode: accepted values: EDIT, OPEN, LIST, SELECT
-        
+        mode: accepted values: SINGLE, MULTIPLE
         '''
 
         obsList = obs_list2.observationsList_widget()
-        obsList.pb.setText(mode)
-        
+       
         obsList.pbOpen.setVisible(False)
         obsList.pbEdit.setVisible(False)
-
-        if mode in [EDIT, OPEN, LIST]:
-            obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
-
-        if mode == LIST:
-            obsList.pbOpen.setVisible(True)
-            obsList.pbEdit.setVisible(True)
-            obsList.pb.setVisible(False)
-
+        obsList.pbSelect.setVisible(False)
         obsList.pbSelectAll.setVisible(False)
         obsList.pbUnSelectAll.setVisible(False)
-        
+        obsList.mode = mode
+
+        if mode == SINGLE:
+            obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
+            obsList.pbOpen.setVisible(True)
+            obsList.pbEdit.setVisible(True)
+
+        if mode == MULTIPLE:
+            obsList.view.setSelectionMode( QAbstractItemView.MultiSelection )
+            obsList.pbSelect.setVisible(True)
+            obsList.pbSelectAll.setVisible(True)
+            obsList.pbUnSelectAll.setVisible(True)
+       
         obsListFields = ['id', 'date', 'description', 'media']
         indepVarHeader = []
         if INDEPENDENT_VARIABLES in self.pj:
@@ -1565,48 +1385,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         obsList.model.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
         obsList.comboBox.addItems(obsListFields + indepVarHeader)
+        
 
-        for obs in sorted( list(self.pj['observations'].keys()) ):
+        for obs in sorted( list(self.pj[OBSERVATIONS].keys()) ):
             
-            date = self.pj['observations'][obs]['date'].replace('T',' ')
-            descr = self.pj['observations'][obs]['description']
+            date = self.pj[OBSERVATIONS][obs]['date'].replace('T',' ')
+            descr = self.pj[OBSERVATIONS][obs]['description']
 
-            '''
-            media = ''
-            if self.pj['observations'][obs]['type'] in [MEDIA]:
-                media =  '  '.join(   [ os.path.basename(x) for x in self.pj['observations'][obs]['file']['1']  ]    )
-            elif self.pj['observations'][obs]['type'] in [LIVE]:
-                media = LIVE
-            '''
-                
             mediaList = []
-            if self.pj['observations'][obs]['type'] in [MEDIA]:
-                for idx in self.pj['observations'][obs]['file']:
-                    for media in self.pj['observations'][obs]['file'][idx]:
+            if self.pj[OBSERVATIONS][obs]['type'] in [MEDIA]:
+                for idx in self.pj[OBSERVATIONS][obs]['file']:
+                    for media in self.pj[OBSERVATIONS][obs]['file'][idx]:
                         mediaList.append('#%s: %s' % (idx , media))
     
                 media = '\n'.join( mediaList )
-            elif self.pj['observations'][obs]['type'] in [LIVE]:
+            elif self.pj[OBSERVATIONS][obs]['type'] in [LIVE]:
                 media = LIVE
 
             ### indep var
             indepVar = []
-            if INDEPENDENT_VARIABLES in self.pj['observations'][obs]:
+            if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obs]:
                 for var in indepVarHeader:
-                    if var in self.pj['observations'][obs][ INDEPENDENT_VARIABLES ]:
-                        indepVar.append( QStandardItem( self.pj['observations'][obs][ INDEPENDENT_VARIABLES ][var] ) )
+                    if var in self.pj[OBSERVATIONS][obs][ INDEPENDENT_VARIABLES ]:
+                        indepVar.append( QStandardItem( self.pj[OBSERVATIONS][obs][ INDEPENDENT_VARIABLES ][var] ) )
 
             obsList.model.invisibleRootItem().appendRow( [ QStandardItem(obs), QStandardItem(date), QStandardItem(descr) , QStandardItem( media )]  +  indepVar )
+
+        #obsList.view.horizontalHeader().setStretchLastSection(True)
+        obsList.view.resizeColumnsToContents()
 
         obsList.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
         obsList.label.setText( '%d observation(s)' % obsList.model.rowCount())
 
-        obsList.resize(800, 600)
+        obsList.resize(900, 600)
 
         selectedObs = []
         
         result = obsList.exec_()
-        print 'result', result
         
         if result:
             if obsList.view.selectedIndexes():
@@ -1614,167 +1429,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if idx.column() == 0:   ### first column
                         selectedObs.append( idx.data() )
 
-        if result == 0:
+        print 'result',result
+
+        if result == 0:  ### cancel
             resultStr = ''
-        if result == 1:
+        if result == 1:   ### select
             resultStr = 'ok'
-        if result == 2:
+        if result == 2:   ### open
             resultStr = OPEN
-        if result == 3:
+        if result == 3:   ### edit
             resultStr = EDIT
         
 
         return resultStr, selectedObs
 
 
-    """
-    def observations_list(self, mode):
-        '''
-        show observations list window
-        open: allow user to select the observation to open
-        edit: allow user to select the observation to edit
-        select: allow user to select the one or more observations
-        '''
-
-    
-        if self.pj['observations']:
-
-            obsList = observations_list.ObservationsList()
-            
-            obsList.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 700, 400)
-
-            obsList.twObservations.setRowCount(0)
-
-            if mode == 'open':
-
-                if self.DEBUG: print 'open observation', self.pj['observations']
-                obsList.twObservations.setSelectionMode( QAbstractItemView.SingleSelection )
-                obsList.pbEdit.setVisible(False)
-                obsList.pbOK.setVisible(False)
-                obsList.pbSelectAll.setVisible(False)
-                obsList.pbUnSelectAll.setVisible(False)
-
-            if mode == 'edit':
-                obsList.twObservations.setSelectionMode( QAbstractItemView.SingleSelection )
-                obsList.pbOpen.setVisible(False)
-                obsList.pbOK.setVisible(False)
-                obsList.pbSelectAll.setVisible(False)
-                obsList.pbUnSelectAll.setVisible(False)
-
-            if mode == 'select':
-                obsList.twObservations.setSelectionMode( QAbstractItemView.ExtendedSelection )
-                obsList.pbOpen.setVisible(False)
-                obsList.pbEdit.setVisible(False)
-
-
-            #if self.pj['observations']:
-            for obs in sorted( list(self.pj['observations'].keys()) ):
-
-                if self.DEBUG: print 'observation:', obs
-
-                obsList.twObservations.setRowCount(obsList.twObservations.rowCount() + 1)
-
-                item = QTableWidgetItem(obs) 
-                obsList.twObservations.setItem(obsList.twObservations.rowCount() - 1, 0 ,item)
-
-                item = QTableWidgetItem( self.pj['observations'][obs]['date'].replace('T',' ') ) 
-                obsList.twObservations.setItem(obsList.twObservations.rowCount() - 1, 1 ,item)
-
-                item = QTableWidgetItem( self.pj['observations'][obs]['description'].replace('\r\n',' ').replace('\n',' ').replace('\r',' ') ) 
-                obsList.twObservations.setItem(obsList.twObservations.rowCount() - 1, 2 ,item)
-
-                ### media file
-                if self.pj['observations'][obs]['type'] in ['MEDIA']:
-                    item = QTableWidgetItem( '  '.join(   [ os.path.basename(x) for x in self.pj['observations'][obs]['file']['1']  ]    )) 
-                elif self.pj['observations'][obs]['type'] in ['LIVE']:
-                    item = QTableWidgetItem( 'Live' )
-                else:
-                    item = QTableWidgetItem( '' )
-
-                obsList.twObservations.setItem(obsList.twObservations.rowCount() - 1, 3 ,item)
-
-
-                if '2' in self.pj['observations'][obs]['file'] and self.pj['observations'][obs]['file']['2']:
-
-                    item = QTableWidgetItem( '  '.join( [ os.path.basename(x) for x in self.pj['observations'][obs]['file']['2'] ] )) 
-                    obsList.twObservations.setItem(obsList.twObservations.rowCount() - 1, 4 ,item)
-
-
-            obsList.twObservations.resizeColumnsToContents()
-
-       
-            if obsList.exec_():
-
-                ### print 'obsList result', obsList.result()
-
-                if obsList.twObservations.selectedIndexes():
-
-                    ### return selected observations
-                    if mode == 'select':
-                        selected_obsId = []
-                        print 'obsList.twObservations.selectedIndexes()', obsList.twObservations.selectedIndexes()
-                        for i in obsList.twObservations.selectedIndexes():
-                            ### print i.row()
-                            if obsList.twObservations.item( i.row(), 0).text() not in selected_obsId:
-                                selected_obsId.append( obsList.twObservations.item( i.row(), 0).text() )
-
-                        if self.DEBUG: print 'selected observations id', selected_obsId
-                        return selected_obsId
-
-                    ### open observation
-                    if mode == 'open':
-                        
-                        self.observationId = obsList.twObservations.item( obsList.twObservations.selectedIndexes()[0].row(), 0).text()
-        
-                        ### load events
-                        self.twEvents.setRowCount(len( self.pj['observations'][self.observationId]['events'] ))
-                        row = 0
-        
-                        for event in self.pj['observations'][self.observationId]['events']:
-        
-                            for field_type in tw_events_fields:
-                                
-                                if field_type in pj_events_fields:
-        
-                                    field = event[ pj_obs_fields[field_type]  ]
-                                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(str(field)))
-        
-                                else:
-                                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(''))
-        
-                            row += 1
-        
-        
-                        if self.initialize_new_observation():
-                        
-        
-                            self.menu_options()
-        
-                            ### title of dock widget
-                            self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
-        
-                            self.sort_events()
-
-                        else:
-
-                            self.observationId = ''
-                            self.twEvents.setRowCount(0)
-                            self.menu_options()
-
-
-                    ### edit observation
-                    if mode == 'edit':
-
-                        ### check if observation to edit is running
-                        if self.observationId != obsList.twObservations.item( obsList.twObservations.selectedIndexes()[0].row(), 0).text():
-
-                            self.new_observation( 'edit', obsList.twObservations.item( obsList.twObservations.selectedIndexes()[0].row(), 0).text())   ### observation id to edit
-                        else:
-                            QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
-    """
-
-
-    def new_observation(self, mode = 'new', obsId = ''):
+    def new_observation(self, mode = NEW, obsId = ''):
         '''
         define a new observation or edit an observation
         '''
@@ -1782,7 +1452,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.DEBUG: print 'mode', mode
 
         ### check if current observation must be closed to create a new one
-        if mode == 'new' and self.observationId:
+        if mode == NEW and self.observationId:
             response = dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', ['Yes', 'No'])
             if response == 'No':
                 return
@@ -1827,10 +1497,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### var value
                 item = QTableWidgetItem()
                 ### check if obs has independent variables and var label is a key
-                if mode == 'edit' and INDEPENDENT_VARIABLES in self.pj['observations'][obsId] and indepVarLabel in self.pj['observations'][obsId][INDEPENDENT_VARIABLES]:
-                    txt = self.pj['observations'][obsId][INDEPENDENT_VARIABLES][indepVarLabel]
+                if mode == EDIT and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId] and indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]:
+                    txt = self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][indepVarLabel]
 
-                elif mode == 'new':
+                elif mode == NEW:
                     txt = self.pj[INDEPENDENT_VARIABLES][i]['default value']
                 else:
                     txt = ''
@@ -1841,25 +1511,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             observationWindow.twIndepVariables.resizeColumnsToContents()
 
-        ### set player type
-        observationWindow.rbVLC.setEnabled( VLC in self.availablePlayers )
-        observationWindow.rbOpenCV.setEnabled(OPENCV in self.availablePlayers)
 
-        '''FIXME to be removed
-        if mode == 'new':
-            if self.timeFormat == S:
-                observationWindow.teTimeOffset.setVisible(False)
-            if self.timeFormat == HHMMSS:
-                observationWindow.leTimeOffset.setVisible(False)
-        '''
         if self.timeFormat == S:
             observationWindow.teTimeOffset.setVisible(False)
         if self.timeFormat == HHMMSS:
             observationWindow.leTimeOffset.setVisible(False)
 
 
-        if mode == 'edit':
-
+        if mode == EDIT:
 
             observationWindow.setWindowTitle('Edit observation ' + obsId )
             mem_obs_id = obsId
@@ -1897,12 +1556,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
 
-                '''
-                FIXME no more player type
-                if 'playertype' in self.pj["observations"][obsId]:
-                    observationWindow.rbVLC.setChecked(self.pj["observations"][obsId]['playertype'] == VLC)
-                    observationWindow.rbOpenCV.setChecked(self.pj["observations"][obsId]['playertype'] == OPENCV)
-                '''
 
             if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
@@ -1921,16 +1574,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
             '''
 
-            ### check VLC
-            '''
-            FIXME no more player type
-            if observationWindow.rbVLC.isChecked():
-                self.playerType = VLC
-
-            if observationWindow.rbOpenCV.isChecked():
-                self.playerType = OPENCV
-            '''
-
             self.playerType = VLC
 
             self.projectChanged = True
@@ -1938,7 +1581,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### check if new id already used
             '''
             if mode == 'new' and observationWindow.leObservationId.text():
-                if observationWindow.leObservationId.text() in self.pj['observations']:
+                if observationWindow.leObservationId.text() in self.pj[OBSERVATIONS]:
                     QMessageBox.warning(self, programName , 'The observation id <b>%s</b> is already used!' % observationWindow.leObservationId.text())
                     return
             '''
@@ -1946,19 +1589,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             new_obs_id = observationWindow.leObservationId.text()
 
 
-            if mode == 'new':
+            if mode == NEW:
 
                 self.observationId = new_obs_id
 
-                self.pj['observations'][self.observationId] = { 'file': [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
+                self.pj[OBSERVATIONS][self.observationId] = { 'file': [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
 
 
             ### check if id changed
-            if mode == 'edit' and new_obs_id != obsId:
+            if mode == EDIT and new_obs_id != obsId:
 
                 ### check if changed id already used
                 '''
-                if new_obs_id in self.pj['observations']:
+                if new_obs_id in self.pj[OBSERVATIONS]:
                     QMessageBox.warning(self, programName , 'An observation id <b>%s</b> is already used!' % new_obs_id)
                     return
                 '''
@@ -1966,48 +1609,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### self.observationId = new_obs_id
                 if self.DEBUG: 'observation id', obsId, 'changed in', new_obs_id
 
-                self.pj['observations'][ new_obs_id ] = self.pj['observations'][ obsId ]
-                del self.pj['observations'][ obsId ]
+                self.pj[OBSERVATIONS][ new_obs_id ] = self.pj[OBSERVATIONS][ obsId ]
+                del self.pj[OBSERVATIONS][ obsId ]
 
 
             '''
             FIXME
-            self.pj['observations'][new_obs_id]['playertype'] = self.playerType'''
+            self.pj[OBSERVATIONS][new_obs_id]['playertype'] = self.playerType
+            '''
 
             ### observation date
-            self.pj['observations'][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
+            self.pj[OBSERVATIONS][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
 
-            self.pj['observations'][new_obs_id]['description'] = observationWindow.teDescription.toPlainText()
+            self.pj[OBSERVATIONS][new_obs_id]['description'] = observationWindow.teDescription.toPlainText()
 
             ### observation type: read project type from tab text
-            self.pj['observations'][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
+            self.pj[OBSERVATIONS][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
 
             ### independent variables for observation
-            self.pj['observations'][new_obs_id][INDEPENDENT_VARIABLES] = {}
+            self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES] = {}
             for r in range(0, observationWindow.twIndepVariables.rowCount()):
 
                 ### set dictionary as label (col 0) => value (col 2)
-                self.pj['observations'][new_obs_id][INDEPENDENT_VARIABLES][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
+                self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
 
 
             ### observation time offset
 
             if self.timeFormat == HHMMSS:
-                self.pj['observations'][new_obs_id][TIME_OFFSET]  = self.time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]  = self.time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
 
             if self.timeFormat == S:
-                self.pj['observations'][new_obs_id][TIME_OFFSET] =  abs(Decimal( observationWindow.leTimeOffset.text() ))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] =  abs(Decimal( observationWindow.leTimeOffset.text() ))
 
             if observationWindow.rbSubstract.isChecked():
-                self.pj['observations'][new_obs_id][TIME_OFFSET]  = - self.pj['observations'][new_obs_id][TIME_OFFSET] 
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]  = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] 
 
-            self.display_timeoffset_statubar(self.pj['observations'][new_obs_id][TIME_OFFSET])
+            self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
 
             ### media file
             fileName = {}
 
             ### media
-            if self.pj['observations'][new_obs_id]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][new_obs_id]['type'] in [MEDIA]:
                 
                 fileName['1'] = []
                 if observationWindow.lwVideo.count():
@@ -2038,10 +1682,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.DEBUG: print 'media fileName', fileName
 
-                self.pj['observations'][new_obs_id]['file'] = fileName
+                self.pj[OBSERVATIONS][new_obs_id]['file'] = fileName
 
 
-            if mode == 'new':
+            if mode == NEW:
                 
                 self.menu_options()
                 
@@ -2116,7 +1760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTime.clear()
         self.lbSubject.clear()
 
-        self.lbState.clear()
+        '''FIX ME self.lbState.clear()'''
         self.lbTimeOffset.clear()
         self.lbSpeed.clear()
 
@@ -2129,7 +1773,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         read config file
         '''
         if self.DEBUG: print 'read config file'
-        
 
         if os.path.isfile( os.path.expanduser('~') + os.sep + '.boris' ):
             settings = QSettings(os.path.expanduser('~') + os.sep + '.boris' , QSettings.IniFormat)
@@ -2230,7 +1873,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def edit_project_activated(self):
 
         if self.project:
-            self.edit_project('edit')
+            self.edit_project(EDIT)
         else:
             QMessageBox.warning(self, programName, 'There is no project to edit')
 
@@ -2342,9 +1985,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 ### extract time, code and modifier
                 if subject_to_analyze == 'No subject':
-                    behaviors_to_analyze = [[x[0], x[2], x[3] ] for x in self.pj['observations'][obs_id]['events'] if x[1] == '']   ### pass time and code
+                    behaviors_to_analyze = [[x[0], x[2], x[3] ] for x in self.pj[OBSERVATIONS][obs_id]['events'] if x[1] == '']   ### pass time and code
                 else:
-                    behaviors_to_analyze = [[x[0], x[2], x[3]] for x in self.pj['observations'][obs_id]['events'] if x[1] == subject_to_analyze]   ### pass time and code
+                    behaviors_to_analyze = [[x[0], x[2], x[3]] for x in self.pj[OBSERVATIONS][obs_id]['events'] if x[1] == subject_to_analyze]   ### pass time and code
 
                 points, states_paired = self.observation_analysis(behaviors_to_analyze)
 
@@ -2379,7 +2022,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observed_subjects = []
         
         ### extract events from selected observations
-        all_events =   [ self.pj['observations'][x]['events'] for x in self.pj['observations'] if x in selected_observations]
+        all_events =   [ self.pj[OBSERVATIONS][x]['events'] for x in self.pj[OBSERVATIONS] if x in selected_observations]
         for events in all_events:
             for event in events:
                 observed_subjects.append( event[pj_obs_fields['subject']] )
@@ -2443,23 +2086,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return []
 
+
     def combinationsCodeModifier(self):
         '''
-        returns all code and modifier combinations
+        returns all code and modifier combinations for code without coding map 
         'no modifier' if event has modifiers but no one selected
+        returns list of sets
         '''
         codes = []
         for event in self.pj['behaviors_conf']:
 
-            if self.pj['behaviors_conf'][event]['modifiers']:
+            if self.pj['behaviors_conf'][event]['modifiers'] and not self.pj['behaviors_conf'][event]['coding map']:
 
                 ### add event without modifier
-                codes.append( self.pj['behaviors_conf'][event]['code'] + '###' + 'no modifier')
+                """codes.append( self.pj['behaviors_conf'][event]['code'] + '###' + 'no modifier')"""
+                #codes.append( (self.pj['behaviors_conf'][event]['code'], 'no modifier') )
+
                 ### add code with all modifiers
-                for modifier in self.pj['behaviors_conf'][event]['modifiers'].split(','):
-                    codes.append( self.pj['behaviors_conf'][event]['code'] + '###' + modifier)
-            else:   ### event without modifier
-                codes.append( self.pj['behaviors_conf'][event]['code'] + '###' )
+
+                ### check if more sets of modifiers
+
+                ### remove key code from modifiers
+                modifiersList = re.sub(' \(.\)', '', self.pj['behaviors_conf'][event]['modifiers']).split('|')
+                m = []
+                for modifiers in modifiersList:
+                    m.append( ['None'] + modifiers.split(',') )
+
+                for set in itertools.product(*m):
+                    codes.append( (self.pj['behaviors_conf'][event]['code'], '|'.join(set)))
+
+            else:   ### event without modifier or with coding map
+                codes.append( (self.pj['behaviors_conf'][event]['code'] , 'None') )
 
         return codes
 
@@ -2474,7 +2131,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### OBSERVATIONS
 
         ### ask user observations to analyze
-        result, selected_observations = self.selectObservations( SELECT )
+        result, selected_observations = self.selectObservations( MULTIPLE )
+
+        if self.DEBUG: print '\nselected observations', selected_observations
 
         if not selected_observations:
             return
@@ -2491,8 +2150,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### ask user for subjects to analyze
             selected_subjects = self.select_subjects( observed_subjects )
     
-            if self.DEBUG: print '\nselected subjects', selected_subjects
-    
             if not selected_subjects:
                 return
 
@@ -2500,57 +2157,76 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             selected_subjects = ['No subject']
 
+        if self.DEBUG: print '\nselected subjects', selected_subjects
 
         states_results, points_results = self.analyze_subject( selected_subjects, selected_observations )
 
-        if self.DEBUG: print '\nstates_results', states_results
+        if self.DEBUG: print '\nr2163 states_results', states_results
         
-        if self.DEBUG: print '\npoint_results', points_results
+        if self.DEBUG: print '\nr2165 point_results', points_results
 
         out = []
         tot_duration = {}
         
         ### extract all event codes and modifier
         codes = self.combinationsCodeModifier()
+        
 
-        print 'all code modifier combinations', codes
+        
+        ### create list of codes with coding map
+        cm = []
+        for behaviorIdx in self.pj['behaviors_conf']:
+			if 'coding map' in self.pj['behaviors_conf'][ behaviorIdx ] and self.pj['behaviors_conf'][ behaviorIdx ][ 'coding map' ]:
+				cm.append( self.pj['behaviors_conf'][ behaviorIdx ][ 'code' ] )
+				
+        print 'cm',cm
+        ### append all modifiers from coding map        
+        for observationIdx in self.pj[OBSERVATIONS]:
+			for event in self.pj[OBSERVATIONS][ observationIdx ]['events']:
+				if event[pj_obs_fields['code'] ] in cm:
+					if not (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ) in codes:
+					    codes.append( (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ))
+
+
+
+        if self.DEBUG: print '\nall code modifier combinations', codes ,'\n'
 
         for subject_to_analyze in selected_subjects:
             
             tot_duration[ subject_to_analyze ] = 0 
 
-            for behavior in codes:
+            for behaviorModifier in codes:
 
                 duration = 0
                 number = 0
 
                 ### state events
-                if subject_to_analyze + '|' + behavior in states_results:
+                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in states_results:
 
-                    for event in states_results[ subject_to_analyze + '|' + behavior ]:
+                    for event in states_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ]:
                         number += 1
                         duration += event[1] - event[0]
 
                     tot_duration[ subject_to_analyze ] += duration
 
 
-                    if self.DEBUG: print 'behavior',behavior.split('###')
+                    if self.DEBUG: print 'behaviorModifier', behaviorModifier
 
                     if number:
-                        out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')),  'number': number, 'duration': duration, 'mean': round( duration/number, 1)  } )
+                        out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behaviorModifier),  'number': number, 'duration': duration, 'mean': round( duration/number, 1)  } )
                     else:
-                        out.append( {'subject': subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')),  'number': 0, 'duration': 0, 'mean': 0 } )
+                        out.append( {'subject': subject_to_analyze, 'behavior': '%s (%s)' % tuple(behaviorModifier),  'number': 0, 'duration': 0, 'mean': 0 } )
 
                 ### point events
-                if subject_to_analyze + '|' + behavior in points_results:
+                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in points_results:
 
-                    number = len( points_results[ subject_to_analyze + '|' + behavior ] )
+                    number = len( points_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ] )
                     duration = '-'
 
-                    out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behavior.split('###')) , 'number': number, 'duration':duration, 'mean':'-' } )
+                    out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behaviorModifier), 'number': number, 'duration':duration, 'mean':'-' } )
 
                 if self.DEBUG:
-                     if out: print out[-1]
+                    if out: print 'r2208 out[-1]', out[-1]
 
             if self.DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
 
@@ -2601,10 +2277,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def visualize_data(self):
+        '''
+        draw diagram
+        '''
 
 
         ### ask user for observations to analyze
-        result, selected_observations = self.selectObservations( SELECT )
+        result, selected_observations = self.selectObservations( MULTIPLE )
         if not selected_observations:
             return
 
@@ -2631,23 +2310,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         codes = self.combinationsCodeModifier()
         if self.DEBUG: print 'all code modifier combinations', codes
 
+        ### create list of codes with coding map
+        cm = []
+        for behaviorIdx in self.pj['behaviors_conf']:
+			if 'coding map' in self.pj['behaviors_conf'][ behaviorIdx ] and self.pj['behaviors_conf'][ behaviorIdx ][ 'coding map' ]:
+				cm.append( self.pj['behaviors_conf'][ behaviorIdx ][ 'code' ] )
+				
+        print 'cm',cm
+        ### append all modifiers from coding map        
+        for observationIdx in self.pj[OBSERVATIONS]:
+			for event in self.pj[OBSERVATIONS][ observationIdx ]['events']:
+				if event[pj_obs_fields['code'] ] in cm:
+					if not (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ) in codes:
+					    codes.append( (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ))
+
+
+
         ### extract highest time and track number
         max_time, track_nb = 0, 0
 
         for subject_to_analyze in selected_subjects:
 
-            for behavior in codes:
+            for behaviorModifier in codes:
 
-                if subject_to_analyze + '|' + behavior in states_results:
+                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in states_results:
                     track_nb += 1
 
-                    for event in states_results[ subject_to_analyze + '|' + behavior ]:
+                    for event in states_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ]:
                         max_time = max( max_time, event[0], event[1] )
 
-                if subject_to_analyze + '|' + behavior in points_results:
+                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in points_results:
                     track_nb += 1
                     
-                    for event in points_results[ subject_to_analyze + '|' + behavior ]:
+                    for event in points_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ]:
                         max_time = max( max_time, event )
 
 
@@ -2727,22 +2422,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             scene.add( svg.Text(( left_margin , y_init ), 'Subject: ' + subject, 14) )
             y_init += h
 
-            for behavior in codes:
+            for behaviorModifier in codes:
 
-                if subject + '|' + behavior in points_results:
-                    behaviorOut = '%s (%s)' % tuple(behavior.split('###')) 
+                if subject + '|' + '###'.join(behaviorModifier) in points_results:
+                    behaviorOut = '%s (%s)' % behaviorModifier
                     scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut.replace(' ()','' ), 16) )
 
-                    for event in points_results[ subject + '|' + behavior ]:
+                    for event in points_results[ subject + '|' + '###'.join(behaviorModifier) ]:
                         scene.add(svg.Rectangle( (x_init + round(event / max_time * ( width - x_init - right_margin )), y_init), h, w, red) )
 
                     y_init += h + spacer
 
-                if subject + '|' + behavior in states_results:
-                    behaviorOut = '%s (%s)' % tuple(behavior.split('###'))
+                if subject + '|' + '###'.join(behaviorModifier) in states_results:
+                    behaviorOut = '%s (%s)' % behaviorModifier
                     scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut.replace(' ()','' ), 16) )
 
-                    for event in states_results[ subject + '|' + behavior ]:
+                    for event in states_results[ subject + '|' + '###'.join(behaviorModifier)]:
                         scene.add(svg.Rectangle( (x_init + round(event[0] / max_time * ( width - x_init - right_margin )), y_init), h,   round((event[1] - event[0]) / max_time * ( width - x_init - right_margin ) )     , blue))
 
                     y_init += h + spacer
@@ -2774,14 +2469,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pj = json.loads(s)
         
         ### transform time to decimal
-        for obs in self.pj['observations']:
-            self.pj['observations'][obs]['time offset'] = Decimal( str(self.pj['observations'][obs]['time offset']) )
+        for obs in self.pj[OBSERVATIONS]:
+            self.pj[OBSERVATIONS][obs]['time offset'] = Decimal( str(self.pj[OBSERVATIONS][obs]['time offset']) )
 
-            for idx,event in enumerate(self.pj['observations'][obs]['events']):
+            for idx,event in enumerate(self.pj[OBSERVATIONS][obs]['events']):
 
-                self.pj['observations'][obs]['events'][idx][ pj_obs_fields['time'] ] = Decimal(str(self.pj['observations'][obs]['events'][idx][ pj_obs_fields['time'] ]))
-                
+                self.pj[OBSERVATIONS][obs]['events'][idx][ pj_obs_fields['time'] ] = Decimal(str(self.pj[OBSERVATIONS][obs]['events'][idx][ pj_obs_fields['time'] ]))
+        
 
+        ### add coding_map key to old project files
+        if not 'coding_map' in self.pj:
+            self.pj['coding_map'] = {}
+
+        ### add subject description
+        for idx in [x for x in self.pj[SUBJECTS]]:
+            if not 'description' in self.pj[SUBJECTS][ idx ] :
+                self.pj[SUBJECTS][ idx ]['description'] = ''
+            
 
         if self.DEBUG: print 'pj', self.pj
 
@@ -2798,6 +2502,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
 
+
         ### check if old version  v. 0 *.obs
         if 'project_format_version' not in self.pj:
             if self.DEBUG: print 'project format version:', 0
@@ -2805,25 +2510,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### convert VIDEO, AUDIO -> MEDIA
             self.pj['project_format_version'] = project_format_version
 
-            for obs in [x for x in self.pj['observations']]:
+            for obs in [x for x in self.pj[OBSERVATIONS]]:
 
                 ### remove 'replace audio' key
-                if 'replace audio' in self.pj['observations'][obs]:
-                    del self.pj['observations'][obs]['replace audio']
+                if 'replace audio' in self.pj[OBSERVATIONS][obs]:
+                    del self.pj[OBSERVATIONS][obs]['replace audio']
 
-                if self.pj['observations'][obs]['type'] in ['VIDEO','AUDIO']:
-                    self.pj['observations'][obs]['type'] = MEDIA
+                if self.pj[OBSERVATIONS][obs]['type'] in ['VIDEO','AUDIO']:
+                    self.pj[OBSERVATIONS][obs]['type'] = MEDIA
 
                 ### convert old media list in new one
-                if len( self.pj['observations'][obs]['file'] ):
-                    d1 = { '1':  [self.pj['observations'][obs]['file'][0]] }
+                if len( self.pj[OBSERVATIONS][obs]['file'] ):
+                    d1 = { '1':  [self.pj[OBSERVATIONS][obs]['file'][0]] }
 
-                if len( self.pj['observations'][obs]['file'] ) == 2:
-                    d1['2'] =  [self.pj['observations'][obs]['file'][1]]
+                if len( self.pj[OBSERVATIONS][obs]['file'] ) == 2:
+                    d1['2'] =  [self.pj[OBSERVATIONS][obs]['file'][1]]
 
-                self.pj['observations'][obs]['file'] = d1
+                self.pj[OBSERVATIONS][obs]['file'] = d1
 
-                if self.DEBUG: print "self.pj['observations'][obs]['file']", self.pj['observations'][obs]['file']
+                if self.DEBUG: print "self.pj[OBSERVATIONS][obs]['file']", self.pj[OBSERVATIONS][obs]['file']
 
             ### convert VIDEO, AUDIO -> MEDIA
 
@@ -2887,11 +2592,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fileName = fd.getOpenFileName(self, 'Open project', '', 'Project files (*.boris);;Old project files (*.obs);;All files (*)')[0]
 
         if fileName:
-
             self.open_project_json(fileName)
-
-
-
 
 
     def initialize_new_project(self):
@@ -3018,7 +2719,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def edit_project(self, mode):
-
         '''
         project management
         mode: new/edit
@@ -3028,11 +2728,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, programName , 'Close the running observation before creating/modifying the project.' )
             return
 
-        if mode == 'new':
+        if mode == NEW:
 
             if self.projectChanged:
                 response = dialog.MessageDialog(programName, 'What to do about the current unsaved project?', ['Save', 'Discard', 'Cancel'])
-                #response = dialog.MessageDialog(programName, 'The current project is not saved. Do you want to continue?', ['Yes', 'No'])
 
                 if response == 'Save':
                     self.save_project_activated()
@@ -3040,17 +2739,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if response == 'Cancel':
                     return
 
-            '''self.pj = {"time_format": "hh:mm:ss", "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {} }'''
-
             ### empty main window tables
             self.twConfiguration.setRowCount(0)   ### behaviors
             self.twSubjects.setRowCount(0)
             self.twEvents.setRowCount(0)
 
 
-        newProjectWindow = DlgProject(self.DEBUG)
-        
-        newProjectWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
+        newProjectWindow = projectDialog(self.DEBUG)
+
+        if self.projectWindowGeometry:
+            newProjectWindow.restoreGeometry( self.projectWindowGeometry)
 
         newProjectWindow.setWindowTitle(mode + ' project')
         newProjectWindow.tabProject.setCurrentIndex(0)   ### project information
@@ -3064,14 +2762,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj['time_format'] == HHMMSS:
             newProjectWindow.rbHMS.setChecked(True)
 
-        ### memorize video file name
-        memVideoFileName = '@'
-
-        if mode == 'new':
+        if mode == NEW:
 
             newProjectWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
+            newProjectWindow.lbProjectFilePath.setText( '')
 
-        if mode == 'edit':
+        if mode == EDIT:
 
             if self.pj['project_name']: 
                 newProjectWindow.leProjectName.setText(self.pj["project_name"])
@@ -3094,14 +2790,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             ### load subjects in editor
-            if self.pj['subjects_conf']:
+            if self.pj[SUBJECTS]:
 
-                for idx in sorted ( self.pj['subjects_conf'].keys() ):
+                for idx in sorted ( self.pj[SUBJECTS].keys() ):
 
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
 
-                    for i, field in enumerate(['key','name']):   ### key, name
-                        item = QTableWidgetItem(self.pj['subjects_conf'][idx][field])   
+                    for i, field in enumerate( subjectsFields ):
+                        item = QTableWidgetItem(self.pj[SUBJECTS][idx][field])   
                         newProjectWindow.twSubjects.setItem(newProjectWindow.twSubjects.rowCount() - 1, i ,item)
 
                 newProjectWindow.twSubjects.setSortingEnabled(False)
@@ -3111,9 +2807,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### load observation in project window
             newProjectWindow.twObservations.setRowCount(0)
-            if self.pj['observations']:
+            if self.pj[OBSERVATIONS]:
 
-                for obs in sorted( self.pj['observations'].keys() ):
+                for obs in sorted( self.pj[OBSERVATIONS].keys() ):
 
                     if self.DEBUG: print 'observation:', obs
 
@@ -3122,20 +2818,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     item = QTableWidgetItem(obs) 
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 0, item)
 
-                    item = QTableWidgetItem( self.pj['observations'][obs]['date'].replace('T',' ') ) 
+                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]['date'].replace('T',' ') ) 
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 1, item)
 
-                    item = QTableWidgetItem( self.pj['observations'][obs]['description'] ) 
+                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]['description'] ) 
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 2, item)
 
-                    ### FIXME
                     mediaList = []
-                    if self.pj['observations'][obs]['type'] in [MEDIA]:
-                        for idx in self.pj['observations'][obs]['file']:
-                            for media in self.pj['observations'][obs]['file'][idx]:
+                    if self.pj[OBSERVATIONS][obs]['type'] in [MEDIA]:
+                        for idx in self.pj[OBSERVATIONS][obs]['file']:
+                            for media in self.pj[OBSERVATIONS][obs]['file'][idx]:
                                 mediaList.append('#%s: %s' % (idx , media))
 
-                    elif self.pj['observations'][obs]['type'] in [LIVE]:
+                    elif self.pj[OBSERVATIONS][obs]['type'] in [LIVE]:
                         mediaList = [LIVE]
                     
 
@@ -3149,31 +2844,52 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### configuration of behaviours
             if self.pj['behaviors_conf']:
 
+                newProjectWindow.signalMapper = QSignalMapper(self)
+                newProjectWindow.comboBoxes = []
+
                 for i in sorted( self.pj['behaviors_conf'].keys() ):
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
-                    for field in self.pj['behaviors_conf'][i]:
+                    #for field in self.pj['behaviors_conf'][i]: 2014-05-29
+                    for field in fields:
 
                         item = QTableWidgetItem()
 
                         if field == 'type':
 
-                            comboBox = QComboBox()
-                            for observation in observation_types:
-                                comboBox.addItem(observation)
-                            comboBox.setCurrentIndex( observation_types.index(self.pj['behaviors_conf'][i][field]) )
+                            ### add combobox with event type
+                            newProjectWindow.comboBoxes.append(QComboBox())
+                            newProjectWindow.comboBoxes[-1].addItems(observation_types)
+                            newProjectWindow.comboBoxes[-1].setCurrentIndex( observation_types.index(self.pj['behaviors_conf'][i][field]) )
+                            
+                            #comboBox = QComboBox()
+                            #comboBox.addItems(observation_types)
+                            #comboBox.setCurrentIndex( observation_types.index(self.pj['behaviors_conf'][i][field]) )
 
-                            newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, 0, comboBox)
+                            newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
+                            newProjectWindow.comboBoxes[-1].currentIndexChanged['int'].connect(newProjectWindow.signalMapper.map)
+                            #newProjectWindow.signalMapper.mapped['int'].connect(newProjectWindow.comboBoxChanged)
+
+
+                            newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, fields[field], newProjectWindow.comboBoxes[-1])
+
 
                         else:
-                            item.setText( self.pj['behaviors_conf'][i][field] )
+                            if field in self.pj['behaviors_conf'][i]:
+                                item.setText( self.pj['behaviors_conf'][i][field] )
+                            else:
+                                item.setText( '' )
 
-                            if field == 'excluded':
+                            if field in ['excluded', 'coding map', 'modifiers']:
                                 item.setFlags(Qt.ItemIsEnabled)
 
                             newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, fields[field] ,item)
 
+                newProjectWindow.signalMapper.mapped['int'].connect(newProjectWindow.comboBoxChanged)
+
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
+
+            
 
             ### load independent variables 
             if INDEPENDENT_VARIABLES in self.pj:
@@ -3200,37 +2916,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx,item)
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
-                    
-
 
 
         newProjectWindow.dteDate.setDisplayFormat('yyyy-MM-dd hh:mm:ss')
+
+        if mode == NEW:
+
+            self.pj = {'time_format': HHMMSS,\
+            'project_date': '', \
+            'project_name': '', \
+            'project_description': '', \
+            'subjects_conf' : {},\
+            'behaviors_conf': {}, \
+            OBSERVATIONS: {},
+            'coding_map': {} }
         
         ### pass copy of self.pj
         newProjectWindow.pj = dict(self.pj)
+
 
         ##################################################################################################################################
         ##################################################################################################################################
 
         if newProjectWindow.exec_():  #button OK
 
+            ### retrieve project dict from window
             self.pj = dict( newProjectWindow.pj )
 
-            if mode == 'new':
+            if mode == NEW:
                 self.projectFileName = ''
-                self.pj = {"time_format": "hh:mm:ss",\
-                "project_date": "",\
-                "project_name": "",\
-                "project_description": "",\
-                "subjects_conf" : {},\
-                "behaviors_conf": {},\
-                "observations": {} }
 
             self.project = True
 
-            self.pj["project_name"] = newProjectWindow.leProjectName.text()
-            self.pj["project_date"] = newProjectWindow.dteDate.dateTime().toString(Qt.ISODate)
-            self.pj["project_description"] = newProjectWindow.teDescription.toPlainText()
+            self.pj['project_name'] = newProjectWindow.leProjectName.text()
+            self.pj['project_date'] = newProjectWindow.dteDate.dateTime().toString(Qt.ISODate)
+            self.pj['project_description'] = newProjectWindow.teDescription.toPlainText()
 
             ### time format
             if newProjectWindow.rbSeconds.isChecked():
@@ -3239,7 +2959,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if newProjectWindow.rbHMS.isChecked():
                 self.timeFormat = HHMMSS
 
-            self.pj["time_format"] = self.timeFormat
+            self.pj['time_format'] = self.timeFormat
 
 
             ### configuration
@@ -3255,6 +2975,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.DEBUG: print 'behaviours configuration', self.pj['behaviors_conf']
 
                 self.load_obs_in_lwConfiguration()
+                
+                #self.pj['coding_map'] = dict( newProjectWindow.coding_map )
+
+                #if self.DEBUG: print 'coding map', self.pj['coding_map']
 
                 self.pj['subjects_conf'] =  newProjectWindow.subjects_conf
 
@@ -3274,10 +2998,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.menu_options()
 
 
+        self.projectWindowGeometry = newProjectWindow.saveGeometry()
+
+
     def new_project_activated(self):
 
         if self.DEBUG: print 'new project'
-        self.edit_project('new')
+        self.edit_project(NEW)
 
 
     def save_project_json(self, projectFileName):
@@ -3289,19 +3016,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return float(obj)
             raise TypeError
 
-
         if self.DEBUG: print 'save project json projectFileName:',  projectFileName
 
-        #self.sort_events()
-        
         self.pj['project_format_version'] = project_format_version
         
-        s = json.dumps(self.pj, indent=4, default=decimal_default)
-
-        f = open(projectFileName, 'w')
-
-        f.write(s)
-        f.close()
+        try:
+            f = open(projectFileName, 'w')
+            f.write(json.dumps(self.pj, indent=4, default=decimal_default))
+            f.close()
+        except:
+            QMessageBox.critical(self, programName, 'The project file can not be saved!')
+            return
 
         self.projectChanged = False
 
@@ -3328,9 +3053,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def save_project_activated(self):
         '''save current project'''
 
-        print 'self.projectFileName', self.projectFileName
-
         if self.DEBUG: print 'save project function'
+
         if not self.projectFileName:
 
             fd = QFileDialog(self)
@@ -3377,7 +3101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### add states for no focal subject
         self.currentStates[ '' ] = []
         for sbc in StateBehaviorsCodes:
-            if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: ### test if odd
+            if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: ### test if odd
                 self.currentStates[''].append(sbc)
 
         ### add states for all configured subjects
@@ -3386,14 +3110,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### add subject index
             self.currentStates[ idx ] = []
             for sbc in StateBehaviorsCodes:
-                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: ### test if odd
+                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: ### test if odd
                     self.currentStates[idx].append(sbc)
-
-        if self.currentStates[ '' ]:
-            self.lbState.setText('Current state(s): <b>' + '</b> ,<b> '.join(self.currentStates[ '' ]) + '</b>' )
-
-        else:
-            self.lbState.clear()
 
 
         ### show current states
@@ -3407,7 +3125,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### show selected subjects
         for idx in sorted( self.pj['subjects_conf'].keys() ):
 
-            self.twSubjects.item(int(idx), 2 ).setText( ','.join(self.currentStates[idx]) )
+            self.twSubjects.item(int(idx), len(subjectsFields) ).setText( ','.join(self.currentStates[idx]) )
 
 
 
@@ -3427,7 +3145,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.twEvents.setRowCount(0)
                 
-                self.pj['observations'][self.observationId]['events'] = []
+                self.pj[OBSERVATIONS][self.observationId]['events'] = []
                 self.projectChanged = True
                 #self.loadEventsInTW(self.observationId)
 
@@ -3466,33 +3184,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if platform.system() in ['Linux', 'Darwin']:
                 import commands
 
-                for f in self.pj['observations'][self.observationId]['file']:
+                for idx in self.pj[OBSERVATIONS][self.observationId]['file']:
+                    
+                    for file_ in self.pj[OBSERVATIONS][self.observationId]['file'][idx]:
 
-                    if self.DEBUG: print 'file:', f
+                        if self.DEBUG: print 'file:', file_
+    
+                        r = os.system( 'file -b ' + file_ )
+    
+                        if not r:
+                            out += '<b>'+os.path.basename(file_) + '</b><br>'
+                            out += commands.getoutput('file -b ' + file_ ) + '<br>'
 
-                    r = os.system( 'file -b ' + f )
-
-                    if not r:
-                        out += '<b>'+os.path.basename(f) + '</b><br>'
-                        out += commands.getoutput('file -b ' + f ) + '<br>'
-
-            if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
-                QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s<br>Video: %s<br>Is seekable: %s' \
-                % (self.convertTime(self.mediaplayer.get_length()/1000), str(self.player.hasVideo()), str(self.player.isSeekable()) ) )
+            media = self.mediaplayer.get_media()
+            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s' % (self.convertTime(self.mediaplayer.get_length()/1000)  ) )
 
 
-
-                media = player.get_media()
-                print('State: %s' % self.mediaplayer.get_state())
-                print('Media: %s' % bytes_to_str(media.get_mrl()))
-                print('Track: %s/%s' % (self.mediaplayer.video_get_track(), player.video_get_track_count()))
-                print('Current time: %s/%s' % (self.mediaplayer.get_time(), media.get_duration()))
-                print('Position: %s' % self.mediaplayer.get_position())
-                print('FPS: %s (%d ms)' % (self.mediaplayer.get_fps(), mspf()))
-                print('Rate: %s' % self.mediaplayer.get_rate())
-                print('Video size: %s' % str(self.mediaplayer.video_get_size(0)))  # num=0
-                print('Scale: %s' % self.mediaplayer.video_get_scale())
-                print('Aspect ratio: %s' % self.mediaplayer.video_get_aspect_ratio())
+                if self.DEBUG:
+                    print('State: %s' % self.mediaplayer.get_state())
+                    print('Media: %s' % bytes_to_str(media.get_mrl()))
+                    print('Track: %s/%s' % (self.mediaplayer.video_get_track(), self.mediaplayer.video_get_track_count()))
+                    print('Current time: %s/%s' % (self.mediaplayer.get_time(), media.get_duration()))
+                    print('Position: %s' % self.mediaplayer.get_position())
+                    print('FPS: %s' % (self.mediaplayer.get_fps()))
+                    print('Rate: %s' % self.mediaplayer.get_rate())
+                    print('Video size: %s' % str(self.mediaplayer.video_get_size(0)))  # num=0
+                    print('Scale: %s' % self.mediaplayer.video_get_scale())
+                    print('Aspect ratio: %s' % self.mediaplayer.video_get_aspect_ratio())
 
 
 
@@ -3583,6 +3302,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         editWindow.cobCode.addItems( sortedCodes )
 
+        ### activate signal
+        editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
+
+
+        editWindow.currentModifier = ''
 
         if editWindow.exec_():  #button OK
 
@@ -3595,26 +3319,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             memTime = newTime
 
+            ### get modifier(s)
+            ### check mod type (QPushButton or QDialog)
+            print type(editWindow.mod)
+            
+            if type(editWindow.mod)  is select_modifiers.ModifiersRadioButton:
+                modifiers = editWindow.mod.getModifiers()
+                if self.DEBUG: print 'r 3441 modifiers', modifiers
+
+                if len(modifiers) == 1:
+                    modifier_str = modifiers[0]
+                    if modifier_str == 'None':
+                        modifier_str = ''
+                else:
+                    modifier_str = '|'.join( modifiers )
+
+            #QPushButton coding map
+            if type(editWindow.mod)  is QPushButton:
+                modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
+
+
             new_event = { 'time': newTime, \
             'subject': editWindow.cobSubject.currentText(), \
             'code': editWindow.cobCode.currentText() ,\
             'type': '',\
-            'modifier': editWindow.cobModifier.currentText(),\
+            'modifier': modifier_str,\
             'comment': editWindow.leComment.toPlainText() }
 
             
-            self.pj['observations'][self.observationId]['events'].append( [ newTime, editWindow.cobSubject.currentText(),  editWindow.cobCode.currentText() , editWindow.cobModifier.currentText(), editWindow.leComment.toPlainText()]  )
+            self.pj[OBSERVATIONS][self.observationId]['events'].append( [ newTime, editWindow.cobSubject.currentText(),  editWindow.cobCode.currentText() , modifier_str, editWindow.leComment.toPlainText()]  )
             
-            self.pj['observations'][self.observationId]['events'].sort()
+            self.pj[OBSERVATIONS][self.observationId]['events'].sort()
             
             self.loadEventsInTW( self.observationId )
             
             
 
-            if self.DEBUG: print 'EVENTS:', self.pj['observations'][self.observationId]['events']
+            if self.DEBUG: print 'EVENTS:', self.pj[OBSERVATIONS][self.observationId]['events']
 
             ### get item from twEvents at memTime row position
-            item = self.twEvents.item(  [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
+            item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
 
             self.twEvents.scrollToItem( item )
 
@@ -3636,19 +3380,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             editWindow = DlgEditEvent(self.DEBUG)
             editWindow.setWindowTitle('Edit event parameters')
 
-            editWindow.pj = self.pj 
+            ### pass project to window
+            editWindow.pj = self.pj
+            editWindow.currentModifier = ''
 
             row = self.twEvents.selectedItems()[0].row()   ### first selected event
 
             if self.DEBUG: print 'row to edit:', row
-            if self.DEBUG: print 'self.pj[observations][events][row]', self.pj['observations'][self.observationId]['events'][row]
+            if self.DEBUG: print 'self.pj[observations][events][row]', self.pj[OBSERVATIONS][self.observationId]['events'][row]
 
 
             if self.timeFormat == HHMMSS:
                 editWindow.dsbTime.setVisible(False)
 
                 time = QTime()
-                h,m,s = self.seconds2time( self.pj['observations'][self.observationId]['events'][row][ 0 ] ).split(':')
+                h,m,s = self.seconds2time( self.pj[OBSERVATIONS][self.observationId]['events'][row][ 0 ] ).split(':')
                 s, ms = s.split('.')
                 time.setHMS(int(h),int(m),int(s),int(ms))
                 editWindow.teTime.setTime( time )
@@ -3656,17 +3402,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.timeFormat == S:
                 editWindow.teTime.setVisible(False)
 
-                editWindow.dsbTime.setValue( self.pj['observations'][self.observationId]['events'][row][ 0 ] )
+                editWindow.dsbTime.setValue( self.pj[OBSERVATIONS][self.observationId]['events'][row][ 0 ] )
 
 
             sortedSubjects = [''] + sorted( [ self.pj['subjects_conf'][x]['name'] for x in self.pj['subjects_conf'] ])
             
             editWindow.cobSubject.addItems( sortedSubjects )
             
-            if self.pj['observations'][self.observationId]['events'][row][ 1 ] in sortedSubjects:
-                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj['observations'][self.observationId]['events'][row][ 1 ] ) )
+            if self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['subject'] ] in sortedSubjects:
+                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['subject'] ] ) )
             else:
-                QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' %   self.pj['observations'][self.observationId]['events'][row][ 1 ]  )
+                QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' %   self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['subject'] ]  )
                 editWindow.cobSubject.setCurrentIndex( 0 )
 
 
@@ -3675,27 +3421,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             editWindow.cobCode.addItems( sortedCodes )
 
             ### check if selected code is in code's list (no modification of codes)
-            if self.pj['observations'][self.observationId]['events'][row][ 2 ] in sortedCodes:
-                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj['observations'][self.observationId]['events'][row][ 2 ] ) )
+            if self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['code'] ] in sortedCodes:
+                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['code'] ] ) )
             else:
-                QMessageBox.warning(self, programName, 'The code <b>%s</b> do not exists more in the code\'s list' % self.pj['observations'][self.observationId]['events'][row][ 2 ])
+                QMessageBox.warning(self, programName, 'The code <b>%s</b> do not exists more in the code\'s list' % self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['code'] ])
                 editWindow.cobCode.setCurrentIndex( 0 )
 
             '''editWindow.leModifier.setText( self.twEvents.item(row, tw_obs_fields['modifier']).text())'''
 
+            ### pass current modifier(s) to window
+            editWindow.currentModifier = self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['modifier'] ]
+
+
             ### comment
-            editWindow.leComment.setPlainText( self.pj['observations'][self.observationId]['events'][row][ 4 ])
+            editWindow.leComment.setPlainText( self.pj[OBSERVATIONS][self.observationId]['events'][row][ pj_obs_fields['comment'] ])
 
             ### load modifiers
             editWindow.codeChanged()
-
-            ### extract modifers for current code
-
-            modif = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] ==  self.pj['observations'][self.observationId]['events'][row][ 2 ] ]
-            if modif:
-                editWindow.cobModifier.setCurrentIndex( ([''] + modif[0].split(',')).index( self.pj['observations'][self.observationId]['events'][row][ 3 ] ) )
-            else:
-                editWindow.cobModifier.setCurrentIndex( 0 )
+            
+            ### activate signal
+            editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
 
             if editWindow.exec_():  #button OK
             
@@ -3707,8 +3452,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.timeFormat == S:
                     newTime = editWindow.dsbTime.value()
 
-                self.pj['observations'][self.observationId]['events'][row] = [newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText(), editWindow.cobModifier.currentText() ,editWindow.leComment.toPlainText()]
-                self.pj['observations'][self.observationId]['events'].sort()
+                ### check mod type (QPushButton or QDialog)
+                if type(editWindow.mod)  is select_modifiers.ModifiersRadioButton:
+                    modifiers = editWindow.mod.getModifiers()
+                    if self.DEBUG: print 'r 3441 modifiers', modifiers
+    
+                    if len(modifiers) == 1:
+                        modifier_str = modifiers[0]
+                        if modifier_str == 'None':
+                            modifier_str = ''
+                    else:
+                        modifier_str = '|'.join( modifiers )
+
+                #QPushButton coding map
+                if type(editWindow.mod)  is QPushButton:
+                    modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
+
+
+                self.pj[OBSERVATIONS][self.observationId]['events'][row] = [newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText(), modifier_str ,editWindow.leComment.toPlainText()]
+                self.pj[OBSERVATIONS][self.observationId]['events'].sort()
                 self.loadEventsInTW( self.observationId )
 
         else:
@@ -3750,12 +3512,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         about window
         '''
         import platform
+        
+        ver = __version__
+        if __RC__:
+            ver += ' RC' + __RC__
 
         players = []
-        if VLC in self.availablePlayers:
-            players.append( "VLC media player v. %s" % bytes_to_str(vlc.libvlc_get_version()))
-        if OPENCV in self.availablePlayers:
-            players.append('OpenCV 2')
+        players.append( "VLC media player v. %s" % bytes_to_str(vlc.libvlc_get_version()))
+        
+        
 
 
         QMessageBox.about(self, "About " + programName,
@@ -3766,8 +3531,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python %s - Qt %s - PySide %s on %s<br><br>
-        Available player(s):<br>%s""" % \
-        (programName, __version__, __version_date__, platform.python_version(), PySide.QtCore.__version__, PySide.__version__, platform.system(), '<br>'.join(players)))
+        %s""" % \
+        (programName, ver, __version_date__, platform.python_version(), PySide.QtCore.__version__, PySide.__version__, platform.system(), '<br>'.join(players)))
 
 
 
@@ -3778,7 +3543,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         adjust media position
         '''
 
-        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             sliderPos = self.hsVideo.value() / (slider_maximum - 1)
 
@@ -3795,17 +3560,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.mediaplayer2.set_time( self.mediaplayer2.get_length() )
 
-            if self.playerType == OPENCV:
-
-                self.cap.set(cv2.cv.CV_CAP_PROP_POS_FRAMES,  sliderPos * self.mediaTotalLength * self.cap.get(cv2.cv.CV_CAP_PROP_FPS) )
-
 
     def timer_out(self):
         '''
         indicate the video current position and total length for VLC player
         '''
 
-        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             currentTime = self.mediaplayer.get_time()
 
@@ -3833,14 +3594,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### current state(s)
 
                 ### extract State events
-                StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf'] if 'State' in self.pj['behaviors_conf'][y]['type']] ]
+                StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf'] if 'STATE' in self.pj['behaviors_conf'][y]['type'].upper()] ]
 
                 self.currentStates = {}
-                
+
                 ### add states for no focal subject
                 self.currentStates[ '' ] = []
                 for sbc in StateBehaviorsCodes:
-                    if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
+                    if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
                         self.currentStates[''].append(sbc)
 
                 ### add states for all configured subjects
@@ -3849,28 +3610,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     ### add subject index
                     self.currentStates[ idx ] = []
                     for sbc in StateBehaviorsCodes:
-                        if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
+                        if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: ### test if odd
                             self.currentStates[idx].append(sbc)
-
-                if self.currentStates[ '' ]:
-                    self.lbState.setText('Current state(s): <b>' + '</b> ,<b> '.join(self.currentStates[ '' ]) + '</b>' )
-
-                else:
-                    self.lbState.clear()
 
 
                 ### show current states
+                cm = {}
                 if self.currentSubject:
                     ### get index of focal subject (by name)
                     idx = [idx for idx in self.pj['subjects_conf'] if self.pj['subjects_conf'][idx]['name'] == self.currentSubject][0]
-                    self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ idx ]))) 
                 else:
-                    self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ]))) 
+                    idx = ''
+
+
+                txt = []
+                for cs in self.currentStates[idx]:
+                    for ev in self.pj[OBSERVATIONS][self.observationId]['events' ]:
+                        if ev[0] > currentTime / 1000:   #time
+                            break
+
+                        if ev[1] == self.currentSubject:   #subject
+                            if ev[2] == cs:   #code
+                                cm[cs] = ev[3]    ### current modifier for current state
+                    ### state and modifiers (if any)
+                    txt.append( cs + (' (%s) ' %  cm[cs])*(cm[cs] != '') )
+
+                txt = ', '.join(txt)
+
+                ### remove key code
+                self.lbCurrentStates.setText( re.sub(' \(.\)', '', txt) )
 
                 ### show selected subjects
                 for idx in sorted( self.pj['subjects_conf'].keys() ):
 
-                    self.twSubjects.item(int(idx), 2 ).setText( ','.join(self.currentStates[idx]) )
+                    self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
 
                 msg = ''
 
@@ -3878,7 +3651,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     msg = '%s: <b>%s / %s</b>' % ( self.mediaplayer.get_media().get_meta(0), self.convertTime(self.mediaplayer.get_time() / 1000), self.convertTime(self.mediaplayer.get_length() / 1000) )
 
                     if self.media_list.count() > 1:
-                        msg += ' | total: <b>%s / %s</b>' % ( (self.convertTime( Decimal(globalCurrentTime/1000) + self.pj['observations'][self.observationId]['time offset']), self.convertTime( totalGlobalTime / 1000) ) )
+                        msg += ' | total: <b>%s / %s</b>' % ( (self.convertTime( Decimal(globalCurrentTime/1000) + self.pj[OBSERVATIONS][self.observationId]['time offset']), self.convertTime( totalGlobalTime / 1000) ) )
 
                     if self.mediaListPlayer.get_state() == vlc.State.Paused:
                         msg += ' (paused)'
@@ -3923,21 +3696,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fill subjects table widget with subjects from self.subjects_conf
         '''
         
-        if self.DEBUG: print 'load subjects conf',self.pj['subjects_conf']
+        if self.DEBUG: print 'load subjects conf',self.pj[SUBJECTS]
         
         self.twSubjects.setRowCount(0)
         
-        for idx in sorted( self.pj['subjects_conf'].keys() ):
+        for idx in sorted( self.pj[SUBJECTS].keys() ):
 
             if self.DEBUG: print 'row', idx
 
             self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
                 
-            for i,field in enumerate(['key','name']): ### key, subject name
-                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, i , QTableWidgetItem( self.pj['subjects_conf'][ idx ][field] ))
+            for idx2, field in enumerate( subjectsFields ): 
+                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2 , QTableWidgetItem( self.pj[SUBJECTS][ idx ][field] ))
 
-            ### add cell for current state(s)
-            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 2 , QTableWidgetItem( '' ))
+            ### add cell for current state(s) after last subject field
+            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields) , QTableWidgetItem( '' ))
 
 
 
@@ -3948,8 +3721,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         if self.DEBUG: print '\nupdate events for start/stop'
+        
         stateEventsList = [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] if 'STATE' in self.pj['behaviors_conf'][x]['type'].upper() ]
-        print 'state events', stateEventsList
+        '''if self.DEBUG: print 'state events list:', stateEventsList'''
         
         for row in range(0, self.twEvents.rowCount()):
 
@@ -3964,32 +3738,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             code = self.twEvents.item(row, tw_obs_fields['code'] ).text()
             subject = self.twEvents.item(row, tw_obs_fields['subject'] ).text()
 
-            if self.DEBUG: print 'update events start/stop ', time, code, subject
-            
             ### check if code is state
             if code in stateEventsList:
-                if self.DEBUG: print 'is STATE'
+
                 ### how many code before with same subject?
 
-                for x in self.pj['observations'][self.observationId]['events' ] :
+                for x in self.pj[OBSERVATIONS][self.observationId]['events' ] :
 
-                    print 'code', code, x[ pj_obs_fields['code'] ],  x[ pj_obs_fields['code'] ] == code
-                    print 'time', time, x[ pj_obs_fields['time'] ], x[ pj_obs_fields['time'] ]  < time, type(x[ pj_obs_fields['time'] ])
-                    
-                    #print Decimal( str(time) ), Decimal( str(x[ pj_obs_fields['time'] ]) ), Decimal( str(x[ pj_obs_fields['time'] ]) )  < Decimal( str(time) )
-                    
-                    #print 'subject', subject, x[ pj_obs_fields['subject'] ], x[ pj_obs_fields['subject'] ] == subject
-                    
                     if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject:
                         pass
-                    
-                print 'id code id subject before:', [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]
 
-                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj['observations'][self.observationId]['events' ] if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]) % 2: ### test if odd
+                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId]['events' ] if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]) % 2: ### test if odd
 
                     self.twEvents.item(row, tw_obs_fields['type'] ).setText('STOP')
                 else:
                     self.twEvents.item(row, tw_obs_fields['type'] ).setText('START')
+
+
 
 
     def writeEvent(self, event, memTime):
@@ -3998,60 +3763,75 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         if self.DEBUG: print 'add event to observation id:', self.observationId
-        
-        ### check if a same event is already in events list
+
+        ### check if a same event is already in events list (time, subject, code)
         event_list = [ memTime, self.currentSubject, event['code'] ]
-        if event_list in [[x[0],x[1],x[2]] for x in self.pj['observations'][self.observationId]['events']]:
+        if event_list in [[x[0],x[1],x[2]] for x in self.pj[OBSERVATIONS][self.observationId]['events']]:
             QMessageBox.warning(self, programName, 'The same event already exists!')
-            return None
+            return
 
-        ### check if event has modifiers
-        modifier_str = ''
-
-        if event['modifiers']:
-            
-            if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
-
-                if self.playerType == VLC:
-                    memState = self.mediaListPlayer.get_state()
-                    if memState == vlc.State.Playing:
-                        self.pause_video()
-
-                if self.playerType == OPENCV:
-                    memState = self.openCVtimerOut.isActive()
-                    if memState:
-                        self.pause_video()
-
-
-            response = ''
-            items =  [''] + [s.strip() for s in event['modifiers'].split(',')]
-
-            item, ok = QInputDialog.getItem(self, 'Choose the modifier', 'Modifiers for ' + event['code'], items, 0, False)
-
-            if ok and item:
-                modifier_str = item
-
-
-            if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
-
-                if self.DEBUG: print 'media state:', memState
-
-                if self.playerType == VLC:
-                    if memState == vlc.State.Playing:
-                        self.play_video()
-
-                if self.playerType == OPENCV:
-                    if memState:
-                        self.play_video()
-
-            if self.DEBUG: print 'modifier', modifier_str
+        if not 'from map' in event:   ### modifiers only for behaviors without coding map
+            ### check if event has modifiers
+            modifier_str = ''
+    
+            if event['modifiers']:
+    
+                ### pause media
+                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+    
+                    if self.playerType == VLC:
+                        memState = self.mediaListPlayer.get_state()
+                        if memState == vlc.State.Playing:
+                            self.pause_video()
+    
+                    if self.playerType == OPENCV:
+                        memState = self.openCVtimerOut.isActive()
+                        if memState:
+                            self.pause_video()
+    
+                modifiersList = []
+                if '|' in event['modifiers']:
+                    modifiersStringsList = event['modifiers'].split('|')
+                    for modifiersString in modifiersStringsList:
+                        modifiersList.append([s.strip() for s in modifiersString.split(',')])
+    
+                else:
+                    modifiersList.append([s.strip() for s in event['modifiers'].split(',')])
+    
+                modifierSelector = select_modifiers.ModifiersRadioButton(event['code'], modifiersList, '', 'normal')
+    
+                if modifierSelector.exec_():
+                    modifiers = modifierSelector.getModifiers()
+                    if len(modifiers) == 1:
+                        modifier_str = modifiers[0]
+                        if modifier_str == 'None':
+                            modifier_str = ''
+                    else:
+                        modifier_str = '|'.join( modifiers )
+    
+    
+                ### restart media
+                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+    
+                    if self.playerType == VLC:
+                        if memState == vlc.State.Playing:
+                            self.play_video()
+    
+                    if self.playerType == OPENCV:
+                        if memState:
+                            self.play_video()
+    
+                if self.DEBUG: print 'modifier', modifier_str
+        else:
+            modifier_str = event['from map']
 
 
         ### update current state
 
         if 'STATE' in event['type'].upper():
 
-            if self.DEBUG: print 'current subject:', self.currentSubject
+            if self.DEBUG: print 'self.currentSubject:', self.currentSubject
+            if self.DEBUG: print 'self.currentStates:',self.currentStates
 
             if self.currentSubject:
                 csj = []
@@ -4059,90 +3839,65 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if idx in self.pj['subjects_conf'] and self.pj['subjects_conf'][idx]['name'] == self.currentSubject:
                         csj = self.currentStates[idx]
                         break
+
             else:  ### no focal subject
-                if self.DEBUG: print 'self.currentStates', self.currentStates
+                if self.DEBUG: print 'no focal self.currentStates', self.currentStates
                 csj = self.currentStates['']
 
-            if self.DEBUG: print 'current states:',csj
-            if self.DEBUG: print 'event code', event['code'], event['modifiers']
+            if self.DEBUG: print 'csj:', csj   ### current state for current subject
+            if self.DEBUG: print 'code modifier', event['code'], event['modifiers']
 
-
-            '''
-            if (event['code'] in csj and modifier_str):
-
-                 ### STOP current state event/modifier if same event with different modifier
-                column = 0
-                self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
-
-                for field in [  self.convertTime( memTime - 0.1 ) , self.currentSubject, event['code'], '', modifier_str, '' ]:
-                
-                    if self.DEBUG: print self.twEvents.rowCount() - 1, column, field
-                
-                    item = QTableWidgetItem(field)
-                    self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
-                    column += 1
-            '''
-
-
-
-
-            if event['excluded']:
-                ### states to remove from current states
-
-                ### extract current states for current subject
-                
-
-                for cs in csj :
-                    if cs in event['excluded'].split(','):
-
-                        ### current modifiers
-                        cm = ''
-                        for ev in self.pj['observations'][self.observationId]['events' ]:
-                            if ev[0] > memTime:   #time
-                                break
+            ### current modifiers
+            cm = {}
+            for cs in csj :
+                for ev in self.pj[OBSERVATIONS][self.observationId]['events' ]:
+                    if ev[0] > memTime:   #time
+                        break
     
-                            if ev[1] == self.currentSubject:   # current subject name
-                                if ev[2] == cs:   #code
-                                    cm = ev[3]
-        
-                        if self.DEBUG: print 'cm', cm
+                    if ev[1] == self.currentSubject:   # current subject name
+                        if ev[2] == cs:   #code
+                            cm[cs] = ev[3]
+
+            if self.DEBUG: print 'cm', cm
 
 
-                        ### add excluded state event to observations (= STOP them)
-                        self.pj['observations'][self.observationId]['events'].append( [memTime - Decimal('0.1'), self.currentSubject, cs, cm, ''] )
-                        '''
-                        column = 0
-                        self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
-                
-                        for field in [  self.convertTime( memTime - 0.1 ) , self.currentSubject, cs, '','', '' ]:
-                
-                            if self.DEBUG: print self.twEvents.rowCount() - 1, column, field
-                
-                            item = QTableWidgetItem(field)
-                            self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
-                            column += 1
-                        '''
+            for cs in csj :
+                #if cs in event['excluded'].split(','):
+                if (event['excluded']  and cs in event['excluded'].split(',') ) or ( event['code'] == cs and  cm[cs] != modifier_str) :
+                    ### add excluded state event to observations (= STOP them)
+                    self.pj[OBSERVATIONS][self.observationId]['events'].append( [memTime - Decimal('0.1'), self.currentSubject, cs, cm[cs], ''] )
 
 
-        ### add event to pj
-        self.pj['observations'][self.observationId]['events'].append( [memTime, self.currentSubject, event['code'], modifier_str, ''] )
+
+        ### check if coding map
+        '''
+        if 'from map' in event:
+            modifier_str = event['from map']
+        '''
+
+        ### remove key code from modifiers
+        modifier_str = re.sub(' \(.\)', '', modifier_str)
+
+        ### add event to pj        
+        self.pj[OBSERVATIONS][self.observationId]['events'].append( [memTime, self.currentSubject, event['code'], modifier_str, ''] )
 
         ### sort events in pj
-        self.pj['observations'][self.observationId]['events'].sort()
+        self.pj[OBSERVATIONS][self.observationId]['events'].sort()
 
+        ### reload all events in tw
         self.twEvents.setRowCount(0)
-        for o in self.pj['observations'][self.observationId]['events']:
+        for o in self.pj[OBSERVATIONS][self.observationId]['events']:
 
             self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
 
             ### time
-            item = QTableWidgetItem( self.convertTime(o[ 0] ) )
+            item = QTableWidgetItem( self.convertTime(o[ 0 ] ) )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 0, item)
             ### subject
-            item = QTableWidgetItem( o[ 1]  )
+            item = QTableWidgetItem( o[ 1 ]  )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 1, item)
             ### code
-            item = QTableWidgetItem( o[ 2]  )
+            item = QTableWidgetItem( o[ 2 ]  )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 2, item)
             
             ### type
@@ -4150,34 +3905,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 3, item)
 
             ### modifier
-            item = QTableWidgetItem( o[ 3]  )
+            item = QTableWidgetItem( o[ 3 ] )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 4, item)
 
             ### modifier
-            item = QTableWidgetItem( o[ 4]  )
+            item = QTableWidgetItem( o[ 4 ]  )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 5, item)
 
         self.update_events_start_stop()
 
-        ### get item from twEvents at memTime row position
-        if self.DEBUG:
-            print
-            print 'memtime', memTime
-            print self.pj['observations'][self.observationId]['events'] 
-            print  
-            print [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime]
-
-        item = self.twEvents.item(  [i for i,t in enumerate( self.pj['observations'][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
+        item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId]['events'] ) if t[0] == memTime][0], 0  )
 
         self.twEvents.scrollToItem( item )
 
-       
         self.projectChanged = True
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
         '''
         fill listwidget with all events coded by key
+        return index of behaviour
         '''
 
         ### check if key duplicated
@@ -4202,8 +3949,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.DEBUG:print 'selected code:', item
 
             obs_idx = self.detailedObs[ item ]
+            if self.DEBUG:print 'obs_idx', obs_idx
             
-            self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
+            return obs_idx
+            #self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
+
+        else:
+
+            return None
 
 
     def getLaps(self):
@@ -4217,7 +3970,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ###  if self.DEBUG: print 'self.observationId', self.observationId
         
         
-        if self.pj['observations'][self.observationId]['type'] in [LIVE]:
+        if self.pj[OBSERVATIONS][self.observationId]['type'] in [LIVE]:
 
             if self.liveObservationStarted:
                 now = QTime()
@@ -4233,16 +3986,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-        if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             
             if self.playerType == VLC:
                 ### cumulative time
-                
-                print self.pj['observations'][self.observationId]['time offset']
-                print type(self.pj['observations'][self.observationId]['time offset'])
-                
-                memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) / 1000 ,3)))+ self.pj['observations'][self.observationId]['time offset']
+                memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) / 1000 ,3)))+ self.pj[OBSERVATIONS][self.observationId]['time offset']
                 return memLaps
 
             if self.playerType == OPENCV:
@@ -4259,7 +4008,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def keyPressEvent(self, event):
         
-        if self.DEBUG: print 'keyPressEvent function'
+        '''if self.DEBUG: print "keyPressEvent function"'''
+
         '''
         if (event.modifiers() & Qt.ShiftModifier):
             print 'Shift!'
@@ -4267,6 +4017,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print QApplication.keyboardModifiers()
         
         http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
+        
+        ESC: 16777216
         '''
 
         if not self.observationId:
@@ -4274,35 +4026,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         ### beep
         if self.confirmSound:
-            print '\a'
+            ### print '\a'
+            app.beep()
 
         ### check if media ever played
         if self.playerType == VLC:
             if self.mediaListPlayer.get_state() == vlc.State.NothingSpecial:
                 return
 
-            if self.DEBUG:
-                print 'player state', self.mediaListPlayer.get_state()
+            '''if self.DEBUG: print 'player state', self.mediaListPlayer.get_state()'''
 
         ek = event.key()
 
+        
         if self.DEBUG:
-            print 'key event:', ek
+            if self.DEBUG: print 'key event:', ek
             if ek in function_keys:
                 print 'F key', function_keys[ek]
+        
 
-            
 
         if ek in [16777248,  16777249, 16777217, 16781571]: ### shift tab ctrl
             return
 
+
         ### play / pause with space bar
-        if ek == Qt.Key_Space and self.pj['observations'][self.observationId]['type'] in [MEDIA]:   
-
-            if self.DEBUG:
-                if self.playerType == VLC:
-                    print 'space player #1 state', self.mediaListPlayer.get_state()
-
+        if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:   
             self.pause_video()
             return
 
@@ -4330,7 +4079,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         if  self.playerType == OPENCV:
             if ek == 47:  ### /   one frame back
-                print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
+                if self.DEBUG: print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
                 newFrame = self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES) - 2
 
                 newTime = 1000.0 * newFrame / self.cap.get(cv2.cv.CV_CAP_PROP_FPS)
@@ -4346,7 +4095,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)                
 
                 return
-                
+
             if ek == 42:  ### *  read next frame
                 print 'frame', self.cap.get(cv2.cv.CV_CAP_PROP_POS_FRAMES)
                 self.openCVtimerOut()
@@ -4367,14 +4116,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             flag_function = False
 
-        if self.DEBUG: print 'function key', flag_function
+
+        ### get video time
+        memLaps = self.getLaps()
+        if memLaps == None:
+            return
+
 
         if (ek in function_keys) or ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])):
-
-            memLaps = self.getLaps()
-            print memLaps
-            if memLaps == None:
-                return
 
             obs_idx = -1
             count = 0
@@ -4384,13 +4133,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 ek_unichr = unichr(ek)
 
-            if self.DEBUG: print 'ek_unichr'  ,ek_unichr
-
             for o in self.pj['behaviors_conf']:
 
                 if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
-                    if self.DEBUG: print 'OK', ek_unichr
-
                     obs_idx = o
                     count += 1
 
@@ -4399,7 +4144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.DEBUG: print 'multi code key'
 
                 flagPlayerPlaying = False
-                if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
                     
                     if self.playerType == VLC:
                         if self.mediaListPlayer.get_state() != vlc.State.Paused:
@@ -4410,16 +4155,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.pause_video()
 
                 ### let user choose event
-                self.fill_lwDetailed( ek_unichr, memLaps)
+                obs_idx = self.fill_lwDetailed( ek_unichr, memLaps)
 
-                if self.pj['observations'][self.observationId]['type'] in [MEDIA] and flagPlayerPlaying:
+                if obs_idx:
+                    count = 1
+
+                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA] and flagPlayerPlaying:
                     self.play_video()
 
-            elif count == 1:
+            if count == 1:
 
-                self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
+                ### check if coding map
+                if 'coding map' in self.pj['behaviors_conf'][obs_idx] and self.pj['behaviors_conf'][obs_idx]['coding map']:
 
-            else:
+                    ### pause if media and media playing
+                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                        if self.playerType == VLC:
+                            memState = self.mediaListPlayer.get_state()
+                            if memState == vlc.State.Playing:
+                                self.pause_video()
+                        if self.playerType == OPENCV:
+                            memState = self.openCVtimerOut.isActive()
+                            if memState:
+                                self.pause_video()
+        
+                    self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj['behaviors_conf'][obs_idx]['coding map'] ] ) 
+                    #self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ obs_idx ] ) 
+
+                    self.codingMapWindow.resize(640, 640)
+                    if self.codingMapWindowGeometry:
+                         self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
+
+                    if not self.codingMapWindow.exec_():
+                        return
+
+                    self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
+                    if self.DEBUG: print 'returned codes', self.codingMapWindow.getCodes()
+        
+                    '''
+                    {    "key": "J",   "code": "jump",    "description": "jumping",  "modifiers": "foo,bar|foo,bar|foo,bar",     "excluded": "",   "type": "Point event"   }
+                    '''
+                    event = dict( self.pj['behaviors_conf'][obs_idx] )
+                    event['from map'] = self.codingMapWindow.getCodes()
+
+                    self.writeEvent(event, memLaps)
+        
+                    ### restart media
+                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        
+                        if self.playerType == VLC:
+                            if memState == vlc.State.Playing:
+                                self.play_video()
+        
+                        if self.playerType == OPENCV:
+                            if memState:
+                                self.play_video()
+
+
+                else: ### no coding map
+
+                    self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
+
+            elif count == 0:
 
                 ### check if key defines a suject
                 flag_subject = False
@@ -4434,17 +4231,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.deselectSubject()
                         else:
                             self.selectSubject( self.pj['subjects_conf'][idx]['name'] )
-                            '''
-                            self.currentSubject = self.pj['subjects_conf'][idx]['name']
-                            self.lbSubject.setText( 'Focal subject: <b>%s</b>' % (self.currentSubject))
-                            self.lbFocalSubject.setText( ' Focal subject: <b>%s</b>' % (self.currentSubject) )
-                            '''
 
                 if not flag_subject:
 
                     if self.DEBUG: print '%s key not assigned' % ek_unichr
                     
                     self.statusbar.showMessage( 'Key not assigned (%s)' % ek_unichr , 5000)
+
+
+        ### coding map
+        '''
+        if ek == 16777216:    ### ESC
+
+            ### pause if media and media playing
+            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                if self.playerType == VLC:
+                    memState = self.mediaListPlayer.get_state()
+                    if memState == vlc.State.Playing:
+                        self.pause_video()
+                if self.playerType == OPENCV:
+                    memState = self.openCVtimerOut.isActive()
+                    if memState:
+                        self.pause_video()
+
+            self.codingMap = coding_map.codingMapWindow('prova_map.boris_map')
+            self.codingMap.resize(640, 640)
+            self.codingMap.exec_()
+            print 'returned', self.codingMap.getCodes()
+
+
+            self.writeEvent({ "code": self.codingMap.getCodes(), "key": "map","modifiers": "", "excluded":"", "type": "Point event"}, memLaps)
+
+            ### restart media
+            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+
+                if self.playerType == VLC:
+                    if memState == vlc.State.Playing:
+                        self.play_video()
+
+                if self.playerType == OPENCV:
+                    if memState:
+                        self.play_video()
+        '''
 
 
 
@@ -4467,7 +4295,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 time  = Decimal( self.twEvents.item(row, 0).text() )
 
             ### substract time offset
-            time -= self.pj['observations'][self.observationId][TIME_OFFSET]
+            time -= self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]
 
             if time + self.repositioningTimeOffset >= 0:
                 newtime = (time + self.repositioningTimeOffset ) * 1000
@@ -4475,7 +4303,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newtime = 0
 
 
-            ### FIXME
             if self.DEBUG: print 'self.mediaListPlayer.get_state()', self.mediaListPlayer.get_state()
 
             ### remember if player paused (go previous will start playing)
@@ -4539,24 +4366,80 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def select_events_between_activated(self):
         '''
-        select observations between a time interval
+        select events between a time interval
         FIXME
         '''
 
+        '''
         QMessageBox.warning(self, programName, 'Not available yet!')
         return
+        '''
 
+        def timeRegExp(s):
+            '''
+            extract time from 01:23:45.678
+            '''
+            pattern = r'\d{1,2}:\d{1,2}'
+            if '.' in s:
+                pattern += r'.\d{1,3}'
+            if from_.count(':') == 2:
+                pattern = r'\d{1,2}:' + pattern
+            re_r = re.findall(pattern, s)
+            if re_r:
+                r_str = re_r[0]
+                if not '.' in r_str:
+                    r_str += '.000'
+                if r_str.count(':') ==1:
+                    r_str = '00:' + r_str
+                return r_str
+            else:
+                return ''
+
+            
 
         if self.twEvents.rowCount():
-            text, ok = QInputDialog.getText(self, 'Select observations from interval', 'Interval: (example: 12.5-14.7)' , QLineEdit.Normal,  '')
-            if ok and text != '':
-                from_, to_ = [ float(s.strip()) for s in text.split('-')[0:2] ]
+            text, ok = QInputDialog.getText(self, 'Select observations from interval', 'Interval: (example: 12.5-14.7 or 2:45.780-3:15.120 )' , QLineEdit.Normal,  '')
 
-                if to_ < from_:
-                    QMessageBox.about(self, programName, 'The begin value is greater than the end value!')
+            if ok and text != '':
+
+                if not '-' in text:
+                    QMessageBox.critical(self, programName, 'Use - to separate initial value from final value')
+                    return
+                
+                from_, to_ = text.split('-')[0:2]
+
+                if ':' in from_:
+                    from_time = timeRegExp(from_)
+                    if from_time:
+                        from_sec = time2seconds(from_time)
+                    else:
+                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % from_ )
+                else:
+                    try:
+                        from_sec = Decimal(from_)
+                    except InvalidOperation:
+                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % from_ )
+                        
+                if ':' in to_:
+                    to_time = timeRegExp(to_)
+                    if to_time:
+                        to_sec = time2seconds(to_time)
+                    else:
+                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % to_ )
+                else:
+                    try:
+                        to_sec = Decimal(to_)
+                    except InvalidOperation:
+                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % to_ )
+
+
+
+                if to_sec < from_sec:
+                    QMessageBox.critical(self, programName, 'The initial time is greater than the final time')
                     return
 
-
+                self.twEvents.clearSelection()
+                self.twEvents.setSelectionMode( QAbstractItemView.MultiSelection )
                 for r in range(0, self.twEvents.rowCount()):
 
                     if ':' in self.twEvents.item(r, 0).text():
@@ -4564,106 +4447,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         time = Decimal(self.twEvents.item(r, 0).text())
                         
-                    if time >= from_ and time <= to_:
-                        #self.twEvents.setItemSelected(self.twEvents.item(r, 0), True)
+                    if time >= from_sec and time <= to_sec:
                         self.twEvents.selectRow(r)
 
-            
         else:
-            QMessageBox.warning(self, programName, 'There are no observations to select!')
+            QMessageBox.critical(self, programName, 'There are no events to select')
 
-        
-        '''
-        if self.twEvents.selectedItems():
-            ask_value = frmAskValue()
-            ask_value.setWindowTitle('Select observations between interval')
-    
-            if ask_value.exec_():  #button OK
-                from_ = str(ask_value.leFrom.text()).strip()
-                to_ = str(ask_value.leTo.text()).strip()
-                if float(to_) < float(from_):
-                    QMessageBox.about(self, programName, 'The begin value is greater than the end value!')
-                    return
-            else:
-                return
-    
-    
-            for r in range(0, self.twEvents.rowCount()):
-                time = float(self.twEvents.item(r, 0).text())
-                if time >= float(from_) and time <= float(to_):
-                    self.twEvents.setItemSelected (self.twEvents.item(r, 0), True)
-        else:
-            QMessageBox.warning(self, programName, 'There are no observations to select!')
-        '''
-
-    '''
-    def sort_events(self):
-        
-        sort events chronologically
-        and
-        update self.pj
-        
-
-        if self.DEBUG: print 'sort events'
-
-        if not self.observationId:
-            return
-
-        if self.twEvents.rowCount():
-
-            observ_list = []
-
-            for row in range(0, self.twEvents.rowCount()):
-
-                event = []
-
-                for field_type in tw_events_fields:
-
-                    if field_type == 'time':
-                        t = self.twEvents.item(row, tw_obs_fields[field_type] ).text()
-                        if ':' in t:
-                            time = float(self.time2seconds(t))
-                        else:
-                            time = float(t)
-                        event.append(time)
-
-                    else:
-
-                        event.append( self.twEvents.item(row, tw_obs_fields[field_type]).text() )
-
-                observ_list.append(event)
-
-            observ_list.sort()
-
-            if self.DEBUG: print observ_list
-
-            self.twEvents.setRowCount(0)
-
-            for o in observ_list:
-
-                self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
-                
-                
-                for field_type in tw_events_fields:
-                    
-                    if field_type == 'time':
-                        item = QTableWidgetItem( self.convertTime(o[ tw_obs_fields[ field_type ]] ) )
-                    else:
-
-                        item = QTableWidgetItem( o[ tw_obs_fields[ field_type ] ] )
-                    self.twEvents.setItem(self.twEvents.rowCount() - 1, tw_obs_fields[ field_type ], item)
-
-        ### update pj
-        self.update_observations()
-        self.update_events_start_stop()
-    '''
 
 
     def delete_all_events(self):
         '''
         delete all events in current observation
         '''
-        
+
         if not self.observationId:
             self.no_observation()
             return
@@ -4671,10 +4467,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         response = dialog.MessageDialog(programName, 'Do you really want to delete all events from the current observation?', ['Yes', 'No'])
 
         if response == 'Yes':
-            self.pj['observations'][self.observationId]['events'] = []
+            self.pj[OBSERVATIONS][self.observationId]['events'] = []
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
-            
+
             '''
             self.twEvents.setRowCount(0)
             self.projectChanged = True
@@ -4699,9 +4495,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### list of rows to delete (set for unique)
             rows = set( [ item.row() for item in self.twEvents.selectedIndexes() ])
             
-            if self.DEBUG: print [ event for idx,event in enumerate(self.pj['observations'][self.observationId]['events']) if not idx in rows]
+            if self.DEBUG: print [ event for idx,event in enumerate(self.pj[OBSERVATIONS][self.observationId]['events']) if not idx in rows]
             
-            self.pj['observations'][self.observationId]['events'] = [ event for idx,event in enumerate(self.pj['observations'][self.observationId]['events']) if not idx in rows]
+            self.pj[OBSERVATIONS][self.observationId]['events'] = [ event for idx,event in enumerate(self.pj[OBSERVATIONS][self.observationId]['events']) if not idx in rows]
 
             self.projectChanged = True
 
@@ -4719,26 +4515,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'There are no events to export!')
         else:
             fd = QFileDialog(self)
-            fileName, filtr = fd.getSaveFileName(self,'Export events', '','Events file (*.txt *.tsv);;All files (*)')
+            fileName, filtr = fd.getSaveFileName(self,'Export events', '', 'Events file (*.txt *.tsv);;All files (*)')
 
             if fileName:
                 f = open(fileName, 'w')
 
                 ### media file name
                 f.write('#Media file(s):\n')
-                if self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
-                    for idx in self.pj['observations'][self.observationId]['file']:
-                        for media in self.pj['observations'][self.observationId]['file'][idx]:
+                    for idx in self.pj[OBSERVATIONS][self.observationId]['file']:
+                        for media in self.pj[OBSERVATIONS][self.observationId]['file'][idx]:
                             f.write('#Player #%s\t%s\n' % (idx, media) )
 
                 f.write('#\n#\n')
-
-                ### write video length
-                '''  TO DO: replace with total length if any
-                if self.pj['observations'][self.observationId]['type'] == 'MEDIA':
-                    f.write('#media total length\t%f\n' % ( self.mediaplayer.get_length() / 1000.0 ))
-                '''
 
                 ### write header
                 f.write('#%s\n' % ( '\t'.join(  tw_events_fields ) ))
@@ -4777,7 +4567,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         ### ask user to select observations
-        result, selected_observations = self.selectObservations( SELECT )
+        result, selected_observations = self.selectObservations( MULTIPLE )
         
         if not selected_observations:
             return
@@ -4798,15 +4588,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 f.write('# observation id: %s\n' %  obs )
 
                 ### observation descrition
-                f.write('# observation description: %s\n' %  self.pj['observations'][obs]['description'].replace('\n',' ' ) )
+                f.write('# observation description: %s\n' %  self.pj[OBSERVATIONS][obs]['description'].replace('\n',' ' ) )
 
 
                 ### media file name
-                if self.pj['observations'][obs]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][obs]['type'] in [MEDIA]:
 
-                    f.write('# Media file name: %s\n\n' % (', '.join(   [ os.path.basename(x) for x in self.pj['observations'][obs]['file']['1']  ]  )  ) )
+                    f.write('# Media file name: %s\n\n' % (', '.join(   [ os.path.basename(x) for x in self.pj[OBSERVATIONS][obs]['file']['1']  ]  )  ) )
 
-                if self.pj['observations'][obs]['type'] in [LIVE]:
+                if self.pj[OBSERVATIONS][obs]['type'] in [LIVE]:
                     f.write('# Live observation\n\n')
 
 
@@ -4825,7 +4615,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for obs in selected_observations:
                     s = ''
                     
-                    for event in self.pj['observations'][obs]['events']:
+                    for event in self.pj[OBSERVATIONS][obs]['events']:
                         if event[ pj_obs_fields['subject'] ] == subj:
                             s += event[ pj_obs_fields['code'] ] + self.behaviouralStringsSeparator
     
@@ -4872,41 +4662,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.close()
 
 
-    '''
-    def update_observations(self):
-        
-        ### update events in pj
-        
-        if self.DEBUG: print 'update_observations (events)'
-
-        events = []
-        for r in range(0, self.twEvents.rowCount()):
-
-            row = []
-            
-            for field in pj_events_fields:
-                if self.twEvents.item(r, tw_obs_fields[ field ]):
-
-                    if field == 'time':
-                        if self.timeFormat == 'hh:mm:ss':
-                            s = self.time2seconds( self.twEvents.item(r, tw_obs_fields[ field ] ).text() )
-                        else:
-                            s = float( self.twEvents.item(r, tw_obs_fields[ field ]).text() )
-                    else:
-                        s = self.twEvents.item(r, tw_obs_fields[ field ]).text()
-
-                    row.append( s )
-                else:
-                    row.append('')
-
-            if self.DEBUG: print 'event:', row
-            events.append(row)
-
-        self.pj['observations'][self.observationId]['events'] = events
-        '''
-
-
-
 
     def import_observations(self):
         '''
@@ -4914,62 +4669,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         self.statusbar.showMessage('Function not yet implemented for OpenCV player', 5000)        
-
-        '''
-        FIXME import observations
-        
-        if not self.observationId:
-            self.no_observation()
-            return ''
-
-        if self.twEvents.rowCount():
-
-            response = dialog.MessageDialog(programName, 'The observation already contains event(s). Do you want to append events or replace them?', ['Append', 'Replace', 'Cancel'])
-
-            if response == 'Replace':
-                self.twEvents.setRowCount(0)
-
-            if response == 'Cancel':
-                return
-
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Import events file', '', 'Text files (*.txt *.tsv);;All files (*)')[0]
-        if fileName:
-            ### read file and decode it
-            f = open(fileName,'r')
-            rows_utf8 = f.readlines()
-            rows = [ row.decode('utf8') for row in rows_utf8]
-            f.close()
-
-            lineRow = 0
-            for row in rows:
-
-                lineRow += 1
-
-                if row and '#media total length' in row:
-                    self.mediaTotalLength = float(row.split('\t')[1].strip())
-                    #self.statusbar.showMessage(str(self.mediaTotalLength), 0)
-
-                if row and row[0] == '#':
-                    continue
-
-                if len( row.split('\t') ) != len( tw_events_fields ):
-                    QMessageBox.warning(self, programName, 'Error in configuration file at line %d' % lineRow)
-                    return
-
-                self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
-                column = 0
-                for field in row.replace('\n','').split('\t') :
-
-                    item = QTableWidgetItem(field)
-                    self.twEvents.setItem(self.twEvents.rowCount() - 1, column ,item)
-                    column += 1
-
-            
-            self.pj['observations'][self.observationId]['events'].sort()
-            self.projectChanged = True
-        '''
-            
 
 
 
@@ -5024,7 +4723,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def play_activated(self):
 
-        if self.observationId and self.pj['observations'][self.observationId]['type'] in [MEDIA]:
+        if self.observationId and self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             self.play_video()
             
@@ -5035,7 +4734,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rewind from current position 
         '''
         if self.playerType == VLC:
-            ''' FIXME work only in current media '''
+
             if self.media_list.count() == 1:
                 if self.mediaplayer.get_time() >= self.fast * 1000:
                     self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000 )
@@ -5109,7 +4808,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         if self.playerType == VLC:
-            ''' FIXME work only in current media '''
             if self.media_list.count() == 1:
                 if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
     
@@ -5227,8 +4925,7 @@ if __name__=="__main__":
     parser = OptionParser(usage=usage)
     
     parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
-    #parser.add_option("-o", "--opencv", action = "store_true", default = False, dest = "opencv", help = "Use OpenCV (useful for frame access)")
-    
+   
     (options, args) = parser.parse_args()
 
     availablePlayers = []
@@ -5240,31 +4937,20 @@ if __name__=="__main__":
     except:
         print 'The VLC media player can not be loaded.'
 
-
-    ### load OpenCV
-    ''' DISABLED FOR NOW
-    try:
-        import numpy
-        import cv2
-        from cv2 import cv
-        availablePlayers.append(OPENCV)
-
-    except:
-        print 'OpenCV can not be loaded.'
-    '''
-
     if not availablePlayers:
-        QMessageBox.critical(None, programName, 'This program requires the VLC media player library or the OpenCV Python module and it seems that they are not installed on your system.<br>Go to http://www.videolan.org/vlc to install it', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        QMessageBox.critical(None, programName, 'This program requires the VLC media player library but it seems that it is not installed on your system.<br>Go to http://www.videolan.org/vlc to install it', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
 
-    if 'RC' in __version_date__:
-        QMessageBox.warning(None, programName, 'This version is a release candidate and must be used only for testing.\nPlease report all bugs', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers)
 
     window.DEBUG = options.debug
+
+    if not window.DEBUG:
+        if 'RC' in __version_date__:
+            QMessageBox.warning(None, programName, 'This version is a release candidate and must be used only for testing.\nPlease report all bugs', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     if args:
 

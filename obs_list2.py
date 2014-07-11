@@ -26,13 +26,18 @@ Copyright 2012-2014 Olivier Friard
 
 from PySide.QtCore import *
 from PySide.QtGui import *
+import dialog
+import config
 
 class observationsList_widget(QDialog):
 
     def __init__(self, parent=None):
         super(observationsList_widget, self).__init__(parent)
 
+        self.setWindowTitle('Observations list - ' + config.programName)
         self.label = QLabel(self)
+
+        self.mode = config.SINGLE
 
         self.lineEdit       = QLineEdit(self)
         self.view           = QTableView(self)
@@ -46,9 +51,7 @@ class observationsList_widget(QDialog):
         self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
 
-
         hbox2 = QHBoxLayout(self)
-
 
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
@@ -69,8 +72,8 @@ class observationsList_widget(QDialog):
         self.pbEdit = QPushButton('Edit')
         hbox2.addWidget(self.pbEdit)
 
-        self.pb = QPushButton('')
-        hbox2.addWidget(self.pb)
+        self.pbSelect = QPushButton('Select')
+        hbox2.addWidget(self.pbSelect)
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)
 
@@ -87,34 +90,42 @@ class observationsList_widget(QDialog):
         self.horizontalHeader = self.view.horizontalHeader()
         self.horizontalHeader.sectionClicked.connect(self.on_view_horizontalHeader_sectionClicked)
 
-        '''
-        FIXME
         self.pbSelectAll.clicked.connect(self.pbSelectAll_clicked)
         self.pbUnSelectAll.clicked.connect(self.pbUnSelectAll_clicked)
-        '''
 
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
-        self.pb.clicked.connect(self.pb_clicked)
+        self.pbSelect.clicked.connect(self.pbSelect_clicked)
         self.pbOpen.clicked.connect(self.pbOpen_clicked)
         self.pbEdit.clicked.connect(self.pbEdit_clicked)
+        
+        self.view.doubleClicked.connect(self.view_doubleClicked)
 
-    '''
+
+    def view_doubleClicked(self, index):
+        if self.mode == config.MULTIPLE:
+           return
+
+        response = dialog.MessageDialog(config.programName, 'What do you want to do with this observation?', ['Open', 'Edit', 'Cancel'])
+        if response == 'Open':
+            self.done(2)
+        if response == 'Edit':
+            self.done(3)
+        
+    
+
     def pbSelectAll_clicked(self):
 
-        if self.proxy.rowCount():
-            self.view.setSelection(QRect(QPoint(1,1),QSize(1,1)),QItemSelectionModel.Select)
-    '''
+        for idx in range(self.proxy.rowCount()):
+            self.view.selectRow(idx)
 
-    '''
     def pbUnSelectAll_clicked(self):
-        pass
-    '''
+        self.view.clearSelection()
 
     def pbCancel_clicked(self):
         self.close()
 
-    def pb_clicked(self):
-        self.accept()
+    def pbSelect_clicked(self):
+        self.done(1)
 
     def pbOpen_clicked(self):
         self.done(2)

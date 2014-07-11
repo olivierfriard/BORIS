@@ -142,7 +142,6 @@
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_event"/>
-    <addaction name="actionSort_observations"/>
     <addaction name="actionSelect_observations"/>
     <addaction name="separator"/>
     <addaction name="actionDelete_selected_observations"/>
@@ -173,9 +172,16 @@
     <addaction name="actionPrevious"/>
     <addaction name="actionNext"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionMapCreator"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
    <addaction name="menuPlayback"/>
+   <addaction name="menuTools"/>
    <addaction name="menuAnalyze"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -213,7 +219,7 @@
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
-    <string>Configuration of behaviours</string>
+    <string>Ethogram</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -374,6 +380,11 @@
        <column>
         <property name="text">
          <string>Name</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Description</string>
         </property>
        </column>
        <column>
@@ -670,6 +681,11 @@
   <action name="actionObservationsList">
    <property name="text">
     <string>Observations list</string>
+   </property>
+  </action>
+  <action name="actionMapCreator">
+   <property name="text">
+    <string>Map creator</string>
    </property>
   </action>
  </widget>
