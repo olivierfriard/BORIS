@@ -59,12 +59,6 @@ def intersection(A, B, C, D):
     xc, yc = Dec(str(C[0])), Dec(str(C[1]))
     xd, yd = Dec(str(D[0])), Dec(str(D[1]))
 
-    """
-    if round(yb)==-338 or round(yc)==-338:
-        print 'segmenti',A,B,C,D
-        print 'xa,ya,xb,yb',xa,ya,xb,yb
-        print 'xc yc xd yd',xc,yc,xd,yd
-    """
 
     ### check if first segment is vertical
     if xa == xb:
@@ -121,7 +115,7 @@ class MapCreatorWindow(QMainWindow):
         
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
-            self.setBackgroundBrush( QColor( 128,128,128 ) )
+            self.setBackgroundBrush( QColor( 128, 128, 128 ) )
             self.setScene(QGraphicsScene(self))
 
             self.scene().update()
@@ -162,13 +156,20 @@ class MapCreatorWindow(QMainWindow):
         self.saveMapAction.setEnabled(False)
         self.saveMapAction.triggered.connect(self.saveMap_clicked)
 
-        self.saveAsMapAction = QAction(QIcon(), '&Save map as', self)
+        self.mapNameAction = QAction(QIcon(), '&Map name', self)
+        self.mapNameAction.setShortcut('Ctrl+M')
+        self.mapNameAction.setStatusTip('Change map name')
+        self.mapNameAction.setEnabled(False)
+        self.mapNameAction.triggered.connect(self.mapName_clicked)
+
+
+        self.saveAsMapAction = QAction(QIcon(), 'Save map as', self)
         self.saveAsMapAction.setStatusTip('Save map as')
         self.saveAsMapAction.setEnabled(False)
         self.saveAsMapAction.triggered.connect(self.saveAsMap_clicked)
 
 
-        self.exitAction = QAction(QIcon('exit.png'), '&Close', self)
+        self.exitAction = QAction(QIcon(), '&Close', self)
         self.exitAction.setStatusTip('Close map creator')
         self.exitAction.triggered.connect(self.close)
 
@@ -177,6 +178,7 @@ class MapCreatorWindow(QMainWindow):
         fileMenu = menubar.addMenu('&Map creator')
         fileMenu.addAction(self.newMapAction)
         fileMenu.addAction(self.openMapAction)
+        fileMenu.addAction(self.mapNameAction)
         fileMenu.addAction(self.saveMapAction)
         fileMenu.addAction(self.saveAsMapAction)
         fileMenu.addAction(self.exitAction)
@@ -476,9 +478,19 @@ class MapCreatorWindow(QMainWindow):
                 self.view.points.append( ( self.view._start.x(), self.view._start.y()) )
 
 
+    def mapName_clicked(self):
+        '''
+        change map name
+        '''
+        text, ok = QInputDialog.getText(self, 'Map name', 'Enter a name for the map', QLineEdit.Normal, self.mapName )
+        if ok:
+            self.mapName = text
+            self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
 
     def newMap(self):
-        '''new map'''
+        '''
+        create a new map
+        '''
 
         if self.flagMapChanged:
             
@@ -494,7 +506,7 @@ class MapCreatorWindow(QMainWindow):
 
         self.cancelMap()
  
-        text, ok = QInputDialog.getText(self, 'Map name', 'Enter a name for the new map:')
+        text, ok = QInputDialog.getText(self, 'Map name', 'Enter a name for the new map')
         if ok:
             self.mapName = text
         else:
@@ -595,6 +607,7 @@ class MapCreatorWindow(QMainWindow):
 
             self.saveMapAction.setEnabled(True)
             self.saveAsMapAction.setEnabled(True)
+            self.mapNameAction.setEnabled(True)
             self.statusBar().showMessage('Click "New area" to create a new area')
         else:
             self.statusBar().showMessage('No file', 5000)
@@ -618,30 +631,31 @@ class MapCreatorWindow(QMainWindow):
             buffer = QBuffer(byte_array)
             buffer.open(QIODevice.WriteOnly)
             self.pixmap.save(buffer, 'PNG')
-        
+
             # Read QByteArray containing PNG into a StringIO.
             string_io = StringIO.StringIO(byte_array)
             string_io.seek(0)
-           
+
             ### add bitmap
             mapDict[ 'bitmap' ] = binascii.b2a_base64(string_io.read())
 
             with open(self.fileName, 'w') as outfile:
                 outfile.write(json.dumps( mapDict ))
-            
+
             self.flagMapChanged = False
-            print True
+
             return True
         else:
-            print False
             return False
 
 
     def saveAsMap_clicked(self):
         fd = QFileDialog(self)
-        self.fileName, filtr = fd.getSaveFileName(self, 'Save coding map as', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
+        self.fileName, filtr = fd.getSaveFileName(self, 'Save coding map as', '' , 'BORIS MAP (*.boris_map);;All files (*)')
 
         if self.fileName:
+            if os.path.splitext(self.fileName)[1] != '.boris_map':
+                self.fileName += '.boris_map'
             self.saveMap()
 
 
@@ -650,6 +664,9 @@ class MapCreatorWindow(QMainWindow):
         if not self.fileName:
             fd = QFileDialog(self)
             self.fileName, filtr = fd.getSaveFileName(self, 'Save coding map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
+            
+            if self.fileName and os.path.splitext(self.fileName)[1] != '.boris_map':
+                self.fileName += '.boris_map'
 
         if self.fileName:
             return self.saveMap()
@@ -816,6 +833,7 @@ class MapCreatorWindow(QMainWindow):
         self.btNewArea.setVisible(False)
         self.saveMapAction.setEnabled(False)
         self.saveAsMapAction.setEnabled(False)
+        self.mapNameAction.setEnabled(False)
         self.statusBar().showMessage('')
 
 
@@ -852,6 +870,7 @@ class MapCreatorWindow(QMainWindow):
             self.btLoad.setVisible(False)
             self.saveMapAction.setEnabled(True)
             self.saveAsMapAction.setEnabled(True)
+            self.mapNameAction.setEnabled(True)
     
             self.statusBar().showMessage('Click "New area" to create a new area')
  
