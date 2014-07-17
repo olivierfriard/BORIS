@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Thu Jun 12 09:38:07 2014
+# Created: Thu Jul 17 15:42:43 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,7 +13,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName("prefDialog")
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(466, 436)
+        prefDialog.resize(465, 436)
         self.verticalLayout_2 = QtGui.QVBoxLayout(prefDialog)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.verticalLayout = QtGui.QVBoxLayout()
@@ -65,6 +65,9 @@ class Ui_prefDialog(object):
         self.cbEmbedPlayer = QtGui.QCheckBox(prefDialog)
         self.cbEmbedPlayer.setObjectName("cbEmbedPlayer")
         self.verticalLayout.addWidget(self.cbEmbedPlayer)
+        self.cbAlertNoFocalSubject = QtGui.QCheckBox(prefDialog)
+        self.cbAlertNoFocalSubject.setObjectName("cbAlertNoFocalSubject")
+        self.verticalLayout.addWidget(self.cbAlertNoFocalSubject)
         self.cbSaveMediaFilePath = QtGui.QCheckBox(prefDialog)
         self.cbSaveMediaFilePath.setEnabled(False)
         self.cbSaveMediaFilePath.setChecked(True)
@@ -98,6 +101,7 @@ class Ui_prefDialog(object):
         self.leSeparator.setText(QtGui.QApplication.translate("prefDialog", "|", None, QtGui.QApplication.UnicodeUTF8))
         self.cbConfirmSound.setText(QtGui.QApplication.translate("prefDialog", "Play sound when keypressed", None, QtGui.QApplication.UnicodeUTF8))
         self.cbEmbedPlayer.setText(QtGui.QApplication.translate("prefDialog", "Embed media player in main window (program must be restarted)", None, QtGui.QApplication.UnicodeUTF8))
+        self.cbAlertNoFocalSubject.setText(QtGui.QApplication.translate("prefDialog", "Alert if focal subject is not set", None, QtGui.QApplication.UnicodeUTF8))
         self.cbSaveMediaFilePath.setText(QtGui.QApplication.translate("prefDialog", "Save complete media path in project", None, QtGui.QApplication.UnicodeUTF8))
         self.pbCancel.setText(QtGui.QApplication.translate("prefDialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.pbOK.setText(QtGui.QApplication.translate("prefDialog", "OK", None, QtGui.QApplication.UnicodeUTF8))

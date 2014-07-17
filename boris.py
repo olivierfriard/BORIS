@@ -192,8 +192,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     timeOffset = 0.0
     saveMediaFilePath = True
-    confirmSound = False          ### if True a beep will confirm each keypress
+    confirmSound = False          ### if True each keypress will be confirmed by a beep
     embedPlayer = True            ### if True the VLC player will be embedded in the main window
+    alertNoFocalSubject = False   ### if True an alert will show up if no focal subject
+
     timeFormat = HHMMSS       ### 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
 
@@ -822,6 +824,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### embed player
         preferencesWindow.cbEmbedPlayer.setChecked( self.embedPlayer )
 
+        ### alert no focal subject
+        preferencesWindow.cbAlertNoFocalSubject.setChecked( self.alertNoFocalSubject )
 
 
         if preferencesWindow.exec_():
@@ -849,6 +853,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
 
             self.embedPlayer = preferencesWindow.cbEmbedPlayer.isChecked()
+
+            self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
 
             if self.observationId:
@@ -1839,6 +1845,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.embedPlayer = True
 
+            self.alertNoFocalSubject = False
+            try:
+                self.alertNoFocalSubject = ( settings.value('alert_nosubject') == 'true' )
+            except:
+                self.alertNoFocalSubject = False
+
+
 
     def saveConfigFile(self):
         '''
@@ -1868,6 +1881,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue('confirm_sound', self.confirmSound)
 
         settings.setValue('embed_player', self.embedPlayer)
+        
+        settings.setValue('alert_nosubject', self.alertNoFocalSubject)
 
 
     def edit_project_activated(self):
@@ -4034,8 +4049,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.mediaListPlayer.get_state() == vlc.State.NothingSpecial:
                 return
 
-            '''if self.DEBUG: print 'player state', self.mediaListPlayer.get_state()'''
-
         ek = event.key()
 
         
@@ -4128,6 +4141,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obs_idx = -1
             count = 0
 
+
+
             if (ek in function_keys):
                 ek_unichr = function_keys[ek]
             else:
@@ -4145,14 +4160,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 flagPlayerPlaying = False
                 if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-                    
                     if self.playerType == VLC:
                         if self.mediaListPlayer.get_state() != vlc.State.Paused:
                             flagPlayerPlaying = True
                             self.pause_video()
-
-                    if self.playerType == OPENCV:
-                        self.pause_video()
 
                 ### let user choose event
                 obs_idx = self.fill_lwDetailed( ek_unichr, memLaps)
@@ -4165,6 +4176,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if count == 1:
 
+                ### check if focal subject is defined
+                if not self.currentSubject and self.alertNoFocalSubject:
+                    
+                    flagPlayerPlaying = False
+                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                        if self.playerType == VLC:
+                            if self.mediaListPlayer.get_state() != vlc.State.Paused:
+                                flagPlayerPlaying = True
+                                self.pause_video()
+
+                    response = dialog.MessageDialog(programName, 'The focal subject is not defined. Do you want to continue?', ['Yes', 'No'])
+                    
+                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA] and flagPlayerPlaying:
+                        self.play_video()
+
+                    if response == 'No':
+                        return
+
                 ### check if coding map
                 if 'coding map' in self.pj['behaviors_conf'][obs_idx] and self.pj['behaviors_conf'][obs_idx]['coding map']:
 
@@ -4174,13 +4203,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             memState = self.mediaListPlayer.get_state()
                             if memState == vlc.State.Playing:
                                 self.pause_video()
-                        if self.playerType == OPENCV:
-                            memState = self.openCVtimerOut.isActive()
-                            if memState:
-                                self.pause_video()
         
                     self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj['behaviors_conf'][obs_idx]['coding map'] ] ) 
-                    #self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ obs_idx ] ) 
 
                     self.codingMapWindow.resize(640, 640)
                     if self.codingMapWindowGeometry:
@@ -4207,11 +4231,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if memState == vlc.State.Playing:
                                 self.play_video()
         
-                        if self.playerType == OPENCV:
-                            if memState:
-                                self.play_video()
-
-
                 else: ### no coding map
 
                     self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
@@ -4712,12 +4731,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.DEBUG: print 'player #2 state',  self.mediaListPlayer2.get_state()
             else:
                 self.no_media()
-
-        if self.playerType == OPENCV:
-            if self.openCVtimer.isActive():
-                self.openCVtimer.stop()   ### stop
-            else:
-                self.openCVtimer.start()   ### start
 
 
 

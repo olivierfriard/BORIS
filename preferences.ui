@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>466</width>
+    <width>465</width>
     <height>436</height>
    </rect>
   </property>
@@ -125,6 +125,13 @@
       <widget class="QCheckBox" name="cbEmbedPlayer">
        <property name="text">
         <string>Embed media player in main window (program must be restarted)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="cbAlertNoFocalSubject">
+       <property name="text">
+        <string>Alert if focal subject is not set</string>
        </property>
       </widget>
      </item>
