@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Jun 19 11:26:49 2014
+# Created: Thu Jul 17 16:49:36 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -274,6 +274,8 @@ class Ui_MainWindow(object):
         self.actionObservationsList.setObjectName("actionObservationsList")
         self.actionMapCreator = QtGui.QAction(MainWindow)
         self.actionMapCreator.setObjectName("actionMapCreator")
+        self.actionCreate_subtitles = QtGui.QAction(MainWindow)
+        self.actionCreate_subtitles.setObjectName("actionCreate_subtitles")
         self.menuHelp.addAction(self.actionAbout)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuFile.addAction(self.actionNew_project)
@@ -306,6 +308,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.menuExport_events.menuAction())
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionMedia_file_information)
+        self.menuObservations.addAction(self.actionCreate_subtitles)
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionVisualize_data)
         self.menuPlayback.addAction(self.actionJumpForward)
@@ -418,4 +421,5 @@ class Ui_MainWindow(object):
         self.actionClose_project.setText(QtGui.QApplication.translate("MainWindow", "Close project", None, QtGui.QApplication.UnicodeUTF8))
         self.actionObservationsList.setText(QtGui.QApplication.translate("MainWindow", "Observations list", None, QtGui.QApplication.UnicodeUTF8))
         self.actionMapCreator.setText(QtGui.QApplication.translate("MainWindow", "Map creator", None, QtGui.QApplication.UnicodeUTF8))
+        self.actionCreate_subtitles.setText(QtGui.QApplication.translate("MainWindow", "Create subtitles", None, QtGui.QApplication.UnicodeUTF8))
 

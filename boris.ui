@@ -150,6 +150,7 @@
     <addaction name="actionLoad_observations_file"/>
     <addaction name="menuExport_events"/>
     <addaction name="separator"/>
+    <addaction name="actionCreate_subtitles"/>
     <addaction name="actionMedia_file_information"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">
@@ -686,6 +687,11 @@
   <action name="actionMapCreator">
    <property name="text">
     <string>Map creator</string>
+   </property>
+  </action>
+  <action name="actionCreate_subtitles">
+   <property name="text">
+    <string>Create subtitles</string>
    </property>
   </action>
  </widget>

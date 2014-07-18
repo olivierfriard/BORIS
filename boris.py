@@ -374,6 +374,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project_as.setEnabled(flag)
         self.actionClose_project.setEnabled(flag)
         self.actionMedia_file_information.setEnabled(flag)
+        self.actionCreate_subtitles.setEnabled(flag)
 
         ### observations
 
@@ -396,6 +397,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(flagObs)
+        self.actionCreate_subtitles.setEnabled(flagObs)
         
         
         self.actionJumpForward.setEnabled( flagObs)
@@ -427,6 +429,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionClose_project.triggered.connect(self.close_project)
 
         self.actionMedia_file_information.triggered.connect(self.media_file_info)
+        self.actionCreate_subtitles.triggered.connect(self.create_subtitles)
+        
 
         self.actionPreferences.triggered.connect(self.preferences)
 
@@ -3186,6 +3190,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             self.lbTimeLive.setText('00:00:00.000')
             
+
+    def create_subtitles(self):
+        '''
+        create subtitles for current observation
+        '''
+        if self.observationId:
+            fd = QFileDialog(self)
+            fileName, filtr = fd.getSaveFileName(self, 'Create subtitles', '','Subtitles file (*.srt);;All files (*)')
+    
+            if fileName:
+                f = open(fileName, 'w')
+                
+                '''
+                for r in range(0, self.twEvents.rowCount()):
+
+                    row = []
+                    
+                    for c in tw_events_fields:
+                        if self.twEvents.item(r, tw_obs_fields[c]):
+                            if c == 'time' and self.timeFormat == HHMMSS:
+                                s = str(self.time2seconds( self.twEvents.item(r, tw_obs_fields[c]).text() ))
+                            else:
+                                s = self.twEvents.item(r, tw_obs_fields[c]).text()
+
+                            row.append( s )
+                        else:
+                            row.append('')
+
+                    s = '\t'.join(row) + '\n'
+                    s2 = s.encode('UTF-8')
+
+                    f.write(s2)
+                '''
+
+                f.close()
+
+
+
 
 
     def media_file_info(self):
