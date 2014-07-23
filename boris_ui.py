@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Jul 17 16:49:36 2014
+# Created: Wed Jul 23 16:44:07 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -44,7 +44,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 352, 403))
+        self.page.setGeometry(QtCore.QRect(0, 0, 352, 397))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -52,7 +52,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar()
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 23))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -308,7 +308,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.menuExport_events.menuAction())
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionMedia_file_information)
-        self.menuObservations.addAction(self.actionCreate_subtitles)
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionVisualize_data)
         self.menuPlayback.addAction(self.actionJumpForward)

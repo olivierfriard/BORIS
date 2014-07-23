@@ -76,7 +76,7 @@
              <x>0</x>
              <y>0</y>
              <width>352</width>
-             <height>403</height>
+             <height>397</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>938</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -150,7 +150,6 @@
     <addaction name="actionLoad_observations_file"/>
     <addaction name="menuExport_events"/>
     <addaction name="separator"/>
-    <addaction name="actionCreate_subtitles"/>
     <addaction name="actionMedia_file_information"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">

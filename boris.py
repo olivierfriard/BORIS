@@ -2180,31 +2180,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         states_results, points_results = self.analyze_subject( selected_subjects, selected_observations )
 
-        if self.DEBUG: print '\nr2163 states_results', states_results
+        if self.DEBUG: print '\nr2183 states_results', states_results
         
-        if self.DEBUG: print '\nr2165 point_results', points_results
+        if self.DEBUG: print '\nr2185 point_results', points_results
 
         out = []
         tot_duration = {}
-        
+
         ### extract all event codes and modifier
         codes = self.combinationsCodeModifier()
-        
+        print 'codes', codes
 
-        
+
         ### create list of codes with coding map
         cm = []
         for behaviorIdx in self.pj['behaviors_conf']:
-			if 'coding map' in self.pj['behaviors_conf'][ behaviorIdx ] and self.pj['behaviors_conf'][ behaviorIdx ][ 'coding map' ]:
-				cm.append( self.pj['behaviors_conf'][ behaviorIdx ][ 'code' ] )
-				
+            if 'coding map' in self.pj['behaviors_conf'][ behaviorIdx ] and self.pj['behaviors_conf'][ behaviorIdx ][ 'coding map' ]:
+                cm.append( self.pj['behaviors_conf'][ behaviorIdx ][ 'code' ] )
+
         print 'cm',cm
-        ### append all modifiers from coding map        
+        ### append all modifiers from coding map
         for observationIdx in self.pj[OBSERVATIONS]:
-			for event in self.pj[OBSERVATIONS][ observationIdx ]['events']:
-				if event[pj_obs_fields['code'] ] in cm:
-					if not (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ) in codes:
-					    codes.append( (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ))
+            for event in self.pj[OBSERVATIONS][ observationIdx ]['events']:
+                if event[pj_obs_fields['code'] ] in cm:
+                    if not (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ) in codes:
+                        codes.append( (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ))
 
 
 
@@ -2215,21 +2215,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             tot_duration[ subject_to_analyze ] = 0 
 
             for behaviorModifier in codes:
+                print 'r 2217 behaviorModifier',behaviorModifier
+                if behaviorModifier[1] == 'None':
+                    subj_behav_modif  = subject_to_analyze + '|' + behaviorModifier[0]  + '###'
+                else:
+                    subj_behav_modif = subject_to_analyze + '|' + '###'.join(behaviorModifier)
 
                 duration = 0
                 number = 0
 
                 ### state events
-                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in states_results:
+                print 'subj_behav_modif',subj_behav_modif
+                if subj_behav_modif in states_results:
 
-                    for event in states_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ]:
+                    for event in states_results[ subj_behav_modif ]:
                         number += 1
                         duration += event[1] - event[0]
 
                     tot_duration[ subject_to_analyze ] += duration
 
 
-                    if self.DEBUG: print 'behaviorModifier', behaviorModifier
+                    if self.DEBUG: print 'r 2231 behaviorModifier', behaviorModifier
 
                     if number:
                         out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behaviorModifier),  'number': number, 'duration': duration, 'mean': round( duration/number, 1)  } )
@@ -2239,13 +2245,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ### point events
                 if subject_to_analyze + '|' + '###'.join(behaviorModifier) in points_results:
 
-                    number = len( points_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ] )
+                    number = len( points_results[ subj_behav_modif ] )
                     duration = '-'
 
                     out.append( {'subject':subject_to_analyze, 'behavior': '%s (%s)' % tuple(behaviorModifier), 'number': number, 'duration':duration, 'mean':'-' } )
 
                 if self.DEBUG:
-                    if out: print 'r2208 out[-1]', out[-1]
+                    if out: print 'r2247 out[-1]', out[-1]
 
             if self.DEBUG: print '\nsubject', subject_to_analyze, 'tot_duration[ subject_to_analyze ]', tot_duration[ subject_to_analyze ]
 
@@ -2332,16 +2338,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ### create list of codes with coding map
         cm = []
         for behaviorIdx in self.pj['behaviors_conf']:
-			if 'coding map' in self.pj['behaviors_conf'][ behaviorIdx ] and self.pj['behaviors_conf'][ behaviorIdx ][ 'coding map' ]:
-				cm.append( self.pj['behaviors_conf'][ behaviorIdx ][ 'code' ] )
-				
+            if 'coding map' in self.pj['behaviors_conf'][ behaviorIdx ] and self.pj['behaviors_conf'][ behaviorIdx ][ 'coding map' ]:
+                cm.append( self.pj['behaviors_conf'][ behaviorIdx ][ 'code' ] )
+
         print 'cm',cm
-        ### append all modifiers from coding map        
+        ### append all modifiers from coding map
         for observationIdx in self.pj[OBSERVATIONS]:
-			for event in self.pj[OBSERVATIONS][ observationIdx ]['events']:
-				if event[pj_obs_fields['code'] ] in cm:
-					if not (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ) in codes:
-					    codes.append( (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ))
+            for event in self.pj[OBSERVATIONS][ observationIdx ]['events']:
+                if event[pj_obs_fields['code'] ] in cm:
+                    if not (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ) in codes:
+                        codes.append( (event[pj_obs_fields['code']], event[pj_obs_fields['modifier']] ))
 
 
 
@@ -2352,16 +2358,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for behaviorModifier in codes:
 
-                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in states_results:
+                if behaviorModifier[1] == 'None':
+                    subj_behav_modif  = subject_to_analyze + '|' + behaviorModifier[0]  + '###'
+                else:
+                    subj_behav_modif = subject_to_analyze + '|' + '###'.join(behaviorModifier)
+
+
+                if subj_behav_modif in states_results:
                     track_nb += 1
 
-                    for event in states_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ]:
+                    for event in states_results[ subj_behav_modif ]:
                         max_time = max( max_time, event[0], event[1] )
 
-                if subject_to_analyze + '|' + '###'.join(behaviorModifier) in points_results:
+                if subj_behav_modif in points_results:
                     track_nb += 1
                     
-                    for event in points_results[ subject_to_analyze + '|' + '###'.join(behaviorModifier) ]:
+                    for event in points_results[ subj_behav_modif ]:
                         max_time = max( max_time, event )
 
 
@@ -2443,20 +2455,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for behaviorModifier in codes:
 
-                if subject + '|' + '###'.join(behaviorModifier) in points_results:
+                if behaviorModifier[1] == 'None':
+                    subj_behav_modif  = subject + '|' + behaviorModifier[0]  + '###'
+                else:
+                    subj_behav_modif = subject + '|' + '###'.join(behaviorModifier)
+
+
+                if subj_behav_modif in points_results:
                     behaviorOut = '%s (%s)' % behaviorModifier
                     scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut.replace(' ()','' ), 16) )
 
-                    for event in points_results[ subject + '|' + '###'.join(behaviorModifier) ]:
+                    for event in points_results[ subj_behav_modif ]:
                         scene.add(svg.Rectangle( (x_init + round(event / max_time * ( width - x_init - right_margin )), y_init), h, w, red) )
 
                     y_init += h + spacer
 
-                if subject + '|' + '###'.join(behaviorModifier) in states_results:
+                if subj_behav_modif in states_results:
                     behaviorOut = '%s (%s)' % behaviorModifier
                     scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut.replace(' ()','' ), 16) )
 
-                    for event in states_results[ subject + '|' + '###'.join(behaviorModifier)]:
+                    for event in states_results[ subj_behav_modif]:
                         scene.add(svg.Rectangle( (x_init + round(event[0] / max_time * ( width - x_init - right_margin )), y_init), h,   round((event[1] - event[0]) / max_time * ( width - x_init - right_margin ) )     , blue))
 
                     y_init += h + spacer
