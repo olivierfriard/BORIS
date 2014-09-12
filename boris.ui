@@ -76,7 +76,7 @@
              <x>0</x>
              <y>0</y>
              <width>352</width>
-             <height>397</height>
+             <height>403</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>938</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -319,7 +319,7 @@
           <bool>false</bool>
          </property>
          <property name="editTriggers">
-          <set>QAbstractItemView::SelectedClicked</set>
+          <set>QAbstractItemView::NoEditTriggers</set>
          </property>
          <property name="tabKeyNavigation">
           <bool>false</bool>
