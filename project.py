@@ -947,7 +947,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         item = QTableWidgetItem('')
         self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 0 ,item)
 
+
     def pbRemoveSubject_clicked(self):
+        '''
+        remove selected subject from subjects list
+        control before if subject used in observations
+        '''
         if not self.twSubjects.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select a subject to remove')
         else:
@@ -955,26 +960,34 @@ class projectDialog(QDialog, Ui_dlgProject):
             response = dialog.MessageDialog(programName, 'Remove the selected subject?', ['Yes', 'Cancel'])
             if response == 'Yes':
 
-                subjectToDelete = self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1).text()  ### 1: subject name
-
-                if self.DEBUG: print 'subject to delete', subjectToDelete
-
-                subjectsInObs = []
-                for obs in  self.pj['observations']:
-                    events = self.pj['observations'][ obs ]['events']
-                    for event in events:
-                        subjectsInObs.append( event[ 1 ] )  ### 1: subject name
-                        
-                if self.DEBUG: print 'all subjects in observations',  subjectsInObs
-
-                if subjectToDelete in subjectsInObs:
-                    response = dialog.MessageDialog(programName, 'The subject to remove is used in observations!', ['Remove', 'Cancel'])
-                    if response == 'Remove':
-                        self.twSubjects.removeRow(self.twSubjects.selectedIndexes()[0].row())
+                flagDel = False
+                if  self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1):
+                    subjectToDelete = self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1).text()  ### 1: subject name
+    
+                    if self.DEBUG: print('subject to delete', subjectToDelete)
+    
+                    subjectsInObs = []
+                    for obs in  self.pj['observations']:
+                        events = self.pj['observations'][ obs ]['events']
+                        for event in events:
+                            subjectsInObs.append( event[ 1 ] )  ### 1: subject name
+                            
+                    if self.DEBUG: print('all subjects in observations',  subjectsInObs)
+    
+                    if subjectToDelete in subjectsInObs:
+                        response = dialog.MessageDialog(programName, 'The subject to remove is used in observations!', ['Remove', 'Cancel'])
+                        if response == 'Remove':
+                            flagDel = True
+                    else:
+                        ### code not used
+                        flagDel = True
 
                 else:
-                    ### code not used
+                    flagDel = True
+
+                if flagDel:
                     self.twSubjects.removeRow(self.twSubjects.selectedIndexes()[0].row())
+
 
 
     def pbDown_behavior_clicked(self):

@@ -1125,7 +1125,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [LIVE]:
 
-            #if self.DEBUG: print 'set up live observation', live
+            if self.DEBUG: print( 'set up live observation', live)
             self.simultaneousMedia = False
 
             self.liveTab.setEnabled(True)
