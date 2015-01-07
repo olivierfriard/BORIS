@@ -114,11 +114,12 @@ class MapCreatorWindow(QMainWindow):
         points = []
         
         def __init__(self, parent):
+
             QGraphicsView.__init__(self, parent)
             self.setBackgroundBrush( QColor( 128, 128, 128 ) )
             self.setScene(QGraphicsScene(self))
-
             self.scene().update()
+
 
     bitmapFileName = ''
     mapName = ''
@@ -848,11 +849,12 @@ class MapCreatorWindow(QMainWindow):
         fd = QFileDialog(self)
         fileName = fd.getOpenFileName(self, 'Load bitmap', '', 'bitmap files (*.png *.jpg);;All files (*)')[0]
         if fileName:
-            self.bitmapFileName = fileName
 
+            self.bitmapFileName = fileName
             self.pixmap.load(self.bitmapFileName)
     
             print 'image size:', self.pixmap.size()
+
             if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
                 self.pixmap = self.pixmap.scaled (maxSize, maxSize, Qt.KeepAspectRatio)
                 QMessageBox.information(self, programName , 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' % ( self.pixmap.size().width(), self.pixmap.size().height() ) )

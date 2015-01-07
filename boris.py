@@ -5,7 +5,7 @@ from __future__ import division
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2014 Olivier Friard
+Copyright 2012-2015 Olivier Friard
 
 This file is part of BORIS.
 
@@ -24,8 +24,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = '1.63'
-__version_date__ = '2014-11-20'
+__version__ = '1.64'
+__version_date__ = '2015-01-07'
 __RC__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -1342,9 +1342,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     field = event[ pj_obs_fields[field_type]  ]
                     if field_type == 'time':
-                        field = self.convertTime( field) 
+                        field = str(self.convertTime( field) )
                         
-                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(str(field)))
+                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem( field) )
 
                 else:
                     self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(''))
