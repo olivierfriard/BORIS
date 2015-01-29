@@ -24,13 +24,22 @@ This file is part of BORIS.
 
 """
 
-__version__ = '1.64'
-__version_date__ = '2015-01-07'
+__version__ = '1.641'
+__version_date__ = '2015-01-29'
 __RC__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
 slider_maximum = 1000
+
+import sys
+
+try:
+    from PySide.QtCore import *
+    from PySide.QtGui import *
+except:
+    print('PySide not installed! See http://qt-project.org/wiki/PySide')
+    sys.exit()
 
 import qrc_boris
 
@@ -42,7 +51,7 @@ live_tab_index = 1
 
 video, live = 0, 1
 
-import sys
+
 import time
 import os
 from encodings import hex_codec
@@ -51,8 +60,7 @@ from decimal import *
 import itertools
 import re
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+
 
 import dialog
 
