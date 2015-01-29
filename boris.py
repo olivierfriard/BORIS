@@ -3608,7 +3608,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         QMessageBox.about(self, "About " + programName,
         """<b>%s</b> v. %s - %s
-        <p>Copyright &copy; 2012-2014 Olivier Friard - Universit&agrave; degli Studi di Torino.<br>
+        <p>Copyright &copy; 2012-2015 Olivier Friard - Universit&agrave; degli Studi di Torino.<br>
         <br>
         The author would like to acknowledge Sergio Castellano, Marco Gamba, Valentina Matteucci and Laura Ozella for their precious help.<br>
         <br>
