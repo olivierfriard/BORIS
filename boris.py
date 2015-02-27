@@ -24,8 +24,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = '1.641'
-__version_date__ = '2015-01-29'
+__version__ = '1.642'
+__version_date__ = '2015-02-27'
 __RC__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -2513,7 +2513,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.pj = json.loads(s)
         
-        ### transform time to decimal
+        # transform time to decimal
         for obs in self.pj[OBSERVATIONS]:
             self.pj[OBSERVATIONS][obs]['time offset'] = Decimal( str(self.pj[OBSERVATIONS][obs]['time offset']) )
 
@@ -2522,19 +2522,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][obs]['events'][idx][ pj_obs_fields['time'] ] = Decimal(str(self.pj[OBSERVATIONS][obs]['events'][idx][ pj_obs_fields['time'] ]))
         
 
-        ### add coding_map key to old project files
+        # add coding_map key to old project files
         if not 'coding_map' in self.pj:
             self.pj['coding_map'] = {}
 
-        ### add subject description
-        for idx in [x for x in self.pj[SUBJECTS]]:
-            if not 'description' in self.pj[SUBJECTS][ idx ] :
-                self.pj[SUBJECTS][ idx ]['description'] = ''
+        # add subject description if project format recent
+        if 'project_format_version' in self.pj:
+            for idx in [x for x in self.pj[SUBJECTS]]:
+                if not 'description' in self.pj[SUBJECTS][ idx ] :
+                    self.pj[SUBJECTS][ idx ]['description'] = ''
             
 
         if self.DEBUG: print 'pj', self.pj
 
-        ### check if project file version is newer than current BORIS project file version
+        # check if project file version is newer than current BORIS project file version
         if 'project_format_version' in self.pj and Decimal(self.pj['project_format_version']) > Decimal(project_format_version):
             QMessageBox.critical(self, programName , 'This project file was created with a more recent version of BORIS.\nUpdate your version of BORIS to load it' )
             self.pj = {"time_format": "hh:mm:ss",\
@@ -2548,23 +2549,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-        ### check if old version  v. 0 *.obs
+        # check if old version  v. 0 *.obs
         if 'project_format_version' not in self.pj:
             if self.DEBUG: print 'project format version:', 0
 
-            ### convert VIDEO, AUDIO -> MEDIA
+            # convert VIDEO, AUDIO -> MEDIA
             self.pj['project_format_version'] = project_format_version
 
             for obs in [x for x in self.pj[OBSERVATIONS]]:
 
-                ### remove 'replace audio' key
+                # remove 'replace audio' key
                 if 'replace audio' in self.pj[OBSERVATIONS][obs]:
                     del self.pj[OBSERVATIONS][obs]['replace audio']
 
                 if self.pj[OBSERVATIONS][obs]['type'] in ['VIDEO','AUDIO']:
                     self.pj[OBSERVATIONS][obs]['type'] = MEDIA
 
-                ### convert old media list in new one
+                # convert old media list in new one
                 if len( self.pj[OBSERVATIONS][obs]['file'] ):
                     d1 = { '1':  [self.pj[OBSERVATIONS][obs]['file'][0]] }
 
@@ -2575,12 +2576,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.DEBUG: print "self.pj[OBSERVATIONS][obs]['file']", self.pj[OBSERVATIONS][obs]['file']
 
-            ### convert VIDEO, AUDIO -> MEDIA
+            # convert VIDEO, AUDIO -> MEDIA
 
             for idx in [x for x in self.pj['subjects_conf']]:
 
                 key, name = self.pj['subjects_conf'][idx]
-                self.pj['subjects_conf'][idx] = {'key': key, 'name': name}
+                self.pj['subjects_conf'][idx] = {'key': key, 'name': name, 'description':''}
 
 
             QMessageBox.information(self, programName , 'The project file was converted to the new format (v. %s) in use with your version of BORIS.\nChoose a new file name for saving it.' % project_format_version)
