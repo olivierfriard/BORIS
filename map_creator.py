@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 from __future__ import division
+from __future__ import print_function
 
 from config import *
 
@@ -114,12 +115,11 @@ class MapCreatorWindow(QMainWindow):
         points = []
         
         def __init__(self, parent):
-
             QGraphicsView.__init__(self, parent)
             self.setBackgroundBrush( QColor( 128, 128, 128 ) )
             self.setScene(QGraphicsScene(self))
-            self.scene().update()
 
+            self.scene().update()
 
     bitmapFileName = ''
     mapName = ''
@@ -291,7 +291,7 @@ class MapCreatorWindow(QMainWindow):
     def closeEvent(self, event):
 
         if self.flagMapChanged:
-            
+
             response = dialog.MessageDialog('BORIS - Map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
 
             if response == 'Save':
@@ -304,21 +304,21 @@ class MapCreatorWindow(QMainWindow):
 
         self.closed.emit()
         event.accept()
-    
+
 
     def viewMousePressEvent(self, event):
 
-        print 'event.pos()', event.pos()
+        print('event.pos()', event.pos())
 
         if not self.bitmapFileName:
             return
 
         test = self.view.mapToScene(event.pos()).toPoint()
 
-        print 'test',test
+        print('test',test)
 
         if test.x()<0 or test.y()<0 or test.x() > self.pixmap.size().width() or test.y() > self.pixmap.size().height():
-            print 'out1'
+            print('out1')
             return
 
         if not self.flagNewArea:   ### test clicked point for areas
@@ -331,17 +331,17 @@ class MapCreatorWindow(QMainWindow):
                 self.selectedPolygonMemBrush = None
 
 
-            print 'self.polygonsList2', self.polygonsList2
+            print('self.polygonsList2', self.polygonsList2)
             for areaCode in self.polygonsList2:
 
-                print 'areaCode', areaCode
+                print('areaCode', areaCode)
 
                 if self.polygonsList2[areaCode].contains( test ):
-                    print '***'
+                    print('***')
                     if txt:
                         txt += ','
 
-                    print 'self.areasList', self.areasList
+                    print('self.areasList', self.areasList)
                     txt += areaCode
                     self.selectedPolygon = self.polygonsList2[areaCode]
                     self.selectedPolygonAreaCode = areaCode
@@ -408,7 +408,7 @@ class MapCreatorWindow(QMainWindow):
                     for idx, point in enumerate(self.view.points[:-2]):
                     
                         if intersection(  self.view.points[ idx ], self.view.points[ idx + 1 ], self.view.points[ -1 ], (  int(end.x()), int(end.y()))  ) :
-                            print idx, idx+1
+                            print(idx, idx+1)
                             QMessageBox.critical(self, '' , 'The polygon edges can not be intersected')
                             return
 
@@ -738,24 +738,8 @@ class MapCreatorWindow(QMainWindow):
         for l in self.view.elList:
             self.view.scene().removeItem( l )
 
-        ### remove closed polygon
-        '''self.view.scene().removeItem( self.closedPolygon )'''
-
         ### draw polygon
-        '''
-        polygon = QGraphicsPolygonItem(newPolygon, None, None)
 
-        polygon.setPen(QPen(self.areaColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-
-        brush = QBrush()
-        brush.setStyle(Qt.SolidPattern)
-        brush.setColor(self.areaColor)
-        polygon.setBrush( brush)
-
-        self.view.scene().addItem( polygon )
-
-        self.polygonsList2[ self.leAreaCode.text()  ] = polygon
-        '''
         self.closedPolygon.setBrush( QBrush( self.areaColor, Qt.SolidPattern ) )
         self.polygonsList2[ self.leAreaCode.text()  ] = self.closedPolygon
         self.closedPolygon = None
@@ -813,10 +797,6 @@ class MapCreatorWindow(QMainWindow):
         self.btNewArea.setVisible(True)
         self.leAreaCode.setText('')
 
-        '''
-        else:
-            self.statusBar().showMessage('No selected area to delete', 5000)
-        '''
 
 
 
@@ -849,12 +829,11 @@ class MapCreatorWindow(QMainWindow):
         fd = QFileDialog(self)
         fileName = fd.getOpenFileName(self, 'Load bitmap', '', 'bitmap files (*.png *.jpg);;All files (*)')[0]
         if fileName:
-
             self.bitmapFileName = fileName
+
             self.pixmap.load(self.bitmapFileName)
     
-            print 'image size:', self.pixmap.size()
-
+            print('image size:', self.pixmap.size())
             if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
                 self.pixmap = self.pixmap.scaled (maxSize, maxSize, Qt.KeepAspectRatio)
                 QMessageBox.information(self, programName , 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' % ( self.pixmap.size().width(), self.pixmap.size().height() ) )

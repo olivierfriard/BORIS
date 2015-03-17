@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 
+from __future__ import print_function
 
 import PySide   ### qwebwidget
 from PySide.QtCore import *
@@ -76,7 +77,7 @@ class diagram(QWidget):
 
     def pbSave_clicked(self):
         
-        if self.DEBUG: print 'save time diagram to a SVG file'
+        if self.DEBUG: print('save time diagram to a SVG file')
         fd = QFileDialog(self)
         fileName, filtr = fd.getSaveFileName(self, 'Save time diagram', '', 'SVG file (*.svg);;All files (*)')
 

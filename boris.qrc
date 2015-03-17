@@ -10,6 +10,8 @@
 <file alias="slower.png">icons/glyphicons_191_circle_minus.png</file>
 <file alias="previous.png">icons/glyphicons_171_fast_backward.png</file>
 <file alias="next.png">icons/glyphicons_177_fast_forward.png</file>
-
+<file alias="normal_speed.png">icons/glyphicons_192_circle_egal.png</file>
+<file alias="snapshot.png">icons/glyphicons_011_camera.png</file>
+<file alias="frame_mode">icons/glyphicons_008_film.png</file>
 </qresource>
 </RCC>

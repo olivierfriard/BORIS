@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>938</width>
-    <height>606</height>
+    <height>604</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -76,7 +76,7 @@
              <x>0</x>
              <y>0</y>
              <width>352</width>
-             <height>403</height>
+             <height>401</height>
             </rect>
            </property>
            <attribute name="label">
@@ -104,8 +104,9 @@
     <property name="title">
      <string>Help</string>
     </property>
-    <addaction name="actionAbout"/>
     <addaction name="actionCheckUpdate"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuFile">
     <property name="title">
@@ -131,9 +132,19 @@
       <string>Export events</string>
      </property>
      <addaction name="actionExportEventTabular"/>
-     <addaction name="actionExportEventString"/>
+     <addaction name="actionODS_format"/>
+     <addaction name="separator"/>
+     <addaction name="separator"/>
+    </widget>
+    <widget class="QMenu" name="menuExport_aggregated_events">
+     <property name="title">
+      <string>Export aggregated events</string>
+     </property>
+     <addaction name="actionAggregatedEventsTabularFormat"/>
+     <addaction name="actionExportEventsSQL"/>
     </widget>
     <addaction name="actionNew_observation"/>
+    <addaction name="actionOpen_observation"/>
     <addaction name="actionObservationsList"/>
     <addaction name="actionOpen_observation_2"/>
     <addaction name="actionEdit_observation"/>
@@ -148,8 +159,12 @@
     <addaction name="actionDelete_all_observations"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_observations_file"/>
-    <addaction name="menuExport_events"/>
     <addaction name="separator"/>
+    <addaction name="menuExport_events"/>
+    <addaction name="menuExport_aggregated_events"/>
+    <addaction name="actionExportEventString"/>
+    <addaction name="separator"/>
+    <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionMedia_file_information"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">
@@ -206,10 +221,13 @@
    <addaction name="actionReset"/>
    <addaction name="actionJumpBackward"/>
    <addaction name="actionJumpForward"/>
+   <addaction name="actionNormalSpeed"/>
    <addaction name="actionFaster"/>
    <addaction name="actionSlower"/>
    <addaction name="actionPrevious"/>
    <addaction name="actionNext"/>
+   <addaction name="actionSnapshot"/>
+   <addaction name="actionFrame_by_frame"/>
   </widget>
   <widget class="QDockWidget" name="dwConfiguration">
    <property name="floating">
@@ -665,12 +683,12 @@
   </action>
   <action name="actionExportEventTabular">
    <property name="text">
-    <string>Tabular format</string>
+    <string>TSV format</string>
    </property>
   </action>
   <action name="actionExportEventString">
    <property name="text">
-    <string>Behavioural strings format</string>
+    <string>Export events as behavioural strings</string>
    </property>
   </action>
   <action name="actionClose_project">
@@ -688,7 +706,50 @@
     <string>Map creator</string>
    </property>
   </action>
-  <action name="actionCreate_subtitles">
+  <action name="actionNormalSpeed">
+   <property name="text">
+    <string>Normal speed</string>
+   </property>
+  </action>
+  <action name="actionSnapshot">
+   <property name="text">
+    <string>Snapshot</string>
+   </property>
+  </action>
+  <action name="actionFrame_by_frame">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Frame by frame</string>
+   </property>
+  </action>
+  <action name="actionExportEventsSQL">
+   <property name="text">
+    <string>SQL format</string>
+   </property>
+  </action>
+  <action name="actionAggregatedEventsTabularFormat">
+   <property name="text">
+    <string>TSV format</string>
+   </property>
+  </action>
+  <action name="actionOpen_observation">
+   <property name="text">
+    <string>Open observation</string>
+   </property>
+  </action>
+  <action name="actionODS_format">
+   <property name="text">
+    <string>ODS format</string>
+   </property>
+  </action>
+  <action name="actionAaaa">
+   <property name="text">
+    <string>aaaa</string>
+   </property>
+  </action>
+  <action name="menuCreate_subtitles_2">
    <property name="text">
     <string>Create subtitles</string>
    </property>

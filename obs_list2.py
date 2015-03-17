@@ -39,11 +39,11 @@ class observationsList_widget(QDialog):
 
         self.mode = config.SINGLE
 
-        self.lineEdit       = QLineEdit(self)
-        self.view           = QTableView(self)
+        self.lineEdit = QLineEdit(self)
+        self.view = QTableView(self)
         self.view.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.comboBox       = QComboBox(self)
-        self.label          = QLabel(self)
+        self.comboBox = QComboBox(self)
+        self.label = QLabel(self)
 
         self.gridLayout = QGridLayout(self)
         self.gridLayout.addWidget(self.label, 0, 1, 1, 3)
@@ -102,8 +102,14 @@ class observationsList_widget(QDialog):
 
 
     def view_doubleClicked(self, index):
+
+        
         if self.mode == config.MULTIPLE:
            return
+
+        if self.mode == config.OPEN:
+            self.done(2)
+            return
 
         response = dialog.MessageDialog(config.programName, 'What do you want to do with this observation?', ['Open', 'Edit', 'Cancel'])
         if response == 'Open':
@@ -111,7 +117,7 @@ class observationsList_widget(QDialog):
         if response == 'Edit':
             self.done(3)
         
-    
+
 
     def pbSelectAll_clicked(self):
 
@@ -187,8 +193,8 @@ class observationsList_widget(QDialog):
 
     def on_lineEdit_textChanged(self, text):
         search = QRegExp(    text,  Qt.CaseInsensitive,  QRegExp.RegExp )
-
         self.proxy.setFilterRegExp(search)
+        self.label.setText( '%d observation(s)' % self.proxy.rowCount())
 
 
     def on_comboBox_currentIndexChanged(self, index):

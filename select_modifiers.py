@@ -22,6 +22,8 @@ This file is part of BORIS.
 
 """
 
+from __future__ import print_function
+
 from PySide.QtCore import *
 from PySide.QtGui import *
 import re
@@ -72,7 +74,7 @@ class ModifiersRadioButton(QDialog):
                 ### check if current modifier
                 
                 if currentModifierList != ['']:
-                    print 'r75 ',modifier, currentModifierList[idx]
+                    print('r75 ',modifier, currentModifierList[idx])
                     
                     if re.sub(' \(.\)', '', modifier) == currentModifierList[idx]:
                     #if modifier == currentModifierList[idx]:
@@ -92,15 +94,17 @@ class ModifiersRadioButton(QDialog):
 
 
     def keyPressEvent(self, event):
-        print( 'key press event' )
+
         ek = event.key()
+        print('ek',ek)
         if ek == 16777220 or ek == 16777221:
             self.accept()
+            return
 
-        ### check radio button if key are pressed
+        # check radio button if key are pressed
         l = self.layout()
         modifiers = []
-        for i in range(0, l.count()):   ### iterate on all widget/layout
+        for i in range(0, l.count()):   # iterate on all widget/layout
             layout = l.itemAt(i).layout()
             if (layout) and (type(layout) is QHBoxLayout):
                 for j in range(0, layout.count()):   ### iterate on all widget 

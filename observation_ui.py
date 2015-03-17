@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Wed Jul  2 11:40:03 2014
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Thu Jan 29 12:43:18 2015
+#      by: pyside-uic 0.2.13 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(601, 577)
+        Form.resize(602, 625)
         self.verticalLayout_3 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
@@ -136,6 +136,27 @@ class Ui_Form(object):
         self.verticalLayout_6.addItem(spacerItem2)
         self.horizontalLayout_5.addLayout(self.verticalLayout_6)
         self.verticalLayout_7.addLayout(self.horizontalLayout_5)
+        self.horizontalLayout_7 = QtGui.QHBoxLayout()
+        self.horizontalLayout_7.setObjectName("horizontalLayout_7")
+        self.lbTimeOffset_2 = QtGui.QLabel(self.tabVideo)
+        self.lbTimeOffset_2.setObjectName("lbTimeOffset_2")
+        self.horizontalLayout_7.addWidget(self.lbTimeOffset_2)
+        self.rbEarlier = QtGui.QRadioButton(self.tabVideo)
+        self.rbEarlier.setChecked(True)
+        self.rbEarlier.setObjectName("rbEarlier")
+        self.horizontalLayout_7.addWidget(self.rbEarlier)
+        self.rbLater = QtGui.QRadioButton(self.tabVideo)
+        self.rbLater.setObjectName("rbLater")
+        self.horizontalLayout_7.addWidget(self.rbLater)
+        self.leTimeOffset_2 = QtGui.QLineEdit(self.tabVideo)
+        self.leTimeOffset_2.setObjectName("leTimeOffset_2")
+        self.horizontalLayout_7.addWidget(self.leTimeOffset_2)
+        self.teTimeOffset_2 = QtGui.QTimeEdit(self.tabVideo)
+        self.teTimeOffset_2.setObjectName("teTimeOffset_2")
+        self.horizontalLayout_7.addWidget(self.teTimeOffset_2)
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_7.addItem(spacerItem3)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_7)
         self.tabProjectType.addTab(self.tabVideo, "")
         self.tabLive = QtGui.QWidget()
         self.tabLive.setObjectName("tabLive")
@@ -144,8 +165,8 @@ class Ui_Form(object):
         self.verticalLayout_3.addLayout(self.verticalLayout_9)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem3)
+        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem4)
         self.pbCancel = QtGui.QPushButton(Form)
         self.pbCancel.setObjectName("pbCancel")
         self.horizontalLayout.addWidget(self.pbCancel)
@@ -179,6 +200,11 @@ class Ui_Form(object):
         self.label_2.setText(QtGui.QApplication.translate("Form", "Media file paths for second player (will be played simultaneously)", None, QtGui.QApplication.UnicodeUTF8))
         self.pbAddVideo_2.setText(QtGui.QApplication.translate("Form", "Add media", None, QtGui.QApplication.UnicodeUTF8))
         self.pbRemoveVideo_2.setText(QtGui.QApplication.translate("Form", "Remove media", None, QtGui.QApplication.UnicodeUTF8))
+        self.lbTimeOffset_2.setText(QtGui.QApplication.translate("Form", "Time offset for second player", None, QtGui.QApplication.UnicodeUTF8))
+        self.rbEarlier.setText(QtGui.QApplication.translate("Form", "Earlier", None, QtGui.QApplication.UnicodeUTF8))
+        self.rbLater.setText(QtGui.QApplication.translate("Form", "Later", None, QtGui.QApplication.UnicodeUTF8))
+        self.leTimeOffset_2.setText(QtGui.QApplication.translate("Form", "0", None, QtGui.QApplication.UnicodeUTF8))
+        self.teTimeOffset_2.setDisplayFormat(QtGui.QApplication.translate("Form", "hh:mm:ss.zzz", None, QtGui.QApplication.UnicodeUTF8))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabVideo), QtGui.QApplication.translate("Form", "Media", None, QtGui.QApplication.UnicodeUTF8))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabLive), QtGui.QApplication.translate("Form", "Live", None, QtGui.QApplication.UnicodeUTF8))
         self.pbCancel.setText(QtGui.QApplication.translate("Form", "Cancel", None, QtGui.QApplication.UnicodeUTF8))

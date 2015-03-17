@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 
+from __future__ import print_function
 from config import *
 
 from PySide.QtCore import *
@@ -80,7 +81,7 @@ class DlgEditEvent(QDialog, Ui_Form):
 
     def codeChanged(self):
 
-        if self.DEBUG: print 'cobCode current index', self.cobCode.currentText()
+        if self.DEBUG: print('cobCode current index', self.cobCode.currentText())
 
         ### check if selected code has coding map
         codingMap = [ self.pj['behaviors_conf'][x]['coding map'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText() and self.pj['behaviors_conf'][x]['coding map']]
@@ -106,14 +107,14 @@ class DlgEditEvent(QDialog, Ui_Form):
             else:
                 modifiersList.append([s.strip() for s in modifiers.split(',')])
 
-            if self.DEBUG: print 'modifiersList (codeChanged)', modifiersList
+            if self.DEBUG: print('modifiersList (codeChanged)', modifiersList)
 
             ### delete widget
             self.mod.setParent(None)
             if modifiersList != [['']]:
                 self.groupBox.setTitle('Modifiers')
                 
-                print 'modifiersList, self.currentModifier',modifiersList, self.currentModifier
+                print('modifiersList, self.currentModifier',modifiersList, self.currentModifier)
                 
                 self.mod = select_modifiers.ModifiersRadioButton(self.cobCode.currentText(), modifiersList, self.currentModifier, 'embedded')
             else:

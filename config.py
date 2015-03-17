@@ -29,8 +29,16 @@ programName = 'BORIS'
 
 project_format_version = '1.6'
 
+VLC_MIN_VERSION = '2'
+
+#FFMPEG_BIN = 'ffmpeg'
+
+subtitlesColors = ['cyan','red','blue','yellow','fuchsia','orange', 'lime']
+
 OBSERVATIONS = 'observations'
+EVENTS = 'events'
 TIME_OFFSET='time offset'
+TIME_OFFSET_SECOND_PLAYER='time offset second player'
 
 CODING_MAP = 'coding_map'
 SUBJECTS = 'subjects_conf'
@@ -39,6 +47,10 @@ subjects_config = ['key', 'id']
 
 subjectsFields = ['key', 'name', 'description']
 
+UNPAIRED = 'UNPAIRED'
+
+YES = 'Yes'
+NO = 'No'
 
 ### fields for event configuration
 #fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5}
@@ -77,6 +89,8 @@ SELECT = 'select'
 SINGLE = 'single'
 MULTIPLE = 'multiple'
 
+SELECT1 = 'select1'
+
 NUMERIC = 'numeric'
 TEXT = 'text'
 INDEPENDENT_VARIABLES = 'independent_variables'
@@ -84,3 +98,11 @@ OBSERVATIONS = 'observations'
 
 OPENCV = 'opencv'
 VLC = 'vlc'
+FFMPEG = 'ffmpeg'
+
+MEDIA_FILE_INFO = 'media_file_info'
+
+STATE = 'STATE'
+
+PLAYER1 = '1'
+PLAYER2 = '2'

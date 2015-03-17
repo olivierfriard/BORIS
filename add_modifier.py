@@ -24,6 +24,7 @@ This file is part of BORIS.
 
 
 from config import *
+
 from PySide.QtCore import *
 from PySide.QtGui import *
 

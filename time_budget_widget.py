@@ -22,9 +22,11 @@ This file is part of BORIS.
 
 """
 
+from __future__ import print_function
 
 from PySide.QtCore import *
 from PySide.QtGui import *
+import os
 
 from config import *
 
@@ -79,36 +81,40 @@ class timeBudgetResults(QWidget):
         save time budget analysis results in TSV format
         '''
 
-        if self.DEBUG: print 'save time budget results to file in TSV format'
+        if self.DEBUG: print('save time budget results to file in TSV format')
 
         fd = QFileDialog(self)
-        fileName, filtr = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
+        fileName, _ = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
 
         if fileName:
             f = open(fileName, 'w')
 
-            ### observations list
-            f.write('Observations:\n')
+            # observations list
+            f.write('Observations:{0}'.format(os.linesep))
             for idx in xrange(self.lw.count()):
-                f.write(self.lw.item(idx).text() + '\n')
+                f.write(self.lw.item(idx).text() + os.linesep)
 
-            ### check if only one observation was selected
+            # check if only one observation was selected
             if self.lw.count() == 1:
-                f.write('\n')
+                f.write(os.linesep)
 
-                ### write independant variables to file
+                # write independant variables to file
                 if INDEPENDENT_VARIABLES in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
-                    if self.DEBUG: print 'indep var of selected observation ' , self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]
+                    if self.DEBUG: print('indep var of selected observation ' , self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ])
 
                     for var in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
                         f.write( var + '\t' + self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
 
-            f.write('\n\nTime budget:\n')
-            ### write header
-            f.write( 'Subject\tBehavior\tTotal number\tTotal duration\tDuration mean\t% of total time\n' )
+            f.write('{0}{0}Time budget:{0}'.format(os.linesep))
+            # write header
+            
+            for col in xrange(self.twTB.columnCount() ):
+                f.write( self.twTB.horizontalHeaderItem(col).text() + '\t' )
+            
+            f.write( os.linesep )
 
-            for row in range( self.twTB.rowCount()):
-                for col in range(self.twTB.columnCount()):
+            for row in xrange( self.twTB.rowCount()):
+                for col in xrange(self.twTB.columnCount()):
                     f.write( self.twTB.item(row,col).text().encode('utf8') + '\t' )
-                f.write('\n')
+                f.write(os.linesep)
             f.close()
