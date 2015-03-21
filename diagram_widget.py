@@ -81,7 +81,6 @@ class diagram(QWidget):
         fd = QFileDialog(self)
         fileName, filtr = fd.getSaveFileName(self, 'Save time diagram', '', 'SVG file (*.svg);;All files (*)')
 
-        if fileName:
-            f = open(fileName, 'w')
-            f.write(self.svg_text)
-            f.close()
+        with open(fileName,'w') as f:
+            f.write(self.svg_text.encode('UTF-8'))
+

@@ -1436,8 +1436,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.mediaplayer.set_hwnd(int_hwnd)
 
-                elif sys.platform == "darwin": # for MacOS
-                    self.mediaplayer.set_nsobject(self.videoframe.winId())
+            # for mac always embed player
+            if sys.platform == "darwin": # for MacOS
+                self.mediaplayer.set_nsobject(self.videoframe.winId())
 
             app.processEvents()
 
@@ -1446,8 +1447,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in range(self.media_list.count()):
                 app.processEvents()
                 self.mediaListPlayer.play_item_at_index( idx )
-
+                print('wait for playing video')
                 while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                    time.sleep(3)
+                    #print(3)
                     pass
                 self.mediaListPlayer.pause()
                 app.processEvents()
@@ -1522,6 +1525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # play mediaListPlayer for a while to obtain media information
             while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                time.sleep(3)
                 pass
             self.mediaListPlayer.pause()
 
@@ -1620,6 +1624,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 app.processEvents()
 
                 while self.mediaListPlayer2.get_state() != vlc.State.Playing:
+                    time.sleep(3)
                     pass
                 self.mediaListPlayer2.pause()
                 app.processEvents()
@@ -2658,8 +2663,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for field in fields:
 
-                item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
-
+                #item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
+                item = QTableWidgetItem(unicode( row[field]).replace(' ()','' ))
                 # no modif allowed
                 item.setFlags(Qt.ItemIsEnabled)
                 self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
@@ -2826,9 +2831,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = cursor.fetchall()
 
                         if modifier[0]:
-                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
+                            print( behavior )
+                            print( modifier )
+                            behaviorOut = unicode('{0} ({1})').format(behavior, modifier[0].replace('|',','))
                         else:
-                            behaviorOut = '%s' % behavior
+                            behaviorOut = behavior
 
                         scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut, 16) )
 
@@ -3792,6 +3799,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.mediaListPlayer.play_item_at_index( idx )
 
                         while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                            time.sleep(2)
                             pass
                         self.mediaListPlayer.pause()
 
@@ -5162,6 +5170,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.DEBUG: print('new state',self.mediaListPlayer.get_state())
                     while self.mediaListPlayer.get_state() != vlc.State.Playing:
                         if self.DEBUG: print('state (while)',self.mediaListPlayer.get_state())
+                        time.sleep(2)
                         pass
     
                     self.mediaListPlayer.pause()
@@ -5564,7 +5573,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     modifiers.append('')
                                 s = '\t'.join( modifiers )
                             else:
-                                s = str( event[pj_obs_fields[c]] )
+                                s = unicode( event[pj_obs_fields[c]] )
                             row.append( s )
 
                         # append status START/STOP
