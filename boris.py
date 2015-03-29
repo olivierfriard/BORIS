@@ -5414,8 +5414,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         mediaNb += 1
             
             ods = ezodf.newdoc('ods', fileName)
-
-            sheet = ezodf.Sheet('Events for ' + obsId, size=(len( eventsWithStatus ) + mediaNb + 10, 8 + max_modifiers)) 
+            if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
+                nbVar = len(self.pj[OBSERVATIONS][obsId]["independent_variables"])
+            else:
+                nbVar = 0
+            sheet = ezodf.Sheet('Events for ' + obsId, size=(len( eventsWithStatus ) + mediaNb + 10+ nbVar+4, 8 + max_modifiers)) 
             ods.sheets += sheet
             
             row = 0
@@ -5436,7 +5439,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             row += 2
 
-            
+            # independant variables
+            if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
+                sheet[ row, 0].set_value( 'independent variables' )
+                row += 1
+                sheet[ row, 0].set_value('variable') 
+                sheet[ row, 1].set_value('value')
+                row += 1
+
+                for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
+                    sheet[ row, 0].set_value(variable) 
+                    sheet[ row, 1].set_value(self.pj[OBSERVATIONS][obsId]["independent_variables"][variable])
+                    row += 1
+
+            row += 2
+
             # write header
 
             col = 0
@@ -5478,7 +5495,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             if self.DEBUG: print( type(event[pj_obs_fields[c]])) 
                             if self.DEBUG: print( float( event[pj_obs_fields[c]]) )
-
+                            print(row,col)
+                            print(c)
+                            print(pj_obs_fields[c])
+                            
                             sheet[ row, col].set_value( float( event[pj_obs_fields[c]]) )
                             col += 1
 
@@ -5543,6 +5563,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 outfile.write('#{0}#{0}'.format(os.linesep))
 
+                # independant variables
+                if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
+                    outfile.write('#independent variables{0}'.format(os.linesep))
+                    outfile.write('#variable\tvalue{0}'.format(os.linesep))
+                    for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
+                        outfile.write('{0}\t{1}{2}'.format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable], os.linesep))
+
+                outfile.write('#{0}#{0}'.format(os.linesep))
+
                 eventsWithStatus =  self.update_events_start_stop2( self.pj[OBSERVATIONS][obsId][EVENTS] ) 
 
                 max_modifiers = 0
@@ -5580,12 +5609,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         row.append( event[-1] )
 
                         outfile.write( '\t'.join(row).encode('UTF-8') + os.linesep)
-    
+
 
     def export_string_events(self):
         '''
         export events from selected observations by subject in string format to plain text file
-        behaviors are separated by pipe character (|) for use with BSA
+        behaviors are separated by pipe character (|) for use with BSA (see http://penelope.unito.it/bsa)
         '''
 
         # ask user to select observations
