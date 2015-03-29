@@ -5587,7 +5587,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for media in self.pj[OBSERVATIONS][obsId]['file'][idx]:
                             outfile.write('#Player #{0}\t{1}{2}'.format(idx, media, os.linesep) )
 
-                outfile.write('#{0}#{0}'.format(os.linesep))
+                outfile.write('#{0}'.format(os.linesep))
+
+                # date
+                if "date" in self.pj[OBSERVATIONS][obsId]:
+                    outfile.write('#Observation date\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["date"].replace('T',' '),os.linesep))
+                outfile.write('#{0}'.format(os.linesep))
+
+                # description
+                if "description" in self.pj[OBSERVATIONS][obsId]:
+                    outfile.write('#Description\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, ' '),os.linesep))
+                outfile.write('#{0}'.format(os.linesep))
+
+                # time offset
+                if "time offset" in self.pj[OBSERVATIONS][obsId]:
+                    outfile.write('#Time offset (s)\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["time offset"],os.linesep))
+                outfile.write('#{0}'.format(os.linesep))
 
                 # independant variables
                 if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
@@ -5605,9 +5620,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for c in pj_events_fields:
                         if c == 'modifier' and event[pj_obs_fields[c]]:
                             max_modifiers = max( max_modifiers, len(event[pj_obs_fields[c]].split('|')) )
-                
-                if self.DEBUG: print('max_modifiers',max_modifiers)
-                
+
                 # write header
                 out = '#{0}{1}{2}'.format( '\t'.join(  pj_events_fields), '\tstatus', os.linesep ) 
                 if max_modifiers > 1:
