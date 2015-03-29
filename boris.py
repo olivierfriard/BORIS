@@ -5383,13 +5383,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not exportDir:
                 return
 
-        import ezodf
+        try:
+            import ezodf
+        except:
+            print('Function not available')
+            return
 
         for obsId in selected_observations:
             
             if len(selected_observations) == 1:
                 fd = QFileDialog(self)
-                fileName, _ = fd.getSaveFileName(self, 'Export events', obsId + '.ods' , 'ODS file (*.ods);;All files (*)')
+                fileName, _ = fd.getSaveFileName(self, 'Export events', obsId + '.ods' , 'Open Document Spreadsheet (*.ods);;All files (*)')
                 if not fileName:
                     return
             else:
@@ -5412,15 +5416,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx in self.pj[OBSERVATIONS][obsId]['file']:
                     for media in self.pj[OBSERVATIONS][obsId]['file'][idx]:
                         mediaNb += 1
-            
+
             ods = ezodf.newdoc('ods', fileName)
+
+            # check number of rows for independent variables
             if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
                 nbVar = len(self.pj[OBSERVATIONS][obsId]["independent_variables"])
             else:
                 nbVar = 0
+
             sheet = ezodf.Sheet('Events for ' + obsId, size=(len( eventsWithStatus ) + mediaNb + 10+ nbVar+4, 8 + max_modifiers)) 
             ods.sheets += sheet
-            
+
             row = 0
             # media file name
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
@@ -5437,7 +5444,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         sheet[ row, 1].set_value( media )
                         row += 1
 
+            row += 1
+
+            # date
+            if "date" in self.pj[OBSERVATIONS][obsId]:
+                sheet[ row, 0].set_value( 'Observation date' )
+                sheet[ row, 1].set_value( self.pj[OBSERVATIONS][obsId]["date"].replace('T',' ') )
+
             row += 2
+
+            # description
+            if "description" in self.pj[OBSERVATIONS][obsId]:
+                sheet[ row, 0].set_value( 'Description' )
+                sheet[ row, 1].set_value( self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, ' ') )
+
+            row += 2
+
+            # time offset
+            if "time offset" in self.pj[OBSERVATIONS][obsId]:
+                sheet[ row, 0].set_value( 'Time offset (s)' )
+                sheet[ row, 1].set_value( self.pj[OBSERVATIONS][obsId]["time offset"] )
+
+            row += 2
+
 
             # independant variables
             if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
@@ -5454,8 +5483,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             row += 2
 
-            # write header
+            
 
+            # write header
             col = 0
             for c in pj_events_fields:
                 if c == 'modifier':
@@ -5477,7 +5507,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if (event[ pj_obs_fields['subject'] ] in selected_subjects) \
                    or (event[ pj_obs_fields['subject'] ] == '' and 'No focal subject' in selected_subjects):
 
-
                     col = 0
                     for c in pj_events_fields:
 
@@ -5490,22 +5519,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 for m in modifiers:
                                     sheet[ row, col].set_value( m )
                                     col += 1
+                            else:
+                                col += 1
 
                         elif c == 'time':
-
-                            if self.DEBUG: print( type(event[pj_obs_fields[c]])) 
-                            if self.DEBUG: print( float( event[pj_obs_fields[c]]) )
-                            print(row,col)
-                            print(c)
-                            print(pj_obs_fields[c])
-                            
                             sheet[ row, col].set_value( float( event[pj_obs_fields[c]]) )
                             col += 1
 
+                        elif c == 'comment':
+                            sheet[ row, col].set_value( event[pj_obs_fields[c]].replace(os.linesep, ' ') )
+                            col += 1
+
                         else:
-
                             sheet[ row, col].set_value(  event[pj_obs_fields[c]]  ) 
-
                             col += 1
 
 
