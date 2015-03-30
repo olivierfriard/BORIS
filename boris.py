@@ -5383,11 +5383,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not exportDir:
                 return
 
+
+        '''
         try:
             import ezodf
         except:
             print('Function not available')
             return
+        '''
 
         for obsId in selected_observations:
             
@@ -5462,7 +5465,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # description
             if "description" in self.pj[OBSERVATIONS][obsId]:
                 sheet[ row, 0].set_value( 'Description' )
-                sheet[ row, 1].set_value( self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, ' ') )
+                sheet[ row, 1].set_value( eol2space(self.pj[OBSERVATIONS][obsId]["description"]) )
 
             row += 2
 
@@ -5607,7 +5610,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # description
                 if "description" in self.pj[OBSERVATIONS][obsId]:
-                    outfile.write('Description\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["description"].replace('\r\n',' ').replace('\n',' ').replace('\r',' ' ),os.linesep))
+                    outfile.write('Description\t{0}{1}'.format(eol2space(self.pj[OBSERVATIONS][obsId]["description"]),os.linesep))
                 outfile.write(os.linesep)
 
                 # time offset
@@ -5654,7 +5657,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     modifiers.append('')
                                 s = '\t'.join( modifiers )
                             elif c == 'comment':
-                                s = unicode( event[pj_obs_fields[c]].replace('\r\n',' ').replace('\n',' ').replace('\r',' ' ))
+                                s = unicode( eol2space(event[pj_obs_fields[c]]))
                             else:
                                 s = unicode( event[pj_obs_fields[c]])
                             row.append( s )

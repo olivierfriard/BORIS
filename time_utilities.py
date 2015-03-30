@@ -92,3 +92,9 @@ def safeFileName(s):
         fileName = fileName.replace(char, '_')
 
     return fileName
+
+def eol2space(s):
+    '''
+    replace EOL char by space for all platforms
+    '''
+    return s.replace('\r\n',' ').replace('\n',' ').replace('\r',' ' )
