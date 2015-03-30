@@ -5607,7 +5607,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # description
                 if "description" in self.pj[OBSERVATIONS][obsId]:
-                    outfile.write('Description\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["description"]..replace('\r\n',' ').replace('\n',' ').replace('\r',' ' ),os.linesep))
+                    outfile.write('Description\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["description"].replace('\r\n',' ').replace('\n',' ').replace('\r',' ' ),os.linesep))
                 outfile.write(os.linesep)
 
                 # time offset
