@@ -5362,6 +5362,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export events from selected observations in ODS format
         '''
 
+        try:
+            import ezodf
+        except:
+            QMessageBox.critical(None, programName, 'The Open Document Spreadsheet format is not available!', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
         # ask user observations to analyze
         result, selected_observations = self.selectObservations( MULTIPLE )
 
@@ -5383,12 +5389,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not exportDir:
                 return
 
-
-        try:
-            import ezodf
-        except:
-            print('Function not available')
-            return
 
         for obsId in selected_observations:
             
