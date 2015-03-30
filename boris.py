@@ -5384,13 +5384,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
 
-        '''
         try:
             import ezodf
         except:
             print('Function not available')
             return
-        '''
 
         for obsId in selected_observations:
             
