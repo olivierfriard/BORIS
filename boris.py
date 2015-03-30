@@ -26,8 +26,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = '2.02'
-__version_date__ = '2015-03-24'
+__version__ = '2.03'
+__version_date__ = '2015-03-30'
 __RC__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -5425,10 +5425,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 nbVar = 0
 
-            sheet = ezodf.Sheet('Events for ' + obsId, size=(len( eventsWithStatus ) + mediaNb + 10+ nbVar+4, 8 + max_modifiers)) 
+            sheet = ezodf.Sheet('Events for ' + obsId, size=(len( eventsWithStatus ) + mediaNb + 20+ nbVar+4, 8 + max_modifiers)) 
             ods.sheets += sheet
 
             row = 0
+            
+            # observation id
+            sheet[ row, 0].set_value( 'Observation id' )
+            sheet[ row, 1].set_value( obsId )
+            row += 2
+            
             # media file name
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                 sheet[ row, 0].set_value( 'Media file(s)' )
@@ -5580,38 +5586,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             with open( fileName, 'w') as outfile:
 
+                # observation id
+                outfile.write('Observation id\t{obsId}{eol}'.format(obsId = obsId, eol = os.linesep))
+                outfile.write(os.linesep)
+
                 # media file name
-                outfile.write('#Media file(s):{0}'.format(os.linesep))
+                outfile.write('Media file(s){0}'.format(os.linesep))
                 if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                     for idx in self.pj[OBSERVATIONS][obsId]['file']:
                         for media in self.pj[OBSERVATIONS][obsId]['file'][idx]:
-                            outfile.write('#Player #{0}\t{1}{2}'.format(idx, media, os.linesep) )
+                            outfile.write('Player #{0}\t{1}{2}'.format(idx, media, os.linesep) )
 
-                outfile.write('#{0}'.format(os.linesep))
+                outfile.write(os.linesep)
 
                 # date
                 if "date" in self.pj[OBSERVATIONS][obsId]:
-                    outfile.write('#Observation date\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["date"].replace('T',' '),os.linesep))
-                outfile.write('#{0}'.format(os.linesep))
+                    outfile.write('Observation date\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["date"].replace('T',' '),os.linesep))
+                outfile.write(os.linesep)
+
 
                 # description
                 if "description" in self.pj[OBSERVATIONS][obsId]:
-                    outfile.write('#Description\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, ' '),os.linesep))
-                outfile.write('#{0}'.format(os.linesep))
+                    outfile.write('Description\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, ' '),os.linesep))
+                outfile.write(os.linesep)
 
                 # time offset
                 if "time offset" in self.pj[OBSERVATIONS][obsId]:
-                    outfile.write('#Time offset (s)\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["time offset"],os.linesep))
-                outfile.write('#{0}'.format(os.linesep))
+                    outfile.write('Time offset (s)\t{0}{1}'.format(self.pj[OBSERVATIONS][obsId]["time offset"],os.linesep))
+                outfile.write(os.linesep)
 
                 # independant variables
                 if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
-                    outfile.write('#independent variables{0}'.format(os.linesep))
-                    outfile.write('#variable\tvalue{0}'.format(os.linesep))
+                    outfile.write('Independent variables{0}'.format(os.linesep))
+                    outfile.write('variable\tvalue{0}'.format(os.linesep))
                     for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
                         outfile.write('{0}\t{1}{2}'.format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable], os.linesep))
 
-                outfile.write('#{0}#{0}'.format(os.linesep))
+                outfile.write(os.linesep)
+                outfile.write(os.linesep)
 
                 eventsWithStatus =  self.update_events_start_stop2( self.pj[OBSERVATIONS][obsId][EVENTS] ) 
 
@@ -5622,7 +5634,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             max_modifiers = max( max_modifiers, len(event[pj_obs_fields[c]].split('|')) )
 
                 # write header
-                out = '#{0}{1}{2}'.format( '\t'.join(  pj_events_fields), '\tstatus', os.linesep ) 
+                outfile.write('Events{0}'.format(os.linesep))
+                out = '{0}\t{1}{2}'.format( '\t'.join(  pj_events_fields), 'status', os.linesep ) 
                 if max_modifiers > 1:
                     out = out.replace('modifier', '\t'.join([ 'Modifier %d' % x for x in range(1, max_modifiers + 1) ]))
                 outfile.write(out)
@@ -5640,8 +5653,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 while len(modifiers)<max_modifiers:
                                     modifiers.append('')
                                 s = '\t'.join( modifiers )
+                            elif c == 'comment':
+                                s = unicode( event[pj_obs_fields[c]].replace('\r\n',' ').replace('\n',' ').replace('\r',' ' ))
                             else:
-                                s = unicode( event[pj_obs_fields[c]] )
+                                s = unicode( event[pj_obs_fields[c]])
                             row.append( s )
 
                         # append status START/STOP
