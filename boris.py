@@ -26,9 +26,9 @@ This file is part of BORIS.
 
 """
 
-__version__ = '2.03'
-__version_date__ = '2015-03-30'
-__RC__ = ''
+__version__ = '2.04'
+__version_date__ = '2015-04-07'
+__DEV__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
@@ -2628,8 +2628,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             else:
                                 inter_duration = round(inter_duration/ (len(rows)/2-1),3)
 
+                            if inter_duration != 'NA':
+                                inter_duration_mean = inter_duration/ (len(rows)/2-1)
+                            else:
+                                inter_duration_mean = '-'
+
                             out.append( { 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': tot_duration, 'mean': round(tot_duration/(len(rows)/2),3),\
-                                           'number': int(len(rows)/2), 'inter_duration_mean': inter_duration/ (len(rows)/2-1) } )
+                                           'number': int(len(rows)/2), 'inter_duration_mean': inter_duration_mean } )
 
 
         # min max
