@@ -612,9 +612,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', 'Cancel'])
 
-            if response == 'Replace':
-                self.twBehaviors.setRowCount(0)
-
             if response == 'Cancel':
                 return
 
@@ -622,6 +619,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         fileName, dummy = fd.getOpenFileName(self, 'Import behaviors from JWatcher', '', 'Global Definition File (*.gdf);;All files (*)')
 
         if fileName:
+
+            if response == 'Replace':
+                self.twBehaviors.setRowCount(0)
+
             f = open(fileName, 'r')
             rows_utf8 = f.readlines()
             f.close()
