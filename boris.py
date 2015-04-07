@@ -796,13 +796,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import urllib2
             msg = 'The version you are using is the last one: <b>%s</b>' %  __version__
 
-            if __RC__:
-                msg += '<b> RC%s</b>' % __RC__
+            if __DEV__:
 
                 versionURL = 'http://penelope.unito.it/boris/static/ver.rc.dat'
                 newRCdate, newRCversion = urllib2.urlopen( versionURL ).read().strip().split(':')
                 if newRCdate > __version_date__:
-                    msg = 'A new Release Candidate is available: <b>RC%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.<br><br>Remember to report all bugs you will find! ;-)' % newRCversion
+                    msg = 'A new development version is available: <b>RC%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.<br><br>Remember to report all bugs you will find! ;-)' % newRCversion
 
             else:
                 versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
@@ -4239,8 +4238,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         import platform
 
         ver = __version__
-        if __RC__:
-            ver += ' RC' + __RC__
 
         players = []
         players.append( "VLC media player v. %s" % bytes_to_str(vlc.libvlc_get_version()))
