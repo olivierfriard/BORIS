@@ -794,21 +794,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         try:
             import urllib2
-            msg = 'The version you are using is the last one: <b>%s</b>' %  __version__
+            msg = 'The version you are using is the last one: <b>{0}</b> ({1})'.format(__version__, __version_date__)
 
-            if __DEV__:
+            if __version__ == 'DEV':
 
-                versionURL = 'http://penelope.unito.it/boris/static/ver.rc.dat'
-                newRCdate, newRCversion = urllib2.urlopen( versionURL ).read().strip().split(':')
-                if newRCdate > __version_date__:
-                    msg = 'A new development version is available: <b>RC%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.<br><br>Remember to report all bugs you will find! ;-)' % newRCversion
+                versionURL = 'http://penelope.unito.it/boris/static/ver_dev.txt'
+                newDevVersion = urllib2.urlopen( versionURL ).read().strip()
+                if newDevVersion > __version_date__:
+                    msg = '''A new development version is available: <b>{0}</b><br>
+                    Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to download it.<br><br>
+                    Remember to report all bugs you will find! ;-)'''.format(newDevVersion)
 
             else:
-                versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
-                lastVersion = Decimal(urllib2.urlopen( versionURL ).read().strip())
+                versionURL = 'http://penelope.unito.it/boris/static/ver.txt'
+                lastVersion = urllib2.urlopen( versionURL ).read().strip()
 
-                if lastVersion > Decimal(__version__):
-                    msg = 'A new version is available: v. <b>%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.' % str(lastVersion)
+                if Decimal(lastVersion) > Decimal(__version__):
+                    msg = '''A new version is available: v. <b>{0}</b><br>
+                    Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to download it.'''.format(lastVersion)
 
             QMessageBox.information(self, programName , msg)
    
