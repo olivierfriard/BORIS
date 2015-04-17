@@ -3363,7 +3363,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.DEBUG: print(INDEPENDENT_VARIABLES, self.pj[INDEPENDENT_VARIABLES])
 
             # observations (check if observation deleted)
-            self.toolBar.setEnabled(True)
+            #self.toolBar.setEnabled(True)
 
             self.initialize_new_project()
             self.menu_options()
