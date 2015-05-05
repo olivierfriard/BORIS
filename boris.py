@@ -26,8 +26,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = '2.04'
-__version_date__ = '2015-04-17'
+__version__ = '2.05'
+__version_date__ = '2015-05-05'
 __DEV__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -6069,19 +6069,22 @@ if __name__=="__main__":
     # load VLC
     try:
         import vlc
+        
+        logging.info('VLC version %s' % vlc.libvlc_get_version()[0])
+        if vlc.libvlc_get_version() < VLC_MIN_VERSION:
+            QMessageBox.critical(None, programName, 'The VLC media player seems very old (%s).<br>Go to http://www.videolan.org/vlc to update it' \
+                % vlc.libvlc_get_version(), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            logging.critical('The VLC media player seems a little bit old (%s). Go to http://www.videolan.org/vlc to update it' % vlc.libvlc_get_version())
+            sys.exit(2)
+
         availablePlayers.append(VLC)
+
     except:
         logging.critical('VLC media player not found')
         QMessageBox.critical(None, programName, 'This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc',\
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
 
-    logging.info('VLC version %s' % vlc.libvlc_get_version()[0])
-    if vlc.libvlc_get_version() < VLC_MIN_VERSION:
-        QMessageBox.critical(None, programName, 'The VLC media player seems very old (%s).<br>Go to http://www.videolan.org/vlc to update it' \
-            % vlc.libvlc_get_version(), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical('The VLC media player seems a little bit old (%s). Go to http://www.videolan.org/vlc to update it' % vlc.libvlc_get_version())
-        sys.exit(2)
 
 
     # check for ffmpeg
