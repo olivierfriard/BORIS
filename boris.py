@@ -27,7 +27,7 @@ This file is part of BORIS.
 """
 
 __version__ = '2.05'
-__version_date__ = '2015-05-05'
+__version_date__ = '2015-05-06'
 __DEV__ = ''
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -316,15 +316,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, OBSERVATIONS: {} , 'coding_map':{} }
     project = False
 
-    observationId = ''   ### current observation id
+    observationId = ''   # current observation id
 
     timeOffset = 0.0
 
-    confirmSound = False          ### if True each keypress will be confirmed by a beep
-    embedPlayer = True            ### if True the VLC player will be embedded in the main window
-    alertNoFocalSubject = False   ### if True an alert will show up if no focal subject
+    confirmSound = False          # if True each keypress will be confirmed by a beep
+    embedPlayer = True            # if True the VLC player will be embedded in the main window
+    alertNoFocalSubject = False   # if True an alert will show up if no focal subject
 
-    timeFormat = HHMMSS       ### 's' or 'hh:mm:ss'
+    timeFormat = HHMMSS       # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
 
     #ObservationsChanged = False
@@ -334,6 +334,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     projectFileName = ''
     mediaTotalLength = None
+
+    saveMediaFilePath = True
 
     automaticBackup = 0
 
@@ -2041,11 +2043,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for i in range(observationWindow.lwVideo.count()):
                         observationWindow.lwVideo.item(i)
                     
+                        '''
                         if self.saveMediaFilePath:
                             ### save full path 
                             fileName['1'].append (  observationWindow.lwVideo.item(i).text() )
                         else:
                             fileName['1'].append ( os.path.basename( observationWindow.lwVideo.item(i).text() ) )
+                        '''
+                        fileName['1'].append (  observationWindow.lwVideo.item(i).text() )
 
 
                 fileName['2'] = []
@@ -2055,11 +2060,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for i in range(observationWindow.lwVideo_2.count()):
                         observationWindow.lwVideo_2.item(i)
                     
+                        '''
                         if self.saveMediaFilePath:
                             # save full path 
                             fileName['2'].append (  observationWindow.lwVideo_2.item(i).text() )
                         else:
                             fileName['2'].append ( os.path.basename( observationWindow.lwVideo_2.item(i).text() ) )
+                        '''
+                        fileName['2'].append (  observationWindow.lwVideo_2.item(i).text() )
 
 
                 self.pj[OBSERVATIONS][new_obs_id]['file'] = fileName
