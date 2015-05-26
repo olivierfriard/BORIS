@@ -25,20 +25,19 @@ This file is part of BORIS.
 
 from config import *
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 from add_modifier_ui import Ui_Dialog
 
 
 class addModifierDialog(QDialog, Ui_Dialog):
 
-    def __init__(self, debug, modifiersStr, parent=None):
+    def __init__(self, modifiersStr, parent=None):
 
         super(addModifierDialog, self).__init__(parent)
         self.setupUi(self)
 
-        self.DEBUG = debug
         self.modifierStr = modifiersStr
 
         self.pbAddModifier.clicked.connect(self.addModifier)
@@ -51,7 +50,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
 
-        ### store modifiers in list
+        # store modifiers in list
 
         if self.modifierStr:
             self.modifiersSets_list = []
@@ -60,11 +59,11 @@ class addModifierDialog(QDialog, Ui_Dialog):
         else:
             self.modifiersSets_list = [[]]
 
-        ### create tab
+        # create tab
         for i in range(len(self.modifiersSets_list)-1):
             self.tabWidgetModifiersSets.addTab( QWidget(), 'Set #%d' % (i+2))
 
-        ### set first tab as active
+        # set first tab as active
         self.lwModifiers.addItems( self.modifiersSets_list[0] )
 
 
@@ -98,7 +97,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ].remove( self.lwModifiers.currentItem().text() )
             self.lwModifiers.takeItem(  self.lwModifiers.currentIndex().row()  )
 
-        if self.DEBUG: print( 'new set', self.modifiersSets_list)
 
 
 
@@ -107,13 +105,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
         remove modifier from set
         '''
 
-        if self.DEBUG: print( 'selected row', self.lwModifiers.currentIndex().row()  )
-
         if self.lwModifiers.currentIndex().row() >= 0:
             self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ].remove( self.lwModifiers.currentItem().text() )
             self.lwModifiers.takeItem(  self.lwModifiers.currentIndex().row()  )
-
-        if self.DEBUG: print( 'new set', self.modifiersSets_list)
 
 
 
@@ -121,8 +115,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         '''
         add a modifier to set
         '''
-
-        if self.DEBUG: print('add modifier')
 
         txt = self.leModifier.text()
 
@@ -133,13 +125,11 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 return
 
         if txt:
-
             if len(self.leCode.text()) > 1:
                 QMessageBox.critical(self, programName, 'The modifier key code can not exceed one key')
                 self.leCode.setFocus()
                 return
-                
-                
+
             if self.leCode.text():
                 for c in '(|)':
                     if c in self.leCode.text():
@@ -148,7 +138,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         return
                 
                 
-                ### check if code already exists
+                # check if code already exists
                 if '(' + self.leCode.text() + ')' in self.getModifiers():
                     QMessageBox.critical(self, programName, 'The code %s already exists!' % self.leCode.text())
                     self.leCode.setFocus()

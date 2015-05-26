@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,8 +22,6 @@ This file is part of BORIS.
 
 """
 
-
-#DEBUG = True
 
 programName = 'BORIS'
 
@@ -81,7 +79,7 @@ MEDIA = 'MEDIA'
 HHMMSS = 'hh:mm:ss'
 S = 's'
 
-NEW='new'
+NEW = 'new'
 LIST = 'list'
 EDIT = 'edit'
 OPEN = 'open'
@@ -106,3 +104,6 @@ STATE = 'STATE'
 
 PLAYER1 = '1'
 PLAYER2 = '2'
+
+VIDEO_TAB = 0
+FRAME_TAB = 1

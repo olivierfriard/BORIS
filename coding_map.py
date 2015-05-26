@@ -24,8 +24,8 @@ This file is part of BORIS.
 
 codeSeparator = ','
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 import json
 import binascii
@@ -35,7 +35,7 @@ class codingMapWindowClass(QDialog):
 
     class View(QGraphicsView):
 
-        mousePress = Signal(QMouseEvent)
+        mousePress = pyqtSignal(QMouseEvent)
         def mousePressEvent(self, event):
             self.mousePress.emit( event )
 

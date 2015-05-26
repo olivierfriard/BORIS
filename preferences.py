@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,11 +22,11 @@ This file is part of BORIS.
 
 """
 
-from PySide.QtCore import *
-from PySide.QtGui import *
-from config import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 import os
 
+from config import *
 from preferences_ui import Ui_prefDialog
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -61,7 +61,7 @@ class Preferences(QDialog, Ui_prefDialog):
         allow user search for ffmpeg
         '''
         fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Select FFmpeg program', '', 'All files (*)')[0]
+        fileName = fd.getOpenFileName(self, 'Select FFmpeg program', '', 'All files (*)')
         if fileName:
             self.leFFmpegPath.setText( fileName )
             self.testFFmpeg()
@@ -72,8 +72,7 @@ class Preferences(QDialog, Ui_prefDialog):
         '''
         fd = QFileDialog(self)
         FFmpegCacheDir = fd.getExistingDirectory(self, 'Select a directory', os.path.expanduser('~'), options=fd.ShowDirsOnly)
-        
-        #fileName = fd.getOpenFileName(self, 'Select FFmpeg program', '', 'All files (*)')[0]
+
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText( FFmpegCacheDir )
 
@@ -86,10 +85,10 @@ class Preferences(QDialog, Ui_prefDialog):
         '''
         import subprocess
         out, error = subprocess.Popen(self.leFFmpegPath.text() + ' -version' ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
-        '''
-        print 'out\n', out
-        print 'error\n', error
-        '''
+
+        out = out.decode('utf-8')
+        error = error.decode('utf-8')
+
         if 'avconv' in out:
             QMessageBox.warning(None, programName, 'Please use FFmpeg in place of avconv.\nSee https://www.ffmpeg.org', \
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -99,8 +98,7 @@ class Preferences(QDialog, Ui_prefDialog):
             QMessageBox.warning(None, programName, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.', \
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return False
-        
-        
+
         if not 'ffmpeg version' in out:
             QMessageBox.warning(None, programName, 'It seems that it is not the correct FFmpeg program... See https://www.ffmpeg.org', \
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -113,7 +111,6 @@ class Preferences(QDialog, Ui_prefDialog):
 
         if self.cbAllowFrameByFrameMode.isChecked() and self.leFFmpegPath.text():
             if not self.testFFmpeg():
-                '''print 'no!'''
                 return
             
         self.accept()

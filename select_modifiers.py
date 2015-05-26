@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,17 +22,16 @@ This file is part of BORIS.
 
 """
 
-from __future__ import print_function
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 import re
 import config
 
 
 class ModifiersRadioButton(QDialog):
 
-    def __init__(self, code, modifiers_list, currentModifier, mode):   ### mode: normal / embeded
+    def __init__(self, code, modifiers_list, currentModifier, mode):   # mode: normal / embeded
 
         super(ModifiersRadioButton, self).__init__()
 
@@ -57,10 +56,10 @@ class ModifiersRadioButton(QDialog):
                 lb.setText('Modifiers #%d' % count)
                 count += 1
                 Vlayout.addWidget(lb)
-            
+
             group = QButtonGroup(widget)
             HLayout = QHBoxLayout()
-            
+
             txt = 'None'
             r = QRadioButton(txt)
             r.setChecked(True)
@@ -71,13 +70,11 @@ class ModifiersRadioButton(QDialog):
                 txt = modifier
                 r = QRadioButton( txt )
 
-                ### check if current modifier
-                
+                # check if current modifier
+
                 if currentModifierList != ['']:
-                    print('r75 ',modifier, currentModifierList[idx])
-                    
+
                     if re.sub(' \(.\)', '', modifier) == currentModifierList[idx]:
-                    #if modifier == currentModifierList[idx]:
                         r.setChecked(True)
                 group.addButton(r)
                 HLayout.addWidget(r)
@@ -96,7 +93,6 @@ class ModifiersRadioButton(QDialog):
     def keyPressEvent(self, event):
 
         ek = event.key()
-        print('ek',ek)
         if ek == 16777220 or ek == 16777221:
             self.accept()
             return
@@ -107,7 +103,7 @@ class ModifiersRadioButton(QDialog):
         for i in range(0, l.count()):   # iterate on all widget/layout
             layout = l.itemAt(i).layout()
             if (layout) and (type(layout) is QHBoxLayout):
-                for j in range(0, layout.count()):   ### iterate on all widget 
+                for j in range(0, layout.count()):   # iterate on all widget 
                     widget = layout.itemAt(j).widget()
                     if (widget != 0) and (type(widget) is QRadioButton):
                         if '(' + chr(ek + 32) + ')' in widget.text():
@@ -122,10 +118,10 @@ class ModifiersRadioButton(QDialog):
 
         l = self.layout()
         modifiers = []
-        for i in range(0, l.count()):   ### iterate on all widget/layout
+        for i in range(0, l.count()):   # iterate on all widget/layout
             layout = l.itemAt(i).layout()
             if (layout) and (type(layout) is QHBoxLayout):
-                for j in range(0, layout.count()):   ### iterate on all widget 
+                for j in range(0, layout.count()):   # iterate on all widget 
                     widget = layout.itemAt(j).widget()
                     if (widget != 0) and (type(widget) is QRadioButton):
                         if widget.isChecked():

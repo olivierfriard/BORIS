@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,11 +22,11 @@ This file is part of BORIS.
 
 """
 
-from __future__ import print_function
-
-from PySide.QtCore import *
-from PySide.QtGui import *
+import logging
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 import os
+import tablib
 
 from config import *
 
@@ -36,10 +36,10 @@ class timeBudgetResults(QWidget):
     a function for exporting data in TSV format is implemented
     '''
 
-    def __init__(self, debug, pj):
+    def __init__(self, log_level, pj):
         super(timeBudgetResults, self).__init__()
 
-        self.DEBUG = debug
+        logging.basicConfig(level=log_level)
         self.pj = pj
         self.label = QLabel()
         self.label.setText('')
@@ -81,40 +81,97 @@ class timeBudgetResults(QWidget):
         save time budget analysis results in TSV format
         '''
 
-        if self.DEBUG: print('save time budget results to file in TSV format')
+        def complete(l, max):
+            '''
+            complete list with empty string until len = max
+            '''
+            while len(l) < max:
+                l.append('')
+            return l
+
+
+        logging.debug('save time budget results to file')
 
         fd = QFileDialog(self)
-        fileName, _ = fd.getSaveFileName(self, 'Save results', '','Results file (*.txt *.tsv);;All files (*)')
+        fileName, filter_ = fd.getSaveFileNameAndFilter(self, 'Save Time budget analysis', '','Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)')
 
+        print('filter_',filter_)
         if fileName:
-            f = open(fileName, 'w')
+
+            rows = []
 
             # observations list
-            f.write('Observations:{0}'.format(os.linesep))
-            for idx in xrange(self.lw.count()):
-                f.write(self.lw.item(idx).text() + os.linesep)
+            rows.append( ['Observations:'] )
+            for idx in range(self.lw.count()):
+                rows.append( [ self.lw.item(idx).text() ] )
+
 
             # check if only one observation was selected
             if self.lw.count() == 1:
-                f.write(os.linesep)
+                rows.append( [''] )
 
+                
                 # write independant variables to file
                 if INDEPENDENT_VARIABLES in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
-                    if self.DEBUG: print('indep var of selected observation ' , self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ])
-
+                    rows.append( ['Independent variables:'] )
                     for var in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
-                        f.write( var + '\t' + self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] + '\n')
+                        rows.append( [ var, self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] ] )
 
-            f.write('{0}{0}Time budget:{0}'.format(os.linesep))
+            rows.append( [''] )
+            rows.append( [''] )
+            rows.append( ['Time budget:'] )
+            
+            
             # write header
-            
-            for col in xrange(self.twTB.columnCount() ):
-                f.write( self.twTB.horizontalHeaderItem(col).text() + '\t' )
-            
-            f.write( os.linesep )
+            cols = []
+            for col in range(self.twTB.columnCount() ):
+                cols.append( self.twTB.horizontalHeaderItem(col).text() )
 
-            for row in xrange( self.twTB.rowCount()):
-                for col in xrange(self.twTB.columnCount()):
-                    f.write( self.twTB.item(row,col).text().encode('utf8') + '\t' )
-                f.write(os.linesep)
-            f.close()
+            rows.append( cols )
+            
+            rows.append( [''] )
+
+            for row in range( self.twTB.rowCount()):
+                values = []
+                for col in range(self.twTB.columnCount()):
+                    values.append( self.twTB.item(row,col).text() )
+                rows.append( values )
+
+
+            maxLen = max( [len(r) for r in rows] )
+            data = tablib.Dataset()
+            data.title = 'Time budget'
+            
+            for row in rows:
+                data.append( complete( row, maxLen ) )
+
+            if 'tsv' in filter_ and not fileName.upper().endswith( '.TSV' ):
+                fileName += '.tsv'
+            if 'csv' in filter_ and not fileName.upper().endswith( '.CSV' ):
+                fileName += '.csv'
+            if 'ods' in filter_ and not fileName.upper().endswith( '.ODS' ):
+                fileName += '.ods'
+            if 'xls' in filter_ and not fileName.upper().endswith( '.XLS' ):
+                fileName += '.xls'
+
+            if fileName.upper().endswith('.TSV'):
+                with open(fileName,'w') as f:
+                    f.write(data.tsv)
+                return
+
+            if fileName.upper().endswith('.CSV'):
+                with open(fileName,'w') as f:
+                    f.write(data.csv)
+                return
+
+            if fileName.upper().endswith('.ODS'):
+                with open(fileName,'wb') as f:
+                    f.write(data.ods)
+                return            
+
+            if fileName.upper().endswith('.XLS'):
+                with open(fileName,'wb') as f:
+                    f.write(data.xls)
+                return
+
+            QMessageBox.warning(self, programName, 'You must choose a format: TSV, CSV, ODS or XLS')

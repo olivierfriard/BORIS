@@ -23,7 +23,7 @@ This file is part of BORIS.
 """
 
 
-from PySide.QtGui import *
+from PyQt4.QtGui import *
 import config
 
 def MessageDialog(title, text, buttons):
@@ -44,14 +44,14 @@ class EventType(QDialog):
     '''
     dialog for selecting the type of new event and if there is an associed coding map
     '''
-   
+
     def __init__(self, parent=None):
         super(EventType, self).__init__(parent)
 
-        self.setWindowTitle(config.programName)        
+        self.setWindowTitle(config.programName)
         group = QButtonGroup()
         HLayout = QHBoxLayout()
-        
+
         self.rbStateEvent = QRadioButton('State event')
         group.addButton(self.rbStateEvent)
         HLayout.addWidget(self.rbStateEvent)
@@ -60,7 +60,6 @@ class EventType(QDialog):
         group.addButton(self.rbPointEvent)
         HLayout.addWidget(self.rbPointEvent)
 
-        
         self.cbCodingMap = QCheckBox('Coding map')
 
         layout = QVBoxLayout()
@@ -82,8 +81,6 @@ class EventType(QDialog):
         self.setLayout(layout)
 
 
-
-       
     def pbOK_clicked(self):
         self.accept()
 

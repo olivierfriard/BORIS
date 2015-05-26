@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,34 +22,33 @@ This file is part of BORIS.
 
 """
 
-from __future__ import print_function
-from config import *
 
-from PySide.QtCore import *
-from PySide.QtGui import *
-
-from edit_event_ui import Ui_Form
+import logging
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 import re
-
+from config import *
 import select_modifiers
 import coding_map
 
+from edit_event_ui import Ui_Form
+
 class DlgEditEvent(QDialog, Ui_Form):
 
-    def __init__(self, debug, parent=None):
+    def __init__(self, log_level, parent=None):
 
         super(DlgEditEvent, self).__init__(parent)
+        logging.basicConfig(level=log_level)
         self.setupUi(self)
 
-        self.DEBUG = debug
         self.currentModifier = ''
 
         #self.cobCode.currentIndexChanged.connect(self.codeChanged)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
-        ### embed modifiers selection
+        # embed modifiers selection
         self.mod = select_modifiers.ModifiersRadioButton('', [], '', 'embedded')
         self.VBoxLayout = QVBoxLayout()
         self.VBoxLayout.addWidget(self.mod)
@@ -81,20 +80,19 @@ class DlgEditEvent(QDialog, Ui_Form):
 
     def codeChanged(self):
 
-        if self.DEBUG: print('cobCode current index', self.cobCode.currentText())
 
-        ### check if selected code has coding map
+        # check if selected code has coding map
         codingMap = [ self.pj['behaviors_conf'][x]['coding map'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText() and self.pj['behaviors_conf'][x]['coding map']]
         if codingMap:
 
             self.groupBox.setTitle('Coding map')
-            ### delete widget
+            # delete widget
             self.mod.setParent(None)
             self.mod = QPushButton( codingMap[0] + '\nArea(s): ' + self.currentModifier)
             self.mod.clicked.connect(self.codeMap_clicked)
             self.VBoxLayout.addWidget(self.mod)
 
-        else:   ### no coding map
+        else:   # no coding map
 
             modifiers = [ self.pj['behaviors_conf'][x]['modifiers'] for x in self.pj['behaviors_conf']  if  self.pj['behaviors_conf'][x]['code'] ==  self.cobCode.currentText()][0]
 
@@ -103,19 +101,15 @@ class DlgEditEvent(QDialog, Ui_Form):
                 modifiersStringsList = modifiers.split('|')
                 for modifiersString in modifiersStringsList:
                     modifiersList.append([s.strip() for s in modifiersString.split(',')])
-                
+
             else:
                 modifiersList.append([s.strip() for s in modifiers.split(',')])
 
-            if self.DEBUG: print('modifiersList (codeChanged)', modifiersList)
-
-            ### delete widget
+            # delete widget
             self.mod.setParent(None)
             if modifiersList != [['']]:
                 self.groupBox.setTitle('Modifiers')
-                
-                print('modifiersList, self.currentModifier',modifiersList, self.currentModifier)
-                
+
                 self.mod = select_modifiers.ModifiersRadioButton(self.cobCode.currentText(), modifiersList, self.currentModifier, 'embedded')
             else:
                 self.groupBox.setTitle('')

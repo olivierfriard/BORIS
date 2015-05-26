@@ -131,8 +131,9 @@
      <property name="title">
       <string>Export events</string>
      </property>
-     <addaction name="actionExportEventTabular"/>
-     <addaction name="actionODS_format"/>
+     <addaction name="actionExportEventTabular_TSV"/>
+     <addaction name="actionExportEventTabular_ODS"/>
+     <addaction name="actionExportEventTabular_XLS"/>
      <addaction name="separator"/>
      <addaction name="separator"/>
     </widget>
@@ -681,9 +682,9 @@
     <string>Check for updates</string>
    </property>
   </action>
-  <action name="actionExportEventTabular">
+  <action name="actionExportEventTabular_TSV">
    <property name="text">
-    <string>TSV format</string>
+    <string>Tab Separated Values (tsv)</string>
    </property>
   </action>
   <action name="actionExportEventString">
@@ -726,12 +727,12 @@
   </action>
   <action name="actionExportEventsSQL">
    <property name="text">
-    <string>SQL format</string>
+    <string>Structured Query Language (SQL)</string>
    </property>
   </action>
   <action name="actionAggregatedEventsTabularFormat">
    <property name="text">
-    <string>TSV format</string>
+    <string>Tab Separated Values (tsv)</string>
    </property>
   </action>
   <action name="actionOpen_observation">
@@ -739,9 +740,9 @@
     <string>Open observation</string>
    </property>
   </action>
-  <action name="actionODS_format">
+  <action name="actionExportEventTabular_ODS">
    <property name="text">
-    <string>ODS format</string>
+    <string>Open Document Spreadsheet (ods)</string>
    </property>
   </action>
   <action name="actionAaaa">
@@ -752,6 +753,11 @@
   <action name="menuCreate_subtitles_2">
    <property name="text">
     <string>Create subtitles</string>
+   </property>
+  </action>
+  <action name="actionExportEventTabular_XLS">
+   <property name="text">
+    <string>Microsoft Excel format (xls)</string>
    </property>
   </action>
  </widget>

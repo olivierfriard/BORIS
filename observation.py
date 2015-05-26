@@ -26,8 +26,8 @@ Copyright 2012-2015 Olivier Friard
 
 from config import *
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 from observation_ui import Ui_Form
 import os
@@ -90,7 +90,7 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
                 return
 
-        ### check if media list #2 popolated and media list #1 empty
+        # check if media list #2 popolated and media list #1 empty
         if self.tabProjectType.currentIndex() == 0 and not self.lwVideo.count():
             QMessageBox.critical(self, programName , 'Add a media file in the first list!' )
             return
@@ -107,14 +107,14 @@ class Observation(QDialog, Ui_Form):
 
         os.chdir( os.path.expanduser("~")  )
 
-        fileName, filter_ = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
+        fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
             self.lwVideo.addItems( [fileName] )
 
 
     def add_media_2(self):
         fd = QFileDialog(self)
-        fileName, filter_ = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
+        fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
             self.lwVideo_2.addItems( [fileName] )
 

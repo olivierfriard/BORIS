@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,14 +22,15 @@ This file is part of BORIS.
 
 """
 
-from __future__ import print_function
+import logging
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+import json
 
 from config import *
-
-from PySide.QtCore import *
-from PySide.QtGui import *
-
 from add_modifier import *
+import dialog
+from project_ui import Ui_dlgProject
 
 class ExclusionMatrix(QDialog):
 
@@ -74,19 +75,16 @@ class ExclusionMatrix(QDialog):
         self.reject()
 
 
-import dialog
-
-from project_ui import Ui_dlgProject
 
 
 class projectDialog(QDialog, Ui_dlgProject):
 
-    def __init__(self, debug, parent=None ):
+    def __init__(self, log_level, parent=None ):
 
         super(projectDialog, self).__init__(parent)
+        logging.basicConfig(level=log_level)
+        
         self.setupUi(self)
-
-        self.DEBUG = debug
 
         self.lbObservationsState.setText('')
         self.lbSubjectsState.setText('')
@@ -95,7 +93,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twSubjects.setSortingEnabled(False)
 
 
-        ### ethogram tab
+        # ethogram tab
         self.pbAddObservation.clicked.connect(self.pbAddBehavior_clicked)
         self.pbClone.clicked.connect(self.pbClone_clicked)
        
@@ -116,7 +114,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbDown_behavior.clicked.connect(self.pbDown_behavior_clicked)
 
 
-        ### subjects
+        # subjects
         self.pbAddSubject.clicked.connect(self.pbAddSubject_clicked)
         self.pbRemoveSubject.clicked.connect(self.pbRemoveSubject_clicked)
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
@@ -137,7 +135,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbLoadSubjects.clicked.connect(self.pbLoadSubjects_clicked)
         '''
 
-        ### independent variables tab
+        # independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
 
@@ -147,7 +145,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
-        ### observations
+        # observations
         self.pbRemoveObservation.clicked.connect(self.pbRemoveObservation_clicked)
 
 
@@ -156,19 +154,18 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def twObservations_cellDoubleClicked(self, row, column):
-        if self.DEBUG: print(( 'clicked row and column', row, column))
-        
-        ### check if double click on coding map
+
+        # check if double click on coding map
         if column == behavioursFields['coding map']:
             self.comboBoxChanged(row)
 
         if column == behavioursFields['modifiers']:
             
-            ### check if behavior has coding map
+            # check if behavior has coding map
             if self.twBehaviors.item(row, behavioursFields['coding map'] ).text():
                 QMessageBox.warning(self, programName, 'Use the coding map to set/modify the areas')
             else:
-                addModifierWindow = addModifierDialog(self.DEBUG, self.twBehaviors.item(row, column).text())
+                addModifierWindow = addModifierDialog( self.twBehaviors.item(row, column).text())
                 addModifierWindow.setWindowTitle('Set modifiers')
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText( addModifierWindow.getModifiers() )
@@ -179,14 +176,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
         add an independent variable
         '''
-        if self.DEBUG: print('add an independent variable')
+        logging.debug('add an independent variable')
 
         self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
 
         for idx, field in enumerate(tw_indVarFields):
 
             if field == 'type':
-                ### add type combobox
+                # add type combobox
                 comboBox = QComboBox()
                 comboBox.addItem( NUMERIC )
                 comboBox.addItem( TEXT )
@@ -202,7 +199,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
         remove the selected independent variable
         '''
-        if self.DEBUG: print('remove selected independent variable')
+        logging.debug('remove selected independent variable')
 
         if not self.twVariables.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select a variable to remove')
@@ -224,7 +221,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def pbUp_behavior_clicked(self):
-        ### move up selected behavior
+        '''
+        move up selected behavior
+        '''
 
         if self.twBehaviors.selectedIndexes() and self.twBehaviors.selectedIndexes()[0].row() > 0:
 
@@ -258,7 +257,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             varToMoveUp, varToMoveDown = [], []
 
             for x in range(len(tw_indVarFields)):
-                if x == 2:   ### type
+                if x == 2:   # type
                     varToMoveUp.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
                     varToMoveDown.append( self.twVariables.cellWidget(selectedRow - 1, x).currentIndex() )
                 else:
@@ -266,7 +265,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     varToMoveDown.append( self.twVariables.item( selectedRow - 1, x).text() )
 
             for x in range(len(tw_indVarFields)):
-                if x == 2:   ### type
+                if x == 2:   # type
                     self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( varToMoveDown[x] )
                     self.twVariables.cellWidget(selectedRow - 1, x).setCurrentIndex( varToMoveUp[x] )
 
@@ -286,7 +285,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             subjectToMoveDown, subjectToMoveUp = [], []
 
             for x in range(len(tw_indVarFields)):
-                if x == 2:   ### type
+                if x == 2:   # type
                     subjectToMoveDown.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
                     subjectToMoveUp.append( self.twVariables.cellWidget(selectedRow + 1, x).currentIndex() )
                 else:
@@ -294,7 +293,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     subjectToMoveUp.append( self.twVariables.item( selectedRow+1, x).text() )
 
             for x in range(len(tw_indVarFields)):
-                if x == 2:   ### type
+                if x == 2:   # type
                     self.twVariables.cellWidget(selectedRow + 1, x).setCurrentIndex( subjectToMoveDown[x] )
                     self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( subjectToMoveUp[x] )
 
@@ -310,18 +309,22 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
         fd = QFileDialog(self)
-        fileName, dummy = fd.getOpenFileName(self, 'Import independent variables from project file', '', 'Project files (*.boris);;All files (*)')
+        fileName = fd.getOpenFileName(self, 'Import independent variables from project file', '', 'Project files (*.boris);;All files (*)')
         if fileName:
 
-            import json
-            s = open(fileName, 'r').read()
+            with open(fileName, 'r') as infile:
+                s = infile.read()
 
-            project = json.loads(s)
+            try:
+                project = json.loads(s)
+            except:
+                QMessageBox.warning(None, programName, 'Error while reading independent variables from selected file', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
 
-            ### independent variables
+            # independent variables
             if project[ INDEPENDENT_VARIABLES ]:
 
-                ### check if variables are already present
+                # check if variables are already present
                 if self.twVariables.rowCount():
     
                     response = dialog.MessageDialog(programName, 'There are independent variables already configured. Do you want to append independent variables or replace them?', ['Append', 'Replace', 'Cancel'])
@@ -387,17 +390,20 @@ class projectDialog(QDialog, Ui_dlgProject):
         import subjects from another project
         '''
         fd = QFileDialog(self)
-        fileName, dummy = fd.getOpenFileName(self, 'Import subjects from project file', '', 'Project files (*.boris);;All files (*)')
+        fileName = fd.getOpenFileName(self, 'Import subjects from project file', '', 'Project files (*.boris);;All files (*)')
 
         if fileName:
 
-            import json
-            s = open(fileName, 'r').read()
+            with open(fileName, 'r') as infile:
+                s = infile.read()
 
-            project = json.loads(s)
-            if self.DEBUG: print(project[SUBJECTS])
+            try:
+                project = json.loads(s)
+            except:
+                QMessageBox.warning(None, programName, 'Error while reading subjects from selected file', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
 
-            ### configuration of behaviours
+            # configuration of behaviours
             if project[SUBJECTS]:
 
                 if self.twSubjects.rowCount():
@@ -410,7 +416,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if response == 'Cancel':
                         return
 
-
                 for idx in sorted( project[SUBJECTS].keys() ):
 
                     self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
@@ -421,18 +426,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2 , QTableWidgetItem( project[SUBJECTS][idx][ sbjField ] ))
                         else:
                             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2 , QTableWidgetItem( '' ))
-
-                    '''
-                    subject_key = project[SUBJECTS][idx]['key']
-                    subject_name = project[SUBJECTS][idx]['name']
-
-
-                    item = QTableWidgetItem( subject_key )
-                    self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 0 , item)
-
-                    item = QTableWidgetItem( subject_name )
-                    self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 1 , item)
-                    '''
 
 
                 self.twSubjects.resizeColumnsToContents()
@@ -446,16 +439,19 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
         fd = QFileDialog(self)
-        fileName, dummy = fd.getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
+        fileName = fd.getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
         if fileName:
 
-            import json
-            s = open(fileName, 'r').read()
+            with open(fileName, 'r') as infile:
+                s = infile.read()
 
-            project = json.loads(s)
-            if self.DEBUG: print(project['behaviors_conf'])
+            try:
+                project = json.loads(s)
+            except:
+                QMessageBox.warning(None, programName, 'Error while reading behaviors from selected file', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
 
-            ### configuration of behaviours
+            # configuration of behaviours
             if project['behaviors_conf']:
 
                 if self.twBehaviors.rowCount():
@@ -500,8 +496,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def pbExclusionMatrix_clicked(self):
-
-        if self.DEBUG: print('exclusion matrix')
+        '''
+        activate exclusion matrix window
+        '''
 
         ex = ExclusionMatrix()
 
@@ -520,7 +517,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     excl[ self.twBehaviors.item(r, fields['code']).text() ] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
                     new_excl[ self.twBehaviors.item(r, fields['code']).text() ] = []
 
-        if self.DEBUG: print('exclusion matrix', excl)
+        logging.debug('exclusion matrix {0}'.format(excl))
 
         ex.twExclusions.setColumnCount( len( headers ) )
         
@@ -561,8 +558,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                             if not s1 in new_excl[s2]:
                                 new_excl[s2].append(s1)
 
-            if self.DEBUG: print('new exclusion matrix', new_excl)
-
             for r in range(0, self.twBehaviors.rowCount()):
                 for e in excl:
                     if e == self.twBehaviors.item(r, fields['code']).text():
@@ -579,7 +574,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if response == 'Yes':
 
-                ### extract all codes to delete
+                # extract all codes to delete
                 codesToDelete = []
                 row_mem = {}
                 for r in range(self.twBehaviors.rowCount()-1, -1, -1):
@@ -587,7 +582,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         codesToDelete.append( self.twBehaviors.item(r, 2).text() )
                         row_mem[ self.twBehaviors.item(r, 2).text() ] = r
 
-                ### extract all codes used in observations
+                # extract all codes used in observations
                 codesInObs = []
                 for obs in  self.pj['observations']:
                     events = self.pj['observations'][ obs ]['events']
@@ -595,12 +590,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                         codesInObs.append( event[2] )
 
                 for codeToDelete in codesToDelete:
-                    ### if code to delete used in obs ask confirmation
+                    # if code to delete used in obs ask confirmation
                     if codeToDelete in codesInObs:
                         response = dialog.MessageDialog(programName, 'The code <b>%s</b> is used in observations!' % codeToDelete, ['Remove', 'Cancel'])
                         if response == 'Remove':
                             self.twBehaviors.removeRow(row_mem[ codeToDelete ] )
-                    else: ### remove without asking
+                    else: # remove without asking
                         self.twBehaviors.removeRow(row_mem[ codeToDelete ] )
 
 
@@ -611,23 +606,19 @@ class projectDialog(QDialog, Ui_dlgProject):
         if self.twBehaviors.rowCount():
 
             response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', 'Cancel'])
-
             if response == 'Cancel':
                 return
 
         fd = QFileDialog(self)
-        fileName, dummy = fd.getOpenFileName(self, 'Import behaviors from JWatcher', '', 'Global Definition File (*.gdf);;All files (*)')
+        fileName = fd.getOpenFileName(self, 'Import behaviors from JWatcher', '', 'Global Definition File (*.gdf);;All files (*)')
 
         if fileName:
 
             if response == 'Replace':
                 self.twBehaviors.setRowCount(0)
 
-            f = open(fileName, 'r')
-            rows_utf8 = f.readlines()
-            f.close()
-
-            rows = [ row.decode('utf8') for row in rows_utf8]
+            with open(fileName, 'r') as f:
+                rows = f.readlines()
 
             lineRow = 0
 
@@ -638,7 +629,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if 'Behavior.name.' in row and '=' in row:
                     key, code = row.split('=')
                     key = key.replace('Behavior.name.','')
-                    ### read description
+                    # read description
                     if idx < len(rows) and 'Behavior.description.' in rows[idx+1]:
                         description = rows[idx+1].split('=')[-1]
 
@@ -652,10 +643,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             
                         if field_type == 'type':
             
-                            ### add type combobox
+                            # add type combobox
                             comboBox = QComboBox()
                             comboBox.addItems( observation_types )
-                            comboBox.setCurrentIndex(  0  )   ### event type from jwatcher not known
+                            comboBox.setCurrentIndex(  0  )   # event type from jwatcher not known
         
                             signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
                             comboBox.currentIndexChanged['int'].connect(signalMapper.map)
@@ -681,7 +672,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
         fd = QFileDialog(self)
 
-        fileName, filter = fd.getSaveFileName(self, 'Save configuration', '', 'Text files (*.txt *.tsv);;All files (*)')
+        fileName = fd.getSaveFileName(self, 'Save configuration', '', 'Text files (*.txt *.tsv);;All files (*)')
 
         if fileName:
             f = open(fileName, 'w')
@@ -694,8 +685,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     if field == 'type':
                         combobox = self.twBehaviors.cellWidget(r,0)
-                        if self.DEBUG: print('combo', observation_types[combobox.currentIndex()])
-                        
                         row[field] = observation_types[combobox.currentIndex()]
                     else:
 
@@ -705,11 +694,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                             row[field] = ''
 
                 if (row['type']) and (row['key']) and (row['code']):
-                    print('type', type(row['key']))
 
                     s = row['type'] + '\t' + row['key'] + '\t' +  row['code'] + '\t' +  row['description'] + '\t' +  row['modifiers'] + '\t' + row['excluded'] + '\n'
 
-                    s2 = s.encode('UTF-8')
+                    s2 = s
 
                     f.write(s2)
 
@@ -718,16 +706,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def twObservations_cellChanged(self, row, column):
         
-        if self.DEBUG: print('twObservations cell changed')
-
         keys = []
         codes = []
         
         self.lbObservationsState.setText('')
         
         for r in range(0, self.twBehaviors.rowCount()):
-            
-            ### check key
+
+            # check key
             if self.twBehaviors.item(r, fields['key']):
                 if self.twBehaviors.item(r, fields['key']).text().upper() not in ['F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12'] \
                    and  len(self.twBehaviors.item(r, fields['key']).text()) > 1:
@@ -735,14 +721,13 @@ class projectDialog(QDialog, Ui_dlgProject):
                     return
                 
                 keys.append(self.twBehaviors.item(r, fields['key']).text())
-                
-                ### convert to upper text
-                
+
+                # convert to upper text
+
                 self.twBehaviors.item(r, fields['key']).setText( self.twBehaviors.item(r, fields['key']).text().upper() )
-                
 
 
-            ### check code
+            # check code
             if self.twBehaviors.item(r, fields['code']):
                 if self.twBehaviors.item(r, fields['code']).text() in codes:
                     self.lbObservationsState.setText('<font color="red">Code duplicated at line %d </font>' % (r + 1))
@@ -750,15 +735,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(r, fields['code']).text():
                         codes.append(self.twBehaviors.item(r, fields['code']).text())
 
-        if self.DEBUG: print('keys', keys)
-
-        ### check subjects for key duplication
+        # check subjects for key duplication
         for r in range(0, self.twSubjects.rowCount()):
             if self.twSubjects.item(r, fields['key']):
 
                 if self.twSubjects.item(r, fields['key']).text() in keys:
                     self.lbObservationsState.setText('<font color="red">Key found in subjects list at line %d </font>' % (r + 1))
-        if self.DEBUG: print('end tw changed')
 
 
     def pbClone_clicked(self):
@@ -791,9 +773,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def pbRemoveBehavior_clicked(self):
-        
-        
-        if self.DEBUG: print('remove behavior')
+        '''
+        remove behavior
+        '''
 
         if not self.twBehaviors.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select a behaviour to remove')
@@ -801,9 +783,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             response = dialog.MessageDialog(programName, 'Remove the selected behavior?', ['Yes', 'Cancel'])
             if response == 'Yes':
-                            
-                ### check if behavior already used in observations
-                
+
+                # check if behavior already used in observations
+
                 codeToDelete = self.twBehaviors.item( self.twBehaviors.selectedIndexes()[0].row(), 2).text()
 
                 codesInObs = []
@@ -811,8 +793,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     events = self.pj['observations'][ obs ]['events']
                     for event in events:
                         codesInObs.append( event[2] )
-                        
-                if self.DEBUG: print('all codes in observations',  codesInObs)
 
                 if codeToDelete in codesInObs:
                     response = dialog.MessageDialog(programName, 'The code to remove is used in observations!', ['Remove', 'Cancel'])
@@ -820,7 +800,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         self.twBehaviors.removeRow(self.twBehaviors.selectedIndexes()[0].row())
 
                 else:
-                    ### code not used
+                    # code not used
                     self.twBehaviors.removeRow(self.twBehaviors.selectedIndexes()[0].row())
 
 
@@ -829,41 +809,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         add a behavior
         '''
 
-        if self.DEBUG: print('add behavior configuration')
-
-        '''
-        dlg = dialog.EventType()
-        if dlg.exec_():
-
-            ### retrieve event type
-            if dlg.rbStateEvent.isChecked():
-                response = 'State event'
-            elif dlg.rbPointEvent.isChecked():
-                response = 'Point event'
-            else:
-                return
-        '''
-
         response = 'Point event'
 
-        '''
-        ### retrieve is coding map is associated
-        if dlg.cbCodingMap.isChecked():
-            response += ' with coding map'
-
-            ### let user select a coding maop
-            fd = QFileDialog(self)
-            fileName, dummy = fd.getOpenFileName(self, 'Select a coding map for the event', '', 'BORIS map files (*.boris_map);;All files (*)')
-    
-            if fileName:
-                import json
-                new_map = json.loads( open(fileName, 'r').read() )
-                self.pj['coding_map'][ new_map['name'] ] = new_map
-            else:
-                return
-        '''
-
-        ### Add behavior to table
+        # Add behavior to table
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
         signalMapper = QSignalMapper(self)
@@ -874,7 +822,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if field_type == 'type':
 
-                ### add type combobox
+                # add type combobox
                 comboBox = QComboBox()
                 comboBox.addItems( observation_types )
                 comboBox.setCurrentIndex( observation_types.index( response ) )
@@ -889,10 +837,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if field_type in ['excluded', 'coding map', 'modifiers']:
                     item.setFlags(Qt.ItemIsEnabled)
 
-                '''
-                if field_type == 'coding map' and dlg.cbCodingMap.isChecked():
-                    item.setText(new_map['name'])
-                '''
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field_type] , item)
 
         signalMapper.mapped['int'].connect(self.comboBoxChanged)
@@ -902,25 +846,21 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
         event type combobox changed
         '''
-        
-        if self.DEBUG: print(( 'combo box changed', row))
-        
+
         combobox = self.twBehaviors.cellWidget(row, fields['type'])
 
         if 'with coding map' in observation_types[combobox.currentIndex()]:
-            ### let user select a coding maop
+            # let user select a coding maop
             fd = QFileDialog(self)
-            fileName, dummy = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
+            fileName = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
 
             if fileName:
                 import json
                 new_map = json.loads( open(fileName, 'r').read() )
 
-                if self.DEBUG: print('new_map', new_map['name'])
-
                 self.pj['coding_map'][ new_map['name'] ] = new_map
                 
-                ### add modifiers from coding map codes
+                # add modifiers from coding map codes
                 modifStr = '|'.join(  sorted(new_map['areas'].keys()) )
 
                 self.twBehaviors.item(row, behavioursFields['modifiers']).setText( modifStr )
@@ -929,7 +869,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             else:
 
-                ### if coding map already exists do not rest the behavior type if no filename selected
+                # if coding map already exists do not rest the behavior type if no filename selected
                 if not self.twBehaviors.item(row, behavioursFields['coding map']).text():
                     QMessageBox.critical(self, programName,  'No coding map was selected.\nEvent type will be reset to "Point event"' )
                     self.twBehaviors.cellWidget(row, fields['type']).setCurrentIndex(0)
@@ -942,8 +882,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
         add a subject
         '''
-
-        if self.DEBUG: print('add subject')
 
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
         item = QTableWidgetItem('')
@@ -965,22 +903,17 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if  self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1):
                     subjectToDelete = self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1).text()  ### 1: subject name
     
-                    if self.DEBUG: print('subject to delete', subjectToDelete)
-    
                     subjectsInObs = []
                     for obs in  self.pj['observations']:
                         events = self.pj['observations'][ obs ]['events']
                         for event in events:
-                            subjectsInObs.append( event[ 1 ] )  ### 1: subject name
-                            
-                    if self.DEBUG: print('all subjects in observations',  subjectsInObs)
-    
+                            subjectsInObs.append( event[ 1 ] )  # 1: subject name
                     if subjectToDelete in subjectsInObs:
                         response = dialog.MessageDialog(programName, 'The subject to remove is used in observations!', ['Remove', 'Cancel'])
                         if response == 'Remove':
                             flagDel = True
                     else:
-                        ### code not used
+                        # code not used
                         flagDel = True
 
                 else:
@@ -1085,8 +1018,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         check if subject not unique
         '''
 
-        if self.DEBUG: print('subject cell changed', row, column)
-
         subjects = []
         keys = []
 
@@ -1137,10 +1068,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         remove first selected observation
         '''
 
-        if self.DEBUG:
-            print('remove observation')
-            print('self.pj', self.pj)
-
         if not self.twObservations.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select an observation to remove')
         else:
@@ -1151,7 +1078,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 obs_id = self.twObservations.item( self.twObservations.selectedIndexes()[0].row(), 0).text()
 
-                if self.DEBUG: print('obs to delete', obs_id)
                 del self.pj['observations'][ obs_id ]
                 self.twObservations.removeRow(self.twObservations.selectedIndexes()[0].row())
 
@@ -1170,18 +1096,18 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
 
-        ### store subjects
+        # store subjects
         self.subjects_conf = {}
 
         for row in range(0, self.twSubjects.rowCount()):
             
-            ### check key
+            # check key
             if self.twSubjects.item(row, 0):
                 key = self.twSubjects.item(row, 0).text()
             else:
                 key = ''
 
-            ### check subject name
+            # check subject name
             if self.twSubjects.item(row, 1):
                 subjectName = self.twSubjects.item(row, 1).text()
                 if '|' in subjectName:
@@ -1192,7 +1118,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 QMessageBox.warning(self, programName, 'Missing subject name in subjects configuration at row %d !' % row)
                 return
 
-            ### description
+            # description
             if self.twSubjects.item(row, 2):
                 subjectDescription = self.twSubjects.item(row, 2).text()
             else:
@@ -1202,14 +1128,13 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.subjects_conf[ len(self.subjects_conf) ] = { 'key': key, 'name': subjectName, 'description': subjectDescription }
 
 
-        ### store behaviors
+        # store behaviors
         missing_data = []
 
         self.obs = {}
 
-        ### coding maps names loaded in pj
+        # coding maps names loaded in pj
         loadedCodingMaps = self.pj['coding_map'].keys()
-        if self.DEBUG: print( 'loadedCodingMaps', loadedCodingMaps)
 
         for r in range(0, self.twBehaviors.rowCount()):
 
@@ -1218,14 +1143,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 if field == 'type':
                     combobox = self.twBehaviors.cellWidget(r, fields['type'])
-                    if self.DEBUG: print('combo', observation_types[combobox.currentIndex()])
+
                     row[field] = observation_types[combobox.currentIndex()]
 
                 else:
 
                     if self.twBehaviors.item(r, behavioursFields[field]):
 
-                        ### check for | char in code
+                        # check for | char in code
                         if field == 'code' and '|' in self.twBehaviors.item(r, fields[field]).text():
                             QMessageBox.warning(self, programName, 'The pipe (|) character is not allowed in code <b>%s</b> !' % self.twBehaviors.item(r, fields[field]).text())
                             return
@@ -1242,7 +1167,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 missing_data.append(str(r + 1))
 
-            ### remove coding map present in ethogram from coding maps names loaded in pj
+            # remove coding map present in ethogram from coding maps names loaded in pj
             if self.twBehaviors.item(r, behavioursFields['coding map']).text():
                 if self.twBehaviors.item(r, behavioursFields['coding map']).text() in loadedCodingMaps:
                     loadedCodingMaps.remove( self.twBehaviors.item(r, behavioursFields['coding map']).text() )
@@ -1252,12 +1177,12 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, 'Missing data in behaviors configuration at row %s !' % (','.join(missing_data)))
             return
 
-        ### delete coding maps loaded in pj and not cited in ethogram
+        # delete coding maps loaded in pj and not cited in ethogram
         for loadedCodingMap in loadedCodingMaps:
             del self.pj['coding_map'][ loadedCodingMap ]
 
 
-        ### check independent variables
+        # check independent variables
         self.indVar = {}
         for r in range(0, self.twVariables.rowCount()):
             row = {}
@@ -1282,7 +1207,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.indVar[ len(self.indVar) ] = row
 
-        if self.DEBUG: print('ind var', self.indVar)
         self.accept()
 
 

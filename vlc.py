@@ -1,4 +1,9 @@
-#! /usr/bin/python
+#! /usr/bin/python3
+
+
+'''http://nerdwaller.com/using-vlcs-python-bindings-vlc-py/
+http://stackoverflow.com/questions/9372672/how-does-vlc-py-play-video-stream
+'''
 
 # Python ctypes bindings for VLC
 #
@@ -39,8 +44,6 @@ will be implicitly created.  The latter can be obtained using the
 C{get_instance} method of L{MediaPlayer} and L{MediaListPlayer}.
 """
 
-DEBUG = False
-
 
 import ctypes
 from ctypes.util import find_library
@@ -57,9 +60,9 @@ build_date  = "Tue Jul  2 10:35:53 2013"
 
 if sys.version_info[0] > 2:
     str = str
-    unicode = str
+    str = str
     bytes = bytes
-    basestring = (str, bytes)
+    str = (str, bytes)
     PYTHON3 = True
     def str_to_bytes(s):
         """Translate string or bytes to bytes.
@@ -78,15 +81,15 @@ if sys.version_info[0] > 2:
             return b
 else:
     str = str
-    unicode = unicode
+    str = str
     bytes = str
-    basestring = basestring
+    str = str
     PYTHON3 = False
     def str_to_bytes(s):
         """Translate string or bytes to bytes.
         """
 
-        if isinstance(s, unicode):
+        if isinstance(s, str):
 
             fileSystemEncoding = sys.getfilesystemencoding()
             ### hack for PyInstaller
@@ -133,7 +136,7 @@ def find_lib():
 
         if p is None:
             try:  # some registry settings
-                import _winreg as w  # leaner than win32api, win32con
+                import winreg as w  # leaner than win32api, win32con
                 for r in w.HKEY_LOCAL_MACHINE, w.HKEY_CURRENT_USER:
                     try:
                         r = w.OpenKey(r, 'Software\\VideoLAN\\VLC')
@@ -143,7 +146,7 @@ def find_lib():
                     except w.error:
                         pass
             except ImportError:  # no PyWin32
-                print 'no pywin32'
+                print('no pywin32')
                 pass
 
             ### print 'plugin path (find lib)', plugin_path
@@ -175,10 +178,15 @@ def find_lib():
         d = '/Applications/VLC.app/Contents/MacOS/'
         p = d + 'lib/libvlc.dylib'
         if os.path.exists(p):
+
+            os.environ["VLC_PLUGIN_PATH"] = d + 'plugins'
+            print(os.environ["VLC_PLUGIN_PATH"])
+
             dll = ctypes.CDLL(p)
             d += 'modules'
             if os.path.isdir(d):
                 plugin_path = d
+
         else:  # hope, some PATH is set...
             dll = ctypes.CDLL('libvlc.dylib')
 
@@ -196,7 +204,7 @@ class VLCException(Exception):
     pass
 
 try:
-    _Ints = (int, long)
+    _Ints = (int, int)
 except NameError:  # no long in Python 3+
     _Ints =  int
 _Seqs = (list, tuple)
@@ -1149,7 +1157,7 @@ def track_description_list(head):
         while item:
             item = item.contents
             r.append((item.id, item.name))
-            item = item.next
+            item = item.__next__
         try:
             libvlc_track_description_release(head)
         except NameError:
@@ -1206,7 +1214,7 @@ def module_description_list(head):
         while item:
             item = item.contents
             r.append((item.name, item.shortname, item.longname, item.help))
-            item = item.next
+            item = item.__next__
         libvlc_module_description_list_release(head)
     return r
 
@@ -1326,7 +1334,7 @@ class Instance(_Ctype):
             i = args[0]
             if isinstance(i, _Ints):
                 return _Constructor(cls, i)
-            elif isinstance(i, basestring):
+            elif isinstance(i, str):
                 args = i.strip().split()
             elif isinstance(i, _Seqs):
                 args = i
@@ -1424,7 +1432,7 @@ class Instance(_Ctype):
                       'longname': libvlc_audio_output_device_longname(self, i.name, d)}
                    for d in range(libvlc_audio_output_device_count   (self, i.name))]
                 r.append({'name': i.name, 'description': i.description, 'devices': d})
-                i = i.next
+                i = i.__next__
             libvlc_audio_output_list_release(head)
         return r
 
@@ -2118,7 +2126,7 @@ class MediaList(_Ctype):
         @param mrl: a media instance or a MRL.
         @return: 0 on success, -1 if the media list is read-only.
         """
-        if isinstance(mrl, basestring):
+        if isinstance(mrl, str):
             mrl = (self.get_instance() or get_default_instance()).media_new(mrl)
         return libvlc_media_list_add_media(self, mrl)
 
@@ -2332,7 +2340,7 @@ class MediaListPlayer(_Ctype):
         '''
         return libvlc_media_list_player_stop(self)
 
-    def next(self):
+    def __next__(self):
         '''Play next item from media list.
         @return: 0 upon success -1 if there is no next item.
         '''
@@ -5985,10 +5993,10 @@ def debug_callback(event, *args, **kwds):
     '''
     l = ['event %s' % (event.type,)]
     if args:
-        l.extend(map(str, args))
+        l.extend(list(map(str, args)))
     if kwds:
-        l.extend(sorted('%s=%s' % t for t in kwds.items()))
-    print('Debug callback (%s)' % ', '.join(l))
+        l.extend(sorted('%s=%s' % t for t in list(kwds.items())))
+    print(('Debug callback (%s)' % ', '.join(l)))
 
 
 

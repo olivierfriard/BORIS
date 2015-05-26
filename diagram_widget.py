@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -22,11 +22,10 @@ This file is part of BORIS.
 
 """
 
-from __future__ import print_function
-
-import PySide   ### qwebwidget
-from PySide.QtCore import *
-from PySide.QtGui import *
+import logging
+import PyQt4   # qwebwidget
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 
 class diagram(QWidget):
@@ -35,20 +34,19 @@ class diagram(QWidget):
     a function for exporting data in SVG format is implemented
     '''
 
-    def __init__(self, debug, svg_text = ''):
+    def __init__(self, log_level, svg_text = ''):
 
         self.svg_text = svg_text
 
         super(diagram, self).__init__()
-
-        self.DEBUG = debug
+        logging.basicConfig(level=log_level)
 
         self.label = QLabel()
         self.label.setText('')
 
-        ### load image
+        # load image
 
-        self.webview = PySide.QtWebKit.QWebView()
+        self.webview = PyQt4.QtWebKit.QWebView()
 
         self.webview.setHtml(svg_text)
 
@@ -69,18 +67,21 @@ class diagram(QWidget):
 
         hbox.addLayout(hbox2)
 
-        self.setWindowTitle('Time diagram')
+        self.setWindowTitle('Plot events')
 
         self.pbClose.clicked.connect(self.close)
         self.pbSave.clicked.connect(self.pbSave_clicked)
 
 
     def pbSave_clicked(self):
-        
-        if self.DEBUG: print('save time diagram to a SVG file')
+        '''
+        save diagram in SVG format
+        '''
+
+        logging.debug('save time diagram to a SVG file')
+
         fd = QFileDialog(self)
-        fileName, filtr = fd.getSaveFileName(self, 'Save time diagram', '', 'SVG file (*.svg);;All files (*)')
+        fileName = fd.getSaveFileName(self, 'Save time diagram', '', 'SVG file (*.svg);;All files (*)')
 
         with open(fileName,'w') as f:
-            f.write(self.svg_text.encode('UTF-8'))
-
+            f.write(self.svg_text)

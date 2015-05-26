@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-#-*- coding:utf-8 -*-
+#!/usr/bin/env python3.4
 
 """
 BORIS
@@ -22,7 +21,7 @@ Copyright 2012-2015 Olivier Friard
   MA 02110-1301, USA.
 
 """
-from __future__ import division
+import math
 
 from decimal import *
 
@@ -30,8 +29,6 @@ def getTimeValues( n ):
     '''
     get tick and max scale values for time diagram time axe
     '''
-    import math
-
     if int(n/10**int(math.log10(n))) == round( n/10**int(math.log10(n)) ):
         tick = 10**int(math.log10(n))
         m = (int(n/(10**int(math.log10(n))))+0.5)*10**int(math.log10(n))
