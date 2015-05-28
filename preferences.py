@@ -84,7 +84,7 @@ class Preferences(QDialog, Ui_prefDialog):
         test if FFmepg is running
         '''
         import subprocess
-        out, error = subprocess.Popen(self.leFFmpegPath.text() + ' -version' ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
+        out, error = subprocess.Popen('"{0}" -version'.format(self.leFFmpegPath.text()) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
 
         out = out.decode('utf-8')
         error = error.decode('utf-8')
@@ -99,7 +99,7 @@ class Preferences(QDialog, Ui_prefDialog):
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return False
 
-        if not 'ffmpeg version' in out:
+        if not 'ffmpeg version' in out and not 'ffmpeg version' in error:
             QMessageBox.warning(None, programName, 'It seems that it is not the correct FFmpeg program... See https://www.ffmpeg.org', \
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return False
