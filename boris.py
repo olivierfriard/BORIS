@@ -25,7 +25,7 @@ This file is part of BORIS.
 """
 
 __version__ = '2.1'
-__version_date__ = '2015-05-26'
+__version_date__ = '2015-05-28'
 __DEV__ = False
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -1172,28 +1172,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('image {0}'.format( '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) ))
 
-        #if not '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) in self.imagesList:
         if True:
 
-            # extract frames for 1 second from current position
-
-            ffmpeg_command = '%(ffmpeg_bin)s -ss %(pos)d -loglevel quiet -i "%(currentMedia)s" -vframes %(fps)s -qscale:v 2 "%(imageDir)s%(sep)sBORIS_%(fileName)s-%(pos)d_%%d.%(extension)s"' \
-            % {'ffmpeg_bin': self.ffmpeg_bin,
-            'pos': int(frameCurrentMedia/ fps),
-            'currentMedia': currentMedia,
-            'fps': str(round(fps) +1),
-            'imageDir': self.imageDirectory,
-            'sep': os.sep,
-            'fileName': md5FileName,
-            'extension': 'jpg'
-            }
-            #ffmpeg_command = self.ffmpeg_bin + ' -ss %d  -loglevel quiet -i %s -vframes '+ str(int(fps)) +' -qscale:v 2 '+ self.imageDirectory + os.sep +  md5FileName +'-%d_%%d.jpg' 
-
-            #command = ffmpeg_command % (int(frameCurrentMedia/ fps), currentMedia,  int(frameCurrentMedia / fps) )
+            ffmpeg_command = '"{ffmpeg_bin}" -ss {pos} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS_{fileName}-{pos}_%d.{extension}"'.format( 
+            ffmpeg_bin=ffmpeg_bin,
+            pos=int(frameCurrentMedia / fps),
+            currentMedia=currentMedia,
+            fps=str(round(fps) +1),
+            imageDir=self.imageDirectory,
+            sep=os.sep,
+            fileName=md5FileName,
+            extension='jpg' )
 
             logging.debug('ffmpeg command: {0}'.format( ffmpeg_command ))
-
-            #os.system(ffmpeg_command)
 
             p = subprocess.Popen( ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
             out, error = p.communicate()
@@ -5970,12 +5961,12 @@ if __name__=="__main__":
             except:
                 ffmpeg_bin = ''
 
-    logging.debug('ffmpeg_bin: %s' % ffmpeg_bin)
+    logging.debug('ffmpeg bin path: {0}'.format(ffmpeg_bin))
 
     if allowFrameByFrame:
 
         try:
-            if subprocess.Popen(ffmpeg_bin + ' -version' ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()[0] :
+            if subprocess.Popen('"{0}" -version'.format(ffmpeg_bin) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()[0] :
                 availablePlayers.append(FFMPEG)
         except:
             logging.warning('ffmpeg not found')
