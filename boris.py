@@ -1205,7 +1205,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                'frame':( frameCurrentMedia - int(frameCurrentMedia / fps)*fps)+1,
                'extension': 'jpg'}
 
-        #img = self.imageDirectory + os.sep + '%s-%d-%d.%s' % ( md5FileName, int(frameCurrentMedia / 25), ( frameCurrentMedia - int(frameCurrentMedia / 25)*25)+1 , 'jpg' )
+        
 
         if not os.path.isfile(img):
             logging.warning('image not found: {0}'.format( img ))
