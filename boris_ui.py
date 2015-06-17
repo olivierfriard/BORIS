@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Apr 22 11:47:58 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created: Sun Jun 14 19:30:24 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -58,15 +58,15 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 352, 401))
+        self.page.setGeometry(QtCore.QRect(0, 0, 362, 404))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
         self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtGui.QMenuBar()
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
+        self.menubar = QtGui.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -457,7 +457,7 @@ class Ui_MainWindow(object):
         self.actionSet_offset.setText(_translate("MainWindow", "Set time offset", None))
         self.actionEdit_project.setText(_translate("MainWindow", "Edit project", None))
         self.actionSave_project_as.setText(_translate("MainWindow", "Save project as ...", None))
-        self.actionVisualize_data.setText(_translate("MainWindow", "Visualize data ", None))
+        self.actionVisualize_data.setText(_translate("MainWindow", "Plot events", None))
         self.actionPreferences.setText(_translate("MainWindow", "Preferences", None))
         self.actionNew_observation.setText(_translate("MainWindow", "New observation", None))
         self.actionSave_observation.setText(_translate("MainWindow", "Save current observation", None))

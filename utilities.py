@@ -22,8 +22,24 @@ Copyright 2012-2015 Olivier Friard
 
 """
 import math
+import subprocess
+import urllib.parse
+import sys
 
 from decimal import *
+
+def url2path(url):
+    '''
+    convert URL in local path name
+    under windows, check if path name begin with /
+    '''
+
+    path = urllib.parse.urlparse( url ).path
+    # check / for windows
+    if sys.platform.startswith('win') and path.startswith('/'):
+        path = path[1:]
+    return path
+
 
 def getTimeValues( n ):
     '''
@@ -95,3 +111,24 @@ def eol2space(s):
     replace EOL char by space for all platforms
     '''
     return s.replace('\r\n',' ').replace('\n',' ').replace('\r',' ' )
+
+
+def test_ffmpeg_path(FFmpegPath):
+    '''
+    test if ffmpeg has valid path
+    '''
+
+    out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
+    out = out.decode('utf-8')
+    error = error.decode('utf-8')
+
+    if 'avconv' in out:
+        return False, 'Please use FFmpeg in place of avconv.\nSee https://www.ffmpeg.org'
+    
+    if 'the Libav developers' in error:
+        return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
+
+    if not 'ffmpeg version' in out and not 'ffmpeg version' in error:
+        return False, 'It seems that it is not the correct FFmpeg program... {} See https://www.ffmpeg.org'.format(FFmpegPath  )
+
+    return True, ''

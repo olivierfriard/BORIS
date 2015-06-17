@@ -71,10 +71,9 @@ class ExclusionMatrix(QDialog):
     def pbOK_clicked(self):
         self.accept()
 
+
     def pbCancel_clicked(self):
         self.reject()
-
-
 
 
 class projectDialog(QDialog, Ui_dlgProject):
@@ -83,19 +82,20 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         super(projectDialog, self).__init__(parent)
         logging.basicConfig(level=log_level)
-        
+
         self.setupUi(self)
 
         self.lbObservationsState.setText('')
         self.lbSubjectsState.setText('')
         
+        '''
         self.twBehaviors.setSortingEnabled(False)
         self.twSubjects.setSortingEnabled(False)
-
+        '''
 
         # ethogram tab
-        self.pbAddObservation.clicked.connect(self.pbAddBehavior_clicked)
-        self.pbClone.clicked.connect(self.pbClone_clicked)
+        self.pbAddBehavior.clicked.connect(self.pbAddBehavior_clicked)
+        self.pbCloneBehavior.clicked.connect(self.pb_clone_behavior_clicked)
        
         self.pbRemoveBehavior.clicked.connect(self.pbRemoveBehavior_clicked)
         self.pbRemoveAllBehaviors.clicked.connect(self.pbRemoveAllBehaviors_clicked)
@@ -109,45 +109,21 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twBehaviors.cellChanged[int, int].connect(self.twObservations_cellChanged)
         self.twBehaviors.cellDoubleClicked[int, int].connect(self.twObservations_cellDoubleClicked)
 
-        self.cbAlphabeticalOrder_behavior.stateChanged.connect(self.cbAlphabeticalOrder_behavior_stateChanged)
-        self.pbUp_behavior.clicked.connect(self.pbUp_behavior_clicked)
-        self.pbDown_behavior.clicked.connect(self.pbDown_behavior_clicked)
-
-
         # subjects
         self.pbAddSubject.clicked.connect(self.pbAddSubject_clicked)
         self.pbRemoveSubject.clicked.connect(self.pbRemoveSubject_clicked)
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
 
-        self.cbAlphabeticalOrder.stateChanged.connect(self.cbAlphabeticalOrder_stateChanged)
-        self.pbUp.clicked.connect(self.pbUp_clicked)
-        self.pbDown.clicked.connect(self.pbDown_clicked)        
-
         self.pbImportSubjectsFromProject.clicked.connect(self.pbImportSubjectsFromProject_clicked)
-
-        ''' FIXME 2014-04-28 set buttons to not visible'''
-        self.pbSaveSubjects.setVisible(False)
-        self.pbLoadSubjects.setVisible(False)
-
-        ''' FIXME 2014-04-28 buttons are not more available
-        use import from project instead 
-        self.pbSaveSubjects.clicked.connect(self.pbSaveSubjects_clicked)
-        self.pbLoadSubjects.clicked.connect(self.pbLoadSubjects_clicked)
-        '''
 
         # independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
 
-        self.cbAlphabeticalOrderVar.stateChanged.connect(self.cbAlphabeticalOrderVar_stateChanged)
-        self.pbUpVar.clicked.connect(self.pbUpVar_clicked)
-        self.pbDownVar.clicked.connect(self.pbDownVar_clicked)
-
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
         # observations
         self.pbRemoveObservation.clicked.connect(self.pbRemoveObservation_clicked)
-
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
@@ -160,7 +136,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.comboBoxChanged(row)
 
         if column == behavioursFields['modifiers']:
-            
             # check if behavior has coding map
             if self.twBehaviors.item(row, behavioursFields['coding map'] ).text():
                 QMessageBox.warning(self, programName, 'Use the coding map to set/modify the areas')
@@ -169,7 +144,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 addModifierWindow.setWindowTitle('Set modifiers')
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText( addModifierWindow.getModifiers() )
-
 
 
     def pbAddVariable_clicked(self):
@@ -209,99 +183,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == 'Yes':
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
-
-    def cbAlphabeticalOrderVar_stateChanged(self):
-        '''
-        change order of independent variables
-        '''
-        self.pbUpVar.setEnabled( not self.cbAlphabeticalOrderVar.isChecked())
-        self.pbDownVar.setEnabled( not self.cbAlphabeticalOrderVar.isChecked())
-        if self.cbAlphabeticalOrderVar.isChecked():
-            self.twVariables.sortByColumn(0, Qt.AscendingOrder)   ### order by variable label
-
-
-    def pbUp_behavior_clicked(self):
-        '''
-        move up selected behavior
-        '''
-
-        if self.twBehaviors.selectedIndexes() and self.twBehaviors.selectedIndexes()[0].row() > 0:
-
-            selectedRow = self.twBehaviors.selectedIndexes()[0].row()
-            subjectToMoveUp = [ self.twBehaviors.cellWidget(selectedRow, 0).currentIndex() ]
-            subjectToMoveDown = [self.twBehaviors.cellWidget(selectedRow - 1, 0).currentIndex() ]
-
-            for x in range(1, len(fields)):
-                subjectToMoveUp.append( self.twBehaviors.item( selectedRow , x).text() )
-                subjectToMoveDown.append( self.twBehaviors.item( selectedRow - 1, x).text() )
-
-            self.twBehaviors.cellWidget(selectedRow , 0).setCurrentIndex( subjectToMoveDown[0] )
-            self.twBehaviors.cellWidget(selectedRow - 1, 0).setCurrentIndex( subjectToMoveUp[0] )
-
-            for x in range(1, len(fields)):
-                self.twBehaviors.item( selectedRow , x).setText(subjectToMoveDown[x])
-                self.twBehaviors.item( selectedRow - 1, x).setText(subjectToMoveUp[x])
-
-            self.twBehaviors.selectRow(selectedRow - 1)
-
-
-
-    def pbUpVar_clicked(self):
-        '''
-        move selected variable up
-        '''
-        if self.twVariables.selectedIndexes() and self.twVariables.selectedIndexes()[0].row() > 0:
-
-            selectedRow = self.twVariables.selectedIndexes()[0].row()
-
-            varToMoveUp, varToMoveDown = [], []
-
-            for x in range(len(tw_indVarFields)):
-                if x == 2:   # type
-                    varToMoveUp.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
-                    varToMoveDown.append( self.twVariables.cellWidget(selectedRow - 1, x).currentIndex() )
-                else:
-                    varToMoveUp.append( self.twVariables.item( selectedRow , x).text() )
-                    varToMoveDown.append( self.twVariables.item( selectedRow - 1, x).text() )
-
-            for x in range(len(tw_indVarFields)):
-                if x == 2:   # type
-                    self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( varToMoveDown[x] )
-                    self.twVariables.cellWidget(selectedRow - 1, x).setCurrentIndex( varToMoveUp[x] )
-
-                else:
-                    self.twVariables.item( selectedRow , x).setText(varToMoveDown[x])
-                    self.twVariables.item( selectedRow - 1, x).setText(varToMoveUp[x])
-
-            self.twVariables.selectRow(selectedRow - 1)
-
-
-    def pbDownVar_clicked(self):
-        '''
-        move selected variable down
-        '''
-        if self.twVariables.selectedIndexes() and self.twVariables.selectedIndexes()[0].row() < self.twVariables.rowCount() -1:
-            selectedRow = self.twVariables.selectedIndexes()[0].row()
-            subjectToMoveDown, subjectToMoveUp = [], []
-
-            for x in range(len(tw_indVarFields)):
-                if x == 2:   # type
-                    subjectToMoveDown.append( self.twVariables.cellWidget(selectedRow, x).currentIndex() )
-                    subjectToMoveUp.append( self.twVariables.cellWidget(selectedRow + 1, x).currentIndex() )
-                else:
-                    subjectToMoveDown.append( self.twVariables.item( selectedRow , x).text() )
-                    subjectToMoveUp.append( self.twVariables.item( selectedRow+1, x).text() )
-
-            for x in range(len(tw_indVarFields)):
-                if x == 2:   # type
-                    self.twVariables.cellWidget(selectedRow + 1, x).setCurrentIndex( subjectToMoveDown[x] )
-                    self.twVariables.cellWidget(selectedRow , x).setCurrentIndex( subjectToMoveUp[x] )
-
-                else:
-                    self.twVariables.item( selectedRow + 1, x).setText(subjectToMoveDown[x])
-                    self.twVariables.item( selectedRow , x).setText(subjectToMoveUp[x])
-
-            self.twVariables.selectRow(selectedRow + 1)
 
     def pbImportVarFromProject_clicked(self):
         '''
@@ -364,25 +245,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             else:
                 QMessageBox.warning(self, programName,  'No independent variables found in project' )
-
-
-
-    def cbAlphabeticalOrder_stateChanged(self):
-        '''
-        change order of subject
-        '''
-        self.pbUp.setEnabled( not self.cbAlphabeticalOrder.isChecked())
-        self.pbDown.setEnabled( not self.cbAlphabeticalOrder.isChecked())
-        if self.cbAlphabeticalOrder.isChecked():
-            self.twSubjects.sortByColumn(1, Qt.AscendingOrder)   ### order by subject name
-
-    def cbAlphabeticalOrder_behavior_stateChanged(self):
-
-        self.pbUp_behavior.setEnabled( not self.cbAlphabeticalOrder_behavior.isChecked())
-        self.pbDown_behavior.setEnabled( not self.cbAlphabeticalOrder_behavior.isChecked())
-        if self.cbAlphabeticalOrder_behavior.isChecked():
-            self.twBehaviors.sortByColumn(2, Qt.AscendingOrder)   ### order by code ascending
-
 
 
     def pbImportSubjectsFromProject_clicked(self):
@@ -664,46 +526,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     signalMapper.mapped['int'].connect(self.comboBoxChanged)
 
 
-
-
-    def pbExportConfiguration_clicked(self):
-        '''
-        export configuration of observations
-        '''
-        fd = QFileDialog(self)
-
-        fileName = fd.getSaveFileName(self, 'Save configuration', '', 'Text files (*.txt *.tsv);;All files (*)')
-
-        if fileName:
-            f = open(fileName, 'w')
-            f.write('### behaviors configuration file for use with %s\n\n' % programName)
-
-            for r in range(0, self.twBehaviors.rowCount()):
-
-                row = {}
-                for field in fields:
-
-                    if field == 'type':
-                        combobox = self.twBehaviors.cellWidget(r,0)
-                        row[field] = observation_types[combobox.currentIndex()]
-                    else:
-
-                        if self.twBehaviors.item(r, fields[field]):
-                            row[field] = self.twBehaviors.item(r, fields[field]).text()
-                        else:
-                            row[field] = ''
-
-                if (row['type']) and (row['key']) and (row['code']):
-
-                    s = row['type'] + '\t' + row['key'] + '\t' +  row['code'] + '\t' +  row['description'] + '\t' +  row['modifiers'] + '\t' + row['excluded'] + '\n'
-
-                    s2 = s
-
-                    f.write(s2)
-
-            f.close()
-
-
     def twObservations_cellChanged(self, row, column):
         
         keys = []
@@ -743,12 +565,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.lbObservationsState.setText('<font color="red">Key found in subjects list at line %d </font>' % (r + 1))
 
 
-    def pbClone_clicked(self):
+    def pb_clone_behavior_clicked(self):
         '''
         clone the selected configuration
         '''
         if not self.twBehaviors.selectedIndexes():
-            QMessageBox.about(self, programName, 'First select an observation')
+            QMessageBox.about(self, programName, 'First select a behavior')
         else:
             self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
             
@@ -770,7 +592,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     item = QTableWidgetItem( self.twBehaviors.item( row, fields[field] ))
                     self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field] ,item)
             
-
 
     def pbRemoveBehavior_clicked(self):
         '''
@@ -830,7 +651,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
                 comboBox.currentIndexChanged['int'].connect(signalMapper.map)
 
-
                 self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, fields[field_type], comboBox)
             else:
 
@@ -884,8 +704,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
-        item = QTableWidgetItem('')
-        self.twSubjects.setItem(self.twSubjects.rowCount() - 1, 0 ,item)
+        for col in range(0, len(subjectsFields)):
+            item = QTableWidgetItem('')
+            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col ,item)
+
 
     def pbRemoveSubject_clicked(self):
         '''
@@ -901,7 +723,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 flagDel = False
                 if  self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1):
-                    subjectToDelete = self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1).text()  ### 1: subject name
+                    subjectToDelete = self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), 1).text()  # 1: subject name
     
                     subjectsInObs = []
                     for obs in  self.pj['observations']:
@@ -922,96 +744,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if flagDel:
                     self.twSubjects.removeRow(self.twSubjects.selectedIndexes()[0].row())
 
-    def pbDown_behavior_clicked(self):
-        '''
-        move selected event up
-        '''
-
-        if self.twBehaviors.selectedIndexes() and self.twBehaviors.selectedIndexes()[0].row() < self.twBehaviors.rowCount() -1:
-            selectedRow = self.twBehaviors.selectedIndexes()[0].row()
-            subjectToMoveDown = [self.twBehaviors.cellWidget(selectedRow, 0).currentIndex()]
-            subjectToMoveUp = [self.twBehaviors.cellWidget(selectedRow + 1, 0).currentIndex()]
-
-            for x in range(1, len(fields)):
-                subjectToMoveDown.append( self.twBehaviors.item( selectedRow , x).text() )
-                subjectToMoveUp.append( self.twBehaviors.item( selectedRow+1, x).text() )
-
-
-            self.twBehaviors.cellWidget(selectedRow + 1, 0).setCurrentIndex( subjectToMoveDown[0] )
-            self.twBehaviors.cellWidget(selectedRow , 0).setCurrentIndex( subjectToMoveUp[0] )
-            for x in range(1, len(fields)):
-                self.twBehaviors.item( selectedRow + 1, x).setText(subjectToMoveDown[x])
-                self.twBehaviors.item( selectedRow , x).setText(subjectToMoveUp[x])
-
-            self.twBehaviors.selectRow(selectedRow + 1)
-
-
-    def pbUp_clicked(self):
-        '''
-        move selected subject up
-        '''
-
-        if self.twSubjects.selectedIndexes() and self.twSubjects.selectedIndexes()[0].row() > 0:
-
-            subjectToMoveUp = []
-            subjectToMoveDown = []
-            for idx, field in enumerate(subjectsFields):
-                subjectToMoveUp.append(self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row(), idx).text()) 
-                subjectToMoveDown.append( self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() - 1, idx).text() )
-
-            '''
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() - 1, 0).setText(subjectToMoveUp[0])
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() - 1, 1).setText(subjectToMoveUp[1])
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() - 1, 2).setText(subjectToMoveUp[2])
-
-
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 0).setText(subjectToMoveDown[0])
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 1).setText(subjectToMoveDown[1])
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 2).setText(subjectToMoveDown[2])
-            '''
-
-            for idx, field in enumerate(subjectsFields):
-                self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() - 1, idx).setText(subjectToMoveUp[idx])
-
-            for idx, field in enumerate(subjectsFields):
-                self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , idx).setText(subjectToMoveDown[idx])
-
-            self.twSubjects.selectRow(self.twSubjects.selectedIndexes()[0].row() - 1)
-
-
-    def pbDown_clicked(self):
-        '''
-        move selected subject down
-        '''
-
-        if self.twSubjects.selectedIndexes() and self.twSubjects.selectedIndexes()[0].row() < self.twSubjects.rowCount() -1:
-
-            subjectToMoveDown = []
-            subjectToMoveUp = []
-            for idx, field in enumerate(subjectsFields):
-                subjectToMoveDown.append( self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , idx).text() )
-                subjectToMoveUp.append( self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() +1,  idx).text() ) 
-            '''
-            subjectToMoveDown = [ self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 0).text() , self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 1).text()]
-            subjectToMoveUp = [ self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() +1,  0).text() , self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row()+1, 1).text()]
-            '''
-
-            for idx, field in enumerate(subjectsFields):
-                self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() + 1, idx).setText(subjectToMoveDown[idx])
-
-            for idx, field in enumerate(subjectsFields):
-                self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , idx).setText(subjectToMoveUp[idx])
-
-            '''
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() + 1, 0).setText(subjectToMoveDown[0])
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() + 1, 1).setText(subjectToMoveDown[1])
-
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 0).setText(subjectToMoveUp[0])
-            self.twSubjects.item( self.twSubjects.selectedIndexes()[0].row() , 1).setText(subjectToMoveUp[1])
-            '''
-
-            self.twSubjects.selectRow(self.twSubjects.selectedIndexes()[0].row() + 1)
-
 
     def twSubjects_cellChanged(self, row, column):
         '''
@@ -1025,10 +757,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for r in range(0, self.twSubjects.rowCount()):
 
-            ### check key
+            # check key
             if self.twSubjects.item(r, 0):
 
-                ### check key length
+                # check key length
                 if self.twSubjects.item(r, 0).text().upper() not in ['F' + str(i) for i in range(1,13)] \
                    and  len(self.twSubjects.item(r, 0).text()) > 1:
                     self.lbSubjectsState.setText('<font color="red">Key length &gt; 1</font>')
@@ -1040,11 +772,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twSubjects.item(r, 0).text():
                         keys.append(self.twSubjects.item(r, 0).text())
 
-                ### convert to upper text
+                # convert to upper text
                 self.twSubjects.item(r, 0).setText( self.twSubjects.item(r, 0).text().upper() )
 
 
-            ### check subject
+            # check subject
             if self.twSubjects.item(r, 1):
 
                 if self.twSubjects.item(r, 1).text() in subjects:
@@ -1054,10 +786,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                         subjects.append(self.twSubjects.item(r, 1).text())
 
 
-        ### check behaviours keys
+        # check behaviours keys
         for r in range(0, self.twBehaviors.rowCount()):
             
-            ### check key
+            # check key
             if self.twBehaviors.item(r, fields['key']):
                 if self.twBehaviors.item(r, fields['key']).text() in keys:
                     self.lbSubjectsState.setText('<font color="red">Key found in behaviours configuration at line %d </font>' % (r + 1))

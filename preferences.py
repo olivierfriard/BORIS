@@ -27,6 +27,7 @@ from PyQt4.QtGui import *
 import os
 
 from config import *
+from utilities import *
 from preferences_ui import Ui_prefDialog
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -66,6 +67,7 @@ class Preferences(QDialog, Ui_prefDialog):
             self.leFFmpegPath.setText( fileName )
             self.testFFmpeg()
 
+
     def browseFFmpegCacheDir(self):
         '''
         allow user select a cache dir for ffmpeg images
@@ -77,34 +79,15 @@ class Preferences(QDialog, Ui_prefDialog):
             self.leFFmpegCacheDir.setText( FFmpegCacheDir )
 
 
-
-
     def testFFmpeg(self):
         '''
         test if FFmepg is running
         '''
-        import subprocess
-        out, error = subprocess.Popen('"{0}" -version'.format(self.leFFmpegPath.text()) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
-
-        out = out.decode('utf-8')
-        error = error.decode('utf-8')
-
-        if 'avconv' in out:
-            QMessageBox.warning(None, programName, 'Please use FFmpeg in place of avconv.\nSee https://www.ffmpeg.org', \
-                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
         
-        if 'the Libav developers' in error:
-            QMessageBox.warning(None, programName, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.', \
-                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
-
-        if not 'ffmpeg version' in out and not 'ffmpeg version' in error:
-            QMessageBox.warning(None, programName, 'It seems that it is not the correct FFmpeg program... See https://www.ffmpeg.org', \
-                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
-        return True
-        
+        r, msg = test_ffmpeg_path( self.leFFmpegPath.text() )
+        if not r:
+            QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        return r
 
 
     def ok(self):
@@ -112,5 +95,4 @@ class Preferences(QDialog, Ui_prefDialog):
         if self.cbAllowFrameByFrameMode.isChecked() and self.leFFmpegPath.text():
             if not self.testFFmpeg():
                 return
-            
         self.accept()

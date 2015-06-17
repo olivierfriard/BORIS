@@ -50,6 +50,9 @@ UNPAIRED = 'UNPAIRED'
 YES = 'Yes'
 NO = 'No'
 
+
+TYPE = "type"
+
 ### fields for event configuration
 #fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5}
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}

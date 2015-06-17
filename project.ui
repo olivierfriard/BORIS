@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>4</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -129,9 +129,12 @@
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="sortingEnabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+                <bool>true</bool>
+               </attribute>
+               <attribute name="verticalHeaderShowSortIndicator" stdset="0">
                 <bool>false</bool>
                </attribute>
                <column>
@@ -174,14 +177,14 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_11">
                <item>
-                <widget class="QPushButton" name="pbAddObservation">
+                <widget class="QPushButton" name="pbAddBehavior">
                  <property name="text">
                   <string>Add behavior</string>
                  </property>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pbClone">
+                <widget class="QPushButton" name="pbCloneBehavior">
                  <property name="text">
                   <string>Clone behavior</string>
                  </property>
@@ -209,53 +212,6 @@
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="groupBox">
-                 <property name="title">
-                  <string>Sorting</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_9">
-                  <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_8">
-                    <item>
-                     <widget class="QCheckBox" name="cbAlphabeticalOrder_behavior">
-                      <property name="text">
-                       <string>Alphabetical order</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="pbUp_behavior">
-                      <property name="text">
-                       <string>Move up</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="pbDown_behavior">
-                      <property name="text">
-                       <string>Move down</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="verticalSpacer_3">
-                      <property name="orientation">
-                       <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>20</width>
-                        <height>40</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
                 <widget class="QPushButton" name="pbImportBehaviorsFromProject">
                  <property name="text">
                   <string>Import behaviors
@@ -272,6 +228,19 @@ from a BORIS project</string>
                   <string>Import from JWatcher</string>
                  </property>
                 </widget>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </item>
@@ -315,7 +284,7 @@ from a BORIS project</string>
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="sortingEnabled">
-                <bool>false</bool>
+                <bool>true</bool>
                </property>
                <column>
                 <property name="text">
@@ -351,67 +320,6 @@ from a BORIS project</string>
                 </widget>
                </item>
                <item>
-                <widget class="QGroupBox" name="gbSorting">
-                 <property name="title">
-                  <string>Sorting</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_4">
-                  <item>
-                   <layout class="QVBoxLayout" name="verticalLayout_3">
-                    <item>
-                     <widget class="QCheckBox" name="cbAlphabeticalOrder">
-                      <property name="text">
-                       <string>Alphabetical order</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="pbUp">
-                      <property name="text">
-                       <string>Move up</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="pbDown">
-                      <property name="text">
-                       <string>Move down</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <spacer name="verticalSpacer_2">
-                      <property name="orientation">
-                       <enum>Qt::Vertical</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>20</width>
-                        <height>40</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                   </layout>
-                  </item>
-                  <item>
-                   <spacer name="verticalSpacer_4">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                 <zorder>verticalSpacer_4</zorder>
-                </widget>
-               </item>
-               <item>
                 <widget class="QPushButton" name="pbImportSubjectsFromProject">
                  <property name="text">
                   <string>Import subjects
@@ -420,24 +328,17 @@ from a BORIS project</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pbLoadSubjects">
-                 <property name="enabled">
-                  <bool>false</bool>
+                <spacer name="verticalSpacer_2">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
                  </property>
-                 <property name="text">
-                  <string>Load subjects from file</string>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pbSaveSubjects">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="text">
-                  <string>Save subjects to file</string>
-                 </property>
-                </widget>
+                </spacer>
                </item>
               </layout>
              </item>
@@ -482,10 +383,10 @@ from a BORIS project</string>
               <enum>QAbstractItemView::SelectRows</enum>
              </property>
              <property name="sortingEnabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-              <bool>false</bool>
+              <bool>true</bool>
              </attribute>
              <column>
               <property name="text">
@@ -526,59 +427,25 @@ from a BORIS project</string>
               </widget>
              </item>
              <item>
-              <widget class="QGroupBox" name="groupBox_2">
-               <property name="title">
-                <string>Sorting</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_13">
-                <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_17">
-                  <item>
-                   <widget class="QCheckBox" name="cbAlphabeticalOrderVar">
-                    <property name="text">
-                     <string>Alphabetical order</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pbUpVar">
-                    <property name="text">
-                     <string>Move up</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pbDownVar">
-                    <property name="text">
-                     <string>Move down</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="verticalSpacer_5">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="pbImportVarFromProject">
                <property name="text">
                 <string>Import variables
 from a BORIS project</string>
                </property>
               </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_4">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
              </item>
             </layout>
            </item>
