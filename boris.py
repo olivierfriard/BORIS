@@ -2782,6 +2782,75 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot events
         '''
 
+        def plot_time_ranges(obs):
+        
+            import matplotlib.pyplot as plt
+            import matplotlib.transforms as mtransforms
+            import numpy as np
+        
+            colors = ['blue','green','red','cyan','magenta','yellow']
+            
+            count = 0
+            lbl = []
+            maxTime = 0
+            for subject_idx, subject in enumerate( sorted( list(obs.keys()) )   ):
+                behaviors = obs[subject]
+                for k in sorted(list(behaviors.keys())):
+                    lbl.append(subject + ' - ' + k)
+                    for t1,t2 in behaviors[k]:
+                        maxTime = max(maxTime,t1,t2)
+                    count += 1
+        
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+            labels = ax.set_yticklabels(lbl)
+            
+            plt.ylim( count, -0.5)
+            plt.xlim( 0, maxTime + 2)
+            plt.yticks(range(count + 1), np.array(lbl))
+            
+            count = 0
+            for subject_idx, subject in enumerate(obs):
+                behaviors = obs[subject]
+                
+                x1, x2, y = [], [], []
+        
+                for k in sorted(list(behaviors.keys())):
+                    for t1,t2 in behaviors[k]:
+                        x1.append( t1 )
+                        x2.append( t2 )
+                        y.append(count)
+                    count += 1
+                
+                x1 = np.array(x1)
+                x2 = np.array(x2)
+                y = np.array(y)
+        
+                
+                ax.hlines(y, x1, x2, lw = 10, color = colors[subject_idx % len( colors )])
+                if y.any():
+                    ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
+            
+            def on_draw(event):
+               # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
+               bboxes = []
+               for label in labels:
+                   bbox = label.get_window_extent()
+                   bboxi = bbox.inverse_transformed(fig.transFigure)
+                   bboxes.append(bboxi)
+            
+               bbox = mtransforms.Bbox.union(bboxes)
+               if fig.subplotpars.left < bbox.width:
+                   fig.subplots_adjust(left=1.1*bbox.width)
+                   fig.canvas.draw()
+               return False
+        
+            fig.canvas.mpl_connect('draw_event', on_draw)
+                
+            #plt.savefig('2.svg')
+            plt.show()
+
+
         # ask user for one observation to plot
         result, selectedObservations = self.selectObservations( SELECT1 )
 
@@ -2807,10 +2876,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         maxTime += self.pj[OBSERVATIONS][ selectedObservations[0] ][MEDIA_FILE_INFO][ hf ][ 'video_length' ]/1000
 
                 else: # file not found
+                    
+                    if not self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS]:
+                        QMessageBox.warning(self, programName, 'The observation is empty (no events)')
+                        return
+                    
                     QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found!\nThe maximum time will be the time of the last event.'.format( mediaFile))
                     maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
     
             if not maxTime:
+                if not self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS]:
+                    QMessageBox.warning(self, programName, 'The observation is empty (no events)')
+                    return
+
                 QMessageBox.warning(self, programName , 'The video length was not found!\nThe maximum time will be the time of the last event.')
                 maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
 
@@ -2839,80 +2917,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
-        # min max
-        '''
-        cursor.execute( "SELECT min(occurence), max(occurence) FROM events" )
-        minTime, maxTime = cursor.fetchall()[0]
+        o = {}
         
-        '''
-
-
-
-        # tracks number
-        trackNb = len( selectedSubjects ) * len( selectedBehaviors ) 
-
-        # figure
-
-        # set rotation
-        if self.timeFormat == HHMMSS:
-             rotation = -45
-        if self.timeFormat == S:
-             rotation = 0
-
-        width = 1000
-        #xm = 1000
-
-        left_margin = 10
-        right_margin = 80
-        
-        x_init = 250
-        y_init = 100
-        spacer = 10   # distance between elements
-        header_height = 160
-        top_margin = 10
-
-        h = 20   # height of element
-        w = 1
-
-        red = (255,0,0)
-        blue = (0,0,255)
-        black = (0,0,0)
-        white = (255,255,255)
-
-
-        height = top_margin + (trackNb ) * (h + spacer) + 280
-        
-        scene = svg.Scene('',  height, width)
-
-        # white background
-        scene.add(svg.Rectangle((0,0), height, width , white))
-
-        # time line
-        scene.add(svg.Rectangle((x_init, y_init), 1, ( width - x_init - right_margin ) , black))
-        
-        #scene.add(svg.Line((x_init + xm, y_init - h // 4), (x_init + xm, y_init), black ))
-
-        
-
-        tick, maxScale = getTimeValues( maxTime )
-
-        scene.add( svg.Text(( x_init + ( width - x_init - right_margin ) - 2, y_init - h // 4 - 2 ), self.convertTime( maxScale ), 12, rotation) )
-        for i in range( int(maxScale/tick) ):
-
-            scene.add(svg.Line((round(x_init + i * (( width - x_init - right_margin ) / int(maxScale/tick)    )), y_init - h // 4), \
-                               (round(x_init + i * (( width - x_init - right_margin ) / int(maxScale/tick))), y_init), black ))
-
-            scene.add( svg.Text(( round(x_init + i * (( width - x_init - right_margin ) / int(maxScale/tick))), y_init - h // 4 - 2 ), \
-                                self.convertTime( i * tick  ), 12, rotation) )
-
-        y_init += 30
-
         for subject in selectedSubjects:
-
-            scene.add( svg.Text(( left_margin , y_init ), 'Subject: ' + subject, 14) )
-            y_init += h
+            
+            o[subject] = {}
 
             for behavior in selectedBehaviors:
+                #o[subject][behavior] = []
 
                 if includeModifiers == YES:
 
@@ -2924,30 +2936,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = cursor.fetchall()
 
                         if modifier[0]:
-                            behaviorOut = str('{0} ({1})').format(behavior, modifier[0].replace('|',','))
+                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
                         else:
-                            behaviorOut = behavior
-
-                        scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut, 16) )
+                            behaviorOut = '{0}'.format(behavior)
+                            
+                        if not behaviorOut in o[subject]:
+                            o[subject][behaviorOut] = []
 
                         for idx, row in enumerate(rows):
                             if 'POINT' in self.eventType(behavior).upper():
-                                scene.add(svg.Rectangle( (x_init + round(row[0] / maxScale * ( width - x_init - right_margin )), y_init), h, w, red) )
+                                o[subject][behaviorOut].append( [row[0],row[0] + 1] )
     
                             if 'STATE' in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
-
                                     try:
-                                        begin, end = row[0], rows[idx + 1][0]
-                                        scene.add(svg.Rectangle( (x_init + round(begin / maxScale * ( width - x_init - right_margin )), y_init), h,   round((end - begin) / maxScale * ( width - x_init - right_margin ) )     , blue))
+                                        o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )                                        
                                     except:
                                         if 'No focal subject' in subject:
                                             sbj = ''
                                         else:
                                             sbj =  'for subject <b>{0}</b>'.format( subject )
-                                        QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behavior, sbj) )
-
-                        y_init += h + spacer
+                                        QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behaviorOut, sbj) )
 
                 else:
 
@@ -2956,31 +2965,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
                         continue
 
-                    behaviorOut = '%s' % behavior
-                    scene.add( svg.Text(( left_margin, y_init + h - 2), behaviorOut, 16) )
+                    behaviorOut = '{0}'.format(behavior)
+
+                    if not behaviorOut in o[subject]:
+                        o[subject][behaviorOut] = []
     
                     for idx, row in enumerate(rows):
 
                         if 'POINT' in self.eventType(behavior).upper():
-                            scene.add(svg.Rectangle( (x_init + round(row[0] / maxScale * ( width - x_init - right_margin )), y_init), h, w, red) )
+                            o[subject][behaviorOut].append( [row[0],row[0]+1]  )
 
                         if 'STATE' in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                begin, end = row[0], rows[idx + 1][0]
-                                scene.add(svg.Rectangle( (x_init + round(begin / maxScale * ( width - x_init - right_margin )), y_init), h,   round((end - begin) / maxScale * ( width - x_init - right_margin ) )     , blue))
+                                o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
 
-                    y_init += h + spacer
+        print('o',o)
+        plot_time_ranges(o)
 
-            # subject separator
-            scene.add(svg.Rectangle((left_margin, y_init), 1, width - right_margin -left_margin, black))
-
-            y_init += h + spacer
-
-        svg_text = scene.svg_text()
         
-        
+        '''
         self.gr = diagram(logging.getLogger().getEffectiveLevel(), svg_text)
         self.gr.show()
+        '''
             
 
 
