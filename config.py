@@ -50,6 +50,7 @@ UNPAIRED = 'UNPAIRED'
 YES = 'Yes'
 NO = 'No'
 
+NO_FOCAL_SUBJECT = 'No focal subject'
 
 TYPE = "type"
 FILE = "file"

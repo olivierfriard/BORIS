@@ -443,7 +443,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setText('')
         self.lbCurrentStates.setText('')
         
-        self.lbFocalSubject.setText( 'No focal subject' )
+        self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
         
         font = QFont()
         font.setPointSize(15)
@@ -1023,8 +1023,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         deselect the current subject
         '''
         self.currentSubject = ''
-        self.lbSubject.setText( 'No focal subject' )
-        self.lbFocalSubject.setText( 'No focal subject' )        
+        self.lbSubject.setText( NO_FOCAL_SUBJECT )
+        self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
 
 
     def selectSubject(self, subject):
@@ -2481,11 +2481,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if event[2] in selectedBehaviors:
 
                         # extract time, code and modifier  ( time0, subject1, code2, modifier3 )
-                        if (subject_to_analyze == 'No focal subject' and event[1] == '') \
+                        if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == '') \
                             or ( event[1] == subject_to_analyze ):
 
                             if event[1] == '':
-                                subjectStr = 'No focal subject'
+                                subjectStr = NO_FOCAL_SUBJECT
                             else:
                                 subjectStr = event[1]
                             
@@ -2534,8 +2534,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         for events in all_events:
             for event in events:
-                if event[1] in selectedSubjects:
-                    observed_behaviors.append( event[pj_obs_fields["subject"]] )
+                if event[1] in selectedSubjects or ( not event[1] and NO_FOCAL_SUBJECT in selectedSubjects):
+                    observed_behaviors.append( event[pj_obs_fields["code"]] )
 
         
         # remove duplicate
@@ -2557,11 +2557,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if '' in observed_subjects:
             subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
             subjectsSelection.ch = QCheckBox()
-            subjectsSelection.ch.setText( 'No focal subject' )
+            subjectsSelection.ch.setText( NO_FOCAL_SUBJECT )
             subjectsSelection.ch.setChecked(True)
             subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
 
-        all_subjects = sorted( [  self.pj['subjects_conf'][x][ 'name' ]  for x in self.pj['subjects_conf'] ] )
+        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
 
         for subject in all_subjects:
             subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
@@ -2840,7 +2840,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import matplotlib.transforms as mtransforms
             import numpy as np
         
-            colors = ['blue','green','red','cyan','magenta','yellow']
+            colors = ['blue','green','red','cyan','magenta','yellow','#7A68A6','#81b1d2','#afeeee','#FBC15E','#e5ae38','#8EBA42','#fa8174','#6d904f']
             
             count = 0
             lbl = []
@@ -2877,7 +2877,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         x1.append( t1 )
                         x2.append( t2 )
                         y.append(count)
-                        col.append( colors[ col_count ] )
+                        col.append( colors[ col_count % len(colors) ] )
                     count += 1
                     col_count += 1
                 
@@ -2959,6 +2959,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # extract subjects present in observations
         observedSubjects = self.extract_observed_subjects( selectedObservations )
+
+        logging.debug('observed subjects: {0}'.format(observedSubjects))
+        
         selectedSubjects = self.select_subjects( observedSubjects )
     
         logging.debug('selected subjects: {0}'.format(selectedSubjects))
@@ -2967,9 +2970,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
+        
+        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+        
         selectedBehaviors = self.select_behaviors( observedBehaviors )
 
         logging.debug('Selected behaviors: {0}'.format(selectedBehaviors))
+
         if not selectedBehaviors:
             return
 
@@ -3012,7 +3019,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     try:
                                         o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )                                        
                                     except:
-                                        if 'No focal subject' in subject:
+                                        if NO_FOCAL_SUBJECT in subject:
                                             sbj = ''
                                         else:
                                             sbj =  'for subject <b>{0}</b>'.format( subject )
@@ -3750,7 +3757,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for idx, row in enumerate(rows):
     
                             # subtitle color
-                            if subject == 'No focal subject':
+                            if subject == NO_FOCAL_SUBJECT:
                                 col = 'white'
                             else:
                                 col = subtitlesColors[  selectedSubjects.index( subject ) % len(subtitlesColors) ]
@@ -5592,7 +5599,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for event in eventsWithStatus:
 
                 if (event[ pj_obs_fields['subject'] ] in selected_subjects) \
-                   or (event[ pj_obs_fields['subject'] ] == '' and 'No focal subject' in selected_subjects):
+                   or (event[ pj_obs_fields['subject'] ] == '' and NO_FOCAL_SUBJECT in selected_subjects):
 
 
                     col = 0
@@ -5708,7 +5715,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     s = ''
                     
                     for event in self.pj[OBSERVATIONS][obs][EVENTS]:
-                        if event[ pj_obs_fields['subject'] ] == subj or (subj == 'No focal subject' and event[ pj_obs_fields['subject'] ] == ''):
+                        if event[ pj_obs_fields['subject'] ] == subj or (subj == NO_FOCAL_SUBJECT and event[ pj_obs_fields['subject'] ] == ''):
                             s += event[ pj_obs_fields['code'] ] + self.behaviouralStringsSeparator
     
                     # remove last separator (if separator not empty)
