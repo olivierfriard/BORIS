@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created: Fri Jul 10 11:37:47 2015
+# Created: Fri Jul 10 12:15:03 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -39,13 +39,20 @@ class Ui_Dialog(object):
         self.lbSubjects = QtGui.QLabel(Dialog)
         self.lbSubjects.setGeometry(QtCore.QRect(50, 10, 57, 14))
         self.lbSubjects.setObjectName(_fromUtf8("lbSubjects"))
+        self.lwBehaviors = QtGui.QListWidget(Dialog)
+        self.lwBehaviors.setGeometry(QtCore.QRect(60, 280, 256, 192))
+        self.lwBehaviors.setObjectName(_fromUtf8("lwBehaviors"))
+        self.lbBehaviors = QtGui.QLabel(Dialog)
+        self.lbBehaviors.setGeometry(QtCore.QRect(60, 260, 61, 16))
+        self.lbBehaviors.setObjectName(_fromUtf8("lbBehaviors"))
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Dialog", None))
+        Dialog.setWindowTitle(_translate("Dialog", "Parameters", None))
         self.pbOK.setText(_translate("Dialog", "OK", None))
         self.pbCancel.setText(_translate("Dialog", "Cancel", None))
         self.lbSubjects.setText(_translate("Dialog", "Subjects", None))
+        self.lbBehaviors.setText(_translate("Dialog", "Behaviors", None))
 

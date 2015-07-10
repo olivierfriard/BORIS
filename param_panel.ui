@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Parameters</string>
   </property>
   <widget class="QListWidget" name="lwSubjects">
    <property name="geometry">
@@ -60,6 +60,29 @@
    </property>
    <property name="text">
     <string>Subjects</string>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="lwBehaviors">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>280</y>
+     <width>256</width>
+     <height>192</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lbBehaviors">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>260</y>
+     <width>61</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Behaviors</string>
    </property>
   </widget>
  </widget>

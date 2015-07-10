@@ -76,6 +76,7 @@ from edit_event import *
 
 from project import *
 import preferences
+import param_panel
 import observation
 import coding_map
 import map_creator
@@ -2620,7 +2621,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if behaviorsSelection.exec_():
 
             for idx in range(behaviorsSelection.lw.count()):
-
                 check_box = behaviorsSelection.lw.itemWidget(behaviorsSelection.lw.item(idx))
                 if check_box.isChecked():
                     behav_sel.append( check_box.text() )
@@ -4411,12 +4411,81 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else: 
             self.no_observation()
 
+
+
     def actionAbout_activated(self):
         '''
         about window
         '''
         
-        print('PLAYER TYPE', self.playerType)
+        paramPanelWindow = param_panel.Param_panel()
+
+        result, selectedObservations = self.selectObservations( SELECT1 )
+        
+        paramPanelWindow.selectedObservations = selectedObservations
+        paramPanelWindow.pj = self.pj
+        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
+
+        logging.debug('Selected observations: {0}'.format(selectedObservations))
+
+        if not selectedObservations:
+            return
+
+        # extract subjects present in observations
+        observedSubjects = self.extract_observed_subjects( selectedObservations )
+        selectedSubjects = []
+
+        # add 'No focal subject'
+        if '' in observedSubjects:
+            selectedSubjects.append(NO_FOCAL_SUBJECT)
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            paramPanelWindow.ch.setChecked(True)
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
+
+        for subject in all_subjects:
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( subject )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            if subject in observedSubjects:
+                selectedSubjects.append(subject)
+                paramPanelWindow.ch.setChecked(True)
+
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
+
+        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
+        logging.debug('allBehaviors: {0}'.format(allBehaviors))
+
+        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
+        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+        
+        for behavior in allBehaviors:
+
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( behavior )
+
+            if behavior in observedBehaviors:
+                paramPanelWindow.ch.setChecked(True)
+
+            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+        
+
+
+
+
+        if paramPanelWindow.exec_():
+            print( paramPanelWindow.selectedSubjects )
+            print( paramPanelWindow.selectedBehaviors )
+        return
+        
         
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
