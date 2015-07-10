@@ -2863,17 +2863,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             plt.ylim( count, -0.5)
 
-            if videoLength:
-                plt.xlim( 0, round(videoLength) + 2)
-            else:
-                plt.xlim( 0, round(maxTime) + 2)
+            if not videoLength:
+                videoLength = maxTime
+
+            plt.xlim( 0, round(videoLength) + 2)
+
             plt.yticks(range(count + 1), np.array(lbl))
 
             count = 0
 
             for subject_idx, subject in enumerate(sorted( list(obs.keys()) )):
 
-                ax.text(1, count - 0.2 , subject)
+                ax.text(round(float(videoLength) * 0.05), count - 0.2 , subject)
                 
                 behaviors = obs[subject]
 
@@ -2881,11 +2882,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 col_count = 0        
                 for k in sorted(list(behaviors.keys())):
-                    for t1,t2 in behaviors[k]:
-                        x1.append( t1 )
-                        x2.append( t2 )
+                    if not behaviors[k]:
+                        x1.append(0)
+                        x2.append(0)
                         y.append(count)
                         col.append( colors[ col_count % len(colors) ] )
+                    else:
+                        for t1,t2 in behaviors[k]:
+                            x1.append( t1 )
+                            x2.append( t2 )
+                            y.append(count)
+                            col.append( colors[ col_count % len(colors) ] )
                     count += 1
                     col_count += 1
                 
@@ -2919,7 +2926,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plt.show()
 
 
-        # ask user for one observation to plot
+        paramPanelWindow = param_panel.Param_panel()
+
         result, selectedObservations = self.selectObservations( SELECT1 )
 
         logging.debug('Selected observations: {0}'.format(selectedObservations))
@@ -2927,12 +2935,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        maxTime = 0
-        
         '''
         ffprobe -i video.avi -show_entries format=duration -v quiet -of csv="p=0"
         '''
-
+        maxTime = 0    
         if self.pj[OBSERVATIONS][ selectedObservations[0] ][TYPE] == MEDIA:
 
             for mediaFile in self.pj[OBSERVATIONS][ selectedObservations[0] ][FILE][PLAYER1]:
@@ -2965,97 +2971,185 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('max time: {0}'.format(maxTime))
 
+        
+        paramPanelWindow.selectedObservations = selectedObservations
+        paramPanelWindow.pj = self.pj
+        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
+
+        logging.debug('Selected observations: {0}'.format(selectedObservations))
+
+        if not selectedObservations:
+            return
+
         # extract subjects present in observations
         observedSubjects = self.extract_observed_subjects( selectedObservations )
+        selectedSubjects = []
 
-        logging.debug('observed subjects: {0}'.format(observedSubjects))
-        
-        selectedSubjects = self.select_subjects( observedSubjects )
-    
-        logging.debug('selected subjects: {0}'.format(selectedSubjects))
-    
-        if not selectedSubjects:
-            return
+        # add 'No focal subject'
+        if '' in observedSubjects:
+            selectedSubjects.append(NO_FOCAL_SUBJECT)
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            paramPanelWindow.ch.setChecked(True)
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
+
+        for subject in all_subjects:
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( subject )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            if subject in observedSubjects:
+                selectedSubjects.append(subject)
+                paramPanelWindow.ch.setChecked(True)
+
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
+
+        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
+        logging.debug('allBehaviors: {0}'.format(allBehaviors))
 
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-        
         logging.debug('observed behaviors: {0}'.format(observedBehaviors))
         
-        selectedBehaviors = self.select_behaviors( observedBehaviors )
+        for behavior in allBehaviors:
 
-        logging.debug('Selected behaviors: {0}'.format(selectedBehaviors))
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( behavior )
 
-        if not selectedBehaviors:
-            return
+            if behavior in observedBehaviors:
+                paramPanelWindow.ch.setChecked(True)
 
-        includeModifiers = dialog.MessageDialog(programName, 'Include modifiers?', [YES, NO])
-
-        cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
-
-        o = {}
+            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
         
-        for subject in selectedSubjects:
+        paramPanelWindow.sbMaxTime.setMinimum(0)
+        paramPanelWindow.sbMaxTime.setMaximum(1e6)
+        paramPanelWindow.sbMaxTime.setValue(maxTime)
+        
+        if paramPanelWindow.exec_():
             
-            o[subject] = {}
+            selectedSubjects = paramPanelWindow.selectedSubjects
+            selectedBehaviors = paramPanelWindow.selectedBehaviors
+            
+            logging.debug( selectedSubjects )
+            logging.debug( selectedBehaviors )
 
-            for behavior in selectedBehaviors:
-                #o[subject][behavior] = []
+            if not selectedSubjects or not selectedBehaviors:
+                return
 
-                if includeModifiers == YES:
+            if paramPanelWindow.cbIncludeModifiers.isChecked():
+                includeModifiers = YES
+            else:
+                includeModifiers = NO
 
-                    cursor.execute( "SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior) )
-                    distinct_modifiers = list(cursor.fetchall() )
 
-                    for modifier in distinct_modifiers:
-                        cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
-                        rows = cursor.fetchall()
+            '''
+            # ask user for one observation to plot
+            result, selectedObservations = self.selectObservations( SELECT1 )
+    
+            logging.debug('Selected observations: {0}'.format(selectedObservations))
+    
+            if not selectedObservations:
+                return
+    
+            # extract subjects present in observations
+            observedSubjects = self.extract_observed_subjects( selectedObservations )
+    
+            logging.debug('observed subjects: {0}'.format(observedSubjects))
+            
+            selectedSubjects = self.select_subjects( observedSubjects )
+        
+            logging.debug('selected subjects: {0}'.format(selectedSubjects))
+        
+            if not selectedSubjects:
+                return
+    
+            observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
+            
+            logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+            
+            selectedBehaviors = self.select_behaviors( observedBehaviors )
+    
+            logging.debug('Selected behaviors: {0}'.format(selectedBehaviors))
+    
+            if not selectedBehaviors:
+                return
 
-                        if modifier[0]:
-                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
-                        else:
-                            behaviorOut = '{0}'.format(behavior)
-                            
+    
+            includeModifiers = dialog.MessageDialog(programName, 'Include modifiers?', [YES, NO])
+            '''
+    
+            cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
+    
+            o = {}
+            
+            for subject in selectedSubjects:
+                
+                o[subject] = {}
+    
+                for behavior in selectedBehaviors:
+                    #o[subject][behavior] = []
+    
+                    if includeModifiers == YES:
+    
+                        cursor.execute( "SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior) )
+                        distinct_modifiers = list(cursor.fetchall() )
+    
+                        for modifier in distinct_modifiers:
+                            cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
+                            rows = cursor.fetchall()
+    
+                            if modifier[0]:
+                                behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
+                            else:
+                                behaviorOut = '{0}'.format(behavior)
+                                
+                            if not behaviorOut in o[subject]:
+                                o[subject][behaviorOut] = []
+    
+                            for idx, row in enumerate(rows):
+                                if 'POINT' in self.eventType(behavior).upper():
+                                    o[subject][behaviorOut].append( [row[0],row[0] + 1] )  ### FIXME 1 second? for point event
+        
+                                if 'STATE' in self.eventType(behavior).upper():
+                                    if idx % 2 == 0:
+                                        try:
+                                            o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )                                        
+                                        except:
+                                            if NO_FOCAL_SUBJECT in subject:
+                                                sbj = ''
+                                            else:
+                                                sbj =  'for subject <b>{0}</b>'.format( subject )
+                                            QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behaviorOut, sbj) )
+    
+                    else:
+    
+                        cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
+                        rows = list(cursor.fetchall() )
+                        if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
+                            continue
+    
+                        behaviorOut = '{0}'.format(behavior)
+    
                         if not behaviorOut in o[subject]:
                             o[subject][behaviorOut] = []
-
+        
                         for idx, row in enumerate(rows):
+    
                             if 'POINT' in self.eventType(behavior).upper():
-                                o[subject][behaviorOut].append( [row[0],row[0] + 1] )  ### FIXME 1 second? for point event
+                                o[subject][behaviorOut].append( [row[0],row[0] + 1]  )   ### FIXME 1 second? for point event
     
                             if 'STATE' in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
-                                    try:
-                                        o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )                                        
-                                    except:
-                                        if NO_FOCAL_SUBJECT in subject:
-                                            sbj = ''
-                                        else:
-                                            sbj =  'for subject <b>{0}</b>'.format( subject )
-                                        QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behaviorOut, sbj) )
-
-                else:
-
-                    cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
-                    rows = list(cursor.fetchall() )
-                    if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
-                        continue
-
-                    behaviorOut = '{0}'.format(behavior)
-
-                    if not behaviorOut in o[subject]:
-                        o[subject][behaviorOut] = []
+                                    o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
     
-                    for idx, row in enumerate(rows):
-
-                        if 'POINT' in self.eventType(behavior).upper():
-                            o[subject][behaviorOut].append( [row[0],row[0] + 1]  )   ### FIXME 1 second? for point event
-
-                        if 'STATE' in self.eventType(behavior).upper():
-                            if idx % 2 == 0:
-                                o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
-
-        logging.debug('intervals: {}'.format(o))
-        plot_time_ranges(o, selectedObservations[0], maxTime)
+            logging.debug('intervals: {}'.format(o))
+            plot_time_ranges(o, selectedObservations[0], paramPanelWindow.sbMaxTime.value())
 
 
 
@@ -4417,76 +4511,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         about window
         '''
-        
-        paramPanelWindow = param_panel.Param_panel()
 
-        result, selectedObservations = self.selectObservations( SELECT1 )
-        
-        paramPanelWindow.selectedObservations = selectedObservations
-        paramPanelWindow.pj = self.pj
-        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
-
-        logging.debug('Selected observations: {0}'.format(selectedObservations))
-
-        if not selectedObservations:
-            return
-
-        # extract subjects present in observations
-        observedSubjects = self.extract_observed_subjects( selectedObservations )
-        selectedSubjects = []
-
-        # add 'No focal subject'
-        if '' in observedSubjects:
-            selectedSubjects.append(NO_FOCAL_SUBJECT)
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            paramPanelWindow.ch.setChecked(True)
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
-
-        for subject in all_subjects:
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( subject )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            if subject in observedSubjects:
-                selectedSubjects.append(subject)
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
-
-        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
-        logging.debug('allBehaviors: {0}'.format(allBehaviors))
-
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
-        
-        for behavior in allBehaviors:
-
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( behavior )
-
-            if behavior in observedBehaviors:
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-        
-
-
-
-
-        if paramPanelWindow.exec_():
-            print( paramPanelWindow.selectedSubjects )
-            print( paramPanelWindow.selectedBehaviors )
-        return
-        
-        
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
         else:
