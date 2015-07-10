@@ -99,9 +99,6 @@ def hashfile(fileName, hasher, blocksize=65536):
             buf = afile.read(blocksize)
     return hasher.hexdigest()
     
-    
-
-
 
 def bytes_to_str(b):
     '''
@@ -204,8 +201,6 @@ class TempDirCleanerThread(QThread):
                         os.remove(f)
 
                 time.sleep(30)
-
-
 
 
 class checkingBox_list(QDialog):
@@ -381,6 +376,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # dictionary for FPS storing
     fps = {}
     
+    playerType = ''
     playMode = VLC
     
     cleaningThread = TempDirCleanerThread()
@@ -575,24 +571,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionMedia_file_information.setEnabled(flagObs)
         #self.menuCreate_subtitles_2.setEnabled(flagObs)
 
-        self.actionJumpForward.setEnabled( flagObs)
-        self.actionJumpBackward.setEnabled( flagObs)
-        self.actionJumpTo.setEnabled( flagObs)
-        self.actionPlay.setEnabled( flagObs)
-        self.actionPause.setEnabled( flagObs)
-        self.actionReset.setEnabled( flagObs)
-        self.actionFaster.setEnabled( flagObs)        
-        self.actionSlower.setEnabled( flagObs)
-        self.actionNormalSpeed.setEnabled( flagObs)        
-        self.actionPrevious.setEnabled( flagObs)
-        self.actionNext.setEnabled( flagObs)
-        self.actionSnapshot.setEnabled( flagObs)
+        
+        self.actionJumpForward.setEnabled( self.playerType == VLC)
+        self.actionJumpBackward.setEnabled( self.playerType == VLC)
+        self.actionJumpTo.setEnabled( self.playerType == VLC)
+        self.actionPlay.setEnabled( self.playerType == VLC)
+        self.actionPause.setEnabled( self.playerType == VLC)
+        self.actionReset.setEnabled( self.playerType == VLC)
+        self.actionFaster.setEnabled( self.playerType == VLC)        
+        self.actionSlower.setEnabled( self.playerType == VLC)
+        self.actionNormalSpeed.setEnabled( self.playerType == VLC)        
+        self.actionPrevious.setEnabled( self.playerType == VLC)
+        self.actionNext.setEnabled( self.playerType == VLC)
+        self.actionSnapshot.setEnabled( self.playerType == VLC)
 
         # stausbar label
-        self.lbTime.setVisible( flagObs ) 
-        self.lbSubject.setVisible( flagObs )       
-        self.lbTimeOffset.setVisible( flagObs ) 
-        self.lbSpeed.setVisible( flagObs ) 
+        self.lbTime.setVisible( self.playerType == VLC ) 
+        self.lbSubject.setVisible( self.playerType == VLC )       
+        self.lbTimeOffset.setVisible( self.playerType == VLC ) 
+        self.lbSpeed.setVisible( self.playerType == VLC ) 
 
 
         self.actionTime_budget.setEnabled( self.pj[OBSERVATIONS] != {} )
@@ -2243,6 +2240,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeOffset.clear()
         self.lbSpeed.clear()
 
+        self.playerType = ''
+
         self.menu_options()
 
 
@@ -2834,7 +2833,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot events
         '''
 
-        def plot_time_ranges(obs, videoLength):
+        def plot_time_ranges(obs, obsId, videoLength):
         
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
@@ -2848,16 +2847,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for subject_idx, subject in enumerate( sorted( list(obs.keys()) )   ):
                 behaviors = obs[subject]
                 for k in sorted(list(behaviors.keys())):
-                    lbl.append(subject + ' - ' + k)
+                    #lbl.append(subject + ' - ' + k)
+                    lbl.append(k)
                     for t1,t2 in behaviors[k]:
                         maxTime = max(maxTime,t1,t2)
                     count += 1
         
             fig = plt.figure()
+            fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
+            
             ax = fig.add_subplot(111)
             labels = ax.set_yticklabels(lbl)
             ax.set_xlabel('Time (s)')
-            
+            ax.set_ylabel('Behaviors')
+
             plt.ylim( count, -0.5)
 
             if videoLength:
@@ -2865,12 +2868,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 plt.xlim( 0, round(maxTime) + 2)
             plt.yticks(range(count + 1), np.array(lbl))
-            
+
             count = 0
 
             for subject_idx, subject in enumerate(sorted( list(obs.keys()) )):
-                behaviors = obs[subject]
+
+                ax.text(1, count - 0.2 , subject)
                 
+                behaviors = obs[subject]
+
                 x1, x2, y, col = [], [], [], []
 
                 col_count = 0        
@@ -3049,7 +3055,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
 
         logging.debug('intervals: {}'.format(o))
-        plot_time_ranges(o, maxTime)
+        plot_time_ranges(o, selectedObservations[0], maxTime)
 
 
 
@@ -4409,6 +4415,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         about window
         '''
+        
+        print('PLAYER TYPE', self.playerType)
+        
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
         else:
