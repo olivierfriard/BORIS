@@ -902,7 +902,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 currentMedia = ''
                 
                 
-                for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE]['1']):
+                for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                     if self.FFmpegGlobalFrame < self.duration[idx+1]:
 
                         self.FFmpegGlobalFrame = self.duration[idx-1 ]
@@ -948,7 +948,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playMode == FFMPEG:
     
-                for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE]['1']):
+                for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                     if self.FFmpegGlobalFrame < self.duration[idx + 1]:
 
                         self.FFmpegGlobalFrame = self.duration[idx + 1 ]
@@ -1165,7 +1165,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         currentIdx = -1
 
 
-        for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE]['1']):
+        for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
             if requiredFrame *frameMs < sum(self.duration[0:idx + 1 ]):
                 currentMedia = media
                 currentIdx = idx
@@ -1393,16 +1393,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def check_if_media_available(self):
 
-        if not '1' in self.pj[OBSERVATIONS][self.observationId][FILE]:
+        if not PLAYER1 in self.pj[OBSERVATIONS][self.observationId][FILE]:
             return False
 
-        if type(self.pj[OBSERVATIONS][self.observationId][FILE]['1']) != type([]):
+        if type(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) != type([]):
             return False
 
-        if not self.pj[OBSERVATIONS][self.observationId][FILE]['1']:
+        if not self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             return False
 
-        for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE]['1']:
+        for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if not os.path.isfile( mediaFile ):
                 return False
 
@@ -1437,7 +1437,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return True
 
         # check if media list player 1 contains more than 1 media
-        if len(self.pj[OBSERVATIONS][self.observationId][FILE]['1']) > 1 \
+        if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1 \
             and \
            '2' in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE]['2']:
 
@@ -1481,7 +1481,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add all media files to media list 
         self.simultaneousMedia = False
 
-        for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE]['1']:
+        for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
 
             try:
                 self.instance
@@ -2021,9 +2021,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]['time offset'] < 0:
                 observationWindow.rbSubstract.setChecked(True)
 
-            if '1' in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE]['1']:
+            if PLAYER1 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
 
-                observationWindow.lwVideo.addItems( self.pj[OBSERVATIONS][obsId][FILE]['1'] )
+                observationWindow.lwVideo.addItems( self.pj[OBSERVATIONS][obsId][FILE][PLAYER1] )
 
             # check if simultaneous 2nd media
             if '2' in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE]['2']:   # media for 2nd player
@@ -3123,7 +3123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # convert old media list in new one
                 if len( self.pj[OBSERVATIONS][obs][FILE] ):
-                    d1 = { '1':  [self.pj[OBSERVATIONS][obs][FILE][0]] }
+                    d1 = { PLAYER1:  [self.pj[OBSERVATIONS][obs][FILE][0]] }
 
                 if len( self.pj[OBSERVATIONS][obs][FILE] ) == 2:
                     d1['2'] =  [self.pj[OBSERVATIONS][obs][FILE][1]]
@@ -3951,7 +3951,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             
             # seek VLC on current time from FFmpeg mode
-            for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE]['1']):
+            for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                 if globalCurrentTime < sum(self.duration[0:idx + 1]):
 
                     logging.debug('idx: {0}'.format(idx))
@@ -4069,7 +4069,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.playMode == FFMPEG:
 
-                    for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE]['1']):
+                    for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                         if self.FFmpegGlobalFrame < sum(self.duration[0:idx + 1]):
 
                             dirName, fileName = os.path.split( media )
@@ -5706,7 +5706,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # media file name
                 if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
 
-                    f.write('# Media file name: {0}{1}{1}'.format(', '.join(   [ os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE]['1']  ]  ), os.linesep ) )
+                    f.write('# Media file name: {0}{1}{1}'.format(', '.join(   [ os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]  ]  ), os.linesep ) )
 
                 if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
                     f.write('# Live observation{0}{0}'.format(os.linesep))
