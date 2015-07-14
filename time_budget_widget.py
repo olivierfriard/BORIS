@@ -46,30 +46,33 @@ class timeBudgetResults(QWidget):
         self.lw = QListWidget()
         self.lw.setEnabled(False)
         self.lw.setMaximumHeight(100)
+        self.lbTotalObservedTime = QLabel()
+        self.lbTotalObservedTime.setText('')
         self.twTB = QTableWidget()
                 
         hbox = QVBoxLayout(self)
 
         hbox.addWidget(self.label)
         hbox.addWidget(self.lw)
+        hbox.addWidget(self.lbTotalObservedTime)
         hbox.addWidget(self.twTB)
 
         hbox2 = QHBoxLayout(self)
 
 
-        self.pbSave = QPushButton('Save results')
+        self.pbSave = QPushButton("Save results")
         hbox2.addWidget(self.pbSave)
 
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
 
-        self.pbClose = QPushButton('Close')
+        self.pbClose = QPushButton("Close")
         hbox2.addWidget(self.pbClose)
 
         hbox.addLayout(hbox2)
 
-        self.setWindowTitle('Time budget')
+        self.setWindowTitle("Time budget")
 
 
         self.pbClose.clicked.connect(self.close)
@@ -78,7 +81,7 @@ class timeBudgetResults(QWidget):
 
     def pbSave_clicked(self):
         '''
-        save time budget analysis results in TSV format
+        save time budget analysis results in TSV, CSV, ODS, XLS format
         '''
 
         def complete(l, max):
@@ -105,11 +108,9 @@ class timeBudgetResults(QWidget):
             for idx in range(self.lw.count()):
                 rows.append( [ self.lw.item(idx).text() ] )
 
-
             # check if only one observation was selected
             if self.lw.count() == 1:
                 rows.append( [''] )
-
                 
                 # write independant variables to file
                 if INDEPENDENT_VARIABLES in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
@@ -120,7 +121,6 @@ class timeBudgetResults(QWidget):
             rows.append( [''] )
             rows.append( [''] )
             rows.append( ['Time budget:'] )
-            
             
             # write header
             cols = []

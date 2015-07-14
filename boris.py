@@ -24,12 +24,10 @@ This file is part of BORIS.
 """
 
 __version__ = '2.3' # 'DEV' for development version
-__version_date__ = '2015-07-09'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version_date__ = '2015-07-14'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
-
-slider_maximum = 1000
 
 import sys
 import logging
@@ -2136,7 +2134,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             if mode == NEW:
-                self.menu_options()
 
                 # title of dock widget
                 self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
@@ -2149,7 +2146,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     self.playerType = VLC
                     self.initialize_new_observation_vlc()
-    
+
+                self.menu_options()    
 
     def close_observation(self):
         '''
@@ -2636,34 +2634,90 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         time budget
         '''
         logging.debug("Time budget function")
-
-        # OBSERVATIONS
-
-        # ask user observations to analyze
+        
+        
+        paramPanelWindow = param_panel.Param_panel()
+        
         result, selectedObservations = self.selectObservations( MULTIPLE )
+
+        logging.debug('Selected observations: {0}'.format(selectedObservations))
 
         if not selectedObservations:
             return
 
-        # SUBJECTS
+        paramPanelWindow.selectedObservations = selectedObservations
+        paramPanelWindow.pj = self.pj
+        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
 
         # extract subjects present in observations
-        observed_subjects = self.extract_observed_subjects( selectedObservations )
-        
-        # ask user for subjects to analyze
-        selectedSubjects = self.select_subjects( observed_subjects )
-    
-        if not selectedSubjects:
-            return
+        observedSubjects = self.extract_observed_subjects( selectedObservations )
+        selectedSubjects = []
+
+        # add 'No focal subject'
+        if '' in observedSubjects:
+            selectedSubjects.append(NO_FOCAL_SUBJECT)
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            paramPanelWindow.ch.setChecked(True)
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
+
+        for subject in all_subjects:
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( subject )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            if subject in observedSubjects:
+                selectedSubjects.append(subject)
+                paramPanelWindow.ch.setChecked(True)
+
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
+
+        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
+        logging.debug('allBehaviors: {0}'.format(allBehaviors))
 
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
+        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+        
+        for behavior in allBehaviors:
 
-        selectedBehaviors = self.select_behaviors( observedBehaviors )
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( behavior )
 
-        if not selectedBehaviors:
-            return
+            if behavior in observedBehaviors:
+                paramPanelWindow.ch.setChecked(True)
 
-        includeModifiers = dialog.MessageDialog(programName, "Include modifiers?", [YES, NO])
+            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+        '''
+        paramPanelWindow.sbMaxTime.setMinimum(0)
+        paramPanelWindow.sbMaxTime.setMaximum(1e6)
+        paramPanelWindow.sbMaxTime.setValue(maxTime)
+        '''
+        paramPanelWindow.sbMaxTime.setVisible(False)
+        paramPanelWindow.lbMaxTime.setVisible(False)
+
+        if paramPanelWindow.exec_():
+            
+            selectedSubjects = paramPanelWindow.selectedSubjects
+            selectedBehaviors = paramPanelWindow.selectedBehaviors
+            
+            logging.debug( selectedSubjects )
+            logging.debug( selectedBehaviors )
+
+            if not selectedSubjects or not selectedBehaviors:
+                return
+
+            if paramPanelWindow.cbIncludeModifiers.isChecked():
+                includeModifiers = YES
+            else:
+                includeModifiers = NO
+
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
@@ -2687,10 +2741,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             rows = cursor.fetchall()
                             inter_duration = 0
                             for idx, row in enumerate(rows):
-                                if idx > 0:
+                                if idx:
                                     inter_duration += float(row[0]) - float(rows[idx-1][0])
 
-                            if inter_duration == 0:
+                            if len(selectedObservations) > 1 or inter_duration == 0:
                                 inter_duration =  'NA'
                             else:
                                 inter_duration = round(inter_duration/(len(rows) - 1),3)
@@ -2702,6 +2756,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for modifier in distinct_modifiers:
                             cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", (subject, behavior, modifier[0]) )
                             rows = list(cursor.fetchall() )
+
                             if len( rows ) % 2:
                                 out.append( { 'subject': subject , 'behavior': behavior, 'modifiers': modifier[0], 'duration': UNPAIRED, 'mean': UNPAIRED,\
                                            'number': UNPAIRED, 'inter_duration_mean': UNPAIRED } )
@@ -2715,7 +2770,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if idx % 2 and idx != len(rows) - 1:
                                         inter_duration += float( rows[idx+1][0]) - float( row[0])
         
-                                if inter_duration == 0:
+                                if len(selectedObservations) > 1 or inter_duration == 0:
                                     inter_duration = 'NA'
                                 else:
                                     inter_duration = round(inter_duration/ (len(rows)/2-1),3)
@@ -2733,9 +2788,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         inter_duration = 0
                         for idx,row in enumerate(rows):
                             if idx > 0:
-                                inter_duration += float(row[0]) - float(rows[idx-1][0])
+                                inter_duration += float(row[0]) - float(rows[idx - 1][0])
 
-                        if inter_duration == 0:
+                        if len(selectedObservations) > 1 or inter_duration == 0:
                             inter_duration =  'NA'
                         else:
                             inter_duration = round(inter_duration/(len(rows) - 1),3)
@@ -2746,6 +2801,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if 'STATE' in self.eventType(behavior).upper():
                         cursor.execute( "SELECT occurence FROM events where subject = ? AND code = ? order by observation, occurence", (subject, behavior) )
                         rows = list(cursor.fetchall() )
+                        
+                        logging.debug('occurences: {0}'.format(rows))
+                        
                         if not len( rows ):
                             out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': 0, 'mean': 0, 'number': 0, 'inter_duration_mean': '-'})
                             continue
@@ -2762,13 +2820,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if idx % 2 and idx != len(rows) - 1:
                                     inter_duration += float( rows[idx+1][0]) - float( row[0])
 
-                            if inter_duration == 0:
+                            if len(selectedObservations) > 1 or inter_duration == 0:
                                 inter_duration = 'NA'
                                 inter_duration_mean = '-'
                             else:
-                                inter_duration_mean = round(inter_duration/ (len(rows)/2-1),3)
+                                inter_duration_mean = round(inter_duration / (len(rows) / 2 - 1), 3)
 
-                            out.append( { 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': round(tot_duration,3), 'mean': round(tot_duration/(len(rows)/2),3),\
+                            out.append( { 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': round(tot_duration,3), 'mean': round(tot_duration / (len(rows)/2),3),\
                                            'number': int(len(rows)/2), \
                                            'inter_duration_mean': inter_duration_mean } )
 
@@ -2782,16 +2840,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             obsDuration = 0
 
+        logging.debug("total observation time: {0}".format(obsDuration))
+
         # widget for results visualization
         self.tb = timeBudgetResults( logging.getLogger().getEffectiveLevel(), self.pj)
 
         # observations list
-        self.tb.label.setText( 'Selected observations' )
+        self.tb.label.setText("Selected observations")
         for obs in selectedObservations:
             self.tb.lw.addItem(obs)
 
+        self.tb.lbTotalObservedTime.setText( "Total observed time: {} s".format(obsDuration) )
 
-        tb_fields = ['Subject', 'Behavior', 'Modifiers', 'Total number', 'Total duration (s)', 'Duration mean (s)', 'inter-event intervals mean (s)', '% of total time']
+
+        tb_fields = ['Subject', 'Behavior', 'Modifiers', 'Total number', 'Total duration (s)', 'Duration mean (s)', 'inter-event intervals mean (s)', '% of total observed time']
         self.tb.twTB.setColumnCount( len( tb_fields ) )
         self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
@@ -2803,13 +2865,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             column = 0 
 
             for field in fields:
-
-                #item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
                 item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
                 # no modif allowed
                 item.setFlags(Qt.ItemIsEnabled)
                 self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
-
                 column += 1
 
             # % of total time
@@ -2975,11 +3034,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
-
-        logging.debug('Selected observations: {0}'.format(selectedObservations))
-
-        if not selectedObservations:
-            return
 
         # extract subjects present in observations
         observedSubjects = self.extract_observed_subjects( selectedObservations )

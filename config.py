@@ -112,3 +112,5 @@ PLAYER2 = '2'
 
 VIDEO_TAB = 0
 FRAME_TAB = 1
+
+slider_maximum = 1000

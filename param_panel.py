@@ -39,8 +39,6 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)
-        
-        #self.lwSubjects.itemChanged.connect(self.lwSubjectsChanged)
 
 
     def ok(self):
@@ -64,11 +62,11 @@ class Param_panel(QDialog, Ui_Dialog):
 
 
     def cb_changed(self):
-        print('ciao')
+        print( self.lwSubjects.count() )
         selectedSubjects = [] 
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))
-            if cb.isChecked():
+            if cb and cb.isChecked():
                 selectedSubjects.append( cb.text() )
         print( selectedSubjects )
 
