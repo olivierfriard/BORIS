@@ -1391,6 +1391,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.vboxlayout.insertLayout(1, self.video2layout)
 
     def check_if_media_available(self):
+        '''
+        check if every media available for observationId
+        '''
 
         if not PLAYER1 in self.pj[OBSERVATIONS][self.observationId][FILE]:
             return False
@@ -2645,6 +2648,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
+        maxTime = 0
+        for o in selectedObservations:
+            if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
+    
+                for mediaFile in self.pj[OBSERVATIONS][ o ][FILE][PLAYER1]:
+        
+                    if os.path.isfile(mediaFile):
+                        hf = hashfile( mediaFile , hashlib.md5())
+                        if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                        and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                            maxTime += self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000
+    
+                    else: # file not found
+                        
+                        QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found!\nThe maximum time will be the time of the last event.'.format( mediaFile))
+                        maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+    
+            else: # LIVE
+                maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+
+        logging.debug('max time: {0}'.format(maxTime))
+
+
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
@@ -2694,11 +2720,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 paramPanelWindow.ch.setChecked(True)
 
             paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-        '''
-        paramPanelWindow.sbMaxTime.setMinimum(0)
-        paramPanelWindow.sbMaxTime.setMaximum(1e6)
-        paramPanelWindow.sbMaxTime.setValue(maxTime)
-        '''
+
+        # hide max time
         paramPanelWindow.sbMaxTime.setVisible(False)
         paramPanelWindow.lbMaxTime.setVisible(False)
 
@@ -2717,7 +2740,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 includeModifiers = YES
             else:
                 includeModifiers = NO
-
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
@@ -2832,13 +2854,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # min max
-        cursor.execute( "SELECT min(occurence), max(occurence) FROM events" )
-        min_, max_ = cursor.fetchall()[0]
+        cursor.execute( "SELECT max(occurence)-min(occurence) FROM events GROUP BY observation" )
         
-        if min_ and max_:
-            obsDuration = float(max_) - float(min_)
-        else:
-            obsDuration = 0
+        obsDuration = sum([x[0] for x in cursor.fetchall() ])
 
         logging.debug("total observation time: {0}".format(obsDuration))
 
@@ -2874,7 +2892,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # % of total time
 
             if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and obsDuration: 
-                item = QTableWidgetItem(str( round( row['duration'] / obsDuration * 100,1)  ) )
+                item = QTableWidgetItem(str( round( row['duration'] / maxTime * 100,1)  ) )
             else:
                 item = QTableWidgetItem( '-' )
 
@@ -2994,10 +3012,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        '''
-        ffprobe -i video.avi -show_entries format=duration -v quiet -of csv="p=0"
-        '''
-        maxTime = 0    
+        if not self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS]:
+            QMessageBox.warning(self, programName, 'There are no events in the selected observation')
+            return
+
+        maxTime = 0
         if self.pj[OBSERVATIONS][ selectedObservations[0] ][TYPE] == MEDIA:
 
             for mediaFile in self.pj[OBSERVATIONS][ selectedObservations[0] ][FILE][PLAYER1]:
@@ -3010,18 +3029,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else: # file not found
                     
-                    if not self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS]:
-                        QMessageBox.warning(self, programName, 'The observation is empty (no events)')
-                        return
-                    
                     QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found!\nThe maximum time will be the time of the last event.'.format( mediaFile))
                     maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
 
             if not maxTime:
-                if not self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS]:
-                    QMessageBox.warning(self, programName, 'The observation is empty (no events)')
-                    return
-
                 QMessageBox.warning(self, programName , 'The video length was not found!\nThe maximum time will be the time of the last event.')
                 maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
 
@@ -3029,7 +3040,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
 
         logging.debug('max time: {0}'.format(maxTime))
-
         
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
