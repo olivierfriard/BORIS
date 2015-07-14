@@ -2648,28 +2648,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        maxTime = 0
+        maxTime = Decimal("0.0")
+        flagOK = True
         for o in selectedObservations:
             if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
-    
+
                 for mediaFile in self.pj[OBSERVATIONS][ o ][FILE][PLAYER1]:
-        
+
                     if os.path.isfile(mediaFile):
                         hf = hashfile( mediaFile , hashlib.md5())
                         if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
                         and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                            maxTime += self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000
-    
+                            maxTime += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
                     else: # file not found
-                        
-                        QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found!\nThe maximum time will be the time of the last event.'.format( mediaFile))
+                        flagOK = False
+                        QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found! The % of total media duration value will not be available.'.format( mediaFile))
                         maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
-    
             else: # LIVE
                 maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
 
-        logging.debug('max time: {0}'.format(maxTime))
-
+        if not flagOK:
+            maxTime = 0
+        logging.debug('max time: {}'.format(maxTime))
 
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
@@ -2725,21 +2725,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.sbMaxTime.setVisible(False)
         paramPanelWindow.lbMaxTime.setVisible(False)
 
-        if paramPanelWindow.exec_():
+        if not paramPanelWindow.exec_():
+            return
             
-            selectedSubjects = paramPanelWindow.selectedSubjects
-            selectedBehaviors = paramPanelWindow.selectedBehaviors
-            
-            logging.debug( selectedSubjects )
-            logging.debug( selectedBehaviors )
+        selectedSubjects = paramPanelWindow.selectedSubjects
+        selectedBehaviors = paramPanelWindow.selectedBehaviors
+        
+        logging.debug( selectedSubjects )
+        logging.debug( selectedBehaviors )
 
-            if not selectedSubjects or not selectedBehaviors:
-                return
+        if not selectedSubjects or not selectedBehaviors:
+            return
 
-            if paramPanelWindow.cbIncludeModifiers.isChecked():
-                includeModifiers = YES
-            else:
-                includeModifiers = NO
+        if paramPanelWindow.cbIncludeModifiers.isChecked():
+            includeModifiers = YES
+        else:
+            includeModifiers = NO
+
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
@@ -2754,7 +2756,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     distinct_modifiers = list(cursor.fetchall() )
 
                     if not distinct_modifiers:
-                        out.append(  { 'subject': subject , 'behavior': behavior, 'modifiers': '-' , 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-' } )
+                        if not paramPanelWindow.cbExcludeBehaviors.isChecked():
+                            out.append(  { 'subject': subject , 'behavior': behavior, 'modifiers': '-' , 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-' } )
                         continue
                     if 'POINT' in self.eventType(behavior).upper():
 
@@ -2803,10 +2806,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if 'POINT' in self.eventType(behavior).upper():
                         cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ?  order by observation, occurence", ( subject, behavior ) )
                         rows =  cursor.fetchall()
+
                         if not len( rows ):
-                            out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-'})
+                            if not paramPanelWindow.cbExcludeBehaviors.isChecked():
+                                out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-'})
                             continue
-                        
+
                         inter_duration = 0
                         for idx,row in enumerate(rows):
                             if idx > 0:
@@ -2827,7 +2832,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         logging.debug('occurences: {0}'.format(rows))
                         
                         if not len( rows ):
-                            out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': 0, 'mean': 0, 'number': 0, 'inter_duration_mean': '-'})
+                            if not paramPanelWindow.cbExcludeBehaviors.isChecked():
+                                out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': 0, 'mean': 0, 'number': 0, 'inter_duration_mean': '-'})
                             continue
                         if len( rows ) % 2:
                             out.append( { 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': UNPAIRED, 'mean': UNPAIRED,\
@@ -2854,11 +2860,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # min max
+        '''
         cursor.execute( "SELECT max(occurence)-min(occurence) FROM events GROUP BY observation" )
         
         obsDuration = sum([x[0] for x in cursor.fetchall() ])
+        '''
 
-        logging.debug("total observation time: {0}".format(obsDuration))
+        logging.debug("Total media duration: {0}".format(round(maxTime,3)))
 
         # widget for results visualization
         self.tb = timeBudgetResults( logging.getLogger().getEffectiveLevel(), self.pj)
@@ -2868,10 +2876,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obs in selectedObservations:
             self.tb.lw.addItem(obs)
 
-        self.tb.lbTotalObservedTime.setText( "Total observed time: {} s".format(obsDuration) )
+        if maxTime:
+            self.tb.lbTotalObservedTime.setText( "Total media duration: {0} s".format(round(maxTime,3)) )
+        else:
+            self.tb.lbTotalObservedTime.setText( "Total media duration: not available")
 
 
-        tb_fields = ['Subject', 'Behavior', 'Modifiers', 'Total number', 'Total duration (s)', 'Duration mean (s)', 'inter-event intervals mean (s)', '% of total observed time']
+        tb_fields = ['Subject', 'Behavior', 'Modifiers', 'Total number', 'Total duration (s)', 'Duration mean (s)', 'inter-event intervals mean (s)', '% of total media duration']
         self.tb.twTB.setColumnCount( len( tb_fields ) )
         self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
@@ -2891,7 +2902,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # % of total time
 
-            if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and obsDuration: 
+            if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and maxTime: 
                 item = QTableWidgetItem(str( round( row['duration'] / maxTime * 100,1)  ) )
             else:
                 item = QTableWidgetItem( '-' )

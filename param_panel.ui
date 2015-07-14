@@ -44,6 +44,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="cbExcludeBehaviors">
+       <property name="text">
+        <string>Exclude behaviors without events</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <widget class="QLabel" name="lbMaxTime">

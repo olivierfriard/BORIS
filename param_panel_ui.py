@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created: Fri Jul 10 15:47:52 2015
+# Created: Tue Jul 14 23:00:45 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -46,6 +46,9 @@ class Ui_Dialog(object):
         self.cbIncludeModifiers = QtGui.QCheckBox(Dialog)
         self.cbIncludeModifiers.setObjectName(_fromUtf8("cbIncludeModifiers"))
         self.verticalLayout.addWidget(self.cbIncludeModifiers)
+        self.cbExcludeBehaviors = QtGui.QCheckBox(Dialog)
+        self.cbExcludeBehaviors.setObjectName(_fromUtf8("cbExcludeBehaviors"))
+        self.verticalLayout.addWidget(self.cbExcludeBehaviors)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.lbMaxTime = QtGui.QLabel(Dialog)
@@ -78,6 +81,7 @@ class Ui_Dialog(object):
         self.lbSubjects.setText(_translate("Dialog", "Subjects", None))
         self.lbBehaviors.setText(_translate("Dialog", "Behaviors", None))
         self.cbIncludeModifiers.setText(_translate("Dialog", "Include modifiers", None))
+        self.cbExcludeBehaviors.setText(_translate("Dialog", "Exclude behaviors without events", None))
         self.lbMaxTime.setText(_translate("Dialog", "Max time (s)", None))
         self.pbCancel.setText(_translate("Dialog", "Cancel", None))
         self.pbOK.setText(_translate("Dialog", "OK", None))
