@@ -540,9 +540,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project.setEnabled(flag)
         self.actionSave_project_as.setEnabled(flag)
         self.actionClose_project.setEnabled(flag)
-        self.actionMedia_file_information.setEnabled(flag)
-        self.menuCreate_subtitles_2.setEnabled(flag)
-
+        
         # observations
 
         # enabled if project
@@ -568,6 +566,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(flagObs)
+        self.actionMedia_file_information.setEnabled(self.playerType == VLC)
         #self.menuCreate_subtitles_2.setEnabled(flagObs)
 
         
@@ -584,7 +583,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNext.setEnabled( self.playerType == VLC)
         self.actionSnapshot.setEnabled( self.playerType == VLC)
 
-        # stausbar label
+        # statusbar label
         self.lbTime.setVisible( self.playerType == VLC ) 
         self.lbSubject.setVisible( self.playerType == VLC )       
         self.lbTimeOffset.setVisible( self.playerType == VLC ) 
@@ -2631,16 +2630,94 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return []
 
 
+    def choose_obs_subj_behav(self, selectedObservations, maxTime):
+
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.selectedObservations = selectedObservations
+        paramPanelWindow.pj = self.pj
+        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
+
+        # extract subjects present in observations
+        observedSubjects = self.extract_observed_subjects( selectedObservations )
+        selectedSubjects = []
+
+        # add 'No focal subject'
+        if '' in observedSubjects:
+            selectedSubjects.append(NO_FOCAL_SUBJECT)
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            paramPanelWindow.ch.setChecked(True)
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
+
+        for subject in all_subjects:
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( subject )
+            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+            if subject in observedSubjects:
+                selectedSubjects.append(subject)
+                paramPanelWindow.ch.setChecked(True)
+
+            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
+
+        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
+        logging.debug('allBehaviors: {0}'.format(allBehaviors))
+
+        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
+        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+        
+        for behavior in allBehaviors:
+
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText( behavior )
+
+            if behavior in observedBehaviors:
+                paramPanelWindow.ch.setChecked(True)
+
+            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        # hide max time
+        if not maxTime:
+            paramPanelWindow.sbMaxTime.setVisible(False)
+            paramPanelWindow.lbMaxTime.setVisible(False)
+        else:
+            paramPanelWindow.sbMaxTime.setValue(maxTime)
+
+        if not paramPanelWindow.exec_():
+            return
+            
+        selectedSubjects = paramPanelWindow.selectedSubjects
+        selectedBehaviors = paramPanelWindow.selectedBehaviors
+        
+        logging.debug( selectedSubjects )
+        logging.debug( selectedBehaviors )
+
+        if not selectedSubjects or not selectedBehaviors:
+            return
+
+        if paramPanelWindow.cbIncludeModifiers.isChecked():
+            includeModifiers = YES
+        else:
+            includeModifiers = NO
+
+
+
+        return selectedSubjects, selectedBehaviors, includeModifiers, paramPanelWindow.cbExcludeBehaviors.isChecked(), paramPanelWindow.sbMaxTime.value()
+
 
     def time_budget(self):
         '''
         time budget
         '''
         logging.debug("Time budget function")
-        
-        
-        paramPanelWindow = param_panel.Param_panel()
-        
+
         result, selectedObservations = self.selectObservations( MULTIPLE )
 
         logging.debug('Selected observations: {0}'.format(selectedObservations))
@@ -2671,6 +2748,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             maxTime = 0
         logging.debug('max time: {}'.format(maxTime))
 
+        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
+
+        if not selectedSubjects or not selectedBehaviors:
+            return
+
+        '''
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
@@ -2741,6 +2824,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             includeModifiers = YES
         else:
             includeModifiers = NO
+        '''
 
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
@@ -2756,7 +2840,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     distinct_modifiers = list(cursor.fetchall() )
 
                     if not distinct_modifiers:
-                        if not paramPanelWindow.cbExcludeBehaviors.isChecked():
+                        if not excludeBehaviorsWoEvents:
                             out.append(  { 'subject': subject , 'behavior': behavior, 'modifiers': '-' , 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-' } )
                         continue
                     if 'POINT' in self.eventType(behavior).upper():
@@ -2808,7 +2892,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows =  cursor.fetchall()
 
                         if not len( rows ):
-                            if not paramPanelWindow.cbExcludeBehaviors.isChecked():
+                            if not excludeBehaviorsWoEvents:
                                 out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-'})
                             continue
 
@@ -2832,7 +2916,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         logging.debug('occurences: {0}'.format(rows))
                         
                         if not len( rows ):
-                            if not paramPanelWindow.cbExcludeBehaviors.isChecked():
+                            if not excludeBehaviorsWoEvents:
                                 out.append({ 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': 0, 'mean': 0, 'number': 0, 'inter_duration_mean': '-'})
                             continue
                         if len( rows ) % 2:
@@ -3014,7 +3098,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plt.show()
 
 
-        paramPanelWindow = param_panel.Param_panel()
+        '''paramPanelWindow = param_panel.Param_panel()'''
 
         result, selectedObservations = self.selectObservations( SELECT1 )
 
@@ -3051,7 +3135,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
 
         logging.debug('max time: {0}'.format(maxTime))
-        
+
+        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, maxTime = self.choose_obs_subj_behav(selectedObservations, maxTime)
+
+        if not selectedSubjects or not selectedBehaviors:
+            return
+
+        '''
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
@@ -3121,110 +3211,77 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 includeModifiers = YES
             else:
                 includeModifiers = NO
+        '''
 
+        cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
-            '''
-            # ask user for one observation to plot
-            result, selectedObservations = self.selectObservations( SELECT1 )
-    
-            logging.debug('Selected observations: {0}'.format(selectedObservations))
-    
-            if not selectedObservations:
-                return
-    
-            # extract subjects present in observations
-            observedSubjects = self.extract_observed_subjects( selectedObservations )
-    
-            logging.debug('observed subjects: {0}'.format(observedSubjects))
-            
-            selectedSubjects = self.select_subjects( observedSubjects )
+        o = {}
         
-            logging.debug('selected subjects: {0}'.format(selectedSubjects))
-        
-            if not selectedSubjects:
-                return
-    
-            observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
+        for subject in selectedSubjects:
             
-            logging.debug('observed behaviors: {0}'.format(observedBehaviors))
-            
-            selectedBehaviors = self.select_behaviors( observedBehaviors )
-    
-            logging.debug('Selected behaviors: {0}'.format(selectedBehaviors))
-    
-            if not selectedBehaviors:
-                return
+            o[subject] = {}
 
-    
-            includeModifiers = dialog.MessageDialog(programName, 'Include modifiers?', [YES, NO])
-            '''
-    
-            cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
-    
-            o = {}
-            
-            for subject in selectedSubjects:
-                
-                o[subject] = {}
-    
-                for behavior in selectedBehaviors:
-                    #o[subject][behavior] = []
-    
-                    if includeModifiers == YES:
-    
-                        cursor.execute( "SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior) )
-                        distinct_modifiers = list(cursor.fetchall() )
-    
-                        for modifier in distinct_modifiers:
-                            cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
-                            rows = cursor.fetchall()
-    
-                            if modifier[0]:
-                                behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
-                            else:
-                                behaviorOut = '{0}'.format(behavior)
-                                
-                            if not behaviorOut in o[subject]:
-                                o[subject][behaviorOut] = []
-    
-                            for idx, row in enumerate(rows):
-                                if 'POINT' in self.eventType(behavior).upper():
-                                    o[subject][behaviorOut].append( [row[0],row[0] + 1] )  ### FIXME 1 second? for point event
-        
-                                if 'STATE' in self.eventType(behavior).upper():
-                                    if idx % 2 == 0:
-                                        try:
-                                            o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )                                        
-                                        except:
-                                            if NO_FOCAL_SUBJECT in subject:
-                                                sbj = ''
-                                            else:
-                                                sbj =  'for subject <b>{0}</b>'.format( subject )
-                                            QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behaviorOut, sbj) )
-    
-                    else:
-    
-                        cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
-                        rows = list(cursor.fetchall() )
-                        if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
-                            continue
-    
-                        behaviorOut = '{0}'.format(behavior)
-    
+            for behavior in selectedBehaviors:
+
+                if includeModifiers == YES:
+
+                    cursor.execute( "SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior) )
+                    distinct_modifiers = list(cursor.fetchall() )
+
+                    for modifier in distinct_modifiers:
+                        cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
+                        rows = cursor.fetchall()
+
+                        if modifier[0]:
+                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
+                        else:
+                            behaviorOut = '{0}'.format(behavior)
+                            
                         if not behaviorOut in o[subject]:
                             o[subject][behaviorOut] = []
-        
+
                         for idx, row in enumerate(rows):
-    
                             if 'POINT' in self.eventType(behavior).upper():
-                                o[subject][behaviorOut].append( [row[0],row[0] + 1]  )   ### FIXME 1 second? for point event
+                                o[subject][behaviorOut].append( [row[0],row[0] + 1] )  ### FIXME 1 second? for point event
     
                             if 'STATE' in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
-                                    o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
+                                    try:
+                                        o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )                                        
+                                    except:
+                                        if NO_FOCAL_SUBJECT in subject:
+                                            sbj = ''
+                                        else:
+                                            sbj =  'for subject <b>{0}</b>'.format( subject )
+                                        QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behaviorOut, sbj) )
+
+                else:
+
+                    cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
+                    rows = list(cursor.fetchall() )
+
+                    if not len( rows ) and excludeBehaviorsWoEvents:
+                        continue
+
+                    if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
+                        continue
+
+                    behaviorOut = '{0}'.format(behavior)
+
+                    if not behaviorOut in o[subject]:
+                        o[subject][behaviorOut] = []
     
-            logging.debug('intervals: {}'.format(o))
-            plot_time_ranges(o, selectedObservations[0], paramPanelWindow.sbMaxTime.value())
+                    for idx, row in enumerate(rows):
+
+                        if 'POINT' in self.eventType(behavior).upper():
+                            o[subject][behaviorOut].append( [row[0],row[0] + 1]  )   ### FIXME 1 second? for point event
+
+                        if 'STATE' in self.eventType(behavior).upper():
+                            if idx % 2 == 0:
+                                o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
+
+        logging.debug('intervals: {}'.format(o))
+        plot_time_ranges(o, selectedObservations[0], maxTime)
 
 
 
@@ -3867,30 +3924,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         create subtitles for selected observations, subjects and behaviors
         '''
-        # ask user observations to analyze
+
         result, selectedObservations = self.selectObservations( MULTIPLE )
+
+        logging.debug('Selected observations: {0}'.format(selectedObservations))
+
         if not selectedObservations:
             return
-        
-        # filter subjects in observations
-        observedSubjects = self.extract_observed_subjects( selectedObservations )
 
-        selectedSubjects = self.select_subjects( observedSubjects )
+        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
 
-        if not selectedSubjects:
-            logging.info('No subjects selected')
+        if not selectedSubjects or not selectedBehaviors:
             return
-
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-
-        selectedBehaviors = self.select_behaviors( observedBehaviors )
-
-        if not selectedBehaviors:
-            logging.info('No behaviors selected')
-            return
-
-
-        includeModifiers = dialog.MessageDialog(programName, 'Include modifiers?', [YES, NO])
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
@@ -3914,12 +3959,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                 # TODO add subtitle for enqueued media
-                '''
-                hf = hashfile( mediaFile , hashlib.md5())
-                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ selectedObservations[0] ] and hf in self.pj[OBSERVATIONS][ selectedObservations[0] ][MEDIA_FILE_INFO]:
-                    maxTime += self.pj[OBSERVATIONS][ selectedObservations[0] ][MEDIA_FILE_INFO][ hf ][ 'video_length' ]
-                '''
-
 
                 subtitles = []
                 for subject in selectedSubjects:
@@ -3967,6 +4006,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export aggregated events in SQL (sql) or Tabular format (tab)
         '''
 
+        result, selectedObservations = self.selectObservations( MULTIPLE )
+
+        if not selectedObservations:
+            return
+
+        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
+
+        if not selectedSubjects or not selectedBehaviors:
+            return
+
+        '''
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations( MULTIPLE )
         if not selectedObservations:
@@ -3984,9 +4034,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         selectedBehaviors = self.select_behaviors( observedBehaviors )
 
-
         if not selectedBehaviors:
             return
+        '''
 
         fd = QFileDialog(self)
 
@@ -4060,23 +4110,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         show info about current video
         '''
-        if self.observationId:
-            
+        if self.observationId and self.playerType == VLC:
             out = ''
-
             if platform.system() in ['Linux', 'Darwin']:
-                
-
                 for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
                     
                     for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
-
                         r = os.system( 'file -b ' + file_ )
-    
                         if not r:
                             out += '<b>'+os.path.basename(file_) + '</b><br>'
                             out += subprocess.getoutput('file -b ' + file_ ) + '<br>'
-
 
             media = self.mediaplayer.get_media()
             if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
@@ -4097,10 +4140,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
 
                 QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s' % (self.convertTime(self.mediaplayer.get_length()/1000)  ) )
-
-
-        else:
-            self.no_observation()
 
 
     def switch_playing_mode(self):
@@ -4247,7 +4286,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else:  # VLC
 
-                    '''current_media_path = urllib.parse.urlparse(self.mediaplayer.get_media().get_mrl()).path'''
                     current_media_path = url2path( self.mediaplayer.get_media().get_mrl() )
                     dirName, fileName = os.path.split( current_media_path )
                     time = str(self.mediaplayer.get_time())
