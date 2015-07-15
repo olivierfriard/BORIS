@@ -23,8 +23,14 @@ This file is part of BORIS.
 
 """
 
+
+# TODO: check media player 1 and 2
+# TODO: media offset in plot event function
+# TODO: edit observation
+
+
 __version__ = '2.3' # 'DEV' for development version
-__version_date__ = '2015-07-14'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version_date__ = '2015-07-16'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -1494,7 +1500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.duration.append(media.get_duration())
 
-            # store video length in project file
+            # store video length in project file using md5 sum of file content as key
             hf = hashfile( mediaFile , hashlib.md5())
 
             if not MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ self.observationId ]:
@@ -1923,8 +1929,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         observationWindow.mode = mode
 
-        logging.debug( 'start mode 2 {0}'.format(mode) )
-
         observationWindow.mem_obs_id = obsId
 
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
@@ -2025,12 +2029,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if PLAYER1 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
 
                 observationWindow.lwVideo.addItems( self.pj[OBSERVATIONS][obsId][FILE][PLAYER1] )
+                if 'media_durations' in self.pj[OBSERVATIONS][obsId]:
+                    observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]['media_durations']
 
             # check if simultaneous 2nd media
             if '2' in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE]['2']:   # media for 2nd player
 
                 observationWindow.lwVideo_2.addItems( self.pj[OBSERVATIONS][obsId][FILE]['2'] )
-
 
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
@@ -2040,19 +2045,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 observationWindow.tabProjectType.setCurrentIndex(live)
 
 
-        #
-
         if observationWindow.exec_():
 
             self.projectChanged = True
-            
 
             new_obs_id = observationWindow.leObservationId.text()
 
             if mode == NEW:
                 self.observationId = new_obs_id
                 self.pj[OBSERVATIONS][self.observationId] = { FILE: [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
-
 
 
             # check if id changed
@@ -2104,36 +2105,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # media
             if self.pj[OBSERVATIONS][new_obs_id]['type'] in [MEDIA]:
-                
-                fileName['1'] = []
+
+                fileName[PLAYER1] = []
                 if observationWindow.lwVideo.count():
                     
                     for i in range(observationWindow.lwVideo.count()):
-                        observationWindow.lwVideo.item(i)
-                    
+                        '''observationWindow.lwVideo.item(i)'''
+
                         if self.saveMediaFilePath:
                             # save full path 
-                            fileName['1'].append (  observationWindow.lwVideo.item(i).text() )
+                            fileName[PLAYER1].append( observationWindow.lwVideo.item(i).text() )
                         else:
-                            fileName['1'].append ( os.path.basename( observationWindow.lwVideo.item(i).text() ) )
+                            fileName[PLAYER1].append( os.path.basename( observationWindow.lwVideo.item(i).text() ) )
 
-
-                fileName['2'] = []
+                fileName[PLAYER2] = []
 
                 if observationWindow.lwVideo_2.count():
                     
                     for i in range(observationWindow.lwVideo_2.count()):
-                        observationWindow.lwVideo_2.item(i)
+                        '''observationWindow.lwVideo_2.item(i)'''
                     
                         if self.saveMediaFilePath:
                             # save full path 
-                            fileName['2'].append (  observationWindow.lwVideo_2.item(i).text() )
+                            fileName[PLAYER2].append (  observationWindow.lwVideo_2.item(i).text() )
                         else:
-                            fileName['2'].append ( os.path.basename( observationWindow.lwVideo_2.item(i).text() ) )
-
+                            fileName[PLAYER2].append ( os.path.basename( observationWindow.lwVideo_2.item(i).text() ) )
 
                 self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
+                self.pj[OBSERVATIONS][new_obs_id]['media_durations'] = observationWindow.mediaDurations
 
             if mode == NEW:
 

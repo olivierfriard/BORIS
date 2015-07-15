@@ -31,6 +31,7 @@ from PyQt4.QtGui import *
 
 from observation_ui import Ui_Form
 import os
+import vlc
 
 class Observation(QDialog, Ui_Form):
 
@@ -39,16 +40,17 @@ class Observation(QDialog, Ui_Form):
         super(Observation, self).__init__(parent)
         self.setupUi(self)
 
-        self.pbAddVideo.clicked.connect(self.add_media)
-        self.pbRemoveVideo.clicked.connect(self.remove_media)
+        self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
+        self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
 
-        self.pbAddVideo_2.clicked.connect(self.add_media_2)
-        self.pbRemoveVideo_2.clicked.connect(self.remove_media2)
-
+        self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
+        self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-
+        self.pbCancel.clicked.connect( self.reject)
+        self.instance = vlc.Instance()
+        
+        self.mediaDurations = { PLAYER1:[], PLAYER2:[] }
 
     def pbOK_clicked(self):
 
@@ -59,12 +61,12 @@ class Observation(QDialog, Ui_Form):
             except ValueError:
                 return False
 
-        ### check time offset
+        # check time offset
         if not is_numeric(self.leTimeOffset.text()):
             QMessageBox.warning(self, programName , '<b>%s</b> is not recognized as a valid time offset format' % self.leTimeOffset.text())
             return
 
-        ### check if indep variables are correct type
+        # check if indep variables are correct type
         for row in range(0, self.twIndepVariables.rowCount()):
 
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
@@ -73,18 +75,18 @@ class Observation(QDialog, Ui_Form):
                     return
 
 
-        ### check if observation id not empty
+        # check if observation id not empty
         if not self.leObservationId.text():
             QMessageBox.warning(self, programName , 'The <b>observation id</b> is mandatory and must be unique!' )
             return
 
-        ### check if new obs and observation id already present
+        # check if new obs and observation id already present
         if self.mode == 'new':
             if self.leObservationId.text() in self.pj['observations']:
                 QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
                 return
 
-        ### check if edit obs and id changed
+        # check if edit obs and id changed
         if self.mode == 'edit' and self.leObservationId.text() != self.mem_obs_id:
             if self.leObservationId.text() in self.pj['observations']:
                 QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
@@ -98,33 +100,44 @@ class Observation(QDialog, Ui_Form):
         self.accept()
 
 
-    def pbCancel_clicked(self):
-        self.reject()
 
-
-    def add_media(self):
+    def add_media(self, nPlayer):
         fd = QFileDialog(self)
 
         os.chdir( os.path.expanduser("~")  )
 
         fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
-            self.lwVideo.addItems( [fileName] )
+
+            media = self.instance.media_new( fileName )
+            media.parse()
+
+            if not media.get_duration():
+                QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
+                return
+
+            self.mediaDurations[nPlayer].append( media.get_duration() )
+            
+            
+            if nPlayer == PLAYER1:
+                self.lwVideo.addItems( [fileName] )
+
+            if nPlayer == PLAYER2:
+                self.lwVideo_2.addItems( [fileName] )
+
+        print( self.mediaDurations )
 
 
-    def add_media_2(self):
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
-        if fileName:
-            self.lwVideo_2.addItems( [fileName] )
+    def remove_media(self, nPlayer):
 
+        if nPlayer == PLAYER1:
+            for selectedItem in self.lwVideo.selectedItems():
+                del self.mediaDurations[nPlayer][self.lwVideo.row(selectedItem)]
+                self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
 
-    def remove_media(self):
+        if nPlayer == PLAYER2:
+            for selectedItem in self.lwVideo_2.selectedItems():
+                del self.mediaDurations[nPlayer][self.lwVideo_2.row(selectedItem)]
+                self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
 
-        for SelectedItem in self.lwVideo.selectedItems():
-            self.lwVideo.takeItem(self.lwVideo.row(SelectedItem))
-
-    def remove_media2(self):
-
-        for SelectedItem in self.lwVideo_2.selectedItems():
-            self.lwVideo_2.takeItem(self.lwVideo_2.row(SelectedItem))
+        print( self.mediaDurations )
