@@ -24,9 +24,7 @@ This file is part of BORIS.
 """
 
 
-# TODO: check media player 1 and 2
 # TODO: media offset in plot event function
-# TODO: edit observation
 
 
 __version__ = '2.3' # 'DEV' for development version
@@ -766,7 +764,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.menu_options()
             # title of dock widget
             self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
-
 
 
 
@@ -1529,6 +1526,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if sys.platform == "darwin": # for MacOS
             self.mediaplayer.set_nsobject(self.videoframe.winId())
 
+        logging.debug('FPS: {}'.format(self.mediaplayer.get_fps()))
 
         # check if fps changes between media
         if FFMPEG in self.availablePlayers:
@@ -1545,6 +1543,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.mediaListPlayer.pause()
                 app.processEvents()
 
+            logging.debug('FPS2: {}'.format(self.mediaplayer.get_fps()))
             if self.mediaplayer.get_fps() == 0:   # FPS not available from VLC
 
                 flagOK = False
@@ -1779,7 +1778,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.pbOpen.setVisible(True)
             #obsList.pbEdit.setVisible(True)
 
-
         if mode == SINGLE:
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbOpen.setVisible(True)
@@ -1799,11 +1797,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         indepVarHeader = []
 
         if INDEPENDENT_VARIABLES in self.pj:
-
             for idx in sorted( list(self.pj[ INDEPENDENT_VARIABLES ].keys())  ):
                 indepVarHeader.append(  self.pj[ INDEPENDENT_VARIABLES ][ idx ]['label'] )
 
-        
         obsList.model.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
         obsList.comboBox.addItems(obsListFields + indepVarHeader)
 
@@ -1821,13 +1817,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             subjectsList = ', '.join( observedSubjects )
 
             mediaList = []
-            if self.pj[OBSERVATIONS][obs]['type'] in [MEDIA]:
-                for idx in self.pj[OBSERVATIONS][obs][FILE]:
-                    for media in self.pj[OBSERVATIONS][obs][FILE][idx]:
-                        mediaList.append('#%s: %s' % (idx , media))
+            if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
+                for player in sorted(self.pj[OBSERVATIONS][obs][FILE].keys()):
+                    for media in self.pj[OBSERVATIONS][obs][FILE][player]:
+                        mediaList.append('#{0}: {1}'.format(player, media))
 
-                media = '\n'.join( mediaList )
-            elif self.pj[OBSERVATIONS][obs]['type'] in [LIVE]:
+                media = os.linesep.join( mediaList )
+            elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                 media = LIVE
 
             # independent variable
@@ -1924,15 +1920,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow = observation.Observation()
         
         observationWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
-
         observationWindow.pj = self.pj
-        
         observationWindow.instance = vlc.Instance()
-
         observationWindow.mode = mode
-
         observationWindow.mem_obs_id = obsId
-
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
 
         # add indepvariables
@@ -2084,7 +2075,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             # observation time offset
-
             if self.timeFormat == HHMMSS:
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]  = time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = time2seconds(observationWindow.teTimeOffset_2.time().toString('hh:mm:ss.zzz'))
@@ -2112,7 +2102,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if observationWindow.lwVideo.count():
                     
                     for i in range(observationWindow.lwVideo.count()):
-                        '''observationWindow.lwVideo.item(i)'''
 
                         if self.saveMediaFilePath:
                             # save full path 
@@ -2125,7 +2114,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if observationWindow.lwVideo_2.count():
                     
                     for i in range(observationWindow.lwVideo_2.count()):
-                        '''observationWindow.lwVideo_2.item(i)'''
                     
                         if self.saveMediaFilePath:
                             # save full path 
@@ -2136,6 +2124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
                 self.pj[OBSERVATIONS][new_obs_id]['media_durations'] = observationWindow.mediaDurations
+                logging.info('media durations: {0}'.format(  observationWindow.mediaDurations ))
 
             if mode == NEW:
 
@@ -2152,6 +2141,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.initialize_new_observation_vlc()
 
                 self.menu_options()    
+
 
     def close_observation(self):
         '''
@@ -2693,7 +2683,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.sbMaxTime.setValue(maxTime)
 
         if not paramPanelWindow.exec_():
-            return
+            return [],[],YES,False,0
             
         selectedSubjects = paramPanelWindow.selectedSubjects
         selectedBehaviors = paramPanelWindow.selectedBehaviors
@@ -2701,15 +2691,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug( selectedSubjects )
         logging.debug( selectedBehaviors )
 
-        if not selectedSubjects or not selectedBehaviors:
-            return
-
         if paramPanelWindow.cbIncludeModifiers.isChecked():
             includeModifiers = YES
         else:
             includeModifiers = NO
-
-
 
         return selectedSubjects, selectedBehaviors, includeModifiers, paramPanelWindow.cbExcludeBehaviors.isChecked(), paramPanelWindow.sbMaxTime.value()
 
@@ -2722,7 +2707,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         result, selectedObservations = self.selectObservations( MULTIPLE )
 
-        logging.debug('Selected observations: {0}'.format(selectedObservations))
+        logging.debug("Selected observations: {0}".format(selectedObservations))
 
         if not selectedObservations:
             return
@@ -2732,102 +2717,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for o in selectedObservations:
             if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
 
-                for mediaFile in self.pj[OBSERVATIONS][ o ][FILE][PLAYER1]:
-
-                    if os.path.isfile(mediaFile):
-                        hf = hashfile( mediaFile , hashlib.md5())
-                        if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                        and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                            maxTime += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
+                if 'media_durations' in self.pj[OBSERVATIONS][o] and self.pj[OBSERVATIONS][o]['media_durations']:
+                    maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
+                    
+                else:
+                    # check if all files in player1 available
+                    maxTime1 = Decimal("0.0")
+                    if set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER1] ]) == set([True]):
+                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER1]:
+    
+                            if os.path.isfile(mediaFile):
+                                hf = hashfile( mediaFile , hashlib.md5())
+                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                                    maxTime1 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
+                                    
+                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
+                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+    
+                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
+                                    self.projectChanged = True
                     else: # file not found
                         flagOK = False
-                        QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found! The % of total media duration value will not be available.'.format( mediaFile))
-                        maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+                        QMessageBox.warning(self, programName, "A media file was not found in player #1! The % of total media duration value will not be available.")
+
+                    # check if all files in player1 available
+                    maxTime2 = Decimal("0.0")
+                    if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
+                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
+                            if os.path.isfile(mediaFile):
+                                hf = hashfile( mediaFile , hashlib.md5())
+                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                                    maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
+                                    
+                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
+                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+    
+                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
+                                    self.projectChanged = True
+                    else: # file not found
+                        flagOK = False
+                        QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+
+                    maxTime += max( maxTime1,maxTime2 )
+
             else: # LIVE
-                maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+                if self.pj[OBSERVATIONS][ o ][EVENTS]:
+                    maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+                else:
+                    flagOK = False
+
+        if 'media_durations' in self.pj[OBSERVATIONS][o]:
+            logging.debug('media durations: {}'.format(self.pj[OBSERVATIONS][o]['media_durations']))
 
         if not flagOK:
-            maxTime = 0
+            maxTime = Decimal("0.0")
         logging.debug('max time: {}'.format(maxTime))
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
 
         if not selectedSubjects or not selectedBehaviors:
             return
-
-        '''
-        paramPanelWindow.selectedObservations = selectedObservations
-        paramPanelWindow.pj = self.pj
-        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
-
-        # extract subjects present in observations
-        observedSubjects = self.extract_observed_subjects( selectedObservations )
-        selectedSubjects = []
-
-        # add 'No focal subject'
-        if '' in observedSubjects:
-            selectedSubjects.append(NO_FOCAL_SUBJECT)
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            paramPanelWindow.ch.setChecked(True)
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
-
-        for subject in all_subjects:
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( subject )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            if subject in observedSubjects:
-                selectedSubjects.append(subject)
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
-
-        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
-        logging.debug('allBehaviors: {0}'.format(allBehaviors))
-
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
-        
-        for behavior in allBehaviors:
-
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( behavior )
-
-            if behavior in observedBehaviors:
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        # hide max time
-        paramPanelWindow.sbMaxTime.setVisible(False)
-        paramPanelWindow.lbMaxTime.setVisible(False)
-
-        if not paramPanelWindow.exec_():
-            return
-            
-        selectedSubjects = paramPanelWindow.selectedSubjects
-        selectedBehaviors = paramPanelWindow.selectedBehaviors
-        
-        logging.debug( selectedSubjects )
-        logging.debug( selectedBehaviors )
-
-        if not selectedSubjects or not selectedBehaviors:
-            return
-
-        if paramPanelWindow.cbIncludeModifiers.isChecked():
-            includeModifiers = YES
-        else:
-            includeModifiers = NO
-        '''
-
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
@@ -2963,7 +2914,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tb.lw.addItem(obs)
 
         if maxTime:
-            self.tb.lbTotalObservedTime.setText( "Total media duration: {0} s".format(round(maxTime,3)) )
+            self.tb.lbTotalObservedTime.setText( "Total media duration: {0} s  (~ {1} min)".format(round(maxTime,3),round(maxTime/60)) )
         else:
             self.tb.lbTotalObservedTime.setText( "Total media duration: not available")
 
@@ -2989,7 +2940,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # % of total time
 
             if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and maxTime: 
-                item = QTableWidgetItem(str( round( row['duration'] / maxTime * 100,1)  ) )
+                item = QTableWidgetItem(str( round( row['duration'] / float(maxTime) * 100,1)  ) )
             else:
                 item = QTableWidgetItem( '-' )
 
@@ -3099,9 +3050,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
             plt.show()
 
-
-        '''paramPanelWindow = param_panel.Param_panel()'''
-
         result, selectedObservations = self.selectObservations( SELECT1 )
 
         logging.debug('Selected observations: {0}'.format(selectedObservations))
@@ -3113,6 +3061,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'There are no events in the selected observation')
             return
 
+        '''
         maxTime = 0
         if self.pj[OBSERVATIONS][ selectedObservations[0] ][TYPE] == MEDIA:
 
@@ -3135,6 +3084,63 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         else: # LIVE
             maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
+        '''
+        maxTime = Decimal("0.0")
+        flagOK = True
+        for o in selectedObservations:
+            if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
+
+                if 'media_durations' in self.pj[OBSERVATIONS][o] and self.pj[OBSERVATIONS][o]['media_durations']:
+                    maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
+                    
+                else:
+                    # check if all files in player1 available
+                    maxTime1 = Decimal("0.0")
+                    if set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER1] ]) == set([True]):
+                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER1]:
+    
+                            if os.path.isfile(mediaFile):
+                                hf = hashfile( mediaFile , hashlib.md5())
+                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                                    maxTime1 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
+                                    
+                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
+                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+    
+                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
+                                    self.projectChanged = True
+                    else: # file not found
+                        flagOK = False
+                        QMessageBox.warning(self, programName, "A media file was not found in player #1! The % of total media duration value will not be available.")
+
+                    # check if all files in player1 available
+                    maxTime2 = Decimal("0.0")
+                    if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
+                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
+                            if os.path.isfile(mediaFile):
+                                hf = hashfile( mediaFile , hashlib.md5())
+                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                                    maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
+                                    
+                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
+                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+    
+                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
+                                    self.projectChanged = True
+                    else: # file not found
+                        flagOK = False
+                        QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+
+                    maxTime += max( maxTime1,maxTime2 )
+
+            else: # LIVE
+                if self.pj[OBSERVATIONS][ o ][EVENTS]:
+                    maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+                else:
+                    flagOK = False
+
 
         logging.debug('max time: {0}'.format(maxTime))
 
@@ -3142,78 +3148,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not selectedSubjects or not selectedBehaviors:
             return
-
-        '''
-        paramPanelWindow.selectedObservations = selectedObservations
-        paramPanelWindow.pj = self.pj
-        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
-
-        # extract subjects present in observations
-        observedSubjects = self.extract_observed_subjects( selectedObservations )
-        selectedSubjects = []
-
-        # add 'No focal subject'
-        if '' in observedSubjects:
-            selectedSubjects.append(NO_FOCAL_SUBJECT)
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            paramPanelWindow.ch.setChecked(True)
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
-
-        for subject in all_subjects:
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( subject )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            if subject in observedSubjects:
-                selectedSubjects.append(subject)
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
-
-        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
-        logging.debug('allBehaviors: {0}'.format(allBehaviors))
-
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
-        
-        for behavior in allBehaviors:
-
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( behavior )
-
-            if behavior in observedBehaviors:
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-        
-        paramPanelWindow.sbMaxTime.setMinimum(0)
-        paramPanelWindow.sbMaxTime.setMaximum(1e6)
-        paramPanelWindow.sbMaxTime.setValue(maxTime)
-        
-        if paramPanelWindow.exec_():
-            
-            selectedSubjects = paramPanelWindow.selectedSubjects
-            selectedBehaviors = paramPanelWindow.selectedBehaviors
-            
-            logging.debug( selectedSubjects )
-            logging.debug( selectedBehaviors )
-
-            if not selectedSubjects or not selectedBehaviors:
-                return
-
-            if paramPanelWindow.cbIncludeModifiers.isChecked():
-                includeModifiers = YES
-            else:
-                includeModifiers = NO
-        '''
 
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
 
@@ -4017,28 +3951,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not selectedSubjects or not selectedBehaviors:
             return
-
-        '''
-        # ask user observations to analyze
-        result, selectedObservations = self.selectObservations( MULTIPLE )
-        if not selectedObservations:
-            return
-        
-        # filter subjects in observations
-        observedSubjects = self.extract_observed_subjects( selectedObservations )
-
-        selectedSubjects = self.select_subjects( observedSubjects )
-
-        if not selectedSubjects:
-            return
-
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-
-        selectedBehaviors = self.select_behaviors( observedBehaviors )
-
-        if not selectedBehaviors:
-            return
-        '''
 
         fd = QFileDialog(self)
 

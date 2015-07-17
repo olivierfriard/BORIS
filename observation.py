@@ -47,10 +47,6 @@ class Observation(QDialog, Ui_Form):
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect( self.reject)
-        '''
-        import vlc
-        self.instance = vlc.Instance()
-        '''
         
         self.mediaDurations = { PLAYER1:[], PLAYER2:[] }
 
@@ -102,7 +98,6 @@ class Observation(QDialog, Ui_Form):
         self.accept()
 
 
-
     def add_media(self, nPlayer):
         fd = QFileDialog(self)
 
@@ -118,16 +113,20 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
                 return
 
-            self.mediaDurations[nPlayer].append( media.get_duration() )
-            
+            self.mediaDurations[nPlayer].append( media.get_duration()/1000 )
             
             if nPlayer == PLAYER1:
+                if self.lwVideo.count() and self.lwVideo_2.count():
+                    QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+                    return False
                 self.lwVideo.addItems( [fileName] )
 
             if nPlayer == PLAYER2:
+                if self.lwVideo.count()>1:
+                    QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+                    return False
                 self.lwVideo_2.addItems( [fileName] )
 
-        print( self.mediaDurations )
 
 
     def remove_media(self, nPlayer):

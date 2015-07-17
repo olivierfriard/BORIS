@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created: Tue Jul 14 23:00:45 2015
+# Created: Fri Jul 17 17:13:11 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -55,6 +55,7 @@ class Ui_Dialog(object):
         self.lbMaxTime.setObjectName(_fromUtf8("lbMaxTime"))
         self.horizontalLayout.addWidget(self.lbMaxTime)
         self.sbMaxTime = QtGui.QSpinBox(Dialog)
+        self.sbMaxTime.setMaximum(10000000)
         self.sbMaxTime.setObjectName(_fromUtf8("sbMaxTime"))
         self.horizontalLayout.addWidget(self.sbMaxTime)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)

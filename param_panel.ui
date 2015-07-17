@@ -60,7 +60,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="sbMaxTime"/>
+        <widget class="QSpinBox" name="sbMaxTime">
+         <property name="maximum">
+          <number>10000000</number>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="horizontalSpacer_2">
