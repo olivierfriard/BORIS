@@ -31,7 +31,6 @@ from PyQt4.QtGui import *
 
 from observation_ui import Ui_Form
 import os
-import vlc
 
 class Observation(QDialog, Ui_Form):
 
@@ -48,7 +47,10 @@ class Observation(QDialog, Ui_Form):
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect( self.reject)
+        '''
+        import vlc
         self.instance = vlc.Instance()
+        '''
         
         self.mediaDurations = { PLAYER1:[], PLAYER2:[] }
 

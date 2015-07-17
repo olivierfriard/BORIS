@@ -1926,6 +1926,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
 
         observationWindow.pj = self.pj
+        
+        observationWindow.instance = vlc.Instance()
 
         observationWindow.mode = mode
 
