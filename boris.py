@@ -138,12 +138,7 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
         cmdOutput = '/dev/null'
     command2 = '"{0}" -i "{1}" -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
     
-    print('command2',command2)
-
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-
-    print( '0',p.communicate()[0] )
-    print( '1',p.communicate()[1] )
 
     error = p.communicate()[1]
     error= error.decode('utf-8')
