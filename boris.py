@@ -2716,7 +2716,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
                     
                 else:
-                    # check if all files in player1 available
+                    # check if all files in player #1 available
                     maxTime1 = Decimal("0.0")
                     if set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER1] ]) == set([True]):
                         for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER1]:
@@ -2736,26 +2736,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flagOK = False
                         QMessageBox.warning(self, programName, "A media file was not found in player #1! The % of total media duration value will not be available.")
 
-                    # check if all files in player1 available
-                    maxTime2 = Decimal("0.0")
-                    if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
-                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
-                            if os.path.isfile(mediaFile):
-                                hf = hashfile( mediaFile , hashlib.md5())
-                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                                    maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
-                                    
-                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
-                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
-    
-                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
-                                    self.projectChanged = True
-                    else: # file not found
-                        flagOK = False
-                        QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+                    # check if all files in player #2 available
 
-                    maxTime += max( maxTime1,maxTime2 )
+                    if self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
+                        maxTime2 = Decimal("0.0")
+                        if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
+                            for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
+                                if os.path.isfile(mediaFile):
+                                    hf = hashfile( mediaFile , hashlib.md5())
+                                    if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                                    and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                                        maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
+                                        
+                                        if not 'media_durations' in self.pj[OBSERVATIONS][o]:
+                                            self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+        
+                                        self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
+                                        self.projectChanged = True
+                        else: # file not found
+                            flagOK = False
+                            QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+
+                        maxTime += max( maxTime1,maxTime2 )
 
             else: # LIVE
                 if self.pj[OBSERVATIONS][ o ][EVENTS]:
@@ -3109,26 +3111,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flagOK = False
                         QMessageBox.warning(self, programName, "A media file was not found in player #1! The % of total media duration value will not be available.")
 
-                    # check if all files in player1 available
-                    maxTime2 = Decimal("0.0")
-                    if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
-                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
-                            if os.path.isfile(mediaFile):
-                                hf = hashfile( mediaFile , hashlib.md5())
-                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                                    maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
-                                    
-                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
-                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
-    
-                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
-                                    self.projectChanged = True
-                    else: # file not found
-                        flagOK = False
-                        QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+                    # check if all files in player #2 available
 
-                    maxTime += max( maxTime1,maxTime2 )
+                    if self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
+                        maxTime2 = Decimal("0.0")
+                        if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
+                            for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
+                                if os.path.isfile(mediaFile):
+                                    hf = hashfile( mediaFile , hashlib.md5())
+                                    if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
+                                    and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
+                                        maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
+                                        
+                                        if not 'media_durations' in self.pj[OBSERVATIONS][o]:
+                                            self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+        
+                                        self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
+                                        self.projectChanged = True
+                        else: # file not found
+                            flagOK = False
+                            QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+    
+                        maxTime += max( maxTime1,maxTime2 )
 
             else: # LIVE
                 if self.pj[OBSERVATIONS][ o ][EVENTS]:
