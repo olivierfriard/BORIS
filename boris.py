@@ -2366,17 +2366,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
             elif sys.platform.startswith('linux'):
 
+                logging.debug('ffmpeg embedded {}'.format(os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ))
                 if os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
                     self.allowFrameByFrame = True
                     self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
 
                 # test if FFmpeg installed on path
                 #if not os.system('ffmpeg -h'):
-
-                r, msg = test_ffmpeg_path('ffmpeg')
-                if r:
-                    self.allowFrameByFrame = True
-                    self.ffmpeg_bin = 'ffmpeg'
+                if not self.ffmpeg_bin:
+                    r, msg = test_ffmpeg_path('ffmpeg')
+                    if r:
+                        self.allowFrameByFrame = True
+                        self.ffmpeg_bin = 'ffmpeg'
 
             if self.ffmpeg_bin:
                 self.availablePlayers.append(FFMPEG)
