@@ -133,12 +133,16 @@ class Observation(QDialog, Ui_Form):
 
         if nPlayer == PLAYER1:
             for selectedItem in self.lwVideo.selectedItems():
-                del self.mediaDurations[nPlayer][self.lwVideo.row(selectedItem)]
+                print( self.lwVideo.row(selectedItem) )
+                print( self.mediaDurations[nPlayer] )
+                if self.mediaDurations[nPlayer]:
+                    del self.mediaDurations[nPlayer][self.lwVideo.row(selectedItem)]
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
 
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():
-                del self.mediaDurations[nPlayer][self.lwVideo_2.row(selectedItem)]
+                if self.mediaDurations[nPlayer]:
+                    del self.mediaDurations[nPlayer][self.lwVideo_2.row(selectedItem)]
                 self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
 
         print( self.mediaDurations )

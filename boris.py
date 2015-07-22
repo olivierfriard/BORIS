@@ -1896,10 +1896,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveTimer.stop()
 
     def new_observation_triggered(self):
-        self.new_observation(mode = NEW, obsId = '')
+        self.new_observation(mode=NEW, obsId='')
 
 
-    def new_observation(self, mode = NEW, obsId = ''):
+    def new_observation(self, mode=NEW, obsId=''):
         '''
         define a new observation or edit an existing observation
         '''
@@ -1987,8 +1987,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbEarlier.setChecked(True)
                     else:
                         observationWindow.rbLater.setChecked(True)
-
-
 
             if self.timeFormat == HHMMSS:
 
