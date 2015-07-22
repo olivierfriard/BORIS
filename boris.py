@@ -2317,39 +2317,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.alertNoFocalSubject = False
 
-            # frame-by-frame mode
-            if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
-                self.allowFrameByFrame = True
-                self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
-            elif sys.platform.startswith('linux') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
-                self.allowFrameByFrame = True
-                self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
-            else:
-                # ffmpeg not embedded
+
+            self.allowFrameByFrame = False
+            try:
+                self.allowFrameByFrame = ( settings.value('allow_frame_by_frame') == 'true' )
+            except:
                 self.allowFrameByFrame = False
+
+            if not self.ffmpeg_bin:
                 try:
-                    self.allowFrameByFrame = ( settings.value('allow_frame_by_frame') == 'true' )
-                except:
-                    self.allowFrameByFrame = False
-    
-                if not self.ffmpeg_bin:
-                    try:
-                        self.ffmpeg_bin = settings.value('ffmpeg_bin')
-                        if not self.ffmpeg_bin:
-                            self.ffmpeg_bin = ''
-                    except:
+                    self.ffmpeg_bin = settings.value('ffmpeg_bin')
+                    if not self.ffmpeg_bin:
                         self.ffmpeg_bin = ''
+                except:
+                    self.ffmpeg_bin = ''
 
             if self.allowFrameByFrame:
-                print('test')
-                
+
                 r, msg = test_ffmpeg_path(self.ffmpeg_bin)
                 if r:
                     self.availablePlayers.append(FFMPEG)
                 else:        
+                    self.allowFrameByFrame = False
                     logging.warning(msg)
-
-            print( 'self.availablePlayers',self.availablePlayers )
 
             self.ffmpeg_cache_dir = ''
             try:
@@ -2366,6 +2356,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ffmpeg_cache_dir_max_size = 0
             except:
                 self.ffmpeg_cache_dir_max_size = 0
+
+
+        # test if FFmpeg embedded to allow frame-by-frame mode
+        if not self.ffmpeg_bin:
+            if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
+                self.allowFrameByFrame = True
+                self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
+    
+            elif sys.platform.startswith('linux'):
+
+                if os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
+                    self.allowFrameByFrame = True
+                    self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
+
+                # test if FFmpeg installed on path
+                #if not os.system('ffmpeg -h'):
+
+                r, msg = test_ffmpeg_path('ffmpeg')
+                if r:
+                    self.allowFrameByFrame = True
+                    self.ffmpeg_bin = 'ffmpeg'
+
+            if self.ffmpeg_bin:
+                self.availablePlayers.append(FFMPEG)
+
+        logging.debug( 'available players: {}'.format(self.availablePlayers ))
+
 
 
     def saveConfigFile(self):
@@ -6226,47 +6243,6 @@ if __name__=="__main__":
     if __version__ == 'DEV':
         QMessageBox.warning(None, programName, 'This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs', \
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-    # check for ffmpeg
-    '''
-    allowFrameByFrame = False
-    ffmpeg_bin = ''
-
-    if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
-        allowFrameByFrame = True
-        ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
-    if sys.platform.startswith('linux') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
-        allowFrameByFrame = True
-        ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
-
-    print('ffmpeg_bin',ffmpeg_bin )
-
-    if not ffmpeg_bin and os.path.isfile( os.path.expanduser('~') + os.sep + '.boris' ):
-        settings = QSettings(os.path.expanduser('~') + os.sep + '.boris' , QSettings.IniFormat)
-        try:
-            allowFrameByFrame = ( settings.value('allow_frame_by_frame') == 'true' )
-        except:
-            allowFrameByFrame = False
-
-        if allowFrameByFrame:
-            try:
-                ffmpeg_bin = settings.value('ffmpeg_bin')
-                if not ffmpeg_bin:
-                    ffmpeg_bin = ''
-            except:
-                ffmpeg_bin = ''
-
-    logging.debug('ffmpeg bin path: {0}'.format(ffmpeg_bin))
-
-    if allowFrameByFrame:
-
-        try:
-            if subprocess.Popen('"{0}" -version'.format(ffmpeg_bin) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()[0] :
-                availablePlayers.append(FFMPEG)
-        except:
-            logging.warning('ffmpeg not found')
-    '''
-
 
     if args:
         logging.debug('args[0]: ' + os.path.abspath(args[0]))
