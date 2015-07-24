@@ -31,6 +31,9 @@ from PyQt4.QtGui import *
 
 from observation_ui import Ui_Form
 import os
+import vlc
+import time
+import sys
 
 class Observation(QDialog, Ui_Form):
 
@@ -106,8 +109,51 @@ class Observation(QDialog, Ui_Form):
         fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
 
+            #media_list = self.instance.media_list_new()
+            #media_list.add_media(media)
+
+            # play media a while
+            
+            mediaplayer = self.instance.media_player_new()
+            
+            
+            
+            if sys.platform.startswith("linux"): # for Linux using the X Server
+                print( self.videoFrame)
+                print( self.videoFrame.winId())
+                mediaplayer.set_xwindow(self.videoFrame.winId())
+
+            #mediaListPlayer = self.instance.media_list_player_new()
+            #mediaListPlayer.set_media_player(mediaplayer)
+
+            #mediaListPlayer.set_media_list(media_list)
+
+
             media = self.instance.media_new( fileName )
             media.parse()
+            mediaplayer.set_media( media )
+
+            print( 'before play item' )
+            
+            #mediaListPlayer.play_item_at_index( 0 )
+            mediaplayer.play()
+            print( 'after play item' )    
+            # play mediaListPlayer for a while to obtain media information
+            while True:
+                if mediaplayer.get_state() == vlc.State.Playing:
+                    break
+                if mediaplayer.get_state() == vlc.State.Ended:
+                    QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
+                    return
+                time.sleep(3)                
+                print( mediaplayer.get_state()  ) 
+    
+            mediaplayer.pause()
+    
+            #app.processEvents()
+            #self.mediaplayer.set_time(0)
+
+
 
             if not media.get_duration():
                 QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')

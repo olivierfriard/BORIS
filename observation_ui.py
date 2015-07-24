@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Thu Mar 26 12:35:25 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created: Fri Jul 24 17:16:29 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -172,6 +172,14 @@ class Ui_Form(object):
         self.horizontalLayout_7.addItem(spacerItem3)
         self.verticalLayout_7.addLayout(self.horizontalLayout_7)
         self.tabProjectType.addTab(self.tabVideo, _fromUtf8(""))
+        self.tab = QtGui.QWidget()
+        self.tab.setObjectName(_fromUtf8("tab"))
+        self.videoFrame = QtGui.QFrame(self.tab)
+        self.videoFrame.setGeometry(QtCore.QRect(70, 30, 381, 231))
+        self.videoFrame.setFrameShape(QtGui.QFrame.StyledPanel)
+        self.videoFrame.setFrameShadow(QtGui.QFrame.Raised)
+        self.videoFrame.setObjectName(_fromUtf8("videoFrame"))
+        self.tabProjectType.addTab(self.tab, _fromUtf8(""))
         self.tabLive = QtGui.QWidget()
         self.tabLive.setObjectName(_fromUtf8("tabLive"))
         self.tabProjectType.addTab(self.tabLive, _fromUtf8(""))
@@ -223,6 +231,7 @@ class Ui_Form(object):
         self.leTimeOffset_2.setText(_translate("Form", "0", None))
         self.teTimeOffset_2.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz", None))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabVideo), _translate("Form", "Media", None))
+        self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tab), _translate("Form", "Page", None))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabLive), _translate("Form", "Live", None))
         self.pbCancel.setText(_translate("Form", "Cancel", None))
         self.pbOK.setText(_translate("Form", "OK", None))
