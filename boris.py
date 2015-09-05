@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.32' # 'DEV' for development version
-__version_date__ = '2015-07-24'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version__ = '2.4' # 'DEV' for development version
+__version_date__ = '2015-09-05'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}

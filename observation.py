@@ -31,7 +31,7 @@ from PyQt4.QtGui import *
 
 from observation_ui import Ui_Form
 import os
-import vlc
+'''import vlc'''
 import time
 import sys
 
@@ -108,7 +108,18 @@ class Observation(QDialog, Ui_Form):
 
         fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
+            
+            
+            
+            import subprocess
+            p = subprocess.Popen( 'python3 /home/olivier/projects/boris/git.2015-09-05/script_vlc.py "%s"' % fileName, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+            out, error = p.communicate()
+            out = out.decode('utf-8').strip()
+            error = error.decode('utf-8')
+            print('out #%s#' % out)
+            print(error)
 
+            '''
             #media_list = self.instance.media_list_new()
             #media_list.add_media(media)
 
@@ -152,15 +163,23 @@ class Observation(QDialog, Ui_Form):
     
             #app.processEvents()
             #self.mediaplayer.set_time(0)
+            '''
 
 
-
+            '''
             if not media.get_duration():
                 QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
                 return
 
             self.mediaDurations[nPlayer].append( media.get_duration()/1000 )
+            '''
             
+            if out == 'media error':
+                QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
+                return
+            else:
+                self.mediaDurations[nPlayer].append( int(out)/1000 )
+
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
                     QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
