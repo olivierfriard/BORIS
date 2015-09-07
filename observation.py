@@ -35,6 +35,8 @@ import os
 import time
 import sys
 
+out = 'INIT'
+
 class Observation(QDialog, Ui_Form):
 
     def __init__(self, parent=None):
@@ -108,16 +110,44 @@ class Observation(QDialog, Ui_Form):
 
         fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
+        
             
-            
-            
+            '''
             import subprocess
-            p = subprocess.Popen( 'python3 /home/olivier/projects/boris/git.2015-09-05/script_vlc.py "%s"' % fileName, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+            p = subprocess.Popen( 'python3 script_vlc.py "%s"' % fileName, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
             out, error = p.communicate()
             out = out.decode('utf-8').strip()
             error = error.decode('utf-8')
             print('out #%s#' % out)
             print(error)
+            '''
+            
+            s = """
+import vlc
+#import time
+#import sys
+
+instance = vlc.Instance()
+mediaplayer = instance.media_player_new()
+media = instance.media_new('%s')
+mediaplayer.set_media(media)
+media.parse()
+mediaplayer.play()
+print('init')
+while mediaplayer.get_state() != vlc.State.Playing:
+    time.sleep(3)
+    print(mediaplayer.get_state())
+print('end')
+#print( media.get_duration())
+global out
+out = media.get_duration()
+mediaplayer.stop()
+""" % fileName
+
+
+            exec(s, globals(), locals())
+            print(locals())
+            print (out)
 
             '''
             #media_list = self.instance.media_list_new()
