@@ -28,7 +28,7 @@ This file is part of BORIS.
 
 
 __version__ = '2.4' # 'DEV' for development version
-__version_date__ = '2015-09-05'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version_date__ = '2015-09-07'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -745,11 +745,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # load events in table widget
             self.loadEventsInTW(self.observationId)
 
-            if self.pj[OBSERVATIONS][self.observationId][ 'type' ] == LIVE:
+            if self.pj[OBSERVATIONS][self.observationId][ TYPE ] == LIVE:
                 self.playerType = LIVE
                 self.initialize_new_live_observation()
 
-            if self.pj[OBSERVATIONS][self.observationId][ 'type' ] in [MEDIA]:
+            if self.pj[OBSERVATIONS][self.observationId][ TYPE ] in [MEDIA]:
 
                 if not self.initialize_new_observation_vlc():
                     self.observationId = ''

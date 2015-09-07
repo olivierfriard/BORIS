@@ -35,7 +35,8 @@ import os
 import time
 import sys
 
-out = 'INIT'
+out = ''
+fps = 0
 
 class Observation(QDialog, Ui_Form):
 
@@ -54,6 +55,7 @@ class Observation(QDialog, Ui_Form):
         self.pbCancel.clicked.connect( self.reject)
         
         self.mediaDurations = { PLAYER1:[], PLAYER2:[] }
+        self.fps = { PLAYER1:[], PLAYER2:[] }
 
     def pbOK_clicked(self):
 
@@ -133,82 +135,49 @@ media = instance.media_new('%s')
 mediaplayer.set_media(media)
 media.parse()
 mediaplayer.play()
-print('init')
-while mediaplayer.get_state() != vlc.State.Playing:
-    time.sleep(3)
-    print(mediaplayer.get_state())
-print('end')
-#print( media.get_duration())
 global out
-out = media.get_duration()
+global fps
+out = ''
+fps = 0
+result = None
+while True:
+    if mediaplayer.get_state() == vlc.State.Playing:
+        break
+    if mediaplayer.get_state() == vlc.State.Ended:
+        result = 'media error'
+        break
+    time.sleep(3)                
+    print( mediaplayer.get_state()  ) 
+
+if result:
+    out = result
+else:
+    out = media.get_duration()
+
+fps = mediaplayer.get_fps()
+
 mediaplayer.stop()
+
+
+
 """ % fileName
 
 
             exec(s, globals(), locals())
-            print(locals())
             print (out)
+            print('fps',fps)
 
-            '''
-            #media_list = self.instance.media_list_new()
-            #media_list.add_media(media)
-
-            # play media a while
-            
-            mediaplayer = self.instance.media_player_new()
-            
-            
-            
-            if sys.platform.startswith("linux"): # for Linux using the X Server
-                print( self.videoFrame)
-                print( self.videoFrame.winId())
-                mediaplayer.set_xwindow(self.videoFrame.winId())
-
-            #mediaListPlayer = self.instance.media_list_player_new()
-            #mediaListPlayer.set_media_player(mediaplayer)
-
-            #mediaListPlayer.set_media_list(media_list)
-
-
-            media = self.instance.media_new( fileName )
-            media.parse()
-            mediaplayer.set_media( media )
-
-            print( 'before play item' )
-            
-            #mediaListPlayer.play_item_at_index( 0 )
-            mediaplayer.play()
-            print( 'after play item' )    
-            # play mediaListPlayer for a while to obtain media information
-            while True:
-                if mediaplayer.get_state() == vlc.State.Playing:
-                    break
-                if mediaplayer.get_state() == vlc.State.Ended:
-                    QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
-                    return
-                time.sleep(3)                
-                print( mediaplayer.get_state()  ) 
-    
-            mediaplayer.pause()
-    
-            #app.processEvents()
-            #self.mediaplayer.set_time(0)
-            '''
-
-
-            '''
-            if not media.get_duration():
-                QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
-                return
-
-            self.mediaDurations[nPlayer].append( media.get_duration()/1000 )
-            '''
-            
             if out == 'media error':
                 QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
                 return
             else:
                 self.mediaDurations[nPlayer].append( int(out)/1000 )
+
+            # check FPS
+            if fps:
+                self.fps[nPlayer].append( fps ) 
+            else:
+                pass
 
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
