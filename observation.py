@@ -201,12 +201,17 @@ mediaplayer.stop()
                 print( self.mediaDurations[nPlayer] )
                 if self.mediaDurations[nPlayer]:
                     del self.mediaDurations[nPlayer][self.lwVideo.row(selectedItem)]
+                if self.fps[nPlayer]:
+                    del self.fps[nPlayer][self.lwVideo.row(selectedItem)]
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
 
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():
                 if self.mediaDurations[nPlayer]:
                     del self.mediaDurations[nPlayer][self.lwVideo_2.row(selectedItem)]
+                if self.fps[nPlayer]:
+                    del self.fps[nPlayer][self.lwVideo_2.row(selectedItem)]
                 self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
 
         print( self.mediaDurations )
+        print( self.fps )        
