@@ -30,10 +30,52 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
 from observation_ui import Ui_Form
+
 import os
 '''import vlc'''
 import time
 import sys
+import hashlib
+import subprocess
+
+from utilities import *
+import dialog
+
+
+
+def accurate_video_analysis(ffmpeg_bin, fileName):
+    '''
+    analyse frame rate and length of video with ffmpeg
+    '''
+
+    if sys.platform.startswith("win"):
+        cmdOutput = 'NUL'
+    else:
+        cmdOutput = '/dev/null'
+    command2 = '"{0}" -i "{1}" -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
+    
+    p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+
+    error = p.communicate()[1]
+    error= error.decode('utf-8')
+    rows = error.split('\r')
+    out = ''
+
+    for rowIdx in range(len(rows)-1, 0, -1):
+        if 'frame=' in rows[rowIdx]:
+            out = rows[rowIdx]
+            break
+    if out:
+        nframe = int(out.split(' fps=')[0].replace('frame=','').strip())
+        timeStr = out.split('time=')[1].split(' ')[0].strip()
+        time = time2seconds(timeStr) * 1000
+
+        return nframe, time
+    else:
+        return None, None
+
+
+
 
 out = ''
 fps = 0
@@ -54,8 +96,9 @@ class Observation(QDialog, Ui_Form):
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect( self.reject)
         
-        self.mediaDurations = { PLAYER1:[], PLAYER2:[] }
-        self.fps = { PLAYER1:[], PLAYER2:[] }
+        '''self.mediaDurations = { PLAYER1:[], PLAYER2:[] }'''
+        self.media_file_info = {}
+        self.fileName2hash = {}
 
     def pbOK_clicked(self):
 
@@ -112,23 +155,14 @@ class Observation(QDialog, Ui_Form):
 
         fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
         if fileName:
-        
-            
-            '''
-            import subprocess
-            p = subprocess.Popen( 'python3 script_vlc.py "%s"' % fileName, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-            out, error = p.communicate()
-            out = out.decode('utf-8').strip()
-            error = error.decode('utf-8')
-            print('out #%s#' % out)
-            print(error)
-            '''
-            
-            s = """
-import vlc
-#import time
-#import sys
+            fileContentMD5 = hashfile( fileName, hashlib.md5())
 
+            # check if md5 checksum already in project_media_file_info dictionary
+            if (not 'project_media_file_info' in self.pj) \
+               or ('project_media_file_info' in self.pj and not fileContentMD5 in self.pj['project_media_file_info']):
+        
+                vlc_script = """
+import vlc
 instance = vlc.Instance()
 mediaplayer = instance.media_player_new()
 media = instance.media_new('%s')
@@ -147,49 +181,62 @@ while True:
         result = 'media error'
         break
     time.sleep(3)                
-    print( mediaplayer.get_state()  ) 
 
 if result:
     out = result
 else:
     out = media.get_duration()
-
 fps = mediaplayer.get_fps()
-
 mediaplayer.stop()
-
-
-
 """ % fileName
 
-
-            exec(s, globals(), locals())
-            print (out)
-            print('fps',fps)
-
-            if out == 'media error':
-                QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
-                return
-            else:
-                self.mediaDurations[nPlayer].append( int(out)/1000 )
-
-            # check FPS
-            if fps:
-                self.fps[nPlayer].append( fps ) 
-            else:
-                pass
+                exec(vlc_script, globals(), locals())
+    
+                print ('out',out)
+                print('fps',fps)
+    
+                if out != 'media error':
+                    self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
+                else:
+                    QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
+                    return
+    
+                # check FPS
+                if fps:
+                    self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
+                else:
+                    if self.ffmpeg_bin:
+                        response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
+    
+                        if response == YES:
+                            nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, fileName )
+                            print('videoTime from ffmpeg', videoTime)
+                            print('fps from ffmpeg', (videoTime /1000) / nframe)
+                            if nframe:
+                                self.media_file_info[ fileContentMD5 ]['nframe'] = nframe
+                                self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms
+                            else:
+                                QMessageBox.critical(self, programName , 'ffmpeg is not able to analyze this file...')
+                                self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+                        else:
+                            self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+                    else:
+                        self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+                    
 
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
                     QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
                     return False
                 self.lwVideo.addItems( [fileName] )
+                self.fileName2hash[ fileName ] = fileContentMD5
 
             if nPlayer == PLAYER2:
                 if self.lwVideo.count()>1:
                     QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
                     return False
                 self.lwVideo_2.addItems( [fileName] )
+                self.fileName2hash[ fileName ] = fileContentMD5
 
 
 
@@ -198,20 +245,15 @@ mediaplayer.stop()
         if nPlayer == PLAYER1:
             for selectedItem in self.lwVideo.selectedItems():
                 print( self.lwVideo.row(selectedItem) )
-                print( self.mediaDurations[nPlayer] )
-                if self.mediaDurations[nPlayer]:
-                    del self.mediaDurations[nPlayer][self.lwVideo.row(selectedItem)]
-                if self.fps[nPlayer]:
-                    del self.fps[nPlayer][self.lwVideo.row(selectedItem)]
+                print( selectedItem.text() )
+                self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
+                del self.fileName2hash[ selectedItem.text() ]
+
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
 
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():
-                if self.mediaDurations[nPlayer]:
-                    del self.mediaDurations[nPlayer][self.lwVideo_2.row(selectedItem)]
-                if self.fps[nPlayer]:
-                    del self.fps[nPlayer][self.lwVideo_2.row(selectedItem)]
-                self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
 
-        print( self.mediaDurations )
-        print( self.fps )        
+                del self.fileName2hash[ selectedItem.text() ]
+                self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
+                self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))

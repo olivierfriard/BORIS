@@ -48,6 +48,8 @@ import qrc_boris
 from config import *
 
 video, live = 0, 1
+script_out = ''
+script_fps = -2
 
 import time
 import os
@@ -90,7 +92,7 @@ import tablib
 import obs_list2
 
 
-
+"""
 def hashfile(fileName, hasher, blocksize=65536):
     '''
     return hash of file content
@@ -101,7 +103,7 @@ def hashfile(fileName, hasher, blocksize=65536):
             hasher.update(buf)
             buf = afile.read(blocksize)
     return hasher.hexdigest()
-    
+"""
 
 def bytes_to_str(b):
     '''
@@ -1261,8 +1263,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
 
-
+    """
     def processCompleted(self, nframe, videoTime, obsId):
+        '''
+        function triggered at the end of media file analysis with FFMPEG
+        '''
         
         if not nframe:
             QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -1277,19 +1282,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not 'media_file_info' in self.pj[OBSERVATIONS][ obsId]:
             self.pj[OBSERVATIONS][ obsId]['media_file_info'] = {}
 
-        '''
-        mediaPathName = urllib.parse.urlparse( self.mediaplayer.get_media().get_mrl() ).path
-        # check / for windows
-        if sys.platform.startswith('win') and mediaPathName.startswith('/'):
-            mediaPathName = mediaPathName[1:]
-        '''
-
         mediaPathName = url2path( self.mediaplayer.get_media().get_mrl() )
 
         self.pj[OBSERVATIONS][ obsId]['media_file_info'][ hashfile( mediaPathName, hashlib.md5()) ] = {'nframe': nframe, 'video_length': videoTime}
         self.projectChanged = True
 
         return True
+    """
 
     def initialize_video_tab(self):
         # creating a basic vlc instance
@@ -1454,25 +1453,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbCurrentStates.setVisible(True)
 
 
-
-        '''
-        self.mediaListPlayer.stop()
-
-        # empty media list
-        while self.media_list.count():
-            self.media_list.remove_index(0)
-
-        self.mediaListPlayer.set_media_list(self.media_list)
-
-        logging.debug('media list count: {0}'.format(self.media_list.count()))
-
-        # empty media list
-        while self.media_list2.count():
-            self.media_list2.remove_index(0)
-        '''
-
-
-
         # init duration of media file
         del self.duration[0: len(self.duration)]
 
@@ -1486,23 +1466,98 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except AttributeError:
                 self.initialize_video_tab()
 
+
             media = self.instance.media_new( mediaFile )
             media.parse()
 
-            self.duration.append(media.get_duration())
+            # md5 sum of file content 
+            print('start md5')
+            fileContentMD5 = hashfile( mediaFile , hashlib.md5())
+            print('stop md5')
 
-            # store video length in project file using md5 sum of file content as key
-            hf = hashfile( mediaFile , hashlib.md5())
+            try:
+                self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
+            except: 
+                self.duration.append(media.get_duration())
 
+            try:
+                self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
+            except:
+                try:
+                    self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO]['nframe'] / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO]['video_length'] /1000) , 3)
+                except:
+                    try:
+                    
+                        vlc_script = """
+import vlc
+instance2 = vlc.Instance()
+mediaplayer2 = instance2.media_player_new()
+media2 = instance2.media_new('%s')
+mediaplayer2.set_media(media2)
+media2.parse()
+mediaplayer2.play()
+global script_out
+global script_fps
+#out = ''
+#fps = 0
+result = None
+while True:
+    if mediaplayer2.get_state() == vlc.State.Playing:
+        break
+    if mediaplayer2.get_state() == vlc.State.Ended:
+        result = 'media error'
+        break
+    time.sleep(3)                
+
+if result:
+    script_out = result
+else:
+    script_out = media2.get_duration()
+script_fps = mediaplayer2.get_fps()
+mediaplayer2.stop()
+""" % mediaFile
+
+                        exec(vlc_script, globals(), locals())
+    
+                        print ('out from script',script_out)
+                        print('fps from script',script_fps)
+
+                        self.fps[fileContentMD5] = script_fps
+
+                        # insert in 'project_media_file_info' dictionary
+                        if not 'project_media_file_info' in self.pj:
+                            self.pj['project_media_file_info'] = {}
+                        
+                        if not fileContentMD5 in self.pj['project_media_file_info']:
+                            self.pj['project_media_file_info'][fileContentMD5] = {}
+
+                        self.pj['project_media_file_info'][fileContentMD5]['video_length'] =int(script_out)
+                        self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(script_fps * int(script_out)/1000)
+                        self.projectChanged = True
+                            
+                            
+                    except:
+                    
+                        self.fps[fileContentMD5] = 0
+
+            print( 'self.duration',self.duration )
+            print('self.fps',self.fps)
+
+            '''
             if not MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ self.observationId ]:
                 self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO] = {}
                 self.projectChanged = True
+            '''
 
-            if not hf in self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO]:
+            '''
+            if not fileContentMD5 in self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO]:
                 self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO][ hf ] = {'video_length': media.get_duration() }
                 self.projectChanged = True
+            '''
 
             self.media_list.add_media(media)
+
+
 
         # add media list to media player list
         self.mediaListPlayer.set_media_list(self.media_list)
@@ -1520,11 +1575,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if sys.platform == "darwin": # for MacOS
             self.mediaplayer.set_nsobject(self.videoframe.winId())
 
-        logging.debug('FPS: {}'.format(self.mediaplayer.get_fps()))
+        '''logging.debug('FPS: {}'.format(self.mediaplayer.get_fps()))'''
 
         # check if fps changes between media
         if FFMPEG in self.availablePlayers:
+            pass
+            '''
+            fps = 0
+            if 'project_media_file_info' in self.pj:
+                if fileContentMD5 in self.pj['project_media_file_info']:
+                    if 'nframe' in self.pj['project_media_file_info'][fileContentMD5] and 'video_length' in self.pj['project_media_file_info'][fileContentMD5]:
+                        
+                        fps = self.pj['project_media_file_info'][fileContentMD5]['nframe'] / (self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000)
+                        
+                        
+                        print('fps',fps)
+            if not fps:
+                pass
+            '''
+                
+            #self.fps[  self.mediaplayer.get_media().get_mrl() ] = self.mediaplayer.get_fps()
 
+            '''
             for idx in range(self.media_list.count()):
 
                 logging.debug('playing media #{0}'.format( idx ))
@@ -1600,10 +1672,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(self, programName, 'The video files have different frame rates:\n%s\n\nYou can only queue video files with same frame rate.' % (', '.join([str(i) for i in list(self.fps.values())])),\
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return False
+            '''
 
 
         # show first frame of video
-
+        
         logging.debug('playing media #{0}'.format( 0 ))
 
         self.mediaListPlayer.play_item_at_index( 0 )
@@ -1616,7 +1689,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mediaListPlayer.pause()
 
         app.processEvents()
-
+        
         self.mediaplayer.set_time(0)
 
         # no subtitles
@@ -1662,7 +1735,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # self.mediaplayer.set_hwnd(self.videoframe.winId())
                 # for mac always embed player
                 if sys.platform == "darwin": # for MacOS
-                    self.mediaplayer.set_nsobject(self.videoframe.winId())
+                    self.mediaplayer2.set_nsobject(self.videoframe.winId())
 
                     '''
                     elif sys.platform == "darwin": # for MacOS
@@ -1919,6 +1992,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.mode = mode
         observationWindow.mem_obs_id = obsId
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
+        if FFMPEG in self.availablePlayers:        
+            observationWindow.ffmpeg_bin = self.ffmpeg_bin
+        else:
+            observationWindow.ffmpeg_bin = ''
 
         # add indepvariables
         if INDEPENDENT_VARIABLES in self.pj:
@@ -2115,8 +2192,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
-                self.pj[OBSERVATIONS][new_obs_id]['media_durations'] = observationWindow.mediaDurations
-                logging.info('media durations: {0}'.format(  observationWindow.mediaDurations ))
+                #self.pj[OBSERVATIONS][new_obs_id]['media_durations'] = observationWindow.mediaDurations
+                
+                #self.pj[OBSERVATIONS][new_obs_id]['media_durations']
+                logging.info('media file info: {0}'.format(  observationWindow.media_file_info ))
+
+                '''
+                for h in observationWindow.media_file_info:
+                    self.pj[OBSERVATIONS][new_obs_id]['media_file_info'] = observationWindow.media_file_info
+                '''
+                
+                # add parameters to project_media_file_info
+                if not 'project_media_file_info' in self.pj:
+                    self.pj['project_media_file_info'] = {}
+                
+                for h in observationWindow.media_file_info:
+                    self.pj['project_media_file_info'][h] = observationWindow.media_file_info[h]
+                logging.info('pj: {0}'.format(  self.pj ))
+                    
 
             if mode == NEW:
 
@@ -4122,12 +4215,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             
             # second video together   
             if self.simultaneousMedia:  
-
                 logging.warning( 'Frame-by-frame mode is not available in multi-player mode' )
                 app.beep()
                 self.actionFrame_by_frame.setChecked(False)
                 self.statusbar.showMessage('Frame-by-frame mode is not available in multi-player mode', 5000)
                 return
+            
+            if list(self.fps.values())[0] == 0:
+                logging.warning( 'The frame per second value is not available. Frame-by-frame mode will not be available' ) 
+                QMessageBox.critical(None, programName, 'The frame per second value is not available. Frame-by-frame mode will not be available', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
+            
             
             self.playMode = FFMPEG
 
@@ -4552,6 +4650,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         about window
         '''
+
+        #print(self.pj)
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
@@ -5071,7 +5171,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         as Decimal in seconds
 
         no more add time offset!
-        #add time offset for video observation if any
+        
         '''
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [LIVE]:
@@ -5105,7 +5205,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     return memLaps
 
-                else:
+                else: # playMode == VLC
 
                     # cumulative time
                     memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) \

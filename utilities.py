@@ -28,6 +28,19 @@ import sys
 
 from decimal import *
 
+
+def hashfile(fileName, hasher, blocksize=65536):
+    '''
+    return hash of file content
+    '''
+    with open(fileName,'rb') as afile:
+        buf = afile.read(blocksize)
+        while len(buf) > 0:
+            hasher.update(buf)
+            buf = afile.read(blocksize)
+    return hasher.hexdigest()
+
+
 def url2path(url):
     '''
     convert URL in local path name
