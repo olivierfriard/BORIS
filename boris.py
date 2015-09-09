@@ -1471,9 +1471,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             media.parse()
 
             # md5 sum of file content 
-            print('start md5')
             fileContentMD5 = hashfile( mediaFile , hashlib.md5())
-            print('stop md5')
 
             try:
                 self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
@@ -1991,6 +1989,7 @@ mediaplayer2.stop()
         observationWindow.instance = vlc.Instance()
         observationWindow.mode = mode
         observationWindow.mem_obs_id = obsId
+        observationWindow.availablePlayers = self.availablePlayers
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
         if FFMPEG in self.availablePlayers:        
             observationWindow.ffmpeg_bin = self.ffmpeg_bin

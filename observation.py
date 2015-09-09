@@ -121,6 +121,7 @@ class Observation(QDialog, Ui_Form):
         
         self.media_file_info = {}
         self.fileName2hash = {}
+        self.availablePlayers = []
         
         self.flagAnalysisRunning = False
 
@@ -136,11 +137,14 @@ class Observation(QDialog, Ui_Form):
 
     def pbCancel_clicked(self):
         
-        
-        response = dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ])
+        if self.flagAnalysisRunning:
+            response = dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ])
+    
+            if response == YES:
+                self.flagAnalysisRunning = False
+                self.reject()
+        else:
 
-        if response == YES:
-            self.flagAnalysisRunning = False
             self.reject()
 
 
@@ -293,7 +297,7 @@ mediaplayer.stop()
                 if fps:
                     self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
                 else:
-                    if self.ffmpeg_bin:
+                    if FFMPEG in self.availablePlayers:
                         response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
     
                         if response == YES:
