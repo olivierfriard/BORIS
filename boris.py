@@ -35,6 +35,11 @@ function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',167
 
 import sys
 import logging
+import platform
+
+if int(platform.python_version_tuple()[0]) < 3:
+    logging.critical('BORIS requires Python 3!')
+    sys.exit()
 
 try:
     from PyQt4.QtCore import *
@@ -64,7 +69,6 @@ import urllib.parse
 import urllib.request
 import urllib.error
 import urllib.parse
-import platform
 import PyQt4.QtNetwork
 import PyQt4.QtWebKit
 import tempfile
@@ -6271,19 +6275,18 @@ mediaplayer2.stop()
 
 
     def stopClicked(self):
-        
         logging.debug('Stop activated')
-        
+
         self.mediaplayer.stop()
 
-        # second video together   
-        if self.simultaneousMedia:  
+        # second video together
+        if self.simultaneousMedia:
             self.mediaplayer2.stop()
 
 
 
 if __name__=="__main__":
-    
+
     # check if argument
     from optparse import OptionParser
     usage = "usage: %prog [options]"
