@@ -232,9 +232,9 @@ class Observation(QDialog, Ui_Form):
         if self.flagAnalysisRunning:
             QMessageBox.information(self, programName,'Video analysis done ( %s - %d frames ).' % (seconds2time(videoTime/1000), nframe) , QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-        self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
-
         self.flagAnalysisRunning = False
+
+        self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
         return True
 
