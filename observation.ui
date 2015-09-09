@@ -347,27 +347,6 @@
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="tab">
-        <attribute name="title">
-         <string>Page</string>
-        </attribute>
-        <widget class="QFrame" name="videoFrame">
-         <property name="geometry">
-          <rect>
-           <x>70</x>
-           <y>30</y>
-           <width>381</width>
-           <height>231</height>
-          </rect>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-        </widget>
-       </widget>
        <widget class="QWidget" name="tabLive">
         <attribute name="title">
          <string>Live</string>
@@ -379,6 +358,18 @@
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="lbMediaAnalysis">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>BORIS</string>
+       </property>
+      </widget>
+     </item>
      <item>
       <spacer name="horizontalSpacer_3">
        <property name="orientation">

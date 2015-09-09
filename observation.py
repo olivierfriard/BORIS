@@ -74,7 +74,28 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
     else:
         return None, None
 
+class ThreadSignal(QObject):
+    sig = pyqtSignal(int, float, str, str, str)
 
+class Process(QThread):
+    '''
+    process for accurate video analysis
+    '''
+
+    def __init__(self, parent = None):
+        QThread.__init__(self, parent)
+        self.filePath = ''
+        self.ffmpeg_bin = ''
+        self.fileContentMD5 = ''
+        self.nPlayer = ''
+        self.filePath = ''
+        self.signal = ThreadSignal()
+
+    def run(self):
+
+        nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
+        print( 'nframe, videoTime, fileContentMD5, nPlayer', nframe, videoTime, self.fileContentMD5, self.nPlayer )
+        self.signal.sig.emit(nframe, videoTime, self.fileContentMD5, self.nPlayer, self.filePath)
 
 
 out = ''
@@ -87,6 +108,8 @@ class Observation(QDialog, Ui_Form):
         super(Observation, self).__init__(parent)
         self.setupUi(self)
 
+        self.lbMediaAnalysis.setText('')
+
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
 
@@ -94,11 +117,39 @@ class Observation(QDialog, Ui_Form):
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel.clicked.connect( self.reject)
+        self.pbCancel.clicked.connect( self.pbCancel_clicked )
         
-        '''self.mediaDurations = { PLAYER1:[], PLAYER2:[] }'''
         self.media_file_info = {}
         self.fileName2hash = {}
+        
+        self.flagAnalysisRunning = False
+
+
+    def widgetEnabled(self, flag):
+        self.tabProjectType.setEnabled(flag)
+        if not flag:
+            self.lbMediaAnalysis.setText('<b>A media analysis is running</b>')
+        else:
+            self.lbMediaAnalysis.setText('')
+
+
+
+    def pbCancel_clicked(self):
+        
+        
+        response = dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ])
+
+        if response == YES:
+            self.flagAnalysisRunning = False
+            self.reject()
+
+
+
+    def closeEvent(self, event):
+        if self.flagAnalysisRunning:
+            QMessageBox.warning(self, programName , 'A media analysis is running. Please wait before closing window')
+            event.ignore()
+
 
     def pbOK_clicked(self):
 
@@ -108,6 +159,10 @@ class Observation(QDialog, Ui_Form):
                 return True
             except ValueError:
                 return False
+
+        if self.flagAnalysisRunning:
+            QMessageBox.warning(self, programName , 'A media analysis is running. Please wait before closing window')
+            return
 
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
@@ -140,12 +195,45 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
                 return
 
-        # check if media list #2 popolated and media list #1 empty
+        # check if media list #2 populated and media list #1 empty
         if self.tabProjectType.currentIndex() == 0 and not self.lwVideo.count():
             QMessageBox.critical(self, programName , 'Add a media file in the first list!' )
             return
 
         self.accept()
+
+
+    def processCompleted(self, nframe, videoTime, fileContentMD5, nPlayer, fileName):
+        '''
+        function triggered at the end of media file analysis with FFMPEG
+        '''
+        
+        if not nframe:
+            QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return False
+
+        if nframe:
+            self.media_file_info[ fileContentMD5 ]['nframe'] = nframe
+            self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms
+        '''
+        else:
+            QMessageBox.critical(self, programName , 'ffmpeg is not able to analyze this file...')
+            self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+        '''
+
+        print( self.media_file_info )
+        
+        self.widgetEnabled(True)
+
+        if self.flagAnalysisRunning:
+            QMessageBox.information(self, programName,'Video analysis done ( %s - %d frames ).' % (seconds2time(videoTime/1000), nframe) , QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+        self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
+
+        self.flagAnalysisRunning = False
+
+        return True
+
 
 
     def add_media(self, nPlayer):
@@ -209,6 +297,24 @@ mediaplayer.stop()
                         response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
     
                         if response == YES:
+                            
+                            self.process = Process()
+                            self.process.signal.sig.connect(self.processCompleted)
+                            self.process.fileContentMD5 = fileContentMD5
+                            self.process.filePath = fileName #mediaPathName
+                            self.process.ffmpeg_bin = self.ffmpeg_bin
+                            self.process.nPlayer = nPlayer
+                            self.process.start()
+                        
+                            while not self.process.isRunning():
+                                time.sleep(0.01)
+                                continue
+
+                            self.flagAnalysisRunning = True
+                            
+                            self.widgetEnabled(False)
+                            
+                            '''
                             nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, fileName )
                             print('videoTime from ffmpeg', videoTime)
                             print('fps from ffmpeg', (videoTime /1000) / nframe)
@@ -218,12 +324,32 @@ mediaplayer.stop()
                             else:
                                 QMessageBox.critical(self, programName , 'ffmpeg is not able to analyze this file...')
                                 self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+                            ''' 
                         else:
                             self.media_file_info[ fileContentMD5 ]['nframe'] = 0
                     else:
                         self.media_file_info[ fileContentMD5 ]['nframe'] = 0
                     
+            self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
+            '''
+            if not self.flagAnalysisRunning:
+                if nPlayer == PLAYER1:
+                    if self.lwVideo.count() and self.lwVideo_2.count():
+                        QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+                        return False
+                    self.lwVideo.addItems( [fileName] )
+                    self.fileName2hash[ fileName ] = fileContentMD5
+    
+                if nPlayer == PLAYER2:
+                    if self.lwVideo.count()>1:
+                        QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+                        return False
+                    self.lwVideo_2.addItems( [fileName] )
+                    self.fileName2hash[ fileName ] = fileContentMD5
+            '''
 
+    def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
+        if not self.flagAnalysisRunning:
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
                     QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
@@ -237,8 +363,8 @@ mediaplayer.stop()
                     return False
                 self.lwVideo_2.addItems( [fileName] )
                 self.fileName2hash[ fileName ] = fileContentMD5
-
-
+        
+        
 
     def remove_media(self, nPlayer):
 
@@ -246,7 +372,7 @@ mediaplayer.stop()
             for selectedItem in self.lwVideo.selectedItems():
                 print( self.lwVideo.row(selectedItem) )
                 print( selectedItem.text() )
-                self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
+                del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
                 del self.fileName2hash[ selectedItem.text() ]
 
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
@@ -254,6 +380,7 @@ mediaplayer.stop()
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():
 
+                del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
                 del self.fileName2hash[ selectedItem.text() ]
-                self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
                 self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
+        print(self.media_file_info)
