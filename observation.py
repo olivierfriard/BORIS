@@ -32,7 +32,6 @@ from PyQt4.QtGui import *
 from observation_ui import Ui_Form
 
 import os
-'''import vlc'''
 import time
 import sys
 import hashlib
@@ -212,21 +211,13 @@ class Observation(QDialog, Ui_Form):
         function triggered at the end of media file analysis with FFMPEG
         '''
         
-        if not nframe:
-            QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
-
         if nframe:
             self.media_file_info[ fileContentMD5 ]['nframe'] = nframe
             self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms
-        '''
         else:
-            QMessageBox.critical(self, programName , 'ffmpeg is not able to analyze this file...')
-            self.media_file_info[ fileContentMD5 ]['nframe'] = 0
-        '''
+            QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return False
 
-        print( self.media_file_info )
-        
         self.widgetEnabled(True)
 
         if self.flagAnalysisRunning:
@@ -284,9 +275,6 @@ mediaplayer.stop()
 
                 exec(vlc_script, globals(), locals())
     
-                print ('out',out)
-                print('fps',fps)
-    
                 if out != 'media error':
                     self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
                 else:
@@ -318,56 +306,30 @@ mediaplayer.stop()
                             
                             self.widgetEnabled(False)
                             
-                            '''
-                            nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, fileName )
-                            print('videoTime from ffmpeg', videoTime)
-                            print('fps from ffmpeg', (videoTime /1000) / nframe)
-                            if nframe:
-                                self.media_file_info[ fileContentMD5 ]['nframe'] = nframe
-                                self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms
-                            else:
-                                QMessageBox.critical(self, programName , 'ffmpeg is not able to analyze this file...')
-                                self.media_file_info[ fileContentMD5 ]['nframe'] = 0
-                            ''' 
                         else:
                             self.media_file_info[ fileContentMD5 ]['nframe'] = 0
                     else:
                         self.media_file_info[ fileContentMD5 ]['nframe'] = 0
                     
             self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
-            '''
-            if not self.flagAnalysisRunning:
-                if nPlayer == PLAYER1:
-                    if self.lwVideo.count() and self.lwVideo_2.count():
-                        QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
-                        return False
-                    self.lwVideo.addItems( [fileName] )
-                    self.fileName2hash[ fileName ] = fileContentMD5
-    
-                if nPlayer == PLAYER2:
-                    if self.lwVideo.count()>1:
-                        QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
-                        return False
-                    self.lwVideo_2.addItems( [fileName] )
-                    self.fileName2hash[ fileName ] = fileContentMD5
-            '''
+
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         if not self.flagAnalysisRunning:
+
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
                     QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
                     return False
                 self.lwVideo.addItems( [fileName] )
-                self.fileName2hash[ fileName ] = fileContentMD5
 
             if nPlayer == PLAYER2:
                 if self.lwVideo.count()>1:
                     QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
                     return False
                 self.lwVideo_2.addItems( [fileName] )
-                self.fileName2hash[ fileName ] = fileContentMD5
-        
+
+            self.fileName2hash[ fileName ] = fileContentMD5
         
 
     def remove_media(self, nPlayer):
@@ -376,15 +338,21 @@ mediaplayer.stop()
             for selectedItem in self.lwVideo.selectedItems():
                 print( self.lwVideo.row(selectedItem) )
                 print( selectedItem.text() )
-                del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
-                del self.fileName2hash[ selectedItem.text() ]
+                try:
+                    del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
+                    del self.fileName2hash[ selectedItem.text() ]
+                except:
+                    pass
 
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
 
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():
 
-                del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
-                del self.fileName2hash[ selectedItem.text() ]
+                try:
+                    del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
+                    del self.fileName2hash[ selectedItem.text() ]
+                except:
+                    pass
+
                 self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
-        print(self.media_file_info)

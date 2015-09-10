@@ -28,7 +28,7 @@ This file is part of BORIS.
 
 
 __version__ = '2.4' # 'DEV' for development version
-__version_date__ = '2015-09-07'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version_date__ = '2015-09-10'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
 function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
@@ -1477,17 +1477,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # md5 sum of file content 
             fileContentMD5 = hashfile( mediaFile , hashlib.md5())
 
+            # media duration
             try:
                 self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
             except: 
                 self.duration.append(media.get_duration())
 
+            # media FPS
             try:
                 self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
             except:
+
+                # check 'media_file_info' key on selected observation
                 try:
-                    self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO]['nframe'] / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO]['video_length'] /1000) , 3)
+                    self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['nframe'] \
+                           / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['video_length'] /1000) , 3)
+
+                    # add parameter 'media_file_info' to 'project_media_file_info'
+                    if not 'project_media_file_info' in self.pj:
+                        self.pj['project_media_file_info'] = {}
+                    self.pj['project_media_file_info'][fileContentMD5] = self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]
+                    self.projectChanged = True
+
                 except:
+                    
+                    # if every thing fail try to extract parameter playing media with VLC for few seconds
                     try:
                     
                         vlc_script = """
@@ -1521,8 +1535,8 @@ mediaplayer2.stop()
 
                         exec(vlc_script, globals(), locals())
     
-                        print ('out from script',script_out)
-                        print('fps from script',script_fps)
+                        logging.debug('out from script: {}'.format( script_out ))
+                        logging.debug('fps from script: {}'.format( script_fps ))                        
 
                         self.fps[fileContentMD5] = script_fps
 
@@ -1537,25 +1551,12 @@ mediaplayer2.stop()
                         self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(script_fps * int(script_out)/1000)
                         self.projectChanged = True
                             
-                            
                     except:
                     
                         self.fps[fileContentMD5] = 0
 
-            print( 'self.duration',self.duration )
-            print('self.fps',self.fps)
-
-            '''
-            if not MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ self.observationId ]:
-                self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO] = {}
-                self.projectChanged = True
-            '''
-
-            '''
-            if not fileContentMD5 in self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO]:
-                self.pj[OBSERVATIONS][ self.observationId][MEDIA_FILE_INFO][ hf ] = {'video_length': media.get_duration() }
-                self.projectChanged = True
-            '''
+            logging.debug('self.duration: {}'.format( self.duration ))
+            logging.debug('self.fps: {}'.format( self.fps ))
 
             self.media_list.add_media(media)
 
@@ -1577,105 +1578,11 @@ mediaplayer2.stop()
         if sys.platform == "darwin": # for MacOS
             self.mediaplayer.set_nsobject(self.videoframe.winId())
 
-        '''logging.debug('FPS: {}'.format(self.mediaplayer.get_fps()))'''
-
         # check if fps changes between media
         if FFMPEG in self.availablePlayers:
-            pass
-            '''
-            fps = 0
-            if 'project_media_file_info' in self.pj:
-                if fileContentMD5 in self.pj['project_media_file_info']:
-                    if 'nframe' in self.pj['project_media_file_info'][fileContentMD5] and 'video_length' in self.pj['project_media_file_info'][fileContentMD5]:
-                        
-                        fps = self.pj['project_media_file_info'][fileContentMD5]['nframe'] / (self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000)
-                        
-                        
-                        print('fps',fps)
-            if not fps:
-                pass
-            '''
-                
-            #self.fps[  self.mediaplayer.get_media().get_mrl() ] = self.mediaplayer.get_fps()
-
-            '''
-            for idx in range(self.media_list.count()):
-
-                logging.debug('playing media #{0}'.format( idx ))
-                self.mediaListPlayer.play_item_at_index( idx )
-                app.processEvents()
-
-                while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                    time.sleep(3)
-
-                self.mediaListPlayer.pause()
-                app.processEvents()
-
-            logging.debug('FPS2: {}'.format(self.mediaplayer.get_fps()))
-            if self.mediaplayer.get_fps() == 0:   # FPS not available from VLC
-
-                flagOK = False
-
-                logging.debug('path of video to analyze: {0}'.format( self.mediaplayer.get_media().get_mrl()))                    
-
-                mediaPathName = url2path( self.mediaplayer.get_media().get_mrl() )
-
-                logging.debug('path of video to analyze: {0}'.format( mediaPathName ))
-
-                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][self.observationId]:
-
-                    hashFile = hashfile( mediaPathName , hashlib.md5())
-
-                    if hashFile in self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO]:
-
-                        if 'video_length' in self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][hashFile]:
-                            videoLength = self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][hashFile]['video_length']
-                        else:
-                            videoLength = 0
-
-                        if 'nframe' in self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][hashFile]:
-                            nframe = self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][hashFile]['nframe']
-                        else:
-                            nframe = 0
-
-                        logging.debug('media length: {0}, number of frames: {1}'.format(videoLength, nframe))
-
-                        if videoLength and nframe:
-                            self.fps[  self.mediaplayer.get_media().get_mrl() ] = round( videoLength / nframe,2 )
-                            flagOK = True
-
-                if not flagOK:
-
-                    response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
-                    if response == YES:
-
-                        self.process = Process()
-                        self.process.signal.sig.connect(self.processCompleted)
-                        self.process.obsId = self.observationId
-                        self.process.videoPath = mediaPathName
-                        self.process.ffmpeg_bin = self.ffmpeg_bin
-                        self.process.start()
-
-                        while not self.process.isRunning():
-                            time.sleep(0.01)
-                            continue
-
-                        self.close_observation()
-                        self.statusbar.showMessage('Video analysis. Please wait...',0)
-                        return False
-
-                    else:
-
-                        return False
-            else:
-                self.fps[  self.mediaplayer.get_media().get_mrl() ] = self.mediaplayer.get_fps()
-
             if len(set( self.fps.values() )) != 1:
-                QMessageBox.critical(self, programName, 'The video files have different frame rates:\n%s\n\nYou can only queue video files with same frame rate.' % (', '.join([str(i) for i in list(self.fps.values())])),\
+                QMessageBox.critical(self, programName, 'The frame-by-frame mode will not be available because the video files have different frame rates (%s).' % (', '.join([str(i) for i in list(self.fps.values())])),\
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return False
-            '''
-
 
         # show first frame of video
         
@@ -4226,7 +4133,16 @@ mediaplayer2.stop()
             
             if list(self.fps.values())[0] == 0:
                 logging.warning( 'The frame per second value is not available. Frame-by-frame mode will not be available' ) 
-                QMessageBox.critical(None, programName, 'The frame per second value is not available. Frame-by-frame mode will not be available', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, programName, 'The frame per second value is not available. Frame-by-frame mode will not be available',
+                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                self.actionFrame_by_frame.setChecked(False)
+                return
+
+            if len(set( self.fps.values() )) != 1:
+                logging.warning( 'The frame-by-frame mode will not be available because the video files have different frame rates' ) 
+                QMessageBox.warning(self, programName, 'The frame-by-frame mode will not be available because the video files have different frame rates (%s).' % (', '.join([str(i) for i in list(self.fps.values())])),\
+                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                self.actionFrame_by_frame.setChecked(False)
                 return
             
             
