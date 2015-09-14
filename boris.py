@@ -4668,19 +4668,48 @@ mediaplayer2.stop()
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             # cumulative time
-            currentTime = self.getLaps() * 1000   
+            currentTime = self.getLaps() * 1000
+            
+            # check if time is current media time
+            '''
+            try:
+                if o[ 0 ] <= self.getLaps() and self.getLaps() < self.pj[OBSERVATIONS][self.observationId][EVENTS][idx + 1][0]:
+                    item.setBackground(QColor(250,0,0))
+            except:
+                pass
+            '''
 
             # current media time
             mediaTime = self.mediaplayer.get_time()
 
+            #highlight current event in tw events
+            for row in range(0, self.twEvents.rowCount()):
+
+                try:
+                    item = self.twEvents.item(row, tw_obs_fields['time'] )
+                    if ':' in item.text():
+                        time = time2seconds(item.text())
+                    else:
+                        time = Decimal(item.text())
+    
+                    item2 = self.twEvents.item(row+1, tw_obs_fields['time'] )
+                    if ':' in item2.text():
+                        time2 = time2seconds(item2.text())
+                    else:
+                        time2 = Decimal(item2.text())
+    
+                    if time <= self.getLaps() and self.getLaps() < time2:
+                        item.setBackground(QColor(250,0,0))
+                except:
+                    pass
+
             # check if second video
             if self.simultaneousMedia:
-                
+
                 if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
 
-
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
-                        
+
                         if mediaTime < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000:
 
                             if self.mediaListPlayer2.get_state() == vlc.State.Playing:
@@ -4690,7 +4719,7 @@ mediaplayer2.stop()
                         else:
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
                                 self.mediaListPlayer2.play()
-                    
+
                     mediaTime2 = self.mediaplayer2.get_time()
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
 
@@ -4703,8 +4732,6 @@ mediaplayer2.stop()
                         else:
                             if self.mediaListPlayer2.get_state() == vlc.State.Playing:
                                 self.mediaListPlayer.play()
-                        
-                        
 
 
             currentTimeOffset = Decimal(currentTime /1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
@@ -4739,7 +4766,6 @@ mediaplayer2.stop()
                         if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
                             self.currentStates[idx].append(sbc)
 
-
                 # show current states
                 cm = {}
                 if self.currentSubject:
@@ -4747,7 +4773,6 @@ mediaplayer2.stop()
                     idx = [idx for idx in self.pj['subjects_conf'] if self.pj['subjects_conf'][idx]['name'] == self.currentSubject][0]
                 else:
                     idx = ''
-
 
                 txt = []
                 for cs in self.currentStates[idx]:
@@ -4769,7 +4794,6 @@ mediaplayer2.stop()
                 # show selected subjects
                 for idx in sorted( self.pj['subjects_conf'].keys() ):
                     self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
-
 
                 # update status bar
                 msg = ''
@@ -4853,7 +4877,6 @@ mediaplayer2.stop()
 
         stateEventsList = [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] if STATE in self.pj['behaviors_conf'][x]['type'].upper() ]
 
-       
         for row in range(0, self.twEvents.rowCount()):
             
             t = self.twEvents.item(row, tw_obs_fields['time'] ).text()
@@ -5054,12 +5077,6 @@ mediaplayer2.stop()
 
             # time
             item = QTableWidgetItem( self.convertTime(o[ 0 ] ) )
-            # check if time is current media time
-            try:
-                if o[ 0 ] <= self.getLaps() and self.getLaps() < self.pj[OBSERVATIONS][self.observationId][EVENTS][idx + 1][0]:
-                    item.setBackground(QColor(250,0,0))
-            except:
-                pass
 
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 0, item)
             # subject
