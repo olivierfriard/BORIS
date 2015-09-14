@@ -1709,6 +1709,10 @@ mediaplayer2.stop()
         '''
         load events in table widget
         '''
+        currentMediaTime = self.getLaps()
+        print( 'currentMediaTime',  currentMediaTime)
+        
+        
         self.twEvents.setRowCount(len( self.pj[OBSERVATIONS][obsId][EVENTS] ))
         row = 0
 
@@ -1722,13 +1726,13 @@ mediaplayer2.stop()
                     if field_type == 'time':
                         field = str( self.convertTime( field) )
 
-                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(  field ) )
+                    twi = QTableWidgetItem(  field )
+                    self.twEvents.setItem(row, tw_obs_fields[field_type] , twi )
 
                 else:
                     self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(''))
 
             row += 1
-
 
         self.update_events_start_stop()
 
@@ -4429,9 +4433,38 @@ mediaplayer2.stop()
             # get item from twEvents at memTime row position
             item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS] ) if t[0] == memTime][0], 0  )
 
+            '''item.setStyleSheet("background-color: red;") 
+            item.setBackground(QColor(100,100,150))
+            '''
+
             self.twEvents.scrollToItem( item )
 
             self.projectChanged = True
+            
+            '''appStyle="""
+        QTableView
+        {   
+            background-color: black;
+            gridline-color:grey;
+            color: black;
+        }
+        QTableView::item 
+        {   
+            color: white;         
+        }
+        QTableView::item:hover
+        {   
+            color: black;
+            background: #ffaa00;            
+        }
+        QTableView::item:focus
+        {   
+            color: black;
+            background: #0063cd;            
+        }"""
+            
+            self.twEvents.setStyleSheet(appStyle);
+            '''
 
 
 
@@ -5015,12 +5048,19 @@ mediaplayer2.stop()
 
         # reload all events in tw
         self.twEvents.setRowCount(0)
-        for o in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+        for idx,o in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
 
             self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
 
             # time
             item = QTableWidgetItem( self.convertTime(o[ 0 ] ) )
+            # check if time is current media time
+            try:
+                if o[ 0 ] <= self.getLaps() and self.getLaps() < self.pj[OBSERVATIONS][self.observationId][EVENTS][idx + 1][0]:
+                    item.setBackground(QColor(250,0,0))
+            except:
+                pass
+
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 0, item)
             # subject
             item = QTableWidgetItem( o[ 1 ]  )
