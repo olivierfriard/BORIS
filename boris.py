@@ -313,7 +313,29 @@ class JumpTo(QDialog):
     def pbCancel_clicked(self):
         self.reject()
 
+ROW = -1
 
+class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
+    def __init__(self, parent=None):
+        super(StyledItemDelegateTriangle, self).__init__(parent)
+
+    def paint(self, painter, option, index):
+        #print(index.row(), index.column())
+
+        super(StyledItemDelegateTriangle, self).paint(painter, option, index)
+
+        if ROW != -1 and index.row() == ROW:
+            polygonTriangle = QtGui.QPolygon(3)
+            polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
+            polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y()-5))
+            polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y()+5))
+    
+            painter.save()
+            painter.setRenderHint(painter.Antialiasing)
+            painter.setBrush(QtGui.QBrush(QtGui.QColor(QtCore.Qt.red))) 
+            painter.setPen(QtGui.QPen(QtGui.QColor(QtCore.Qt.red)))
+            painter.drawPolygon(polygonTriangle)
+            painter.restore()
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -476,7 +498,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbSpeed.setMinimumWidth(40)
         self.statusbar.addPermanentWidget(self.lbSpeed)
 
-
+        # set painter for twEvents to highlight current row
+        self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
+        
         self.twEvents.setColumnCount( len(tw_events_fields) )
         self.twEvents.setHorizontalHeaderLabels(tw_events_fields)
 
@@ -4683,6 +4707,19 @@ mediaplayer2.stop()
             mediaTime = self.mediaplayer.get_time()
 
             #highlight current event in tw events
+
+            ct = self.getLaps()
+            cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
+            
+            global ROW
+            
+            if cr_list:
+                ROW = cr_list[0] +1
+            else:
+                ROW = -1
+            print('ROW', ROW)
+            self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
+            '''
             for row in range(0, self.twEvents.rowCount()):
 
                 try:
@@ -4702,6 +4739,7 @@ mediaplayer2.stop()
                         item.setBackground(QColor(250,0,0))
                 except:
                     pass
+            '''
 
             # check if second video
             if self.simultaneousMedia:
