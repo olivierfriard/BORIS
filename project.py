@@ -179,8 +179,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, 'First select a variable to remove')
         else:
 
-            response = dialog.MessageDialog(programName, 'Remove the selected variable?', ['Yes', 'Cancel'])
-            if response == 'Yes':
+            response = dialog.MessageDialog(programName, 'Remove the selected variable?', [YES, 'Cancel'])
+            if response == YES:
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
 
@@ -326,7 +326,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if response == 'Cancel':
                         return
 
-
                 for i in sorted( project['behaviors_conf'].keys() ):
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
@@ -402,7 +401,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     ex.twExclusions.setCellWidget(r, c, checkBox)
 
         ex.twExclusions.setVerticalHeaderLabels ( headers)
-
 
         if ex.exec_():
 
@@ -689,7 +687,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             else:
 
-                # if coding map already exists do not rest the behavior type if no filename selected
+                # if coding map already exists do not reset the behavior type if no filename selected
                 if not self.twBehaviors.item(row, behavioursFields['coding map']).text():
                     QMessageBox.critical(self, programName,  'No coding map was selected.\nEvent type will be reset to "Point event"' )
                     self.twBehaviors.cellWidget(row, fields['type']).setCurrentIndex(0)
@@ -865,8 +863,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.obs = {}
 
-        # coding maps names loaded in pj
-        loadedCodingMaps = self.pj['coding_map'].keys()
+        # coding maps in ethogram
+        codingMapsList = []
 
         for r in range(0, self.twBehaviors.rowCount()):
 
@@ -899,10 +897,17 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 missing_data.append(str(r + 1))
 
-            # remove coding map present in ethogram from coding maps names loaded in pj
             if self.twBehaviors.item(r, behavioursFields['coding map']).text():
-                if self.twBehaviors.item(r, behavioursFields['coding map']).text() in loadedCodingMaps:
-                    loadedCodingMaps.remove( self.twBehaviors.item(r, behavioursFields['coding map']).text() )
+                codingMapsList.append( self.twBehaviors.item(r, behavioursFields['coding map']).text() )
+
+        # remove coding map from project if not in ethogram
+        cmToDelete = []
+        for cm in self.pj['coding_map']:
+            if not cm in codingMapsList:
+                cmToDelete.append( cm )
+
+        for cm in cmToDelete:
+            del self.pj['coding_map'][cm]
 
 
         if missing_data:
@@ -910,8 +915,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
         # delete coding maps loaded in pj and not cited in ethogram
+        '''
         for loadedCodingMap in loadedCodingMaps:
             del self.pj['coding_map'][ loadedCodingMap ]
+        '''
 
 
         # check independent variables

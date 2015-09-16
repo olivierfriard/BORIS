@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -109,11 +109,10 @@ class codingMapWindowClass(QDialog):
                 if '' in codes:
                     codes.remove('')
 
-                ### check if code already in codes list
+                # check if code already in codes list
                 if code in codes:
                     codes.remove(code)
                 else:
-                #if not code in codes:
                     codes.append( code )
 
                 self.leareaCode.setText( codeSeparator.join(sorted(codes)) )
@@ -149,15 +148,17 @@ class codingMapWindowClass(QDialog):
         for area in self.areasList['areas']:
             points = self.areasList['areas'][ area]['geometry']
 
-            newPolygon = QPolygon()
+            newPolygon = QPolygonF()
             for p in points:
                 newPolygon.append(QPoint(p[0], p[1]))
 
             clr = QColor( )
             clr.setRgba( self.areasList['areas'][ area]['color'] )
 
-            ### draw polygon
-            polygon = QGraphicsPolygonItem(newPolygon,None,None)
+            # draw polygon
+            polygon = QGraphicsPolygonItem( None, None)
+            
+            polygon.setPolygon(newPolygon)
     
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
     

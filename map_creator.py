@@ -245,6 +245,7 @@ class MapCreatorWindow(QMainWindow):
 
         self.statusBar().showMessage('')
 
+
     def slAlpha_changed(self, val):
         '''
         opacity slider value changed
@@ -255,6 +256,7 @@ class MapCreatorWindow(QMainWindow):
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush( self.areaColor )
+            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba() 
 
         if self.closedPolygon:
             self.closedPolygon.setBrush( self.areaColor )
@@ -266,7 +268,6 @@ class MapCreatorWindow(QMainWindow):
         '''
         cd = QColorDialog()
 
-
         cd.setOptions(QColorDialog.ShowAlphaChannel)
 
         col = cd.getColor()
@@ -276,6 +277,7 @@ class MapCreatorWindow(QMainWindow):
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush( self.areaColor )
+            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba() 
 
         if self.closedPolygon:
             self.closedPolygon.setBrush( self.areaColor )
@@ -414,14 +416,7 @@ class MapCreatorWindow(QMainWindow):
                     self.closedPolygon = QGraphicsPolygonItem(newPolygon, None, None)
 
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-            
-                    '''
-                    brush = QBrush()
-                    brush.setStyle(Qt.SolidPattern)
-                    brush.setColor(designColor)
-                    self.closedPolygon.setBrush( brush)
-                    '''
-                    
+
                     self.closedPolygon.setBrush( self.areaColor )
 
                     self.view.scene().addItem( self.closedPolygon )
@@ -562,7 +557,7 @@ class MapCreatorWindow(QMainWindow):
             for areaCode in self.areasList:
                 points = self.areasList[ areaCode ]['geometry']
 
-                newPolygon = QPolygon()
+                newPolygon = QPolygonF()
                 for p in points:
                     newPolygon.append(QPoint(p[0], p[1]))
 
@@ -571,7 +566,9 @@ class MapCreatorWindow(QMainWindow):
                 clr.setRgba( self.areasList[ areaCode ]['color'] )
 
                 # draw polygon
-                polygon = QGraphicsPolygonItem(newPolygon, None, None)
+                polygon = QGraphicsPolygonItem(None, None)
+                
+                polygon.setPolygon(newPolygon)
 
                 polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
 
@@ -605,12 +602,9 @@ class MapCreatorWindow(QMainWindow):
             # add areas
             mapDict['areas'] = self.areasList
 
-            #import cStringIO as StringIO
-            '''import io as StringIO'''
             import io
 
             # Save QPixmap to QByteArray via QBuffer.
-            
             byte_array = QByteArray()
             buffer = QBuffer(byte_array)
             buffer.open(QIODevice.WriteOnly)
@@ -622,7 +616,6 @@ class MapCreatorWindow(QMainWindow):
 
             # add bitmap
             mapDict[ 'bitmap' ] = binascii.b2a_base64(string_io.read()).decode('utf-8')
-
 
             with open(self.fileName, 'w') as outfile:
                 outfile.write(json.dumps( mapDict ))

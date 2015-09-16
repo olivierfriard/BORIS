@@ -31,6 +31,9 @@ VLC_MIN_VERSION = '2'
 
 #FFMPEG_BIN = 'ffmpeg'
 
+function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
+
+
 subtitlesColors = ['cyan','red','blue','yellow','fuchsia','orange', 'lime']
 
 OBSERVATIONS = 'observations'
@@ -58,6 +61,7 @@ FILE = "file"
 ### fields for event configuration
 #fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5}
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
+# fields in behaviours table from project window
 behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 
 observation_types = ['Point event', 'State event', 'Point event with coding map', 'State event with coding map']

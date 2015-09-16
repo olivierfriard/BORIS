@@ -27,11 +27,10 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.4' # 'DEV' for development version
-__version_date__ = '2015-09-10'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version__ = '2.5' # 'DEV' for development version
+__version_date__ = '2015-09-16'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
-function_keys = {16777264: 'F1',16777265: 'F2',16777266: 'F3',16777267: 'F4',16777268: 'F5', 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',16777274: 'F11', 16777275: 'F12'}
 
 import sys
 import logging
@@ -316,15 +315,18 @@ class JumpTo(QDialog):
 ROW = -1
 
 class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
+    '''
+    painter for twEvents with current time highlighting
+    '''
     def __init__(self, parent=None):
         super(StyledItemDelegateTriangle, self).__init__(parent)
 
     def paint(self, painter, option, index):
-        #print(index.row(), index.column())
 
         super(StyledItemDelegateTriangle, self).paint(painter, option, index)
 
         if ROW != -1 and index.row() == ROW:
+            #print('painter',ROW, index.row())
             polygonTriangle = QtGui.QPolygon(3)
             polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
             polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y()-5))
@@ -340,7 +342,7 @@ class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
 class MainWindow(QMainWindow, Ui_MainWindow):
 
 
-    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, OBSERVATIONS: {} , 'coding_map':{} }
+    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", SUBJECTS : {}, "behaviors_conf": {}, OBSERVATIONS: {} , 'coding_map':{} }
     project = False
 
     observationId = ''   # current observation id
@@ -1046,7 +1048,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         deselect the current subject
         '''
         self.currentSubject = ''
-        self.lbSubject.setText( NO_FOCAL_SUBJECT )
+        self.lbSubject.setText( '<b>%s</b>' % NO_FOCAL_SUBJECT )
         self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
 
 
@@ -1055,9 +1057,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         deselect the current subject
         '''
         self.currentSubject = subject
-        self.lbSubject.setText( 'Subject: %s' % (self.currentSubject))
+        self.lbSubject.setText( 'Subject: <b>%s</b>' % (self.currentSubject))
         self.lbFocalSubject.setText( ' Focal subject: <b>%s</b>' % (self.currentSubject) )
-
 
 
     def preferences(self):
@@ -1162,12 +1163,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def FFmpegTimerOut(self):
         '''
-        FFMPEG mode:
+        triggered when frame-by-frame mode:
         read next frame and update image
         '''
 
         logging.debug('FFmpegTimerOut function')
-
 
         fps = list(self.fps.values())[0]
         
@@ -1180,7 +1180,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         requiredFrame = self.FFmpegGlobalFrame + 1
 
         logging.debug('required frame: {0}'.format( requiredFrame ))
-
         logging.debug('sum self.duration {0}'.format( sum(self.duration)))
 
         # check if end of last media
@@ -1189,7 +1188,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentMedia = ''
         currentIdx = -1
-
 
         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
             if requiredFrame *frameMs < sum(self.duration[0:idx + 1 ]):
@@ -1229,31 +1227,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.imagesList.update( [ '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) ] )
 
         logging.debug('frame current media: {0}'.format( frameCurrentMedia ))
-        
-        
 
         img = '%(imageDir)s%(sep)sBORIS_%(fileName)s-%(second)d_%(frame)d.%(extension)s' % \
               {'imageDir': self.imageDirectory, 'sep': os.sep, 'fileName': md5FileName, 'second':  int(frameCurrentMedia / fps),
                'frame':( frameCurrentMedia - int(frameCurrentMedia / fps)*fps)+1,
                'extension': 'jpg'}
 
-        
-
         if not os.path.isfile(img):
             logging.warning('image not found: {0}'.format( img ))
             return
 
-
         pixmap = QtGui.QPixmap( img )
 
         self.lbFFmpeg.setPixmap( pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
-        
 
         self.FFmpegGlobalFrame = requiredFrame
        
         currentTime = self.getLaps() * 1000
 
-        self.lbTime.setText( '%s frame: %d' % ( self.convertTime( currentTime /1000), self.FFmpegGlobalFrame))
+        self.lbTime.setText( '{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>'.format(
+                             currentMediaName=self.mediaplayer.get_media().get_meta(0),
+                             currentTime=self.convertTime( currentTime /1000),
+                             totalTime=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)),
+                             currentFrame=round(self.FFmpegGlobalFrame)
+                             ))
 
         # extract State events
         StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf']
@@ -1290,33 +1287,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for idx in sorted( self.pj[SUBJECTS].keys() ):
 
             self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
-
-    """
-    def processCompleted(self, nframe, videoTime, obsId):
-        '''
-        function triggered at the end of media file analysis with FFMPEG
-        '''
         
-        if not nframe:
-            QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
+        # show tracking cursor
+        self.get_events_current_row()
 
-        self.statusbar.showMessage('', 0)            
-        QMessageBox.information(self, programName,'Video analysis done ( %s - %d frames )\nOpen the observation again.' % (seconds2time(videoTime/1000), nframe) , QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-        
-        self.fps[ self.mediaplayer.get_media().get_mrl() ] = round( videoTime / nframe,2  )
-
-        if not 'media_file_info' in self.pj[OBSERVATIONS][ obsId]:
-            self.pj[OBSERVATIONS][ obsId]['media_file_info'] = {}
-
-        mediaPathName = url2path( self.mediaplayer.get_media().get_mrl() )
-
-        self.pj[OBSERVATIONS][ obsId]['media_file_info'][ hashfile( mediaPathName, hashlib.md5()) ] = {'nframe': nframe, 'video_length': videoTime}
-        self.projectChanged = True
-
-        return True
-    """
 
     def initialize_video_tab(self):
         # creating a basic vlc instance
@@ -1709,6 +1683,7 @@ mediaplayer2.stop()
 
         self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
         self.timer.start(200)
+        self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
 
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
@@ -4291,7 +4266,7 @@ mediaplayer2.stop()
 
         else:
         '''
-        if self.playType == VLC and self.playMode == VLC:
+        if self.playerType == VLC and self.playMode == VLC:
 
             self.play_rate = 1
 
@@ -4678,6 +4653,28 @@ mediaplayer2.stop()
                     else:
                         self.mediaplayer2.set_time( self.mediaplayer2.get_length() )
 
+    def get_events_current_row(self):
+        '''
+        get events current row corresponding to video/frame-by-frame position
+        '''
+        global ROW
+        ct = self.getLaps()
+        if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
+            ROW = len( self.pj[OBSERVATIONS][self.observationId][EVENTS] )
+        else:    
+            cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
+       
+            if cr_list:
+                ROW = cr_list[0] +1
+            else:
+                ROW = -1
+
+        logging.debug('ROW: {0}'.format( ROW ))
+
+        self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
+        self.twEvents.scrollToItem( self.twEvents.item(ROW, 0) )
+
+
 
     def timer_out(self):
         '''
@@ -4693,53 +4690,13 @@ mediaplayer2.stop()
 
             # cumulative time
             currentTime = self.getLaps() * 1000
-            
-            # check if time is current media time
-            '''
-            try:
-                if o[ 0 ] <= self.getLaps() and self.getLaps() < self.pj[OBSERVATIONS][self.observationId][EVENTS][idx + 1][0]:
-                    item.setBackground(QColor(250,0,0))
-            except:
-                pass
-            '''
 
             # current media time
             mediaTime = self.mediaplayer.get_time()
 
             #highlight current event in tw events
 
-            ct = self.getLaps()
-            cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
-            
-            global ROW
-            
-            if cr_list:
-                ROW = cr_list[0] +1
-            else:
-                ROW = -1
-            print('ROW', ROW)
-            self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
-            '''
-            for row in range(0, self.twEvents.rowCount()):
-
-                try:
-                    item = self.twEvents.item(row, tw_obs_fields['time'] )
-                    if ':' in item.text():
-                        time = time2seconds(item.text())
-                    else:
-                        time = Decimal(item.text())
-    
-                    item2 = self.twEvents.item(row+1, tw_obs_fields['time'] )
-                    if ':' in item2.text():
-                        time2 = time2seconds(item2.text())
-                    else:
-                        time2 = Decimal(item2.text())
-    
-                    if time <= self.getLaps() and self.getLaps() < time2:
-                        item.setBackground(QColor(250,0,0))
-                except:
-                    pass
-            '''
+            self.get_events_current_row()
 
             # check if second video
             if self.simultaneousMedia:
@@ -5181,7 +5138,7 @@ mediaplayer2.stop()
     def getLaps(self):
         '''
         return cumulative laps time from begining of observation
-
+        
         as Decimal in seconds
 
         no more add time offset!
