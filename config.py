@@ -43,6 +43,7 @@ TIME_OFFSET_SECOND_PLAYER='time offset second player'
 
 CODING_MAP = 'coding_map'
 SUBJECTS = 'subjects_conf'
+ETHOGRAM = 'behaviors_conf'
 
 subjects_config = ['key', 'id']
 

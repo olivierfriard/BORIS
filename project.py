@@ -825,7 +825,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, self.lbSubjectsState.text())
             return
 
-
         # store subjects
         self.subjects_conf = {}
 
@@ -854,9 +853,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 subjectDescription = ''
 
-
-            self.subjects_conf[ len(self.subjects_conf) ] = { 'key': key, 'name': subjectName, 'description': subjectDescription }
-
+            self.subjects_conf[ str(len(self.subjects_conf)) ] = { 'key': key, 'name': subjectName, 'description': subjectDescription }
 
         # store behaviors
         missing_data = []
@@ -891,7 +888,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if (row['type']) and (row['key']) and (row['code']):
 
-                self.obs[ len(self.obs) ] = row
+                self.obs[ str(len(self.obs)) ] = row
 
             else:
 
@@ -908,7 +905,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for cm in cmToDelete:
             del self.pj['coding_map'][cm]
-
 
         if missing_data:
             QMessageBox.warning(self, programName, 'Missing data in behaviors configuration at row %s !' % (','.join(missing_data)))
@@ -936,15 +932,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     if combobox.currentIndex() == 1:
                         row[field] = TEXT
-
                 else:
-                
                     if self.twVariables.item(r, idx):
                         row[field] = self.twVariables.item(r, idx).text()
                     else:
                         row[field] = ''
 
-            self.indVar[ len(self.indVar) ] = row
+            self.indVar[ str(len(self.indVar)) ] = row
 
         self.accept()
 

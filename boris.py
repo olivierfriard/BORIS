@@ -1284,10 +1284,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ]))) 
 
         # show selected subjects
-        for idx in sorted( self.pj[SUBJECTS].keys() ):
-
+        for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
             self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
-        
+
         # show tracking cursor
         self.get_events_current_row()
 
@@ -1776,7 +1775,8 @@ mediaplayer2.stop()
         indepVarHeader = []
 
         if INDEPENDENT_VARIABLES in self.pj:
-            for idx in sorted( list(self.pj[ INDEPENDENT_VARIABLES ].keys())  ):
+            for idx in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
+
                 indepVarHeader.append(  self.pj[ INDEPENDENT_VARIABLES ][ idx ]['label'] )
 
         obsList.model.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
@@ -1912,8 +1912,9 @@ mediaplayer2.stop()
 
         # add indepvariables
         if INDEPENDENT_VARIABLES in self.pj:
+            
             observationWindow.twIndepVariables.setRowCount(0)
-            for i in sorted( self.pj[INDEPENDENT_VARIABLES].keys() ):
+            for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
 
                 observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
@@ -3521,7 +3522,8 @@ mediaplayer2.stop()
             # load subjects in editor
             if self.pj[SUBJECTS]:
 
-                for idx in sorted ( self.pj[SUBJECTS].keys() ):
+
+                for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
 
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
 
@@ -3566,12 +3568,13 @@ mediaplayer2.stop()
 
 
             # configuration of behaviours
-            if self.pj['behaviors_conf']:
+            if self.pj[ETHOGRAM]:
 
                 newProjectWindow.signalMapper = QSignalMapper(self)
                 newProjectWindow.comboBoxes = []
 
-                for i in sorted( self.pj['behaviors_conf'].keys() ):
+                for i in [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys() ])]:
+
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
                     for field in fields:
@@ -3583,7 +3586,7 @@ mediaplayer2.stop()
                             # add combobox with event type
                             newProjectWindow.comboBoxes.append(QComboBox())
                             newProjectWindow.comboBoxes[-1].addItems(observation_types)
-                            newProjectWindow.comboBoxes[-1].setCurrentIndex( observation_types.index(self.pj['behaviors_conf'][i][field]) )
+                            newProjectWindow.comboBoxes[-1].setCurrentIndex( observation_types.index(self.pj[ETHOGRAM][i][field]) )
 
                             newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
                             newProjectWindow.comboBoxes[-1].currentIndexChanged['int'].connect(newProjectWindow.signalMapper.map)
@@ -3591,8 +3594,8 @@ mediaplayer2.stop()
                             newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, fields[field], newProjectWindow.comboBoxes[-1])
 
                         else:
-                            if field in self.pj['behaviors_conf'][i]:
-                                item.setText( self.pj['behaviors_conf'][i][field] )
+                            if field in self.pj[ETHOGRAM][i]:
+                                item.setText( self.pj[ETHOGRAM][i][field] )
                             else:
                                 item.setText( '' )
 
@@ -3609,7 +3612,7 @@ mediaplayer2.stop()
 
             # load independent variables 
             if INDEPENDENT_VARIABLES in self.pj:
-                for i in sorted( self.pj[ INDEPENDENT_VARIABLES ].keys() ):
+                for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
                     for idx, field in enumerate( tw_indVarFields ):
@@ -3642,8 +3645,8 @@ mediaplayer2.stop()
             'project_date': '', \
             'project_name': '', \
             'project_description': '', \
-            'subjects_conf' : {},\
-            'behaviors_conf': {}, \
+            SUBJECTS : {},\
+            ETHOGRAM: {}, \
             OBSERVATIONS: {},
             'coding_map': {} }
         
@@ -3680,14 +3683,13 @@ mediaplayer2.stop()
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
 
-
                 self.twConfiguration.setRowCount(0)
 
-                self.pj['behaviors_conf'] =  newProjectWindow.obs
+                self.pj[ETHOGRAM] =  newProjectWindow.obs
 
                 self.load_obs_in_lwConfiguration()
                 
-                self.pj['subjects_conf'] =  newProjectWindow.subjects_conf
+                self.pj[SUBJECTS] =  newProjectWindow.subjects_conf
 
                 self.load_subjects_in_twSubjects()
                 
@@ -3827,8 +3829,8 @@ mediaplayer2.stop()
             self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ]))) 
 
         # show selected subjects
-        for idx in sorted( self.pj['subjects_conf'].keys() ):
-
+        
+        for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
             self.twSubjects.item(int(idx), len(subjectsFields) ).setText( ','.join(self.currentStates[idx]) )
 
 
@@ -4583,14 +4585,55 @@ mediaplayer2.stop()
 
     def twConfiguration_doubleClicked(self):
         '''
-        add observation by double click
+        add observation by double click in ethogram 
         '''
         if self.observationId:
             if self.twConfiguration.selectedIndexes():
     
-                obs_idx = self.twConfiguration.selectedIndexes()[0].row()
-                code = self.twConfiguration.item(obs_idx, 1).text()
-                self.writeEvent(  self.pj['behaviors_conf'] [ [ x for x in self.pj['behaviors_conf'] if self.pj['behaviors_conf'][x]['code'] == code][0] ], self.getLaps())
+                ethogramRow = self.twConfiguration.selectedIndexes()[0].row()
+                logging.debug('ethogrm row: {0}'.format(ethogramRow  ))
+                logging.debug(self.pj[ETHOGRAM][str(ethogramRow)])
+                
+                
+                code = self.twConfiguration.item(ethogramRow, 1).text()
+
+                if 'coding map' in self.pj[ETHOGRAM][str(ethogramRow)] and self.pj[ETHOGRAM][str(ethogramRow)]['coding map']:
+
+                    # pause if media and media playing
+                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                        if self.playerType == VLC:
+                            memState = self.mediaListPlayer.get_state()
+                            if memState == vlc.State.Playing:
+                                self.pause_video()
+        
+                    self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj[ETHOGRAM][str(ethogramRow)]['coding map'] ] ) 
+
+                    self.codingMapWindow.resize(640, 640)
+                    if self.codingMapWindowGeometry:
+                         self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
+
+                    if not self.codingMapWindow.exec_():
+                        return
+
+                    self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
+        
+                    event = dict( self.pj[ETHOGRAM][str(ethogramRow)] )
+                    event['from map'] = self.codingMapWindow.getCodes()
+
+                    #self.writeEvent(event, self.getLaps())
+        
+                    # restart media
+                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        
+                        if self.playerType == VLC:
+                            if memState == vlc.State.Playing:
+                                self.play_video()
+                else:
+                    event = self.pj[ETHOGRAM] [ str(ethogramRow) ]
+                    #event = self.pj[ETHOGRAM] [ [ x for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]['code'] == code][0] ]
+
+                logging.debug('event: {0}'.format( event ))
+                self.writeEvent( event , self.getLaps())
 
         else: 
             self.no_observation()
@@ -4602,7 +4645,7 @@ mediaplayer2.stop()
         about window
         '''
 
-        #print(self.pj)
+        #print(self.pj[ETHOGRAM])
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
@@ -4656,23 +4699,26 @@ mediaplayer2.stop()
     def get_events_current_row(self):
         '''
         get events current row corresponding to video/frame-by-frame position
+        paint twEvents with tracking cursor
+        scroll to corresponding event
         '''
         global ROW
-        ct = self.getLaps()
-        if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
-            ROW = len( self.pj[OBSERVATIONS][self.observationId][EVENTS] )
-        else:    
-            cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
-       
-            if cr_list:
-                ROW = cr_list[0] +1
-            else:
-                ROW = -1
-
-        logging.debug('ROW: {0}'.format( ROW ))
-
-        self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
-        self.twEvents.scrollToItem( self.twEvents.item(ROW, 0) )
+        if self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+            ct = self.getLaps()
+            if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
+                ROW = len( self.pj[OBSERVATIONS][self.observationId][EVENTS] )
+            else:    
+                cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
+           
+                if cr_list:
+                    ROW = cr_list[0] +1
+                else:
+                    ROW = -1
+    
+            #logging.debug('ROW: {0}'.format( ROW ))
+    
+            self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
+            self.twEvents.scrollToItem( self.twEvents.item(ROW, 0) )
 
 
 
@@ -4787,7 +4833,8 @@ mediaplayer2.stop()
                 self.lbCurrentStates.setText( re.sub(' \(.\)', '', txt) )
 
                 # show selected subjects
-                for idx in sorted( self.pj['subjects_conf'].keys() ):
+                for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
+
                     self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
 
                 # update status bar
@@ -4830,19 +4877,19 @@ mediaplayer2.stop()
 
     def load_obs_in_lwConfiguration(self):
         '''
-        fill behaviors configuration table widget with behaviors from pj
+        fill ethogram table with ethogram from pj
         '''
 
         self.twConfiguration.setRowCount(0)
 
-        if self.pj['behaviors_conf']:
+        if self.pj[ETHOGRAM]:
 
-            for idx in sorted(self.pj['behaviors_conf'].keys()):
+            for idx in [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys() ])]:
 
                 self.twConfiguration.setRowCount(self.twConfiguration.rowCount() + 1)
                 
                 for col, field in enumerate(['key','code','type','description','modifiers','excluded']):
-                    self.twConfiguration.setItem(self.twConfiguration.rowCount() - 1, col , QTableWidgetItem( self.pj['behaviors_conf'][idx][field] ))
+                    self.twConfiguration.setItem(self.twConfiguration.rowCount() - 1, col , QTableWidgetItem( self.pj[ETHOGRAM][idx][field] ))
                 
 
     def load_subjects_in_twSubjects(self):
@@ -4852,7 +4899,8 @@ mediaplayer2.stop()
 
         self.twSubjects.setRowCount(0)
         
-        for idx in sorted( self.pj[SUBJECTS].keys() ):
+        
+        for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
 
             self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
                 
@@ -4909,7 +4957,7 @@ mediaplayer2.stop()
         '''
 
         
-        stateEventsList = [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] if STATE in self.pj['behaviors_conf'][x]['type'].upper() ]
+        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x]['type'].upper() ]
 
         eventsFlagged = []
         for event in events:
@@ -4947,9 +4995,11 @@ mediaplayer2.stop()
 
         offset is added to event time
         '''
+        
+        logging.debug('write event - event: {0}'.format( event ))
 
         # add time offset
-        memTime += + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal('.001'))
+        memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal('.001'))
 
 
         # check if a same event is already in events list (time, subject, code)
@@ -5112,12 +5162,12 @@ mediaplayer2.stop()
 
         # check if key duplicated
         items = []
-        for idx in self.pj['behaviors_conf']:
-            if self.pj['behaviors_conf'][idx]['key'] == obs_key:
+        for idx in self.pj[ETHOGRAM]:
+            if self.pj[ETHOGRAM][idx]['key'] == obs_key:
 
-                txt = self.pj['behaviors_conf'][idx]['code']
-                if  self.pj['behaviors_conf'][idx]['description']:
-                    txt += ' - ' + self.pj['behaviors_conf'][idx]['description']
+                txt = self.pj[ETHOGRAM][idx]['code']
+                if  self.pj[ETHOGRAM][idx]['description']:
+                    txt += ' - ' + self.pj[ETHOGRAM][idx]['description']
                 items.append(txt)
 
                 self.detailedObs[txt] = idx
@@ -5281,7 +5331,7 @@ mediaplayer2.stop()
                 self.previous_media_file()
 
 
-        if not self.pj['behaviors_conf']:
+        if not self.pj[ETHOGRAM]:
             QMessageBox.warning(self, programName, 'Behaviours are not configured')
             return
 
@@ -5290,7 +5340,7 @@ mediaplayer2.stop()
         # check if key is function key
         if (ek in function_keys):
             flag_function = True
-            if function_keys[ ek ] in [self.pj['behaviors_conf'][x]['key'] for x in self.pj['behaviors_conf']]:
+            if function_keys[ ek ] in [self.pj[ETHOGRAM][x]['key'] for x in self.pj[ETHOGRAM]]:
                 obs_key = function_keys[ek]
         else:
             flag_function = False
@@ -5310,9 +5360,9 @@ mediaplayer2.stop()
             else:
                 ek_unichr = chr(ek)
 
-            for o in self.pj['behaviors_conf']:
+            for o in self.pj[ETHOGRAM]:
 
-                if self.pj['behaviors_conf'][o]['key'] == ek_unichr:
+                if self.pj[ETHOGRAM][o]['key'] == ek_unichr:
                     obs_idx = o
                     count += 1
 
@@ -5356,7 +5406,7 @@ mediaplayer2.stop()
                         return
 
                 # check if coding map
-                if 'coding map' in self.pj['behaviors_conf'][obs_idx] and self.pj['behaviors_conf'][obs_idx]['coding map']:
+                if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
 
                     # pause if media and media playing
                     if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
@@ -5365,7 +5415,7 @@ mediaplayer2.stop()
                             if memState == vlc.State.Playing:
                                 self.pause_video()
         
-                    self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj['behaviors_conf'][obs_idx]['coding map'] ] ) 
+                    self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj[ETHOGRAM][obs_idx]['coding map'] ] ) 
 
                     self.codingMapWindow.resize(640, 640)
                     if self.codingMapWindowGeometry:

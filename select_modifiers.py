@@ -45,7 +45,7 @@ class ModifiersRadioButton(QDialog):
     
         if mode == 'normal':
             label = QLabel()
-            label.setText('Choose the modifier' + 's'*(len(modifiers_list)-1) + ' for <b>' + code + '</b> event')
+            label.setText('Choose the modifier{0} for <b>{1}</b> event'.format( 's'*(len(modifiers_list)>1), code))
             Vlayout.addWidget(label)
 
         count = 1
