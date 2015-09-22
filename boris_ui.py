@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Sun Jun 14 19:30:24 2015
+# Created: Tue Sep 22 10:13:05 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 362, 404))
+        self.page.setGeometry(QtCore.QRect(0, 0, 352, 412))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -311,6 +311,9 @@ class Ui_MainWindow(object):
         self.menuCreate_subtitles_2.setObjectName(_fromUtf8("menuCreate_subtitles_2"))
         self.actionExportEventTabular_XLS = QtGui.QAction(MainWindow)
         self.actionExportEventTabular_XLS.setObjectName(_fromUtf8("actionExportEventTabular_XLS"))
+        self.actionUser_guide = QtGui.QAction(MainWindow)
+        self.actionUser_guide.setObjectName(_fromUtf8("actionUser_guide"))
+        self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.actionAbout)
@@ -490,4 +493,5 @@ class Ui_MainWindow(object):
         self.actionAaaa.setText(_translate("MainWindow", "aaaa", None))
         self.menuCreate_subtitles_2.setText(_translate("MainWindow", "Create subtitles", None))
         self.actionExportEventTabular_XLS.setText(_translate("MainWindow", "Microsoft Excel format (xls)", None))
+        self.actionUser_guide.setText(_translate("MainWindow", "User guide", None))
 

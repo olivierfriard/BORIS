@@ -95,19 +95,6 @@ import tablib
 import obs_list2
 
 
-"""
-def hashfile(fileName, hasher, blocksize=65536):
-    '''
-    return hash of file content
-    '''
-    with open(fileName,'rb') as afile:
-        buf = afile.read(blocksize)
-        while len(buf) > 0:
-            hasher.update(buf)
-            buf = afile.read(blocksize)
-    return hasher.hexdigest()
-"""
-
 def bytes_to_str(b):
     '''
     Translate bytes to string.
@@ -598,9 +585,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_event.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
-        #self.menuCreate_subtitles_2.setEnabled(flagObs)
+        self.menuCreate_subtitles_2.setEnabled(flagObs)
 
-        
         self.actionJumpForward.setEnabled( self.playerType == VLC)
         self.actionJumpBackward.setEnabled( self.playerType == VLC)
         self.actionJumpTo.setEnabled( self.playerType == VLC)
@@ -619,7 +605,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbSubject.setVisible( self.playerType == VLC )       
         self.lbTimeOffset.setVisible( self.playerType == VLC ) 
         self.lbSpeed.setVisible( self.playerType == VLC ) 
-
 
         self.actionTime_budget.setEnabled( self.pj[OBSERVATIONS] != {} )
         self.actionVisualize_data.setEnabled( self.pj[OBSERVATIONS] != {} )
@@ -680,7 +665,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget.triggered.connect(self.time_budget)
         self.actionVisualize_data.triggered.connect(self.plot_events)
 
-
+        # menu Help
+        self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
         self.actionAbout.triggered.connect(self.actionAbout_activated)
         self.actionCheckUpdate.triggered.connect(self.actionCheckUpdate_activated)
         
@@ -708,9 +694,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twConfiguration.itemDoubleClicked.connect(self.twConfiguration_doubleClicked)
         self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
 
-        # toolbox
-        '''self.toolBox.currentChanged.connect( self.switch_playing_mode )'''
-
         # Actions for twEvents context menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
@@ -730,7 +713,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # timer for playing
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timer_out)
-        
 
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
@@ -4638,14 +4620,12 @@ mediaplayer2.stop()
         else: 
             self.no_observation()
 
-
+    def actionUser_guide_triggered(self):
+        ''' open user guide URL'''
+        QDesktopServices.openUrl(QUrl('https://github.com/olivierfriard/BORIS/wiki/BORIS-user-guide'))
 
     def actionAbout_activated(self):
-        '''
-        about window
-        '''
-
-        #print(self.pj[ETHOGRAM])
+        ''' about window '''
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'

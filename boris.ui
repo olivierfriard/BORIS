@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>362</width>
-             <height>404</height>
+             <width>352</width>
+             <height>412</height>
             </rect>
            </property>
            <attribute name="label">
@@ -104,6 +104,7 @@
     <property name="title">
      <string>Help</string>
     </property>
+    <addaction name="actionUser_guide"/>
     <addaction name="actionCheckUpdate"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
@@ -758,6 +759,11 @@
   <action name="actionExportEventTabular_XLS">
    <property name="text">
     <string>Microsoft Excel format (xls)</string>
+   </property>
+  </action>
+  <action name="actionUser_guide">
+   <property name="text">
+    <string>User guide</string>
    </property>
   </action>
  </widget>
