@@ -1544,7 +1544,6 @@ mediaplayer2.stop()
             self.media_list.add_media(media)
 
 
-
         # add media list to media player list
         self.mediaListPlayer.set_media_list(self.media_list)
 
