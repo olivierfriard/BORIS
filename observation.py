@@ -40,8 +40,6 @@ import subprocess
 from utilities import *
 import dialog
 
-
-
 def accurate_video_analysis(ffmpeg_bin, fileName):
     '''
     analyse frame rate and length of video with ffmpeg
@@ -123,6 +121,9 @@ class Observation(QDialog, Ui_Form):
         self.availablePlayers = []
         
         self.flagAnalysisRunning = False
+        
+        self.mediaDurations = {}
+        self.mediaFPS = {}
 
 
     def widgetEnabled(self, flag):
@@ -131,7 +132,6 @@ class Observation(QDialog, Ui_Form):
             self.lbMediaAnalysis.setText('<b>A media analysis is running</b>')
         else:
             self.lbMediaAnalysis.setText('')
-
 
 
     def pbCancel_clicked(self):
@@ -145,7 +145,6 @@ class Observation(QDialog, Ui_Form):
         else:
 
             self.reject()
-
 
 
     def closeEvent(self, event):
@@ -214,6 +213,8 @@ class Observation(QDialog, Ui_Form):
         if nframe:
             self.media_file_info[ fileContentMD5 ]['nframe'] = nframe
             self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms
+            self.mediaDurations[ fileName ] = int(videoTime)/1000
+            self.mediaFPS[ fileName ] = nframe / (int(videoTime)/1000)
         else:
             QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return False
@@ -243,7 +244,7 @@ class Observation(QDialog, Ui_Form):
             # check if md5 checksum already in project_media_file_info dictionary
             if (not 'project_media_file_info' in self.pj) \
                or ('project_media_file_info' in self.pj and not fileContentMD5 in self.pj['project_media_file_info']):
-        
+
                 vlc_script = """
 import vlc
 instance = vlc.Instance()
@@ -277,6 +278,7 @@ mediaplayer.stop()
     
                 if out != 'media error':
                     self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
+                    self.mediaDurations[ fileName ] = int(out)/1000
                 else:
                     QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
                     return
@@ -284,12 +286,12 @@ mediaplayer.stop()
                 # check FPS
                 if fps:
                     self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
+                    self.mediaFPS[ fileName ] = fps
                 else:
                     if FFMPEG in self.availablePlayers:
                         response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
     
                         if response == YES:
-                            
                             self.process = Process()
                             self.process.signal.sig.connect(self.processCompleted)
                             self.process.fileContentMD5 = fileContentMD5
@@ -297,20 +299,27 @@ mediaplayer.stop()
                             self.process.ffmpeg_bin = self.ffmpeg_bin
                             self.process.nPlayer = nPlayer
                             self.process.start()
-                        
+
                             while not self.process.isRunning():
                                 time.sleep(0.01)
                                 continue
 
                             self.flagAnalysisRunning = True
-                            
                             self.widgetEnabled(False)
-                            
+
                         else:
                             self.media_file_info[ fileContentMD5 ]['nframe'] = 0
                     else:
                         self.media_file_info[ fileContentMD5 ]['nframe'] = 0
-                    
+
+            else:
+                if 'project_media_file_info' in self.pj and fileContentMD5 in self.pj['project_media_file_info']:
+                    try:
+                        self.mediaDurations[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000
+                        self.mediaFPS[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["nframe"] / (self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000)
+                    except:
+                        pass
+
             self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
 
@@ -330,7 +339,6 @@ mediaplayer.stop()
                 self.lwVideo_2.addItems( [fileName] )
 
             self.fileName2hash[ fileName ] = fileContentMD5
-        
 
     def remove_media(self, nPlayer):
 
@@ -341,6 +349,7 @@ mediaplayer.stop()
                 try:
                     del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
                     del self.fileName2hash[ selectedItem.text() ]
+                    del self.mediaDurations[ selectedItem.text() ]
                 except:
                     pass
 
@@ -352,6 +361,7 @@ mediaplayer.stop()
                 try:
                     del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
                     del self.fileName2hash[ selectedItem.text() ]
+                    del self.mediaDurations[ selectedItem.text() ]
                 except:
                     pass
 

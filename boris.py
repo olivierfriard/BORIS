@@ -1435,7 +1435,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setVisible(True)
         self.lbCurrentStates.setVisible(True)
 
-
         # init duration of media file
         del self.duration[0: len(self.duration)]
 
@@ -1443,47 +1442,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.simultaneousMedia = False
 
         for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-
+            logging.debug('media file {}'.format(mediaFile))
             try:
                 self.instance
             except AttributeError:
                 self.initialize_video_tab()
 
-
             media = self.instance.media_new( mediaFile )
             media.parse()
 
-            # md5 sum of file content 
-            fileContentMD5 = hashfile( mediaFile , hashlib.md5())
-
             # media duration
             try:
-                self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
-            except: 
-                self.duration.append(media.get_duration())
-
-            # media FPS
-            try:
-                self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
+                self.duration.append(self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000)
+                logging.debug('self.duration 1 {}'.format(self.duration))
+                self.fps[mediaFile] = self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile]
             except:
+                # md5 sum of file content 
+                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
 
-                # check 'media_file_info' key on selected observation
                 try:
-                    self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['nframe'] \
-                           / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['video_length'] /1000) , 3)
+                    self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
+                except: 
+                    self.duration.append(media.get_duration())
 
-                    # add parameter 'media_file_info' to 'project_media_file_info'
-                    if not 'project_media_file_info' in self.pj:
-                        self.pj['project_media_file_info'] = {}
-                    self.pj['project_media_file_info'][fileContentMD5] = self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]
-                    self.projectChanged = True
-
+                # media FPS
+                try:
+                    self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
                 except:
-                    
-                    # if every thing fail try to extract parameter playing media with VLC for few seconds
+
+                    # check 'media_file_info' key on selected observation
                     try:
-                    
-                        vlc_script = """
+                        self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['nframe'] \
+                               / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['video_length'] /1000) , 3)
+    
+                        # add parameter 'media_file_info' to 'project_media_file_info'
+                        if not 'project_media_file_info' in self.pj:
+                            self.pj['project_media_file_info'] = {}
+                        self.pj['project_media_file_info'][fileContentMD5] = self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]
+                        self.projectChanged = True
+                    except:
+                        # if every thing fail try to extract parameter playing media with VLC for few seconds
+                        try:
+                            vlc_script = """
 import vlc
 instance2 = vlc.Instance()
 mediaplayer2 = instance2.media_player_new()
@@ -1502,7 +1502,7 @@ while True:
     if mediaplayer2.get_state() == vlc.State.Ended:
         result = 'media error'
         break
-    time.sleep(3)                
+    time.sleep(3)
 
 if result:
     script_out = result
@@ -1512,30 +1512,34 @@ script_fps = mediaplayer2.get_fps()
 mediaplayer2.stop()
 """ % mediaFile
 
-                        exec(vlc_script, globals(), locals())
+                            exec(vlc_script, globals(), locals())
     
-                        logging.debug('out from script: {}'.format( script_out ))
-                        logging.debug('fps from script: {}'.format( script_fps ))                        
-
-                        self.fps[fileContentMD5] = script_fps
-
-                        # insert in 'project_media_file_info' dictionary
-                        if not 'project_media_file_info' in self.pj:
-                            self.pj['project_media_file_info'] = {}
-                        
-                        if not fileContentMD5 in self.pj['project_media_file_info']:
-                            self.pj['project_media_file_info'][fileContentMD5] = {}
-
-                        self.pj['project_media_file_info'][fileContentMD5]['video_length'] =int(script_out)
-                        self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(script_fps * int(script_out)/1000)
-                        self.projectChanged = True
+                            logging.debug('out from script: {}'.format( script_out ))
+                            logging.debug('fps from script: {}'.format( script_fps ))                        
+    
+                            self.fps[fileContentMD5] = script_fps
+    
+                            # insert in 'project_media_file_info' dictionary
+                            if not 'project_media_file_info' in self.pj:
+                                self.pj['project_media_file_info'] = {}
                             
-                    except:
-                    
-                        self.fps[fileContentMD5] = 0
+                            if not fileContentMD5 in self.pj['project_media_file_info']:
+                                self.pj['project_media_file_info'][fileContentMD5] = {}
+    
+                            self.pj['project_media_file_info'][fileContentMD5]['video_length'] = int(script_out)
+                            self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(script_fps * int(script_out)/1000)
+                            self.projectChanged = True
+                        except:
+                            self.fps[fileContentMD5] = 0
 
             logging.debug('self.duration: {}'.format( self.duration ))
             logging.debug('self.fps: {}'.format( self.fps ))
+
+            if not 'media_info' in self.pj[OBSERVATIONS][self.observationId]:
+                self.pj[OBSERVATIONS][self.observationId]['media_info'] = {"length":{}, "fps":{}}
+            
+            '''self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] = '''
+
 
             self.media_list.add_media(media)
 
@@ -2013,7 +2017,6 @@ mediaplayer2.stop()
                 self.observationId = new_obs_id
                 self.pj[OBSERVATIONS][self.observationId] = { FILE: [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
 
-
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
 
@@ -2021,7 +2024,6 @@ mediaplayer2.stop()
 
                 self.pj[OBSERVATIONS][ new_obs_id ] = self.pj[OBSERVATIONS][ obsId ]
                 del self.pj[OBSERVATIONS][ obsId ]
-
 
             # observation date
             self.pj[OBSERVATIONS][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
@@ -2037,7 +2039,6 @@ mediaplayer2.stop()
 
                 # set dictionary as label (col 0) => value (col 2)
                 self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
-
 
             # observation time offset
             if self.timeFormat == HHMMSS:
@@ -2088,24 +2089,25 @@ mediaplayer2.stop()
 
                 self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
-                #self.pj[OBSERVATIONS][new_obs_id]['media_durations'] = observationWindow.mediaDurations
-                
-                #self.pj[OBSERVATIONS][new_obs_id]['media_durations']
-                logging.info('media file info: {0}'.format(  observationWindow.media_file_info ))
+                self.pj[OBSERVATIONS][new_obs_id]['media_info'] = {"length": observationWindow.mediaDurations,
+                                                                  "fps":  observationWindow.mediaFPS}
+
+                logging.debug('media_info: {0}'.format(  self.pj[OBSERVATIONS][new_obs_id]['media_info'] ))
+
+                logging.debug('media file info: {0}'.format(  observationWindow.media_file_info ))
 
                 '''
                 for h in observationWindow.media_file_info:
                     self.pj[OBSERVATIONS][new_obs_id]['media_file_info'] = observationWindow.media_file_info
                 '''
-                
+
                 # add parameters to project_media_file_info
                 if not 'project_media_file_info' in self.pj:
                     self.pj['project_media_file_info'] = {}
-                
+
                 for h in observationWindow.media_file_info:
                     self.pj['project_media_file_info'][h] = observationWindow.media_file_info[h]
                 logging.info('pj: {0}'.format(  self.pj ))
-                    
 
             if mode == NEW:
 
@@ -2977,7 +2979,6 @@ mediaplayer2.stop()
             for subject_idx, subject in enumerate( sorted( list(obs.keys()) )   ):
                 behaviors = obs[subject]
                 for k in sorted(list(behaviors.keys())):
-                    #lbl.append(subject + ' - ' + k)
                     lbl.append(k)
                     for t1,t2 in behaviors[k]:
                         maxTime = max(maxTime,t1,t2)
@@ -3095,6 +3096,17 @@ mediaplayer2.stop()
         for o in selectedObservations:
             if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
 
+                '''
+                # md5 sum of file content 
+                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
+    
+                # media duration
+                try:
+                    self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
+                except: 
+                    self.duration.append(media.get_duration())
+                '''
+
                 if 'media_durations' in self.pj[OBSERVATIONS][o] and self.pj[OBSERVATIONS][o]['media_durations']:
                     maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
 
@@ -3109,7 +3121,7 @@ mediaplayer2.stop()
                                 if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
                                 and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
                                     maxTime1 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
-                                    
+
                                     if not 'media_durations' in self.pj[OBSERVATIONS][o]:
                                         self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
     
@@ -3152,6 +3164,8 @@ mediaplayer2.stop()
         logging.debug('max time: {0}'.format(maxTime))
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, maxTime = self.choose_obs_subj_behav(selectedObservations, maxTime)
+
+        logging.debug('max time: {0}'.format(maxTime))
 
         if not selectedSubjects or not selectedBehaviors:
             return
