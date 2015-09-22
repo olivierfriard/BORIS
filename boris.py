@@ -2958,15 +2958,19 @@ mediaplayer2.stop()
         '''
         plot events
         '''
-
-        def plot_time_ranges(obs, obsId, videoLength):
-        
+        try:
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
             import numpy as np
-        
+        except:
+            logging.warning('matplotlib plotting library not installed')
+            QMessageBox.warning(None, programName, 'The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>',\
+            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        def plot_time_ranges(obs, obsId, videoLength):
+
             colors = ['blue','green','red','cyan','magenta','yellow','#7A68A6','#81b1d2','#afeeee','#FBC15E','#e5ae38','#8EBA42','#fa8174','#6d904f']
-            
             count = 0
             lbl = []
             maxTime = 0
@@ -2978,10 +2982,10 @@ mediaplayer2.stop()
                     for t1,t2 in behaviors[k]:
                         maxTime = max(maxTime,t1,t2)
                     count += 1
-        
+
             fig = plt.figure()
             fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
-            
+
             ax = fig.add_subplot(111)
             labels = ax.set_yticklabels(lbl)
             ax.set_xlabel('Time (s)')
@@ -3006,7 +3010,7 @@ mediaplayer2.stop()
 
                 x1, x2, y, col = [], [], [], []
 
-                col_count = 0        
+                col_count = 0
                 for k in sorted(list(behaviors.keys())):
                     if not behaviors[k]:
                         x1.append(0)
@@ -3021,7 +3025,7 @@ mediaplayer2.stop()
                             col.append( colors[ col_count % len(colors) ] )
                     count += 1
                     col_count += 1
-                
+
                 x1 = np.array(x1)
                 x2 = np.array(x2)
                 y = np.array(y)
@@ -3093,7 +3097,7 @@ mediaplayer2.stop()
 
                 if 'media_durations' in self.pj[OBSERVATIONS][o] and self.pj[OBSERVATIONS][o]['media_durations']:
                     maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
-                    
+
                 else:
                     # check if all files in player1 available
                     maxTime1 = Decimal("0.0")
@@ -3135,7 +3139,7 @@ mediaplayer2.stop()
                         else: # file not found
                             flagOK = False
                             QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
-    
+
                         maxTime += max( maxTime1,maxTime2 )
 
             else: # LIVE
