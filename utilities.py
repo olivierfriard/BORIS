@@ -26,6 +26,9 @@ import subprocess
 import urllib.parse
 import sys
 
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
 from decimal import *
 
 
@@ -145,3 +148,90 @@ def test_ffmpeg_path(FFmpegPath):
         return False, 'It seems that it is not the correct FFmpeg program... {} See https://www.ffmpeg.org'.format(FFmpegPath  )
 
     return True, ''
+
+def playWithVLC(fileName):
+    import vlc
+    import time
+    instance = vlc.Instance()
+    mediaplayer = instance.media_player_new()
+    media = instance.media_new(fileName)
+    mediaplayer.set_media(media)
+    media.parse()
+    mediaplayer.play()
+    global out
+    global fps
+    out = ''
+    fps = 0
+    result = None
+    while True:
+        if mediaplayer.get_state() == vlc.State.Playing:
+            break
+        if mediaplayer.get_state() == vlc.State.Ended:
+            result = 'media error'
+            break
+        time.sleep(3)                
+    
+    if result:
+        out = result
+    else:
+        out = media.get_duration()
+    fps = mediaplayer.get_fps()
+    mediaplayer.stop()
+
+    return out, fps
+
+
+def accurate_video_analysis(ffmpeg_bin, fileName):
+    '''
+    analyse frame rate and length of video with ffmpeg
+    '''
+
+    if sys.platform.startswith("win"):
+        cmdOutput = 'NUL'
+    else:
+        cmdOutput = '/dev/null'
+    command2 = '"{0}" -i "{1}" -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
+    
+    p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+
+    error = p.communicate()[1]
+    error= error.decode('utf-8')
+    rows = error.split('\r')
+    out = ''
+
+    for rowIdx in range(len(rows)-1, 0, -1):
+        if 'frame=' in rows[rowIdx]:
+            out = rows[rowIdx]
+            break
+    if out:
+        nframe = int(out.split(' fps=')[0].replace('frame=','').strip())
+        timeStr = out.split('time=')[1].split(' ')[0].strip()
+        time = time2seconds(timeStr) * 1000
+
+        return nframe, time
+    else:
+        return None, None
+
+
+class ThreadSignal(QObject):
+    sig = pyqtSignal(int, float, str, str, str)
+
+
+class Process(QThread):
+    '''
+    process for accurate video analysis
+    '''
+
+    def __init__(self, parent = None):
+        QThread.__init__(self, parent)
+        self.filePath = ''
+        self.ffmpeg_bin = ''
+        self.fileContentMD5 = ''
+        self.nPlayer = ''
+        self.filePath = ''
+        self.signal = ThreadSignal()
+
+    def run(self):
+
+        nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
+        self.signal.sig.emit(nframe, videoTime, self.fileContentMD5, self.nPlayer, self.filePath)

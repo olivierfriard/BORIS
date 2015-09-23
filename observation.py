@@ -40,6 +40,10 @@ import subprocess
 from utilities import *
 import dialog
 
+
+
+
+"""
 def accurate_video_analysis(ffmpeg_bin, fileName):
     '''
     analyse frame rate and length of video with ffmpeg
@@ -93,7 +97,7 @@ class Process(QThread):
         nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
         print( 'nframe, videoTime, fileContentMD5, nPlayer', nframe, videoTime, self.fileContentMD5, self.nPlayer )
         self.signal.sig.emit(nframe, videoTime, self.fileContentMD5, self.nPlayer, self.filePath)
-
+"""
 
 out = ''
 fps = 0
@@ -127,6 +131,9 @@ class Observation(QDialog, Ui_Form):
 
 
     def widgetEnabled(self, flag):
+        '''
+        enable/disable widget for selecting media file
+        '''
         self.tabProjectType.setEnabled(flag)
         if not flag:
             self.lbMediaAnalysis.setText('<b>A media analysis is running</b>')
@@ -233,97 +240,89 @@ class Observation(QDialog, Ui_Form):
 
 
     def add_media(self, nPlayer):
+        '''
+        add media in player
+        '''
+        # check if more media in player1 before adding media to player2
+        if nPlayer == PLAYER2 and self.lwVideo.count() > 1:
+            QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+            return
+        
         fd = QFileDialog(self)
 
         os.chdir( os.path.expanduser("~")  )
 
         fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
+
         if fileName:
+
             fileContentMD5 = hashfile( fileName, hashlib.md5())
-
-            # check if md5 checksum already in project_media_file_info dictionary
-            if (not 'project_media_file_info' in self.pj) \
-               or ('project_media_file_info' in self.pj and not fileContentMD5 in self.pj['project_media_file_info']):
-
-                vlc_script = """
-import vlc
-instance = vlc.Instance()
-mediaplayer = instance.media_player_new()
-media = instance.media_new('%s')
-mediaplayer.set_media(media)
-media.parse()
-mediaplayer.play()
-global out
-global fps
-out = ''
-fps = 0
-result = None
-while True:
-    if mediaplayer.get_state() == vlc.State.Playing:
-        break
-    if mediaplayer.get_state() == vlc.State.Ended:
-        result = 'media error'
-        break
-    time.sleep(3)                
-
-if result:
-    out = result
-else:
-    out = media.get_duration()
-fps = mediaplayer.get_fps()
-mediaplayer.stop()
-""" % fileName
-
-                exec(vlc_script, globals(), locals())
+            try:
+                mediaLength = self.mediaDurations[ fileName ]
+                mediaFPS = self.mediaFPS[ fileName ] 
+            except:
+            
+                # check if md5 checksum already in project_media_file_info dictionary
+                if (not 'project_media_file_info' in self.pj) \
+                   or ('project_media_file_info' in self.pj and not fileContentMD5 in self.pj['project_media_file_info']):
     
-                if out != 'media error':
-                    self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
-                    self.mediaDurations[ fileName ] = int(out)/1000
-                else:
-                    QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
-                    return
+                    out, fps = playWithVLC(fileName)
+        
+                    if out != 'media error':
+                        self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
+                        self.mediaDurations[ fileName ] = int(out)/1000
+                    else:
+                        QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
+                        return
+        
+                    # check FPS
+                    if fps:
+                        self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
+                        self.mediaFPS[ fileName ] = fps
+                    else:
+                        if FFMPEG in self.availablePlayers:
+                            response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
+        
+                            if response == YES:
+                                self.process = Process()
+                                self.process.signal.sig.connect(self.processCompleted)
+                                self.process.fileContentMD5 = fileContentMD5
+                                self.process.filePath = fileName #mediaPathName
+                                self.process.ffmpeg_bin = self.ffmpeg_bin
+                                self.process.nPlayer = nPlayer
+                                self.process.start()
     
-                # check FPS
-                if fps:
-                    self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
-                    self.mediaFPS[ fileName ] = fps
-                else:
-                    if FFMPEG in self.availablePlayers:
-                        response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
+                                while not self.process.isRunning():
+                                    time.sleep(0.01)
+                                    continue
     
-                        if response == YES:
-                            self.process = Process()
-                            self.process.signal.sig.connect(self.processCompleted)
-                            self.process.fileContentMD5 = fileContentMD5
-                            self.process.filePath = fileName #mediaPathName
-                            self.process.ffmpeg_bin = self.ffmpeg_bin
-                            self.process.nPlayer = nPlayer
-                            self.process.start()
-
-                            while not self.process.isRunning():
-                                time.sleep(0.01)
-                                continue
-
-                            self.flagAnalysisRunning = True
-                            self.widgetEnabled(False)
-
+                                self.flagAnalysisRunning = True
+                                self.widgetEnabled(False)
+    
+                            else:
+                                self.media_file_info[ fileContentMD5 ]['nframe'] = 0
                         else:
                             self.media_file_info[ fileContentMD5 ]['nframe'] = 0
-                    else:
-                        self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+    
+                else:
+                    if 'project_media_file_info' in self.pj and fileContentMD5 in self.pj['project_media_file_info']:
+                        try:
+                            self.mediaDurations[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000
+                            self.mediaFPS[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["nframe"] / (self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000)
+                            
+                            self.media_file_info[ fileContentMD5 ]['video_length'] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]
+                            self.media_file_info[ fileContentMD5 ]['nframe'] = self.pj['project_media_file_info'][fileContentMD5]["nframe"]
 
-            else:
-                if 'project_media_file_info' in self.pj and fileContentMD5 in self.pj['project_media_file_info']:
-                    try:
-                        self.mediaDurations[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000
-                        self.mediaFPS[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["nframe"] / (self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000)
-                    except:
-                        pass
+                        except:
+                            pass
 
             self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
+        '''
+        add media file path to list widget
+        '''
         if not self.flagAnalysisRunning:
 
             if nPlayer == PLAYER1:
@@ -340,29 +339,38 @@ mediaplayer.stop()
 
             self.fileName2hash[ fileName ] = fileContentMD5
 
+
     def remove_media(self, nPlayer):
+        '''
+        remove selected item from list widget
+        '''
 
         if nPlayer == PLAYER1:
             for selectedItem in self.lwVideo.selectedItems():
-                print( self.lwVideo.row(selectedItem) )
-                print( selectedItem.text() )
-                try:
-                    del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
-                    del self.fileName2hash[ selectedItem.text() ]
-                    del self.mediaDurations[ selectedItem.text() ]
-                except:
-                    pass
+                mem = selectedItem.text()
+                self.lwVideo.takeItem(self.lwVideo.row(selectedItem))                
 
-                self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
+                # check if media file path no more in the 2 listwidget
+                if not mem in [ self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count()) ] \
+                   and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count()) ]:
+                    try:
+                        del self.media_file_info[ self.fileName2hash[ mem ] ]
+                        del self.fileName2hash[ mem ]
+                        del self.mediaDurations[ mem ]
+                    except:
+                        pass
 
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():
+                mem = selectedItem.text()
+                self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))                
 
-                try:
-                    del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
-                    del self.fileName2hash[ selectedItem.text() ]
-                    del self.mediaDurations[ selectedItem.text() ]
-                except:
-                    pass
-
-                self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
+                # check if media file path no more in the 2 listwidget
+                if not mem in [ self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count()) ] \
+                   and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count()) ]:
+                    try:
+                        del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
+                        del self.fileName2hash[ selectedItem.text() ]
+                        del self.mediaDurations[ selectedItem.text() ]
+                    except:
+                        pass

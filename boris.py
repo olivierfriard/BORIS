@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.5' # 'DEV' for development version
-__version_date__ = '2015-09-16'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version__ = '2.6' # 'DEV' for development version
+__version_date__ = '2015-09-23'  # complete date in ISO 8601 format (YYYY-MM-DD)
 __DEV__ = False
 
 
@@ -1452,25 +1452,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             media.parse()
 
             # media duration
+            mediaLength = 0
+            mediaFPS = 0
+            
             try:
-                self.duration.append(self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000)
-                logging.debug('self.duration 1 {}'.format(self.duration))
-                self.fps[mediaFile] = self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile]
+                mediaLength = self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000
+                #self.duration.append(self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000)
+                #logging.debug('self.duration 1 {}'.format(self.duration))
+                
+                mediaFPS = self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile]
+                #self.fps[mediaFile] = self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile]
+
             except:
                 # md5 sum of file content 
                 fileContentMD5 = hashfile( mediaFile , hashlib.md5())
 
                 try:
-                    self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
+                    mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']
+                    #self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
                 except: 
-                    self.duration.append(media.get_duration())
+                    mediaLength = media.get_duration()
+                    #self.duration.append(media.get_duration())
 
                 # media FPS
                 try:
-                    self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
+                    mediaFPS = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
+                    #self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
                 except:
-
-                    # check 'media_file_info' key on selected observation
+                    '''
                     try:
                         self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['nframe'] \
                                / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['video_length'] /1000) , 3)
@@ -1482,55 +1491,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.projectChanged = True
                     except:
                         # if every thing fail try to extract parameter playing media with VLC for few seconds
-                        try:
-                            vlc_script = """
-import vlc
-instance2 = vlc.Instance()
-mediaplayer2 = instance2.media_player_new()
-media2 = instance2.media_new('%s')
-mediaplayer2.set_media(media2)
-media2.parse()
-mediaplayer2.play()
-global script_out
-global script_fps
-#out = ''
-#fps = 0
-result = None
-while True:
-    if mediaplayer2.get_state() == vlc.State.Playing:
-        break
-    if mediaplayer2.get_state() == vlc.State.Ended:
-        result = 'media error'
-        break
-    time.sleep(3)
+                    '''
+                    try:
+                        logging.debug('playing with VLC')
+                        out, fps = playWithVLC(mediaFile)
 
-if result:
-    script_out = result
-else:
-    script_out = media2.get_duration()
-script_fps = mediaplayer2.get_fps()
-mediaplayer2.stop()
-""" % mediaFile
+                        logging.debug('out from vlc: {}'.format( out ))
+                        logging.debug('fps from vlc: {}'.format( fps ))                        
 
-                            exec(vlc_script, globals(), locals())
-    
-                            logging.debug('out from script: {}'.format( script_out ))
-                            logging.debug('fps from script: {}'.format( script_fps ))                        
-    
-                            self.fps[fileContentMD5] = script_fps
-    
-                            # insert in 'project_media_file_info' dictionary
-                            if not 'project_media_file_info' in self.pj:
-                                self.pj['project_media_file_info'] = {}
-                            
-                            if not fileContentMD5 in self.pj['project_media_file_info']:
-                                self.pj['project_media_file_info'][fileContentMD5] = {}
-    
-                            self.pj['project_media_file_info'][fileContentMD5]['video_length'] = int(script_out)
-                            self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(script_fps * int(script_out)/1000)
-                            self.projectChanged = True
-                        except:
-                            self.fps[fileContentMD5] = 0
+                        mediaLength = int(out)
+                        mediaFPS = fps
+                        #self.fps[fileContentMD5] = script_fps
+
+                        # insert in 'project_media_file_info' dictionary
+                        if not 'project_media_file_info' in self.pj:
+                            self.pj['project_media_file_info'] = {}
+                        
+                        if not fileContentMD5 in self.pj['project_media_file_info']:
+                            self.pj['project_media_file_info'][fileContentMD5] = {}
+
+                        self.pj['project_media_file_info'][fileContentMD5]['video_length'] = int(out)
+                        self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(fps * int(out)/1000)
+                        self.projectChanged = True
+                    except:
+                        mediaFPS = 0
+                        #self.fps[fileContentMD5] = 0
+                        
+                    if mediaFPS == 0:
+                        if FFMPEG in self.availablePlayers:
+                            response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
+                            if response == YES:
+                                nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, mediaFile )
+                                if nframe:
+                                    mediaLength = int(videoTime)   # ms
+                                    mediaFPS = nframe / (int(videoTime)/1000)
+
+            logging.debug('mediaLength: {}'.format( mediaLength ))
+            logging.debug('mediaFPS: {}'.format( mediaFPS ))
+
+            self.duration.append( mediaLength )
+            self.fps[mediaFile] = mediaFPS
 
             logging.debug('self.duration: {}'.format( self.duration ))
             logging.debug('self.fps: {}'.format( self.fps ))
@@ -1538,11 +1538,10 @@ mediaplayer2.stop()
             if not 'media_info' in self.pj[OBSERVATIONS][self.observationId]:
                 self.pj[OBSERVATIONS][self.observationId]['media_info'] = {"length":{}, "fps":{}}
             
-            '''self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] = '''
-
+            self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] = mediaLength
+            self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile] = mediaFPS
 
             self.media_list.add_media(media)
-
 
         # add media list to media player list
         self.mediaListPlayer.set_media_list(self.media_list)
@@ -1567,7 +1566,6 @@ mediaplayer2.stop()
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         # show first frame of video
-        
         logging.debug('playing media #{0}'.format( 0 ))
 
         self.mediaListPlayer.play_item_at_index( 0 )
@@ -2094,11 +2092,6 @@ mediaplayer2.stop()
                 logging.debug('media_info: {0}'.format(  self.pj[OBSERVATIONS][new_obs_id]['media_info'] ))
 
                 logging.debug('media file info: {0}'.format(  observationWindow.media_file_info ))
-
-                '''
-                for h in observationWindow.media_file_info:
-                    self.pj[OBSERVATIONS][new_obs_id]['media_file_info'] = observationWindow.media_file_info
-                '''
 
                 # add parameters to project_media_file_info
                 if not 'project_media_file_info' in self.pj:
