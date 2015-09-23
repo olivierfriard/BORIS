@@ -5722,7 +5722,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def export_tabular_events(self, outputFormat):
         '''
-        export events from selected observations in ODS format
+        export events from selected observations in various formats: ODS, TSV, XLS
         '''
 
         def complete(l, max):
@@ -5773,7 +5773,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
             else:
                 fileName = exportDir + os.sep + safeFileName(obsId) + '.'+outputFormat
-
 
             eventsWithStatus =  self.update_events_start_stop2( self.pj[OBSERVATIONS][obsId][EVENTS] ) 
 
@@ -5838,14 +5837,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             rows.append( [''] )
 
             # write header
-
             col = 0
             header = []
             for c in pj_events_fields:
                 if c == 'modifier':
                     for x in range(1, max_modifiers + 1):
                         header.append('Modifier %d' % x )
-
                 else:
                     header.append( c )
             
@@ -5857,7 +5854,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if (event[ pj_obs_fields['subject'] ] in selected_subjects) \
                    or (event[ pj_obs_fields['subject'] ] == '' and NO_FOCAL_SUBJECT in selected_subjects):
-
 
                     col = 0
                     fields = []
@@ -5872,7 +5868,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 for m in modifiers:
                                     fields.append( m ) 
                             else:
-                                fields.append( '' ) 
+                                for dummy in range(max_modifiers):
+                                    fields.append( '' ) 
 
                         elif c == 'time':
                             fields.append( float( event[pj_obs_fields[c]]) ) 
