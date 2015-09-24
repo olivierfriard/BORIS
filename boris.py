@@ -865,40 +865,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newTime = int(time2seconds(jt.te.time().toString('hh:mm:ss.zzz')) * 1000)
             else:
                 newTime = int( jt.te.value() * 1000)
+
+            if self.playerType == VLC:
+
+                if self.playMode == FFMPEG:
+                    pass
+
+                else: # play mode VLC
             
-            if self.media_list.count() == 1:
+                    if self.media_list.count() == 1:
+        
+                        if newTime < self.mediaplayer.get_length():
+                            self.mediaplayer.set_time( newTime )
+                        else:
+                            QMessageBox.warning(self, programName , 'The indicated position is behind the end of media (%s)' % seconds2time(self.mediaplayer.get_length()/1000))
+        
+                    elif self.media_list.count() > 1:
+        
+                        if newTime  < sum(self.duration):
+        
+                            # remember if player paused (go previous will start playing)
+                            flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
+        
+                            tot = 0
+                            for idx, d in enumerate(self.duration):
+                                if newTime >= tot and newTime < tot+d:
+                                    self.mediaListPlayer.play_item_at_index(idx)
+                                    
+                                    # wait until media is played    
+                                    while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                                        pass
+                                        
+                                    if flagPaused:
+                                        self.mediaListPlayer.pause()
+                                    
+                                    #print( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ])  )
+                                    #print( type(newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) ) )
+                                    self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
+                                    
+                                    break
+                                tot += d
+                        else:
+                            QMessageBox.warning(self, programName , 'The indicated position is behind the total media duration (%s)' % seconds2time(sum(self.duration)/1000))
 
-                if newTime < self.mediaplayer.get_length():
-                    self.mediaplayer.set_time( newTime )
-                else:
-                    QMessageBox.warning(self, programName , 'The indicated position is behind the end of media (%s)' % seconds2time(self.mediaplayer.get_length()/1000))
-
-            elif self.media_list.count() > 1:
-
-                
-                if newTime  < sum(self.duration):
-
-                    # remember if player paused (go previous will start playing)
-                    flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
-
-                    tot = 0
-                    for idx, d in enumerate(self.duration):
-                        if newTime >= tot and newTime < tot+d:
-                            self.mediaListPlayer.play_item_at_index(idx)
-                            
-                            # wait until media is played    
-                            while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                                pass
-                                
-                            if flagPaused:
-                                self.mediaListPlayer.pause()
-                            
-                            self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
-                            
-                            break
-                        tot += d
-                else:
-                    QMessageBox.warning(self, programName , 'The indicated position is behind the total media duration (%s)' % seconds2time(sum(self.duration)/1000))
+                    self.timer_out()
 
 
     def previous_media_file(self):
@@ -1181,7 +1191,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         md5FileName = hashlib.md5(currentMedia.encode('utf-8')).hexdigest()
 
         logging.debug('imagesList {0}'.format( self.imagesList ))
-
         logging.debug('image {0}'.format( '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) ))
 
         if True:
@@ -1398,7 +1407,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
 
-
     def initialize_new_observation_vlc(self):
         '''
         initialize new observation for VLC
@@ -1452,11 +1460,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             media.parse()
 
             # media duration
-            mediaLength = 0
+            mediaLength = 0  # in ms
             mediaFPS = 0
             
             try:
-                mediaLength = self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000
+                mediaLength = self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] * 1000
                 #self.duration.append(self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000)
                 #logging.debug('self.duration 1 {}'.format(self.duration))
                 
@@ -1529,7 +1537,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug('mediaLength: {}'.format( mediaLength ))
             logging.debug('mediaFPS: {}'.format( mediaFPS ))
 
-            self.duration.append( mediaLength )
+            self.duration.append( int(mediaLength) )
             self.fps[mediaFile] = mediaFPS
 
             logging.debug('self.duration: {}'.format( self.duration ))
@@ -1538,7 +1546,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not 'media_info' in self.pj[OBSERVATIONS][self.observationId]:
                 self.pj[OBSERVATIONS][self.observationId]['media_info'] = {"length":{}, "fps":{}}
             
-            self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] = mediaLength
+            self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] = mediaLength/1000
             self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile] = mediaFPS
 
             self.media_list.add_media(media)
@@ -1568,6 +1576,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show first frame of video
         logging.debug('playing media #{0}'.format( 0 ))
 
+        
         self.mediaListPlayer.play_item_at_index( 0 )
         app.processEvents()
 
@@ -1578,6 +1587,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mediaListPlayer.pause()
 
         app.processEvents()
+        
         
         self.mediaplayer.set_time(0)
 
@@ -1622,14 +1632,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.mediaplayer2.set_hwnd( int(self.videoframe2.winId()) )
             
                         # self.mediaplayer.set_hwnd(self.videoframe.winId())
+
                 # for mac always embed player
                 if sys.platform == "darwin": # for MacOS
-                    self.mediaplayer2.set_nsobject(self.videoframe.winId())
-
-                    '''
-                    elif sys.platform == "darwin": # for MacOS
-                        self.mediaplayer2.set_nsobject(self.videoframe2.windId())
-                    '''
+                    self.mediaplayer2.set_nsobject(self.videoframe2.winId())
 
                 # show first frame of video
                 app.processEvents()
@@ -1639,7 +1645,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 while self.mediaListPlayer2.get_state() != vlc.State.Playing:
                     time.sleep(3)
-                    pass
+
                 self.mediaListPlayer2.pause()
                 app.processEvents()
 
@@ -1664,7 +1670,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
-        self.timer.start(200)
+        
+        #self.timer.start(200)
+        self.timer_out()
+        
         self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
 
         if window.focusWidget():
@@ -1690,10 +1699,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         load events in table widget
         '''
-        currentMediaTime = self.getLaps()
-        print( 'currentMediaTime',  currentMediaTime)
-        
-        
+
         self.twEvents.setRowCount(len( self.pj[OBSERVATIONS][obsId][EVENTS] ))
         row = 0
 
@@ -2705,70 +2711,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        maxTime = Decimal("0.0")
-        flagOK = True
-        for o in selectedObservations:
-            if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
-
-                if 'media_durations' in self.pj[OBSERVATIONS][o] and self.pj[OBSERVATIONS][o]['media_durations']:
-                    maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
-                    
-                else:
-                    # check if all files in player #1 available
-                    maxTime1 = Decimal("0.0")
-                    if set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER1] ]) == set([True]):
-                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER1]:
-    
-                            if os.path.isfile(mediaFile):
-                                hf = hashfile( mediaFile , hashlib.md5())
-                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                                    maxTime1 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
-                                    
-                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
-                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
-    
-                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
-                                    self.projectChanged = True
-                    else: # file not found
-                        flagOK = False
-                        QMessageBox.warning(self, programName, "A media file was not found in player #1! The % of total media duration value will not be available.")
-
-                    # check if all files in player #2 available
-
-                    if self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
-                        maxTime2 = Decimal("0.0")
-                        if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
-                            for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
-                                if os.path.isfile(mediaFile):
-                                    hf = hashfile( mediaFile , hashlib.md5())
-                                    if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                                    and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                                        maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
-                                        
-                                        if not 'media_durations' in self.pj[OBSERVATIONS][o]:
-                                            self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
+        #maxTime = Decimal("0.0")
+        #flagOK = True
         
-                                        self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
-                                        self.projectChanged = True
-                        else: # file not found
-                            flagOK = False
-                            QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
+        selectedObsTotalMediaLength = Decimal("0.0")
+        
+        for obsId in selectedObservations:
 
-                        maxTime += max( maxTime1,maxTime2 )
+            if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
+                
+                totalMediaLength = self.observationTotalMediaLength( obsId )
 
             else: # LIVE
-                if self.pj[OBSERVATIONS][ o ][EVENTS]:
-                    maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+                if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
+                    totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
                 else:
-                    flagOK = False
+                    totalMediaLength = Decimal("0.0")
 
-        if 'media_durations' in self.pj[OBSERVATIONS][o]:
-            logging.debug('media durations: {}'.format(self.pj[OBSERVATIONS][o]['media_durations']))
+            if totalMediaLength == -1:
+                selectedObsTotalMediaLength = -1
+                break
+                
+            selectedObsTotalMediaLength += totalMediaLength
+            
+        if selectedObsTotalMediaLength == -1: # an observation media length is not available
+            selectedObsTotalMediaLength = 0
 
-        if not flagOK:
-            maxTime = Decimal("0.0")
-        logging.debug('max time: {}'.format(maxTime))
+        logging.debug('selectedObsTotalMediaLength: {}'.format(selectedObsTotalMediaLength))
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
 
@@ -2891,15 +2860,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            'inter_duration_mean': inter_duration_mean } )
 
 
-        # min max
-        '''
-        cursor.execute( "SELECT max(occurence)-min(occurence) FROM events GROUP BY observation" )
-        
-        obsDuration = sum([x[0] for x in cursor.fetchall() ])
-        '''
-
-        logging.debug("Total media duration: {0}".format(round(maxTime,3)))
-
         # widget for results visualization
         self.tb = timeBudgetResults( logging.getLogger().getEffectiveLevel(), self.pj)
 
@@ -2908,13 +2868,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obs in selectedObservations:
             self.tb.lw.addItem(obs)
 
-        if maxTime:
-            self.tb.lbTotalObservedTime.setText( "Total media duration: {0} s  (~ {1} min)".format(round(maxTime,3),round(maxTime/60)) )
+        if selectedObsTotalMediaLength:
+            self.tb.lbTotalObservedTime.setText( "Total media length: {0} s  (~ {1} min)".format(round(selectedObsTotalMediaLength,3),round(selectedObsTotalMediaLength/60)) )
         else:
-            self.tb.lbTotalObservedTime.setText( "Total media duration: not available")
+            self.tb.lbTotalObservedTime.setText( "Total media length: not available")
 
 
-        tb_fields = ['Subject', 'Behavior', 'Modifiers', 'Total number', 'Total duration (s)', 'Duration mean (s)', 'inter-event intervals mean (s)', '% of total media duration']
+        tb_fields = ['Subject', 'Behavior', 'Modifiers', 'Total number', 'Total duration (s)', 'Duration mean (s)', 'inter-event intervals mean (s)', '% of total media length']
         self.tb.twTB.setColumnCount( len( tb_fields ) )
         self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
@@ -2934,8 +2894,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # % of total time
 
-            if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and maxTime: 
-                item = QTableWidgetItem(str( round( row['duration'] / float(maxTime) * 100,1)  ) )
+            if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and selectedObsTotalMediaLength: 
+                item = QTableWidgetItem(str( round( row['duration'] / float(selectedObsTotalMediaLength) * 100,1)  ) )
             else:
                 item = QTableWidgetItem( '-' )
 
@@ -2947,6 +2907,72 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb.show()
 
 
+    def observationTotalMediaLength(self, obsId ):
+        '''
+        total media length for observation
+        if media length not available return 0
+        
+        return total media length in s
+        '''
+        
+        totalMediaLength = Decimal("0.0")
+            
+        totalMediaLength1 = Decimal("0.0")
+        totalMediaLength2 = Decimal("0.0")
+        
+        for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+
+            mediaLength = 0
+            try:
+                mediaLength = self.pj[OBSERVATIONS][obsId]['media_info']['length'][mediaFile]
+            except:
+                # md5 sum of file content 
+                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
+                try:
+                    mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000
+                except:
+                    try:
+                        instance = vlc.Instance()
+                        media = instance.media_new(mediaFile)
+                        media.parse()
+
+                        mediaLength = media.get_duration()/1000
+                    except:
+                        totalMediaLength1 = -1
+                        break
+
+            totalMediaLength1 += Decimal(mediaLength)
+            
+        for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:
+
+            mediaLength = 0
+            try:
+                mediaLength = self.pj[OBSERVATIONS][obsId]['media_info']['length'][mediaFile]
+            except:
+                # md5 sum of file content 
+                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
+                try:
+                    mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000
+                except:
+                    try:
+                        instance = vlc.Instance()
+                        media = instance.media_new(mediaFile)
+                        media.parse()
+
+                        mediaLength = media.get_duration()/1000
+                    except:
+                        totalMediaLength2 = -1
+                        break
+
+            totalMediaLength2 += Decimal(mediaLength)
+        
+        if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
+            totalMediaLength = -1
+        else:
+            totalMediaLength = max( totalMediaLength1, totalMediaLength2 )
+        
+        return totalMediaLength
+        
 
     def plot_events(self):
         '''
@@ -3019,15 +3045,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     count += 1
                     col_count += 1
 
+                if not y:
+                    return False
+
                 x1 = np.array(x1)
                 x2 = np.array(x2)
                 y = np.array(y)
         
                 ax.hlines(y, x1, x2, lw = 10, color = col)
-                '''
-                if y.any():
-                    ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
-                '''
+                
                 ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
             
             def on_draw(event):
@@ -3047,6 +3073,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fig.canvas.mpl_connect('draw_event', on_draw)
                 
             plt.show()
+            return True
 
         result, selectedObservations = self.selectObservations( SELECT1 )
 
@@ -3059,105 +3086,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'There are no events in the selected observation')
             return
 
-        '''
-        maxTime = 0
-        if self.pj[OBSERVATIONS][ selectedObservations[0] ][TYPE] == MEDIA:
-
-            for mediaFile in self.pj[OBSERVATIONS][ selectedObservations[0] ][FILE][PLAYER1]:
-    
-                if os.path.isfile(mediaFile):
-                    hf = hashfile( mediaFile , hashlib.md5())
-                    if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ selectedObservations[0] ] \
-                    and hf in self.pj[OBSERVATIONS][ selectedObservations[0] ][MEDIA_FILE_INFO]:
-                        maxTime += self.pj[OBSERVATIONS][ selectedObservations[0] ][MEDIA_FILE_INFO][ hf ][ 'video_length' ]/1000
-
-                else: # file not found
-                    
-                    QMessageBox.warning(self, programName, 'The media file <b>{0}</b> was not found!\nThe maximum time will be the time of the last event.'.format( mediaFile))
-                    maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
-
-            if not maxTime:
-                QMessageBox.warning(self, programName , 'The video length was not found!\nThe maximum time will be the time of the last event.')
-                maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
-
-        else: # LIVE
-            maxTime = max(self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS])[0]
-        '''
-        maxTime = Decimal("0.0")
-        flagOK = True
-        for o in selectedObservations:
-            if self.pj[OBSERVATIONS][ o ][TYPE] == MEDIA:
-
-                '''
-                # md5 sum of file content 
-                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
-    
-                # media duration
-                try:
-                    self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
-                except: 
-                    self.duration.append(media.get_duration())
-                '''
-
-                if 'media_durations' in self.pj[OBSERVATIONS][o] and self.pj[OBSERVATIONS][o]['media_durations']:
-                    maxTime += max( Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1])),Decimal(sum(self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2]  ) ) )
-
-                else:
-                    # check if all files in player1 available
-                    maxTime1 = Decimal("0.0")
-                    if set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER1] ]) == set([True]):
-                        for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER1]:
-    
-                            if os.path.isfile(mediaFile):
-                                hf = hashfile( mediaFile , hashlib.md5())
-                                if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                                and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                                    maxTime1 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000)
-
-                                    if not 'media_durations' in self.pj[OBSERVATIONS][o]:
-                                        self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
-    
-                                    self.pj[OBSERVATIONS][o]['media_durations'][PLAYER1].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
-                                    self.projectChanged = True
-                    else: # file not found
-                        flagOK = False
-                        QMessageBox.warning(self, programName, "A media file was not found in player #1! The % of total media duration value will not be available.")
-
-                    # check if all files in player #2 available
-
-                    if self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
-                        maxTime2 = Decimal("0.0")
-                        if flagOK and set([ os.path.isfile(f) for f in self.pj[OBSERVATIONS][o][FILE][PLAYER2] ]) == set([True]):
-                            for mediaFile in self.pj[OBSERVATIONS][o][FILE][PLAYER2]:
-                                if os.path.isfile(mediaFile):
-                                    hf = hashfile( mediaFile , hashlib.md5())
-                                    if MEDIA_FILE_INFO in self.pj[OBSERVATIONS][ o ] \
-                                    and hf in self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO]:
-                                        maxTime2 += Decimal(self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ]['video_length'] / 1000)
-                                        
-                                        if not 'media_durations' in self.pj[OBSERVATIONS][o]:
-                                            self.pj[OBSERVATIONS][o]['media_durations'] = {PLAYER1:[], PLAYER2:[]}
-        
-                                        self.pj[OBSERVATIONS][o]['media_durations'][PLAYER2].append( self.pj[OBSERVATIONS][ o ][MEDIA_FILE_INFO][ hf ][ 'video_length' ] / 1000  )
-                                        self.projectChanged = True
-                        else: # file not found
-                            flagOK = False
-                            QMessageBox.warning(self, programName, "A media file was not found in player #2! The % of total media duration value will not be available.")
-
-                        maxTime += max( maxTime1,maxTime2 )
+        for obsId in selectedObservations:
+            
+            if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
+                
+                totalMediaLength = self.observationTotalMediaLength( obsId )
 
             else: # LIVE
-                if self.pj[OBSERVATIONS][ o ][EVENTS]:
-                    maxTime += max(self.pj[OBSERVATIONS][ o ][EVENTS])[0]
+                if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
+                    totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
                 else:
-                    flagOK = False
+                    totalMediaLength = Decimal("0.0")
+        
+        if totalMediaLength == -1:
+            totalMediaLength = 0
 
 
-        logging.debug('max time: {0}'.format(maxTime))
+        logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
 
-        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, maxTime = self.choose_obs_subj_behav(selectedObservations, maxTime)
+        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, totalMediaLength = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
 
-        logging.debug('max time: {0}'.format(maxTime))
+        logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
 
         if not selectedSubjects or not selectedBehaviors:
             return
@@ -3229,8 +3178,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if idx % 2 == 0:
                                 o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
 
+
         logging.debug('intervals: {}'.format(o))
-        plot_time_ranges(o, selectedObservations[0], maxTime)
+        if not plot_time_ranges(o, selectedObservations[0], totalMediaLength):
+            QMessageBox.warning(self, programName , 'Check events')
 
 
 
@@ -3245,7 +3196,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         s = open(projectFileName, 'r').read()
 
-        self.pj = json.loads(s)
+        try:
+            self.pj = json.loads(s)
+        except:
+            QMessageBox.critical(self, programName , 'This project file seems corrupted' )
+            return
         
         # transform time to decimal
         for obs in self.pj[OBSERVATIONS]:
@@ -4084,7 +4039,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             globalCurrentTime = int( self.FFmpegGlobalFrame  * (1000/list(self.fps.values())[0]))
             logging.debug('new global current time: {0}'.format( globalCurrentTime ))
-
             
             # seek VLC on current time from FFmpeg mode
             for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
@@ -4116,7 +4070,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.ffmpeg_cache_dir_max_size:
                 self.cleaningThread.exiting = True
 
-            self.timer.start()
+            #self.timer.start()
 
         elif FFMPEG in self.availablePlayers:
             
@@ -4141,13 +4095,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 self.actionFrame_by_frame.setChecked(False)
                 return
-            
-            
+
             self.playMode = FFMPEG
 
+            '''
             if self.mediaListPlayer.get_state() == vlc.State.Playing:
                 self.mediaListPlayer.pause()
+            '''
 
+            self.pause_video()
             self.timer.stop()
             
             # check temp dir for images from ffmpeg
@@ -4663,7 +4619,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def hsVideo_sliderMoved(self):
-
         '''
         media position slider moved
         adjust media position
@@ -4686,12 +4641,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.mediaplayer2.set_time( self.mediaplayer2.get_length() )
 
+                #self.timer_out()
+
+
     def get_events_current_row(self):
         '''
         get events current row corresponding to video/frame-by-frame position
         paint twEvents with tracking cursor
         scroll to corresponding event
         '''
+
         global ROW
         if self.pj[OBSERVATIONS][self.observationId][EVENTS]:
             ct = self.getLaps()
@@ -4721,7 +4680,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         triggered by timer
 
         '''
-
+        print( 'timer_out' )
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             # cumulative time
@@ -5276,8 +5235,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # play / pause with space bar
-        if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:   
-            self.pause_video()
+        if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]: 
+            if self.mediaListPlayer.get_state() != vlc.State.Paused:
+                self.pause_video()
+            else:
+                self.play_video()
             return
 
         if self.playMode == FFMPEG:
@@ -5501,50 +5463,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             row = self.twEvents.selectedIndexes()[0].row()  
         
             if ':' in self.twEvents.item(row, 0).text():
-                time = time2seconds(  self.twEvents.item(row, 0).text()  )
+                time_ = time2seconds(  self.twEvents.item(row, 0).text()  )
             else:
-                time  = Decimal( self.twEvents.item(row, 0).text() )
+                time_  = Decimal( self.twEvents.item(row, 0).text() )
 
             # substract time offset
-            time -= self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]
+            time_ -= self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]
 
-            if time + self.repositioningTimeOffset >= 0:
-                newtime = (time + self.repositioningTimeOffset ) * 1000
+            if time_ + self.repositioningTimeOffset >= 0:
+                newTime = (time_ + self.repositioningTimeOffset ) * 1000
             else:
-                newtime = 0
+                newTime = 0
 
 
             if self.playMode == VLC:
 
-                # remember if player paused (go previous will start playing)
-                flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
-    
-  
-                if len(self.duration) > 1:
+                if len(self.duration) == 1:
+                    
+                    self.mediaplayer.set_time( int(newTime) )
+                    
+                    if self.simultaneousMedia:
+                        self.mediaplayer2.set_time( int(newTime) )
+
+                else: # more media
+
+                    # remember if player paused (go previous will start playing)
+                    flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
 
                     tot = 0
                     for idx, d in enumerate(self.duration):
-                        if newtime >= tot and newtime < d:
-                            self.mediaListPlayer.play_item_at_index( idx )
-                            self.mediaplayer.set_time( int(newtime) - tot )
+                        if newTime >= tot and newTime < tot+d:
+                            self.mediaListPlayer.play_item_at_index(idx)
+                            
+                            # wait until media is played    
+                            while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                                pass
+                                
+                            if flagPaused:
+                                self.mediaListPlayer.pause()
+                            
+                            self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
+                            
+                            break
                         tot += d
 
-                else:   # 1 video
-
-                    self.mediaplayer.set_time( int(newtime) )
-                    
-                    if self.simultaneousMedia:
-                        self.mediaplayer2.set_time( int(newtime) )
-
-                if flagPaused and self.mediaListPlayer.get_state() != vlc.State.Paused:
-    
-                    while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                        time.sleep(2)
-    
-                    self.mediaListPlayer.pause()
-    
-                    if self.simultaneousMedia:
-                        self.mediaListPlayer2.pause()
+                self.timer_out()
 
 
             if self.playMode == FFMPEG:
@@ -6032,25 +5995,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             else:
 
-                logging.debug('self.media_list.count(): {0}'.format( self.media_list.count()))
-                                    # second video together   
-    
-                if self.media_list.count():
+                self.mediaListPlayer.play()
 
-                    self.mediaListPlayer.play()
-                    logging.debug('player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
-    
-                    # second video together   
-                    if self.simultaneousMedia:  
-                        logging.debug('self.media_list2.count(): {0}'.format( self.media_list2.count()))
-                        self.mediaListPlayer2.play()
-                        logging.debug('player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
+                # second video together   
+                if self.simultaneousMedia:  
+                    self.mediaListPlayer2.play()
 
-                else:
-
-                    self.no_media()
-
-
+                self.timer.start(200)
 
 
     def pause_video(self):
@@ -6061,26 +6012,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
             
             if self.playMode == FFMPEG:
-
-                if self.FFmpegTimer.isActive():
-                    self.FFmpegTimer.stop() 
-                else:
-                    self.FFmpegTimer.start() 
+                self.FFmpegTimer.stop() 
             else:
-
-                if self.media_list.count():
+                
+                if self.mediaListPlayer.get_state() != vlc.State.Paused:
+                    
                     self.mediaListPlayer.pause()  # play if paused
-    
                     logging.debug('player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
                     
                     # second video together   
                     if self.simultaneousMedia:  
                         self.mediaListPlayer2.pause()
-                        logging.debug('player #2 state'.format(  self.mediaListPlayer2.get_state()))
-                else:
-                    self.no_media()
-
-
+                        logging.debug('player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
+                    
+                    self.timer.stop()
+    
 
     def play_activated(self):
         '''
@@ -6090,7 +6036,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.play_video()
 
 
-
     def jumpBackward_activated(self):
         '''
         rewind from current position 
@@ -6098,16 +6043,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
+
                 currentTime = self.FFmpegGlobalFrame / list(self.fps.values())[0] 
-    
+
                 logging.debug('currentTime %f' % currentTime)
                 logging.debug('new time %f' % (currentTime - self.fast)) 
                 logging.debug('new frame %d ' % int((currentTime - self.fast )  * list(self.fps.values())[0]))
-   
     
                 if int((currentTime - self.fast ) * list(self.fps.values())[0]) > 0:
                     self.FFmpegGlobalFrame = int((currentTime - self.fast ) * list(self.fps.values())[0])
-    
                 else:
                     self.FFmpegGlobalFrame = 0   # position to init
                 self.FFmpegTimerOut()
@@ -6164,6 +6108,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                 else:
                     self.no_media()
+                
+                self.timer_out()
 
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
@@ -6251,6 +6197,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                 else:
                     self.no_media()
+                    
+                self.timer_out()
 
                 # no subtitles
                 '''
@@ -6268,15 +6216,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         reset video to beginning
         '''
         logging.debug('Reset activated')
+        
+        if self.playerType == VLC:
 
-        self.mediaplayer.pause()
-        self.mediaplayer.set_time(0)
+            self.pause_video()            
+            if self.playMode == FFMPEG:
+        
+                self.FFmpegGlobalFrame = 0   # position to init
+                self.FFmpegTimerOut()
 
-        # second video together   
-        if self.simultaneousMedia:  
+            else: #playmode VLC
 
-            self.mediaplayer2.pause()
-            self.mediaplayer2.set_time(0)
+                self.mediaplayer.set_time(0)
+        
+                # second video together   
+                if self.simultaneousMedia:  
+                    self.mediaplayer2.set_time(0)
+            
+                self.timer_out()
 
 
     def stopClicked(self):
