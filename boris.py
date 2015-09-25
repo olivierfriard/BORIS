@@ -312,19 +312,22 @@ class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
 
         super(StyledItemDelegateTriangle, self).paint(painter, option, index)
 
-        if ROW != -1 and index.row() == ROW:
-            #print('painter',ROW, index.row())
-            polygonTriangle = QtGui.QPolygon(3)
-            polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
-            polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y()-5))
-            polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y()+5))
-    
-            painter.save()
-            painter.setRenderHint(painter.Antialiasing)
-            painter.setBrush(QtGui.QBrush(QtGui.QColor(QtCore.Qt.red))) 
-            painter.setPen(QtGui.QPen(QtGui.QColor(QtCore.Qt.red)))
-            painter.drawPolygon(polygonTriangle)
-            painter.restore()
+        if ROW != -1:
+            
+            if index.row() == ROW:
+                #print('painter',ROW, index.row())
+                
+                polygonTriangle = QtGui.QPolygon(3)
+                polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
+                polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y()-5))
+                polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y()+5))
+        
+                painter.save()
+                painter.setRenderHint(painter.Antialiasing)
+                painter.setBrush(QtGui.QBrush(QtGui.QColor(QtCore.Qt.red))) 
+                painter.setPen(QtGui.QPen(QtGui.QColor(QtCore.Qt.red)))
+                painter.drawPolygon(polygonTriangle)
+                painter.restore()
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -339,6 +342,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     confirmSound = False          # if True each keypress will be confirmed by a beep
     embedPlayer = True            # if True the VLC player will be embedded in the main window
     alertNoFocalSubject = False   # if True an alert will show up if no focal subject
+    trackingCursorAboveEvent = False
 
     timeFormat = HHMMSS       # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
@@ -526,14 +530,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveTab.setLayout(self.liveLayout)
 
         self.toolBox.insertItem(2, self.liveTab, 'Live')
-
-
-
-    def create_ffmpeg_tab(self):
-        
-        pass
-        #self.toolBox.setItemEnabled (1, True)
-
 
 
     def menu_options(self):
@@ -869,7 +865,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC:
 
                 if self.playMode == FFMPEG:
-                    pass
+
+                    frameDuration = Decimal(1000 / list(self.fps.values())[0])
+    
+                    currentFrame = round( newTime/ frameDuration )
+    
+                    self.FFmpegGlobalFrame = currentFrame
+    
+                    if self.FFmpegGlobalFrame > 0:
+                        self.FFmpegGlobalFrame -= 1
+    
+                    self.FFmpegTimerOut()
+                    
 
                 else: # play mode VLC
             
@@ -1086,6 +1093,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # alert no focal subject
         preferencesWindow.cbAlertNoFocalSubject.setChecked( self.alertNoFocalSubject )
+        
+        # tracking cursor above event
+        preferencesWindow.cbTrackingCursorAboveEvent.setChecked( self.trackingCursorAboveEvent )
 
         # FFmpeg for frame by frame mode
         preferencesWindow.pbBrowseFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
@@ -1131,6 +1141,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.embedPlayer = preferencesWindow.cbEmbedPlayer.isChecked()
 
             self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
+            
+            self.trackingCursorAboveEvent= preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
 
             if self.observationId:
                 self.loadEventsInTW( self.observationId )
@@ -2303,7 +2315,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.alertNoFocalSubject = False
 
+            self.trackingCursorAboveEvent = False
+            try:
+                self.trackingCursorAboveEvent = (settings.value('tracking_cursor_above_event') == 'true')
+            except:
+                self.trackingCursorAboveEvent = False
 
+            # frame-by-frame tab
             self.allowFrameByFrame = False
             try:
                 self.allowFrameByFrame = ( settings.value('allow_frame_by_frame') == 'true' )
@@ -2319,7 +2337,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ffmpeg_bin = ''
 
             if self.allowFrameByFrame:
-
                 r, msg = test_ffmpeg_path(self.ffmpeg_bin)
                 if r:
                     self.availablePlayers.append(FFMPEG)
@@ -2344,6 +2361,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_cache_dir_max_size = 0
 
 
+
+
+
         # test if FFmpeg embedded to allow frame-by-frame mode
         if not self.ffmpeg_bin:
             if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
@@ -2358,7 +2378,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
 
                 # test if FFmpeg installed on path
-                #if not os.system('ffmpeg -h'):
                 if not self.ffmpeg_bin:
                     r, msg = test_ffmpeg_path('ffmpeg')
                     if r:
@@ -2406,9 +2425,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue('embed_player', self.embedPlayer)
         
         settings.setValue('alert_nosubject', self.alertNoFocalSubject)
+        settings.setValue('tracking_cursor_above_event', self.trackingCursorAboveEvent)
         
+        # frame-by-frame 
         settings.setValue('allow_frame_by_frame', self.allowFrameByFrame)
-        
         settings.setValue( 'ffmpeg_bin', self.ffmpeg_bin )
         settings.setValue( 'ffmpeg_cache_dir', self.ffmpeg_cache_dir )
         settings.setValue( 'ffmpeg_cache_dir_max_size', self.ffmpeg_cache_dir_max_size )
@@ -4588,7 +4608,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def actionUser_guide_triggered(self):
         ''' open user guide URL'''
-        QDesktopServices.openUrl(QUrl('https://github.com/olivierfriard/BORIS/wiki/BORIS-user-guide'))
+        QDesktopServices.openUrl(QUrl('http://boris.readthedocs.org'))
 
     def actionAbout_activated(self):
         ''' about window '''
@@ -4652,6 +4672,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         global ROW
+
         if self.pj[OBSERVATIONS][self.observationId][EVENTS]:
             ct = self.getLaps()
             if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
@@ -4660,11 +4681,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
            
                 if cr_list:
-                    ROW = cr_list[0] +1
+                    ROW = cr_list[0]
+                    if not self.trackingCursorAboveEvent:
+                        ROW +=  1
                 else:
                     ROW = -1
-    
-            #logging.debug('ROW: {0}'.format( ROW ))
     
             self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
             self.twEvents.scrollToItem( self.twEvents.item(ROW, 0) )
@@ -4674,13 +4695,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def timer_out(self):
         '''
         indicate the video current position and total length for VLC player
-
         Time offset is NOT added!
-
         triggered by timer
-
         '''
-        print( 'timer_out' )
+
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             # cumulative time
@@ -4689,8 +4707,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # current media time
             mediaTime = self.mediaplayer.get_time()
 
-            #highlight current event in tw events
-
+            #highlight current event in tw events and scroll event list
             self.get_events_current_row()
 
             # check if second video
@@ -5485,7 +5502,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.simultaneousMedia:
                         self.mediaplayer2.set_time( int(newTime) )
 
-                else: # more media
+                else: # more media in player 1
 
                     # remember if player paused (go previous will start playing)
                     flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
@@ -5514,7 +5531,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 frameDuration = Decimal(1000 / list(self.fps.values())[0])
 
-                currentFrame = round( newtime/ frameDuration )
+                currentFrame = round( newTime/ frameDuration )
 
                 self.FFmpegGlobalFrame = currentFrame
 
@@ -6026,6 +6043,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         logging.debug('player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
                     
                     self.timer.stop()
+
     
 
     def play_activated(self):
@@ -6073,7 +6091,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             self.mediaplayer2.set_time(0)
     
-    
                 elif self.media_list.count() > 1:
                     
                     newTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) - self.fast * 1000
@@ -6093,12 +6110,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if newTime >= tot and newTime < tot+d:
                             self.mediaListPlayer.play_item_at_index(idx)
                             
-                            # wait until media is played    
-                            while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                                pass
-                                
+                            # wait until media is played
+                            while True:
+                                if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                    break
+                              
                             if flagPaused:
-                                logging.debug(self.mediaListPlayer.get_state())
                                 self.mediaListPlayer.pause()
                             
                             self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
@@ -6113,8 +6130,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
-
-
 
 
     def jumpForward_activated(self):
@@ -6152,8 +6167,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     logging.debug('player 1 done')
 
-
-
                     # second video together   
                     if self.simultaneousMedia:  
 
@@ -6183,9 +6196,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if newTime >= tot and newTime < tot+d:
                                 self.mediaListPlayer.play_item_at_index(idx)
                                 app.processEvents()
+
                                 # wait until media is played    
-                                while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                                    pass
+                                while True:
+                                    if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                        break
 
                                 if flagPaused:
                                     self.mediaListPlayer.pause()

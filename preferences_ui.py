@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Thu Mar 26 12:34:47 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created: Fri Sep 25 12:05:26 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -101,6 +101,9 @@ class Ui_prefDialog(object):
         self.cbAlertNoFocalSubject = QtGui.QCheckBox(self.tab)
         self.cbAlertNoFocalSubject.setObjectName(_fromUtf8("cbAlertNoFocalSubject"))
         self.formLayout.setWidget(8, QtGui.QFormLayout.LabelRole, self.cbAlertNoFocalSubject)
+        self.cbTrackingCursorAboveEvent = QtGui.QCheckBox(self.tab)
+        self.cbTrackingCursorAboveEvent.setObjectName(_fromUtf8("cbTrackingCursorAboveEvent"))
+        self.formLayout.setWidget(9, QtGui.QFormLayout.LabelRole, self.cbTrackingCursorAboveEvent)
         self.verticalLayout.addLayout(self.formLayout)
         self.tabWidget.addTab(self.tab, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
@@ -169,7 +172,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -186,6 +189,7 @@ class Ui_prefDialog(object):
         self.cbConfirmSound.setText(_translate("prefDialog", "Play sound when a key is pressed", None))
         self.cbEmbedPlayer.setText(_translate("prefDialog", "Embed media player in main window (program must be restarted)", None))
         self.cbAlertNoFocalSubject.setText(_translate("prefDialog", "Alert if focal subject is not set", None))
+        self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
         self.label_14.setText(_translate("prefDialog", "The frame-by-frame mode requires the FFmpeg program. See https://www.ffmpeg.org ", None))
         self.cbAllowFrameByFrameMode.setText(_translate("prefDialog", "Allow the frame-by-frame mode", None))
