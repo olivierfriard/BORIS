@@ -190,7 +190,7 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
         cmdOutput = 'NUL'
     else:
         cmdOutput = '/dev/null'
-    command2 = '"{0}" -i "{1}" -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
+    command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
     
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
 

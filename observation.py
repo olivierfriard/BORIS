@@ -40,65 +40,6 @@ import subprocess
 from utilities import *
 import dialog
 
-
-
-
-"""
-def accurate_video_analysis(ffmpeg_bin, fileName):
-    '''
-    analyse frame rate and length of video with ffmpeg
-    '''
-
-    if sys.platform.startswith("win"):
-        cmdOutput = 'NUL'
-    else:
-        cmdOutput = '/dev/null'
-    command2 = '"{0}" -i "{1}" -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
-    
-    p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-
-    error = p.communicate()[1]
-    error= error.decode('utf-8')
-    rows = error.split('\r')
-    out = ''
-
-    for rowIdx in range(len(rows)-1, 0, -1):
-        if 'frame=' in rows[rowIdx]:
-            out = rows[rowIdx]
-            break
-    if out:
-        nframe = int(out.split(' fps=')[0].replace('frame=','').strip())
-        timeStr = out.split('time=')[1].split(' ')[0].strip()
-        time = time2seconds(timeStr) * 1000
-
-        return nframe, time
-    else:
-        return None, None
-
-class ThreadSignal(QObject):
-    sig = pyqtSignal(int, float, str, str, str)
-
-class Process(QThread):
-    '''
-    process for accurate video analysis
-    '''
-
-    def __init__(self, parent = None):
-        QThread.__init__(self, parent)
-        self.filePath = ''
-        self.ffmpeg_bin = ''
-        self.fileContentMD5 = ''
-        self.nPlayer = ''
-        self.filePath = ''
-        self.signal = ThreadSignal()
-
-    def run(self):
-
-        nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
-        print( 'nframe, videoTime, fileContentMD5, nPlayer', nframe, videoTime, self.fileContentMD5, self.nPlayer )
-        self.signal.sig.emit(nframe, videoTime, self.fileContentMD5, self.nPlayer, self.filePath)
-"""
-
 out = ''
 fps = 0
 
@@ -229,7 +170,7 @@ class Observation(QDialog, Ui_Form):
         self.widgetEnabled(True)
 
         if self.flagAnalysisRunning:
-            QMessageBox.information(self, programName,'Video analysis done ( %s - %d frames ).' % (seconds2time(videoTime/1000), nframe) , QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.information(self, programName,'Video analysis done: {} FPS.'.format(nframe / (videoTime/1000)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.flagAnalysisRunning = False
 
@@ -281,7 +222,7 @@ class Observation(QDialog, Ui_Form):
                         self.mediaFPS[ fileName ] = fps
                     else:
                         if FFMPEG in self.availablePlayers:
-                            response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
+                            response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?', [YES, NO ])
         
                             if response == YES:
                                 self.process = Process()

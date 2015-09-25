@@ -119,59 +119,6 @@ from diagram_widget import *
 import select_modifiers
 
 
-def accurate_video_analysis(ffmpeg_bin, fileName):
-    '''
-    analyse frame rate and length of video with ffmpeg
-    '''
-
-    if sys.platform.startswith("win"):
-        cmdOutput = 'NUL'
-    else:
-        cmdOutput = '/dev/null'
-    command2 = '"{0}" -i "{1}" -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
-    
-    p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-
-    error = p.communicate()[1]
-    error= error.decode('utf-8')
-    rows = error.split('\r')
-    out = ''
-
-    for rowIdx in range(len(rows)-1, 0, -1):
-        if 'frame=' in rows[rowIdx]:
-            out = rows[rowIdx]
-            break
-    if out:
-        nframe = int(out.split(' fps=')[0].replace('frame=','').strip())
-        timeStr = out.split('time=')[1].split(' ')[0].strip()
-        time = time2seconds(timeStr) * 1000
-
-        return nframe, time
-    else:
-        return None, None
-
-
-class ThreadSignal(QObject):
-    sig = pyqtSignal(int, float, str)
-
-class Process(QThread):
-    '''
-    process for accurate video analysis
-    '''
-
-    def __init__(self, parent = None):
-        QThread.__init__(self, parent)
-        self.videoPath = ''
-        self.ffmpeg_bin = ''
-        self.obsId = ''
-        self.signal = ThreadSignal()
-
-    def run(self):
-
-        nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, self.videoPath )
-        print( 'nframe, videoTime, self.obsId', nframe, videoTime, self.obsId )
-        self.signal.sig.emit(nframe, videoTime, self.obsId)
-
 
 class TempDirCleanerThread(QThread):
         def __init__(self, parent = None):
