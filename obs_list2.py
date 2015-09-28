@@ -103,13 +103,17 @@ class observationsList_widget(QDialog):
 
     def view_doubleClicked(self, index):
 
-        
         if self.mode == config.MULTIPLE:
            return
 
         if self.mode == config.OPEN:
             self.done(2)
             return
+
+        if self.mode == config.SELECT1:
+            self.done(2)
+            return
+
 
         response = dialog.MessageDialog(config.programName, 'What do you want to do with this observation?', ['Open', 'Edit', 'Cancel'])
         if response == 'Open':

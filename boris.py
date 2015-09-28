@@ -1336,6 +1336,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.vboxlayout.insertLayout(1, self.video2layout)
 
+
     def check_if_media_available(self):
         '''
         check if every media available for observationId
@@ -1365,6 +1366,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return False
         return True
 
+    def check_if_media_in_project_directory(self):
+
+        try:
+            for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
+                if not os.path.isfile( os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile) ):
+                    return False
+        except:
+            return False
+
+        return True
+
+
+
 
     def initialize_new_observation_vlc(self):
         '''
@@ -1373,15 +1387,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('initialize new observation for VLC')
 
+        useMediaFromProjectDirectory = NO
         if not self.check_if_media_available():
-            QMessageBox.critical(self, programName, """A media file was not found!<br>The observation will be opened in VIEW mode.
-            It will not be allowed to log events.\nModify the media path to point an existing media file to log events.""",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            
+            if self.check_if_media_in_project_directory():
 
-            self.playerType = 'VIEWER'
-            self.playMode = ''
-            self.dwObservations.setVisible(True)
-            return True
+                useMediaFromProjectDirectory = dialog.MessageDialog(programName, "Media file was not found in its path but in project directory. Use it from project directory?", [YES, NO ])
+                if useMediaFromProjectDirectory == NO:
+                    QMessageBox.warning(self, programName, """The observation will be opened in VIEW mode.
+                    It will not be allowed to log events.\nModify the media path to point an existing media file to log events.""",
+                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+                    self.playerType = 'VIEWER'
+                    self.playMode = ''
+                    self.dwObservations.setVisible(True)
+                    return True
+
+            else:
+                QMessageBox.critical(self, programName, """A media file was not found!<br>The observation will be opened in VIEW mode.
+                It will not be allowed to log events.\nModify the media path to point an existing media file to log events.""",
+                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+                self.playerType = 'VIEWER'
+                self.playMode = ''
+                self.dwObservations.setVisible(True)
+                return True
 
         # check if media list player 1 contains more than 1 media
         if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1 \
@@ -1415,13 +1445,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except AttributeError:
                 self.initialize_video_tab()
 
+            if useMediaFromProjectDirectory == YES:
+                mediaFile = os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile)
+
             media = self.instance.media_new( mediaFile )
             media.parse()
 
             # media duration
             mediaLength = 0  # in ms
             mediaFPS = 0
-            
+
             try:
                 mediaLength = self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] * 1000
                 #self.duration.append(self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000)
@@ -1687,7 +1720,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def selectObservations(self, mode):
         '''
         show observations list window
-        mode: accepted values: SINGLE, MULTIPLE, SELECT1
+        mode: accepted values: OPEN, SINGLE, MULTIPLE, SELECT1
         '''
 
         obsList = obs_list2.observationsList_widget()
@@ -1789,7 +1822,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             resultStr = OPEN
         if result == 3:   # edit
             resultStr = EDIT
-        
 
         return resultStr, selectedObs
 
@@ -3174,9 +3206,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][obs]['time offset'] = Decimal( str(self.pj[OBSERVATIONS][obs]['time offset']) )
 
             for idx,event in enumerate(self.pj[OBSERVATIONS][obs][EVENTS]):
-
                 self.pj[OBSERVATIONS][obs][EVENTS][idx][ pj_obs_fields['time'] ] = Decimal(str(self.pj[OBSERVATIONS][obs][EVENTS][idx][ pj_obs_fields['time'] ]))
-        
 
         # add coding_map key to old project files
         if not 'coding_map' in self.pj:
@@ -3187,7 +3217,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in [x for x in self.pj[SUBJECTS]]:
                 if not 'description' in self.pj[SUBJECTS][ idx ] :
                     self.pj[SUBJECTS][ idx ]['description'] = ''
-            
 
         # check if project file version is newer than current BORIS project file version
         if 'project_format_version' in self.pj and Decimal(self.pj['project_format_version']) > Decimal(project_format_version):
@@ -3200,7 +3229,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "behaviors_conf": {},\
             "observations": {} }
             return
-
 
 
         # check if old version  v. 0 *.obs
@@ -3234,7 +3262,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 key, name = self.pj[SUBJECTS][idx]
                 self.pj[SUBJECTS][idx] = {'key': key, 'name': name, 'description':''}
 
-
             QMessageBox.information(self, programName , 'The project file was converted to the new format (v. %s) in use with your version of BORIS.\nChoose a new file name for saving it.' % project_format_version)
 
             projectFileName = ''
@@ -3245,10 +3272,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if float(self.pj['program_version']) <  :
         '''
 
-
-
         self.initialize_new_project()
-        
+
         self.load_obs_in_lwConfiguration()
         
         self.load_subjects_in_twSubjects()
@@ -3256,7 +3281,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectFileName = projectFileName
 
         self.project = True
-        
+
         self.menu_options()
 
         self.projectChanged = False
@@ -3964,7 +3989,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             out = ''
             if platform.system() in ['Linux', 'Darwin']:
                 for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
-                    
                     for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
                         r = os.system( 'file -b ' + file_ )
                         if not r:
