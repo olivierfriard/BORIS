@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.6' # 'DEV' for development version
-__version_date__ = '2015-09-23'  # complete date in ISO 8601 format (YYYY-MM-DD)
+__version__ = '2.55'
+__version_date__ = '2015-09-29'  
 __DEV__ = False
 
 
@@ -1355,13 +1355,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not os.path.isfile( mediaFile ):
                 return False
 
-        if '2' in self.pj[OBSERVATIONS][self.observationId][FILE]:
+        if PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE]:
            
-            if type(self.pj[OBSERVATIONS][self.observationId][FILE]['2']) != type([]):
+            if type(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]) != type([]):
                 return False
                 
-            if self.pj[OBSERVATIONS][self.observationId][FILE]['2']:
-                for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE]['2']:
+            if self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
+                for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
                     if not os.path.isfile( mediaFile ):
                         return False
         return True
@@ -1369,15 +1369,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def check_if_media_in_project_directory(self):
 
         try:
-            for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-                if not os.path.isfile( os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile) ):
-                    return False
+            for player in [PLAYER1, PLAYER2]:
+                for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][player]:
+                    if not os.path.isfile( os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile) ):
+                        return False
         except:
             return False
-
         return True
-
-
 
 
     def initialize_new_observation_vlc(self):
@@ -1388,14 +1386,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug('initialize new observation for VLC')
 
         useMediaFromProjectDirectory = NO
+
         if not self.check_if_media_available():
             
             if self.check_if_media_in_project_directory():
 
-                useMediaFromProjectDirectory = dialog.MessageDialog(programName, "Media file was not found in its path but in project directory. Use it from project directory?", [YES, NO ])
+                useMediaFromProjectDirectory = dialog.MessageDialog(programName, """Media file was/were not found in its/their original path(s) but in project directory.<br>
+                Do you want to convert media file paths?""", [YES, NO ])
+
                 if useMediaFromProjectDirectory == NO:
-                    QMessageBox.warning(self, programName, """The observation will be opened in VIEW mode.
-                    It will not be allowed to log events.\nModify the media path to point an existing media file to log events.""",
+                    QMessageBox.warning(self, programName, """The observation will be opened in VIEW mode.<br>
+                    It will not be allowed to log events.<br>Modify the media path to point an existing media file to log events or copy media file in the BORIS project directory.""",
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.playerType = 'VIEWER'
@@ -1404,8 +1405,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return True
 
             else:
-                QMessageBox.critical(self, programName, """A media file was not found!<br>The observation will be opened in VIEW mode.
-                It will not be allowed to log events.\nModify the media path to point an existing media file to log events.""",
+                QMessageBox.critical(self, programName, """A media file was not found!<br>The observation will be opened in VIEW mode.<br>
+                It will not be allowed to log events.<br>Modify the media path to point an existing media file to log events or copy media file in the BORIS project directory.""",
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                 self.playerType = 'VIEWER'
@@ -1416,7 +1417,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if media list player 1 contains more than 1 media
         if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1 \
             and \
-           '2' in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE]['2']:
+           PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
 
                QMessageBox.warning(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
                return False
@@ -1438,15 +1439,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add all media files to media list 
         self.simultaneousMedia = False
 
+        if useMediaFromProjectDirectory == YES:
+            for idx, mediaFile in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
+                self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][idx] = os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile)
+                self.projectChanged = True
+
+
         for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             logging.debug('media file {}'.format(mediaFile))
             try:
                 self.instance
             except AttributeError:
                 self.initialize_video_tab()
-
-            if useMediaFromProjectDirectory == YES:
-                mediaFile = os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile)
 
             media = self.instance.media_new( mediaFile )
             media.parse()
@@ -1567,7 +1571,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # show first frame of video
         logging.debug('playing media #{0}'.format( 0 ))
-
         
         self.mediaListPlayer.play_item_at_index( 0 )
         app.processEvents()
@@ -1587,7 +1590,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.mediaplayer.video_set_spu(0)
 
 
-
         if FFMPEG in self.availablePlayers:
             self.FFmpegTimer = QTimer(self)
             self.FFmpegTimer.timeout.connect(self.FFmpegTimerOut)
@@ -1597,7 +1599,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # check for second media to be played together
-        if '2' in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE]['2']:
+        if PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
+
+                if useMediaFromProjectDirectory == YES:
+                    for idx, mediaFile in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
+                        self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2][idx] = os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile)
+                        self.projectChanged = True
 
                 # create 2nd mediaplayer
                 self.simultaneousMedia = True
@@ -1605,7 +1612,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.initialize_2nd_video_tab()
 
                 # add media file
-                for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE]['2']:
+                for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
 
                     media = self.instance.media_new( mediaFile )
                     media.parse()
@@ -1989,9 +1996,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]['media_durations']
 
             # check if simultaneous 2nd media
-            if '2' in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE]['2']:   # media for 2nd player
+            if PLAYER2 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:   # media for 2nd player
 
-                observationWindow.lwVideo_2.addItems( self.pj[OBSERVATIONS][obsId][FILE]['2'] )
+                observationWindow.lwVideo_2.addItems( self.pj[OBSERVATIONS][obsId][FILE][PLAYER2] )
 
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
@@ -3262,7 +3269,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 key, name = self.pj[SUBJECTS][idx]
                 self.pj[SUBJECTS][idx] = {'key': key, 'name': name, 'description':''}
 
-            QMessageBox.information(self, programName , 'The project file was converted to the new format (v. %s) in use with your version of BORIS.\nChoose a new file name for saving it.' % project_format_version)
+            QMessageBox.information(self, programName , 'The project file was converted to the new format (v. %s) in use with your version of BORIS.<br>Choose a new file name for saving it.' % project_format_version)
 
             projectFileName = ''
 
@@ -3987,12 +3994,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         if self.observationId and self.playerType == VLC:
             out = ''
+
             if platform.system() in ['Linux', 'Darwin']:
                 for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
                     for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
+
                         r = os.system( 'file -b ' + file_ )
+                        print('r', r)
+
                         if not r:
-                            out += '<b>'+os.path.basename(file_) + '</b><br>'
+                            out += '<b>' + os.path.basename(file_) + '</b><br>'
                             out += subprocess.getoutput('file -b ' + file_ ) + '<br>'
 
             media = self.mediaplayer.get_media()
@@ -4013,7 +4024,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.info(('Aspect ratio: %s' % self.mediaplayer.video_get_aspect_ratio()))
                 logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
 
-                QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s' % (self.convertTime(self.mediaplayer.get_length()/1000)  ) )
+                QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s' % (self.convertTime( sum(self.duration)/1000 )  ) )
 
 
     def switch_playing_mode(self):
