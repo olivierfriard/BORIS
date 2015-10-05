@@ -53,6 +53,7 @@ UNPAIRED = 'UNPAIRED'
 
 YES = 'Yes'
 NO = 'No'
+CANCEL = 'Cancel'
 
 NO_FOCAL_SUBJECT = 'No focal subject'
 

@@ -87,11 +87,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.lbObservationsState.setText('')
         self.lbSubjectsState.setText('')
-        
-        '''
-        self.twBehaviors.setSortingEnabled(False)
-        self.twSubjects.setSortingEnabled(False)
-        '''
 
         # ethogram tab
         self.pbAddBehavior.clicked.connect(self.pbAddBehavior_clicked)
@@ -326,11 +321,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if response == 'Cancel':
                         return
 
-                for i in sorted( project['behaviors_conf'].keys() ):
+                for i in sorted( project[ETHOGRAM].keys() ):
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
     
-                    for field in project['behaviors_conf'][i]:
+                    for field in project[ETHOGRAM][i]:
 
                         item = QTableWidgetItem()
 
@@ -338,14 +333,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                             comboBox = QComboBox()
                             comboBox.addItems(observation_types)
-                            comboBox.setCurrentIndex( observation_types.index(project['behaviors_conf'][i][field]) )
+                            comboBox.setCurrentIndex( observation_types.index(project[ETHOGRAM][i][field]) )
 
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, fields[field], comboBox)
 
                         else:
-                            item.setText( project['behaviors_conf'][i][field] )
+                            item.setText( project[ETHOGRAM][i][field] )
                             
-                            if field in ['excluded','coding map']:
+                            if field in ['excluded', 'coding map']:
                                 item.setFlags(Qt.ItemIsEnabled)
 
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field] ,item)
@@ -372,13 +367,17 @@ class projectDialog(QDialog, Ui_dlgProject):
         excl = {}
         new_excl = {}
 
+        includePointEvents = dialog.MessageDialog(programName, 'Do you want to include point events?', [YES, NO])
+
         for r in range(0, self.twBehaviors.rowCount()):
 
             combobox = self.twBehaviors.cellWidget(r, 0)
 
             if self.twBehaviors.item(r, fields['code']):
 
-                allBehaviors.append( self.twBehaviors.item(r, fields['code']).text() )
+                if includePointEvents == YES or ( includePointEvents == NO and 'State' in observation_types[combobox.currentIndex()]):
+                    allBehaviors.append( self.twBehaviors.item(r, fields['code']).text() )
+
                 excl[ self.twBehaviors.item(r, fields['code']).text() ] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
                 new_excl[ self.twBehaviors.item(r, fields['code']).text() ] = []
 
@@ -428,28 +427,33 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                             s1 = stateBehaviors[c]
                             s2 = allBehaviors[r]
+                            '''
                             if not s2 in new_excl[s1]:
                                 new_excl[s1].append(s2)
+                                
+                            '''
                             if not s1 in new_excl[s2]:
                                 new_excl[s2].append(s1)
 
             logging.debug('new exclusion matrix {0}'.format(new_excl))
 
+            # update excluded field
             for r in range(0, self.twBehaviors.rowCount()):
-                for e in excl:
-                    if e == self.twBehaviors.item(r, fields['code']).text():
-                        item = QTableWidgetItem( ','.join(new_excl[e]) )
-                        item.setFlags(Qt.ItemIsEnabled)
-                        self.twBehaviors.setItem(r, fields['excluded'] , item)
+                if includePointEvents == YES or ( includePointEvents == NO and 'State' in observation_types[ self.twBehaviors.cellWidget(r, 0).currentIndex() ] ):
+                    for e in excl:
+                        if e == self.twBehaviors.item(r, fields['code']).text():
+                            item = QTableWidgetItem( ','.join(new_excl[e]) )
+                            item.setFlags(Qt.ItemIsEnabled)
+                            self.twBehaviors.setItem(r, fields['excluded'] , item)
 
 
     def pbRemoveAllBehaviors_clicked(self):
 
         if self.twBehaviors.rowCount():
 
-            response = dialog.MessageDialog(programName, 'Remove all behaviors?', ['Yes', 'Cancel'])
+            response = dialog.MessageDialog(programName, 'Remove all behaviors?', [YES, CANCEL])
 
-            if response == 'Yes':
+            if response == YES:
 
                 # extract all codes to delete
                 codesToDelete = []
@@ -482,8 +486,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
         if self.twBehaviors.rowCount():
 
-            response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', 'Cancel'])
-            if response == 'Cancel':
+            response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', CANCEL])
+            if response == CANCEL:
                 return
 
         fd = QFileDialog(self)
@@ -932,7 +936,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         for loadedCodingMap in loadedCodingMaps:
             del self.pj['coding_map'][ loadedCodingMap ]
         '''
-
 
         # check independent variables
         self.indVar = {}
