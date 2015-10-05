@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.55'
-__version_date__ = '2015-09-29'  
+__version__ = '2.6'
+__version_date__ = '2015-10-05'  
 __DEV__ = False
 
 
@@ -5015,12 +5015,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             modifier_str = event['from map']
 
         # update current state
-        if 'STATE' in event['type'].upper():
+        #if 'STATE' in event['type'].upper():
+        if True:
 
             if self.currentSubject:
                 csj = []
                 for idx in self.currentStates:
-                    if idx in self.pj['subjects_conf'] and self.pj['subjects_conf'][idx]['name'] == self.currentSubject:
+                    if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]['name'] == self.currentSubject:
                         csj = self.currentStates[idx]
                         break
 
@@ -5695,12 +5696,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 l.append('')
             return l
 
-
         # ask user observations to analyze
         result, selected_observations = self.selectObservations( MULTIPLE )
 
+        if not selected_observations:
+            return
+
         # filter subjects in observations
         observed_subjects = self.extract_observed_subjects( selected_observations )
+        
+        print( observed_subjects )
 
         # ask user subject to export
         selected_subjects = self.select_subjects( observed_subjects )
@@ -5710,7 +5715,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if len(selected_observations) > 1:  # choose directory for exporting more observations
             fd = QFileDialog(self)
-            exportDir = fd.getExistingDirectory(self, 'Choose a directory to export events', os.path.expanduser('~'), options=fd.ShowDirsOnly)
+            exportDir = fd.getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser('~'), options=fd.ShowDirsOnly)
             if not exportDir:
                 return
 
@@ -5720,7 +5725,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 fd = QFileDialog(self)
 
                 if outputFormat == 'tsv':
-                    defaultFilter = 'Tab Separated Values (*.tsv);;All files (*)'
+                    defaultFilter = "Tab Separated Values (*.tsv);;All files (*)"
 
                 if outputFormat == 'ods':
                     defaultFilter = 'Open Document Spreadsheet (*.ods);;All files (*)'
@@ -5893,20 +5898,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_subjects:
             return
 
-
         fd = QFileDialog(self)
-        fileName = fd.getSaveFileName(self,'Export events as strings', '','Events file (*.txt *.tsv);;All files (*)')
+        fileName = fd.getSaveFileName(self, "Export events as strings", "","Events file (*.txt *.tsv);;All files (*)")
 
         if fileName:
-            f = open(fileName, 'w')
+            f = open(fileName, "w")
 
             for obsId in selected_observations:
 
                 # observation id
-                f.write('# observation id: {0}{1}'.format(obsId, os.linesep) )
+                f.write("# observation id: {0}{1}".format(obsId, os.linesep) )
 
                 # observation descrition
-                f.write('# observation description: {0}{1}'.format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
+                f.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
 
                 # media file name
                 if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:

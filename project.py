@@ -361,9 +361,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         activate exclusion matrix window
         '''
 
+        if not self.twBehaviors.rowCount():
+            QMessageBox.warning(None, programName, 'Behaviors list is empty!', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
         ex = ExclusionMatrix()
 
-        headers = []
+        stateBehaviors = []
+        allBehaviors = []
         excl = {}
         new_excl = {}
 
@@ -371,52 +376,64 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             combobox = self.twBehaviors.cellWidget(r, 0)
 
-            if 'State' in observation_types[combobox.currentIndex()]:
+            if self.twBehaviors.item(r, fields['code']):
 
-                if self.twBehaviors.item(r, fields['code']):
-                    headers.append( self.twBehaviors.item(r, fields['code']).text() )
-                    excl[ self.twBehaviors.item(r, fields['code']).text() ] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
-                    new_excl[ self.twBehaviors.item(r, fields['code']).text() ] = []
+                allBehaviors.append( self.twBehaviors.item(r, fields['code']).text() )
+                excl[ self.twBehaviors.item(r, fields['code']).text() ] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
+                new_excl[ self.twBehaviors.item(r, fields['code']).text() ] = []
+
+                if 'State' in observation_types[combobox.currentIndex()]:
+                    stateBehaviors.append( self.twBehaviors.item(r, fields['code']).text() )
+         
+        logging.debug( 'all behaviors: {}'.format ( allBehaviors ))
+        logging.debug( 'stateBehaviors: {}'.format ( stateBehaviors ))        
+
+        if not stateBehaviors:
+            QMessageBox.warning(None, programName, 'State events not found in behaviors list!', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
 
         logging.debug('exclusion matrix {0}'.format(excl))
 
-        ex.twExclusions.setColumnCount( len( headers ) )
+        # columns contain state events
+        ex.twExclusions.setColumnCount( len( stateBehaviors ) )
+        ex.twExclusions.setHorizontalHeaderLabels ( stateBehaviors)
         
-        ex.twExclusions.setRowCount( len( headers ) )
-        
-        ex.twExclusions.setHorizontalHeaderLabels ( headers)
 
-        for r in range(0, len( headers ) ):
+        # rows contains all events
+        ex.twExclusions.setRowCount( len( allBehaviors ) )
+        ex.twExclusions.setVerticalHeaderLabels ( allBehaviors)
 
-            for c in range(0, len( headers )):
+        for r in range(0, len( allBehaviors ) ):
+            for c in range(0, len( stateBehaviors )):
 
-                if c > r:
+                if  stateBehaviors[c] != allBehaviors[r]:
 
                     checkBox = QCheckBox()
                     
-                    if headers[ c ] in excl[ headers[r] ] or headers[ r ] in excl[ headers[c] ]:
+                    if stateBehaviors[ c ] in excl[ allBehaviors[r] ]:  # or headers[ r ] in excl[ headers[c] ]:
 
                         checkBox.setChecked(True)
 
                     ex.twExclusions.setCellWidget(r, c, checkBox)
 
-        ex.twExclusions.setVerticalHeaderLabels ( headers)
 
         if ex.exec_():
 
-            for r in range(0, len( headers )):
+            for r in range(0, len( allBehaviors )):
+                for c in range(0, len( stateBehaviors )):
 
-                for c in range(0, len( headers )):
-                    if c > r:
-                        checkBox = ex.twExclusions.cellWidget( r,c )
+                    if  stateBehaviors[c] != allBehaviors[r]:
+                        checkBox = ex.twExclusions.cellWidget(r, c)
                         if checkBox.isChecked():
 
-                            s1 = headers[c]
-                            s2 = headers[r]
+                            s1 = stateBehaviors[c]
+                            s2 = allBehaviors[r]
                             if not s2 in new_excl[s1]:
                                 new_excl[s1].append(s2)
                             if not s1 in new_excl[s2]:
                                 new_excl[s2].append(s1)
+
+            logging.debug('new exclusion matrix {0}'.format(new_excl))
 
             for r in range(0, self.twBehaviors.rowCount()):
                 for e in excl:
