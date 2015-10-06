@@ -28,7 +28,7 @@ This file is part of BORIS.
 
 
 __version__ = '2.6'
-__version_date__ = '2015-10-05'  
+__version_date__ = '2015-10-06'  
 __DEV__ = False
 
 
@@ -573,6 +573,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu observations
         self.actionNew_observation.triggered.connect(self.new_observation_triggered)
         self.actionOpen_observation.triggered.connect(self.open_observation)
+        self.actionEdit_observation_2.triggered.connect(self.edit_observation )
         self.actionObservationsList.triggered.connect(self.observations_list)
         
         self.actionClose_observation.triggered.connect(self.close_observation)
@@ -718,6 +719,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dwObservations.setWindowTitle('Events for ' + self.observationId) 
 
 
+    def edit_observation(self):
+        # check if current observation must be closed to open a new one
+        if self.observationId:
+            response = dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', [YES, NO])
+            if response == NO:
+                return
+            else:
+                self.close_observation()
+
+        result, selectedObs = self.selectObservations( EDIT )
+
+        if selectedObs:
+            self.new_observation( mode=EDIT, obsId=selectedObs[0])
+
 
     def observations_list(self):
         '''
@@ -756,9 +771,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         
             if result == EDIT:
+
                 if self.observationId != selectedObs[0]:
-        
-                    self.new_observation( mode = EDIT, obsId = selectedObs[0])   # observation id to edit
+                    self.new_observation( mode=EDIT, obsId=selectedObs[0])   # observation id to edit
                 else:
                     QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
                 
@@ -1727,7 +1742,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def selectObservations(self, mode):
         '''
         show observations list window
-        mode: accepted values: OPEN, SINGLE, MULTIPLE, SELECT1
+        mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         '''
 
         obsList = obs_list2.observationsList_widget()
@@ -1743,6 +1758,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbOpen.setVisible(True)
             #obsList.pbEdit.setVisible(True)
+
+        if mode == EDIT:
+            obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
+            obsList.pbEdit.setVisible(True)
 
         if mode == SINGLE:
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
@@ -4314,13 +4333,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # send pj to edit_event window
         editWindow.pj = self.pj
-
+        
         if self.timeFormat == HHMMSS:
             editWindow.dsbTime.setVisible(False)
+            editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time( self.getLaps() ), "hh:mm:ss.zzz") )
 
         if self.timeFormat == S:
             editWindow.teTime.setVisible(False)
-
+            editWindow.dsbTime.setValue( float( self.getLaps() ) )
+            
 
         sortedSubjects = [''] + sorted( [ self.pj['subjects_conf'][x]['name'] for x in self.pj['subjects_conf'] ])
 
@@ -4331,7 +4352,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         editWindow.cobCode.addItems( sortedCodes )
 
         # activate signal
-        editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
+        #editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
 
         editWindow.currentModifier = ''
 
@@ -4341,12 +4362,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newTime = time2seconds(editWindow.teTime.time().toString('hh:mm:ss.zzz'))
 
             if self.timeFormat == S:
-                newTime = editWindow.dsbTime.value()
+                newTime = Decimal(editWindow.dsbTime.value())
 
-            memTime = newTime
+            """memTime = newTime"""
 
             # get modifier(s)
             # check mod type (QPushButton or QDialog)
+            '''
             if type(editWindow.mod)  is select_modifiers.ModifiersRadioButton:
                 modifiers = editWindow.mod.getModifiers()
 
@@ -4360,8 +4382,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #QPushButton coding map
             if type(editWindow.mod)  is QPushButton:
                 modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
+            '''
+
+            for o in self.pj[ETHOGRAM]:
+
+                if self.pj[ETHOGRAM][o]['code'] == editWindow.cobCode.currentText():
+                    obs_idx = o
+                    break
+
+            event = self.full_event(obs_idx)
+
+            event['subject'] = editWindow.cobSubject.currentText()
+            if editWindow.leComment.toPlainText():
+                event['comment'] = editWindow.leComment.toPlainText()
+
+            self.writeEvent( event, newTime)
 
 
+            '''
             new_event = { 'time': newTime, \
             'subject': editWindow.cobSubject.currentText(), \
             'code': editWindow.cobCode.currentText() ,\
@@ -4369,11 +4407,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             'modifier': modifier_str,\
             'comment': editWindow.leComment.toPlainText() }
 
+            print('new event', new_event)
+            '''
 
+
+
+            '''
             if self.checkSameEvent(self.observationId, newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText()):
                 QMessageBox.warning(self, programName, 'The same event already exists!\nSame time, code and subject.')
                 return
-
 
             self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [ newTime, editWindow.cobSubject.currentText(),  editWindow.cobCode.currentText() , modifier_str, editWindow.leComment.toPlainText()]  )
             
@@ -4384,39 +4426,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # get item from twEvents at memTime row position
             item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS] ) if t[0] == memTime][0], 0  )
 
-            '''item.setStyleSheet("background-color: red;") 
-            item.setBackground(QColor(100,100,150))
-            '''
-
             self.twEvents.scrollToItem( item )
 
             self.projectChanged = True
-            
-            '''appStyle="""
-        QTableView
-        {   
-            background-color: black;
-            gridline-color:grey;
-            color: black;
-        }
-        QTableView::item 
-        {   
-            color: white;         
-        }
-        QTableView::item:hover
-        {   
-            color: black;
-            background: #ffaa00;            
-        }
-        QTableView::item:focus
-        {   
-            color: black;
-            background: #0063cd;            
-        }"""
-            
-            self.twEvents.setStyleSheet(appStyle);
             '''
-
+            
+ 
 
 
     def edit_event(self):
@@ -4436,22 +4451,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             editWindow.pj = self.pj
             editWindow.currentModifier = ''
 
-            row = self.twEvents.selectedItems()[0].row()   # first selected event
+            row = self.twEvents.selectedItems()[0].row()
 
             if self.timeFormat == HHMMSS:
                 editWindow.dsbTime.setVisible(False)
-
-                time = QTime()
-                h,m,s = seconds2time( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ 0 ] ).split(':')
-                s, ms = s.split('.')
-                time.setHMS(int(h),int(m),int(s),int(ms))
-                editWindow.teTime.setTime( time )
-
+                editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ 0 ] ), "hh:mm:ss.zzz") )
+               
             if self.timeFormat == S:
                 editWindow.teTime.setVisible(False)
-
                 editWindow.dsbTime.setValue( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ 0 ] )
-
 
             sortedSubjects = [''] + sorted( [ self.pj[SUBJECTS][x]['name'] for x in self.pj[SUBJECTS] ])
             
@@ -4462,7 +4470,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' %   self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ]  )
                 editWindow.cobSubject.setCurrentIndex( 0 )
-
 
             sortedCodes = sorted( [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] ])
 
@@ -4478,16 +4485,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             # pass current modifier(s) to window
+            """
             editWindow.currentModifier = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
+            """
 
             # comment
             editWindow.leComment.setPlainText( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['comment'] ])
 
             # load modifiers
+            """
             editWindow.codeChanged()
+            """
             
             # activate signal
+            """
             editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
+            """
 
             if editWindow.exec_():  #button OK
             
@@ -4499,7 +4512,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.timeFormat == S:
                     newTime = editWindow.dsbTime.value()
 
+                for o in self.pj[ETHOGRAM]:
+    
+                    if self.pj[ETHOGRAM][o]['code'] == editWindow.cobCode.currentText():
+                        obs_idx = o
+                        break
+    
+                event = self.full_event(obs_idx)
+                
+                print(event)
+    
+                event['subject'] = editWindow.cobSubject.currentText()
+                event['comment'] = editWindow.leComment.toPlainText()
+                
+                event['row'] = row
+                
+                print(event)
+    
+                self.writeEvent( event, newTime)
+
                 # check mod type (QPushButton or QDialog)
+                """
                 if type(editWindow.mod)  is select_modifiers.ModifiersRadioButton:
                     modifiers = editWindow.mod.getModifiers()
     
@@ -4513,17 +4546,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 #QPushButton coding map
                 if type(editWindow.mod)  is QPushButton:
                     modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
+                """
 
+                """
+                self.pj[OBSERVATIONS][self.observationId][EVENTS][row] = [newTime, editWindow.cobSubject.currentText(),
+                 editWindow.cobCode.currentText(),
+                  modifier_str ,
+                  editWindow.leComment.toPlainText()]
 
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][row] = [newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText(), modifier_str ,editWindow.leComment.toPlainText()]
                 self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
                 self.loadEventsInTW( self.observationId )
+                """
 
         else:
             QMessageBox.warning(self, programName, 'Select an event to edit')
 
+
     def no_media(self):
         QMessageBox.warning(self, programName, 'There is no media available')
+
 
     def no_project(self):
         QMessageBox.warning(self, programName, 'There is no project')
@@ -4943,15 +4984,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         offset is added to event time
         '''
-        
+
         logging.debug('write event - event: {0}'.format( event ))
 
         # add time offset
         memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal('.001'))
 
-
         # check if a same event is already in events list (time, subject, code)
-        if self.checkSameEvent( self.observationId, memTime, self.currentSubject, event['code'] ):
+        if not 'row' in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event['code'] ):
             QMessageBox.warning(self, programName, 'The same event already exists!\nSame time, code and subject.')
             return
 
@@ -4997,7 +5037,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         modifier_str = '|'.join( modifiers )
     
-    
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
     
@@ -5015,55 +5054,63 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             modifier_str = event['from map']
 
         # update current state
-        #if 'STATE' in event['type'].upper():
-        if True:
-
+        if not 'row' in event:
             if self.currentSubject:
                 csj = []
                 for idx in self.currentStates:
                     if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]['name'] == self.currentSubject:
                         csj = self.currentStates[idx]
                         break
-
+    
             else:  # no focal subject
-
+    
                 csj = self.currentStates['']
-
+    
             # current modifiers
             cm = {}
             for cs in csj :
                 for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS ]:
-                    if ev[0] > memTime:   #time
+                    if ev[0] > memTime:  # time
                         break
-
-                    if ev[1] == self.currentSubject:   # current subject name
-                        if ev[2] == cs:   #code
+    
+                    if ev[1] == self.currentSubject:  # current subject name
+                        if ev[2] == cs:   # code
                             cm[cs] = ev[3]
-
+    
             for cs in csj :
-
+    
                 if (event['excluded']  and cs in event['excluded'].split(',') ) or ( event['code'] == cs and  cm[cs] != modifier_str) :
                     # add excluded state event to observations (= STOP them)
                     self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime - Decimal('0.001'), self.currentSubject, cs, cm[cs], ''] )
 
 
-
-        # check if coding map
-        '''
-        if 'from map' in event:
-            modifier_str = event['from map']
-        '''
-
         # remove key code from modifiers
         modifier_str = re.sub(' \(.\)', '', modifier_str)
 
-        # add event to pj        
-        self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime, self.currentSubject, event['code'], modifier_str, ''] )
+        if 'comment' in event:
+            comment = event['comment']
+        else:
+            comment = ''
+
+        if 'subject' in event:
+            subject = event['subject']
+        else:
+            subject = self.currentSubject
+
+        # add event to pj
+        print('event',event)
+        print('row' in event)
+        if 'row' in event:
+            print('row', event['row'])
+            self.pj[OBSERVATIONS][self.observationId][EVENTS][event['row']] =  [memTime, subject, event['code'], modifier_str, comment] 
+        else:
+            self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime, subject, event['code'], modifier_str, comment] )
 
         # sort events in pj
         self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
 
         # reload all events in tw
+        """
         self.twEvents.setRowCount(0)
         for idx,o in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
 
@@ -5088,11 +5135,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             item = QTableWidgetItem( o[ 3 ] )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 4, item)
 
-            # modifier
+            # comment
             item = QTableWidgetItem( o[ 4 ]  )
             self.twEvents.setItem(self.twEvents.rowCount() - 1, 5, item)
 
         self.update_events_start_stop()
+        """
+        self.loadEventsInTW(self.observationId)
 
         item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS] ) if t[0] == memTime][0], 0  )
 
@@ -5188,7 +5237,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     '''
                     return memLaps
 
+    def full_event(self, obs_idx):
 
+        event = dict( self.pj[ETHOGRAM][obs_idx] )
+        # check if coding map
+        if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
+
+            # pause if media and media playing
+            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                if self.playerType == VLC:
+                    memState = self.mediaListPlayer.get_state()
+                    if memState == vlc.State.Playing:
+                        self.pause_video()
+
+            self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj[ETHOGRAM][obs_idx]['coding map'] ] ) 
+
+            self.codingMapWindow.resize(640, 640)
+            if self.codingMapWindowGeometry:
+                 self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
+
+            if not self.codingMapWindow.exec_():
+                return
+
+            self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
+                    
+            event['from map'] = self.codingMapWindow.getCodes()
+
+            # restart media
+            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+
+                if self.playerType == VLC:
+                    if memState == vlc.State.Playing:
+                        self.play_video()
+
+        return event
 
 
 
@@ -5356,7 +5438,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if response == NO:
                         return
-
+                """
+                event = dict( self.pj[ETHOGRAM][obs_idx] )
                 # check if coding map
                 if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
 
@@ -5377,37 +5460,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return
 
                     self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
-        
-                    event = dict( self.pj['behaviors_conf'][obs_idx] )
+                            
                     event['from map'] = self.codingMapWindow.getCodes()
 
-                    self.writeEvent(event, memLaps)
-        
                     # restart media
                     if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
         
                         if self.playerType == VLC:
                             if memState == vlc.State.Playing:
                                 self.play_video()
+                """
+                event = self.full_event(obs_idx)
         
-                else: # no coding map
-
-                    self.writeEvent(self.pj['behaviors_conf'][obs_idx], memLaps)
+                self.writeEvent( event, memLaps)
 
             elif count == 0:
 
                 # check if key defines a suject
                 flag_subject = False
-                for idx in self.pj['subjects_conf']:
+                for idx in self.pj[SUBJECTS]:
 
-                    if ek_unichr == self.pj['subjects_conf'][idx]['key']:
+                    if ek_unichr == self.pj[SUBJECTS][idx]['key']:
                         flag_subject = True
 
                         # select or deselect current subject
-                        if self.currentSubject == self.pj['subjects_conf'][idx]['name']:
+                        if self.currentSubject == self.pj[SUBJECTS][idx]['name']:
                             self.deselectSubject()
                         else:
-                            self.selectSubject( self.pj['subjects_conf'][idx]['name'] )
+                            self.selectSubject( self.pj[SUBJECTS][idx]['name'] )
 
                 if not flag_subject:
 

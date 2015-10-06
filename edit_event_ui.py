@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'edit_event.ui'
 #
-# Created: Thu Mar 26 12:23:54 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created: Tue Oct  6 12:43:14 2015
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -73,6 +73,7 @@ class Ui_Form(object):
         self.horizontalLayout_5.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.groupBox = QtGui.QGroupBox(Form)
+        self.groupBox.setEnabled(False)
         self.groupBox.setObjectName(_fromUtf8("groupBox"))
         self.verticalLayout.addWidget(self.groupBox)
         self.label_4 = QtGui.QLabel(Form)

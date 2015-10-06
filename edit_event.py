@@ -27,10 +27,10 @@ import logging
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
-import re
+#import re
 from config import *
-import select_modifiers
-import coding_map
+#import select_modifiers
+#import coding_map
 
 from edit_event_ui import Ui_Form
 
@@ -42,20 +42,23 @@ class DlgEditEvent(QDialog, Ui_Form):
         logging.basicConfig(level=log_level)
         self.setupUi(self)
 
+        '''
         self.currentModifier = ''
+        '''
 
-        #self.cobCode.currentIndexChanged.connect(self.codeChanged)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
         # embed modifiers selection
+        """
         self.mod = select_modifiers.ModifiersRadioButton('', [], '', 'embedded')
         self.VBoxLayout = QVBoxLayout()
         self.VBoxLayout.addWidget(self.mod)
 
         self.groupBox.setLayout(self.VBoxLayout)
+        """
 
-
+    """    
     def codeMap_clicked(self):
         '''
         show a coding map window
@@ -65,19 +68,14 @@ class DlgEditEvent(QDialog, Ui_Form):
         codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ codingMap[0] ] )
 
         codingMapWindow.resize(640, 640)
-        '''
-        if self.codingMapWindowGeometry:
-             self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
-        '''
 
         if not codingMapWindow.exec_():
             return
 
-        '''self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()'''
-
         self.mod.setText( codingMap[0] + '\nArea(s): ' + codingMapWindow.getCodes() )
+    """
 
-
+    """
     def codeChanged(self):
 
 
@@ -116,3 +114,4 @@ class DlgEditEvent(QDialog, Ui_Form):
                 self.mod = select_modifiers.ModifiersRadioButton('', [], '', 'embedded')
     
             self.VBoxLayout.addWidget(self.mod)
+    """

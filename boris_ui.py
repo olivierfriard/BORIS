@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Sep 22 10:13:05 2015
+# Created: Mon Oct  5 16:02:00 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 352, 412))
+        self.page.setGeometry(QtCore.QRect(0, 0, 352, 402))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -313,6 +313,8 @@ class Ui_MainWindow(object):
         self.actionExportEventTabular_XLS.setObjectName(_fromUtf8("actionExportEventTabular_XLS"))
         self.actionUser_guide = QtGui.QAction(MainWindow)
         self.actionUser_guide.setObjectName(_fromUtf8("actionUser_guide"))
+        self.actionEdit_observation_2 = QtGui.QAction(MainWindow)
+        self.actionEdit_observation_2.setObjectName(_fromUtf8("actionEdit_observation_2"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -336,6 +338,7 @@ class Ui_MainWindow(object):
         self.menuExport_aggregated_events.addAction(self.actionExportEventsSQL)
         self.menuObservations.addAction(self.actionNew_observation)
         self.menuObservations.addAction(self.actionOpen_observation)
+        self.menuObservations.addAction(self.actionEdit_observation_2)
         self.menuObservations.addAction(self.actionObservationsList)
         self.menuObservations.addAction(self.actionOpen_observation_2)
         self.menuObservations.addAction(self.actionEdit_observation)
@@ -494,4 +497,5 @@ class Ui_MainWindow(object):
         self.menuCreate_subtitles_2.setText(_translate("MainWindow", "Create subtitles", None))
         self.actionExportEventTabular_XLS.setText(_translate("MainWindow", "Microsoft Excel format (xls)", None))
         self.actionUser_guide.setText(_translate("MainWindow", "User guide", None))
+        self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
 
