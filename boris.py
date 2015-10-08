@@ -262,7 +262,6 @@ class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
         if ROW != -1:
 
             if index.row() == ROW:
-                #print('painter',ROW, index.row())
 
                 polygonTriangle = QtGui.QPolygon(3)
                 polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
@@ -635,7 +634,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # table Widget double click
         self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
-        self.twConfiguration.itemDoubleClicked.connect(self.twConfiguration_doubleClicked)
+        self.twConfiguration.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
         self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
 
         # Actions for twEvents context menu
@@ -4019,8 +4018,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
 
                         r = os.system( 'file -b ' + file_ )
-                        print('r', r)
-
                         if not r:
                             out += '<b>' + os.path.basename(file_) + '</b><br>'
                             out += subprocess.getoutput('file -b ' + file_ ) + '<br>'
@@ -4520,14 +4517,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 event = self.full_event(obs_idx)
 
-                print(event)
-
                 event['subject'] = editWindow.cobSubject.currentText()
                 event['comment'] = editWindow.leComment.toPlainText()
 
                 event['row'] = row
-
-                print(event)
 
                 self.writeEvent( event, newTime)
 
@@ -4574,60 +4567,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         QMessageBox.warning(self, programName, 'There is no current observation')
 
 
-    def twConfiguration_doubleClicked(self):
+    def twEthogram_doubleClicked(self):
         '''
-        add observation by double click in ethogram
+        add event by double-clicking in ethogram list
         '''
         if self.observationId:
             if self.twConfiguration.selectedIndexes():
 
                 ethogramRow = self.twConfiguration.selectedIndexes()[0].row()
-                logging.debug('ethogrm row: {0}'.format(ethogramRow  ))
-                logging.debug(self.pj[ETHOGRAM][str(ethogramRow)])
 
+                logging.debug('ethogram row: {0}'.format(ethogramRow  ))
+                logging.debug(self.pj[ETHOGRAM][str(ethogramRow)])
 
                 code = self.twConfiguration.item(ethogramRow, 1).text()
 
-                if 'coding map' in self.pj[ETHOGRAM][str(ethogramRow)] and self.pj[ETHOGRAM][str(ethogramRow)]['coding map']:
-
-                    # pause if media and media playing
-                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-                        if self.playerType == VLC:
-                            memState = self.mediaListPlayer.get_state()
-                            if memState == vlc.State.Playing:
-                                self.pause_video()
-
-                    self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj[ETHOGRAM][str(ethogramRow)]['coding map'] ] )
-
-                    self.codingMapWindow.resize(640, 640)
-                    if self.codingMapWindowGeometry:
-                         self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
-
-                    if not self.codingMapWindow.exec_():
-                        return
-
-                    self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
-
-                    event = dict( self.pj[ETHOGRAM][str(ethogramRow)] )
-                    event['from map'] = self.codingMapWindow.getCodes()
-
-                    #self.writeEvent(event, self.getLaps())
-
-                    # restart media
-                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-
-                        if self.playerType == VLC:
-                            if memState == vlc.State.Playing:
-                                self.play_video()
-                else:
-                    event = self.pj[ETHOGRAM] [ str(ethogramRow) ]
-                    #event = self.pj[ETHOGRAM] [ [ x for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]['code'] == code][0] ]
+                event = self.full_event( str(ethogramRow) )
 
                 logging.debug('event: {0}'.format( event ))
+
                 self.writeEvent( event , self.getLaps())
 
         else:
             self.no_observation()
+
+
 
     def actionUser_guide_triggered(self):
         ''' open user guide URL'''
@@ -4648,10 +4611,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             players.append("FFmpeg for frame-by-frame mode")
 
         QMessageBox.about(self, "About " + programName,"""<b>{prog_name}</b> {ver} - {date}
-        <p>Copyright &copy; 2012-2015 Olivier Friard<br>
+        <p>Copyright &copy; 2012-2015 Olivier Friard - Marco Gamba<br>
         Department of Life Sciences and Systems Biology - University of Torino - Italy<br>
         <br>
-        The author would like to acknowledge Sergio Castellano, Marco Gamba, Valentina Matteucci and Laura Ozella for their precious help.<br>
+        The author would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python {python_ver} - Qt {qt_ver} - PyQt4 {pyqt_ver} on {system}<br><br>
@@ -4666,7 +4629,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         media position slider moved
         adjust media position
         '''
-        print('slider moved')
+
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             if self.playerType == VLC and self.playMode == VLC:
@@ -4973,6 +4936,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         add event from pressed key to observation
 
         offset is added to event time
+
+        ask for modifiers if configured
         '''
 
         logging.debug('write event - event: {0}'.format( event ))
@@ -5088,10 +5053,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             subject = self.currentSubject
 
         # add event to pj
-        print('event',event)
-        print('row' in event)
         if 'row' in event:
-            print('row', event['row'])
             self.pj[OBSERVATIONS][self.observationId][EVENTS][event['row']] =  [memTime, subject, event['code'], modifier_str, comment]
         else:
             self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime, subject, event['code'], modifier_str, comment] )
@@ -5228,6 +5190,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return memLaps
 
     def full_event(self, obs_idx):
+        '''
+        ask modifiers from coding if configured and add them under 'from map' key
+        '''
 
         event = dict( self.pj[ETHOGRAM][obs_idx] )
         # check if coding map
@@ -5295,7 +5260,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         ek = event.key()
-        print(ek)
 
         logging.debug('key event {0}'.format( ek ))
 
@@ -5460,6 +5424,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if memState == vlc.State.Playing:
                                 self.play_video()
                 """
+
                 event = self.full_event(obs_idx)
 
                 self.writeEvent( event, memLaps)
@@ -5774,8 +5739,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # filter subjects in observations
         observed_subjects = self.extract_observed_subjects( selected_observations )
-
-        print( observed_subjects )
 
         # ask user subject to export
         selected_subjects = self.select_subjects( observed_subjects )
@@ -6305,16 +6268,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mediaplayer2.set_time(0)
 
                 self.timer_out()
-
-
-    def stopClicked(self):
-        logging.debug('Stop activated')
-
-        self.mediaplayer.stop()
-
-        # second video together
-        if self.simultaneousMedia:
-            self.mediaplayer2.stop()
 
 
 
