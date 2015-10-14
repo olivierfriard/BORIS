@@ -4692,9 +4692,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # cumulative time
             currentTime = self.getLaps() * 1000
+            print('currentTime', currentTime)
 
             # current media time
             mediaTime = self.mediaplayer.get_time()
+            print('mediaTime', mediaTime)
 
             #highlight current event in tw events and scroll event list
             self.get_events_current_row()
@@ -5189,6 +5191,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     '''
                     return memLaps
 
+
     def full_event(self, obs_idx):
         '''
         ask modifiers from coding if configured and add them under 'from map' key
@@ -5241,6 +5244,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         '''print("focus", window.focusWidget() )'''
+
+        self.timer_out()
 
         if not self.observationId:
             return
@@ -5335,6 +5340,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # get video time
         memLaps = self.getLaps()
+        print('memLaps',memLaps)
         if memLaps == None:
             return
 
@@ -6043,6 +6049,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def pause_video(self):
         '''
         pause media
+        do not pause media if already paused (otherwise media will be played)
         '''
 
         if self.playerType == VLC:
@@ -6053,15 +6060,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.mediaListPlayer.get_state() != vlc.State.Paused:
 
-                    self.mediaListPlayer.pause()  # play if paused
-                    logging.debug('player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
+                    self.timer.stop()
+                    self.mediaListPlayer.pause()
+                    # wait for pause
 
+                    while self.mediaListPlayer.get_state() != vlc.State.Paused:
+                        pass
+                    logging.debug('player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
                     # second video together
                     if self.simultaneousMedia:
                         self.mediaListPlayer2.pause()
                         logging.debug('player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
 
-                    self.timer.stop()
+                    self.timer_out()
+                    time.sleep(1)
+                    self.timer_out()
+
 
 
 
