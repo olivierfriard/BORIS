@@ -4381,20 +4381,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
             '''
 
-            for o in self.pj[ETHOGRAM]:
+            for obs_idx in self.pj[ETHOGRAM]:
+                if self.pj[ETHOGRAM][obs_idx]['code'] == editWindow.cobCode.currentText():
 
-                if self.pj[ETHOGRAM][o]['code'] == editWindow.cobCode.currentText():
-                    obs_idx = o
+                    event = self.full_event(obs_idx)
+
+                    event['subject'] = editWindow.cobSubject.currentText()
+                    if editWindow.leComment.toPlainText():
+                        event['comment'] = editWindow.leComment.toPlainText()
+
+                    self.writeEvent( event, newTime)
                     break
-
-            event = self.full_event(obs_idx)
-
-            event['subject'] = editWindow.cobSubject.currentText()
-            if editWindow.leComment.toPlainText():
-                event['comment'] = editWindow.leComment.toPlainText()
-
-            self.writeEvent( event, newTime)
-
 
             '''
             new_event = { 'time': newTime, \
@@ -4406,9 +4403,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             print('new event', new_event)
             '''
-
-
-
             '''
             if self.checkSameEvent(self.observationId, newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText()):
                 QMessageBox.warning(self, programName, 'The same event already exists!\nSame time, code and subject.')
@@ -4509,20 +4503,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.timeFormat == S:
                     newTime = editWindow.dsbTime.value()
 
-                for o in self.pj[ETHOGRAM]:
+                for obs_idx in self.pj[ETHOGRAM]:
 
-                    if self.pj[ETHOGRAM][o]['code'] == editWindow.cobCode.currentText():
-                        obs_idx = o
+                    if self.pj[ETHOGRAM][obs_idx]['code'] == editWindow.cobCode.currentText():
+                        event = self.full_event(obs_idx)
+                        event['subject'] = editWindow.cobSubject.currentText()
+                        event['comment'] = editWindow.leComment.toPlainText()
+                        event['row'] = row
+                        self.writeEvent( event, newTime)
                         break
 
-                event = self.full_event(obs_idx)
-
-                event['subject'] = editWindow.cobSubject.currentText()
-                event['comment'] = editWindow.leComment.toPlainText()
-
-                event['row'] = row
-
-                self.writeEvent( event, newTime)
 
                 # check mod type (QPushButton or QDialog)
                 """
