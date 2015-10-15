@@ -3,6 +3,8 @@
 
 '''http://nerdwaller.com/using-vlcs-python-bindings-vlc-py/
 http://stackoverflow.com/questions/9372672/how-does-vlc-py-play-video-stream
+
+https://www.olivieraubert.net/vlc/python-ctypes/
 '''
 
 # Python ctypes bindings for VLC
