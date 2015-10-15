@@ -11,12 +11,12 @@ Copyright 2012-2015 Olivier Friard
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
@@ -68,7 +68,7 @@ class observationsList_widget(QDialog):
 
         self.pbOpen = QPushButton('Open')
         hbox2.addWidget(self.pbOpen)
-        
+
         self.pbEdit = QPushButton('Edit')
         hbox2.addWidget(self.pbEdit)
 
@@ -97,7 +97,7 @@ class observationsList_widget(QDialog):
         self.pbSelect.clicked.connect(self.pbSelect_clicked)
         self.pbOpen.clicked.connect(self.pbOpen_clicked)
         self.pbEdit.clicked.connect(self.pbEdit_clicked)
-        
+
         self.view.doubleClicked.connect(self.view_doubleClicked)
 
 
@@ -106,7 +106,7 @@ class observationsList_widget(QDialog):
         if self.mode == config.MULTIPLE:
            return
 
-        if self.mode == config.OPEN:
+        if self.mode == config.OPEN or self.mode == config.EDIT:
             self.done(2)
             return
 
@@ -120,7 +120,7 @@ class observationsList_widget(QDialog):
             self.done(2)
         if response == 'Edit':
             self.done(3)
-        
+
 
 
     def pbSelectAll_clicked(self):

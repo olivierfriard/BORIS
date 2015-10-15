@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.6'
-__version_date__ = '2015-10-08'
+__version__ = '2.61'
+__version_date__ = '2015-10-15'
 __DEV__ = False
 
 
@@ -507,6 +507,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNew_observation.setEnabled(flag)
 
         self.actionOpen_observation.setEnabled( self.pj[OBSERVATIONS] != {})
+        self.actionEdit_observation_2.setEnabled( self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled( self.pj[OBSERVATIONS] != {})
 
 
@@ -6054,15 +6055,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mediaListPlayer.pause()
                     # wait for pause
 
-                    while self.mediaListPlayer.get_state() != vlc.State.Paused:
-                        pass
                     logging.debug('player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
                     # second video together
                     if self.simultaneousMedia:
                         self.mediaListPlayer2.pause()
                         logging.debug('player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
 
-                    self.timer_out()
+                    while self.mediaListPlayer.get_state() != vlc.State.Paused:
+                        pass
+
                     time.sleep(1)
                     self.timer_out()
 
