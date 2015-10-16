@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.61'
-__version_date__ = '2015-10-15'
+__version__ = '2.62'
+__version_date__ = '2015-10-16'
 __DEV__ = False
 
 
@@ -275,6 +275,7 @@ class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
                 painter.drawPolygon(polygonTriangle)
                 painter.restore()
 
+
 class MainWindow(QMainWindow, Ui_MainWindow):
 
 
@@ -285,10 +286,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     timeOffset = 0.0
 
-    confirmSound = False          # if True each keypress will be confirmed by a beep
-    embedPlayer = True            # if True the VLC player will be embedded in the main window
-    alertNoFocalSubject = False   # if True an alert will show up if no focal subject
-    trackingCursorAboveEvent = False
+    confirmSound = False               # if True each keypress will be confirmed by a beep
+    embedPlayer = True                 # if True the VLC player will be embedded in the main window
+    alertNoFocalSubject = False        # if True an alert will show up if no focal subject
+    trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
+    checkForNewVersion = False    # if True BORIS will check for new version every 15 days
+
 
     timeFormat = HHMMSS       # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
@@ -778,15 +781,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
 
 
-    def actionCheckUpdate_activated(self):
-
+    def actionCheckUpdate_activated(self, flagMsgOnlyIfNew = False):
         '''
         check BORIS web site for updates
         '''
         try:
-
             if __version__ == 'DEV':
-
                 versionURL = 'http://penelope.unito.it/boris/static/ver_dev.dat'
                 dev_date = urllib.request.urlopen( versionURL ).read().decode('utf-8').strip()
                 if dev_date > __version_date__:
@@ -797,16 +797,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
                 lastVersion = Decimal(urllib.request.urlopen( versionURL ).read().strip().decode('utf-8'))
+                self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
 
                 if lastVersion > Decimal(__version__):
-                    msg = 'A new version is available: v. <b>%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.' % str(lastVersion)
+                    msg = 'A new version is available: v. <b>%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.' % lastVersion
                 else:
                     msg = 'The version you are using is the last one: <b>%s</b>' %  __version__
 
-            QMessageBox.information(self, programName , msg)
+            QMessageBox.information(self, programName, msg)
 
         except:
-            QMessageBox.warning(self, programName , 'Can not check for updates...')
+            QMessageBox.warning(self, programName, 'Can not check for updates...')
 
 
 
@@ -1059,6 +1060,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # tracking cursor above event
         preferencesWindow.cbTrackingCursorAboveEvent.setChecked( self.trackingCursorAboveEvent )
 
+        # check for new version
+        preferencesWindow.cbCheckForNewVersion.setChecked( self.checkForNewVersion )
+
         # FFmpeg for frame by frame mode
         preferencesWindow.pbBrowseFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         preferencesWindow.lbFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
@@ -1104,7 +1108,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
-            self.trackingCursorAboveEvent= preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+            self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+
+            self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
 
             if self.observationId:
                 self.loadEventsInTW( self.observationId )
@@ -1122,7 +1128,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
-
 
             self.saveConfigFile()
 
@@ -2326,6 +2331,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.trackingCursorAboveEvent = False
 
+            # check for new version
+            self.checkForNewVersion = False
+            try:
+                if settings.value('check_for_new_version') == None:
+                    self.checkForNewVersion = ( dialog.MessageDialog(programName, 'Allow BORIS to automatically check for new version?', [YES, NO ]) == YES )
+                else:
+                    self.checkForNewVersion = (settings.value('check_for_new_version') == 'true')
+            except:
+                self.checkForNewVersion = False
+
+            if self.checkForNewVersion:
+                if settings.value('last_check_for_new_version') and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
+                    self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
+
+
             # frame-by-frame tab
             self.allowFrameByFrame = False
             try:
@@ -2396,7 +2416,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def saveConfigFile(self):
+    def saveConfigFile(self, lastCheckForNewVersion=0):
         '''
         save config file
         '''
@@ -2409,38 +2429,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             iniFilePath = os.path.expanduser('~') + os.sep + '.boris'
 
         settings = QSettings(iniFilePath, QSettings.IniFormat)
-
-        #settings.setValue('MainWindow/State', self.saveState())
         settings.setValue('MainWindow/Size', self.size())
         settings.setValue('MainWindow/Position', self.pos())
-
         settings.setValue('Time/Format', self.timeFormat )
         settings.setValue('Time/Repositioning_time_offset', self.repositioningTimeOffset )
         settings.setValue('Time/fast_forward_speed', self.fast )
         settings.setValue('Time/play_rate_step', self.play_rate_step)
-
         settings.setValue('Save_media_file_path', self.saveMediaFilePath )
-
         settings.setValue('Automatic_backup', self.automaticBackup )
-
         settings.setValue('behavioural_strings_separator', self.behaviouralStringsSeparator )
-
         settings.setValue('confirm_sound', self.confirmSound)
-
         settings.setValue('embed_player', self.embedPlayer)
-
         settings.setValue('alert_nosubject', self.alertNoFocalSubject)
         settings.setValue('tracking_cursor_above_event', self.trackingCursorAboveEvent)
+        settings.setValue('check_for_new_version', self.checkForNewVersion)
+        if lastCheckForNewVersion:
+            settings.setValue('last_check_for_new_version', lastCheckForNewVersion)
 
         # frame-by-frame
         settings.setValue('allow_frame_by_frame', self.allowFrameByFrame)
-        settings.setValue( 'ffmpeg_bin', self.ffmpeg_bin )
-        settings.setValue( 'ffmpeg_cache_dir', self.ffmpeg_cache_dir )
-        settings.setValue( 'ffmpeg_cache_dir_max_size', self.ffmpeg_cache_dir_max_size )
+        settings.setValue('ffmpeg_bin', self.ffmpeg_bin)
+        settings.setValue('ffmpeg_cache_dir', self.ffmpeg_cache_dir)
+        settings.setValue('ffmpeg_cache_dir_max_size', self.ffmpeg_cache_dir_max_size)
+
 
 
     def edit_project_activated(self):
-
+        '''
+        edit project menu option triggered
+        '''
         if self.project:
             self.edit_project(EDIT)
         else:
@@ -4584,8 +4601,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def actionUser_guide_triggered(self):
-        ''' open user guide URL'''
-        QDesktopServices.openUrl(QUrl('http://boris.readthedocs.org'))
+        ''' open user guide URL if it exists otherwise open user guide URL'''
+        userGuideFile = os.path.dirname(os.path.realpath(__file__)) + "/boris_user_guide.pdf"
+        if os.path.isfile( userGuideFile ) :
+            if sys.platform.startswith("linux"):
+                subprocess.call(["xdg-open", userGuideFile])
+            else:
+                os.startfile(userGuideFile  )
+        else:
+            QDesktopServices.openUrl(QUrl('http://boris.readthedocs.org'))
+
+
+
 
     def actionAbout_activated(self):
         ''' about window '''

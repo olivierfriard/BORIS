@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Fri Sep 25 12:05:26 2015
+# Created: Fri Oct 16 14:42:45 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -104,6 +104,9 @@ class Ui_prefDialog(object):
         self.cbTrackingCursorAboveEvent = QtGui.QCheckBox(self.tab)
         self.cbTrackingCursorAboveEvent.setObjectName(_fromUtf8("cbTrackingCursorAboveEvent"))
         self.formLayout.setWidget(9, QtGui.QFormLayout.LabelRole, self.cbTrackingCursorAboveEvent)
+        self.cbCheckForNewVersion = QtGui.QCheckBox(self.tab)
+        self.cbCheckForNewVersion.setObjectName(_fromUtf8("cbCheckForNewVersion"))
+        self.formLayout.setWidget(10, QtGui.QFormLayout.LabelRole, self.cbCheckForNewVersion)
         self.verticalLayout.addLayout(self.formLayout)
         self.tabWidget.addTab(self.tab, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
@@ -190,6 +193,7 @@ class Ui_prefDialog(object):
         self.cbEmbedPlayer.setText(_translate("prefDialog", "Embed media player in main window (program must be restarted)", None))
         self.cbAlertNoFocalSubject.setText(_translate("prefDialog", "Alert if focal subject is not set", None))
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
+        self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
         self.label_14.setText(_translate("prefDialog", "The frame-by-frame mode requires the FFmpeg program. See https://www.ffmpeg.org ", None))
         self.cbAllowFrameByFrameMode.setText(_translate("prefDialog", "Allow the frame-by-frame mode", None))

@@ -180,6 +180,13 @@
              </property>
             </widget>
            </item>
+           <item row="10" column="0">
+            <widget class="QCheckBox" name="cbCheckForNewVersion">
+             <property name="text">
+              <string>Check for new version</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
         </layout>
