@@ -4710,11 +4710,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # cumulative time
             currentTime = self.getLaps() * 1000
-            print('currentTime', currentTime)
 
             # current media time
             mediaTime = self.mediaplayer.get_time()
-            print('mediaTime', mediaTime)
 
             #highlight current event in tw events and scroll event list
             self.get_events_current_row()
