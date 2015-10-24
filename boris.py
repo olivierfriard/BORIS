@@ -28,7 +28,7 @@ This file is part of BORIS.
 
 
 __version__ = '2.62'
-__version_date__ = '2015-10-22'
+__version_date__ = '2015-10-24'
 __DEV__ = False
 
 
@@ -2289,7 +2289,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.play_rate_step = 0.1
 
-
             #self.saveMediaFilePath = True
 
             self.automaticBackup = 0
@@ -2345,7 +2344,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if settings.value('last_check_for_new_version') and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
 
-
             # frame-by-frame tab
             self.allowFrameByFrame = False
             try:
@@ -2360,14 +2358,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.ffmpeg_bin = ''
                 except:
                     self.ffmpeg_bin = ''
-
-            if self.allowFrameByFrame:
-                r, msg = test_ffmpeg_path(self.ffmpeg_bin)
-                if r:
-                    self.availablePlayers.append(FFMPEG)
-                else:
-                    self.allowFrameByFrame = False
-                    logging.warning(msg)
 
             self.ffmpeg_cache_dir = ''
             try:
@@ -2386,31 +2376,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_cache_dir_max_size = 0
 
 
-
-
-
-        # test if FFmpeg embedded to allow frame-by-frame mode
-        if not self.ffmpeg_bin:
-            if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
-                self.allowFrameByFrame = True
-                self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
-
-            elif sys.platform.startswith('linux'):
-
-                logging.debug('ffmpeg embedded {}'.format(os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' )))
-                if os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
-                    self.allowFrameByFrame = True
-                    self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
-
-                # test if FFmpeg installed on path
-                if not self.ffmpeg_bin:
-                    r, msg = test_ffmpeg_path('ffmpeg')
-                    if r:
-                        self.allowFrameByFrame = True
-                        self.ffmpeg_bin = 'ffmpeg'
-
-            if self.ffmpeg_bin:
+        if self.allowFrameByFrame:
+            r, msg = test_ffmpeg_path(self.ffmpeg_bin)
+            if r:
                 self.availablePlayers.append(FFMPEG)
+            else:
+                logging.warning(msg)
+
+                if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
+                    self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
+    
+                elif sys.platform.startswith('linux'):
+    
+                    # test if ffmpeg is on same path of main script
+                    #logging.debug('ffmpeg embedded {}'.format(os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' )))
+                    if os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
+                        self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
+    
+                    # test if FFmpeg installed on path
+                    else:
+                        r, msg = test_ffmpeg_path('ffmpeg')
+                        if r:
+                            self.ffmpeg_bin = 'ffmpeg'
+
+                r, _ = test_ffmpeg_path(self.ffmpeg_bin)
+                if r:
+                    self.availablePlayers.append(FFMPEG)
+                else:
+                    self.allowFrameByFrame = False
+
 
         logging.debug( 'available players: {}'.format(self.availablePlayers ))
 

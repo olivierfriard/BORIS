@@ -83,7 +83,6 @@ class Preferences(QDialog, Ui_prefDialog):
         '''
         test if FFmepg is running
         '''
-        
         r, msg = test_ffmpeg_path( self.leFFmpegPath.text() )
         if not r:
             QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -92,7 +91,10 @@ class Preferences(QDialog, Ui_prefDialog):
 
     def ok(self):
 
-        if self.cbAllowFrameByFrameMode.isChecked() and self.leFFmpegPath.text():
+        if self.cbAllowFrameByFrameMode.isChecked():
+            if not self.leFFmpegPath.text():
+                QMessageBox.warning(None, programName, "The path for FFmpeg is empty!", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
             if not self.testFFmpeg():
                 return
         self.accept()

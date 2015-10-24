@@ -145,7 +145,7 @@ def test_ffmpeg_path(FFmpegPath):
         return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
 
     if not 'ffmpeg version' in out and not 'ffmpeg version' in error:
-        return False, 'It seems that it is not the correct FFmpeg program... {} See https://www.ffmpeg.org'.format(FFmpegPath  )
+        return False, 'It seems that <b>{}</b> is not the correct FFmpeg program...<br>See https://www.ffmpeg.org'.format(FFmpegPath  )
 
     return True, ''
 
