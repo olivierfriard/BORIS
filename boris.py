@@ -175,15 +175,16 @@ class checkingBox_list(QDialog):
         for idx in range(self.lw.count()):
             self.lw.itemWidget(self.lw.item(idx)).setChecked(False)
 
-
     def pbOK_clicked(self):
         self.accept()
 
     def pbCancel_clicked(self):
         self.reject()
 
-
 class JumpTo(QDialog):
+    '''
+    jump dialog box
+    '''
 
     def __init__(self, timeFormat):
         super(JumpTo, self).__init__()
