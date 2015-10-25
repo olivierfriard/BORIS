@@ -31,7 +31,6 @@ __version__ = '2.62'
 __version_date__ = '2015-10-24'
 __DEV__ = False
 
-
 import sys
 import logging
 import platform
@@ -48,7 +47,6 @@ except:
     sys.exit()
 
 import qrc_boris
-
 from config import *
 
 video, live = 0, 1
@@ -72,15 +70,10 @@ import PyQt4.QtNetwork
 import PyQt4.QtWebKit
 import tempfile
 import glob
-
 import subprocess
-
 import dialog
-
 from boris_ui import *
-
 from edit_event import *
-
 from project import *
 import preferences
 import param_panel
@@ -89,38 +82,30 @@ import coding_map
 import map_creator
 import select_modifiers
 from utilities import *
-
 import tablib
-
 import obs_list2
-
 
 def bytes_to_str(b):
     '''
     Translate bytes to string.
     '''
     if isinstance(b, bytes):
-
         fileSystemEncoding = sys.getfilesystemencoding()
-
         # hack for PyInstaller
         if fileSystemEncoding == None:
             fileSystemEncoding = 'UTF-8'
-
         return b.decode( fileSystemEncoding )
     else:
         return b
 
-
 from time_budget_widget import *
-
 from diagram_widget import *
-
 import select_modifiers
 
-
-
 class TempDirCleanerThread(QThread):
+        '''
+        class for cleaning image cache directory with thread
+        '''
         def __init__(self, parent = None):
             QThread.__init__(self, parent)
             self.exiting = False
