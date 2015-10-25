@@ -113,21 +113,17 @@ class TempDirCleanerThread(QThread):
             self.ffmpeg_cache_dir_max_size = 0
 
         def run(self):
-            while self.exiting==False:
-
+            while self.exiting == False:
                 if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if 'BORIS_' in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
-
                     fl = sorted((os.path.getctime(self.tempdir+f),self.tempdir+f) for f in os.listdir(self.tempdir) if 'BORIS_' in f and os.path.isfile(self.tempdir + f))
-
                     for ts,f in fl[0:int(len(fl)/10)]:
                         os.remove(f)
-
                 time.sleep(30)
 
 
 class checkingBox_list(QDialog):
     '''
-    class for selecting iems from a ListWidget
+    class for selecting items from a ListWidget by checking a box
     '''
 
     def __init__(self):
