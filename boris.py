@@ -212,7 +212,6 @@ class JumpTo(QDialog):
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         hbox2 = QHBoxLayout(self)
-
         hbox2.addWidget(self.pbCancel)
         hbox2.addWidget(self.pbOK)
 
