@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.62'
-__version_date__ = '2015-10-24'
+__version__ = '2.63'
+__version_date__ = '2015-10-29'
 __DEV__ = False
 
 import sys
