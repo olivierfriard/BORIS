@@ -9,12 +9,12 @@ Copyright 2012-2015 Olivier Friard
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
@@ -70,7 +70,7 @@ def getTimeValues( n ):
 
     while m/tick <5:
         tick = tick/2
-    
+
     return tick, m
 
 
@@ -83,7 +83,7 @@ def time2seconds(time):
     time = time.replace('-','')
 
     tsplit= time.split(':')
-    
+
     h, m, s = int( tsplit[0] ), int( tsplit[1] ), Decimal( tsplit[2] )
 
     if flagNeg:
@@ -98,9 +98,9 @@ def seconds2time(sec):
     '''
     flagNeg = sec < 0
     sec = abs(sec)
-    
+
     hours = 0
-   
+
     minutes = int(sec / 60)
     if minutes >= 60:
         hours = int(minutes /60)
@@ -140,7 +140,7 @@ def test_ffmpeg_path(FFmpegPath):
 
     if 'avconv' in out:
         return False, 'Please use FFmpeg in place of avconv.\nSee https://www.ffmpeg.org'
-    
+
     if 'the Libav developers' in error:
         return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
 
@@ -150,6 +150,7 @@ def test_ffmpeg_path(FFmpegPath):
     return True, ''
 
 def playWithVLC(fileName):
+
     import vlc
     import time
     instance = vlc.Instance()
@@ -169,8 +170,8 @@ def playWithVLC(fileName):
         if mediaplayer.get_state() == vlc.State.Ended:
             result = 'media error'
             break
-        time.sleep(3)                
-    
+        time.sleep(3)
+
     if result:
         out = result
     else:
@@ -191,7 +192,7 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
     else:
         cmdOutput = '/dev/null'
     command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
-    
+
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
 
     error = p.communicate()[1]

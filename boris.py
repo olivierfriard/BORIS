@@ -2366,14 +2366,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
                     self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
-    
+
                 elif sys.platform.startswith('linux'):
-    
+
                     # test if ffmpeg is on same path of main script
                     #logging.debug('ffmpeg embedded {}'.format(os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' )))
                     if os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
                         self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
-    
+
                     # test if FFmpeg installed on path
                     else:
                         r, msg = test_ffmpeg_path('ffmpeg')
@@ -2944,8 +2944,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 mediaLength = self.pj[OBSERVATIONS][obsId]['media_info']['length'][mediaFile]
             except:
                 # md5 sum of file content
-                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
                 try:
+                    fileContentMD5 = hashfile( mediaFile , hashlib.md5())
                     mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000
                 except:
                     try:
@@ -4010,10 +4010,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
                     for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
 
-                        r = os.system( 'file -b ' + file_ )
+                        r = os.system( 'file -b "{}"'.format(file_) )
                         if not r:
                             out += '<b>' + os.path.basename(file_) + '</b><br>'
-                            out += subprocess.getoutput('file -b ' + file_ ) + '<br>'
+                            out += subprocess.getoutput('file -b "{}"'.format(file_) ) + '<br>'
 
             media = self.mediaplayer.get_media()
             if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
