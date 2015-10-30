@@ -2998,6 +2998,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
+            import matplotlib.colors as matcolors
             import numpy as np
         except:
             logging.warning('matplotlib plotting library not installed')
@@ -3007,7 +3008,101 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def plot_time_ranges(obs, obsId, videoLength):
 
+            colors = list(matcolors.cnames.keys())
+
+            all_behaviors = []
+            maxTime = 0
+            for subject_idx, subject in enumerate( sorted( list(obs.keys()) )   ):
+                for behavior in sorted(list(obs[subject].keys())):
+                    if not behavior in all_behaviors:
+                        all_behaviors.append(behavior)
+                    for t1, t2 in obs[subject][behavior]:
+                        maxTime = max(maxTime, t1, t2)
+
+            all_behaviors = sorted(all_behaviors  )
+            lbl = all_behaviors[:] * len(obs)
+
+            fig = plt.figure()
+            fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
+
+            ax = fig.add_subplot(111)
+            labels = ax.set_yticklabels(lbl)
+            ax.set_xlabel('Time (s)')
+            ax.set_ylabel('Behaviors')
+
+            plt.ylim( len(lbl), -0.5)
+
+            if not videoLength:
+                videoLength = maxTime
+
+            plt.xlim( 0, round(videoLength) + 2)
+            plt.yticks(range(len(lbl) + 1), np.array(lbl))
+
+            count = 0
+
+            for subject_idx, subject in enumerate(sorted( list(obs.keys()) )):
+
+                ax.text(round(float(videoLength) * 0.05), count - 0.2 , subject)
+
+                behaviors = obs[subject]
+
+                x1, x2, y, col = [], [], [], []
+                col_count = 0
+
+                for b in all_behaviors:
+                    if not b in behaviors:
+                        x1.append(0)
+                        x2.append(0)
+                        y.append(count)
+                        col.append( colors[ col_count % len(colors)] )
+                    else:
+                        for t1, t2 in behaviors[ b ]:
+                            x1.append( t1 )
+                            x2.append( t2 )
+                            y.append(count)
+                            col.append( colors[ col_count % len(colors)] )
+                    count += 1
+                    col_count += 1
+
+                if not y:
+                    return False
+
+                x1 = np.array(x1)
+                x2 = np.array(x2)
+                y = np.array(y)
+
+                ax.hlines(y, x1, x2, lw = 10, color = col)
+
+                ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
+
+            def on_draw(event):
+               # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
+               bboxes = []
+               for label in labels:
+                   bbox = label.get_window_extent()
+                   bboxi = bbox.inverse_transformed(fig.transFigure)
+                   bboxes.append(bboxi)
+
+               bbox = mtransforms.Bbox.union(bboxes)
+               if fig.subplotpars.left < bbox.width:
+                   fig.subplots_adjust(left=1.1*bbox.width)
+                   fig.canvas.draw()
+               return False
+
+            fig.canvas.mpl_connect('draw_event', on_draw)
+
+            plt.show()
+            return True
+
+
+
+
+
+        def plot_time_ranges_old(obs, obsId, videoLength):
+
             colors = ['blue','green','red','cyan','magenta','yellow','#7A68A6','#81b1d2','#afeeee','#FBC15E','#e5ae38','#8EBA42','#fa8174','#6d904f']
+            #colors = list(colors.cnames.keys())
+
             count = 0
             lbl = []
             maxTime = 0
