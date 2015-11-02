@@ -66,8 +66,6 @@ import urllib.parse
 import urllib.request
 import urllib.error
 import urllib.parse
-import PyQt4.QtNetwork
-import PyQt4.QtWebKit
 import tempfile
 import glob
 import subprocess
@@ -99,7 +97,6 @@ def bytes_to_str(b):
         return b
 
 from time_budget_widget import *
-from diagram_widget import *
 import select_modifiers
 
 class TempDirCleanerThread(QThread):
