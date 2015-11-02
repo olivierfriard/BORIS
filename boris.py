@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.63'
-__version_date__ = '2015-10-29'
+__version__ = '2.64'
+__version_date__ = '2015-11-02'
 __DEV__ = False
 
 import sys
@@ -3006,23 +3006,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        def plot_time_ranges(obs, obsId, videoLength):
+        def plot_time_ranges(obs, obsId, videoLength, excludeBehaviorsWithoutEvents, line_width):
 
-            colors = list(matcolors.cnames.keys())
+            LINE_WIDTH = line_width
+            #colors = list(matcolors.cnames.keys())
+            colors = ['blue','green','red','cyan','magenta','yellow','lime','#81b1d2','#afeeee','#FBC15E','#e5ae38','#8EBA42','#fa8174','#6d904f']
 
             all_behaviors = []
+            observedBehaviors = []
             maxTime = 0
-            for subject_idx, subject in enumerate( sorted( list(obs.keys()) )   ):
+
+            for subject in  sorted( list(obs.keys())):
                 for behavior in sorted(list(obs[subject].keys())):
+
+                    if not excludeBehaviorsWithoutEvents:
+                        observedBehaviors.append(behavior)
+                    else:
+                        if obs[subject][behavior]:
+                            observedBehaviors.append(behavior)
+
                     if not behavior in all_behaviors:
                         all_behaviors.append(behavior)
                     for t1, t2 in obs[subject][behavior]:
                         maxTime = max(maxTime, t1, t2)
+                observedBehaviors.append('')
 
-            all_behaviors = sorted(all_behaviors  )
-            lbl = all_behaviors[:] * len(obs)
+            all_behaviors = sorted(all_behaviors)
 
-            fig = plt.figure()
+            if excludeBehaviorsWithoutEvents:
+                lbl = observedBehaviors[:]
+            else:
+                all_behaviors.append('')
+                lbl = all_behaviors[:] * len(obs)
+
+            lbl = lbl[:-1]  # remove last empty line
+
+            fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
             fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
 
             ax = fig.add_subplot(111)
@@ -3039,10 +3058,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
             count = 0
+            flagFirstSubject = True
 
-            for subject_idx, subject in enumerate(sorted( list(obs.keys()) )):
+            for subject in sorted( list(obs.keys())):
 
-                ax.text(round(float(videoLength) * 0.05), count - 0.2 , subject)
+                if not flagFirstSubject:
+                    if excludeBehaviorsWithoutEvents:
+                        count += 1
+                    ax.axhline(y=(count-1), linewidth=1, color='black')
+                    ax.hlines(np.array([count]), np.array([0]), np.array([0]), lw=LINE_WIDTH, color=col)
+                else:
+                    flagFirstSubject = False
+
+                ax.text(round(float(videoLength) * 0.05), count - 0.5 , subject)
 
                 behaviors = obs[subject]
 
@@ -3050,30 +3078,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 col_count = 0
 
                 for b in all_behaviors:
-                    if not b in behaviors:
-                        x1.append(0)
-                        x2.append(0)
-                        y.append(count)
-                        col.append( colors[ col_count % len(colors)] )
-                    else:
-                        for t1, t2 in behaviors[ b ]:
-                            x1.append( t1 )
-                            x2.append( t2 )
+
+                    if b in obs[subject]:
+                        if obs[subject][ b ]:
+                            for t1, t2 in obs[subject][ b ]:
+                                x1.append( t1 )
+                                x2.append( t2 )
+                                y.append(count)
+                                col.append( colors[ col_count % len(colors)] )
+                            count += 1
+                        else:
+                            x1.append( 0 )
+                            x2.append( 0 )
                             y.append(count)
-                            col.append( colors[ col_count % len(colors)] )
-                    count += 1
+                            col.append('white')
+                            count += 1
+
+                    else:
+                        if not excludeBehaviorsWithoutEvents:
+                            x1.append(0)
+                            x2.append(0)
+                            y.append(count)
+                            col.append( 'white' )
+                            count += 1
+
                     col_count += 1
 
-                if not y:
-                    return False
+                #if not y:
+                #    return False
 
                 x1 = np.array(x1)
                 x2 = np.array(x2)
                 y = np.array(y)
 
-                ax.hlines(y, x1, x2, lw = 10, color = col)
+                ax.hlines(y, x1, x2, lw = LINE_WIDTH, color = col)
 
-                ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
+                #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
             def on_draw(event):
                # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
@@ -3216,7 +3256,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
 
-        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, totalMediaLength = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
+        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWithoutEvents, totalMediaLength = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
 
         logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
 
@@ -3270,7 +3310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
                     rows = list(cursor.fetchall() )
 
-                    if not len( rows ) and excludeBehaviorsWoEvents:
+                    if not len( rows ) and excludeBehaviorsWithoutEvents:
                         continue
 
                     if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
@@ -3290,9 +3330,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if idx % 2 == 0:
                                 o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
 
-
         logging.debug('intervals: {}'.format(o))
-        if not plot_time_ranges(o, selectedObservations[0], totalMediaLength):
+
+        if not plot_time_ranges(o, selectedObservations[0], totalMediaLength, excludeBehaviorsWithoutEvents, line_width=10):
             QMessageBox.warning(self, programName , 'Check events')
 
 
