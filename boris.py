@@ -2651,7 +2651,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             selectedSubjects.append(NO_FOCAL_SUBJECT)
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
             paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( NO_FOCAL_SUBJECT )
+            paramPanelWindow.ch.setText(NO_FOCAL_SUBJECT)
             paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
             paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
@@ -3131,99 +3131,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             plt.show()
             return True
 
-
-
-
-
-        def plot_time_ranges_old(obs, obsId, videoLength):
-
-            colors = ['blue','green','red','cyan','magenta','yellow','#7A68A6','#81b1d2','#afeeee','#FBC15E','#e5ae38','#8EBA42','#fa8174','#6d904f']
-            #colors = list(colors.cnames.keys())
-
-            count = 0
-            lbl = []
-            maxTime = 0
-            for subject_idx, subject in enumerate( sorted( list(obs.keys()) )   ):
-                behaviors = obs[subject]
-                for k in sorted(list(behaviors.keys())):
-                    lbl.append(k)
-                    for t1,t2 in behaviors[k]:
-                        maxTime = max(maxTime,t1,t2)
-                    count += 1
-
-            fig = plt.figure()
-            fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
-
-            ax = fig.add_subplot(111)
-            labels = ax.set_yticklabels(lbl)
-            ax.set_xlabel('Time (s)')
-            ax.set_ylabel('Behaviors')
-
-            plt.ylim( count, -0.5)
-
-            if not videoLength:
-                videoLength = maxTime
-
-            plt.xlim( 0, round(videoLength) + 2)
-
-            plt.yticks(range(count + 1), np.array(lbl))
-
-            count = 0
-
-            for subject_idx, subject in enumerate(sorted( list(obs.keys()) )):
-
-                ax.text(round(float(videoLength) * 0.05), count - 0.2 , subject)
-
-                behaviors = obs[subject]
-
-                x1, x2, y, col = [], [], [], []
-
-                col_count = 0
-                for k in sorted(list(behaviors.keys())):
-                    if not behaviors[k]:
-                        x1.append(0)
-                        x2.append(0)
-                        y.append(count)
-                        col.append( colors[ col_count % len(colors) ] )
-                    else:
-                        for t1,t2 in behaviors[k]:
-                            x1.append( t1 )
-                            x2.append( t2 )
-                            y.append(count)
-                            col.append( colors[ col_count % len(colors) ] )
-                    count += 1
-                    col_count += 1
-
-                if not y:
-                    return False
-
-                x1 = np.array(x1)
-                x2 = np.array(x2)
-                y = np.array(y)
-
-                ax.hlines(y, x1, x2, lw = 10, color = col)
-
-                ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
-
-            def on_draw(event):
-               # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
-               bboxes = []
-               for label in labels:
-                   bbox = label.get_window_extent()
-                   bboxi = bbox.inverse_transformed(fig.transFigure)
-                   bboxes.append(bboxi)
-
-               bbox = mtransforms.Bbox.union(bboxes)
-               if fig.subplotpars.left < bbox.width:
-                   fig.subplots_adjust(left=1.1*bbox.width)
-                   fig.canvas.draw()
-               return False
-
-            fig.canvas.mpl_connect('draw_event', on_draw)
-
-            plt.show()
-            return True
-
         result, selectedObservations = self.selectObservations( SELECT1 )
 
         logging.debug('Selected observations: {0}'.format(selectedObservations))
@@ -3236,11 +3143,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         for obsId in selectedObservations:
-
             if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
-
                 totalMediaLength = self.observationTotalMediaLength( obsId )
-
             else: # LIVE
                 if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
@@ -3249,7 +3153,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if totalMediaLength == -1:
             totalMediaLength = 0
-
 
         logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
 
@@ -3289,7 +3192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         for idx, row in enumerate(rows):
                             if 'POINT' in self.eventType(behavior).upper():
-                                o[subject][behaviorOut].append( [row[0],row[0] + 1] )  ### FIXME 1 second? for point event
+                                o[subject][behaviorOut].append([row[0], row[0] + 1])  ### FIXME 1 second? for point event
 
                             if 'STATE' in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
