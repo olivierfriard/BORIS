@@ -28,7 +28,7 @@ This file is part of BORIS.
 
 
 __version__ = '2.64'
-__version_date__ = '2015-11-02'
+__version_date__ = '2015-11-03'
 __DEV__ = False
 
 import sys
@@ -2888,7 +2888,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tb.lw.addItem(obs)
 
         if selectedObsTotalMediaLength:
-            self.tb.lbTotalObservedTime.setText( "Total media length: {0} s  (~ {1} min)".format(round(selectedObsTotalMediaLength,3),round(selectedObsTotalMediaLength/60)) )
+            #self.tb.lbTotalObservedTime.setText( "Total media length: {0} s  (~ {1} min)".format(round(selectedObsTotalMediaLength,3), round(selectedObsTotalMediaLength/60,2)) )
+            self.tb.lbTotalObservedTime.setText( "Total media length: {0} decimal minutes".format( round(selectedObsTotalMediaLength/60,2)) )
         else:
             self.tb.lbTotalObservedTime.setText( "Total media length: not available")
 
