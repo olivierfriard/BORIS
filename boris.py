@@ -3079,7 +3079,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 behaviors = obs[subject]
 
-                x1, x2, y, col, pointsx, pointsy = [], [], [], [], [], []
+                x1, x2, y, col, pointsx, pointsy, guide = [], [], [], [], [], [], []
                 col_count = 0
 
                 for b in all_behaviors:
@@ -3090,17 +3090,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if t1 == t2:
                                     pointsx.append( t1 )
                                     pointsy.append( count )
+                                    ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
                                 else:
                                     x1.append( t1 )
                                     x2.append( t2 )
                                     y.append(count)
                                     col.append( colors[ col_count % len(colors)] )
+                                    ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
                             count += 1
                         else:
-                            x1.append( 0 )
-                            x2.append( 0 )
+                            x1.append(0)
+                            x2.append(0)
                             y.append(count)
                             col.append('white')
+                            ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
                             count += 1
 
                     else:
@@ -3109,6 +3112,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             x2.append(0)
                             y.append(count)
                             col.append( 'white' )
+                            ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
                             count += 1
 
                     col_count += 1
@@ -3219,10 +3223,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
                     rows = list(cursor.fetchall() )
 
-                    '''
+
                     if not len( rows ) and excludeBehaviorsWithoutEvents:
                         continue
-                    '''
+
 
                     if STATE in self.eventType(behavior).upper() and len( rows ) % 2:
                         continue
