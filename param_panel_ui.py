@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created: Fri Jul 17 17:13:11 2015
+# Created: Tue Nov  3 09:56:33 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -54,8 +54,8 @@ class Ui_Dialog(object):
         self.lbMaxTime = QtGui.QLabel(Dialog)
         self.lbMaxTime.setObjectName(_fromUtf8("lbMaxTime"))
         self.horizontalLayout.addWidget(self.lbMaxTime)
-        self.sbMaxTime = QtGui.QSpinBox(Dialog)
-        self.sbMaxTime.setMaximum(10000000)
+        self.sbMaxTime = QtGui.QDoubleSpinBox(Dialog)
+        self.sbMaxTime.setMaximum(10000.0)
         self.sbMaxTime.setObjectName(_fromUtf8("sbMaxTime"))
         self.horizontalLayout.addWidget(self.sbMaxTime)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -83,7 +83,7 @@ class Ui_Dialog(object):
         self.lbBehaviors.setText(_translate("Dialog", "Behaviors", None))
         self.cbIncludeModifiers.setText(_translate("Dialog", "Include modifiers", None))
         self.cbExcludeBehaviors.setText(_translate("Dialog", "Exclude behaviors without events", None))
-        self.lbMaxTime.setText(_translate("Dialog", "Max time (s)", None))
+        self.lbMaxTime.setText(_translate("Dialog", "Max time (decimal minutes)", None))
         self.pbCancel.setText(_translate("Dialog", "Cancel", None))
         self.pbOK.setText(_translate("Dialog", "OK", None))
 

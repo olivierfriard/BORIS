@@ -2636,6 +2636,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def choose_obs_subj_behav(self, selectedObservations, maxTime):
+        '''
+        show param window
+        allow user to select subjects and behaviors
+        for plot user can select the max time (if media length is known)
+        '''
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.selectedObservations = selectedObservations
@@ -2693,7 +2698,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.sbMaxTime.setVisible(False)
             paramPanelWindow.lbMaxTime.setVisible(False)
         else:
-            paramPanelWindow.sbMaxTime.setValue(maxTime)
+            paramPanelWindow.sbMaxTime.setValue(maxTime/60)  # max time in minutes
 
         if not paramPanelWindow.exec_():
             return [],[],YES,False,0
@@ -2990,7 +2995,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def plot_events(self):
         '''
-        plot events
+        plot events with matplotlib
         '''
         try:
             import matplotlib.pyplot as plt
@@ -3004,10 +3009,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         def plot_time_ranges(obs, obsId, videoLength, excludeBehaviorsWithoutEvents, line_width):
+            '''
+            create "hlines" matplotlib plot
+            '''
 
             LINE_WIDTH = line_width
             #colors = list(matcolors.cnames.keys())
-            colors = ['blue','green','red','cyan','magenta','yellow','lime','#81b1d2','#afeeee','#FBC15E','#e5ae38','#8EBA42','#fa8174','#6d904f']
+            colors = ['blue','green','red','cyan','magenta','yellow','lime','darksalmon','purple','orange','maroon','silver','slateblue','hotpink','steelblue','darkgoldenrod']
 
             all_behaviors = []
             observedBehaviors = []
@@ -3071,7 +3079,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 behaviors = obs[subject]
 
-                x1, x2, y, col = [], [], [], []
+                x1, x2, y, col, pointsx, pointsy = [], [], [], [], [], []
                 col_count = 0
 
                 for b in all_behaviors:
@@ -3079,10 +3087,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if b in obs[subject]:
                         if obs[subject][ b ]:
                             for t1, t2 in obs[subject][ b ]:
-                                x1.append( t1 )
-                                x2.append( t2 )
-                                y.append(count)
-                                col.append( colors[ col_count % len(colors)] )
+                                if t1 == t2:
+                                    pointsx.append( t1 )
+                                    pointsy.append( count )
+                                else:
+                                    x1.append( t1 )
+                                    x2.append( t2 )
+                                    y.append(count)
+                                    col.append( colors[ col_count % len(colors)] )
                             count += 1
                         else:
                             x1.append( 0 )
@@ -3101,14 +3113,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     col_count += 1
 
-                #if not y:
-                #    return False
-
-                x1 = np.array(x1)
-                x2 = np.array(x2)
-                y = np.array(y)
-
-                ax.hlines(y, x1, x2, lw = LINE_WIDTH, color = col)
+                ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
+                ax.plot(pointsx,pointsy, 'r^' )
 
                 #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
@@ -3158,7 +3164,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWithoutEvents, totalMediaLength = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
 
-        logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
+        logging.debug('totalMediaLength: {0} min'.format(totalMediaLength))
+
+        totalMediaLength = int(totalMediaLength * 60)
 
         if not selectedSubjects or not selectedBehaviors:
             return
@@ -3183,7 +3191,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = cursor.fetchall()
 
                         if modifier[0]:
-                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|',','))
+                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|', ','))
                         else:
                             behaviorOut = '{0}'.format(behavior)
 
@@ -3191,10 +3199,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             o[subject][behaviorOut] = []
 
                         for idx, row in enumerate(rows):
-                            if 'POINT' in self.eventType(behavior).upper():
-                                o[subject][behaviorOut].append([row[0], row[0] + 1])  ### FIXME 1 second? for point event
+                            if POINT in self.eventType(behavior).upper():
+                                o[subject][behaviorOut].append([row[0], row[0]])  # for point event start = end
 
-                            if 'STATE' in self.eventType(behavior).upper():
+
+                            if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
                                     try:
                                         o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
@@ -3210,10 +3219,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
                     rows = list(cursor.fetchall() )
 
+                    '''
                     if not len( rows ) and excludeBehaviorsWithoutEvents:
                         continue
+                    '''
 
-                    if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
+                    if STATE in self.eventType(behavior).upper() and len( rows ) % 2:
                         continue
 
                     behaviorOut = '{0}'.format(behavior)
@@ -3223,12 +3234,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     for idx, row in enumerate(rows):
 
-                        if 'POINT' in self.eventType(behavior).upper():
-                            o[subject][behaviorOut].append( [row[0],row[0] + 1]  )   ### FIXME 1 second? for point event
+                        if POINT in self.eventType(behavior).upper():
+                            o[subject][behaviorOut].append([row[0], row[0]])   # for point event start = end
 
-                        if 'STATE' in self.eventType(behavior).upper():
+                        if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
+                                o[subject][behaviorOut].append([row[0], rows[idx + 1][0]])
 
         logging.debug('intervals: {}'.format(o))
 

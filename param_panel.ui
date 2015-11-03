@@ -55,14 +55,14 @@
        <item>
         <widget class="QLabel" name="lbMaxTime">
          <property name="text">
-          <string>Max time (s)</string>
+          <string>Max time (decimal minutes)</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QSpinBox" name="sbMaxTime">
+        <widget class="QDoubleSpinBox" name="sbMaxTime">
          <property name="maximum">
-          <number>10000000</number>
+          <double>10000.000000000000000</double>
          </property>
         </widget>
        </item>

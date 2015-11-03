@@ -114,6 +114,7 @@ FFMPEG = 'ffmpeg'
 MEDIA_FILE_INFO = 'media_file_info'
 
 STATE = 'STATE'
+POINT = 'POINT'
 
 PLAYER1 = '1'
 PLAYER2 = '2'
