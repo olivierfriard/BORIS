@@ -6219,13 +6219,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playMode == FFMPEG:
 
                 currentTime = self.FFmpegGlobalFrame / list(self.fps.values())[0]
-
                 logging.debug('currentTime %f' % currentTime)
                 logging.debug('new time %f' % (currentTime + self.fast))
                 logging.debug('new frame %d ' % int((currentTime + self.fast )  * list(self.fps.values())[0]))
-
                 self.FFmpegGlobalFrame =  int((currentTime + self.fast )  * list(self.fps.values())[0])
-
                 self.FFmpegTimerOut()
 
             else:
@@ -6296,9 +6293,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.mediaplayer.video_set_spu(0)
                 logging.debug('no subtitle done')
                 '''
-
-
-
 
 
     def reset_activated(self):
