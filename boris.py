@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = '2.64'
-__version_date__ = '2015-11-03'
+__version__ = "2.64"
+__version_date__ = "2015-11-03"
 __DEV__ = False
 
 import sys
@@ -36,14 +36,14 @@ import logging
 import platform
 
 if int(platform.python_version_tuple()[0]) < 3:
-    logging.critical('BORIS requires Python 3!')
+    logging.critical("BORIS requires Python 3!")
     sys.exit()
 
 try:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 except:
-    logging.critical('PyQt4 not installed!')
+    logging.critical("PyQt4 not installed!")
     sys.exit()
 
 import qrc_boris
@@ -127,7 +127,7 @@ class checkingBox_list(QDialog):
         super(checkingBox_list, self).__init__()
 
         self.label = QLabel()
-        self.label.setText('Available observations')
+        self.label.setText("Available observations")
 
         self.lw = QListWidget()
         self.lw.doubleClicked.connect(self.pbOK_clicked)
@@ -137,13 +137,13 @@ class checkingBox_list(QDialog):
         hbox.addWidget(self.label)
         hbox.addWidget(self.lw)
 
-        self.pbSelectAll = QPushButton('Select all')
+        self.pbSelectAll = QPushButton("Select all")
         self.pbSelectAll.clicked.connect(self.pbSelectAll_clicked)
 
-        self.pbUnSelectAll = QPushButton('Unselect all')
+        self.pbUnSelectAll = QPushButton("Unselect all")
         self.pbUnSelectAll.clicked.connect(self.pbUnSelectAll_clicked)
 
-        self.pbOK = QPushButton('OK')
+        self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.pbOK_clicked)
 
         self.pbCancel = QPushButton('Cancel')
@@ -2736,27 +2736,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedObsTotalMediaLength = Decimal("0.0")
 
         for obsId in selectedObservations:
-
             if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
-
                 totalMediaLength = self.observationTotalMediaLength( obsId )
-
+                logging.debug("media length for {0} : {1}".format(obsId,totalMediaLength ))
             else: # LIVE
                 if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
-
             if totalMediaLength == -1:
                 selectedObsTotalMediaLength = -1
                 break
-
             selectedObsTotalMediaLength += totalMediaLength
 
         if selectedObsTotalMediaLength == -1: # an observation media length is not available
-            selectedObsTotalMediaLength = 0
+            # propose to user to use max event time
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO ]) == YES:
+                maxTime = 0 # max length for all events all subjects
+                for obsId in selectedObservations:
+                    maxTime += max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
+                logging.debug("max time all events all subjects: {0}".format(maxTime))
+                selectedObsTotalMediaLength = maxTime
+            else:
+                selectedObsTotalMediaLength = 0
 
-        logging.debug('selectedObsTotalMediaLength: {}'.format(selectedObsTotalMediaLength))
+        logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
 
@@ -2935,52 +2939,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return total media length in s
         '''
 
-        totalMediaLength = Decimal("0.0")
-
-        totalMediaLength1 = Decimal("0.0")
-        totalMediaLength2 = Decimal("0.0")
+        totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"),Decimal("0.0")
 
         for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-
             mediaLength = 0
             try:
                 mediaLength = self.pj[OBSERVATIONS][obsId]['media_info']['length'][mediaFile]
             except:
-                # md5 sum of file content
                 try:
-                    fileContentMD5 = hashfile( mediaFile , hashlib.md5())
+                    fileContentMD5 = hashfile( mediaFile , hashlib.md5())                  # md5 sum of file content
                     mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000
                 except:
-                    try:
-                        instance = vlc.Instance()
-                        media = instance.media_new(mediaFile)
-                        media.parse()
-
-                        mediaLength = media.get_duration()/1000
-                    except:
+                    if os.path.isfile(mediaFile):
+                        try:
+                            instance = vlc.Instance()
+                            media = instance.media_new(mediaFile)
+                            media.parse()
+                            mediaLength = media.get_duration()/1000
+                        except:
+                            totalMediaLength1 = -1
+                            break
+                    else:
                         totalMediaLength1 = -1
                         break
 
             totalMediaLength1 += Decimal(mediaLength)
 
         for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:
-
             mediaLength = 0
             try:
                 mediaLength = self.pj[OBSERVATIONS][obsId]['media_info']['length'][mediaFile]
             except:
-                # md5 sum of file content
-                fileContentMD5 = hashfile( mediaFile , hashlib.md5())
                 try:
+                    fileContentMD5 = hashfile( mediaFile , hashlib.md5())                 # md5 sum of file content
                     mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000
                 except:
-                    try:
-                        instance = vlc.Instance()
-                        media = instance.media_new(mediaFile)
-                        media.parse()
-
-                        mediaLength = media.get_duration()/1000
-                    except:
+                    if os.path.isfile(mediaFile):
+                        try:
+                            instance = vlc.Instance()
+                            media = instance.media_new(mediaFile)
+                            media.parse()
+                            mediaLength = media.get_duration()/1000
+                        except:
+                            totalMediaLength2 = -1
+                            break
+                    else:
                         totalMediaLength2 = -1
                         break
 
@@ -2992,6 +2995,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             totalMediaLength = max( totalMediaLength1, totalMediaLength2 )
 
         return totalMediaLength
+
+
 
 
     def plot_events(self):
@@ -3017,10 +3022,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             LINE_WIDTH = line_width
             #colors = list(matcolors.cnames.keys())
             colors = ['blue','green','red','cyan','magenta','yellow','lime','darksalmon','purple','orange','maroon','silver','slateblue','hotpink','steelblue','darkgoldenrod']
-
             all_behaviors = []
             observedBehaviors = []
-            maxTime = 0
+            maxTime = 0  # max time in all events of all subjects
 
             for subject in  sorted( list(obs.keys())):
                 for behavior in sorted(list(obs[subject].keys())):
@@ -3207,7 +3211,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if POINT in self.eventType(behavior).upper():
                                 o[subject][behaviorOut].append([row[0], row[0]])  # for point event start = end
 
-
                             if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
                                     try:
@@ -3224,10 +3227,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
                     rows = list(cursor.fetchall() )
 
-
                     if not len( rows ) and excludeBehaviorsWithoutEvents:
                         continue
-
 
                     if STATE in self.eventType(behavior).upper() and len( rows ) % 2:
                         continue
@@ -3238,10 +3239,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         o[subject][behaviorOut] = []
 
                     for idx, row in enumerate(rows):
-
                         if POINT in self.eventType(behavior).upper():
                             o[subject][behaviorOut].append([row[0], row[0]])   # for point event start = end
-
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
                                 o[subject][behaviorOut].append([row[0], rows[idx + 1][0]])
@@ -3257,9 +3256,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         open project  json
         '''
-        logging.info('open project: {0}'.format(projectFileName))
+        logging.info("open project: {0}".format(projectFileName))
         if not os.path.isfile(projectFileName):
-            QMessageBox.warning(self, programName , 'File not found')
+            QMessageBox.warning(self, programName , "File not found")
             return
 
         s = open(projectFileName, 'r').read()
@@ -3267,12 +3266,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             self.pj = json.loads(s)
         except:
-            QMessageBox.critical(self, programName , 'This project file seems corrupted' )
+            QMessageBox.critical(self, programName , "This project file seems corrupted" )
             return
 
         # transform time to decimal
         for obs in self.pj[OBSERVATIONS]:
-            self.pj[OBSERVATIONS][obs]['time offset'] = Decimal( str(self.pj[OBSERVATIONS][obs]['time offset']) )
+            self.pj[OBSERVATIONS][obs]["time offset"] = Decimal( str(self.pj[OBSERVATIONS][obs]["time offset"]) )
 
             for idx,event in enumerate(self.pj[OBSERVATIONS][obs][EVENTS]):
                 self.pj[OBSERVATIONS][obs][EVENTS][idx][ pj_obs_fields['time'] ] = Decimal(str(self.pj[OBSERVATIONS][obs][EVENTS][idx][ pj_obs_fields['time'] ]))
@@ -3320,13 +3319,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     d1 = { PLAYER1:  [self.pj[OBSERVATIONS][obs][FILE][0]] }
 
                 if len( self.pj[OBSERVATIONS][obs][FILE] ) == 2:
-                    d1['2'] =  [self.pj[OBSERVATIONS][obs][FILE][1]]
+                    d1[PLAYER2] =  [self.pj[OBSERVATIONS][obs][FILE][1]]
 
                 self.pj[OBSERVATIONS][obs][FILE] = d1
 
             # convert VIDEO, AUDIO -> MEDIA
 
-            for idx in [x for x in self.pj['subjects_conf']]:
+            for idx in [x for x in self.pj[SUBJECTS]]:
 
                 key, name = self.pj[SUBJECTS][idx]
                 self.pj[SUBJECTS][idx] = {'key': key, 'name': name, 'description':''}
@@ -3335,11 +3334,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             projectFileName = ''
 
+        if not 'project_media_file_info' in self.pj:
+            print('NO project_media')
+            self.pj['project_media_file_info'] = {}
+
+        for obs in self.pj[OBSERVATIONS]:
+            if 'media_file_info' in self.pj[OBSERVATIONS][obs]:
+                for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
+                    self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
+
+
         # check program version
-        '''
-        if 'program_version' in self.pj:
-            if float(self.pj['program_version']) <  :
-        '''
 
         self.initialize_new_project()
 
@@ -5382,7 +5387,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # get video time
         memLaps = self.getLaps()
-        print('memLaps',memLaps)
+
         if memLaps == None:
             return
 

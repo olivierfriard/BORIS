@@ -24,6 +24,31 @@
       </widget>
      </item>
      <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QPushButton" name="pbSelectAllSubjects">
+         <property name="text">
+          <string>Select all</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbUnselectAllSubjects">
+         <property name="text">
+          <string>Unselect all</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbReverseSubjectsSelection">
+         <property name="text">
+          <string>Reverse selection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
       <widget class="QListWidget" name="lwSubjects"/>
      </item>
      <item>
@@ -32,6 +57,31 @@
         <string>Behaviors</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="pbSelectAllBehaviors">
+         <property name="text">
+          <string>Select all</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbUnselectAllBehaviors">
+         <property name="text">
+          <string>Unselect all</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pbReverseBehaviorsSelection">
+         <property name="text">
+          <string>Reverse selection</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QListWidget" name="lwBehaviors"/>
