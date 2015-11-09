@@ -3269,6 +3269,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, programName , "This project file seems corrupted" )
             return
 
+        self.projectChanged = False
+
         # transform time to decimal
         for obs in self.pj[OBSERVATIONS]:
             self.pj[OBSERVATIONS][obs]["time offset"] = Decimal( str(self.pj[OBSERVATIONS][obs]["time offset"]) )
@@ -3279,12 +3281,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add coding_map key to old project files
         if not 'coding_map' in self.pj:
             self.pj['coding_map'] = {}
+            self.projectChanged = True
 
         # add subject description
         if 'project_format_version' in self.pj:
             for idx in [x for x in self.pj[SUBJECTS]]:
                 if not 'description' in self.pj[SUBJECTS][ idx ] :
                     self.pj[SUBJECTS][ idx ]['description'] = ''
+                    self.projectChanged = True
 
         # check if project file version is newer than current BORIS project file version
         if 'project_format_version' in self.pj and Decimal(self.pj['project_format_version']) > Decimal(project_format_version):
@@ -3304,6 +3308,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # convert VIDEO, AUDIO -> MEDIA
             self.pj['project_format_version'] = project_format_version
+            self.projectChanged = True
 
             for obs in [x for x in self.pj[OBSERVATIONS]]:
 
@@ -3324,26 +3329,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][obs][FILE] = d1
 
             # convert VIDEO, AUDIO -> MEDIA
-
             for idx in [x for x in self.pj[SUBJECTS]]:
-
                 key, name = self.pj[SUBJECTS][idx]
                 self.pj[SUBJECTS][idx] = {'key': key, 'name': name, 'description':''}
-
             QMessageBox.information(self, programName , 'The project file was converted to the new format (v. %s) in use with your version of BORIS.<br>Choose a new file name for saving it.' % project_format_version)
-
             projectFileName = ''
 
         if not 'project_media_file_info' in self.pj:
-            print('NO project_media')
             self.pj['project_media_file_info'] = {}
+            self.projectChanged = True
 
         for obs in self.pj[OBSERVATIONS]:
             if 'media_file_info' in self.pj[OBSERVATIONS][obs]:
                 for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
                     self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
+                    self.projectChanged = True
 
         # TODO: if one file is present -> set media info key with value of media_file_info
+        for obs in self.pj[OBSERVATIONS]:
+            #try:
+                if not 'media_info' in self.pj[OBSERVATIONS][obs] \
+                   and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER1]) == 1 \
+                   and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER2]) == 0:
+                       self.pj[OBSERVATIONS][obs]['media_info'] = \
+                           {'length': {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]: 
+                               self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000}, 
+                            }
+            #except:
+            #    pass
 
         # check program version
 
@@ -3359,7 +3372,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.menu_options()
 
-        self.projectChanged = False
 
 
 
