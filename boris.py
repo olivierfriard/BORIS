@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = "2.64"
-__version_date__ = "2015-11-03"
+__version__ = "2.65"
+__version_date__ = "2015-11-09"
 __DEV__ = False
 
 import sys
@@ -3343,6 +3343,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
                     self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
 
+        # TODO: if one file is present -> set media info key with value of media_file_info
 
         # check program version
 
