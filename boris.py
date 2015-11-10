@@ -216,7 +216,7 @@ class JumpTo(QDialog):
 
         self.setLayout(hbox)
 
-        self.setWindowTitle('Jump to spefific time')
+        self.setWindowTitle('Jump to specific time')
 
     def pbOK_clicked(self):
         self.accept()
@@ -788,7 +788,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'Can not check for updates...')
 
 
-
     def jump_to(self):
         '''
         jump to the user specified media position
@@ -806,18 +805,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC:
 
                 if self.playMode == FFMPEG:
-
                     frameDuration = Decimal(1000 / list(self.fps.values())[0])
-
                     currentFrame = round( newTime/ frameDuration )
-
                     self.FFmpegGlobalFrame = currentFrame
-
                     if self.FFmpegGlobalFrame > 0:
                         self.FFmpegGlobalFrame -= 1
-
                     self.FFmpegTimerOut()
-
 
                 else: # play mode VLC
 
@@ -825,6 +818,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if newTime < self.mediaplayer.get_length():
                             self.mediaplayer.set_time( newTime )
+                            if self.simultaneousMedia:
+                                self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+
                         else:
                             QMessageBox.warning(self, programName , 'The indicated position is behind the end of media (%s)' % seconds2time(self.mediaplayer.get_length()/1000))
 
@@ -847,8 +843,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if flagPaused:
                                         self.mediaListPlayer.pause()
 
-                                    #print( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ])  )
-                                    #print( type(newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) ) )
                                     self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
 
                                     break
@@ -3347,6 +3341,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
                         self.projectChanged = True
 
+        for obs in self.pj[OBSERVATIONS]:
+            if not "time offset second player" in self.pj[OBSERVATIONS][obs]:
+                self.pj[OBSERVATIONS][obs]["time offset second player"] = Decimal("0.0")
+                self.projectChanged = True
+
         # if one file is present in player #1 -> set "media_info" key with value of media_file_info
 
         for obs in self.pj[OBSERVATIONS]:
@@ -4715,14 +4714,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.mediaplayer.set_time( int(videoPosition) )
 
+
                 # second video together
                 # TODO: add second video offset
-                if self.simultaneousMedia:
 
-                    if videoPosition <= self.mediaplayer2.get_length():
-                        self.mediaplayer2.set_time( int(videoPosition) )
-                    else:
-                        self.mediaplayer2.set_time( self.mediaplayer2.get_length() )
+                if self.simultaneousMedia:
+                    # synchronize 2nd player
+                    self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
 
                 self.timer_out(scrollSlider=False)
 
@@ -4777,6 +4775,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if second video
             if self.simultaneousMedia:
 
+                '''t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
+
+                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
+
+                    if t1 < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000:
+                        if self.mediaListPlayer2.get_state() == vlc.State.Playing:
+                            self.mediaplayer2.set_time(0)
+                            self.mediaListPlayer2.pause()
+                    else:
+                        if self.mediaListPlayer.get_state() == vlc.State.Playing:
+                            if abs((t1-t2) - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
+                                self.mediaplayer2.set_time( int(t1 - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+                            self.mediaListPlayer2.play()
+
+                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
+
+                    if t2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000):
+                        if self.mediaListPlayer.get_state() == vlc.State.Playing:
+                            self.mediaplayer.set_time(0)
+                            self.mediaListPlayer.pause()'''
+
+
+                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
+                    t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
+                    if abs(t1-t2) >= 300:
+                        self.mediaplayer2.set_time( t1 )
+
                 if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
 
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
@@ -4784,24 +4809,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if mediaTime < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000:
 
                             if self.mediaListPlayer2.get_state() == vlc.State.Playing:
-
-                                self.mediaplayer2.set_time( 0 )
+                                self.mediaplayer2.set_time(0)
                                 self.mediaListPlayer2.pause()
                         else:
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
+                                t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
+                                if abs((t1-t2) - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
+                                    self.mediaplayer2.set_time( int(t1 - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
                                 self.mediaListPlayer2.play()
 
-                    mediaTime2 = self.mediaplayer2.get_time()
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
+                        mediaTime2 = self.mediaplayer2.get_time()
+
+                        print('mediaTime2', mediaTime2)
 
                         if mediaTime2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000):
 
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
-
-                                self.mediaplayer.set_time( 0 )
+                                self.mediaplayer.set_time(0)
                                 self.mediaListPlayer.pause()
                         else:
                             if self.mediaListPlayer2.get_state() == vlc.State.Playing:
+                                t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
+                                if abs((t2-t1) + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
+                                    self.mediaplayer.set_time( int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
                                 self.mediaListPlayer.play()
 
 
@@ -5597,7 +5628,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mediaplayer.set_time( int(newTime) )
 
                     if self.simultaneousMedia:
-                        self.mediaplayer2.set_time( int(newTime) )
+                        # synchronize 2nd player
+                        self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
 
                 else: # more media in player 1
 
@@ -5617,8 +5649,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.mediaListPlayer.pause()
 
                             self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
-
                             break
+
                         tot += d
 
                 self.timer_out()
@@ -6169,11 +6201,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playMode == FFMPEG:
 
                 currentTime = self.FFmpegGlobalFrame / list(self.fps.values())[0]
-
                 logging.debug('currentTime %f' % currentTime)
                 logging.debug('new time %f' % (currentTime - self.fast))
                 logging.debug('new frame %d ' % int((currentTime - self.fast )  * list(self.fps.values())[0]))
-
                 if int((currentTime - self.fast ) * list(self.fps.values())[0]) > 0:
                     self.FFmpegGlobalFrame = int((currentTime - self.fast ) * list(self.fps.values())[0])
                 else:
@@ -6183,19 +6213,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
 
                 if self.media_list.count() == 1:
+
+                    '''
+                    if not self.simultaneousMedia or (self.simultaneousMedia and self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] >= 0):
+                        if self.mediaplayer.get_time() >= self.fast * 1000:
+                            self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000 )
+                        else:
+                            self.mediaplayer.set_time( 0 )
+                    else:
+                        if self.mediaplayer2.get_time() >= self.fast * 1000:
+                            self.mediaplayer2.set_time(  self.mediaplayer2.get_time() - self.fast * 1000  )
+                        else:
+                            self.mediaplayer2.set_time( 0 )
+                    '''
                     if self.mediaplayer.get_time() >= self.fast * 1000:
                         self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000 )
                     else:
-                        self.mediaplayer.set_time(0)
-
-                    # second video together
+                        self.mediaplayer.set_time( 0 )
                     if self.simultaneousMedia:
-                        if self.mediaplayer2.get_time() >= self.fast * 1000:
+                        self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
 
-                            self.mediaplayer2.set_time( self.mediaplayer2.get_time() - self.fast * 1000 )
 
-                        else:
-                            self.mediaplayer2.set_time(0)
 
                 elif self.media_list.count() > 1:
 
@@ -6263,22 +6301,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug('get time {0}'.format(self.mediaplayer.get_time() ))
                     logging.debug('self.fast {0}'.format(self.fast ))
 
+
+
+                    '''
+                    if not self.simultaneousMedia or (self.simultaneousMedia and self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] >= 0):
+                        if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
+                            self.mediaplayer.set_time(self.mediaplayer.get_length())
+                        else:
+                            self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000 )
+                    else:
+                        if self.mediaplayer2.get_time() >= self.mediaplayer2.get_length() - self.fast * 1000:
+                            self.mediaplayer2.set_time(self.mediaplayer2.get_length())
+                        else:
+                            self.mediaplayer2.set_time( self.mediaplayer2.get_time() + self.fast * 1000 )
+                    '''
                     if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
                         self.mediaplayer.set_time(self.mediaplayer.get_length())
                     else:
                         self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000 )
 
-                    logging.debug('player 1 done')
-
-                    # second video together
                     if self.simultaneousMedia:
+                        self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
 
-                        if self.mediaplayer2.get_time() >= self.mediaplayer2.get_length() - self.fast * 1000:
-                            self.mediaplayer2.set_time(self.mediaplayer2.get_length())
-                        else:
-                            self.mediaplayer2.set_time( self.mediaplayer2.get_time() + self.fast * 1000 )
 
-                        logging.debug('player 2 done')
 
 
                 elif self.media_list.count() > 1:
