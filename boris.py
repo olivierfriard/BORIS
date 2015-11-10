@@ -2744,7 +2744,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
-            if totalMediaLength == -1:
+            if totalMediaLength == -1 or totalMediaLength == 0:
                 selectedObsTotalMediaLength = -1
                 break
             selectedObsTotalMediaLength += totalMediaLength
@@ -3166,7 +3166,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     totalMediaLength = Decimal("0.0")
 
-        if totalMediaLength == -1:
+        if totalMediaLength == -1 :
             totalMediaLength = 0
 
         logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
@@ -3339,28 +3339,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj['project_media_file_info'] = {}
             self.projectChanged = True
 
-        for obs in self.pj[OBSERVATIONS]:
-            if 'media_file_info' in self.pj[OBSERVATIONS][obs]:
-                for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
-                    self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
-                    self.projectChanged = True
 
-        # TODO: if one file is present -> set media info key with value of media_file_info
+        if not 'project_media_file_info' in self.pj:
+            for obs in self.pj[OBSERVATIONS]:
+                if 'media_file_info' in self.pj[OBSERVATIONS][obs]:
+                    for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
+                        self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
+                        self.projectChanged = True
+
+        # if one file is present in player #1 -> set "media_info" key with value of media_file_info
+
         for obs in self.pj[OBSERVATIONS]:
-            #try:
+            try:
                 if not 'media_info' in self.pj[OBSERVATIONS][obs] \
-                   and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER1]) == 1 \
-                   and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER2]) == 0:
-                       self.pj[OBSERVATIONS][obs]['media_info'] = \
-                           {'length': {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]: 
-                               self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000}, 
-                            }
-            #except:
-            #    pass
+                    and len(self.pj[OBSERVATIONS][obs]['media_file_info']) == 1 \
+                    and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER1]) == 1 \
+                    and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER2]) == 0:
+                        self.pj[OBSERVATIONS][obs]['media_info'] = \
+                            {'length': {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
+                               self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000} }
+                        # FPS
+                        if 'nframe' in self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]:
+                            self.pj[OBSERVATIONS][obs]['media_info']['fps'] = { self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
+                                self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['nframe'] / ( self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000 )
+                                 }
+                        self.projectChanged = True
+
+            except:
+                pass
 
         # check program version
+        memProjectChanged = self.projectChanged
 
         self.initialize_new_project()
+
+        self.projectChanged = memProjectChanged
 
         self.load_obs_in_lwConfiguration()
 
