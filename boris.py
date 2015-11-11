@@ -837,8 +837,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     self.mediaListPlayer.play_item_at_index(idx)
 
                                     # wait until media is played
-                                    while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                                    while True:
+                                        if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                            break
+                                    '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
                                         pass
+                                    '''
 
                                     if flagPaused:
                                         self.mediaListPlayer.pause()
@@ -884,8 +888,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.mediaListPlayer.previous()
 
-                    while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                        pass
+                    while True:
+                        if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            break
+
+
+                    '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
+                        pass'''
 
                     if flagPaused:
                         self.mediaListPlayer.pause()
@@ -930,8 +939,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     next(self.mediaListPlayer)
 
                     # wait until media is played
-                    while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                    while True:
+                        if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            break
+
+                    '''
+                    while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
                         pass
+                    '''
 
                     if flagPaused:
                         logging.info('media player state: {0}'.format(self.mediaListPlayer.get_state()) )
@@ -1568,8 +1583,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         app.processEvents()
 
         # play mediaListPlayer for a while to obtain media information
-        while self.mediaListPlayer.get_state() != vlc.State.Playing:
-            time.sleep(3)
+        while True:
+            if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                break
+
+        '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
+            time.sleep(2)
+        '''
 
         self.mediaListPlayer.pause()
 
@@ -1634,8 +1654,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.mediaListPlayer2.play()
                 app.processEvents()
 
-                while self.mediaListPlayer2.get_state() != vlc.State.Playing:
-                    time.sleep(3)
+                while True:
+                    if self.mediaListPlayer2.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                        break
+
+                '''
+                while self.mediaListPlayer2.get_state() != vlc.State.Playing and self.mediaListPlayer2.get_state() != vlc.State.Ended:
+                    time.sleep(2)
+                '''
 
                 self.mediaListPlayer2.pause()
                 app.processEvents()
@@ -4139,10 +4165,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.debug('idx: {0}'.format(idx))
 
                     self.mediaListPlayer.play_item_at_index( idx )
-                    app.processEvents()
-                    while self.mediaListPlayer.get_state() != vlc.State.Playing:
+                    #app.processEvents()
+
+                    while True:
+                        if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            break
+
+                    '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
                         time.sleep(0.5)
                         pass
+                    '''
 
                     self.mediaListPlayer.pause()
 
@@ -4672,6 +4704,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def actionAbout_activated(self):
         ''' about window '''
+
+        print(self.mediaListPlayer.get_state()  )
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
@@ -5642,8 +5676,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.mediaListPlayer.play_item_at_index(idx)
 
                             # wait until media is played
-                            while self.mediaListPlayer.get_state() != vlc.State.Playing:
-                                pass
+                            while True:
+                                if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                    break
+
+                            '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
+                                pass'''
 
                             if flagPaused:
                                 self.mediaListPlayer.pause()
@@ -6169,14 +6207,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mediaListPlayer.pause()
                     # wait for pause
 
-                    logging.debug('player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
+                    logging.debug('pause_video: player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
                     # second video together
                     if self.simultaneousMedia:
                         self.mediaListPlayer2.pause()
-                        logging.debug('player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
+                        logging.debug('pause_video: player #2 state {0}'.format(  self.mediaListPlayer2.get_state()))
 
-                    while self.mediaListPlayer.get_state() != vlc.State.Paused:
-                        pass
+                    # wait until video is paused or ended
+                    while True:
+                        if self.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                            break
+
+
+                    '''while self.mediaListPlayer.get_state() != vlc.State.Paused and self.mediaListPlayer.get_state() != vlc.State.Ended:
+                        pass'''
 
                     time.sleep(1)
                     self.timer_out()
