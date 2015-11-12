@@ -146,11 +146,10 @@ class checkingBox_list(QDialog):
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.pbOK_clicked)
 
-        self.pbCancel = QPushButton('Cancel')
+        self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         hbox2 = QHBoxLayout(self)
-
         hbox2.addWidget(self.pbSelectAll)
         hbox2.addWidget(self.pbUnSelectAll)
         hbox2.addWidget(self.pbCancel)
@@ -159,7 +158,6 @@ class checkingBox_list(QDialog):
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
-
         self.setWindowTitle('')
 
     def pbSelectAll_clicked(self):
@@ -256,8 +254,7 @@ class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-
-    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", SUBJECTS : {}, "behaviors_conf": {}, OBSERVATIONS: {} , 'coding_map':{} }
+    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", SUBJECTS : {}, "behaviors_conf": {}, OBSERVATIONS: {} , "coding_map":{} }
     project = False
 
     observationId = ''   # current observation id
@@ -268,11 +265,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     embedPlayer = True                 # if True the VLC player will be embedded in the main window
     alertNoFocalSubject = False        # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
-    checkForNewVersion = False    # if True BORIS will check for new version every 15 days
-
-
-    timeFormat = HHMMSS       # 's' or 'hh:mm:ss'
+    checkForNewVersion = False         # if True BORIS will check for new version every 15 days
+    timeFormat = HHMMSS                # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
+    automaticBackup = 0                # automatic backup interval (0 no backup)
 
     #ObservationsChanged = False
     projectChanged = False
@@ -282,7 +278,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     projectFileName = ''
     mediaTotalLength = None
 
-    automaticBackup = 0
+
 
     saveMediaFilePath = True
 

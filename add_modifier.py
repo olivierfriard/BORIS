@@ -11,12 +11,12 @@ This file is part of BORIS.
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   any later version.
-  
+
   BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
@@ -24,10 +24,8 @@ This file is part of BORIS.
 
 
 from config import *
-
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
 from add_modifier_ui import Ui_Dialog
 
 
@@ -51,54 +49,47 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
 
         # store modifiers in list
-
         if self.modifierStr:
             self.modifiersSets_list = []
             for modifiersSet in self.modifierStr.split('|'):
-                self.modifiersSets_list.append( modifiersSet.split(','))
+                self.modifiersSets_list.append(modifiersSet.split(','))
         else:
             self.modifiersSets_list = [[]]
 
         # create tab
-        for i in range(len(self.modifiersSets_list)-1):
-            self.tabWidgetModifiersSets.addTab( QWidget(), 'Set #%d' % (i+2))
+        for i in range(len(self.modifiersSets_list) - 1):
+            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #%d" % (i + 2))
 
         # set first tab as active
-        self.lwModifiers.addItems( self.modifiersSets_list[0] )
-
+        self.lwModifiers.addItems(self.modifiersSets_list[0])
 
     def addSet(self):
-        self.tabWidgetModifiersSets.addTab( QWidget(), 'Set #%d' % (len(self.modifiersSets_list)+1))
+        self.tabWidgetModifiersSets.addTab(QWidget(), 'Set #%d' % (len(self.modifiersSets_list)+1))
         self.modifiersSets_list.append([])
-
 
     def removeSet(self):
         '''
         remove set of modifiers
         '''
-        self.modifiersSets_list.pop( self.tabWidgetModifiersSets.currentIndex() )
+        self.modifiersSets_list.pop(self.tabWidgetModifiersSets.currentIndex())
         self.tabWidgetModifiersSets.removeTab(self.tabWidgetModifiersSets.currentIndex())
-
 
     def modifyModifier(self):
         '''
         modify modifier <- arrow
         '''
-        
+
         if self.lwModifiers.currentIndex().row() >= 0:
             txt = self.lwModifiers.currentItem().text()
             code = ''
             if '(' in txt and ')' in txt:
                 code = txt.split('(')[1].split(')')[0]
 
-            self.leModifier.setText( txt.split('(')[0].strip())
-            self.leCode.setText( code )
+            self.leModifier.setText(txt.split('(')[0].strip())
+            self.leCode.setText(code)
 
-            self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ].remove( self.lwModifiers.currentItem().text() )
-            self.lwModifiers.takeItem(  self.lwModifiers.currentIndex().row()  )
-
-
-
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()].remove(self.lwModifiers.currentItem().text())
+            self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
 
     def removeModifier(self):
         '''
@@ -106,10 +97,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         '''
 
         if self.lwModifiers.currentIndex().row() >= 0:
-            self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ].remove( self.lwModifiers.currentItem().text() )
-            self.lwModifiers.takeItem(  self.lwModifiers.currentIndex().row()  )
-
-
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()].remove(self.lwModifiers.currentItem().text())
+            self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
 
     def addModifier(self):
         '''
@@ -117,7 +106,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         '''
 
         txt = self.leModifier.text()
-
         for c in '(|)':
             if c in txt:
                 QMessageBox.critical(self, programName, 'The modifier contain a character that is not allowed (|)!')
@@ -136,17 +124,16 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         QMessageBox.critical(self, programName, 'The modifier key code is not allowed (|)!')
                         self.leCode.setFocus()
                         return
-                
-                
+
                 # check if code already exists
                 if '(' + self.leCode.text() + ')' in self.getModifiers():
                     QMessageBox.critical(self, programName, 'The code %s already exists!' % self.leCode.text())
                     self.leCode.setFocus()
                     return
-                txt += ' (%s)' % self.leCode.text()
+                txt += ' ({})'.format(self.leCode.text())
 
-            self.lwModifiers.addItem(  txt)
-            self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ].append( txt )
+            self.lwModifiers.addItem(txt)
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()].append(txt)
             self.leModifier.setText('')
             self.leCode.setText('')
 
@@ -154,12 +141,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
             QMessageBox.critical(self, programName, 'No modifier to add!')
             self.leModifier.setFocus()
 
-
-
     def tabWidgetModifiersSets_changed(self, tabIndex):
         self.lwModifiers.clear()
-        self.lwModifiers.addItems( self.modifiersSets_list[tabIndex] )
-
+        self.lwModifiers.addItems(self.modifiersSets_list[tabIndex])
 
     def getModifiers(self):
 
