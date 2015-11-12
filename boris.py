@@ -503,6 +503,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSelect_observations.setEnabled(flagObs)
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
+        self.actionCheckStateEvents.setEnabled(flagObs)
+
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
         self.menuCreate_subtitles_2.setEnabled(flagObs)
@@ -558,6 +560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
+        self.actionCheckStateEvents.triggered.connect(self.check_state_events)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
@@ -709,6 +712,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if selectedObs:
             self.new_observation( mode=EDIT, obsId=selectedObs[0])
+
+    def check_state_events(self):
+        '''check state events for each subject in current observation
+        check if number is odd'''
+
+        out = ''
+        subjects = [subject for _, subject, _, _, _ in  self.pj[OBSERVATIONS][self.observationId]['events']]
+        for subject in sorted(set(subjects)):
+            behaviors = [behavior for _, subj, behavior, _, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if subj == subject ]
+            for behavior in sorted(set(behaviors)):
+                if 'STATE' in self.eventType(behavior).upper():
+                    behavior_modifiers = [behav + '@@@' + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if behav == behavior and subj == subject]
+                    for behavior_modifier in set(behavior_modifiers):
+                        if behavior_modifiers.count(behavior_modifier) % 2:
+                            if subject:
+                                subject = " for subject <b>{}</b>".format(subject)
+                            modifier = behavior_modifier.split('@@@')[1]
+                            if modifier:
+                                modifier = "(modifier <b>{}</b>)".modifier
+                            out += "The behavior <b>{0}</b> {1} is not PAIRED {2}<br>".format(behavior, modifier, subject)
+
+        if not out:
+            out = "State events are PAIRED"
+        QMessageBox.warning(self, programName + " - State events check", out )
+
 
 
     def observations_list(self):

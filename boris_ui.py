@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Oct  5 16:02:00 2015
+# Created: Thu Nov 12 15:52:49 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -315,6 +315,8 @@ class Ui_MainWindow(object):
         self.actionUser_guide.setObjectName(_fromUtf8("actionUser_guide"))
         self.actionEdit_observation_2 = QtGui.QAction(MainWindow)
         self.actionEdit_observation_2.setObjectName(_fromUtf8("actionEdit_observation_2"))
+        self.actionCheckStateEvents = QtGui.QAction(MainWindow)
+        self.actionCheckStateEvents.setObjectName(_fromUtf8("actionCheckStateEvents"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -347,6 +349,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_event)
+        self.menuObservations.addAction(self.actionCheckStateEvents)
         self.menuObservations.addAction(self.actionSelect_observations)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionDelete_selected_observations)
@@ -498,4 +501,5 @@ class Ui_MainWindow(object):
         self.actionExportEventTabular_XLS.setText(_translate("MainWindow", "Microsoft Excel format (xls)", None))
         self.actionUser_guide.setText(_translate("MainWindow", "User guide", None))
         self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
+        self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
 
