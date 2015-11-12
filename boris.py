@@ -718,24 +718,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if number is odd'''
 
         out = ''
+        flagStateEvent = False
         subjects = [subject for _, subject, _, _, _ in  self.pj[OBSERVATIONS][self.observationId]['events']]
         for subject in sorted(set(subjects)):
             behaviors = [behavior for _, subj, behavior, _, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if subj == subject ]
             for behavior in sorted(set(behaviors)):
-                if 'STATE' in self.eventType(behavior).upper():
-                    behavior_modifiers = [behav + '@@@' + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if behav == behavior and subj == subject]
+                if "STATE" in self.eventType(behavior).upper():
+                    flagStateEvent = True
+                    behavior_modifiers = [behav + "@@@" + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if behav == behavior and subj == subject]
                     for behavior_modifier in set(behavior_modifiers):
                         if behavior_modifiers.count(behavior_modifier) % 2:
                             if subject:
                                 subject = " for subject <b>{}</b>".format(subject)
-                            modifier = behavior_modifier.split('@@@')[1]
+                            modifier = behavior_modifier.split("@@@")[1]
                             if modifier:
                                 modifier = "(modifier <b>{}</b>)".modifier
                             out += "The behavior <b>{0}</b> {1} is not PAIRED {2}<br>".format(behavior, modifier, subject)
 
         if not out:
             out = "State events are PAIRED"
-        QMessageBox.warning(self, programName + " - State events check", out )
+        if flagStateEvent:
+            QMessageBox.warning(self, programName + " - State events check", out)
+        else:
+            QMessageBox.warning(self, programName + " - State events check", "No state events in current observation")
 
 
 
