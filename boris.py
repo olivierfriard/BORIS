@@ -4866,8 +4866,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
                         mediaTime2 = self.mediaplayer2.get_time()
 
-                        print('mediaTime2', mediaTime2)
-
                         if mediaTime2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000):
 
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
