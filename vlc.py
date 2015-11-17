@@ -3312,6 +3312,7 @@ def libvlc_new(argc, argv):
     @return: the libvlc instance or NULL in case of error.
     @version Arguments are meant to be passed from the command line to LibVLC, just like VLC media player does. The list of valid arguments depends on the LibVLC version, the operating system and platform, and set of available LibVLC plugins. Invalid or unsupported arguments will cause the function to fail (i.e. return NULL). Also, some arguments may alter the behaviour or otherwise interfere with other LibVLC functions. @warning There is absolutely no warranty or promise of forward, backward and cross-platform compatibility with regards to L{libvlc_new}() arguments. We recommend that you do not use them, other than when debugging.
     '''
+
     f = _Cfunctions.get('libvlc_new', None) or \
         _Cfunction('libvlc_new', ((1,), (1,),), class_result(Instance),
                     ctypes.c_void_p, ctypes.c_int, ListPOINTER(ctypes.c_char_p))

@@ -185,12 +185,12 @@ class Observation(QDialog, Ui_Form):
         '''
         # check if more media in player1 before adding media to player2
         if nPlayer == PLAYER2 and self.lwVideo.count() > 1:
-            QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+            QMessageBox.critical(self, programName , "It is not yet possible to play a second media when more media are loaded in the first media player" )
             return
 
         fd = QFileDialog(self)
         os.chdir( os.path.expanduser("~")  )
-        fileName = fd.getOpenFileName(self, 'Add media file', '', 'All files (*)')
+        fileName = fd.getOpenFileName(self, "Add media file", "", "All files (*)")
 
         if fileName:
 
@@ -222,7 +222,7 @@ class Observation(QDialog, Ui_Form):
                             response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?', [YES, NO ])
 
                             if response == YES:
-                                self.process = Process()
+                                self.process = Process()  # class in utilities.py
                                 self.process.signal.sig.connect(self.processCompleted)
                                 self.process.fileContentMD5 = fileContentMD5
                                 self.process.filePath = fileName #mediaPathName

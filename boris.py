@@ -28,7 +28,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.66"
-__version_date__ = "2015-11-10"
+__version_date__ = "2015-11-17"
 __DEV__ = False
 
 import sys
@@ -895,15 +895,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playMode == FFMPEG:
 
                 currentMedia = ''
-
-
                 for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
-                    if self.FFmpegGlobalFrame < self.duration[idx+1]:
-
-                        self.FFmpegGlobalFrame = self.duration[idx-1 ]
+                    if self.FFmpegGlobalFrame < self.duration[idx + 1]:
+                        self.FFmpegGlobalFrame = self.duration[idx - 1]
                         break
-
-
                 self.FFmpegGlobalFrame -= 1
                 self.FFmpegTimerOut()
 
@@ -914,16 +909,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     # remember if player paused (go previous will start playing)
                     flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
-
                     self.mediaListPlayer.previous()
 
                     while True:
                         if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                             break
-
-
-                    '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
-                        pass'''
 
                     if flagPaused:
                         self.mediaListPlayer.pause()
@@ -935,10 +925,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.media_list.index_of_item(self.mediaplayer.get_media()) == 0:
                             self.statusbar.showMessage('The first media is playing', 5000)
 
+                self.timer_out()
+
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
-
-
 
     def next_media_file(self):
         '''
@@ -947,13 +937,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
-
                 for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                     if self.FFmpegGlobalFrame < self.duration[idx + 1]:
-
                         self.FFmpegGlobalFrame = self.duration[idx + 1 ]
                         break
-
                 self.FFmpegGlobalFrame -= 1
                 self.FFmpegTimerOut()
 
@@ -972,11 +959,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                             break
 
-                    '''
-                    while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
-                        pass
-                    '''
-
                     if flagPaused:
                         logging.info('media player state: {0}'.format(self.mediaListPlayer.get_state()) )
                         self.mediaListPlayer.pause()
@@ -988,6 +970,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.media_list.index_of_item(self.mediaplayer.get_media()) == self.media_list.count() - 1:
                             self.statusbar.showMessage('The last media is playing', 5000)
 
+
+                self.timer_out()
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
 
@@ -4733,8 +4717,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def actionAbout_activated(self):
         ''' about window '''
-
-        print(self.mediaListPlayer.get_state()  )
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
