@@ -27,8 +27,8 @@ This file is part of BORIS.
 # TODO: media offset in plot event function
 
 
-__version__ = "2.66"
-__version_date__ = "2015-11-17"
+__version__ = "2.67"
+__version_date__ = "2015-11-19"
 __DEV__ = False
 
 import sys
@@ -732,7 +732,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 subject = " for subject <b>{}</b>".format(subject)
                             modifier = behavior_modifier.split("@@@")[1]
                             if modifier:
-                                modifier = "(modifier <b>{}</b>)".modifier
+                                modifier = "(modifier <b>{}</b>)".format(modifier)
                             out += "The behavior <b>{0}</b> {1} is not PAIRED {2}<br>".format(behavior, modifier, subject)
 
         if not out:
@@ -4710,13 +4710,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 os.startfile(userGuideFile  )
         else:
-            QDesktopServices.openUrl(QUrl('http://boris.readthedocs.org'))
-
-
+            QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
 
     def actionAbout_activated(self):
         ''' about window '''
+
+        #print('self.embedPlayer',self.embedPlayer)
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
@@ -6067,16 +6067,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def export_string_events(self):
         '''
         export events from selected observations by subject in string format to plain text file
-        behaviors are separated by pipe character (|) for use with BSA (see http://penelope.unito.it/bsa)
+        behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
+        for use with BSA (see http://penelope.unito.it/bsa)
         '''
 
         # ask user to select observations
-        result, selected_observations = self.selectObservations( MULTIPLE )
+        result, selected_observations = self.selectObservations(MULTIPLE)
 
         if not selected_observations:
             return
 
-        logging.debug('observations to export: {0}'.format( selected_observations))
+        logging.debug("observations to export: {0}".format( selected_observations))
 
         # filter subjects in observations
         observedSubjects = self.extract_observed_subjects( selected_observations )
@@ -6084,7 +6085,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # ask user subject to analyze
         selected_subjects = self.select_subjects( observedSubjects )
 
-        logging.debug('selected subjects: {0}'.format(selected_subjects))
+        logging.debug("selected subjects: {0}".format(selected_subjects))
 
         if not selected_subjects:
             return
@@ -6093,56 +6094,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fileName = fd.getSaveFileName(self, "Export events as strings", "","Events file (*.txt *.tsv);;All files (*)")
 
         if fileName:
-            f = open(fileName, "w")
-
-            for obsId in selected_observations:
-
-                # observation id
-                f.write("# observation id: {0}{1}".format(obsId, os.linesep) )
-
-                # observation descrition
-                f.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
-
-                # media file name
-                if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
-
-                    f.write('# Media file name: {0}{1}{1}'.format(', '.join(   [ os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]  ]  ), os.linesep ) )
-
-                if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
-                    f.write('# Live observation{0}{0}'.format(os.linesep))
-
-            for subj in selected_subjects:
-
-
-                if subj:
-                    subj_str = '{0}{1}:{0}'.format(os.linesep, subj)
-
-                else:
-                    subj_str = '{0}No focal subject:{0}'.format(os.linesep)
-
-                f.write(subj_str)
-
-                for obs in selected_observations:
-                    s = ''
-
-                    for event in self.pj[OBSERVATIONS][obs][EVENTS]:
-                        if event[ pj_obs_fields['subject'] ] == subj or (subj == NO_FOCAL_SUBJECT and event[ pj_obs_fields['subject'] ] == ''):
-                            s += event[ pj_obs_fields['code'] ] + self.behaviouralStringsSeparator
-
-                    # remove last separator (if separator not empty)
-                    if self.behaviouralStringsSeparator:
-                        s = s[0 : -len(self.behaviouralStringsSeparator)]
-
-                    if s:
-
-                        f.write( s + os.linesep)
-
-            f.close()
-
-        else:
-            return
-
-
+            with open(fileName, "w") as outFile:
+                for obsId in selected_observations:
+                    # observation id
+                    outFile.write("# observation id: {0}{1}".format(obsId, os.linesep) )
+                    # observation descrition
+                    outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
+                    # media file name
+                    if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
+                        outFile.write('# Media file name: {0}{1}{1}'.format(', '.join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
+                    if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
+                        outFile.write('# Live observation{0}{0}'.format(os.linesep))
+                for subj in selected_subjects:
+                    if subj:
+                        subj_str = '{0}{1}:{0}'.format(os.linesep, subj)
+                    else:
+                        subj_str = '{0}No focal subject:{0}'.format(os.linesep)
+                    outFile.write(subj_str)
+                    for obs in selected_observations:
+                        s = ''
+                        for event in self.pj[OBSERVATIONS][obs][EVENTS]:
+                            if event[ pj_obs_fields['subject']] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields['subject']] == ''):
+                                s += event[pj_obs_fields['code']].replace(' ', '_') + self.behaviouralStringsSeparator
+                        # remove last separator (if separator not empty)
+                        if self.behaviouralStringsSeparator:
+                            s = s[0 : -len(self.behaviouralStringsSeparator)]
+                        if s:
+                            outFile.write(s + os.linesep)
 
 
     def closeEvent(self, event):
