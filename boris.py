@@ -6091,7 +6091,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         fd = QFileDialog(self)
-        fileName = fd.getSaveFileName(self, "Export events as strings", "","Events file (*.txt *.tsv);;All files (*)")
+        fileName = fd.getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
         if fileName:
             with open(fileName, "w") as outFile:
