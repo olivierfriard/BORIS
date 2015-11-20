@@ -62,7 +62,7 @@ NO_FOCAL_SUBJECT = 'No focal subject'
 TYPE = "type"
 FILE = "file"
 
-### fields for event configuration
+# fields for event configuration
 #fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5}
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 # fields in behaviours table from project window
@@ -70,13 +70,13 @@ behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers
 
 observation_types = ['Point event', 'State event', 'Point event with coding map', 'State event with coding map']
 
-### fields from observation (list for order)
+# fields from observation (list for order)
 tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
 pj_events_fields = ['time', 'subject', 'code', 'modifier', 'comment']
 
 tw_indVarFields = ['label','description', 'type', 'default value']
 
-### create dictionaries
+# create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}
 
 for idx, field in enumerate(tw_events_fields):
@@ -85,6 +85,8 @@ for idx, field in enumerate(tw_events_fields):
 
 for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[ field ] = idx
+
+SUBJECT_EVENT_FIELD = 1
 
 LIVE = 'LIVE'
 MEDIA = 'MEDIA'

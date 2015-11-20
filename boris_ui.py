@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Nov 12 15:52:49 2015
+# Created: Fri Nov 20 13:28:17 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -317,6 +317,8 @@ class Ui_MainWindow(object):
         self.actionEdit_observation_2.setObjectName(_fromUtf8("actionEdit_observation_2"))
         self.actionCheckStateEvents = QtGui.QAction(MainWindow)
         self.actionCheckStateEvents.setObjectName(_fromUtf8("actionCheckStateEvents"))
+        self.actionEdit_selected_events = QtGui.QAction(MainWindow)
+        self.actionEdit_selected_events.setObjectName(_fromUtf8("actionEdit_selected_events"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -349,6 +351,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_event)
+        self.menuObservations.addAction(self.actionEdit_selected_events)
         self.menuObservations.addAction(self.actionCheckStateEvents)
         self.menuObservations.addAction(self.actionSelect_observations)
         self.menuObservations.addSeparator()
@@ -502,4 +505,5 @@ class Ui_MainWindow(object):
         self.actionUser_guide.setText(_translate("MainWindow", "User guide", None))
         self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
+        self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected events", None))
 

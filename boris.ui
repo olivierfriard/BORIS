@@ -156,6 +156,7 @@
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_event"/>
+    <addaction name="actionEdit_selected_events"/>
     <addaction name="actionCheckStateEvents"/>
     <addaction name="actionSelect_observations"/>
     <addaction name="separator"/>
@@ -776,6 +777,11 @@
   <action name="actionCheckStateEvents">
    <property name="text">
     <string>Check state events</string>
+   </property>
+  </action>
+  <action name="actionEdit_selected_events">
+   <property name="text">
+    <string>Edit selected events</string>
    </property>
   </action>
  </widget>

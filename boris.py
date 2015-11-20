@@ -176,51 +176,6 @@ class checkingBox_list(QDialog):
     def pbCancel_clicked(self):
         self.reject()
 
-class JumpTo(QDialog):
-    '''
-    jump dialog box
-    '''
-
-    def __init__(self, timeFormat):
-        super(JumpTo, self).__init__()
-
-        hbox = QVBoxLayout(self)
-
-        self.label = QLabel()
-        self.label.setText('Go to time')
-        hbox.addWidget(self.label)
-
-        if timeFormat == 'hh:mm:ss':
-            self.te = QTimeEdit()
-            self.te.setDisplayFormat('hh:mm:ss.zzz')
-        else:
-            self.te = QDoubleSpinBox()
-            self.te.setMinimum(0)
-            self.te.setMaximum(86400)
-            self.te.setDecimals(3)
-
-        hbox.addWidget(self.te)
-
-        self.pbOK = QPushButton('OK')
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel = QPushButton('Cancel')
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-
-        hbox2 = QHBoxLayout(self)
-        hbox2.addWidget(self.pbCancel)
-        hbox2.addWidget(self.pbOK)
-
-        hbox.addLayout(hbox2)
-
-        self.setLayout(hbox)
-
-        self.setWindowTitle('Jump to specific time')
-
-    def pbOK_clicked(self):
-        self.accept()
-
-    def pbCancel_clicked(self):
-        self.reject()
 
 ROW = -1
 
@@ -503,6 +458,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSelect_observations.setEnabled(flagObs)
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
+        self.actionEdit_selected_events.setEnabled(flagObs)
         self.actionCheckStateEvents.setEnabled(flagObs)
 
         self.actionMedia_file_information.setEnabled(flagObs)
@@ -560,10 +516,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
+
         self.actionCheckStateEvents.triggered.connect(self.check_state_events)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
+        self.actionEdit_selected_events.triggered.connect(self.edit_selected_events)
         self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
         self.actionDelete_selected_observations.triggered.connect(self.delete_selected_events)
 
@@ -622,6 +580,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
         self.twEvents.addAction(self.actionEdit_event)
+
+        separator1 = QAction(self)
+        separator1.setSeparator(True)
+        self.twEvents.addAction(separator1)
+        self.twEvents.addAction(self.actionEdit_selected_events)
+        separator2 = QAction(self)
+        separator2.setSeparator(True)
+        self.twEvents.addAction(separator2)
+
         self.twEvents.addAction(self.actionDelete_selected_observations)
         self.twEvents.addAction(self.actionDelete_all_observations)
 
@@ -822,7 +789,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jump to the user specified media position
         '''
 
-        jt = JumpTo(self.timeFormat)
+        jt = dialog.JumpTo(self.timeFormat)
 
         if jt.exec_():
 
@@ -5846,13 +5813,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
 
-            '''
-            self.twEvents.setRowCount(0)
-            self.projectChanged = True
-            self.update_observations()
-            '''
-
-
 
     def delete_selected_events(self):
         '''
@@ -5867,13 +5827,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, 'No event selected!')
         else:
             # list of rows to delete (set for unique)
-            rows = set( [ item.row() for item in self.twEvents.selectedIndexes() ])
+            rows = set([item.row() for item in self.twEvents.selectedIndexes()])
 
-            self.pj[OBSERVATIONS][self.observationId][EVENTS] = [ event for idx,event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if not idx in rows]
+            self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if not idx in rows]
 
             self.projectChanged = True
 
             self.loadEventsInTW( self.observationId )
+
+
+    def edit_selected_events(self):
+        '''
+        edit selected events for subject or comment
+        '''
+        if not self.observationId:
+            self.no_observation()
+            return
+
+        if not self.twEvents.selectedIndexes():
+            QMessageBox.warning(self, programName, 'No event selected!')
+        else:
+            dialogWindow = dialog.EditSelectedEvents("subject")
+            if dialogWindow.exec_():
+                # list of rows to edit
+                rows = set([item.row() for item in self.twEvents.selectedIndexes()])
+                for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+                    if idx in rows:
+                        event[SUBJECT_EVENT_FIELD] = dialogWindow.leSubject.text()
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS][idx] = event
+                self.projectChanged = True
+                self.loadEventsInTW( self.observationId )
+
 
 
     def export_tabular_events(self, outputFormat):
