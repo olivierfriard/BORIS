@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri Nov 20 13:28:17 2015
+# Created: Mon Nov 23 15:52:38 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -505,5 +505,5 @@ class Ui_MainWindow(object):
         self.actionUser_guide.setText(_translate("MainWindow", "User guide", None))
         self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
-        self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected events", None))
+        self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)", None))
 

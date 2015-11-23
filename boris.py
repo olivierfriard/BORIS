@@ -579,11 +579,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Actions for twEvents context menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
-        self.twEvents.addAction(self.actionEdit_event)
+        #self.twEvents.addAction(self.actionEdit_event)
 
-        separator1 = QAction(self)
-        separator1.setSeparator(True)
-        self.twEvents.addAction(separator1)
+        #separator1 = QAction(self)
+        #separator1.setSeparator(True)
+        #self.twEvents.addAction(separator1)
+
         self.twEvents.addAction(self.actionEdit_selected_events)
         separator2 = QAction(self)
         separator2.setSeparator(True)
@@ -4509,8 +4510,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             '''
 
 
-
-
     def edit_event(self):
         '''
         edit each event items from the selected row
@@ -4542,8 +4541,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             editWindow.cobSubject.addItems( sortedSubjects )
 
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ] in sortedSubjects:
-                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ] ) )
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] in sortedSubjects:
+                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] ) )
             else:
                 QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' %   self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ]  )
                 editWindow.cobSubject.setCurrentIndex( 0 )
@@ -4709,7 +4708,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
          pyqt_ver=PYQT_VERSION_STR, system=platform.system(), qt_ver=QT_VERSION_STR,
          players='<br>'.join(players)))
 
-
     def hsVideo_sliderMoved(self):
         '''
         media position slider moved
@@ -4719,23 +4717,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
             if self.playerType == VLC and self.playMode == VLC:
-
                 sliderPos = self.hsVideo.value() / (slider_maximum - 1)
-
                 videoPosition = sliderPos * self.mediaplayer.get_length()
-
                 self.mediaplayer.set_time( int(videoPosition) )
-
-
                 # second video together
-                # TODO: add second video offset
-
                 if self.simultaneousMedia:
                     # synchronize 2nd player
                     self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
-
                 self.timer_out(scrollSlider=False)
-
 
     def get_events_current_row(self):
         '''
@@ -5704,98 +5693,66 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.no_observation()
 
 
-
-
     def select_events_between_activated(self):
         '''
         select events between a time interval
-        FIXME select events between a time interval
         '''
 
-        '''
-        QMessageBox.warning(self, programName, 'Not available yet!')
-        return
-        '''
+        def parseTime(txt):
+            '''
+            parse time in string (should be 00:00:00.000 or in seconds)
+            '''
+            if ':' in txt:
+                qtime = QTime.fromString(txt, "hh:mm:ss.zzz")    #timeRegExp(from_)
 
-        def timeRegExp(s):
-            '''
-            extract time from 01:23:45.678
-            '''
-            pattern = r'\d{1,2}:\d{1,2}'
-            if '.' in s:
-                pattern += r'.\d{1,3}'
-            if from_.count(':') == 2:
-                pattern = r'\d{1,2}:' + pattern
-            re_r = re.findall(pattern, s)
-            if re_r:
-                r_str = re_r[0]
-                if not '.' in r_str:
-                    r_str += '.000'
-                if r_str.count(':') ==1:
-                    r_str = '00:' + r_str
-                return r_str
+                if qtime.toString():
+                    timeSeconds = time2seconds(qtime.toString("hh:mm:ss.zzz"))
+                else:
+                    return None
             else:
-                return ''
-
+                try:
+                    timeSeconds = Decimal(txt)
+                except InvalidOperation:
+                    return None
+            return timeSeconds
 
 
         if self.twEvents.rowCount():
-            text, ok = QInputDialog.getText(self, 'Select observations from interval', 'Interval: (example: 12.5-14.7 or 2:45.780-3:15.120 )' , QLineEdit.Normal,  '')
+            text, ok = QInputDialog.getText(self, "Select events in time interval", "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120 )", QLineEdit.Normal, "")
 
             if ok and text != '':
 
-                if not '-' in text:
-                    QMessageBox.critical(self, programName, 'Use - to separate initial value from final value')
+                if not "-" in text:
+                    QMessageBox.critical(self, programName, "Use minus sign (-) to separate initial value from final value")
                     return
 
-                from_, to_ = text.split('-')[0:2]
+                while " " in text:
+                    text = text.replace(" ", "")
 
-                if ':' in from_:
-                    from_time = timeRegExp(from_)
-                    if from_time:
-                        from_sec = time2seconds(from_time)
-                    else:
-                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % from_ )
-                else:
-                    try:
-                        from_sec = Decimal(from_)
-                    except InvalidOperation:
-                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % from_ )
-
-                if ':' in to_:
-                    to_time = timeRegExp(to_)
-                    if to_time:
-                        to_sec = time2seconds(to_time)
-                    else:
-                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % to_ )
-                else:
-                    try:
-                        to_sec = Decimal(to_)
-                    except InvalidOperation:
-                        QMessageBox.critical(self, programName, 'Time value not recognized: %s' % to_ )
-
-
-
+                from_, to_ = text.split("-")[0:2]
+                from_sec = parseTime(from_)
+                if not from_sec:
+                    QMessageBox.critical(self, programName, "Time value not recognized: {}".format(from_))
+                    return
+                to_sec = parseTime(to_)
+                if not to_sec:
+                    QMessageBox.critical(self, programName, "Time value not recognized: {}".format(to_))
+                    return
                 if to_sec < from_sec:
-                    QMessageBox.critical(self, programName, 'The initial time is greater than the final time')
+                    QMessageBox.critical(self, programName, "The initial time is greater than the final time")
                     return
-
                 self.twEvents.clearSelection()
                 self.twEvents.setSelectionMode( QAbstractItemView.MultiSelection )
                 for r in range(0, self.twEvents.rowCount()):
-
                     if ':' in self.twEvents.item(r, 0).text():
-                        time = time2seconds( self.twEvents.item(r, 0).text() )
+                        time = time2seconds(self.twEvents.item(r, 0).text())
                     else:
                         time = Decimal(self.twEvents.item(r, 0).text())
-
-                    if time >= from_sec and time <= to_sec:
+                    if from_sec <= time <= to_sec:
                         self.twEvents.selectRow(r)
 
         else:
-            QMessageBox.critical(self, programName, 'There are no events to select')
-
-
+            QMessageBox.warning(self, programName, "There are no events to select")
 
     def delete_all_events(self):
         '''
@@ -5844,19 +5801,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.no_observation()
             return
 
-        if not self.twEvents.selectedIndexes():
-            QMessageBox.warning(self, programName, 'No event selected!')
+
+
+        # list of rows to edit
+        rowsToEdit = set([item.row() for item in self.twEvents.selectedIndexes()])
+
+        print(len( rowsToEdit ))
+
+        if not len(rowsToEdit):
+            QMessageBox.warning(self, programName, "No event selected!")
+        elif len(rowsToEdit) == 1:
+            self.edit_event()
         else:
-            dialogWindow = dialog.EditSelectedEvents("subject")
+            dialogWindow = dialog.EditSelectedEvents()
             if dialogWindow.exec_():
-                # list of rows to edit
-                rows = set([item.row() for item in self.twEvents.selectedIndexes()])
+
                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                    if idx in rows:
-                        event[SUBJECT_EVENT_FIELD] = dialogWindow.leSubject.text()
+                    if idx in rowsToEdit:
+                        if dialogWindow.rbSubject.isChecked():
+                            event[SUBJECT_EVENT_FIELD] = dialogWindow.leText.text()
+                        if dialogWindow.rbBehavior.isChecked():
+                            event[BEHAVIOR_EVENT_FIELD] = dialogWindow.leText.text()
+                        if dialogWindow.rbComment.isChecked():
+                            event[COMMENT_EVENT_FIELD] = dialogWindow.leText.text()
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][idx] = event
-                self.projectChanged = True
-                self.loadEventsInTW( self.observationId )
+                        self.projectChanged = True
+                self.loadEventsInTW(self.observationId)
 
 
 
@@ -5874,16 +5844,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return l
 
         # ask user observations to analyze
-        result, selected_observations = self.selectObservations( MULTIPLE )
+        result, selected_observations = self.selectObservations(MULTIPLE)
 
         if not selected_observations:
             return
 
         # filter subjects in observations
-        observed_subjects = self.extract_observed_subjects( selected_observations )
+        observed_subjects = self.extract_observed_subjects(selected_observations)
 
         # ask user subject to export
-        selected_subjects = self.select_subjects( observed_subjects )
+        selected_subjects = self.select_subjects(observed_subjects)
 
         if not selected_subjects:
             return

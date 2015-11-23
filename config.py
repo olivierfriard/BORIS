@@ -87,6 +87,8 @@ for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[ field ] = idx
 
 SUBJECT_EVENT_FIELD = 1
+BEHAVIOR_EVENT_FIELD = 2
+COMMENT_EVENT_FIELD = 4
 
 LIVE = 'LIVE'
 MEDIA = 'MEDIA'

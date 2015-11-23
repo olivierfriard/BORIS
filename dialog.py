@@ -80,20 +80,31 @@ class JumpTo(QDialog):
 
 class EditSelectedEvents(QDialog):
     '''
-    "jump to" dialog box
+    "edit selected events" dialog box
     '''
 
-    def __init__(self, field):
+    def __init__(self):
         super(EditSelectedEvents, self).__init__()
 
         hbox = QVBoxLayout(self)
 
-        self.label = QLabel()
-        self.label.setText(field)
+        self.rbSubject = QRadioButton("Subject")
+        self.rbSubject.setChecked(False)
+        hbox.addWidget(self.rbSubject)
+
+        self.rbBehavior = QRadioButton("Behavior")
+        self.rbBehavior.setChecked(False)
+        hbox.addWidget(self.rbBehavior)
+
+        self.rbComment = QRadioButton("Comment")
+        self.rbComment.setChecked(False)
+        hbox.addWidget(self.rbComment)
+
+        self.label = QLabel("New text")
         hbox.addWidget(self.label)
 
-        self.leSubject = QLineEdit()
-        hbox.addWidget(self.leSubject)
+        self.leText = QLineEdit()
+        hbox.addWidget(self.leText)
 
         hbox2 = QHBoxLayout(self)
         self.pbOK = QPushButton("OK")
@@ -109,7 +120,12 @@ class EditSelectedEvents(QDialog):
         self.setWindowTitle("Edit selected events")
 
     def pbOK_clicked(self):
-        self.accept()
+        if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked()and not self.rbComment.isChecked():
+            QMessageBox.warning(None, programName, "You must select a field to be edited",\
+            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+        else:
+            self.accept()
 
     def pbCancel_clicked(self):
         self.reject()

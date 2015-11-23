@@ -25,10 +25,8 @@ import math
 import subprocess
 import urllib.parse
 import sys
-
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-
 from decimal import *
 
 
@@ -56,7 +54,7 @@ def url2path(url):
         path = path[1:]
     return path
 
-
+"""
 def getTimeValues( n ):
     '''
     get tick and max scale values for time diagram time axe
@@ -72,7 +70,7 @@ def getTimeValues( n ):
         tick = tick/2
 
     return tick, m
-
+"""
 
 
 def time2seconds(time):
@@ -80,9 +78,9 @@ def time2seconds(time):
     convert hh:mm:ss.s to number of seconds (decimal)
     '''
     flagNeg = '-' in time
-    time = time.replace('-','')
+    time = time.replace("-", "")
 
-    tsplit= time.split(':')
+    tsplit= time.split(":")
 
     h, m, s = int( tsplit[0] ), int( tsplit[1] ), Decimal( tsplit[2] )
 
@@ -107,7 +105,7 @@ def seconds2time(sec):
         minutes = minutes % 60
 
     secs = sec - hours*3600 - minutes * 60
-    ssecs = '%06.3f' % secs
+    ssecs = "%06.3f" % secs
 
     return  "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs )
 

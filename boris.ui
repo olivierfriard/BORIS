@@ -781,7 +781,7 @@
   </action>
   <action name="actionEdit_selected_events">
    <property name="text">
-    <string>Edit selected events</string>
+    <string>Edit selected event(s)</string>
    </property>
   </action>
  </widget>
