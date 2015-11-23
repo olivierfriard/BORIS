@@ -91,7 +91,7 @@ def bytes_to_str(b):
         fileSystemEncoding = sys.getfilesystemencoding()
         # hack for PyInstaller
         if fileSystemEncoding == None:
-            fileSystemEncoding = 'UTF-8'
+            fileSystemEncoding = "UTF-8"
         return b.decode( fileSystemEncoding )
     else:
         return b
@@ -111,8 +111,8 @@ class TempDirCleanerThread(QThread):
 
         def run(self):
             while self.exiting == False:
-                if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if 'BORIS_' in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
-                    fl = sorted((os.path.getctime(self.tempdir+f),self.tempdir+f) for f in os.listdir(self.tempdir) if 'BORIS_' in f and os.path.isfile(self.tempdir + f))
+                if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
+                    fl = sorted((os.path.getctime(self.tempdir+f),self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
                     for ts,f in fl[0:int(len(fl)/10)]:
                         os.remove(f)
                 time.sleep(30)
@@ -285,7 +285,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.availablePlayers = availablePlayers
-        '''self.installEventFilter(self)'''
         # set icons
         self.setWindowIcon(QIcon(':/logo.png'))
         self.actionPlay.setIcon(QIcon(':/play.png'))
@@ -389,7 +388,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         self.liveLayout = QtGui.QGridLayout()
-        self.textButton = QPushButton('Start live observation')
+        self.textButton = QPushButton("Start live observation")
         self.textButton.clicked.connect(self.start_live_observation)
         self.liveLayout.addWidget(self.textButton)
 
@@ -397,10 +396,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeLive = QLabel()
         self.lbTimeLive.setAlignment(Qt.AlignCenter)
 
-        font = QFont('Monospace')
+        font = QFont("Monospace")
         font.setPointSize(48)
         self.lbTimeLive.setFont(font)
-        self.lbTimeLive.setText('00:00:00.000')
+        self.lbTimeLive.setText("00:00:00.000")
 
         self.liveLayout.addWidget(self.lbTimeLive)
 
@@ -415,16 +414,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         enable/disable menu option
         '''
 
-        title = ''
+        title = ""
         if self.observationId:
-            title = self.observationId + ' - '
+            title = self.observationId + " - "
         if self.pj['project_name']:
             title += self.pj['project_name'] + ' - '
 
         title += programName
-
         self.setWindowTitle( title )
-
         flag = self.project
 
         # project menu
@@ -441,7 +438,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionOpen_observation.setEnabled( self.pj[OBSERVATIONS] != {})
         self.actionEdit_observation_2.setEnabled( self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled( self.pj[OBSERVATIONS] != {})
-
 
         # enabled if observation
         flagObs = self.observationId != ''
@@ -629,7 +625,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.show()
         self.hide()
 
-
     def open_observation(self):
         '''
         open an observation
@@ -637,7 +632,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if current observation must be closed to open a new one
         if self.observationId:
-            response = dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', [YES, NO])
+            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
             if response == NO:
                 return
             else:
@@ -664,13 +659,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.menu_options()
             # title of dock widget
-            self.dwObservations.setWindowTitle('Events for ' + self.observationId)
+            self.dwObservations.setWindowTitle("Events for " + self.observationId)
 
 
     def edit_observation(self):
         # check if current observation must be closed to open a new one
         if self.observationId:
-            response = dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', [YES, NO])
+            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
             if response == NO:
                 return
             else:
@@ -687,13 +682,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         out = ''
         flagStateEvent = False
-        subjects = [subject for _, subject, _, _, _ in  self.pj[OBSERVATIONS][self.observationId]['events']]
+        subjects = [subject for _, subject, _, _, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
         for subject in sorted(set(subjects)):
-            behaviors = [behavior for _, subj, behavior, _, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if subj == subject ]
+            behaviors = [behavior for _, subj, behavior, _, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS] if subj == subject ]
             for behavior in sorted(set(behaviors)):
                 if "STATE" in self.eventType(behavior).upper():
                     flagStateEvent = True
-                    behavior_modifiers = [behav + "@@@" + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId]['events'] if behav == behavior and subj == subject]
+                    behavior_modifiers = [behav + "@@@" + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS] if behav == behavior and subj == subject]
                     for behavior_modifier in set(behavior_modifiers):
                         if behavior_modifiers.count(behavior_modifier) % 2:
                             if subject:
@@ -718,7 +713,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         # check if an observation is running
         if self.observationId:
-            QMessageBox.critical(self, programName , 'You must close the running observation before.' )
+            QMessageBox.critical(self, programName , "You must close the running observation before." )
             return
 
         result, selectedObs = self.selectObservations( SINGLE )
@@ -732,11 +727,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # load events in table widget
                 self.loadEventsInTW(self.observationId)
 
-                if self.pj[OBSERVATIONS][self.observationId][ 'type' ] == LIVE:
+                if self.pj[OBSERVATIONS][self.observationId]['type'] == LIVE:
                     self.playerType = LIVE
                     self.initialize_new_live_observation()
 
-                if self.pj[OBSERVATIONS][self.observationId][ 'type' ] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
                     if not self.initialize_new_observation_vlc():
                         self.observationId = ''
