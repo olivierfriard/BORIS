@@ -121,11 +121,19 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked()and not self.rbComment.isChecked():
-            QMessageBox.warning(None, programName, "You must select a field to be edited",\
+            QMessageBox.warning(None, config.programName, "You must select a field to be edited",\
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
-        else:
-            self.accept()
+        if self.rbBehavior.isChecked() and self.leText.text().upper() not in self.all_behaviors:
+            QMessageBox.warning(None, config.programName, "This behavior is not in ethogram",\
+            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+        if self.rbSubject.isChecked() and self.leText.text().upper() not in self.all_subjects:
+            QMessageBox.warning(None, config.programName, "This subject is not in subject's list",\
+            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        self.accept()
 
     def pbCancel_clicked(self):
         self.reject()
