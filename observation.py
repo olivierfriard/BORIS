@@ -56,6 +56,8 @@ class Observation(QDialog, Ui_Form):
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
 
+        self.cbVisualizeSpectrogram.clicked.connect( self.generate_spectrogram )
+
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect( self.pbCancel_clicked )
 
@@ -67,6 +69,18 @@ class Observation(QDialog, Ui_Form):
 
         self.mediaDurations = {}
         self.mediaFPS = {}
+
+        self.cbVisualizeSpectrogram.setEnabled(False)
+
+    def generate_spectrogram(self):
+        if self.cbVisualizeSpectrogram.isChecked():
+            response = dialog.MessageDialog(programName, "You choose to visualize the spectrogram for the selected media. Choose YES to generate the spectrogram.", [YES, NO ])
+            if response == YES:
+                pass
+            else:
+                self.cbVisualizeSpectrogram.setChecked(False)
+
+
 
 
     def widgetEnabled(self, flag):
@@ -83,9 +97,7 @@ class Observation(QDialog, Ui_Form):
     def pbCancel_clicked(self):
 
         if self.flagAnalysisRunning:
-            response = dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ])
-
-            if response == YES:
+            if dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ]) == YES:
                 self.flagAnalysisRunning = False
                 self.reject()
         else:
@@ -255,6 +267,8 @@ class Observation(QDialog, Ui_Form):
             self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
 
+        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
+
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         '''
         add media file path to list widget
@@ -310,3 +324,5 @@ class Observation(QDialog, Ui_Form):
                         del self.mediaDurations[ selectedItem.text() ]
                     except:
                         pass
+
+        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )

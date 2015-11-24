@@ -239,6 +239,13 @@
           </layout>
          </item>
          <item>
+          <widget class="QCheckBox" name="cbVisualizeSpectrogram">
+           <property name="text">
+            <string>Visualize spectrogram</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
             <string>Media file paths for second player (will be played simultaneously)</string>
