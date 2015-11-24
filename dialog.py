@@ -24,6 +24,7 @@ This file is part of BORIS.
 
 
 from PyQt4.QtGui import *
+
 import config
 
 def MessageDialog(title, text, buttons):

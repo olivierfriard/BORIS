@@ -31,15 +31,39 @@ import time
 import sys
 import hashlib
 import subprocess
+import tempfile
 
 from config import *
 from utilities import *
 import dialog
+import plot_spectrogram
 
 from observation_ui import Ui_Form
 
 out = ''
 fps = 0
+#CHUNK = 60  # seconds
+
+
+class ThreadSignalSpectrogram(QObject):
+    sig = pyqtSignal(str)
+
+"""
+class ProcessSpectro(QThread):
+    '''
+    process for spectrogram creation
+    '''
+    def __init__(self, chunk_length, parent=None):
+        QThread.__init__(self, parent)
+        self.fileName = ''
+        self.chunk_length = chunk_length
+        self.signal = ThreadSignalSpectrogram()
+
+    def run(self):
+        print(self.filename, self.chunk_length)
+        fileName1stChunk = plot_spectrogram.graph_spectrogram(self.fileName, self.chunk_length)
+        self.signal.sig.emit(fileName1stChunk)
+"""
 
 class Observation(QDialog, Ui_Form):
 
@@ -48,13 +72,15 @@ class Observation(QDialog, Ui_Form):
         super(Observation, self).__init__(parent)
         self.setupUi(self)
 
-        self.lbMediaAnalysis.setText('')
+        self.lbMediaAnalysis.setText("")
 
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
+
+        self.cbVisualizeSpectrogram.clicked.connect( self.generate_spectrogram )
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect( self.pbCancel_clicked )
@@ -64,9 +90,74 @@ class Observation(QDialog, Ui_Form):
         self.availablePlayers = []
 
         self.flagAnalysisRunning = False
+        self.spectrogramFinished = False
 
         self.mediaDurations = {}
         self.mediaFPS = {}
+
+        self.cbVisualizeSpectrogram.setEnabled(False)
+
+    """
+    def processSpectrogramCompleted(self, fileName1stChunk):
+        '''
+        function triggered at the end of spectrogram creation
+        '''
+
+        print('fileName1stChunk',fileName1stChunk)
+        self.spectrogramFinished = True
+
+        self.infobutton.setText('Go!')
+
+        self.spectro = Spectrogram( fileName1stChunk )
+        self.spectro.show()
+        self.timer_spectro.start()
+
+        self.PlayPause()
+    """
+
+
+    def generate_spectrogram(self):
+
+        if self.cbVisualizeSpectrogram.isChecked():
+            response = dialog.MessageDialog(programName, "You choose to visualize the spectrogram for the selected media. Choose YES to generate the spectrogram.", [YES, NO ])
+            if response == YES:
+
+                # check temp dir for images from ffmpeg
+                if not self.ffmpeg_cache_dir:
+                    tmp_dir = tempfile.gettempdir()
+                else:
+                    tmp_dir = self.ffmpeg_cache_dir
+
+                print('tmp_dir',tmp_dir)
+
+                _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(0).text(), tmp_dir=tmp_dir  ,chunk_size=self.chunk_length)  # return first chunk PNG file (not used)
+
+                """
+                self.spectrogramFinished = False
+                process = ProcessSpectro()
+                process.signal.sig.connect(self.processSpectrogramCompleted)
+
+
+                print(self.lwVideo.item(0).text() )
+
+                process.fileName = self.lwVideo.item(0).text()
+                process.chunk_length = CHUNK
+                process.start()
+
+                print('started')
+
+                while not process.isRunning():
+                    time.sleep(0.01)
+                    continue
+
+
+                print('started2')
+                """
+
+            else:
+                self.cbVisualizeSpectrogram.setChecked(False)
+
+
 
 
     def widgetEnabled(self, flag):
@@ -83,9 +174,7 @@ class Observation(QDialog, Ui_Form):
     def pbCancel_clicked(self):
 
         if self.flagAnalysisRunning:
-            response = dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ])
-
-            if response == YES:
+            if dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ]) == YES:
                 self.flagAnalysisRunning = False
                 self.reject()
         else:
@@ -255,6 +344,8 @@ class Observation(QDialog, Ui_Form):
             self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
 
+        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
+
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         '''
         add media file path to list widget
@@ -310,3 +401,5 @@ class Observation(QDialog, Ui_Form):
                         del self.mediaDurations[ selectedItem.text() ]
                     except:
                         pass
+
+        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )

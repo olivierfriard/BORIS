@@ -48,7 +48,7 @@ def url2path(url):
     under windows, check if path name begin with /
     '''
 
-    path = urllib.parse.urlparse( url ).path
+    path = urllib.parse.urlparse(url).path
     # check / for windows
     if sys.platform.startswith('win') and path.startswith('/'):
         path = path[1:]
