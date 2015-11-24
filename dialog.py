@@ -24,6 +24,7 @@ This file is part of BORIS.
 
 
 from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 import config
 
 def MessageDialog(title, text, buttons):
@@ -139,7 +140,35 @@ class EditSelectedEvents(QDialog):
         self.reject()
 
 
+class Spectrogram(QWidget):
 
+    def __init__(self, fileName1stChunk, parent = None):
+
+        super(Spectrogram, self).__init__(parent)
+
+        self.pixmap = QPixmap()
+        self.pixmap.load( fileName1stChunk )
+        self.w, self.h = self.pixmap.width(), self.pixmap.height()
+
+        print( 'pixmap.width(), pixmap.height()',self.pixmap.width(), self.pixmap.height() )
+
+        self.setGeometry(300, 300, 1000, self.h + 50)
+
+        self.scene = QGraphicsScene(self)
+        self.scene.setBackgroundBrush (QColor(0,0,0,255))
+
+        self.scene.setSceneRect(0, 0, 100, 100)
+
+        self.line = QGraphicsLineItem(0, 0, 0, self.h, scene = self.scene)
+        self.line.setPen(QPen(QColor(255,0,0,255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        self.line.setZValue(100.0)
+        self.scene.addItem(self.line)
+
+        self.view = QGraphicsView(self.scene)
+        #self.view.showMaximized()
+
+        hbox = QHBoxLayout(self)
+        hbox.addWidget(self.view)
 
 """
 class EventType(QDialog):

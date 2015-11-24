@@ -35,11 +35,34 @@ import subprocess
 from config import *
 from utilities import *
 import dialog
+import plot_spectrogram
 
 from observation_ui import Ui_Form
 
 out = ''
 fps = 0
+CHUNK = 60  # seconds
+
+
+class ThreadSignalSpectrogram(QObject):
+    sig = pyqtSignal(str)
+
+
+class ProcessSpectro(QThread):
+    '''
+    process for spectrogram creation
+    '''
+    def __init__(self, parent = None):
+        QThread.__init__(self, parent)
+        self.fileName = ''
+        self.chunk_length = CHUNK
+        self.signal = ThreadSignalSpectrogram()
+
+    def run(self):
+        print(self.filename, self.chunk_length)
+        fileName1stChunk = plot_spectrogram.graph_spectrogram(self.fileName, self.chunk_length)
+        self.signal.sig.emit(fileName1stChunk)
+
 
 class Observation(QDialog, Ui_Form):
 
@@ -66,17 +89,62 @@ class Observation(QDialog, Ui_Form):
         self.availablePlayers = []
 
         self.flagAnalysisRunning = False
+        self.spectrogramFinished = False
 
         self.mediaDurations = {}
         self.mediaFPS = {}
 
         self.cbVisualizeSpectrogram.setEnabled(False)
 
+
+    def processSpectrogramCompleted(self, fileName1stChunk):
+        '''
+        function triggered at the end of spectrogram creation
+        '''
+
+        print('fileName1stChunk',fileName1stChunk)
+        self.spectrogramFinished = True
+
+        self.infobutton.setText('Go!')
+
+        self.spectro = Spectrogram( fileName1stChunk )
+        self.spectro.show()
+        self.timer_spectro.start()
+
+        self.PlayPause()
+
+
     def generate_spectrogram(self):
+
         if self.cbVisualizeSpectrogram.isChecked():
             response = dialog.MessageDialog(programName, "You choose to visualize the spectrogram for the selected media. Choose YES to generate the spectrogram.", [YES, NO ])
             if response == YES:
-                pass
+
+                fileName1stChunk = plot_spectrogram.graph_spectrogram(self.lwVideo.item(0).text(), CHUNK)
+                print( ' fileName1stChunk',fileName1stChunk)
+
+                """
+                self.spectrogramFinished = False
+                process = ProcessSpectro()
+                process.signal.sig.connect(self.processSpectrogramCompleted)
+
+
+                print(self.lwVideo.item(0).text() )
+
+                process.fileName = self.lwVideo.item(0).text()
+                process.chunk_length = CHUNK
+                process.start()
+
+                print('started')
+
+                while not process.isRunning():
+                    time.sleep(0.01)
+                    continue
+
+
+                print('started2')
+                """
+
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
 

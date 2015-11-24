@@ -276,6 +276,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     playerType = ''
     playMode = VLC
 
+    chunk_length = 60
+    memChunk = ''
+
     cleaningThread = TempDirCleanerThread()
 
 
@@ -602,6 +605,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.timer_out)
 
+        # timer for spectrogram visualization
+        self.timer_spectro = QTimer(self)
+        self.timer_spectro.setInterval(50)
+        self.timer_spectro.timeout.connect(self.timer_spectro_out)
+
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
         self.liveTimer.timeout.connect(self.liveTimer_out)
@@ -613,6 +621,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start( self.automaticBackup * 60000 )
+
+
+    def timer_spectro_out(self):
+        '''
+        timer for spectrogram visualization
+        '''
+        currentChunk = int(self.mediaplayer.get_time() / 1000 / self.chunk_length)
+
+        if currentChunk != self.memChunk:
+
+            try:
+                self.spectro.scene.removeItem(self.spectro.item)
+            except:
+                pass
+
+            currentMediaPath = url2path(self.mediaplayer.get_media().get_mrl())
+            print( '{}.wav.{}-{}.spectrogram.png'.format(currentMediaPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length))
+
+            self.spectro.pixmap.load(  '{}.wav.{}-{}.spectrogram.png'.format( currentMediaPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length))
+            self.spectro.w, self.spectro.h = self.spectro.pixmap.width(), self.spectro.pixmap.height()
+
+            self.spectro.item = QGraphicsPixmapItem(self.spectro.pixmap)
+
+            self.spectro.scene.addItem(self.spectro.item)
+            self.spectro.item.setPos(0, 0)
+
+        get_time = (self.mediaplayer.get_time() % (self.chunk_length * 1000) / (self.chunk_length*1000))
+
+        self.spectro.item.setPos(  - int( get_time * self.spectro.w )  , 0 )
+
+        self.memChunk = currentChunk
+
 
     def map_creator(self):
         '''
@@ -847,6 +887,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             QMessageBox.warning(self, programName , 'The indicated position is behind the total media duration (%s)' % seconds2time(sum(self.duration)/1000))
 
                     self.timer_out()
+                    self.timer_spectro_out()
 
 
     def previous_media_file(self):
@@ -889,6 +930,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.statusbar.showMessage('The first media is playing', 5000)
 
                 self.timer_out()
+                self.timer_spectro_out()
 
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
@@ -935,6 +977,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                 self.timer_out()
+                self.timer_spectro_out()
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
 
@@ -1672,6 +1715,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
 
+        # spectrogram
+        currentMediaPath = url2path(self.mediaplayer.get_media().get_mrl())
+        if "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
+
+            self.spectro = dialog.Spectrogram( currentMediaPath + '.wav.0-{}.spectrogram.png'.format(self.chunk_length))
+            self.spectro.show()
+            self.timer_spectro.start()
+
         return True
 
 
@@ -2001,10 +2052,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
 
-
             if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
 
+            if "visualize_spectrogram" in self.pj[OBSERVATIONS][obsId]:
+                observationWindow.cbVisualizeSpectrogram.setEnabled(True)
+                observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId]["visualize_spectrogram"])
 
         if observationWindow.exec_():
 
@@ -2056,6 +2109,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
+
+            # visualize spectrogram
+            self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
 
             # media file
             fileName = {}
@@ -2141,6 +2197,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
 
             self.timer.stop()
+            self.timer_spectro.stop()
 
             self.mediaplayer.stop()
             del self.mediaplayer
@@ -4206,6 +4263,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.pause_video()
             self.timer.stop()
+            self.timer_spectro.stop()
 
             # check temp dir for images from ffmpeg
             if not self.ffmpeg_cache_dir:
@@ -4276,8 +4334,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else:  # VLC
 
-                    current_media_path = url2path( self.mediaplayer.get_media().get_mrl() )
-                    dirName, fileName = os.path.split( current_media_path )
+                    current_media_path = url2path(self.mediaplayer.get_media().get_mrl())
+                    dirName, fileName = os.path.split(current_media_path)
                     time = str(self.mediaplayer.get_time())
                     self.mediaplayer.video_take_snapshot(0, dirName + os.sep + os.path.splitext( fileName )[0] +  '_'+ time +'.png' ,0,0)
 
@@ -4712,6 +4770,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # synchronize 2nd player
                     self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
                 self.timer_out(scrollSlider=False)
+                self.timer_spectro_out()
 
     def get_events_current_row(self):
         '''
@@ -5644,6 +5703,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         tot += d
 
                 self.timer_out()
+                self.timer_spectro_out()
 
 
             if self.playMode == FFMPEG:
@@ -6068,6 +6128,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.saveConfigFile()
 
+        try:
+            self.spectro.close()
+        except:
+            pass
+
+
+
 
     def actionQuit_activated(self):
         self.close()
@@ -6103,6 +6170,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mediaListPlayer2.play()
 
                 self.timer.start(200)
+                self.timer_spectro.start()
 
 
     def pause_video(self):
@@ -6120,6 +6188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.mediaListPlayer.get_state() != vlc.State.Paused:
 
                     self.timer.stop()
+                    self.timer_spectro.stop()
                     self.mediaListPlayer.pause()
                     # wait for pause
 
@@ -6140,6 +6209,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     time.sleep(1)
                     self.timer_out()
+                    self.timer_spectro_out()
 
 
 
@@ -6212,6 +6282,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.no_media()
 
                 self.timer_out()
+                self.timer_spectro_out()
 
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
@@ -6279,6 +6350,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.no_media()
 
                 self.timer_out()
+                self.timer_spectro_out()
 
                 # no subtitles
                 '''
@@ -6311,6 +6383,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.mediaplayer2.set_time(0)
 
                 self.timer_out()
+                self.timer_spectro_out()
 
 
 
