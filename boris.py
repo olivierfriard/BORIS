@@ -3099,20 +3099,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if t1 == t2:
                                     pointsx.append( t1 )
                                     pointsy.append( count )
-                                    ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
+                                    ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
                                 else:
                                     x1.append( t1 )
                                     x2.append( t2 )
                                     y.append(count)
                                     col.append( colors[ col_count % len(colors)] )
-                                    ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
+                                    ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
                             count += 1
                         else:
                             x1.append(0)
                             x2.append(0)
                             y.append(count)
                             col.append('white')
-                            ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
+                            ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
                             count += 1
 
                     else:
@@ -3121,7 +3121,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             x2.append(0)
                             y.append(count)
                             col.append( 'white' )
-                            ax.axhline(y=count ,linewidth=1, color='lightgray',zorder=-1)
+                            ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
                             count += 1
 
                     col_count += 1
