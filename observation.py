@@ -31,6 +31,7 @@ import time
 import sys
 import hashlib
 import subprocess
+import tempfile
 
 from config import *
 from utilities import *
@@ -41,28 +42,28 @@ from observation_ui import Ui_Form
 
 out = ''
 fps = 0
-CHUNK = 60  # seconds
+#CHUNK = 60  # seconds
 
 
 class ThreadSignalSpectrogram(QObject):
     sig = pyqtSignal(str)
 
-
+"""
 class ProcessSpectro(QThread):
     '''
     process for spectrogram creation
     '''
-    def __init__(self, parent = None):
+    def __init__(self, chunk_length, parent=None):
         QThread.__init__(self, parent)
         self.fileName = ''
-        self.chunk_length = CHUNK
+        self.chunk_length = chunk_length
         self.signal = ThreadSignalSpectrogram()
 
     def run(self):
         print(self.filename, self.chunk_length)
         fileName1stChunk = plot_spectrogram.graph_spectrogram(self.fileName, self.chunk_length)
         self.signal.sig.emit(fileName1stChunk)
-
+"""
 
 class Observation(QDialog, Ui_Form):
 
@@ -71,7 +72,7 @@ class Observation(QDialog, Ui_Form):
         super(Observation, self).__init__(parent)
         self.setupUi(self)
 
-        self.lbMediaAnalysis.setText('')
+        self.lbMediaAnalysis.setText("")
 
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
@@ -96,7 +97,7 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled(False)
 
-
+    """
     def processSpectrogramCompleted(self, fileName1stChunk):
         '''
         function triggered at the end of spectrogram creation
@@ -112,6 +113,7 @@ class Observation(QDialog, Ui_Form):
         self.timer_spectro.start()
 
         self.PlayPause()
+    """
 
 
     def generate_spectrogram(self):
@@ -120,8 +122,15 @@ class Observation(QDialog, Ui_Form):
             response = dialog.MessageDialog(programName, "You choose to visualize the spectrogram for the selected media. Choose YES to generate the spectrogram.", [YES, NO ])
             if response == YES:
 
-                fileName1stChunk = plot_spectrogram.graph_spectrogram(self.lwVideo.item(0).text(), CHUNK)
-                print( ' fileName1stChunk',fileName1stChunk)
+                # check temp dir for images from ffmpeg
+                if not self.ffmpeg_cache_dir:
+                    tmp_dir = tempfile.gettempdir()
+                else:
+                    tmp_dir = self.ffmpeg_cache_dir
+
+                print('tmp_dir',tmp_dir)
+
+                _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(0).text(), tmp_dir=tmp_dir  ,chunk_size=self.chunk_length)  # return first chunk PNG file (not used)
 
                 """
                 self.spectrogramFinished = False
