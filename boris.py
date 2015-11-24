@@ -24,7 +24,7 @@ This file is part of BORIS.
 """
 
 
-# TODO: media offset in plot event function
+
 
 
 __version__ = "2.67"
@@ -1186,8 +1186,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                              ))
 
         # extract State events
-        StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf']
-                                if 'State' in self.pj['behaviors_conf'][y]['type']] ]
+        StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM]
+                                if 'State' in self.pj[ETHOGRAM][y]['type']] ]
 
         self.currentStates = {}
 
@@ -2456,9 +2456,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         returns type of event for code
         '''
 
-        for idx in self.pj['behaviors_conf']:
-            if self.pj['behaviors_conf'][idx]['code'] == code:
-                return self.pj['behaviors_conf'][idx]['type']
+        for idx in self.pj[ETHOGRAM]:
+            if self.pj[ETHOGRAM][idx]['code'] == code:
+                return self.pj[ETHOGRAM][idx]['type']
         return None
 
 
@@ -2599,7 +2599,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         behaviorsSelection = checkingBox_list()
 
-        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
+        allBehaviors = sorted( [  self.pj[ETHOGRAM][x][ 'code' ]  for x in self.pj[ETHOGRAM] ] )
 
         for behavior in allBehaviors:
 
@@ -2631,7 +2631,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return []
 
 
-    def choose_obs_subj_behav(self, selectedObservations, maxTime):
+    def choose_obs_subj_behav(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True):
         '''
         show param window
         allow user to select subjects and behaviors
@@ -2642,6 +2642,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
+
+        if not flagShowIncludeModifiers:
+            paramPanelWindow.cbIncludeModifiers.setVisible(False)
+        if not flagShowExcludeBehaviorsWoEvents:
+            paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+        # hide max time
+        if not maxTime:
+            paramPanelWindow.sbMaxTime.setVisible(False)
+            paramPanelWindow.lbMaxTime.setVisible(False)
+        else:
+            paramPanelWindow.sbMaxTime.setValue(maxTime/60)  # max time in minutes
+
 
         # extract subjects present in observations
         observedSubjects = self.extract_observed_subjects( selectedObservations )
@@ -2657,7 +2669,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
+        all_subjects = sorted([self.pj[SUBJECTS][x]['name'] for x in self.pj[SUBJECTS]])
 
         for subject in all_subjects:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -2672,7 +2684,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
 
-        allBehaviors = sorted( [  self.pj['behaviors_conf'][x][ 'code' ]  for x in self.pj['behaviors_conf'] ] )
+        allBehaviors = sorted( [  self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] ] )
         logging.debug('allBehaviors: {0}'.format(allBehaviors))
 
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
@@ -2682,19 +2694,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
             paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( behavior )
+            paramPanelWindow.ch.setText(behavior)
 
             if behavior in observedBehaviors:
                 paramPanelWindow.ch.setChecked(True)
 
             paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        # hide max time
-        if not maxTime:
-            paramPanelWindow.sbMaxTime.setVisible(False)
-            paramPanelWindow.lbMaxTime.setVisible(False)
-        else:
-            paramPanelWindow.sbMaxTime.setValue(maxTime/60)  # max time in minutes
 
         if not paramPanelWindow.exec_():
             return [],[],YES,False,0
@@ -2994,6 +2999,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         plot events with matplotlib
         '''
+
+        # TODO: media offset in plot events function
+
         try:
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
@@ -3012,7 +3020,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             LINE_WIDTH = line_width
             #colors = list(matcolors.cnames.keys())
-            colors = ['blue','green','red','cyan','magenta','yellow','lime','darksalmon','purple','orange','maroon','silver','slateblue','hotpink','steelblue','darkgoldenrod']
+            colors = ['blue','green','red','cyan','magenta','yellow','lime',
+                      'darksalmon','purple','orange','maroon','silver',
+                      'slateblue','hotpink','steelblue','darkgoldenrod']
             all_behaviors = []
             observedBehaviors = []
             maxTime = 0  # max time in all events of all subjects
@@ -3521,7 +3531,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow.setWindowTitle(mode + ' project')
         newProjectWindow.tabProject.setCurrentIndex(0)   # project information
 
-        newProjectWindow.obs = self.pj['behaviors_conf']
+        newProjectWindow.obs = self.pj[ETHOGRAM]
         newProjectWindow.subjects_conf = self.pj['subjects_conf']
 
         if self.pj['time_format'] == S:
@@ -3835,7 +3845,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # current state(s)
 
         # extract State events
-        StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf'] if 'State' in self.pj['behaviors_conf'][y]['type']] ]
+        StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y]['type']] ]
 
         self.currentStates = {}
 
@@ -3999,41 +4009,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export aggregated events in SQL (sql) or Tabular format (tab)
         '''
 
-        result, selectedObservations = self.selectObservations( MULTIPLE )
+        result, selectedObservations = self.selectObservations(MULTIPLE)
 
         if not selectedObservations:
             return
 
-        selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWoEvents, _ = self.choose_obs_subj_behav(selectedObservations, 0)
+        selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0,
+                                                                                  flagShowIncludeModifiers=False,
+                                                                                  flagShowExcludeBehaviorsWoEvents=False)
 
         if not selectedSubjects or not selectedBehaviors:
             return
 
         fd = QFileDialog(self)
 
-        if format_ == 'sql':
-            fileName = fd.getSaveFileName(self, 'Export aggregated events in SQL format', '' , 'SQL dump file file (*.sql);;All files (*)')
-
+        if format_ == "sql":
+            fileName = fd.getSaveFileName(self, "Export aggregated events in SQL format", "" , "SQL dump file file (*.sql);;All files (*)")
             out = '''CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT);''' + os.linesep
-            out += 'BEGIN TRANSACTION;'
+            out += "BEGIN TRANSACTION;" + os.linesep
+            template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop} );""" + os.linesep
 
-            sqlTemplate = '''INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop ) VALUES ("{0}","{1}","{2}","{3}","{4}","{5}",{6},{7} );'''+ os.linesep
-
-        if format_ == 'tab':
-            fileName = fd.getSaveFileName(self, 'Export aggregated events in tabular format', '' , 'Events file (*.tsv *.txt);;All files (*)')
-            out = 'Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{1}'.format('\t', os.linesep)
-            tabTemplate = '''{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}'''+ os.linesep
+        if format_ == "tab":
+            fileName = fd.getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
+            out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{1}".format("\t", os.linesep)
+            template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}" + os.linesep
 
         if not fileName:
             return
 
         app.processEvents()
-        self.statusbar.showMessage('Exporting aggregated events', 0)
+        self.statusbar.showMessage("Exporting aggregated events", 0)
         app.processEvents()
 
         for obsId in selectedObservations:
 
-            cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
+            cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors )
 
             for subject in selectedSubjects:
 
@@ -4042,39 +4052,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cursor.execute( "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior) )
                     rows = list(cursor.fetchall() )
 
-                    if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
+                    if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:  # unpaired events
                         continue
 
                     for idx, row in enumerate(rows):
 
                         if 'POINT' in self.eventType(behavior).upper():
 
-                            if format_ == 'sql':
-                                template = sqlTemplate
-                            if format_ == 'tab':
-                                template = tabTemplate
-
-                            out += template.format( obsId , self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '), subject, behavior, row[1], 'POINT', row[0], 0 )
+                            out += template.format( observation=obsId,
+                                                    date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
+                                                    subject=subject,
+                                                    behavior=behavior,
+                                                    modifiers=row[1],
+                                                    event_type='POINT',
+                                                    start=row[0],
+                                                    stop=0)
 
                         if 'STATE' in self.eventType(behavior).upper():
                             if idx % 2 == 0:
 
-                                if format_ == 'sql':
-                                    template = sqlTemplate
-                                if format_ == 'tab':
-                                    template = tabTemplate
+                                out += template.format( observation=obsId,
+                                                        date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
+                                                        subject=subject,
+                                                        behavior=behavior,
+                                                        modifiers=row[1],
+                                                        event_type='STATE',
+                                                        start=row[0],
+                                                        stop=rows[idx + 1][0])
 
-                                out += template.format( obsId, self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '), subject, behavior, row[1], 'STATE', row[0],  rows[idx + 1][0] )
+        if format_ == "sql":
+            out += "END TRANSACTION;" + os.linesep
 
-
-        if format_ == 'sql':
-            out += 'END TRANSACTION;'
-
-
-        with open(fileName, 'w') as f:
+        with open(fileName, "w") as f:
             f.write( out )
 
-        self.statusbar.showMessage('Aggregated events exported successfully', 0)
+        self.statusbar.showMessage("Aggregated events exported successfully", 10000)
 
 
     def media_file_info(self):
@@ -4126,7 +4138,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.playMode = VLC
 
-            globalCurrentTime = int( self.FFmpegGlobalFrame  * (1000/list(self.fps.values())[0]))
+            globalCurrentTime = int( self.FFmpegGlobalFrame  * (1000 / list(self.fps.values())[0]))
             logging.debug('new global current time: {0}'.format( globalCurrentTime ))
 
             # seek VLC on current time from FFmpeg mode
@@ -4142,17 +4154,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                             break
 
-                    '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
-                        time.sleep(0.5)
-                        pass
-                    '''
-
                     self.mediaListPlayer.pause()
 
                     currentMediaTime = int(globalCurrentTime - sum(self.duration[0:idx]))
                     break
 
-            logging.debug('current media time: {0}'.format(   currentMediaTime ))
+            logging.debug('current media time: {0}'.format(currentMediaTime))
             self.mediaplayer.set_time( currentMediaTime )
 
             self.toolBox.setCurrentIndex(VIDEO_TAB)
@@ -4193,11 +4200,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.playMode = FFMPEG
 
-            '''
-            if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                self.mediaListPlayer.pause()
-            '''
-
             self.pause_video()
             self.timer.stop()
 
@@ -4215,15 +4217,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # show frame-by_frame tab
             self.toolBox.setCurrentIndex(1)
-
-
-            '''
-            currentTime = self.mediaplayer.get_time()
-            logging.debug('current media time {0}'.format( currentTime ))
-            currentFrame = round(currentTime / 40 )
-            logging.debug('current media frame {0}'.format( currentFrame ))
-            '''
-
 
             globalTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time())
             logging.debug('globalTime {0} s'.format( globalTime/1000 ))
@@ -4421,7 +4414,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         editWindow.cobSubject.addItems( sortedSubjects )
 
-        sortedCodes = sorted( [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] ])
+        sortedCodes = sorted( [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] ])
 
         editWindow.cobCode.addItems( sortedCodes )
 
@@ -4534,10 +4527,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] in sortedSubjects:
                 editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] ) )
             else:
-                QMessageBox.warning(self, programName, 'The subject <b>%s</b> do not exists more in the subject\'s list' %   self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ]  )
+                QMessageBox.warning(self, programName, "The subject <b>%s</b> do not exists more in the subject's list" %   self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ]  )
                 editWindow.cobSubject.setCurrentIndex( 0 )
 
-            sortedCodes = sorted( [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] ])
+            sortedCodes = sorted( [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] ])
 
             editWindow.cobCode.addItems( sortedCodes )
 
@@ -4836,7 +4829,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # current state(s)
 
                 # extract State events
-                StateBehaviorsCodes = [ self.pj['behaviors_conf'][x]['code'] for x in [y for y in self.pj['behaviors_conf'] if 'STATE' in self.pj['behaviors_conf'][y]['type'].upper()] ]
+                StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'STATE' in self.pj[ETHOGRAM][y]['type'].upper()] ]
 
                 self.currentStates = {}
 
@@ -4955,7 +4948,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         take consideration of subject
         '''
 
-        stateEventsList = [ self.pj['behaviors_conf'][x]['code'] for x in self.pj['behaviors_conf'] if STATE in self.pj['behaviors_conf'][x]['type'].upper() ]
+        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x]['type'].upper() ]
 
         for row in range(0, self.twEvents.rowCount()):
 
@@ -5832,14 +5825,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        '''
-        # filter subjects in observations
-        observed_subjects = self.extract_observed_subjects(selected_observations)
-
-        # ask user subject to export
-        selected_subjects = self.select_subjects(observed_subjects)
-        '''
-        selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0)
+        selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0,
+                                                                                  flagShowIncludeModifiers=False,
+                                                                                  flagShowExcludeBehaviorsWoEvents=False)
 
         if not selectedSubjects or not selectedBehaviors:
             return
@@ -5875,12 +5863,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             max_modifiers = 0
             for event in eventsWithStatus:
                 for c in pj_events_fields:
-                    if c == 'modifier' and event[pj_obs_fields[c]]:
+                    if c == "modifier" and event[pj_obs_fields[c]]:
                         max_modifiers = max(max_modifiers, len(event[pj_obs_fields[c]].split('|')))
 
             # media file number
             mediaNb = 0
-            if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 for idx in self.pj[OBSERVATIONS][obsId][FILE]:
                     for media in self.pj[OBSERVATIONS][obsId][FILE][idx]:
                         mediaNb += 1
@@ -5888,8 +5876,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             rows = []
 
             # observation id
-            rows.append(['Observation id', obsId])
-            rows.append([''])
+            rows.append(["Observation id", obsId])
+            rows.append([""])
 
             # media file name
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:

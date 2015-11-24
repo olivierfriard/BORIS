@@ -39,7 +39,7 @@ class ExclusionMatrix(QDialog):
         super(ExclusionMatrix, self).__init__()
 
         self.label = QLabel()
-        self.label.setText('Check behaviors excluded by')
+        self.label.setText("Check behaviors excluded by")
 
         self.twExclusions = QTableWidget()
 
@@ -48,9 +48,9 @@ class ExclusionMatrix(QDialog):
         hbox.addWidget(self.label)
         hbox.addWidget(self.twExclusions)
 
-        self.pbOK = QPushButton('OK')
+        self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel = QPushButton('Cancel')
+        self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         hbox2 = QHBoxLayout(self)
@@ -66,8 +66,8 @@ class ExclusionMatrix(QDialog):
 
         self.setLayout(hbox)
 
-        self.setWindowTitle('Behaviors exclusion matrix')
-        self.resize(800, 300)
+        self.setWindowTitle("Behaviors exclusion matrix")
+        #self.resize(800, 300)
 
     def pbOK_clicked(self):
         self.accept()
@@ -127,16 +127,16 @@ class projectDialog(QDialog, Ui_dlgProject):
     def twObservations_cellDoubleClicked(self, row, column):
 
         # check if double click on coding map
-        if column == behavioursFields['coding map']:
+        if column == behavioursFields["coding map"]:
             self.comboBoxChanged(row)
 
-        if column == behavioursFields['modifiers']:
+        if column == behavioursFields["modifiers"]:
             # check if behavior has coding map
-            if self.twBehaviors.item(row, behavioursFields['coding map']).text():
-                QMessageBox.warning(self, programName, 'Use the coding map to set/modify the areas')
+            if self.twBehaviors.item(row, behavioursFields["coding map"]).text():
+                QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
             else:
                 addModifierWindow = addModifierDialog(self.twBehaviors.item(row, column).text())
-                addModifierWindow.setWindowTitle('Set modifiers')
+                addModifierWindow.setWindowTitle("Set modifiers")
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
 
@@ -192,10 +192,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         logging.debug("remove selected independent variable")
 
         if not self.twVariables.selectedIndexes():
-            QMessageBox.warning(self, programName, 'First select a variable to remove')
+            QMessageBox.warning(self, programName, "First select a variable to remove")
         else:
 
-            response = dialog.MessageDialog(programName, 'Remove the selected variable?', [YES, 'Cancel'])
+            response = dialog.MessageDialog(programName, 'Remove the selected variable?', [YES, CANCEL])
             if response == YES:
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
@@ -223,12 +223,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # check if variables are already present
                 if self.twVariables.rowCount():
 
-                    response = dialog.MessageDialog(programName, 'There are independent variables already configured. Do you want to append independent variables or replace them?', ['Append', 'Replace', 'Cancel'])
+                    response = dialog.MessageDialog(programName, 'There are independent variables already configured. Do you want to append independent variables or replace them?', ['Append', 'Replace', CANCEL])
 
                     if response == 'Replace':
                         self.twVariables.setRowCount(0)
 
-                    if response == 'Cancel':
+                    if response == CANCEL:
                         return
 
                 for i in sorted(project[INDEPENDENT_VARIABLES].keys()):
@@ -769,11 +769,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # check key length
                 if self.twSubjects.item(r, 0).text().upper() not in ['F' + str(i) for i in range(1, 13)] \
                    and len(self.twSubjects.item(r, 0).text()) > 1:
-                    self.lbSubjectsState.setText('<font color="red">Key length &gt; 1</font>')
+                    self.lbSubjectsState.setText("""<font color="red">Error on key {} for subject!</font> The key is too long (keys must be of one character except for function keys _F1, F2..._)""".format(self.twSubjects.item(r, 0).text()))
                     return
 
                 if self.twSubjects.item(r, 0).text() in keys:
-                    self.lbSubjectsState.setText('<font color="red">Key duplicated at line %d </font>' % (r + 1))
+                    self.lbSubjectsState.setText("""<font color="red">Key duplicated at line # {}</font>""".format(r + 1))
                 else:
                     if self.twSubjects.item(r, 0).text():
                         keys.append(self.twSubjects.item(r, 0).text())
@@ -785,18 +785,17 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(r, 1):
 
                 if self.twSubjects.item(r, 1).text() in subjects:
-                    self.lbSubjectsState.setText('<font color="red">Subject duplicated at line %d </font>' % (r + 1))
+                    self.lbSubjectsState.setText("""<font color="red">Subject duplicated at line # {}</font>""".format(r + 1))
                 else:
                     if self.twSubjects.item(r, 1).text():
                         subjects.append(self.twSubjects.item(r, 1).text())
 
         # check behaviours keys
         for r in range(0, self.twBehaviors.rowCount()):
-
             # check key
             if self.twBehaviors.item(r, fields['key']):
                 if self.twBehaviors.item(r, fields['key']).text() in keys:
-                    self.lbSubjectsState.setText('<font color="red">Key found in behaviours configuration at line %d </font>' % (r + 1))
+                    self.lbSubjectsState.setText("""<font color="red">Key found in behaviours configuration ({}) at line # {} </font>""".format(self.twBehaviors.item(r, fields['key']).text(), r + 1))
 
     def twVariables_cellChanged(self, row, column):
         '''
@@ -822,9 +821,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, 'First select an observation to remove')
         else:
 
-            response = dialog.MessageDialog(programName, 'Are you sure to remove the selected observation?', ['Yes', 'Cancel'])
+            response = dialog.MessageDialog(programName, 'Are you sure to remove the selected observation?', [YES, CANCEL])
 
-            if response == 'Yes':
+            if response == YES:
 
                 obs_id = self.twObservations.item(self.twObservations.selectedIndexes()[0].row(), 0).text()
 
@@ -859,7 +858,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(row, 1):
                 subjectName = self.twSubjects.item(row, 1).text()
                 if '|' in subjectName:
-                    QMessageBox.warning(self, programName, 'The pipe (|) character is not allowed in subject name <b>%s</b> !' % subjectName)
+                    QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in subject name <b>%s</b> !" % subjectName)
                     return
 
             else:
@@ -893,7 +892,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(r, behavioursFields[field]):
                         # check for | char in code
                         if field == 'code' and '|' in self.twBehaviors.item(r, fields[field]).text():
-                            QMessageBox.warning(self, programName, 'The pipe (|) character is not allowed in code <b>%s</b> !' % self.twBehaviors.item(r, fields[field]).text())
+                            QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in code <b>%s</b> !" % self.twBehaviors.item(r, fields[field]).text())
                             return
 
                         row[field] = self.twBehaviors.item(r, fields[field]).text()
