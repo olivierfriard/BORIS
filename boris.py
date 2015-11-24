@@ -3008,8 +3008,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import matplotlib.colors as matcolors
             import numpy as np
         except:
-            logging.warning('matplotlib plotting library not installed')
-            QMessageBox.warning(None, programName, 'The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>',\
+            logging.warning("matplotlib plotting library not installed")
+            QMessageBox.warning(None, programName, """The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",\
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
@@ -3040,7 +3040,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         all_behaviors.append(behavior)
                     for t1, t2 in obs[subject][behavior]:
                         maxTime = max(maxTime, t1, t2)
-                observedBehaviors.append('')
+                observedBehaviors.append("")
 
             all_behaviors = sorted(all_behaviors)
 
@@ -3065,7 +3065,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not videoLength:
                 videoLength = maxTime
 
-            plt.xlim( 0, round(videoLength) + 2)
+            if self.pj[OBSERVATIONS][obsId]["time offset"]:
+                plt.xlim( round(self.pj[OBSERVATIONS][obsId]["time offset"]),round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2))
+            else:
+                plt.xlim(0, round(videoLength) + 2)
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
             count = 0
@@ -3129,18 +3132,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
             def on_draw(event):
-               # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
-               bboxes = []
-               for label in labels:
-                   bbox = label.get_window_extent()
-                   bboxi = bbox.inverse_transformed(fig.transFigure)
-                   bboxes.append(bboxi)
 
-               bbox = mtransforms.Bbox.union(bboxes)
-               if fig.subplotpars.left < bbox.width:
-                   fig.subplots_adjust(left=1.1*bbox.width)
-                   fig.canvas.draw()
-               return False
+                # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
+                bboxes = []
+                for label in labels:
+                    bbox = label.get_window_extent()
+                    bboxi = bbox.inverse_transformed(fig.transFigure)
+                    bboxes.append(bboxi)
+
+                bbox = mtransforms.Bbox.union(bboxes)
+                if fig.subplotpars.left < bbox.width:
+                    fig.subplots_adjust(left=1.1*bbox.width)
+                    fig.canvas.draw()
+                return False
 
             fig.canvas.mpl_connect('draw_event', on_draw)
 
