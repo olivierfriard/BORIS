@@ -23,7 +23,7 @@ This file is part of BORIS.
 
 """
 
-# TODO: check ffmpeg in plot_spectogram.py
+# TODO: manage spectrogram visualization for multi media in player 1
 
 
 
@@ -1535,10 +1535,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     '''
                     try:
                         logging.debug('playing with VLC')
-                        out, fps = playWithVLC(mediaFile)
+                        out, fps, nvout = playWithVLC(mediaFile)
 
                         logging.debug('out from vlc: {}'.format( out ))
                         logging.debug('fps from vlc: {}'.format( fps ))
+                        logging.debug('vout: {}'.format(nvout))
 
                         mediaLength = int(out)
                         mediaFPS = fps
@@ -1745,14 +1746,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
             # connect signal from spectrogram class to testsignal function to receive keypress events
-            self.spectro.procStart.connect(self.testSignal)
+            self.spectro.sendEvent.connect(self.signal_from_spectrogram)
             self.spectro.show()
             self.timer_spectro.start()
 
         return True
 
-    def testSignal(self, event):
-        print( 'da main ' + event.text() )
+    def signal_from_spectrogram(self, event):
+        '''
+        receive signal from spectrogram widget
+        '''
         self.keyPressEvent(event)
 
     def eventFilter(self, source, event):
@@ -1964,7 +1967,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         observationWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
         observationWindow.pj = self.pj
-        #observationWindow.instance = vlc.Instance()
         observationWindow.mode = mode
         observationWindow.mem_obs_id = obsId
         observationWindow.chunk_length = self.chunk_length
@@ -2023,7 +2025,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == HHMMSS:
             observationWindow.leTimeOffset.setVisible(False)
             observationWindow.leTimeOffset_2.setVisible(False)
-
 
         if mode == EDIT:
 
@@ -2086,8 +2087,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
 
+            observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             if "visualize_spectrogram" in self.pj[OBSERVATIONS][obsId]:
-                observationWindow.cbVisualizeSpectrogram.setEnabled(True)
                 observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId]["visualize_spectrogram"])
 
         if observationWindow.exec_():
@@ -4217,6 +4218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.info(('Scale: %s' % self.mediaplayer.video_get_scale()))
                 logging.info(('Aspect ratio: %s' % self.mediaplayer.video_get_aspect_ratio()))
                 logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
+                logging.info('has_vout? {0}'.format(self.mediaplayer.has_vout()))
 
                 QMessageBox.about(self, programName + ' - Media file information', out + '<br><br>Total duration: %s s' % (self.convertTime( sum(self.duration)/1000 )  ) )
 

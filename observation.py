@@ -28,9 +28,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 import os
 import time
-import sys
 import hashlib
-import subprocess
 import tempfile
 
 from config import *
@@ -42,8 +40,6 @@ from observation_ui import Ui_Form
 
 out = ''
 fps = 0
-#CHUNK = 60  # seconds
-
 
 class ThreadSignalSpectrogram(QObject):
     sig = pyqtSignal(str)
@@ -119,7 +115,18 @@ class Observation(QDialog, Ui_Form):
     def generate_spectrogram(self):
 
         if self.cbVisualizeSpectrogram.isChecked():
-            response = dialog.MessageDialog(programName, "You choose to visualize the spectrogram for the selected media. Choose YES to generate the spectrogram.", [YES, NO ])
+
+            if not self.ffmpeg_bin:
+                QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
+                                                       "but FFmpeg was not found and it is required for this feature."
+                                                       "See File > Preferences menu option > Frame-by-frame mode"))
+                self.cbVisualizeSpectrogram.setChecked(False)
+                return
+
+
+            response = dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the selected media. "
+                                                          "Choose YES to generate the spectrogram.\n\n"
+                                                          "Spectrogram generation can take some time for long media, be patient"), [YES, NO ])
             if response == YES:
 
                 # check temp dir for images from ffmpeg
@@ -128,9 +135,7 @@ class Observation(QDialog, Ui_Form):
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
-                print('tmp_dir',tmp_dir)
-
-                _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(0).text(), tmp_dir=tmp_dir  ,chunk_size=self.chunk_length)  # return first chunk PNG file (not used)
+                _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
 
                 """
                 self.spectrogramFinished = False
@@ -158,8 +163,6 @@ class Observation(QDialog, Ui_Form):
                 self.cbVisualizeSpectrogram.setChecked(False)
 
 
-
-
     def widgetEnabled(self, flag):
         '''
         enable/disable widget for selecting media file
@@ -178,7 +181,6 @@ class Observation(QDialog, Ui_Form):
                 self.flagAnalysisRunning = False
                 self.reject()
         else:
-
             self.reject()
 
 
@@ -211,7 +213,7 @@ class Observation(QDialog, Ui_Form):
 
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
                 if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
-                    QMessageBox.critical(self, programName , 'The <b>%s</b> variable must be numeric!' %  self.twIndepVariables.item(row, 0).text())
+                    QMessageBox.critical(self, programName , "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
                     return
 
         # check if observation id not empty
@@ -219,21 +221,18 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.warning(self, programName , 'The <b>observation id</b> is mandatory and must be unique!' )
             return
 
-        # check if new obs and observation id already present
-        if self.mode == 'new':
+        # check if new obs and observation id already present or if edit obs and id changed
+        if (self.mode == 'new') or (self.mode == 'edit' and self.leObservationId.text() != self.mem_obs_id):
             if self.leObservationId.text() in self.pj['observations']:
-                QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
-                return
+                QMessageBox.critical(self, programName , "The observation id <b>{0}</b> is already used!<br>{}<br>{}".format(self.leObservationId.text(),
+                                                                                                                             self.pj['observations'][self.leObservationId.text()]['description'],
+                                                                                                                             self.pj['observations'][self.leObservationId.text()]['date']))
 
-        # check if edit obs and id changed
-        if self.mode == 'edit' and self.leObservationId.text() != self.mem_obs_id:
-            if self.leObservationId.text() in self.pj['observations']:
-                QMessageBox.critical(self, programName , 'The observation id <b>%s</b> is already used!<br>' %  (self.leObservationId.text())  + self.pj['observations'][self.leObservationId.text()]['description'] + '<br>' + self.pj['observations'][self.leObservationId.text()]['date']  )
                 return
 
         # check if media list #2 populated and media list #1 empty
         if self.tabProjectType.currentIndex() == 0 and not self.lwVideo.count():
-            QMessageBox.critical(self, programName , 'Add a media file in the first list!' )
+            QMessageBox.critical(self, programName , "Add a media file in the first media player!" )
             return
 
         self.accept()
@@ -252,13 +251,17 @@ class Observation(QDialog, Ui_Form):
             #self.mediaDurations[ fileName ] = int(videoTime)/1000
             self.mediaFPS[fileName] = nframe / (int(videoTime)/1000)
         else:
-            QMessageBox.critical(self, programName, 'BORIS is not able to determine the frame rate of the video even after accurate analysis.\nCheck your video.', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(self, programName, ("BORIS is not able to determine the frame rate of the video "
+                                                     "even after accurate analysis.\nCheck your video."),
+                                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return False
 
         self.widgetEnabled(True)
 
         if self.flagAnalysisRunning:
-            QMessageBox.information(self, programName,'Video analysis done:<br>Length: {} s.<br>Frame rate: {} FPS.'.format(seconds2time(self.mediaDurations[fileName]), nframe / (videoTime/1000)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.information(self, programName,'Video analysis done:<br>Length: {} s.<br>Frame rate: {} FPS.'.format(seconds2time(self.mediaDurations[fileName]),
+                                                                                                                            nframe / (videoTime/1000)),
+                                                                                                                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.flagAnalysisRunning = False
 
@@ -274,70 +277,76 @@ class Observation(QDialog, Ui_Form):
         '''
         # check if more media in player1 before adding media to player2
         if nPlayer == PLAYER2 and self.lwVideo.count() > 1:
-            QMessageBox.critical(self, programName , "It is not yet possible to play a second media when more media are loaded in the first media player" )
+            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
             return
 
         fd = QFileDialog(self)
-        os.chdir( os.path.expanduser("~")  )
+        os.chdir(os.path.expanduser("~"))
         fileName = fd.getOpenFileName(self, "Add media file", "", "All files (*)")
 
         if fileName:
 
             fileContentMD5 = hashfile( fileName, hashlib.md5())
             try:
-                mediaLength = self.mediaDurations[ fileName ]
-                mediaFPS = self.mediaFPS[ fileName ]
+                mediaLength = self.mediaDurations[fileName]
+                mediaFPS = self.mediaFPS[fileName]
             except:
 
                 # check if md5 checksum already in project_media_file_info dictionary
-                if (not 'project_media_file_info' in self.pj) \
-                   or ('project_media_file_info' in self.pj and not fileContentMD5 in self.pj['project_media_file_info']):
+                if (not "project_media_file_info" in self.pj) \
+                   or ("project_media_file_info" in self.pj and not fileContentMD5 in self.pj["project_media_file_info"]):
 
-                    out, fps = playWithVLC(fileName)
+                    out, fps, nvout = playWithVLC(fileName)
+
+                    print('nvout', nvout)
 
                     if out != 'media error':
                         self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
                         self.mediaDurations[ fileName ] = int(out)/1000
                     else:
-                        QMessageBox.critical(self, programName , 'This file do not seem to be a playable media file.')
+                        QMessageBox.critical(self, programName , "This file do not seem to be a playable media file.")
                         return
 
                     # check FPS
-                    if fps:
-                        self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
-                        self.mediaFPS[ fileName ] = fps
-                    else:
-                        if FFMPEG in self.availablePlayers:
-                            response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?', [YES, NO ])
-
-                            if response == YES:
-                                self.process = Process()  # class in utilities.py
-                                self.process.signal.sig.connect(self.processCompleted)
-                                self.process.fileContentMD5 = fileContentMD5
-                                self.process.filePath = fileName #mediaPathName
-                                self.process.ffmpeg_bin = self.ffmpeg_bin
-                                self.process.nPlayer = nPlayer
-                                self.process.start()
-
-                                while not self.process.isRunning():
-                                    time.sleep(0.01)
-                                    continue
-
-                                self.flagAnalysisRunning = True
-                                self.widgetEnabled(False)
-
-                            else:
-                                self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+                    if nvout:  # media file has video
+                        if fps:
+                            self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
+                            self.mediaFPS[ fileName ] = fps
                         else:
-                            self.media_file_info[ fileContentMD5 ]['nframe'] = 0
+                            if FFMPEG in self.availablePlayers:
+                                response = dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
+                                                                              "Launch accurate video analysis?"), [YES, NO ])
+
+                                if response == YES:
+                                    self.process = Process()  # class in utilities.py
+                                    self.process.signal.sig.connect(self.processCompleted)
+                                    self.process.fileContentMD5 = fileContentMD5
+                                    self.process.filePath = fileName #mediaPathName
+                                    self.process.ffmpeg_bin = self.ffmpeg_bin
+                                    self.process.nPlayer = nPlayer
+                                    self.process.start()
+
+                                    while not self.process.isRunning():
+                                        time.sleep(0.01)
+                                        continue
+
+                                    self.flagAnalysisRunning = True
+                                    self.widgetEnabled(False)
+
+                                else:
+                                    self.media_file_info[fileContentMD5]['nframe'] = 0
+                            else:
+                                self.media_file_info[fileContentMD5]['nframe'] = 0
+                    else:
+                        self.media_file_info[fileContentMD5]['nframe'] = 0
 
                 else:
-                    if 'project_media_file_info' in self.pj and fileContentMD5 in self.pj['project_media_file_info']:
+                    if "project_media_file_info" in self.pj and fileContentMD5 in self.pj['project_media_file_info']:
                         try:
-                            self.mediaDurations[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000
-                            self.mediaFPS[ fileName ] = self.pj['project_media_file_info'][fileContentMD5]["nframe"] / (self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000)
-                            self.media_file_info[ fileContentMD5 ]['video_length'] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]
-                            self.media_file_info[ fileContentMD5 ]['nframe'] = self.pj['project_media_file_info'][fileContentMD5]["nframe"]
+                            self.mediaDurations[fileName] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000
+                            self.mediaFPS[fileName] = self.pj['project_media_file_info'][fileContentMD5]["nframe"] / (self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000)
+                            self.media_file_info[fileContentMD5]["video_length"] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
+                            self.media_file_info[fileContentMD5]["nframe"] = self.pj["project_media_file_info"][fileContentMD5]["nframe"]
                         except:
                             pass
 
@@ -345,6 +354,7 @@ class Observation(QDialog, Ui_Form):
 
 
         self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
+
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         '''
@@ -354,13 +364,13 @@ class Observation(QDialog, Ui_Form):
 
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
-                    QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+                    QMessageBox.critical(self, programName , "It is not yet possible to play a second media when more media are loaded in the first media player" )
                     return False
                 self.lwVideo.addItems( [fileName] )
 
             if nPlayer == PLAYER2:
                 if self.lwVideo.count()>1:
-                    QMessageBox.critical(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+                    QMessageBox.critical(self, programName , "It is not yet possible to play a second media when more media are loaded in the first media player" )
                     return False
                 self.lwVideo_2.addItems( [fileName] )
 

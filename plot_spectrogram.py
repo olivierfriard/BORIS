@@ -46,7 +46,7 @@ import subprocess
 class Spectrogram(QWidget):
 
     # send keypress event to mainwindow
-    procStart = pyqtSignal(QEvent)
+    sendEvent = pyqtSignal(QEvent)
 
     memChunk = ''
 
@@ -55,8 +55,6 @@ class Spectrogram(QWidget):
         super(Spectrogram, self).__init__(parent)
 
         self.pixmap = QPixmap()
-
-        print( 'load in Spectrogram '+fileName1stChunk )
 
         self.pixmap.load(fileName1stChunk)
         self.w, self.h = self.pixmap.width(), self.pixmap.height()
@@ -90,16 +88,52 @@ class Spectrogram(QWidget):
 
 
     def eventFilter(self, receiver, event):
+        '''
+        send event (if keypress) to main window
+        '''
         if(event.type() == QEvent.KeyPress):
-            print(event.text())
-            # send keypress event to mainwindow
-            self.procStart.emit(event)
+            self.sendEvent.emit(event)
             return True
         else:
             return False
 
 
-def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
+def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
+
+    def extract_wav(mediaFile, tmp_dir):
+        '''extract wav from media file'''
+
+        wavTmpPath = "{tmp_dir}{sep}{mediaBaseName}.wav".format(tmp_dir=tmp_dir,
+                                                                  sep=os.sep,
+                                                                  mediaBaseName=os.path.basename(mediaFile))
+
+        if os.path.isfile(wavTmpPath):
+            return wavTmpPath
+        else:
+            p = subprocess.Popen('{ffmpeg_bin} -i "{mediaFile}" -y -ac 1 -vn "{wavTmpPath}"'.format(ffmpeg_bin=ffmpeg_bin,
+                                                                                                      mediaFile=mediaFile,
+                                                                                                      wavTmpPath=wavTmpPath),
+                                                                                                      stdout=subprocess.PIPE,
+                                                                                                      stderr=subprocess.PIPE,
+                                                                                                      shell=True)
+            out, error = p.communicate()
+            out, error = out.decode("utf-8"), error.decode("utf-8")
+
+            if not out:
+                return wavTmpPath
+            else:
+                return None
+
+
+    def get_wav_info(wav_file):
+
+        wav = wave.open(wav_file, "r")
+        frames = wav.readframes(-1)
+        sound_info = pylab.fromstring(frames, "Int16")
+        frame_rate = wav.getframerate()
+        wav.close()
+        return sound_info, frame_rate
+
 
     fileName1stChunk = ''
 
@@ -122,6 +156,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
 
             sound_info_slice = sound_info[i * frame_rate: (i + chunk_size) * frame_rate]
 
+            # complete bitmat spectrogram chunk if shorter than chunk length
             if len(sound_info_slice) / frame_rate < chunk_size:
                 concat = np.zeros( (chunk_size - len(sound_info_slice) / frame_rate )* frame_rate )
                 sound_info_slice = np.concatenate(( sound_info_slice, concat) )
@@ -136,10 +171,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
             pylab.clf()
             pylab.close()
 
-        '''
-        else:
-            print(chunkFileName + ' already exists')
-        '''
         if not fileName1stChunk:
             fileName1stChunk = chunkFileName
 
@@ -148,41 +179,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
             break
 
     return fileName1stChunk
-
-
-def extract_wav(mediaFile, tmp_dir):
-    '''extract wav from media file'''
-
-    wavTmpPath = "{tmp_dir}{sep}{mediaBaseName}.wav".format(tmp_dir=tmp_dir,
-                                                              sep=os.sep,
-                                                              mediaBaseName=os.path.basename(mediaFile))
-
-    if os.path.isfile(wavTmpPath):
-        return wavTmpPath
-    else:
-        p = subprocess.Popen( 'ffmpeg -i "{mediaFile}" -y -ac 1 -vn "{wavTmpPath}"'.format(mediaFile=mediaFile,
-                                                                                                  wavTmpPath=wavTmpPath),
-                                                                                                   stdout=subprocess.PIPE,
-                                                                                                    stderr=subprocess.PIPE,
-                                                                                                     shell=True )
-        out, error = p.communicate()
-        out, error = out.decode("utf-8"), error.decode("utf-8")
-
-        if not out:
-            return wavTmpPath
-        else:
-            return None
-
-
-def get_wav_info(wav_file):
-
-    wav = wave.open(wav_file, "r")
-    frames = wav.readframes(-1)
-    sound_info = pylab.fromstring(frames, "Int16")
-    frame_rate = wav.getframerate()
-    wav.close()
-    return sound_info, frame_rate
-
 
 if __name__ == "__main__":
     media_file = sys.argv[1]

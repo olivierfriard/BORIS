@@ -148,6 +148,9 @@ def test_ffmpeg_path(FFmpegPath):
     return True, ''
 
 def playWithVLC(fileName):
+    '''
+    play media in filename and return out, fps and has_vout (number of video)
+    '''
 
     import vlc
     import time
@@ -159,9 +162,7 @@ def playWithVLC(fileName):
     mediaplayer.play()
     global out
     global fps
-    out = ''
-    fps = 0
-    result = None
+    out, fps, result = '', 0, None
     while True:
         if mediaplayer.get_state() == vlc.State.Playing:
             break
@@ -175,9 +176,10 @@ def playWithVLC(fileName):
     else:
         out = media.get_duration()
     fps = mediaplayer.get_fps()
+    nvout = mediaplayer.has_vout()
     mediaplayer.stop()
 
-    return out, fps
+    return out, fps, nvout
 
 
 def accurate_video_analysis(ffmpeg_bin, fileName):
