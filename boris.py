@@ -234,8 +234,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     projectFileName = ''
     mediaTotalLength = None
 
-
-
     saveMediaFilePath = True
 
     behaviouralStringsSeparator = '|'
@@ -277,8 +275,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     playerType = ''
     playMode = VLC
 
-    chunk_length = 60
-    memChunk = ''
+    # spectrogram
+    chunk_length = 60  # lunghezza chunk spectrogram in seconds
+    #memChunk = ''
 
     cleaningThread = TempDirCleanerThread()
 
@@ -634,7 +633,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentChunk = int(self.mediaplayer.get_time() / 1000 / self.chunk_length)
 
-        if currentChunk != self.memChunk:
+        if currentChunk != self.spectro.memChunk:
             try:
                 self.spectro.scene.removeItem(self.spectro.item)
             except:
@@ -647,9 +646,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
 
-            #print( '{}.wav.{}-{}.spectrogram.png'.format(currentMediaTmpPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length))
+            currentChunkFileName = "{}.wav.{}-{}.spectrogram.png".format(currentMediaTmpPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length)
 
-            self.spectro.pixmap.load(  '{}.wav.{}-{}.spectrogram.png'.format( currentMediaTmpPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length))
+            if not os.path.isfile(currentChunkFileName):
+                self.timer_spectro.stop()
+                QMessageBox.warning(self, programName + " - Spectrogram error", "File with spectrogram was not found")
+                return
+
+            self.spectro.pixmap.load(currentChunkFileName)
             self.spectro.w, self.spectro.h = self.spectro.pixmap.width(), self.spectro.pixmap.height()
 
             self.spectro.item = QGraphicsPixmapItem(self.spectro.pixmap)
@@ -659,9 +663,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         get_time = (self.mediaplayer.get_time() % (self.chunk_length * 1000) / (self.chunk_length*1000))
 
-        self.spectro.item.setPos(  - int( get_time * self.spectro.w )  , 0 )
+        self.spectro.item.setPos(-int(get_time * self.spectro.w), 0 )
 
-        self.memChunk = currentChunk
+        self.spectro.memChunk = currentChunk
 
 
     def map_creator(self):
@@ -1724,18 +1728,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # spectrogram
 
-        if not self.ffmpeg_cache_dir:
-            tmp_dir = tempfile.gettempdir()
-        else:
-            tmp_dir = self.ffmpeg_cache_dir
-        currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
         if "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
 
-            self.spectro = plot_spectrogram.Spectrogram( currentMediaTmpPath + '.wav.0-{}.spectrogram.png'.format(self.chunk_length))
+            #self.memChunk = ''
+            if not self.ffmpeg_cache_dir:
+                tmp_dir = tempfile.gettempdir()
+            else:
+                tmp_dir = self.ffmpeg_cache_dir
+
+            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
+
+            if not os.path.isfile("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length)):
+                QMessageBox.warning(self, programName + " - Spectrogram error", "File with spectrogram was not found")
+                self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = False
+                return True
+
+            self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
             # connect signal from spectrogram class to testsignal function to receive keypress events
             self.spectro.procStart.connect(self.testSignal)
             self.spectro.show()
             self.timer_spectro.start()
+
         return True
 
     def testSignal(self, event):
@@ -2211,7 +2224,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.toolBox.removeItem(0)
             self.liveTab.deleteLater()
 
-
         if self.playerType == VLC:
 
             self.timer.stop()
@@ -2254,6 +2266,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.playMode = VLC
 
+            try:
+                self.spectro.close()
+                del self.spectro
+            except:
+                pass
 
             # FFMPEG
             if FFMPEG in self.availablePlayers:
@@ -2269,7 +2286,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage('',0)
 
         # delete layout
-
 
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(False)

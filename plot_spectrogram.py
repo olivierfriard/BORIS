@@ -1,26 +1,46 @@
+#!/usr/bin/env python3
+
 """
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2015 Olivier Friard
+
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+
+
 A spectrogram, or sonogram, is a visual representation of the spectrum
 of frequencies in a sound.  Horizontal axis represents time, Vertical axis
 represents frequency, and color represents amplitude.
 
-
 remove blank border arount pyplot:
 http://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-image-in-matplotlib
 
-
 """
+
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import sys
 import os
 import wave
+import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import pylab
 import subprocess
-
-
-
 
 
 class Spectrogram(QWidget):
@@ -28,17 +48,23 @@ class Spectrogram(QWidget):
     # send keypress event to mainwindow
     procStart = pyqtSignal(QEvent)
 
+    memChunk = ''
+
     def __init__(self, fileName1stChunk, parent = None):
 
         super(Spectrogram, self).__init__(parent)
 
         self.pixmap = QPixmap()
-        self.pixmap.load( fileName1stChunk )
+
+        print( 'load in Spectrogram '+fileName1stChunk )
+
+        self.pixmap.load(fileName1stChunk)
         self.w, self.h = self.pixmap.width(), self.pixmap.height()
 
-        '''print( 'pixmap.width(), pixmap.height()', self.pixmap.width(), self.pixmap.height() )'''
+        #self.setGeometry(300, 300, 1000, self.h + 50)
 
-        self.setGeometry(300, 300, 1000, self.h + 50)
+        self.resize(1000, self.h + 50)
+
         self.setMinimumHeight( self.h + 50)
         self.setMaximumHeight( self.h + 50)
 
@@ -62,6 +88,7 @@ class Spectrogram(QWidget):
 
         self.installEventFilter(self)
 
+
     def eventFilter(self, receiver, event):
         if(event.type() == QEvent.KeyPress):
             print(event.text())
@@ -70,6 +97,7 @@ class Spectrogram(QWidget):
             return True
         else:
             return False
+
 
 def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
 
@@ -85,8 +113,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
 
     wav_length = round(len(sound_info) / frame_rate, 0)
     #print('wav tot length', wav_length)
-    if wav_length < chunk_size:
-        chunk_size = round(wav_length)
 
     i = 0
     while True:
@@ -96,7 +122,9 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size):
 
             sound_info_slice = sound_info[i * frame_rate: (i + chunk_size) * frame_rate]
 
-            #print( [i * frame_rate, (i + chunk_size) * frame_rate] )
+            if len(sound_info_slice) / frame_rate < chunk_size:
+                concat = np.zeros( (chunk_size - len(sound_info_slice) / frame_rate )* frame_rate )
+                sound_info_slice = np.concatenate(( sound_info_slice, concat) )
 
             pylab.figure(num=None, dpi=100, figsize=(int( len(sound_info_slice)/frame_rate  ), 1))
             pylab.gca().set_axis_off()
