@@ -24,7 +24,8 @@ This file is part of BORIS.
 """
 
 # TODO: manage spectrogram visualization for multi media in player 1
-
+# TODO: create spectrogram with thread
+# TODO: add info about media in observation window
 
 
 __version__ = "2.7"
