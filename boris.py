@@ -2276,13 +2276,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # FFMPEG
             if FFMPEG in self.availablePlayers:
-                self.ffmpegLayout.deleteLater()
-                self.lbFFmpeg.deleteLater()
-                self.ffmpegTab.deleteLater()
+                try:
+                    self.ffmpegLayout.deleteLater()
+                    self.lbFFmpeg.deleteLater()
+                    self.ffmpegTab.deleteLater()
 
-                self.FFmpegTimer.stop()
-                self.FFmpegGlobalFrame = 0
-                self.imagesList = set()
+                    self.FFmpegTimer.stop()
+                    self.FFmpegGlobalFrame = 0
+                    self.imagesList = set()
+                except:
+                    pass
 
 
         self.statusbar.showMessage('',0)
