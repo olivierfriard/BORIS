@@ -30,7 +30,6 @@ import os
 import time
 import hashlib
 import tempfile
-
 from config import *
 from utilities import *
 import dialog
@@ -41,10 +40,11 @@ from observation_ui import Ui_Form
 out = ''
 fps = 0
 
+"""
 class ThreadSignalSpectrogram(QObject):
     sig = pyqtSignal(str)
 
-"""
+
 class ProcessSpectro(QThread):
     '''
     process for spectrogram creation
@@ -135,7 +135,15 @@ class Observation(QDialog, Ui_Form):
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
+                self.lbMediaAnalysis.setText("<b>Spectrogram generation...</b>")
+                QApplication.processEvents()
+                #QTimer.singleShot(500, start_spectro_generation)
                 _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+
+                self.lbMediaAnalysis.setText("<b>Spectrogram was generated successfully</b>")
+                QApplication.processEvents()
+
+                #QMessageBox.information(self, programName , "Spectrogram was generated successfully")
 
                 """
                 self.spectrogramFinished = False
@@ -169,7 +177,7 @@ class Observation(QDialog, Ui_Form):
         '''
         self.tabProjectType.setEnabled(flag)
         if not flag:
-            self.lbMediaAnalysis.setText('<b>A media analysis is running</b>')
+            self.lbMediaAnalysis.setText("<b>A media analysis is running</b>")
         else:
             self.lbMediaAnalysis.setText('')
 
@@ -177,7 +185,7 @@ class Observation(QDialog, Ui_Form):
     def pbCancel_clicked(self):
 
         if self.flagAnalysisRunning:
-            if dialog.MessageDialog(programName, 'A media analysis is running. Do you want to cancel the new observation?', [YES, NO ]) == YES:
+            if dialog.MessageDialog(programName, "A media analysis is running. Do you want to cancel the new observation?", [YES, NO ]) == YES:
                 self.flagAnalysisRunning = False
                 self.reject()
         else:

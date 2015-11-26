@@ -83,6 +83,7 @@ class Spectrogram(QWidget):
         hbox.addWidget(self.view)
 
         self.setWindowTitle("Spectrogram")
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint)
 
         self.installEventFilter(self)
 
