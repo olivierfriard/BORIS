@@ -477,6 +477,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPrevious.setEnabled( self.playerType == VLC)
         self.actionNext.setEnabled( self.playerType == VLC)
         self.actionSnapshot.setEnabled( self.playerType == VLC)
+        self.actionFrame_by_frame.setEnabled(FFMPEG in self.availablePlayers )
+
 
         # statusbar label
         self.lbTime.setVisible( self.playerType == VLC )
@@ -1030,24 +1032,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         deselect the current subject
         '''
-        self.currentSubject = ''
-        self.lbSubject.setText( '<b>%s</b>' % NO_FOCAL_SUBJECT )
+        self.currentSubject = ""
+        self.lbSubject.setText( "<b>%s</b>" % NO_FOCAL_SUBJECT )
         self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
-
 
     def selectSubject(self, subject):
         '''
         deselect the current subject
         '''
         self.currentSubject = subject
-        self.lbSubject.setText( 'Subject: <b>%s</b>' % (self.currentSubject))
-        self.lbFocalSubject.setText( ' Focal subject: <b>%s</b>' % (self.currentSubject) )
-
+        self.lbSubject.setText("Subject: <b>%s</b>" % (self.currentSubject))
+        self.lbFocalSubject.setText( " Focal subject: <b>%s</b>" % (self.currentSubject) )
 
     def preferences(self):
         '''
         show preferences window
         '''
+        if self.observationId:
+            QMessageBox.warning(self, programName, "Close the running observation before modifying preferences.")
+            return
 
         preferencesWindow = preferences.Preferences()
 
@@ -1149,6 +1152,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
+
+            self.menu_options()
 
             self.saveConfigFile()
 
@@ -3603,7 +3608,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         if self.observationId:
-            QMessageBox.critical(self, programName , 'Close the running observation before creating/modifying the project.' )
+            QMessageBox.warning(self, programName , 'Close the running observation before creating/modifying the project.' )
             return
 
         if mode == NEW:
@@ -4235,7 +4240,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType != VLC:
             return
 
-        if self.playMode == FFMPEG:
+        if self.playMode == FFMPEG:  # return to VLC mode
 
             self.playMode = VLC
 
@@ -4246,10 +4251,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                 if globalCurrentTime < sum(self.duration[0:idx + 1]):
 
-                    logging.debug('idx: {0}'.format(idx))
-
                     self.mediaListPlayer.play_item_at_index( idx )
-                    #app.processEvents()
 
                     while True:
                         if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
@@ -4273,9 +4275,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.ffmpeg_cache_dir_max_size:
                 self.cleaningThread.exiting = True
 
-            #self.timer.start()
-
-        elif FFMPEG in self.availablePlayers:
+        elif FFMPEG in self.availablePlayers:  # return to frame-by-frame
 
             # second video together
             if self.simultaneousMedia:
@@ -4299,11 +4299,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.actionFrame_by_frame.setChecked(False)
                 return
 
-            self.playMode = FFMPEG
-
             self.pause_video()
-            self.timer.stop()
-            self.timer_spectro.stop()
+            self.playMode = FFMPEG
 
             # check temp dir for images from ffmpeg
             if not self.ffmpeg_cache_dir:
@@ -4313,14 +4310,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # load list of images in a set
             if not self.imagesList:
-                self.imagesList.update(  [ f.replace( self.imageDirectory + os.sep, '' ).split('_')[0] for f in glob.glob(self.imageDirectory + os.sep + '*')  ] )
+                self.imagesList.update([f.replace( self.imageDirectory + os.sep, '').split('_')[0] for f in glob.glob(self.imageDirectory + os.sep + '*')])
 
-            logging.debug('frame-by-frame mode activated. Image directory {0}'.format( self.imageDirectory ))
+            logging.debug("frame-by-frame mode activated. Image directory {0}".format(self.imageDirectory))
 
             # show frame-by_frame tab
             self.toolBox.setCurrentIndex(1)
 
-            globalTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time())
+            globalTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media())]) + self.mediaplayer.get_time())
             logging.debug('globalTime {0} s'.format( globalTime/1000 ))
 
             fps = list(self.fps.values())[0]
