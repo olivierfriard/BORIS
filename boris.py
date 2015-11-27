@@ -23,13 +23,9 @@ This file is part of BORIS.
 
 """
 
-# TODO: manage spectrogram visualization for multi media in player 1
-# TODO: create spectrogram with thread
-# TODO: add info about media in observation window
-
 
 __version__ = "2.7"
-__version_date__ = "2015-11-24"
+__version_date__ = "2015-11-27"
 __DEV__ = False
 
 import sys
@@ -461,6 +457,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_selected_events.setEnabled(flagObs)
         self.actionCheckStateEvents.setEnabled(flagObs)
 
+        self.actionShow_spectrogram.setEnabled(flagObs)
+
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
         self.menuCreate_subtitles_2.setEnabled(flagObs)
@@ -475,9 +473,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSlower.setEnabled( self.playerType == VLC)
         self.actionNormalSpeed.setEnabled( self.playerType == VLC)
         self.actionPrevious.setEnabled( self.playerType == VLC)
-        self.actionNext.setEnabled( self.playerType == VLC)
-        self.actionSnapshot.setEnabled( self.playerType == VLC)
+        self.actionNext.setEnabled(self.playerType == VLC)
+        self.actionSnapshot.setEnabled(self.playerType == VLC)
         self.actionFrame_by_frame.setEnabled(FFMPEG in self.availablePlayers )
+
+
 
 
         # statusbar label
@@ -530,20 +530,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
-        self.actionExportEventTabular_TSV.triggered.connect(lambda: self.export_tabular_events('tsv'))
-        self.actionExportEventTabular_ODS.triggered.connect(lambda: self.export_tabular_events('ods'))
-        self.actionExportEventTabular_XLS.triggered.connect(lambda: self.export_tabular_events('xls'))
+        self.actionExportEventTabular_TSV.triggered.connect(lambda: self.export_tabular_events("tsv"))
+        self.actionExportEventTabular_ODS.triggered.connect(lambda: self.export_tabular_events("ods"))
+        self.actionExportEventTabular_XLS.triggered.connect(lambda: self.export_tabular_events("xls"))
 
         self.actionExportEventString.triggered.connect(self.export_string_events)
 
-        self.actionExportEventsSQL.triggered.connect(lambda: self.export_aggregated_events('sql'))
-        self.actionAggregatedEventsTabularFormat.triggered.connect(lambda: self.export_aggregated_events('tab'))
+        self.actionExportEventsSQL.triggered.connect(lambda: self.export_aggregated_events("sql"))
+        self.actionAggregatedEventsTabularFormat.triggered.connect(lambda: self.export_aggregated_events("tab"))
 
         # menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
 
         # menu Tools
         self.actionMapCreator.triggered.connect(self.map_creator)
+        self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
 
         # menu Analyze
         self.actionTime_budget.triggered.connect(self.time_budget)
@@ -623,12 +624,62 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer = QTimer(self)
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
-            self.automaticBackupTimer.start( self.automaticBackup * 60000 )
+            self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+    def generate_spectrogram(self):
+
+        # check temp dir for images from ffmpeg
+        if not self.ffmpeg_cache_dir:
+            tmp_dir = tempfile.gettempdir()
+        else:
+            tmp_dir = self.ffmpeg_cache_dir
+
+        import plot_spectrogram
+        for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
+            if os.path.isfile(media):
+                _ = plot_spectrogram.graph_spectrogram(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+
+
+    def show_spectrogram(self):
+        '''show spectrogram window if any
+        '''
+        try:
+            self.spectro.show()
+        except:
+
+            # remember if player paused
+            flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
+            self.pause_video()
+
+
+            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation. "
+                                                  "Choose YES to generate the spectrogram.\n\n"
+                                                  "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
+
+                self.generate_spectrogram()
+
+                if not self.ffmpeg_cache_dir:
+                    tmp_dir = tempfile.gettempdir()
+                else:
+                    tmp_dir = self.ffmpeg_cache_dir
+
+                currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
+
+                self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
+
+                self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
+                # connect signal from spectrogram class to testsignal function to receive keypress events
+                self.spectro.sendEvent.connect(self.signal_from_spectrogram)
+                self.spectro.show()
+                self.timer_spectro.start()
+
+
+            if not flagPaused:
+                self.play_video()
 
 
     def timer_spectro_out(self):
-        '''
-        timer for spectrogram visualization
+        '''timer for spectrogram visualization
         '''
 
         if not "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] or not self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
@@ -653,7 +704,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not os.path.isfile(currentChunkFileName):
                 self.timer_spectro.stop()
-                QMessageBox.warning(self, programName + " - Spectrogram error", "File with spectrogram was not found")
+
+                print('currentChunkFileName',currentChunkFileName)
+
+                if dialog.MessageDialog(programName, ("Spectrogram file not found.\n"
+                                                      "Do you want to generate it now?\n"
+                                                      "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
+
+                    self.generate_spectrogram()
+                    self.timer_spectro.start()
+
                 return
 
             self.spectro.pixmap.load(currentChunkFileName)
@@ -889,9 +949,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     while True:
                                         if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                                             break
-                                    '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
-                                        pass
-                                    '''
 
                                     if flagPaused:
                                         self.mediaListPlayer.pause()
@@ -1746,9 +1803,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
 
             if not os.path.isfile("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length)):
-                QMessageBox.warning(self, programName + " - Spectrogram error", "File with spectrogram was not found")
-                self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = False
-                return True
+                if dialog.MessageDialog(programName, ("Spectrogram file not found.\n"
+                                                      "Do you want to generate it now?\n"
+                                                      "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
+
+                    self.generate_spectrogram()
+                else:
+                    self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = False
+                    return True
 
             self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
             # connect signal from spectrogram class to testsignal function to receive keypress events
@@ -3100,8 +3162,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         plot events with matplotlib
         '''
-
-        # TODO: media offset in plot events function
 
         try:
             import matplotlib.pyplot as plt

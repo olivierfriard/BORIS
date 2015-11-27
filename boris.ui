@@ -197,6 +197,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionMapCreator"/>
+    <addaction name="actionShow_spectrogram"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -782,6 +783,11 @@
   <action name="actionEdit_selected_events">
    <property name="text">
     <string>Edit selected event(s)</string>
+   </property>
+  </action>
+  <action name="actionShow_spectrogram">
+   <property name="text">
+    <string>Show spectrogram</string>
    </property>
   </action>
  </widget>

@@ -83,7 +83,7 @@ class Spectrogram(QWidget):
         hbox.addWidget(self.view)
 
         self.setWindowTitle("Spectrogram")
-        self.setWindowFlags(Qt.WindowMinimizeButtonHint)
+        #self.setWindowFlags(Qt.WindowMinimizeButtonHint) # only for Linux
 
         self.installEventFilter(self)
 
@@ -146,8 +146,8 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
     sound_info, frame_rate = get_wav_info(wav_file)
 
-    wav_length = round(len(sound_info) / frame_rate, 0)
-    #print('wav tot length', wav_length)
+    wav_length = round(len(sound_info) / frame_rate, 3)
+    print('wav tot length', wav_length)
 
     i = 0
     while True:
@@ -159,15 +159,15 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
             # complete bitmat spectrogram chunk if shorter than chunk length
             if len(sound_info_slice) / frame_rate < chunk_size:
-                concat = np.zeros( (chunk_size - len(sound_info_slice) / frame_rate )* frame_rate )
-                sound_info_slice = np.concatenate(( sound_info_slice, concat) )
+                concat = np.zeros((chunk_size - len(sound_info_slice) / frame_rate )* frame_rate)
+                sound_info_slice = np.concatenate((sound_info_slice, concat))
 
-            pylab.figure(num=None, dpi=100, figsize=(int( len(sound_info_slice)/frame_rate  ), 1))
+            pylab.figure(num=None, dpi=100, figsize=(int( len(sound_info_slice)/frame_rate), 1))
             pylab.gca().set_axis_off()
             pylab.margins(0, 0)
             pylab.gca().xaxis.set_major_locator(pylab.NullLocator())
             pylab.gca().yaxis.set_major_locator(pylab.NullLocator())
-            pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap('Greys'))
+            pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap('Greys'),scale_by_freq=False)
             pylab.savefig(chunkFileName, bbox_inches='tight', pad_inches=0)
             pylab.clf()
             pylab.close()

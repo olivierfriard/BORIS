@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Nov 23 15:52:38 2015
+# Created: Fri Nov 27 09:30:52 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -319,6 +319,8 @@ class Ui_MainWindow(object):
         self.actionCheckStateEvents.setObjectName(_fromUtf8("actionCheckStateEvents"))
         self.actionEdit_selected_events = QtGui.QAction(MainWindow)
         self.actionEdit_selected_events.setObjectName(_fromUtf8("actionEdit_selected_events"))
+        self.actionShow_spectrogram = QtGui.QAction(MainWindow)
+        self.actionShow_spectrogram.setObjectName(_fromUtf8("actionShow_spectrogram"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -377,6 +379,7 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionPrevious)
         self.menuPlayback.addAction(self.actionNext)
         self.menuTools.addAction(self.actionMapCreator)
+        self.menuTools.addAction(self.actionShow_spectrogram)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
@@ -506,4 +509,5 @@ class Ui_MainWindow(object):
         self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)", None))
+        self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
 
