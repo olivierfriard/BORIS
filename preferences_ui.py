@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Fri Oct 16 14:42:45 2015
+# Created: Mon Nov 30 15:30:26 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName(_fromUtf8("prefDialog"))
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(694, 419)
+        prefDialog.resize(596, 444)
         self.verticalLayout_5 = QtGui.QVBoxLayout(prefDialog)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.verticalLayout_2 = QtGui.QVBoxLayout()
@@ -116,6 +116,8 @@ class Ui_prefDialog(object):
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.label_14 = QtGui.QLabel(self.tab_2)
+        self.label_14.setScaledContents(False)
+        self.label_14.setWordWrap(True)
         self.label_14.setObjectName(_fromUtf8("label_14"))
         self.verticalLayout_3.addWidget(self.label_14)
         self.cbAllowFrameByFrameMode = QtGui.QCheckBox(self.tab_2)
@@ -195,14 +197,14 @@ class Ui_prefDialog(object):
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
         self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
-        self.label_14.setText(_translate("prefDialog", "The frame-by-frame mode requires the FFmpeg program. See https://www.ffmpeg.org ", None))
-        self.cbAllowFrameByFrameMode.setText(_translate("prefDialog", "Allow the frame-by-frame mode", None))
-        self.lbFFmpeg.setText(_translate("prefDialog", "Path for FFmpeg", None))
+        self.label_14.setText(_translate("prefDialog", "<html><head/><body><p>The frame-by-frame mode and the spectrogram visualization require the FFmpeg framework. See https://www.ffmpeg.org for details.</p></body></html>", None))
+        self.cbAllowFrameByFrameMode.setText(_translate("prefDialog", "Allow use of ffmpeg program", None))
+        self.lbFFmpeg.setText(_translate("prefDialog", "<html><head/><body><p>Path for ffmpeg program</p></body></html>", None))
         self.pbBrowseFFmpeg.setText(_translate("prefDialog", "...", None))
         self.lbFFmpegCacheDir.setText(_translate("prefDialog", "FFmpeg cache directory", None))
         self.pbBrowseFFmpegCacheDir.setText(_translate("prefDialog", "...", None))
         self.lbFFmpegCacheDirMaxSize.setText(_translate("prefDialog", "FFmpeg cache directory max size (Mb)", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("prefDialog", "Frame-by-frame mode", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("prefDialog", "FFmpeg framework", None))
         self.pbCancel.setText(_translate("prefDialog", "Cancel", None))
         self.pbOK.setText(_translate("prefDialog", "OK", None))
 

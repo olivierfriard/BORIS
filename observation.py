@@ -118,7 +118,7 @@ class Observation(QDialog, Ui_Form):
 
             if not self.ffmpeg_bin:
                 QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
-                                                       "but FFmpeg was not found and it is required for this feature."
+                                                       "but FFmpeg was not found and it is required for this feature.<br>"
                                                        "See File > Preferences menu option > Frame-by-frame mode"))
                 self.cbVisualizeSpectrogram.setChecked(False)
                 return
@@ -137,13 +137,13 @@ class Observation(QDialog, Ui_Form):
 
                 self.lbMediaAnalysis.setText("<b>Spectrogram generation...</b>")
                 QApplication.processEvents()
-                #QTimer.singleShot(500, start_spectro_generation)
-                _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+
+                for index in range(self.lwVideo.count()):
+                    _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(index).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
 
                 self.lbMediaAnalysis.setText("<b>Spectrogram was generated successfully</b>")
                 QApplication.processEvents()
 
-                #QMessageBox.information(self, programName , "Spectrogram was generated successfully")
 
                 """
                 self.spectrogramFinished = False
@@ -372,15 +372,15 @@ class Observation(QDialog, Ui_Form):
 
             if nPlayer == PLAYER1:
                 if self.lwVideo.count() and self.lwVideo_2.count():
-                    QMessageBox.critical(self, programName , "It is not yet possible to play a second media when more media are loaded in the first media player" )
+                    QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
                     return False
                 self.lwVideo.addItems( [fileName] )
 
             if nPlayer == PLAYER2:
                 if self.lwVideo.count()>1:
-                    QMessageBox.critical(self, programName , "It is not yet possible to play a second media when more media are loaded in the first media player" )
+                    QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
                     return False
-                self.lwVideo_2.addItems( [fileName] )
+                self.lwVideo_2.addItems([fileName])
 
             self.fileName2hash[ fileName ] = fileContentMD5
 

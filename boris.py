@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.7"
-__version_date__ = "2015-11-27"
+__version_date__ = "2015-11-30"
 __DEV__ = False
 
 import sys
@@ -627,6 +627,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
     def generate_spectrogram(self):
+        '''
+        generate spectrogram of all media files loaded in player #1
+        '''
 
         # check temp dir for images from ffmpeg
         if not self.ffmpeg_cache_dir:
@@ -652,6 +655,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pause_video()
 
 
+            if not FFMPEG in self.availablePlayers:
+                QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
+                                                        "but FFmpeg was not found and it is required for this feature.<br>"
+                                                        "See File > Preferences menu option > Frame-by-frame mode"))
+                if not flagPaused:
+                    self.play_video()
+                return
+
+
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation. "
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
@@ -672,7 +684,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.sendEvent.connect(self.signal_from_spectrogram)
                 self.spectro.show()
                 self.timer_spectro.start()
-
 
             if not flagPaused:
                 self.play_video()
@@ -705,11 +716,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not os.path.isfile(currentChunkFileName):
                 self.timer_spectro.stop()
 
-                print('currentChunkFileName',currentChunkFileName)
-
-                if dialog.MessageDialog(programName, ("Spectrogram file not found.\n"
-                                                      "Do you want to generate it now?\n"
+                if dialog.MessageDialog(programName, ("Spectrogram file not found.<br>"
+                                                      "Do you want to generate it now?<br>"
                                                       "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
+
+
+                    if not FFMPEG in self.availablePlayers:
+                        QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
+                                                                "but FFmpeg was not found and it is required for this feature.<br>"
+                                                                "See File > Preferences menu option > Frame-by-frame mode"))
+                        return
 
                     self.generate_spectrogram()
                     self.timer_spectro.start()
