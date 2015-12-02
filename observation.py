@@ -117,14 +117,14 @@ class Observation(QDialog, Ui_Form):
         if self.cbVisualizeSpectrogram.isChecked():
 
             if not self.ffmpeg_bin:
-                QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
+                QMessageBox.warning(self, programName, ("You chose to visualize the spectrogram during observation "
                                                        "but FFmpeg was not found and it is required for this feature.<br>"
                                                        "See File > Preferences menu option > Frame-by-frame mode"))
                 self.cbVisualizeSpectrogram.setChecked(False)
                 return
 
 
-            response = dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the selected media. "
+            response = dialog.MessageDialog(programName, ("You chose to visualize the spectrogram for the media in player #1.<br>"
                                                           "Choose YES to generate the spectrogram.\n\n"
                                                           "Spectrogram generation can take some time for long media, be patient"), [YES, NO ])
             if response == YES:

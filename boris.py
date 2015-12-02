@@ -656,7 +656,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             if not FFMPEG in self.availablePlayers:
-                QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
+                QMessageBox.warning(self, programName, ("You chose to visualize the spectrogram during observation "
                                                         "but FFmpeg was not found and it is required for this feature.<br>"
                                                         "See File > Preferences menu option > Frame-by-frame mode"))
                 if not flagPaused:
@@ -664,7 +664,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
 
-            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation. "
+            if dialog.MessageDialog(programName, ("You chose to visualize the spectrogram during this observation.<br>"
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
 
