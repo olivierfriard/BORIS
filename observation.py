@@ -355,7 +355,6 @@ class Observation(QDialog, Ui_Form):
 
             self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
-
         self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
 
     def add_media_from_dir(self):
