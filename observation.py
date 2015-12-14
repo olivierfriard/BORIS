@@ -278,6 +278,9 @@ class Observation(QDialog, Ui_Form):
 
         return True
 
+    def check_media(fileName):
+        
+
     def add_media(self, nPlayer):
         '''
         add media in player
