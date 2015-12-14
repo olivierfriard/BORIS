@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Tue Nov 24 11:30:54 2015
+# Created: Mon Dec 14 22:26:44 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -124,6 +124,9 @@ class Ui_Form(object):
         self.pbRemoveVideo = QtGui.QPushButton(self.tabVideo)
         self.pbRemoveVideo.setObjectName(_fromUtf8("pbRemoveVideo"))
         self.verticalLayout.addWidget(self.pbRemoveVideo)
+        self.pbAddMediaFromDir = QtGui.QPushButton(self.tabVideo)
+        self.pbAddMediaFromDir.setObjectName(_fromUtf8("pbAddMediaFromDir"))
+        self.verticalLayout.addWidget(self.pbAddMediaFromDir)
         spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem1)
         self.horizontalLayout_4.addLayout(self.verticalLayout)
@@ -223,6 +226,8 @@ class Ui_Form(object):
         self.label_5.setText(_translate("Form", "Media file paths", None))
         self.pbAddVideo.setText(_translate("Form", "Add media", None))
         self.pbRemoveVideo.setText(_translate("Form", "Remove media", None))
+        self.pbAddMediaFromDir.setText(_translate("Form", "Add all media\n"
+"from directory", None))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram", None))
         self.label_2.setText(_translate("Form", "Media file paths for second player (will be played simultaneously)", None))
         self.pbAddVideo_2.setText(_translate("Form", "Add media", None))

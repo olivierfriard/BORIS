@@ -222,6 +222,14 @@
               </widget>
              </item>
              <item>
+              <widget class="QPushButton" name="pbAddMediaFromDir">
+               <property name="text">
+                <string>Add all media
+from directory</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <spacer name="verticalSpacer">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>

@@ -72,6 +72,7 @@ class Observation(QDialog, Ui_Form):
 
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
+        self.pbAddMediaFromDir.clicked.connect(self.add_media_from_dir)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
@@ -277,8 +278,6 @@ class Observation(QDialog, Ui_Form):
 
         return True
 
-
-
     def add_media(self, nPlayer):
         '''
         add media in player
@@ -293,20 +292,16 @@ class Observation(QDialog, Ui_Form):
         fileName = fd.getOpenFileName(self, "Add media file", "", "All files (*)")
 
         if fileName:
-
-            fileContentMD5 = hashfile( fileName, hashlib.md5())
             try:
                 mediaLength = self.mediaDurations[fileName]
                 mediaFPS = self.mediaFPS[fileName]
             except:
-
                 # check if md5 checksum already in project_media_file_info dictionary
+                fileContentMD5 = hashfile( fileName, hashlib.md5())
                 if (not "project_media_file_info" in self.pj) \
                    or ("project_media_file_info" in self.pj and not fileContentMD5 in self.pj["project_media_file_info"]):
 
                     out, fps, nvout = playWithVLC(fileName)
-
-                    print('nvout', nvout)
 
                     if out != 'media error':
                         self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
@@ -363,6 +358,13 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
 
+    def add_media_from_dir(self):
+        fd = QFileDialog(self)
+        #QFileDialog.getExistingDirectory(self, "Select Directory")
+        #os.chdir(os.path.expanduser("~"))
+        dirName = fd.getExistingDirectory(self, "Select Directory")
+        #getOpenFileName(self, "Add media file", "", "All files (*)")
+        
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         '''
