@@ -94,6 +94,7 @@ class Observation(QDialog, Ui_Form):
         self.mediaFPS = {}
 
         self.cbVisualizeSpectrogram.setEnabled(False)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
     """
     def processSpectrogramCompleted(self, fileName1stChunk):
@@ -359,6 +360,7 @@ class Observation(QDialog, Ui_Form):
             self.check_media(fileName, nPlayer)
 
         self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0 )
 
     def add_media_from_dir(self, nPlayer):
         '''
@@ -370,6 +372,7 @@ class Observation(QDialog, Ui_Form):
             for fileName in glob.glob(dirName + os.sep + "*" ):
                 self.check_media(fileName, nPlayer)
         self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0 )
 
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
@@ -429,3 +432,4 @@ class Observation(QDialog, Ui_Form):
                         pass
 
         self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0 )

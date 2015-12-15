@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Mon Dec 14 22:26:44 2015
+# Created: Tue Dec 15 14:23:01 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(602, 625)
+        Form.resize(602, 632)
         self.verticalLayout_3 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
@@ -134,6 +134,9 @@ class Ui_Form(object):
         self.cbVisualizeSpectrogram = QtGui.QCheckBox(self.tabVideo)
         self.cbVisualizeSpectrogram.setObjectName(_fromUtf8("cbVisualizeSpectrogram"))
         self.verticalLayout_7.addWidget(self.cbVisualizeSpectrogram)
+        self.cbCloseCurrentBehaviorsBetweenVideo = QtGui.QCheckBox(self.tabVideo)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName(_fromUtf8("cbCloseCurrentBehaviorsBetweenVideo"))
+        self.verticalLayout_7.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
         self.label_2 = QtGui.QLabel(self.tabVideo)
         self.label_2.setObjectName(_fromUtf8("label_2"))
         self.verticalLayout_7.addWidget(self.label_2)
@@ -229,6 +232,7 @@ class Ui_Form(object):
         self.pbAddMediaFromDir.setText(_translate("Form", "Add all media\n"
 "from directory", None))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram", None))
+        self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Close current behaviors between videos", None))
         self.label_2.setText(_translate("Form", "Media file paths for second player (will be played simultaneously)", None))
         self.pbAddVideo_2.setText(_translate("Form", "Add media", None))
         self.pbRemoveVideo_2.setText(_translate("Form", "Remove media", None))

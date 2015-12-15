@@ -276,6 +276,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     chunk_length = 60  # lunghezza chunk spectrogram in seconds
     #memChunk = ''
 
+    memMedia = ''
+
     cleaningThread = TempDirCleanerThread()
 
 
@@ -809,7 +811,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result, selectedObs = self.selectObservations(EDIT)
 
         if selectedObs:
-            self.new_observation( mode=EDIT, obsId=selectedObs[0])
+            self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
     def check_state_events(self):
         '''check state events for each subject in current observation
@@ -1072,10 +1074,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timer_spectro_out()
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
-
-
-
-
 
 
     def setVolume(self):
@@ -1801,6 +1799,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
 
         #self.timer.start(200)
+
+        self.memMedia = ''
+
         self.timer_out()
 
         self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
@@ -2051,7 +2052,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-
         observationWindow = observation.Observation()
 
         observationWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
@@ -2162,23 +2162,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if PLAYER1 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
 
                 observationWindow.lwVideo.addItems( self.pj[OBSERVATIONS][obsId][FILE][PLAYER1] )
-                if 'media_durations' in self.pj[OBSERVATIONS][obsId]:
-                    observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]['media_durations']
+                if "media_durations" in self.pj[OBSERVATIONS][obsId]:
+                    observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]["media_durations"]
 
             # check if simultaneous 2nd media
             if PLAYER2 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:   # media for 2nd player
 
                 observationWindow.lwVideo_2.addItems( self.pj[OBSERVATIONS][obsId][FILE][PLAYER2] )
 
-            if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
 
-            if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
+            if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
 
+             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             if "visualize_spectrogram" in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId]["visualize_spectrogram"])
+
+            # cbCloseCurrentBehaviorsBetweenVideo
+            observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
+            if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
+                observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
 
         if observationWindow.exec_():
 
@@ -4912,31 +4918,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if second video
             if self.simultaneousMedia:
 
-                '''t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-
-                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
-
-                    if t1 < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000:
-                        if self.mediaListPlayer2.get_state() == vlc.State.Playing:
-                            self.mediaplayer2.set_time(0)
-                            self.mediaListPlayer2.pause()
-                    else:
-                        if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                            if abs((t1-t2) - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
-                                self.mediaplayer2.set_time( int(t1 - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
-                            self.mediaListPlayer2.play()
-
-                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
-
-                    if t2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000):
-                        if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                            self.mediaplayer.set_time(0)
-                            self.mediaListPlayer.pause()'''
-
-
                 if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
                     t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                    if abs(t1-t2) >= 300:
+                    if abs(t1 - t2) >= 300:
                         self.mediaplayer2.set_time( t1 )
 
                 if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
@@ -4971,7 +4955,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.mediaListPlayer.play()
 
 
-            currentTimeOffset = Decimal(currentTime /1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+            currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
             totalGlobalTime = sum(self.duration)
 
@@ -4993,12 +4977,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.currentStates[''].append(sbc)
 
                 # add states for all configured subjects
-                for idx in self.pj['subjects_conf']:
+                for idx in self.pj[SUBJECTS]:
 
                     # add subject index
                     self.currentStates[ idx ] = []
                     for sbc in StateBehaviorsCodes:
-                        if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
+                        if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
                             self.currentStates[idx].append(sbc)
 
                 # show current states
@@ -5030,17 +5014,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
                     self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
 
+                mediaName = self.mediaplayer.get_media().get_meta(0)
+
                 # update status bar
                 msg = ''
 
                 if self.mediaListPlayer.get_state() == vlc.State.Playing or self.mediaListPlayer.get_state() == vlc.State.Paused:
-                    msg = '%s: <b>%s / %s</b>' % ( self.mediaplayer.get_media().get_meta(0),\
-                                                   self.convertTime(Decimal(mediaTime / 1000)  ),\
-                                                   self.convertTime(Decimal(self.mediaplayer.get_length() / 1000) ) )
+                    msg = "{media_name}: <b>{time} / {total_time}</b>".format( media_name=mediaName,
+                                                                          time=self.convertTime(Decimal(mediaTime / 1000)),
+                                                                          total_time=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)))
 
                     if self.media_list.count() > 1:
-                        msg += ' | total: <b>%s / %s</b>' % ( (self.convertTime( Decimal(currentTime/1000) ),\
-                                                               self.convertTime( Decimal(totalGlobalTime / 1000) ) ) )
+                        msg += ' | total: <b>%s / %s</b>' % ((self.convertTime(Decimal(currentTime/1000)), \
+                                                               self.convertTime(Decimal(totalGlobalTime / 1000))))
                     if self.mediaListPlayer.get_state() == vlc.State.Paused:
                         msg += ' (paused)'
 
@@ -5056,6 +5042,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.statusbar.showMessage('Media length not available now', 0)
 
+            if self.memMedia and mediaName != self.memMedia:
+                print('video changed')
+            self.memMedia = mediaName
 
 
     def load_obs_in_lwConfiguration(self):

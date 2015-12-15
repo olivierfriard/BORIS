@@ -112,6 +112,8 @@ TEXT = 'text'
 INDEPENDENT_VARIABLES = 'independent_variables'
 OBSERVATIONS = 'observations'
 
+CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
+
 OPENCV = 'opencv'
 VLC = 'vlc'
 FFMPEG = 'ffmpeg'

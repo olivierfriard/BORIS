@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>602</width>
-    <height>625</height>
+    <height>632</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -250,6 +250,13 @@ from directory</string>
           <widget class="QCheckBox" name="cbVisualizeSpectrogram">
            <property name="text">
             <string>Visualize spectrogram</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
+           <property name="text">
+            <string>Close current behaviors between videos</string>
            </property>
           </widget>
          </item>
