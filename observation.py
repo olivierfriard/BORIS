@@ -196,7 +196,7 @@ class Observation(QDialog, Ui_Form):
 
     def closeEvent(self, event):
         if self.flagAnalysisRunning:
-            QMessageBox.warning(self, programName , 'A media analysis is running. Please wait before closing window')
+            QMessageBox.warning(self, programName , "A media analysis is running. Please wait before closing window")
             event.ignore()
 
 
@@ -210,12 +210,12 @@ class Observation(QDialog, Ui_Form):
                 return False
 
         if self.flagAnalysisRunning:
-            QMessageBox.warning(self, programName , 'A media analysis is running. Please wait before closing window')
+            QMessageBox.warning(self, programName , "A media analysis is running. Please wait before closing window")
             return
 
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
-            QMessageBox.warning(self, programName , '<b>%s</b> is not recognized as a valid time offset format' % self.leTimeOffset.text())
+            QMessageBox.warning(self, programName , "<b>{}</b> is not recognized as a valid time offset format".format(self.leTimeOffset.text()))
             return
 
         # check if indep variables are correct type
@@ -228,12 +228,12 @@ class Observation(QDialog, Ui_Form):
 
         # check if observation id not empty
         if not self.leObservationId.text():
-            QMessageBox.warning(self, programName , 'The <b>observation id</b> is mandatory and must be unique!' )
+            QMessageBox.warning(self, programName , "The <b>observation id</b> is mandatory and must be unique!" )
             return
 
         # check if new obs and observation id already present or if edit obs and id changed
-        if (self.mode == 'new') or (self.mode == 'edit' and self.leObservationId.text() != self.mem_obs_id):
-            if self.leObservationId.text() in self.pj['observations']:
+        if (self.mode == "new") or (self.mode == "edit" and self.leObservationId.text() != self.mem_obs_id):
+            if self.leObservationId.text() in self.pj[OBSERVATIONS]:
                 QMessageBox.critical(self, programName , "The observation id <b>{0}</b> is already used!<br>{}<br>{}".format(self.leObservationId.text(),
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['description'],
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['date']))
@@ -254,7 +254,7 @@ class Observation(QDialog, Ui_Form):
         '''
 
         if nframe:
-            self.media_file_info[ fileContentMD5 ]['nframe'] = nframe
+            self.media_file_info[ fileContentMD5 ]["nframe"] = nframe
 
             # analysis with ffmpeg made on first 60 seconds so the video duration is not available
             #self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms

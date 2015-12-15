@@ -94,6 +94,7 @@ LIVE = 'LIVE'
 MEDIA = 'MEDIA'
 
 HHMMSS = 'hh:mm:ss'
+HHMMSSZZZ = "hh:mm:ss.zzz"
 S = 's'
 
 NEW = 'new'

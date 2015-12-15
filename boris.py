@@ -392,14 +392,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.textButton.clicked.connect(self.start_live_observation)
         self.liveLayout.addWidget(self.textButton)
 
-
         self.lbTimeLive = QLabel()
         self.lbTimeLive.setAlignment(Qt.AlignCenter)
 
         font = QFont("Monospace")
         font.setPointSize(48)
         self.lbTimeLive.setFont(font)
-        self.lbTimeLive.setText("00:00:00.000")
+        if self.timeFormat == HHMMSS:
+            self.lbTimeLive.setText("00:00:00.000")
+        if self.timeFormat == S:
+            self.lbTimeLive.setText("0.000")
 
         self.liveLayout.addWidget(self.lbTimeLive)
 
@@ -786,7 +788,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][self.observationId][ TYPE ] in [MEDIA]:
 
                 if not self.initialize_new_observation_vlc():
-                    self.observationId = ''
+                    self.observationId = ""
                     self.twEvents.setRowCount(0)
                     self.menu_options()
 
@@ -804,7 +806,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        result, selectedObs = self.selectObservations( EDIT )
+        result, selectedObs = self.selectObservations(EDIT)
 
         if selectedObs:
             self.new_observation( mode=EDIT, obsId=selectedObs[0])
@@ -2025,7 +2027,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.liveObservationStarted = False
         self.textButton.setText('Start live observation')
-        self.lbTimeLive.setText('00:00:00.000')
+        if self.timeFormat == HHMMSS:
+            self.lbTimeLive.setText("00:00:00.000")
+        if self.timeFormat == S:
+            self.lbTimeLive.setText("0.000")
 
         self.liveStartTime = None
         self.liveTimer.stop()
@@ -2112,15 +2117,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == EDIT:
 
-            observationWindow.setWindowTitle('Edit observation ' + obsId )
+            observationWindow.setWindowTitle("Edit observation " + obsId )
             mem_obs_id = obsId
             observationWindow.leObservationId.setText( obsId )
-            observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj[OBSERVATIONS][obsId]['date'], 'yyyy-MM-ddThh:mm:ss') )
-            observationWindow.teDescription.setPlainText( self.pj[OBSERVATIONS][obsId]['description'] )
+            observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss") )
+            observationWindow.teDescription.setPlainText( self.pj[OBSERVATIONS][obsId]["description"] )
 
             if self.timeFormat == S:
 
-                observationWindow.leTimeOffset.setText( self.convertTime( abs(self.pj[OBSERVATIONS][obsId]['time offset']) ))
+                observationWindow.leTimeOffset.setText( self.convertTime( abs(self.pj[OBSERVATIONS][obsId]["time offset"]) ))
 
                 if "time offset second player" in self.pj[OBSERVATIONS][obsId]:
                     observationWindow.leTimeOffset_2.setText( self.convertTime( abs(self.pj[OBSERVATIONS][obsId]["time offset second player"]) ))
@@ -2151,7 +2156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbLater.setChecked(True)
 
 
-            if self.pj[OBSERVATIONS][obsId]['time offset'] < 0:
+            if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
 
             if PLAYER1 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
@@ -3667,10 +3672,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def convertTime(self, sec):
         '''
         convert time in base of current format
+        return string
         '''
 
         if self.timeFormat == S:
-
             return '%.3f' % sec
 
         if self.timeFormat == HHMMSS:
@@ -3690,12 +3695,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == NEW:
 
             if self.projectChanged:
-                response = dialog.MessageDialog(programName, 'What to do about the current unsaved project?', ['Save', 'Discard', 'Cancel'])
+                response = dialog.MessageDialog(programName, 'What to do about the current unsaved project?', ['Save', 'Discard', CANCEL])
 
                 if response == 'Save':
                     self.save_project_activated()
 
-                if response == 'Cancel':
+                if response == CANCEL:
                     return
 
             # empty main window tables
@@ -3713,7 +3718,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow.tabProject.setCurrentIndex(0)   # project information
 
         newProjectWindow.obs = self.pj[ETHOGRAM]
-        newProjectWindow.subjects_conf = self.pj['subjects_conf']
+        newProjectWindow.subjects_conf = self.pj[SUBJECTS]
 
         if self.pj['time_format'] == S:
             newProjectWindow.rbSeconds.setChecked(True)
@@ -3750,9 +3755,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                 for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
-
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
-
                     for i, field in enumerate( subjectsFields ):
                         item = QTableWidgetItem(self.pj[SUBJECTS][idx][field])
                         newProjectWindow.twSubjects.setItem(newProjectWindow.twSubjects.rowCount() - 1, i ,item)
@@ -3786,12 +3789,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     elif self.pj[OBSERVATIONS][obs]['type'] in [LIVE]:
                         mediaList = [LIVE]
 
-
                     item = QTableWidgetItem('\n'.join( mediaList ))
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 3, item)
 
                 newProjectWindow.twObservations.resizeColumnsToContents()
-
 
             # configuration of behaviours
             if self.pj[ETHOGRAM]:
@@ -3903,7 +3904,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.pj['time_format'] = self.timeFormat
 
-
             # configuration
             if newProjectWindow.lbObservationsState.text() != '':
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
@@ -3925,7 +3925,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.initialize_new_project()
             self.menu_options()
 
-
         self.projectWindowGeometry = newProjectWindow.saveGeometry()
 
 
@@ -3933,7 +3932,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         new project
         '''
-
         self.edit_project(NEW)
 
 
@@ -3962,14 +3960,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = False
 
 
-
     def save_project_as_activated(self):
         '''
         save current project asking for a new file name
         '''
-
-        fd = QFileDialog(self)
-        self.projectFileName, filtr = fd.getSaveFileNameAndFilter(self, 'Save project as', os.path.dirname(self.projectFileName), 'Projects file (*.boris);;All files (*)')
+        self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save project as', os.path.dirname(self.projectFileName), 'Projects file (*.boris);;All files (*)')
 
         if not self.projectFileName:
             return 'Not saved'
@@ -3981,24 +3976,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.save_project_json(self.projectFileName)
 
 
-
     def save_project_activated(self):
         '''
         save current project
         '''
 
         if not self.projectFileName:
-
-            fd = QFileDialog(self)
-
             if not self.pj['project_name']:
                 txt = 'NONAME.boris'
             else:
                 txt = self.pj['project_name'] + '.boris'
-
             os.chdir( os.path.expanduser("~")  )
-
-            self.projectFileName, filtr = fd.getSaveFileNameAndFilter(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
+            self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
 
             if not self.projectFileName:
                 return 'not saved'
@@ -4018,47 +4007,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def liveTimer_out(self):
 
         currentTime = self.getLaps()
-
-        t = seconds2time(currentTime)
-
-        self.lbTimeLive.setText(t)
-
-        # current state(s)
+        self.lbTimeLive.setText(self.convertTime(currentTime))
 
         # extract State events
-        StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y]['type']] ]
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y]['type']]]
 
         self.currentStates = {}
-
         # add states for no focal subject
-        self.currentStates[ '' ] = []
+        self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
-            if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
+            if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
                 self.currentStates[''].append(sbc)
 
         # add states for all configured subjects
-        for idx in self.pj['subjects_conf']:
-
+        for idx in self.pj[SUBJECTS]:
             # add subject index
-            self.currentStates[ idx ] = []
+            self.currentStates[idx] = []
             for sbc in StateBehaviorsCodes:
-                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj['subjects_conf'][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
+                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
                     self.currentStates[idx].append(sbc)
-
 
         # show current states
         if self.currentSubject:
             # get index of focal subject (by name)
-            idx = [idx for idx in self.pj['subjects_conf'] if self.pj['subjects_conf'][idx]['name'] == self.currentSubject][0]
+            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
             self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ idx ])))
         else:
             self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ])))
 
         # show selected subjects
-
         for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
             self.twSubjects.item(int(idx), len(subjectsFields) ).setText( ','.join(self.currentStates[idx]) )
-
 
 
     def start_live_observation(self):
@@ -4066,42 +4045,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         activate the live observation mode (without media file)
         '''
 
-        logging.debug('start live observation, self.liveObservationStarted: {0}'.format(self.liveObservationStarted))
+        logging.debug("start live observation, self.liveObservationStarted: {0}".format(self.liveObservationStarted))
 
         if not self.liveObservationStarted:
 
             if self.twEvents.rowCount():
-                response = dialog.MessageDialog(programName, 'The current events will be deleted. Do you want to continue?', [YES, NO])
-                if response == NO:
-                    return
 
-                self.twEvents.setRowCount(0)
-
-                self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
+                if dialog.MessageDialog(programName, "Delete the current events?", [YES, NO]) == YES:
+                    self.twEvents.setRowCount(0)
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
                 self.projectChanged = True
-                #self.loadEventsInTW(self.observationId)
-
-
-
-            self.liveObservationStarted = True
-            self.textButton.setText('Stop live observation')
-
+            self.textButton.setText("Stop live observation")
             self.liveStartTime = QTime()
             # set to now
             self.liveStartTime.start()
-
             # start timer
             self.liveTimer.start(100)
-
         else:
-
-            self.liveObservationStarted = False
-            self.textButton.setText('Start live observation')
-
+            self.textButton.setText("Start live observation")
             self.liveStartTime = None
             self.liveTimer.stop()
 
-            self.lbTimeLive.setText('00:00:00.000')
+            if self.timeFormat == HHMMSS:
+                self.lbTimeLive.setText("00:00:00.000")
+            if self.timeFormat == S:
+                self.lbTimeLive.setText("0.000")
+
+        self.liveObservationStarted = not self.liveObservationStarted
 
 
     def create_subtitles(self):
@@ -4111,7 +4081,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         result, selectedObservations = self.selectObservations( MULTIPLE )
 
-        logging.debug('Selected observations: {0}'.format(selectedObservations))
+        logging.debug("Selected observations: {0}".format(selectedObservations))
 
         if not selectedObservations:
             return
@@ -4132,11 +4102,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if os.path.isfile( media ):
                     fileName = media + '.srt'
                 else:
-
-                    response = dialog.MessageDialog(programName, '{0} not found!\nDo you want to choose another place to save subtitles? '.format(media), [YES, NO])
-                    if response == YES:
+                    if dialog.MessageDialog(programName, "{0} not found!\nDo you want to choose another place to save subtitles? ".format(media), [YES, NO]) == YES:
                         fd = QFileDialog(self)
-                        fileName = fd.getSaveFileName(self, 'Save subtitles file', '','Subtitles files (*.srt *.txt);;All files (*)')
+                        fileName = fd.getSaveFileName(self, "Save subtitles file', '','Subtitles files (*.srt *.txt);;All files (*)")
                         if not fileName:
                             continue
                     else:
@@ -4570,38 +4538,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.no_observation()
             return
 
+        laps = self.getLaps()
+
+        if not self.pj[ETHOGRAM]:
+            QMessageBox.warning(self, programName, "The ethogram is not set!")
+            return
+
+
         editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel())
-        editWindow.setWindowTitle('Add a new event')
+        editWindow.setWindowTitle("Add a new event")
 
         # send pj to edit_event window
         editWindow.pj = self.pj
 
         if self.timeFormat == HHMMSS:
             editWindow.dsbTime.setVisible(False)
-            editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time( self.getLaps() ), "hh:mm:ss.zzz") )
+            editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ) )
 
         if self.timeFormat == S:
             editWindow.teTime.setVisible(False)
-            editWindow.dsbTime.setValue( float( self.getLaps() ) )
+            editWindow.dsbTime.setValue(float(laps))
 
+        sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
-        sortedSubjects = [''] + sorted( [ self.pj['subjects_conf'][x]['name'] for x in self.pj['subjects_conf'] ])
+        editWindow.cobSubject.addItems(sortedSubjects)
 
-        editWindow.cobSubject.addItems( sortedSubjects )
+        sortedCodes = sorted([self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM]])
 
-        sortedCodes = sorted( [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] ])
-
-        editWindow.cobCode.addItems( sortedCodes )
+        editWindow.cobCode.addItems(sortedCodes)
 
         # activate signal
         #editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
 
-        editWindow.currentModifier = ''
+        editWindow.currentModifier = ""
 
         if editWindow.exec_():  #button OK
 
             if self.timeFormat == HHMMSS:
-                newTime = time2seconds(editWindow.teTime.time().toString('hh:mm:ss.zzz'))
+                newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
 
             if self.timeFormat == S:
                 newTime = Decimal(editWindow.dsbTime.value())
@@ -4635,7 +4609,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if editWindow.leComment.toPlainText():
                         event['comment'] = editWindow.leComment.toPlainText()
 
-                    self.writeEvent( event, newTime)
+                    self.writeEvent(event, newTime)
                     break
 
             '''
@@ -5285,8 +5259,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         break
 
             else:  # no focal subject
-
-                csj = self.currentStates['']
+                try:
+                    csj = self.currentStates['']
+                except:
+                    csj = []
 
             # current modifiers
             cm = {}
@@ -5405,11 +5381,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def getLaps(self):
         '''
         return cumulative laps time from begining of observation
-
         as Decimal in seconds
-
         no more add time offset!
-
         '''
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [LIVE]:
@@ -5418,16 +5391,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 now = QTime()
                 now.start()
                 memLaps = Decimal(str(round( self.liveStartTime.msecsTo(now) / 1000, 3)))
-
                 return memLaps
-
             else:
+                return Decimal("0.0")
 
-                QMessageBox.warning(self, programName, 'The live observation is not started')
-                return None
-
-
-        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId]["type"] in [MEDIA]:
 
             if self.playerType == VLC:
 
@@ -5926,9 +5894,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.no_observation()
             return
 
-        response = dialog.MessageDialog(programName, 'Do you really want to delete all events from the current observation?', [YES, NO])
+        if not self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+            QMessageBox.warning(self, programName, "No events to delete")
+            return
 
-        if response == YES:
+        if dialog.MessageDialog(programName, "Do you really want to delete all events from the current observation?", [YES, NO]) == YES:
             self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
@@ -5944,15 +5914,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if not self.twEvents.selectedIndexes():
-            QMessageBox.warning(self, programName, 'No event selected!')
+            QMessageBox.warning(self, programName, "No event selected!")
         else:
             # list of rows to delete (set for unique)
             rows = set([item.row() for item in self.twEvents.selectedIndexes()])
-
             self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if not idx in rows]
-
             self.projectChanged = True
-
             self.loadEventsInTW( self.observationId )
 
 
@@ -5996,7 +5963,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             complete list with empty string until len = max
             '''
             while len(l) < max:
-                l.append('')
+                l.append("")
             return l
 
         # ask user observations to analyze
@@ -6060,10 +6027,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             rows.append([""])
 
             # media file name
-            if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
-                rows.append(['Media file(s)'])
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+                rows.append(["Media file(s)"])
             else:
-                rows.append(['Live observation'])
+                rows.append(["Live observation"])
             rows.append( [''] )
 
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
