@@ -34,6 +34,7 @@ from config import *
 from utilities import *
 import dialog
 import plot_spectrogram
+import glob
 
 from observation_ui import Ui_Form
 
@@ -72,7 +73,7 @@ class Observation(QDialog, Ui_Form):
 
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
-        self.pbAddMediaFromDir.clicked.connect(self.add_media_from_dir)
+        self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
@@ -268,18 +269,79 @@ class Observation(QDialog, Ui_Form):
         self.widgetEnabled(True)
 
         if self.flagAnalysisRunning:
-            QMessageBox.information(self, programName,'Video analysis done:<br>Length: {} s.<br>Frame rate: {} FPS.'.format(seconds2time(self.mediaDurations[fileName]),
+            QMessageBox.information(self, programName, "Video analysis done:<br>Length: {} s.<br>Frame rate: {} FPS.".format(seconds2time(self.mediaDurations[fileName]),
                                                                                                                             nframe / (videoTime/1000)),
                                                                                                                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.flagAnalysisRunning = False
+        self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
+        return True
+
+
+    def check_media(self, fileName, nPlayer):
+        try:
+            mediaLength = self.mediaDurations[fileName]
+            mediaFPS = self.mediaFPS[fileName]
+        except:
+            # check if md5 checksum already in project_media_file_info dictionary
+            fileContentMD5 = hashfile( fileName, hashlib.md5())
+            if (not "project_media_file_info" in self.pj) \
+               or ("project_media_file_info" in self.pj and not fileContentMD5 in self.pj["project_media_file_info"]):
+
+                out, fps, nvout = playWithVLC(fileName)
+
+                if out != "media error":
+                    self.media_file_info[ fileContentMD5 ] = {"video_length": int(out) }
+                    self.mediaDurations[ fileName ] = int(out)/1000
+                else:
+                    QMessageBox.critical(self, programName , "This file do not seem to be a playable media file.")
+                    return
+
+                # check FPS
+                if nvout:  # media file has video
+                    if fps:
+                        self.media_file_info[ fileContentMD5 ]["nframe"] = int(fps * int(out)/1000)
+                        self.mediaFPS[ fileName ] = fps
+                    else:
+                        if FFMPEG in self.availablePlayers:
+                            response = dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
+                                                                          "Launch accurate video analysis?"), [YES, NO ])
+
+                            if response == YES:
+                                self.process = Process()  # class in utilities.py
+                                self.process.signal.sig.connect(self.processCompleted)
+                                self.process.fileContentMD5 = fileContentMD5
+                                self.process.filePath = fileName #mediaPathName
+                                self.process.ffmpeg_bin = self.ffmpeg_bin
+                                self.process.nPlayer = nPlayer
+                                self.process.start()
+
+                                while not self.process.isRunning():
+                                    time.sleep(0.01)
+                                    continue
+
+                                self.flagAnalysisRunning = True
+                                self.widgetEnabled(False)
+
+                            else:
+                                self.media_file_info[fileContentMD5]["nframe"] = 0
+                        else:
+                            self.media_file_info[fileContentMD5]["nframe"] = 0
+                else:
+                    self.media_file_info[fileContentMD5]["nframe"] = 0
+
+            else:
+                if "project_media_file_info" in self.pj and fileContentMD5 in self.pj["project_media_file_info"]:
+                    try:
+                        self.mediaDurations[fileName] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]/1000
+                        self.mediaFPS[fileName] = self.pj["project_media_file_info"][fileContentMD5]["nframe"] / (self.pj["project_media_file_info"][fileContentMD5]["video_length"]/1000)
+                        self.media_file_info[fileContentMD5]["video_length"] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
+                        self.media_file_info[fileContentMD5]["nframe"] = self.pj["project_media_file_info"][fileContentMD5]["nframe"]
+                    except:
+                        pass
 
         self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
 
-        return True
-
-    def check_media(fileName):
-        
 
     def add_media(self, nPlayer):
         '''
@@ -290,83 +352,25 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
             return
 
-        fd = QFileDialog(self)
         os.chdir(os.path.expanduser("~"))
-        fileName = fd.getOpenFileName(self, "Add media file", "", "All files (*)")
+        fileName = QFileDialog(self).getOpenFileName(self, "Add media file", "", "All files (*)")
 
         if fileName:
-            try:
-                mediaLength = self.mediaDurations[fileName]
-                mediaFPS = self.mediaFPS[fileName]
-            except:
-                # check if md5 checksum already in project_media_file_info dictionary
-                fileContentMD5 = hashfile( fileName, hashlib.md5())
-                if (not "project_media_file_info" in self.pj) \
-                   or ("project_media_file_info" in self.pj and not fileContentMD5 in self.pj["project_media_file_info"]):
-
-                    out, fps, nvout = playWithVLC(fileName)
-
-                    if out != 'media error':
-                        self.media_file_info[ fileContentMD5 ] = {'video_length': int(out) }
-                        self.mediaDurations[ fileName ] = int(out)/1000
-                    else:
-                        QMessageBox.critical(self, programName , "This file do not seem to be a playable media file.")
-                        return
-
-                    # check FPS
-                    if nvout:  # media file has video
-                        if fps:
-                            self.media_file_info[ fileContentMD5 ]['nframe'] = int(fps * int(out)/1000)
-                            self.mediaFPS[ fileName ] = fps
-                        else:
-                            if FFMPEG in self.availablePlayers:
-                                response = dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
-                                                                              "Launch accurate video analysis?"), [YES, NO ])
-
-                                if response == YES:
-                                    self.process = Process()  # class in utilities.py
-                                    self.process.signal.sig.connect(self.processCompleted)
-                                    self.process.fileContentMD5 = fileContentMD5
-                                    self.process.filePath = fileName #mediaPathName
-                                    self.process.ffmpeg_bin = self.ffmpeg_bin
-                                    self.process.nPlayer = nPlayer
-                                    self.process.start()
-
-                                    while not self.process.isRunning():
-                                        time.sleep(0.01)
-                                        continue
-
-                                    self.flagAnalysisRunning = True
-                                    self.widgetEnabled(False)
-
-                                else:
-                                    self.media_file_info[fileContentMD5]['nframe'] = 0
-                            else:
-                                self.media_file_info[fileContentMD5]['nframe'] = 0
-                    else:
-                        self.media_file_info[fileContentMD5]['nframe'] = 0
-
-                else:
-                    if "project_media_file_info" in self.pj and fileContentMD5 in self.pj['project_media_file_info']:
-                        try:
-                            self.mediaDurations[fileName] = self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000
-                            self.mediaFPS[fileName] = self.pj['project_media_file_info'][fileContentMD5]["nframe"] / (self.pj['project_media_file_info'][fileContentMD5]["video_length"]/1000)
-                            self.media_file_info[fileContentMD5]["video_length"] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
-                            self.media_file_info[fileContentMD5]["nframe"] = self.pj["project_media_file_info"][fileContentMD5]["nframe"]
-                        except:
-                            pass
-
-            self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
+            self.check_media(fileName, nPlayer)
 
         self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
 
-    def add_media_from_dir(self):
-        fd = QFileDialog(self)
-        #QFileDialog.getExistingDirectory(self, "Select Directory")
-        #os.chdir(os.path.expanduser("~"))
-        dirName = fd.getExistingDirectory(self, "Select Directory")
-        #getOpenFileName(self, "Add media file", "", "All files (*)")
-        
+    def add_media_from_dir(self, nPlayer):
+        '''
+        add all media from a selected directory
+        '''
+        dirName = QFileDialog().getExistingDirectory(self, "Select directory")
+        if dirName:
+            print(dirName)
+            for fileName in glob.glob(dirName + os.sep + "*" ):
+                self.check_media(fileName, nPlayer)
+        self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
+
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         '''
@@ -378,15 +382,15 @@ class Observation(QDialog, Ui_Form):
                 if self.lwVideo.count() and self.lwVideo_2.count():
                     QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
                     return False
-                self.lwVideo.addItems( [fileName] )
+                self.lwVideo.addItems([fileName])
 
             if nPlayer == PLAYER2:
-                if self.lwVideo.count()>1:
+                if self.lwVideo.count() > 1:
                     QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
                     return False
                 self.lwVideo_2.addItems([fileName])
 
-            self.fileName2hash[ fileName ] = fileContentMD5
+            self.fileName2hash[fileName] = fileContentMD5
 
 
     def remove_media(self, nPlayer):
@@ -400,12 +404,12 @@ class Observation(QDialog, Ui_Form):
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
 
                 # check if media file path no more in the 2 listwidget
-                if not mem in [ self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count()) ] \
-                   and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count()) ]:
+                if not mem in [ self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count())] \
+                   and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count())]:
                     try:
-                        del self.media_file_info[ self.fileName2hash[ mem ] ]
-                        del self.fileName2hash[ mem ]
-                        del self.mediaDurations[ mem ]
+                        del self.media_file_info[ self.fileName2hash[mem]]
+                        del self.fileName2hash[mem]
+                        del self.mediaDurations[mem]
                     except:
                         pass
 
@@ -415,13 +419,13 @@ class Observation(QDialog, Ui_Form):
                 self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
 
                 # check if media file path no more in the 2 listwidget
-                if not mem in [ self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count()) ] \
-                   and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count()) ]:
+                if not mem in [self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count())] \
+                   and not mem in [self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count())]:
                     try:
-                        del self.media_file_info[ self.fileName2hash[ selectedItem.text() ] ]
-                        del self.fileName2hash[ selectedItem.text() ]
-                        del self.mediaDurations[ selectedItem.text() ]
+                        del self.media_file_info[self.fileName2hash[selectedItem.text()]]
+                        del self.fileName2hash[selectedItem.text()]
+                        del self.mediaDurations[selectedItem.text()]
                     except:
                         pass
 
-        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
+        self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
