@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'edit_event.ui'
 #
-# Created: Tue Oct  6 12:43:14 2015
+# Created: Tue Dec 15 12:51:27 2015
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -72,10 +72,6 @@ class Ui_Form(object):
         spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem2)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
-        self.groupBox = QtGui.QGroupBox(Form)
-        self.groupBox.setEnabled(False)
-        self.groupBox.setObjectName(_fromUtf8("groupBox"))
-        self.verticalLayout.addWidget(self.groupBox)
         self.label_4 = QtGui.QLabel(Form)
         self.label_4.setObjectName(_fromUtf8("label_4"))
         self.verticalLayout.addWidget(self.label_4)
@@ -102,7 +98,6 @@ class Ui_Form(object):
         self.teTime.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz", None))
         self.lbSubject.setText(_translate("Form", "Subject", None))
         self.label_2.setText(_translate("Form", "Code", None))
-        self.groupBox.setTitle(_translate("Form", "Modifiers", None))
         self.label_4.setText(_translate("Form", "Comment", None))
         self.pbCancel.setText(_translate("Form", "Cancel", None))
         self.pbOK.setText(_translate("Form", "OK", None))

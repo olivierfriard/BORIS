@@ -6483,7 +6483,7 @@ if __name__=="__main__":
     (options, args) = parser.parse_args()
 
     if options.version:
-        print('version: {0}'.format(__version__))
+        print("version: {0}".format(__version__))
         sys.exit(0)
 
     app = QApplication(sys.argv)
@@ -6509,28 +6509,28 @@ if __name__=="__main__":
         import vlc
         availablePlayers.append(VLC)
     except:
-        logging.critical('VLC media player not found')
-        QMessageBox.critical(None, programName, 'This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc',\
+        logging.critical("VLC media player not found")
+        QMessageBox.critical(None, programName, "This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc",\
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
 
-    logging.info('VLC version %s' % vlc.libvlc_get_version().decode('utf-8'))
-    if vlc.libvlc_get_version().decode('utf-8') < VLC_MIN_VERSION:
-        QMessageBox.critical(None, programName, 'The VLC media player seems very old (%s).<br>Go to http://www.videolan.org/vlc to update it' \
+    logging.info("VLC version %s" % vlc.libvlc_get_version().decode("utf-8"))
+    if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
+        QMessageBox.critical(None, programName, "The VLC media player seems very old (%s).<br>Go to http://www.videolan.org/vlc to update it" \
             % vlc.libvlc_get_version(), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical('The VLC media player seems a little bit old (%s). Go to http://www.videolan.org/vlc to update it' % vlc.libvlc_get_version())
+        logging.critical("The VLC media player seems a little bit old (%s). Go to http://www.videolan.org/vlc to update it" % vlc.libvlc_get_version())
         sys.exit(2)
 
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers)
 
-    if __version__ == 'DEV':
-        QMessageBox.warning(None, programName, 'This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs', \
+    if __version__ == "DEV":
+        QMessageBox.warning(None, programName, "This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs", \
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     if args:
-        logging.debug('args[0]: ' + os.path.abspath(args[0]))
+        logging.debug("args[0]: " + os.path.abspath(args[0]))
         window.open_project_json( os.path.abspath(args[0]) )
 
     window.show()

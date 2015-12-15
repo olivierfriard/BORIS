@@ -116,16 +116,6 @@
       </layout>
      </item>
      <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="title">
-        <string>Modifiers</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>Comment</string>

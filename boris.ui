@@ -155,7 +155,6 @@
     <addaction name="actionClose_observation"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
-    <addaction name="actionEdit_event"/>
     <addaction name="actionEdit_selected_events"/>
     <addaction name="actionCheckStateEvents"/>
     <addaction name="actionSelect_observations"/>
