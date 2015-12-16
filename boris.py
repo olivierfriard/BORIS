@@ -1801,6 +1801,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.timer.start(200)
 
         self.memMedia = ''
+        self.currentSubject = ''
 
         self.timer_out()
 
@@ -1876,10 +1877,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         field = str( self.convertTime( field) )
 
                     twi = QTableWidgetItem(  field )
-                    self.twEvents.setItem(row, tw_obs_fields[field_type] , twi )
+                    self.twEvents.setItem(row, tw_obs_fields[field_type], twi)
 
                 else:
-                    self.twEvents.setItem(row, tw_obs_fields[field_type] , QTableWidgetItem(''))
+                    self.twEvents.setItem(row, tw_obs_fields[field_type], QTableWidgetItem(""))
 
             row += 1
 
@@ -2240,6 +2241,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
 
+            # cbCloseCurrentBehaviorsBetweenVideo
+            self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
+
             # media file
             fileName = {}
 
@@ -2339,7 +2343,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item = self.video1layout.takeAt(0)
                 item.widget().deleteLater()
 
-
             if self.simultaneousMedia:
                 self.mediaplayer2.stop()
                 while self.media_list2.count():
@@ -2357,9 +2360,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             del self.instance
 
             self.videoTab.deleteLater()
-
             self.actionFrame_by_frame.setChecked(False)
-
             self.playMode = VLC
 
             try:
@@ -2381,11 +2382,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 except:
                     pass
 
-
         self.statusbar.showMessage('',0)
 
         # delete layout
-
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(False)
         self.toolBox.setVisible(False)
@@ -2396,6 +2395,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbTime.clear()
         self.lbSubject.clear()
+        self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
 
         self.lbTimeOffset.clear()
         self.lbSpeed.clear()
@@ -2680,10 +2680,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             else:
                                 subjectStr = event[1]
 
-                            if 'STATE' in self.eventType(event[2]).upper():
-                                eventType = 'STATE'
+                            if STATE in self.eventType(event[2]).upper():
+                                eventType = STATE
                             else:
-                                eventType = 'POINT'
+                                eventType = POINT
 
                             r = cursor.execute('''INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)''', \
                             (obsId, subjectStr, event[2], eventType, event[3], str(event[0])))
@@ -2969,7 +2969,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if not excludeBehaviorsWoEvents:
                             out.append(  { 'subject': subject , 'behavior': behavior, 'modifiers': '-' , 'duration': '-', 'mean': '-', 'number': 0, 'inter_duration_mean': '-' } )
                         continue
-                    if 'POINT' in self.eventType(behavior).upper():
+                    if POINT in self.eventType(behavior).upper():
 
                         for modifier in distinct_modifiers:
                             cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
@@ -2987,7 +2987,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             out.append(  { 'subject': subject , 'behavior': behavior, 'modifiers': modifier[0] , 'duration': '-', 'mean': '-', 'number': len(rows), 'inter_duration_mean': inter_duration } )
 
 
-                    if 'STATE' in self.eventType(behavior).upper():
+                    if STATE in self.eventType(behavior).upper():
                         for modifier in distinct_modifiers:
                             cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", (subject, behavior, modifier[0]) )
                             rows = list(cursor.fetchall() )
@@ -3013,7 +3013,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                'number': int(len(rows)/2), 'inter_duration_mean': inter_duration } )
 
                 else:  # no modifiers
-                    if 'POINT' in self.eventType(behavior).upper():
+                    if POINT in self.eventType(behavior).upper():
                         cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ?  order by observation, occurence", ( subject, behavior ) )
                         rows =  cursor.fetchall()
 
@@ -3035,7 +3035,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         out.append(  { 'subject': subject , 'behavior': behavior, 'modifiers': 'NA', 'duration': '-', 'mean': '-', 'number': len(rows), 'inter_duration_mean': inter_duration}  )
 
 
-                    if 'STATE' in self.eventType(behavior).upper():
+                    if STATE in self.eventType(behavior).upper():
                         cursor.execute( "SELECT occurence FROM events where subject = ? AND code = ? order by observation, occurence", (subject, behavior) )
                         rows = list(cursor.fetchall() )
 
@@ -4550,7 +4550,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "The ethogram is not set!")
             return
 
-
         editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel())
         editWindow.setWindowTitle("Add a new event")
 
@@ -4822,8 +4821,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #print('self.embedPlayer',self.embedPlayer)
 
-        print('imageDirectory',self.imageDirectory)
-        print('self.ffmpeg_cache_dir',self.ffmpeg_cache_dir)
+        print(self.mediaplayer.get_media().get_meta(0))
+        print(self.mediaListPlayer.get_state())   # in [vlc.State.Playing, vlc.State.Ended]:
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
@@ -4848,6 +4847,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
          ver=ver, date=__version_date__, python_ver=platform.python_version(),
          pyqt_ver=PYQT_VERSION_STR, system=platform.system(), qt_ver=QT_VERSION_STR,
          players='<br>'.join(players)))
+
 
     def hsVideo_sliderMoved(self):
         '''
@@ -4903,6 +4903,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Time offset is NOT added!
         triggered by timer
         '''
+
+        if not self.observationId:
+            return
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
@@ -4971,39 +4974,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.currentStates = {}
 
                 # add states for no focal subject
-                self.currentStates[ '' ] = []
+                self.currentStates[''] = []
                 for sbc in StateBehaviorsCodes:
                     if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
                         self.currentStates[''].append(sbc)
 
                 # add states for all configured subjects
                 for idx in self.pj[SUBJECTS]:
-
                     # add subject index
-                    self.currentStates[ idx ] = []
+                    self.currentStates[idx] = []
                     for sbc in StateBehaviorsCodes:
                         if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
                             self.currentStates[idx].append(sbc)
 
-                # show current states
+                # show current subject
                 cm = {}
                 if self.currentSubject:
                     # get index of focal subject (by name)
-                    idx = [idx for idx in self.pj['subjects_conf'] if self.pj['subjects_conf'][idx]['name'] == self.currentSubject][0]
+                    idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
                 else:
                     idx = ''
 
                 txt = []
                 for cs in self.currentStates[idx]:
-                    for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS ]:
+                    for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
                         if ev[0] > currentTimeOffset :   # time
                             break
-
                         if ev[1] == self.currentSubject:   # subject
                             if ev[2] == cs:       # code
                                 cm[cs] = ev[3]    # current modifier for current state
                     # state and modifiers (if any)
-                    txt.append( cs + (' (%s) ' %  cm[cs])*(cm[cs] != '') )
+                    txt.append( cs + ' ({}) '.format(cm[cs])*(cm[cs] != '') )
 
                 txt = ', '.join(txt)
 
@@ -5018,7 +5019,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # update status bar
                 msg = ''
-
                 if self.mediaListPlayer.get_state() == vlc.State.Playing or self.mediaListPlayer.get_state() == vlc.State.Paused:
                     msg = "{media_name}: <b>{time} / {total_time}</b>".format( media_name=mediaName,
                                                                           time=self.convertTime(Decimal(mediaTime / 1000)),
@@ -5037,14 +5037,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # set video scroll bar
                     if scrollSlider:
                         self.hsVideo.setValue(mediaTime / self.mediaplayer.get_length() * (slider_maximum - 1))
-
             else:
-
                 self.statusbar.showMessage('Media length not available now', 0)
 
-            if self.memMedia and mediaName != self.memMedia:
-                print('video changed')
+            if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended):
+
+                if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] :
+
+                    logging.debug('video changed')
+                    logging.debug('current states: {}'.format( self.currentStates))
+
+                    for subjIdx in self.currentStates:
+
+                        if subjIdx:
+                            subjName = self.pj[SUBJECTS][subjIdx]['name']
+                        else:
+                            subjName = ''
+
+                        for behav in self.currentStates[subjIdx]:
+
+                            cm = ''
+                            for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+                                if ev[EVENT_TIME_FIELD_IDX] > currentTime / 1000:  # time
+                                    break
+
+                                if ev[EVENT_SUBJECT_FIELD_IDX] == subjName:  # current subject name
+                                    if ev[EVENT_BEHAVIOR_FIELD_IDX] == behav:   # code
+                                        cm = ev[EVENT_MODIFIER_FIELD_IDX]
+
+                            #self.pj[OBSERVATIONS][self.observationId][EVENTS].append([currentTime / 1000 - Decimal('0.001'), subjName, behav, cm, ''] )
+
+                            event = {'subject': subjName, 'code': behav, 'modifier': cm, 'comment': ''}
+
+                            self.writeEvent(event, currentTime / 1000 - Decimal('0.001'))
+
+
+
+                            #self.loadEventsInTW(self.observationId)
+
             self.memMedia = mediaName
+
+            if self.mediaListPlayer.get_state() == vlc.State.Ended:
+                self.timer.stop()
 
 
     def load_obs_in_lwConfiguration(self):
@@ -5168,6 +5202,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         offset is added to event time
 
         ask for modifiers if configured
+
+        load events in tableview
+
+        scroll to active event
         '''
 
         logging.debug('write event - event: {0}'.format( event ))
@@ -5177,10 +5215,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if a same event is already in events list (time, subject, code)
         if not 'row' in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event['code'] ):
-            QMessageBox.warning(self, programName, 'The same event already exists!\nSame time, code and subject.')
+            QMessageBox.warning(self, programName, "The same event already exists!\nSame time, code and subject.")
             return
 
-        if not 'from map' in event:   # modifiers only for behaviors without coding map
+        if not "from map" in event:   # modifiers only for behaviors without coding map
             # check if event has modifiers
             modifier_str = ''
 
@@ -5265,8 +5303,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             cm[cs] = ev[3]
 
             for cs in csj :
-
-                if (event['excluded']  and cs in event['excluded'].split(',') ) or ( event['code'] == cs and  cm[cs] != modifier_str) :
+                if (event['excluded'] and cs in event['excluded'].split(',') ) or ( event['code'] == cs and cm[cs] != modifier_str) :
                     # add excluded state event to observations (= STOP them)
                     self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime - Decimal('0.001'), self.currentSubject, cs, cm[cs], ''] )
 
@@ -5327,7 +5364,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.loadEventsInTW(self.observationId)
 
-        item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS] ) if t[0] == memTime][0], 0  )
+        item = self.twEvents.item([i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
 
         self.twEvents.scrollToItem( item )
 
@@ -5419,7 +5456,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ask modifiers from coding if configured and add them under 'from map' key
         '''
 
-        event = dict( self.pj[ETHOGRAM][obs_idx] )
+        event = dict(self.pj[ETHOGRAM][obs_idx])
         # check if coding map
         if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
 

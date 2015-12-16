@@ -86,8 +86,17 @@ for idx, field in enumerate(tw_events_fields):
 for idx, field in enumerate(pj_events_fields):
     pj_obs_fields[ field ] = idx
 
-SUBJECT_EVENT_FIELD = 1
+
+EVENT_TIME_FIELD_IDX = 0
+
+SUBJECT_EVENT_FIELD = 1       # to be removed after check
+EVENT_SUBJECT_FIELD_IDX = 1
+
 BEHAVIOR_EVENT_FIELD = 2
+EVENT_BEHAVIOR_FIELD_IDX = 2
+
+EVENT_MODIFIER_FIELD_IDX = 3
+
 COMMENT_EVENT_FIELD = 4
 
 LIVE = 'LIVE'

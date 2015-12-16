@@ -235,7 +235,7 @@ class Observation(QDialog, Ui_Form):
         # check if new obs and observation id already present or if edit obs and id changed
         if (self.mode == "new") or (self.mode == "edit" and self.leObservationId.text() != self.mem_obs_id):
             if self.leObservationId.text() in self.pj[OBSERVATIONS]:
-                QMessageBox.critical(self, programName , "The observation id <b>{0}</b> is already used!<br>{}<br>{}".format(self.leObservationId.text(),
+                QMessageBox.critical(self, programName , "The observation id <b>{0}</b> is already used!<br>{1}<br>{2}".format(self.leObservationId.text(),
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['description'],
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['date']))
 
