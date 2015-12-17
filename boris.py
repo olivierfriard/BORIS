@@ -5038,9 +5038,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if scrollSlider:
                         self.hsVideo.setValue(mediaTime / self.mediaplayer.get_length() * (slider_maximum - 1))
             else:
-                self.statusbar.showMessage('Media length not available now', 0)
+                self.statusbar.showMessage("Media length not available now", 0)
 
-            if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended):
+            if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive()):
 
                 if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] :
 
@@ -5050,7 +5050,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for subjIdx in self.currentStates:
 
                         if subjIdx:
-                            subjName = self.pj[SUBJECTS][subjIdx]['name']
+                            subjName = self.pj[SUBJECTS][subjIdx]["name"]
                         else:
                             subjName = ''
 
@@ -5067,9 +5067,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             #self.pj[OBSERVATIONS][self.observationId][EVENTS].append([currentTime / 1000 - Decimal('0.001'), subjName, behav, cm, ''] )
 
-                            event = {'subject': subjName, 'code': behav, 'modifier': cm, 'comment': ''}
+                            event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}
 
-                            self.writeEvent(event, currentTime / 1000 - Decimal('0.001'))
+                            self.writeEvent(event, currentTime / 1000 - Decimal("0.001"))
 
 
 
@@ -5094,7 +5094,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.twConfiguration.setRowCount(self.twConfiguration.rowCount() + 1)
 
-                for col, field in enumerate(['key','code','type','description','modifiers','excluded']):
+                for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
                     self.twConfiguration.setItem(self.twConfiguration.rowCount() - 1, col , QTableWidgetItem( self.pj[ETHOGRAM][idx][field] ))
 
 
