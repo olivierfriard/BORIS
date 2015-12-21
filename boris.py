@@ -1656,11 +1656,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug('self.duration: {}'.format( self.duration ))
             logging.debug('self.fps: {}'.format( self.fps ))
 
-            if not 'media_info' in self.pj[OBSERVATIONS][self.observationId]:
-                self.pj[OBSERVATIONS][self.observationId]['media_info'] = {"length":{}, "fps":{}}
+            if not "media_info" in self.pj[OBSERVATIONS][self.observationId]:
+                self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length":{}, "fps":{}}
 
-            self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] = mediaLength/1000
-            self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile] = mediaFPS
+
+            self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = mediaLength/1000
+            if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
+                self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
+            self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = mediaFPS
 
             self.media_list.add_media(media)
 
@@ -4720,10 +4723,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectChanged = True
 
                 if self.timeFormat == HHMMSS:
-                    newTime = time2seconds(editWindow.teTime.time().toString('hh:mm:ss.zzz'))
+                    newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
 
                 if self.timeFormat == S:
-                    newTime = editWindow.dsbTime.value()
+                    newTime = Decimal(editWindow.dsbTime.value())
 
                 for obs_idx in self.pj[ETHOGRAM]:
 
@@ -4764,19 +4767,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 """
 
         else:
-            QMessageBox.warning(self, programName, 'Select an event to edit')
+            QMessageBox.warning(self, programName, "Select an event to edit")
 
 
     def no_media(self):
-        QMessageBox.warning(self, programName, 'There is no media available')
+        QMessageBox.warning(self, programName, "There is no media available")
 
 
     def no_project(self):
-        QMessageBox.warning(self, programName, 'There is no project')
+        QMessageBox.warning(self, programName, "There is no project")
 
 
     def no_observation(self):
-        QMessageBox.warning(self, programName, 'There is no current observation')
+        QMessageBox.warning(self, programName, "There is no current observation")
 
 
     def twEthogram_doubleClicked(self):
