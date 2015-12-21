@@ -1576,11 +1576,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mediaFPS = 0
 
             try:
-                mediaLength = self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile] * 1000
+                mediaLength = self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] * 1000
                 #self.duration.append(self.pj[OBSERVATIONS][self.observationId]['media_info']['length'][mediaFile]*1000)
                 #logging.debug('self.duration 1 {}'.format(self.duration))
 
-                mediaFPS = self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile]
+                mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
                 #self.fps[mediaFile] = self.pj[OBSERVATIONS][self.observationId]['media_info']['fps'][mediaFile]
 
             except:
@@ -1588,7 +1588,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 fileContentMD5 = hashfile( mediaFile , hashlib.md5())
 
                 try:
-                    mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']
+                    mediaLength = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
                     #self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
                 except:
                     mediaLength = media.get_duration()
@@ -1596,7 +1596,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # media FPS
                 try:
-                    mediaFPS = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
+                    mediaFPS = round( self.pj["project_media_file_info"][fileContentMD5]["nframe"] / ( self.pj["project_media_file_info"][fileContentMD5]["video_length"]/1000 ) , 3)
                     #self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
                 except:
                     '''
@@ -1625,14 +1625,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         #self.fps[fileContentMD5] = script_fps
 
                         # insert in 'project_media_file_info' dictionary
-                        if not 'project_media_file_info' in self.pj:
-                            self.pj['project_media_file_info'] = {}
+                        if not "project_media_file_info" in self.pj:
+                            self.pj["project_media_file_info"] = {}
 
-                        if not fileContentMD5 in self.pj['project_media_file_info']:
-                            self.pj['project_media_file_info'][fileContentMD5] = {}
+                        if not fileContentMD5 in self.pj["project_media_file_info"]:
+                            self.pj["project_media_file_info"][fileContentMD5] = {}
 
-                        self.pj['project_media_file_info'][fileContentMD5]['video_length'] = int(out)
-                        self.pj['project_media_file_info'][fileContentMD5]['nframe'] = int(fps * int(out)/1000)
+                        self.pj["project_media_file_info"][fileContentMD5]["video_length"] = int(out)
+                        self.pj["project_media_file_info"][fileContentMD5]["nframe"] = int(fps * int(out)/1000)
                         self.projectChanged = True
                     except:
                         mediaFPS = 0
@@ -1640,27 +1640,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if mediaFPS == 0:
                         if FFMPEG in self.availablePlayers:
-                            response = dialog.MessageDialog(programName, 'BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)', [YES, NO ])
+                            response = dialog.MessageDialog(programName, "BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)", [YES, NO ])
                             if response == YES:
                                 nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, mediaFile )
                                 if nframe:
                                     mediaLength = int(videoTime)   # ms
                                     mediaFPS = nframe / (int(videoTime)/1000)
 
-            logging.debug('mediaLength: {}'.format( mediaLength ))
-            logging.debug('mediaFPS: {}'.format( mediaFPS ))
+            logging.debug("mediaLength: {}".format( mediaLength ))
+            logging.debug("mediaFPS: {}".format( mediaFPS ))
 
             self.duration.append( int(mediaLength) )
             self.fps[mediaFile] = mediaFPS
 
-            logging.debug('self.duration: {}'.format( self.duration ))
-            logging.debug('self.fps: {}'.format( self.fps ))
+            logging.debug("self.duration: {}".format( self.duration ))
+            logging.debug("self.fps: {}".format( self.fps ))
 
             if not "media_info" in self.pj[OBSERVATIONS][self.observationId]:
                 self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length":{}, "fps":{}}
 
 
-            self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = mediaLength/1000
+            self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = mediaLength / 1000
             if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
                 self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
             self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = mediaFPS
@@ -1686,11 +1686,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if fps changes between media
         if FFMPEG in self.availablePlayers:
             if len(set( self.fps.values() )) != 1:
-                QMessageBox.critical(self, programName, 'The frame-by-frame mode will not be available because the video files have different frame rates (%s).' % (', '.join([str(i) for i in list(self.fps.values())])),\
+                QMessageBox.critical(self, programName, "The frame-by-frame mode will not be available because the video files have different frame rates (%s)." % (", ".join([str(i) for i in list(self.fps.values())])),\
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         # show first frame of video
-        logging.debug('playing media #{0}'.format( 0 ))
+        logging.debug("playing media #{0}".format( 0 ))
 
         self.mediaListPlayer.play_item_at_index( 0 )
         app.processEvents()
