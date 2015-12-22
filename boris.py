@@ -3186,8 +3186,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return totalMediaLength
 
 
-
-
     def plot_events(self):
         '''
         plot events with matplotlib
@@ -3218,8 +3216,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observedBehaviors = []
             maxTime = 0  # max time in all events of all subjects
 
+            print(obs.keys())
+
             for subject in  sorted( list(obs.keys())):
+
+                print('subject',subject)
+
                 for behavior in sorted(list(obs[subject].keys())):
+
+                    print('behavior', behavior)
 
                     if not excludeBehaviorsWithoutEvents:
                         observedBehaviors.append(behavior)
@@ -3243,7 +3248,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             lbl = lbl[:-1]  # remove last empty line
 
-            fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
+            #fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
+            fig = plt.figure(figsize=(20, int(len(lbl) * .8 )))
+
             fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
 
             ax = fig.add_subplot(111)
@@ -3260,6 +3267,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 plt.xlim( round(self.pj[OBSERVATIONS][obsId]["time offset"]),round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2))
             else:
                 plt.xlim(0, round(videoLength) + 2)
+
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
             count = 0
@@ -3340,17 +3348,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fig.canvas.mpl_connect('draw_event', on_draw)
 
             plt.show()
+
             return True
 
         result, selectedObservations = self.selectObservations( SELECT1 )
 
-        logging.debug('Selected observations: {0}'.format(selectedObservations))
+        logging.debug("Selected observations: {0}".format(selectedObservations))
 
         if not selectedObservations:
             return
 
         if not self.pj[OBSERVATIONS][ selectedObservations[0] ][EVENTS]:
-            QMessageBox.warning(self, programName, 'There are no events in the selected observation')
+            QMessageBox.warning(self, programName, "There are no events in the selected observation")
             return
 
         for obsId in selectedObservations:
@@ -3365,11 +3374,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if totalMediaLength == -1 :
             totalMediaLength = 0
 
-        logging.debug('totalMediaLength: {0}'.format(totalMediaLength))
+        logging.debug("totalMediaLength: {0}".format(totalMediaLength))
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWithoutEvents, totalMediaLength = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
 
-        logging.debug('totalMediaLength: {0} min'.format(totalMediaLength))
+        logging.debug("totalMediaLength: {0} min".format(totalMediaLength))
 
         totalMediaLength = int(totalMediaLength * 60)
 
@@ -3442,10 +3451,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 o[subject][behaviorOut].append([row[0], rows[idx + 1][0]])
 
         logging.debug('intervals: {}'.format(o))
+        logging.debug('totalMediaLength: {}'.format(totalMediaLength))
+        logging.debug('excludeBehaviorsWithoutEvents: {}'.format(excludeBehaviorsWithoutEvents))
 
         if not plot_time_ranges(o, selectedObservations[0], totalMediaLength, excludeBehaviorsWithoutEvents, line_width=10):
             QMessageBox.warning(self, programName , 'Check events')
-
 
 
     def open_project_json(self, projectFileName):
@@ -4824,8 +4834,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #print('self.embedPlayer',self.embedPlayer)
 
+        '''
         print(self.mediaplayer.get_media().get_meta(0))
         print(self.mediaListPlayer.get_state())   # in [vlc.State.Playing, vlc.State.Ended]:
+        '''
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'

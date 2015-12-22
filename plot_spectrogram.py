@@ -38,7 +38,6 @@ import os
 import wave
 import numpy as np
 import matplotlib
-matplotlib.use("Agg")
 import pylab
 import subprocess
 
@@ -135,6 +134,8 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
         wav.close()
         return sound_info, frame_rate
 
+
+    matplotlib.use("Agg")
 
     fileName1stChunk = ''
 
