@@ -38,7 +38,6 @@ import os
 import wave
 import numpy as np
 import matplotlib
-import pylab
 import subprocess
 
 
@@ -136,6 +135,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
 
     matplotlib.use("Agg")
+    import pylab
 
     fileName1stChunk = ''
 
