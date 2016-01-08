@@ -292,27 +292,26 @@ class Observation(QDialog, Ui_Form):
                 out, fps, nvout = playWithVLC(fileName)
 
                 if out != "media error":
-                    self.media_file_info[ fileContentMD5 ] = {"video_length": int(out) }
-                    self.mediaDurations[ fileName ] = int(out)/1000
+                    self.media_file_info[fileContentMD5] = {"video_length": int(out) }
+                    self.mediaDurations[fileName] = int(out) / 1000
                 else:
-                    QMessageBox.critical(self, programName , "This file do not seem to be a playable media file.")
+                    QMessageBox.critical(self, programName, "This file do not seem to be a playable media file.")
                     return
 
                 # check FPS
                 if nvout:  # media file has video
                     if fps:
-                        self.media_file_info[ fileContentMD5 ]["nframe"] = int(fps * int(out)/1000)
-                        self.mediaFPS[ fileName ] = fps
+                        self.media_file_info[fileContentMD5]["nframe"] = int(fps * int(out) / 1000)
+                        self.mediaFPS[fileName] = fps
                     else:
                         if FFMPEG in self.availablePlayers:
-                            response = dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
-                                                                          "Launch accurate video analysis?"), [YES, NO ])
 
-                            if response == YES:
+                            if dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
+                                                                          "Launch accurate video analysis?"), [YES, NO]) == YES:
                                 self.process = Process()  # class in utilities.py
                                 self.process.signal.sig.connect(self.processCompleted)
                                 self.process.fileContentMD5 = fileContentMD5
-                                self.process.filePath = fileName #mediaPathName
+                                self.process.filePath = fileName # mediaPathName
                                 self.process.ffmpeg_bin = self.ffmpeg_bin
                                 self.process.nPlayer = nPlayer
                                 self.process.start()
@@ -334,15 +333,14 @@ class Observation(QDialog, Ui_Form):
             else:
                 if "project_media_file_info" in self.pj and fileContentMD5 in self.pj["project_media_file_info"]:
                     try:
-                        self.mediaDurations[fileName] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]/1000
-                        self.mediaFPS[fileName] = self.pj["project_media_file_info"][fileContentMD5]["nframe"] / (self.pj["project_media_file_info"][fileContentMD5]["video_length"]/1000)
+                        self.mediaDurations[fileName] = self.pj["project_media_file_info"][fileContentMD5]["video_length"] / 1000
+                        self.mediaFPS[fileName] = self.pj["project_media_file_info"][fileContentMD5]["nframe"] / (self.pj["project_media_file_info"][fileContentMD5]["video_length"] / 1000)
                         self.media_file_info[fileContentMD5]["video_length"] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
                         self.media_file_info[fileContentMD5]["nframe"] = self.pj["project_media_file_info"][fileContentMD5]["nframe"]
                     except:
                         pass
 
         self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
-
 
     def add_media(self, nPlayer):
         '''
