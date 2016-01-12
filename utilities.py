@@ -22,6 +22,7 @@ Copyright 2012-2015 Olivier Friard
 
 """
 import math
+import re
 import subprocess
 import urllib.parse
 import sys
@@ -183,35 +184,78 @@ def playWithVLC(fileName):
 
 
 def accurate_video_analysis(ffmpeg_bin, fileName):
-    '''
-    analyse frame rate and length of video with ffmpeg
-    '''
+    """
+    analyse frame rate and video duration with ffmpeg
+    """
 
     if sys.platform.startswith("win"):
         cmdOutput = 'NUL'
     else:
         cmdOutput = '/dev/null'
-    command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
+    #command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
+    command2 = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
 
-    p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+    p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-    error = p.communicate()[1]
-    error= error.decode('utf-8')
+    error = p.communicate()[1].decode('utf-8')
+
     rows = error.split('\r')
-    out = ''
+    '''print(rows)
+    print(len(rows))
 
-    for rowIdx in range(len(rows)-1, 0, -1):
-        if 'frame=' in rows[rowIdx]:
-            out = rows[rowIdx]
-            break
-    if out:
-        nframe = int(out.split(' fps=')[0].replace('frame=','').strip())
-        timeStr = out.split('time=')[1].split(' ')[0].strip()
-        time = time2seconds(timeStr) * 1000
+    print( rows[0].split("\n") )'''
 
-        return nframe, time
-    else:
-        return None, None
+    # video duration
+    duration = 0
+    try:
+        for r in rows[0].split("\n"):
+            if 'Duration' in r:
+                re_results = re.search('Duration: (.*), start', r, re.IGNORECASE)
+                if re_results:
+                    duration = time2seconds(re_results.group(1))
+                    break
+    except:
+        duration = 0
+
+    # fps
+    fps = 0
+    try:
+        for r in rows[0].split("\n"):
+            if ' fps,' in r:
+                re_results = re.search(', (.{1,5}) fps,', r, re.IGNORECASE)
+                if re_results:
+                    fps = Decimal(re_results.group(1).strip())
+                    break
+    except:
+        fps = 0
+
+    print(duration, fps)
+
+    # video nframe and time
+    '''
+    nframe = 0
+    time_ = 0
+    print(rows)
+    try:
+        for rowIdx in range(len(rows) - 1, 0, -1):
+            if 'frame=' in rows[rowIdx]:
+                print( rows[rowIdx] )
+                re_results1 = re.search('frame=(.*)fps=', rows[rowIdx], re.IGNORECASE)
+                if re_results1:
+                    nframe = int(re_results1.group(1).strip())
+                    print('nframe',nframe)
+                re_results2 = re.search('time=(.*)bitrate=', rows[rowIdx], re.IGNORECASE)
+                if re_results2:
+                    time_ = time2seconds(re_results2.group(1).strip()) *1000
+                break
+
+    except:
+        nframe = 0
+        time_ = 0
+    '''
+
+    return int(fps * duration), duration*1000, duration, fps
+
 
 
 class ThreadSignal(QObject):
@@ -219,10 +263,9 @@ class ThreadSignal(QObject):
 
 
 class Process(QThread):
-    '''
+    """
     process for accurate video analysis
-    '''
-
+    """
     def __init__(self, parent = None):
         QThread.__init__(self, parent)
         self.filePath = ''
@@ -233,6 +276,5 @@ class Process(QThread):
         self.signal = ThreadSignal()
 
     def run(self):
-
-        nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
-        self.signal.sig.emit(nframe, videoTime, self.fileContentMD5, self.nPlayer, self.filePath)
+        nframe, videoTime, videoDuration, fps = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
+        self.signal.sig.emit(nframe, videoTime, videoDuration, fps, self.fileContentMD5, self.nPlayer, self.filePath)

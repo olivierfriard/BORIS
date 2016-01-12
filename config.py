@@ -101,6 +101,7 @@ COMMENT_EVENT_FIELD = 4
 
 LIVE = 'LIVE'
 MEDIA = 'MEDIA'
+VIEWER = 'VIEWER'
 
 HHMMSS = 'hh:mm:ss'
 HHMMSSZZZ = "hh:mm:ss.zzz"

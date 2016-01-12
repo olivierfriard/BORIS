@@ -4,7 +4,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.72"
-__version_date__ = "2015-12-22"
+__version__ = "2.73"
+__version_date__ = "2016-01-12"
 __DEV__ = False
 
 import sys
@@ -273,7 +273,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     playMode = VLC
 
     # spectrogram
-    chunk_length = 60  # spectrogram chunk length in seconds
+    chunk_length = 60  # lunghezza chunk spectrogram in seconds
     #memChunk = ''
 
     memMedia = ''
@@ -789,7 +789,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][self.observationId][ TYPE ] in [MEDIA]:
 
-                if not self.initialize_new_observation_vlc:
+                if not self.initialize_new_observation_vlc():
                     self.observationId = ""
                     self.twEvents.setRowCount(0)
                     self.menu_options()
@@ -870,7 +870,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
-                    if not self.initialize_new_observation_vlc:
+                    if not self.initialize_new_observation_vlc():
                         self.observationId = ''
                         self.twEvents.setRowCount(0)
                         self.menu_options()
@@ -1454,9 +1454,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def check_if_media_available(self):
-        """
+        '''
         check if every media available for observationId
-        """
+        '''
 
         if not PLAYER1 in self.pj[OBSERVATIONS][self.observationId][FILE]:
             return False
@@ -1494,11 +1494,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
 
-    @property
     def initialize_new_observation_vlc(self):
-        """
+        '''
         initialize new observation for VLC
-        """
+        '''
 
         logging.debug('initialize new observation for VLC')
 
@@ -1516,7 +1515,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     It will not be allowed to log events.<br>Modify the media path to point an existing media file to log events or copy media file in the BORIS project directory.""",
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-                    self.playerType = 'VIEWER'
+                    self.playerType = VIEWER
                     self.playMode = ''
                     self.dwObservations.setVisible(True)
                     return True
@@ -1526,7 +1525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 It will not be allowed to log events.<br>Modify the media path to point an existing media file to log events or copy media file in the BORIS project directory.""",
                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-                self.playerType = 'VIEWER'
+                self.playerType = VIEWER
                 self.playMode = ''
                 self.dwObservations.setVisible(True)
                 return True
@@ -1536,7 +1535,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             and \
            PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
 
-               QMessageBox.warning(self, programName , 'It is not yet possible to play a second media when more media are loaded in the first media player' )
+               QMessageBox.warning(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
                return False
 
         self.playerType = VLC
@@ -1561,9 +1560,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][idx] = os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile)
                 self.projectChanged = True
 
-
         for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-            logging.debug('media file {}'.format(mediaFile))
+            logging.debug("media file {}".format(mediaFile))
             try:
                 self.instance
             except AttributeError:
@@ -1575,7 +1573,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # media duration
             mediaLength = 0  # in ms
             mediaFPS = 0
-            print(self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] * 1000)
 
             try:
                 mediaLength = self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] * 1000
@@ -1587,33 +1584,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             except:
                 # md5 sum of file content
+
+                logging.debug("media_info key not present")
+                logging.debug("hash of file")
+
                 fileContentMD5 = hashfile( mediaFile , hashlib.md5())
 
                 try:
                     mediaLength = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
-                    #self.duration.append( self.pj['project_media_file_info'][fileContentMD5]['video_length'] )
                 except:
+                    logging.debug("media get duration")
                     mediaLength = media.get_duration()
-                    #self.duration.append(media.get_duration())
+                    logging.debug("mediaLength {}".format(mediaLength))
 
                 # media FPS
                 try:
                     mediaFPS = round( self.pj["project_media_file_info"][fileContentMD5]["nframe"] / ( self.pj["project_media_file_info"][fileContentMD5]["video_length"]/1000 ) , 3)
-                    #self.fps[fileContentMD5] = round( self.pj['project_media_file_info'][fileContentMD5]['nframe'] / ( self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000 ) , 3)
                 except:
-                    '''
-                    try:
-                        self.fps[fileContentMD5] = round( self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['nframe'] \
-                               / (self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]['video_length'] /1000) , 3)
-
-                        # add parameter 'media_file_info' to 'project_media_file_info'
-                        if not 'project_media_file_info' in self.pj:
-                            self.pj['project_media_file_info'] = {}
-                        self.pj['project_media_file_info'][fileContentMD5] = self.pj[OBSERVATIONS][self.observationId][MEDIA_FILE_INFO][fileContentMD5]
-                        self.projectChanged = True
-                    except:
-                        # if every thing fail try to extract parameter playing media with VLC for few seconds
-                    '''
                     try:
                         logging.debug('playing with VLC')
                         out, fps, nvout = playWithVLC(mediaFile)
@@ -1624,7 +1611,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         mediaLength = int(out)
                         mediaFPS = fps
-                        #self.fps[fileContentMD5] = script_fps
 
                         # insert in 'project_media_file_info' dictionary
                         if not "project_media_file_info" in self.pj:
@@ -1638,16 +1624,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.projectChanged = True
                     except:
                         mediaFPS = 0
-                        #self.fps[fileContentMD5] = 0
 
                     if mediaFPS == 0:
                         if FFMPEG in self.availablePlayers:
-                            response = dialog.MessageDialog(programName, "BORIS is not able to determine the frame rate of the video.\nLaunch accurate video analysis?\nThis analysis may be long (half time of video)", [YES, NO ])
-                            if response == YES:
-                                nframe, videoTime = accurate_video_analysis( self.ffmpeg_bin, mediaFile )
-                                if nframe:
-                                    mediaLength = int(videoTime)   # ms
-                                    mediaFPS = nframe / (int(videoTime)/1000)
+                            logging.debug('checking with ffmpeg')
+                            _, _, videoDuration, videoFPS = accurate_video_analysis( self.ffmpeg_bin, mediaFile )
+                            #if nframe:
+
+                            mediaLength = int(videoDuration * 1000)   # ms
+                            #mediaFPS = nframe / (int(videoTime) / 1000)
+                            mediaFPS = videoFPS
+
+                            logging.debug('media length with ffmpeg: {}'.format(mediaLength))
+                            logging.debug('media FPS with ffmpeg: {}'.format(mediaFPS))
+
+                            self.pj["project_media_file_info"][fileContentMD5]["video_length"] = int(videoDuration * 1000)
+                            self.pj["project_media_file_info"][fileContentMD5]["nframe"] = int(mediaFPS * videoDuration)
+                        else:
+                            logging.debug('ffmpeg not available')
 
             logging.debug("mediaLength: {}".format( mediaLength ))
             logging.debug("mediaFPS: {}".format( mediaFPS ))
@@ -1660,6 +1654,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not "media_info" in self.pj[OBSERVATIONS][self.observationId]:
                 self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length":{}, "fps":{}}
+
 
             self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = mediaLength / 1000
             if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
@@ -2051,7 +2046,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         # check if current observation must be closed to create a new one
         if mode == NEW and self.observationId:
-            if dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', [YES, NO]) == NO:
+            response = dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', [YES, NO])
+            if response == NO:
                 return
             else:
                 self.close_observation()
@@ -2198,15 +2194,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == NEW:
                 self.observationId = new_obs_id
-                self.pj[OBSERVATIONS][self.observationId] = {FILE: [], 'type': '', 'date': '', 'description': '', 'time offset': 0, 'events': []}
+                self.pj[OBSERVATIONS][self.observationId] = { FILE: [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
 
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
 
                 logging.info('observation id {0} changed in {1}'.format(obsId, new_obs_id))
 
-                self.pj[OBSERVATIONS][new_obs_id] = self.pj[OBSERVATIONS][obsId]
-                del self.pj[OBSERVATIONS][obsId]
+                self.pj[OBSERVATIONS][ new_obs_id ] = self.pj[OBSERVATIONS][ obsId ]
+                del self.pj[OBSERVATIONS][ obsId ]
 
             # observation date
             self.pj[OBSERVATIONS][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
@@ -2272,25 +2268,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if self.saveMediaFilePath:
                             # save full path
-                            fileName[PLAYER2].append(observationWindow.lwVideo_2.item(i).text())
+                            fileName[PLAYER2].append (  observationWindow.lwVideo_2.item(i).text() )
                         else:
-                            fileName[PLAYER2].append(os.path.basename(observationWindow.lwVideo_2.item(i).text()))
+                            fileName[PLAYER2].append ( os.path.basename( observationWindow.lwVideo_2.item(i).text() ) )
 
                 self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
-                self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
-                                                                  "fps": observationWindow.mediaFPS}
+                self.pj[OBSERVATIONS][new_obs_id]['media_info'] = {"length": observationWindow.mediaDurations,
+                                                                  "fps":  observationWindow.mediaFPS}
 
                 logging.debug('media_info: {0}'.format(  self.pj[OBSERVATIONS][new_obs_id]['media_info'] ))
 
                 logging.debug('media file info: {0}'.format(  observationWindow.media_file_info ))
 
                 # add parameters to project_media_file_info
-                if not "project_media_file_info" in self.pj:
-                    self.pj["project_media_file_info"] = {}
+                if not 'project_media_file_info' in self.pj:
+                    self.pj['project_media_file_info'] = {}
 
                 for h in observationWindow.media_file_info:
-                    self.pj["project_media_file_info"][h] = observationWindow.media_file_info[h]
+                    self.pj['project_media_file_info'][h] = observationWindow.media_file_info[h]
                 logging.info('pj: {0}'.format(  self.pj ))
 
             if mode == NEW:
@@ -2305,7 +2301,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else:
                     self.playerType = VLC
-                    self.initialize_new_observation_vlc
+                    self.initialize_new_observation_vlc()
 
                 self.menu_options()
 
@@ -4258,9 +4254,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def media_file_info(self):
-        """
+        '''
         show info about current video
-        """
+        '''
         if self.observationId and self.playerType == VLC:
             out = ''
 
@@ -4793,9 +4789,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def twEthogram_doubleClicked(self):
-        """
+        '''
         add event by double-clicking in ethogram list
-        """
+        '''
         if self.observationId:
             if self.twConfiguration.selectedIndexes():
 
@@ -4818,7 +4814,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def actionUser_guide_triggered(self):
-        """ open user guide URL if it exists otherwise open user guide URL"""
+        ''' open user guide URL if it exists otherwise open user guide URL'''
         userGuideFile = os.path.dirname(os.path.realpath(__file__)) + "/boris_user_guide.pdf"
         if os.path.isfile( userGuideFile ) :
             if sys.platform.startswith("linux"):
@@ -4830,7 +4826,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def actionAbout_activated(self):
-        """ about window """
+        ''' about window '''
 
         #print('self.embedPlayer',self.embedPlayer)
 
@@ -4844,13 +4840,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             ver = 'v. {0}'.format(__version__)
 
-        players = ["VLC media player v. {0}".format(bytes_to_str(vlc.libvlc_get_version()))]
+        players = []
+        players.append( "VLC media player v. {0}".format( bytes_to_str(vlc.libvlc_get_version())))
 
         if FFMPEG in self.availablePlayers:
             players.append("FFmpeg for frame-by-frame mode")
 
         QMessageBox.about(self, "About " + programName,"""<b>{prog_name}</b> {ver} - {date}
-        <p>Copyright &copy; 2012-2015 Olivier Friard - Marco Gamba<br>
+        <p>Copyright &copy; 2012-2016 Olivier Friard - Marco Gamba<br>
         Department of Life Sciences and Systems Biology - University of Torino - Italy<br>
         <br>
         The author would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
@@ -4864,10 +4861,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def hsVideo_sliderMoved(self):
-        """
+        '''
         media position slider moved
         adjust media position
-        """
+        '''
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
@@ -4883,11 +4880,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timer_spectro_out()
 
     def get_events_current_row(self):
-        """
+        '''
         get events current row corresponding to video/frame-by-frame position
         paint twEvents with tracking cursor
         scroll to corresponding event
-        """
+        '''
 
         global ROW
 
@@ -4911,14 +4908,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def timer_out(self, scrollSlider=True):
-        """
+        '''
         indicate the video current position and total length for VLC player
         scroll video slider to video position
         Time offset is NOT added!
         triggered by timer
-        :param scrollSlider:
-        :return:
-        """
+        '''
 
         if not self.observationId:
             return

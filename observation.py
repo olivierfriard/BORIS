@@ -249,18 +249,14 @@ class Observation(QDialog, Ui_Form):
         self.accept()
 
 
-    def processCompleted(self, nframe, videoTime, fileContentMD5, nPlayer, fileName):
+    def processCompleted(self, nframe, videoTime, videoDuration, fps, fileContentMD5, nPlayer, fileName):
         '''
         function triggered at the end of media file analysis with FFMPEG
         '''
 
-        if nframe:
-            self.media_file_info[ fileContentMD5 ]["nframe"] = nframe
-
-            # analysis with ffmpeg made on first 60 seconds so the video duration is not available
-            #self.media_file_info[ fileContentMD5 ]['video_length'] = int(videoTime)   # ms
-            #self.mediaDurations[ fileName ] = int(videoTime)/1000
-            self.mediaFPS[fileName] = nframe / (int(videoTime)/1000)
+        if fps:
+            self.media_file_info[fileContentMD5]["nframe"] = int(fps * videoDuration)
+            self.mediaFPS[fileName] = fps
         else:
             QMessageBox.critical(self, programName, ("BORIS is not able to determine the frame rate of the video "
                                                      "even after accurate analysis.\nCheck your video."),
