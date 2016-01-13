@@ -1232,25 +1232,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def FFmpegTimerOut(self):
-        '''
-        triggered when frame-by-frame mode:
+        """
+        triggered when frame-by-frame mode is activated:
         read next frame and update image
-        '''
+        """
 
-        logging.debug('FFmpegTimerOut function')
+        logging.debug("FFmpegTimerOut function")
 
         fps = list(self.fps.values())[0]
 
-        logging.debug('fps {0}'.format( fps ))
+        logging.debug("fps {0}".format( fps ))
 
-        frameMs = 1000/fps
+        frameMs = 1000 / fps
 
-        logging.debug('framMs {0}'.format( frameMs ))
+        logging.debug("framMs {0}".format(frameMs))
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
-        logging.debug('required frame: {0}'.format( requiredFrame ))
-        logging.debug('sum self.duration {0}'.format( sum(self.duration)))
+        logging.debug("required frame: {0}".format( requiredFrame ))
+        logging.debug("sum self.duration {0}".format( sum(self.duration)))
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.duration):
@@ -6551,13 +6551,14 @@ if __name__=="__main__":
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
 
-    logging.info("VLC version %s" % vlc.libvlc_get_version().decode("utf-8"))
+    logging.info("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        QMessageBox.critical(None, programName, "The VLC media player seems very old (%s).<br>Go to http://www.videolan.org/vlc to update it" \
-            % vlc.libvlc_get_version(), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical("The VLC media player seems a little bit old (%s). Go to http://www.videolan.org/vlc to update it" % vlc.libvlc_get_version())
-        sys.exit(2)
+        QMessageBox.critical(None, programName, "The VLC media player seems very old ({}).<br>Go to http://www.videolan.org/vlc to update it".format( \
+            vlc.libvlc_get_version()), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
+        logging.critical("The VLC media player seems old ({}). Go to http://www.videolan.org/vlc to update it".format(vlc.libvlc_get_version()))
+
+        sys.exit(2)
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers)
@@ -6568,7 +6569,7 @@ if __name__=="__main__":
 
     if args:
         logging.debug("args[0]: " + os.path.abspath(args[0]))
-        window.open_project_json( os.path.abspath(args[0]) )
+        window.open_project_json(os.path.abspath(args[0]))
 
     window.show()
     window.raise_()

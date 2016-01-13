@@ -266,8 +266,8 @@ class Observation(QDialog, Ui_Form):
         self.widgetEnabled(True)
 
         if self.flagAnalysisRunning:
-            QMessageBox.information(self, programName, "Video analysis done:<br>Length: {} s.<br>Frame rate: {} FPS.".format(seconds2time(self.mediaDurations[fileName]),
-                                                                                                                            nframe / (videoTime/1000)),
+            QMessageBox.information(self, programName, "Video analysis done:<br>Duration: {duration} s.<br>Frame rate: {fps} FPS.".format(duration=seconds2time(self.mediaDurations[fileName]),
+                                                                                                                            fps=fps),
                                                                                                                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.flagAnalysisRunning = False
@@ -277,6 +277,7 @@ class Observation(QDialog, Ui_Form):
 
     def check_media(self, fileName, nPlayer):
         try:
+            print( 'self.mediaDurations', self.mediaDurations )
             mediaLength = self.mediaDurations[fileName]
             mediaFPS = self.mediaFPS[fileName]
         except:
@@ -285,7 +286,10 @@ class Observation(QDialog, Ui_Form):
             if (not "project_media_file_info" in self.pj) \
                or ("project_media_file_info" in self.pj and not fileContentMD5 in self.pj["project_media_file_info"]):
 
+                print( 'play in vlc' )
                 out, fps, nvout = playWithVLC(fileName)
+
+                print( out, fps, nvout  )
 
                 if out != "media error":
                     self.media_file_info[fileContentMD5] = {"video_length": int(out) }
@@ -337,6 +341,7 @@ class Observation(QDialog, Ui_Form):
                         pass
 
         self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
+
 
     def add_media(self, nPlayer):
         '''

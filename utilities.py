@@ -148,6 +148,7 @@ def test_ffmpeg_path(FFmpegPath):
 
     return True, ''
 
+
 def playWithVLC(fileName):
     '''
     play media in filename and return out, fps and has_vout (number of video)
@@ -210,10 +211,8 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
     try:
         for r in rows[0].split("\n"):
             if 'Duration' in r:
-                re_results = re.search('Duration: (.*), start', r, re.IGNORECASE)
-                if re_results:
-                    duration = time2seconds(re_results.group(1))
-                    break
+                duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
+                break
     except:
         duration = 0
 
@@ -229,7 +228,26 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
     except:
         fps = 0
 
-    print(duration, fps)
+    # check for video stream
+    hasVideo = False
+    try:
+        for r in rows[0].split("\n"):
+            if 'Stream #' in r and 'Video:' in r:
+                hasVideo = True
+                break
+    except:
+        hasVideo = None
+
+    # check for audio stream
+    hasAudio = False
+    try:
+        for r in rows[0].split("\n"):
+            if 'Stream #' in r and 'Audio:' in r:
+                hasAudio = True
+                break
+    except:
+        hasAudio = None
+
 
     # video nframe and time
     '''
@@ -254,7 +272,7 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
         time_ = 0
     '''
 
-    return int(fps * duration), duration*1000, duration, fps
+    return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
 
 
 
