@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -11,12 +11,12 @@ This file is part of BORIS.
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   any later version.
-  
+
   BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
@@ -33,7 +33,7 @@ from preferences_ui import Ui_prefDialog
 class Preferences(QDialog, Ui_prefDialog):
 
     def __init__(self, parent=None):
-        
+
         super(Preferences, self).__init__(parent)
         self.setupUi(self)
 
@@ -58,32 +58,30 @@ class Preferences(QDialog, Ui_prefDialog):
 
 
     def browseFFmpeg(self):
-        '''
+        """
         allow user search for ffmpeg
-        '''
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Select FFmpeg program', '', 'All files (*)')
+        """
+        fileName = QFileDialog(self).getOpenFileName(self, "Select FFmpeg program", "", "All files (*)")
         if fileName:
-            self.leFFmpegPath.setText( fileName )
+            self.leFFmpegPath.setText(fileName)
             self.testFFmpeg()
 
 
     def browseFFmpegCacheDir(self):
-        '''
+        """
         allow user select a cache dir for ffmpeg images
-        '''
-        fd = QFileDialog(self)
-        FFmpegCacheDir = fd.getExistingDirectory(self, 'Select a directory', os.path.expanduser('~'), options=fd.ShowDirsOnly)
+        """
+        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly)
 
         if FFmpegCacheDir:
-            self.leFFmpegCacheDir.setText( FFmpegCacheDir )
+            self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
 
     def testFFmpeg(self):
         '''
         test if FFmepg is running
         '''
-        r, msg = test_ffmpeg_path( self.leFFmpegPath.text() )
+        r, msg = test_ffmpeg_path(self.leFFmpegPath.text())
         if not r:
             QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         return r

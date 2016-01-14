@@ -35,6 +35,7 @@ from utilities import *
 import dialog
 import plot_spectrogram
 import glob
+import logging
 
 from observation_ui import Ui_Form
 
@@ -64,9 +65,10 @@ class ProcessSpectro(QThread):
 
 class Observation(QDialog, Ui_Form):
 
-    def __init__(self, parent=None):
+    def __init__(self, log_level, parent=None):
 
         super(Observation, self).__init__(parent)
+        logging.basicConfig(level=log_level)
         self.setupUi(self)
 
         self.lbMediaAnalysis.setText("")
@@ -85,7 +87,6 @@ class Observation(QDialog, Ui_Form):
 
         self.media_file_info = {}
         self.fileName2hash = {}
-        self.availablePlayers = []
 
         self.flagAnalysisRunning = False
         self.spectrogramFinished = False
@@ -277,7 +278,7 @@ class Observation(QDialog, Ui_Form):
 
     def check_media(self, fileName, nPlayer):
         try:
-            print( 'self.mediaDurations', self.mediaDurations )
+            logging.info("self.mediaDurations: {}".format(self.mediaDurations))
             mediaLength = self.mediaDurations[fileName]
             mediaFPS = self.mediaFPS[fileName]
         except:
@@ -304,27 +305,24 @@ class Observation(QDialog, Ui_Form):
                         self.media_file_info[fileContentMD5]["nframe"] = int(fps * int(out) / 1000)
                         self.mediaFPS[fileName] = fps
                     else:
-                        if FFMPEG in self.availablePlayers:
 
-                            if dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
-                                                                          "Launch accurate video analysis?"), [YES, NO]) == YES:
-                                self.process = Process()  # class in utilities.py
-                                self.process.signal.sig.connect(self.processCompleted)
-                                self.process.fileContentMD5 = fileContentMD5
-                                self.process.filePath = fileName # mediaPathName
-                                self.process.ffmpeg_bin = self.ffmpeg_bin
-                                self.process.nPlayer = nPlayer
-                                self.process.start()
+                        if dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
+                                                                      "Launch accurate video analysis?"), [YES, NO]) == YES:
+                            self.process = Process()  # class in utilities.py
+                            self.process.signal.sig.connect(self.processCompleted)
+                            self.process.fileContentMD5 = fileContentMD5
+                            self.process.filePath = fileName # mediaPathName
+                            self.process.ffmpeg_bin = self.ffmpeg_bin
+                            self.process.nPlayer = nPlayer
+                            self.process.start()
 
-                                while not self.process.isRunning():
-                                    time.sleep(0.01)
-                                    continue
+                            while not self.process.isRunning():
+                                time.sleep(0.01)
+                                continue
 
-                                self.flagAnalysisRunning = True
-                                self.widgetEnabled(False)
+                            self.flagAnalysisRunning = True
+                            self.widgetEnabled(False)
 
-                            else:
-                                self.media_file_info[fileContentMD5]["nframe"] = 0
                         else:
                             self.media_file_info[fileContentMD5]["nframe"] = 0
                 else:
@@ -358,8 +356,9 @@ class Observation(QDialog, Ui_Form):
         if fileName:
             self.check_media(fileName, nPlayer)
 
-        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0 )
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0 )
+        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0)
+
 
     def add_media_from_dir(self, nPlayer):
         '''
@@ -367,11 +366,10 @@ class Observation(QDialog, Ui_Form):
         '''
         dirName = QFileDialog().getExistingDirectory(self, "Select directory")
         if dirName:
-            print(dirName)
             for fileName in glob.glob(dirName + os.sep + "*" ):
                 self.check_media(fileName, nPlayer)
         self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0 )
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0)
 
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):

@@ -281,12 +281,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     cleaningThread = TempDirCleanerThread()
 
 
-    def __init__(self, availablePlayers , parent = None):
+    def __init__(self, availablePlayers, ffmpeg_bin, parent = None):
 
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
         self.availablePlayers = availablePlayers
+        self.ffmpeg_bin = ffmpeg_bin
         # set icons
         self.setWindowIcon(QIcon(':/logo.png'))
         self.actionPlay.setIcon(QIcon(':/play.png'))
@@ -479,7 +480,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPrevious.setEnabled( self.playerType == VLC)
         self.actionNext.setEnabled(self.playerType == VLC)
         self.actionSnapshot.setEnabled(self.playerType == VLC)
-        self.actionFrame_by_frame.setEnabled(FFMPEG in self.availablePlayers )
+        self.actionFrame_by_frame.setEnabled(True)
 
 
 
@@ -658,7 +659,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
             self.pause_video()
 
-
+            """
+            TODO: remove
             if not FFMPEG in self.availablePlayers:
                 QMessageBox.warning(self, programName, ("You chose to visualize the spectrogram during observation "
                                                         "but FFmpeg was not found and it is required for this feature.<br>"
@@ -666,6 +668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not flagPaused:
                     self.play_video()
                 return
+            """
 
 
             if dialog.MessageDialog(programName, ("You chose to visualize the spectrogram during this observation.<br>"
@@ -725,11 +728,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                       "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
 
 
+                    """
+                    TODO: remove
                     if not FFMPEG in self.availablePlayers:
                         QMessageBox.warning(self, programName, ("You choose to visualize the spectrogram during observation "
                                                                 "but FFmpeg was not found and it is required for this feature.<br>"
                                                                 "See File > Preferences menu option > Frame-by-frame mode"))
                         return
+                    """
 
                     self.generate_spectrogram()
                     self.timer_spectro.start()
@@ -800,10 +806,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def edit_observation(self):
+        """
+        edit observation
+        """
+
         # check if current observation must be closed to open a new one
         if self.observationId:
-            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
-            if response == NO:
+            if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO]) == NO:
                 return
             else:
                 self.close_observation()
@@ -814,8 +823,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
     def check_state_events(self):
-        '''check state events for each subject in current observation
-        check if number is odd'''
+        """
+        check state events for each subject in current observation
+        check if number is odd
+        """
 
         out = ''
         flagStateEvent = False
@@ -1172,8 +1183,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.lbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         preferencesWindow.sbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
 
+        """
+        TODO: remove
         preferencesWindow.leFFmpegPath.setText( self.ffmpeg_bin )
         preferencesWindow.cbAllowFrameByFrameMode.setChecked( self.allowFrameByFrame )
+        """
         preferencesWindow.leFFmpegCacheDir.setText( self.ffmpeg_cache_dir )
         preferencesWindow.sbFFmpegCacheDirMaxSize.setValue( self.ffmpeg_cache_dir_max_size )
 
@@ -1213,15 +1227,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.loadEventsInTW( self.observationId )
                 self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
 
+            """
+            TODO: remove
+
+
             self.allowFrameByFrame = preferencesWindow.cbAllowFrameByFrameMode.isChecked()
             self.ffmpeg_bin = preferencesWindow.leFFmpegPath.text()
 
             if self.ffmpeg_bin and preferencesWindow.cbAllowFrameByFrameMode.isChecked():
                 self.availablePlayers.append(FFMPEG)
 
+
             if not preferencesWindow.cbAllowFrameByFrameMode.isChecked():
                 if FFMPEG in self.availablePlayers:
                     self.availablePlayers.remove(FFMPEG)
+            """
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
@@ -1404,21 +1424,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionFrame_by_frame.setEnabled(False)
 
-        if FFMPEG in self.availablePlayers:
+        """if FFMPEG in self.availablePlayers:
+        """
 
-            self.ffmpegLayout = QHBoxLayout()
-            self.lbFFmpeg = QLabel(self)
-            self.lbFFmpeg.setBackgroundRole(QPalette.Base)
+        self.ffmpegLayout = QHBoxLayout()
+        self.lbFFmpeg = QLabel(self)
+        self.lbFFmpeg.setBackgroundRole(QPalette.Base)
 
-            self.ffmpegLayout.addWidget(self.lbFFmpeg)
+        self.ffmpegLayout.addWidget(self.lbFFmpeg)
 
-            self.ffmpegTab = QtGui.QWidget()
-            self.ffmpegTab.setLayout(self.ffmpegLayout)
+        self.ffmpegTab = QtGui.QWidget()
+        self.ffmpegTab.setLayout(self.ffmpegLayout)
 
-            self.toolBox.insertItem(FRAME_TAB, self.ffmpegTab, 'Frame by frame')
-            self.toolBox.setItemEnabled (FRAME_TAB, False)
+        self.toolBox.insertItem(FRAME_TAB, self.ffmpegTab, "Frame by frame")
+        self.toolBox.setItemEnabled (FRAME_TAB, False)
 
-            self.actionFrame_by_frame.setEnabled(True)
+        self.actionFrame_by_frame.setEnabled(True)
 
     def initialize_2nd_video_tab(self):
         '''
@@ -1626,6 +1647,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         mediaFPS = 0
 
                     if mediaFPS == 0:
+                        pass
+                        """
+                        TODO: remove
                         if FFMPEG in self.availablePlayers:
                             logging.debug('checking with ffmpeg')
                             _, _, videoDuration, videoFPS = accurate_video_analysis( self.ffmpeg_bin, mediaFile )
@@ -1642,6 +1666,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.pj["project_media_file_info"][fileContentMD5]["nframe"] = int(mediaFPS * videoDuration)
                         else:
                             logging.debug('ffmpeg not available')
+                        """
 
             logging.debug("mediaLength: {}".format( mediaLength ))
             logging.debug("mediaFPS: {}".format( mediaFPS ))
@@ -1680,10 +1705,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.mediaplayer.set_nsobject(self.videoframe.winId())
 
         # check if fps changes between media
+        """
+        TODO: check
         if FFMPEG in self.availablePlayers:
             if len(set( self.fps.values() )) != 1:
                 QMessageBox.critical(self, programName, "The frame-by-frame mode will not be available because the video files have different frame rates (%s)." % (", ".join([str(i) for i in list(self.fps.values())])),\
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        """
 
         # show first frame of video
         logging.debug("playing media #{0}".format( 0 ))
@@ -1711,12 +1739,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.mediaplayer.video_set_spu(0)
 
 
-        if FFMPEG in self.availablePlayers:
-            self.FFmpegTimer = QTimer(self)
-            self.FFmpegTimer.timeout.connect(self.FFmpegTimerOut)
+        """if FFMPEG in self.availablePlayers:
+        """
+        self.FFmpegTimer = QTimer(self)
+        self.FFmpegTimer.timeout.connect(self.FFmpegTimerOut)
 
-            self.FFmpegTimerTick = 40
-            self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
+        self.FFmpegTimerTick = 40
+        self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
 
 
         # check for second media to be played together
@@ -2052,7 +2081,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        observationWindow = observation.Observation()
+        observationWindow = observation.Observation(logging.getLogger().getEffectiveLevel())
 
         observationWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
         observationWindow.pj = self.pj
@@ -2060,13 +2089,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.mem_obs_id = obsId
         observationWindow.chunk_length = self.chunk_length
         observationWindow.ffmpeg_cache_dir = self.ffmpeg_cache_dir
-        observationWindow.availablePlayers = self.availablePlayers
+        """observationWindow.availablePlayers = self.availablePlayers"""
         observationWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
 
-        if FFMPEG in self.availablePlayers:
-            observationWindow.ffmpeg_bin = self.ffmpeg_bin
-        else:
-            observationWindow.ffmpeg_bin = ''
+        observationWindow.ffmpeg_bin = self.ffmpeg_bin
 
         # add indepvariables
         if INDEPENDENT_VARIABLES in self.pj:
@@ -2368,18 +2394,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
 
-            # FFMPEG
-            if FFMPEG in self.availablePlayers:
-                try:
-                    self.ffmpegLayout.deleteLater()
-                    self.lbFFmpeg.deleteLater()
-                    self.ffmpegTab.deleteLater()
+            try:
+                self.ffmpegLayout.deleteLater()
+                self.lbFFmpeg.deleteLater()
+                self.ffmpegTab.deleteLater()
 
-                    self.FFmpegTimer.stop()
-                    self.FFmpegGlobalFrame = 0
-                    self.imagesList = set()
-                except:
-                    pass
+                self.FFmpegTimer.stop()
+                self.FFmpegGlobalFrame = 0
+                self.imagesList = set()
+            except:
+                pass
 
         self.statusbar.showMessage('',0)
 
@@ -2406,11 +2430,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def readConfigFile(self):
-        '''
+        """
         read config file
-        '''
+        """
 
-        logging.info('read config file')
+        logging.info("read config file")
 
         if __version__ == 'DEV':
             iniFilePath = os.path.expanduser('~') + os.sep + '.boris_dev'
@@ -2508,6 +2532,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
 
             # frame-by-frame tab
+            """
             self.allowFrameByFrame = False
             try:
                 self.allowFrameByFrame = ( settings.value('allow_frame_by_frame') == 'true' )
@@ -2521,6 +2546,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.ffmpeg_bin = ''
                 except:
                     self.ffmpeg_bin = ''
+            """
 
             self.ffmpeg_cache_dir = ''
             try:
@@ -2538,7 +2564,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.ffmpeg_cache_dir_max_size = 0
 
-
+        """
         if self.allowFrameByFrame:
             r, msg = test_ffmpeg_path(self.ffmpeg_bin)
             if r:
@@ -2567,9 +2593,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.availablePlayers.append(FFMPEG)
                 else:
                     self.allowFrameByFrame = False
+        """
 
 
-        logging.debug( 'available players: {}'.format(self.availablePlayers ))
+        """logging.debug( 'available players: {}'.format(self.availablePlayers ))
+        """
 
 
 
@@ -2604,8 +2632,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             settings.setValue('last_check_for_new_version', lastCheckForNewVersion)
 
         # frame-by-frame
+        """
+        TODO: remove
         settings.setValue('allow_frame_by_frame', self.allowFrameByFrame)
         settings.setValue('ffmpeg_bin', self.ffmpeg_bin)
+
+        """
         settings.setValue('ffmpeg_cache_dir', self.ffmpeg_cache_dir)
         settings.setValue('ffmpeg_cache_dir_max_size', self.ffmpeg_cache_dir_max_size)
 
@@ -4334,7 +4366,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.ffmpeg_cache_dir_max_size:
                 self.cleaningThread.exiting = True
 
-        elif FFMPEG in self.availablePlayers:  # return to frame-by-frame
+        #elif FFMPEG in self.availablePlayers:  # return to frame-by-frame
+        else:
 
             # second video together
             if self.simultaneousMedia:
@@ -4398,8 +4431,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.cleaningThread.tempdir = self.imageDirectory + os.sep
                 self.cleaningThread.start()
 
-        else:
-            QMessageBox.critical(None, programName, 'The frame-by-frame mode requires the FFmpeg multimedia framework. See https://www.ffmpeg.org', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         # enable/disable speed button
         self.actionNormalSpeed.setEnabled( self.playMode == VLC )
@@ -4843,8 +4874,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         players = []
         players.append( "VLC media player v. {0}".format( bytes_to_str(vlc.libvlc_get_version())))
 
+        """
+        TODO: remove
         if FFMPEG in self.availablePlayers:
             players.append("FFmpeg for frame-by-frame mode")
+        """
 
         QMessageBox.about(self, "About " + programName,"""<b>{prog_name}</b> {ver} - {date}
         <p>Copyright &copy; 2012-2016 Olivier Friard - Marco Gamba<br>
@@ -4854,7 +4888,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python {python_ver} - Qt {qt_ver} - PyQt4 {pyqt_ver} on {system}<br><br>
-        Available media players:<br>{players}""".format( prog_name=programName,
+        Media players:<br>{players}""".format( prog_name=programName,
          ver=ver, date=__version_date__, python_ver=platform.python_version(),
          pyqt_ver=PYQT_VERSION_STR, system=platform.system(), qt_ver=QT_VERSION_STR,
          players='<br>'.join(players)))
@@ -6516,6 +6550,7 @@ if __name__=="__main__":
 
     parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
     parser.add_option("-v", "--version", action = "store_true", default = False, dest = "version", help = "Print version")
+    parser.add_option("-n", "--nosplashscreen", action = "store_true", default = False, help = "No splash screen")
 
     (options, args) = parser.parse_args()
 
@@ -6524,15 +6559,16 @@ if __name__=="__main__":
         sys.exit(0)
 
     app = QApplication(sys.argv)
-    #app.setStyle("cleanlooks")
 
-    start = time.time()
-    splash = QSplashScreen(QPixmap( os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
-    splash.show()
-    splash.raise_()
-    while time.time() - start < 1:
-        time.sleep(0.001)
-        app.processEvents()
+    # splashscreen
+    if not options.nosplashscreen:
+        start = time.time()
+        splash = QSplashScreen(QPixmap( os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
+        splash.show()
+        splash.raise_()
+        while time.time() - start < 1:
+            time.sleep(0.001)
+            app.processEvents()
 
     if options.debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -6557,11 +6593,29 @@ if __name__=="__main__":
             vlc.libvlc_get_version()), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         logging.critical("The VLC media player seems old ({}). Go to http://www.videolan.org/vlc to update it".format(vlc.libvlc_get_version()))
-
         sys.exit(2)
 
+    # check FFmpeg
+    if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
+        r, msg = test_ffmpeg_path("ffmpeg")
+        if not r:
+            logging.critical("FFmpeg is not available")
+            QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            sys.exit(3)
+        ffmpeg_bin = "ffmpeg"
+
+    if sys.platform.startswith("win"):
+        r, msg = test_ffmpeg_path("ffmpeg.exe")
+        if not r:
+            logging.critical("FFmpeg is not available")
+            QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            sys.exit(3)
+        ffmpeg_bin = "ffmpeg.exe"
+
+
+
     app.setApplicationName(programName)
-    window = MainWindow(availablePlayers)
+    window = MainWindow(availablePlayers, ffmpeg_bin)
 
     if __version__ == "DEV":
         QMessageBox.warning(None, programName, "This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs", \
@@ -6573,6 +6627,7 @@ if __name__=="__main__":
 
     window.show()
     window.raise_()
-    splash.finish(window)
+    if not options.nosplashscreen:
+        splash.finish(window)
 
     sys.exit(app.exec_())

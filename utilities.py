@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -129,13 +129,12 @@ def eol2space(s):
 
 
 def test_ffmpeg_path(FFmpegPath):
-    '''
+    """
     test if ffmpeg has valid path
-    '''
+    """
 
     out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
-    out = out.decode('utf-8')
-    error = error.decode('utf-8')
+    out, error = out.decode('utf-8'), error.decode('utf-8')
 
     if 'avconv' in out:
         return False, 'Please use FFmpeg in place of avconv.\nSee https://www.ffmpeg.org'
