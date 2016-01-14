@@ -37,15 +37,16 @@ class Preferences(QDialog, Ui_prefDialog):
         super(Preferences, self).__init__(parent)
         self.setupUi(self)
 
-        self.cbAllowFrameByFrameMode.stateChanged.connect(self.cbChanged)
+        '''self.cbAllowFrameByFrameMode.stateChanged.connect(self.cbChanged)'''
 
-        self.pbBrowseFFmpeg.clicked.connect(self.browseFFmpeg)
+        '''self.pbBrowseFFmpeg.clicked.connect(self.browseFFmpeg)'''
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
 
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)
 
+    '''
     def cbChanged(self, state):
         self.pbBrowseFFmpeg.setEnabled( state == Qt.Checked )
         self.lbFFmpeg.setEnabled( state == Qt.Checked )
@@ -55,8 +56,11 @@ class Preferences(QDialog, Ui_prefDialog):
         self.leFFmpegCacheDir.setEnabled( state == Qt.Checked )
         self.lbFFmpegCacheDirMaxSize.setEnabled( state == Qt.Checked )
         self.sbFFmpegCacheDirMaxSize.setEnabled( state == Qt.Checked )
+    '''
 
 
+    '''
+    TODO: remove
     def browseFFmpeg(self):
         """
         allow user search for ffmpeg
@@ -65,6 +69,7 @@ class Preferences(QDialog, Ui_prefDialog):
         if fileName:
             self.leFFmpegPath.setText(fileName)
             self.testFFmpeg()
+    '''
 
 
     def browseFFmpegCacheDir(self):
@@ -77,7 +82,7 @@ class Preferences(QDialog, Ui_prefDialog):
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
 
-    def testFFmpeg(self):
+    """def testFFmpeg(self):
         '''
         test if FFmepg is running
         '''
@@ -85,14 +90,17 @@ class Preferences(QDialog, Ui_prefDialog):
         if not r:
             QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         return r
+    """
 
 
     def ok(self):
 
+        """
         if self.cbAllowFrameByFrameMode.isChecked():
             if not self.leFFmpegPath.text():
                 QMessageBox.warning(None, programName, "The path for FFmpeg is empty!", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
             if not self.testFFmpeg():
                 return
+        """
         self.accept()
