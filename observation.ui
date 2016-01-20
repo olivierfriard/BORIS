@@ -196,13 +196,38 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
-            <widget class="QListWidget" name="lwVideo">
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
+            <widget class="QTableWidget" name="twVideo">
              <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
+              <enum>QAbstractItemView::SingleSelection</enum>
              </property>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <column>
+              <property name="text">
+               <string>Path</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Duration</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>FPS</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Video</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Audio</string>
+              </property>
+             </column>
             </widget>
            </item>
            <item>
@@ -270,13 +295,32 @@ from directory</string>
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_5">
            <item>
-            <widget class="QListWidget" name="lwVideo_2">
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="selectionMode">
-              <enum>QAbstractItemView::MultiSelection</enum>
-             </property>
+            <widget class="QTableWidget" name="twVideo2">
+             <column>
+              <property name="text">
+               <string>New Column</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Path</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Duration</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>FPS</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Audio</string>
+              </property>
+             </column>
             </widget>
            </item>
            <item>

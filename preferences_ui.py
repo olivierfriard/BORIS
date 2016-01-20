@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Mon Nov 30 15:30:26 2015
+# Created: Wed Jan 20 14:53:22 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -115,25 +115,13 @@ class Ui_prefDialog(object):
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
-        self.label_14 = QtGui.QLabel(self.tab_2)
-        self.label_14.setScaledContents(False)
-        self.label_14.setWordWrap(True)
-        self.label_14.setObjectName(_fromUtf8("label_14"))
-        self.verticalLayout_3.addWidget(self.label_14)
-        self.cbAllowFrameByFrameMode = QtGui.QCheckBox(self.tab_2)
-        self.cbAllowFrameByFrameMode.setObjectName(_fromUtf8("cbAllowFrameByFrameMode"))
-        self.verticalLayout_3.addWidget(self.cbAllowFrameByFrameMode)
+        self.lbFFmpegPath = QtGui.QLabel(self.tab_2)
+        self.lbFFmpegPath.setScaledContents(False)
+        self.lbFFmpegPath.setWordWrap(True)
+        self.lbFFmpegPath.setObjectName(_fromUtf8("lbFFmpegPath"))
+        self.verticalLayout_3.addWidget(self.lbFFmpegPath)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.lbFFmpeg = QtGui.QLabel(self.tab_2)
-        self.lbFFmpeg.setObjectName(_fromUtf8("lbFFmpeg"))
-        self.horizontalLayout.addWidget(self.lbFFmpeg)
-        self.leFFmpegPath = QtGui.QLineEdit(self.tab_2)
-        self.leFFmpegPath.setObjectName(_fromUtf8("leFFmpegPath"))
-        self.horizontalLayout.addWidget(self.leFFmpegPath)
-        self.pbBrowseFFmpeg = QtGui.QPushButton(self.tab_2)
-        self.pbBrowseFFmpeg.setObjectName(_fromUtf8("pbBrowseFFmpeg"))
-        self.horizontalLayout.addWidget(self.pbBrowseFFmpeg)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
@@ -177,7 +165,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -197,10 +185,7 @@ class Ui_prefDialog(object):
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
         self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
-        self.label_14.setText(_translate("prefDialog", "<html><head/><body><p>The frame-by-frame mode and the spectrogram visualization require the FFmpeg framework. See https://www.ffmpeg.org for details.</p></body></html>", None))
-        self.cbAllowFrameByFrameMode.setText(_translate("prefDialog", "Allow use of ffmpeg program", None))
-        self.lbFFmpeg.setText(_translate("prefDialog", "<html><head/><body><p>Path for ffmpeg program</p></body></html>", None))
-        self.pbBrowseFFmpeg.setText(_translate("prefDialog", "...", None))
+        self.lbFFmpegPath.setText(_translate("prefDialog", "FFmpeg path:", None))
         self.lbFFmpegCacheDir.setText(_translate("prefDialog", "FFmpeg cache directory", None))
         self.pbBrowseFFmpegCacheDir.setText(_translate("prefDialog", "...", None))
         self.lbFFmpegCacheDirMaxSize.setText(_translate("prefDialog", "FFmpeg cache directory max size (Mb)", None))

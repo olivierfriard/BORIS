@@ -1172,6 +1172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.cbCheckForNewVersion.setChecked( self.checkForNewVersion )
 
         # FFmpeg for frame by frame mode
+        '''
         preferencesWindow.pbBrowseFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         preferencesWindow.lbFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         preferencesWindow.leFFmpegPath.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
@@ -1182,14 +1183,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         preferencesWindow.lbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         preferencesWindow.sbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
+        '''
 
         """
         TODO: remove
         preferencesWindow.leFFmpegPath.setText( self.ffmpeg_bin )
         preferencesWindow.cbAllowFrameByFrameMode.setChecked( self.allowFrameByFrame )
         """
-        preferencesWindow.leFFmpegCacheDir.setText( self.ffmpeg_cache_dir )
-        preferencesWindow.sbFFmpegCacheDirMaxSize.setValue( self.ffmpeg_cache_dir_max_size )
+
+        preferencesWindow.lbFFmpegPath.setText("FFmpeg path: {}".format(self.ffmpeg_bin))
+        preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
+        preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
 
         if preferencesWindow.exec_():
 
@@ -1887,11 +1891,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def loadEventsInTW(self, obsId):
-        '''
+        """
         load events in table widget
-        '''
+        """
 
-        self.twEvents.setRowCount(len( self.pj[OBSERVATIONS][obsId][EVENTS] ))
+        self.twEvents.setRowCount(len(self.pj[OBSERVATIONS][obsId][EVENTS]))
         row = 0
 
         for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
@@ -1901,10 +1905,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if field_type in pj_events_fields:
 
                     field = event[ pj_obs_fields[field_type] ]
-                    if field_type == 'time':
+                    if field_type == "time":
                         field = str( self.convertTime( field) )
 
-                    twi = QTableWidgetItem(  field )
+                    twi = QTableWidgetItem(field )
                     self.twEvents.setItem(row, tw_obs_fields[field_type], twi)
 
                 else:
@@ -2685,9 +2689,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
-        '''
+        """
         populate the db databse with events from selectedObservations, selectedSubjects and selectedBehaviors
-        '''
+        """
         db = sqlite3.connect(':memory:')
 
         cursor = db.cursor()
@@ -4441,10 +4445,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def snapshot(self):
-        '''
+        """
         take snapshot of current video
         snapshot is saved on media path
-        '''
+        """
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
@@ -4452,11 +4456,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if self.playMode == FFMPEG:
 
-                    for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
+                    for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                         if self.FFmpegGlobalFrame < sum(self.duration[0:idx + 1]):
 
-                            dirName, fileName = os.path.split( media )
-                            self.lbFFmpeg.pixmap().save(dirName + os.sep + os.path.splitext( fileName )[0] +  '_'+ str(self.FFmpegGlobalFrame) +'.png')
+                            dirName, fileName = os.path.split(media)
+
+                            print(self.FFmpegGlobalFrame  )
+
+                            snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + '_' + str(self.FFmpegGlobalFrame) +'.png'
+
+                            self.lbFFmpeg.pixmap().save(snapshotFilePath)
+                            self.statusbar.showMessage("Snapshot saved in {}".format(snapshotFilePath), 0)
                             break
 
                 else:  # VLC
@@ -4857,7 +4867,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def actionAbout_activated(self):
-        ''' about window '''
+        """ about dialog """
 
         #print('self.embedPlayer',self.embedPlayer)
 
@@ -4888,7 +4898,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python {python_ver} - Qt {qt_ver} - PyQt4 {pyqt_ver} on {system}<br><br>
-        Media players:<br>{players}""".format( prog_name=programName,
+        {players}""".format( prog_name=programName,
          ver=ver, date=__version_date__, python_ver=platform.python_version(),
          pyqt_ver=PYQT_VERSION_STR, system=platform.system(), qt_ver=QT_VERSION_STR,
          players='<br>'.join(players)))

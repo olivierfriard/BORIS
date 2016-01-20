@@ -249,11 +249,11 @@ class Observation(QDialog, Ui_Form):
 
         self.accept()
 
-
+    '''
     def processCompleted(self, nframe, videoTime, videoDuration, fps, fileContentMD5, nPlayer, fileName):
-        '''
+        """
         function triggered at the end of media file analysis with FFMPEG
-        '''
+        """
 
         if fps:
             self.media_file_info[fileContentMD5]["nframe"] = int(fps * videoDuration)
@@ -274,9 +274,23 @@ class Observation(QDialog, Ui_Form):
         self.flagAnalysisRunning = False
         self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
         return True
-
+    '''
 
     def check_media(self, fileName, nPlayer):
+
+        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_video_analysis( self.ffmpeg_bin, fileName )
+
+
+        self.mediaDurations[fileName] = videoDuration
+        self.mediaFPS[fileName] = fps
+
+
+        print( self.mediaDurations[fileName] )
+        print( self.mediaFPS[fileName] )
+
+        self.add_media_to_listview(nPlayer, fileName, '')
+
+        """
         try:
             logging.info("self.mediaDurations: {}".format(self.mediaDurations))
             mediaLength = self.mediaDurations[fileName]
@@ -308,6 +322,11 @@ class Observation(QDialog, Ui_Form):
 
                         if dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
                                                                       "Launch accurate video analysis?"), [YES, NO]) == YES:
+
+
+                            nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
+                            self.mediaFPS[fileName] = fps
+                            '''
                             self.process = Process()  # class in utilities.py
                             self.process.signal.sig.connect(self.processCompleted)
                             self.process.fileContentMD5 = fileContentMD5
@@ -322,6 +341,7 @@ class Observation(QDialog, Ui_Form):
 
                             self.flagAnalysisRunning = True
                             self.widgetEnabled(False)
+                            '''
 
                         else:
                             self.media_file_info[fileContentMD5]["nframe"] = 0
@@ -337,8 +357,9 @@ class Observation(QDialog, Ui_Form):
                         self.media_file_info[fileContentMD5]["nframe"] = self.pj["project_media_file_info"][fileContentMD5]["nframe"]
                     except:
                         pass
+        """
 
-        self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
+
 
 
     def add_media(self, nPlayer):
@@ -376,21 +397,25 @@ class Observation(QDialog, Ui_Form):
         '''
         add media file path to list widget
         '''
-        if not self.flagAnalysisRunning:
+        if nPlayer == PLAYER1:
+            if self.lwVideo.count() and self.lwVideo_2.count():
+                QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+                return False
+            self.lwVideo.addItems([fileName])
 
-            if nPlayer == PLAYER1:
-                if self.lwVideo.count() and self.lwVideo_2.count():
-                    QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
-                    return False
-                self.lwVideo.addItems([fileName])
+            self.twVideo.setRowCount( self.twVideo.rowCount() + 1)
+            self.twVideo.setItem(self.twVideo.rowCount()-1, 0, QTableWidgetItem(fileName) )
+            self.twVideo.setItem(self.twVideo.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
+            self.twVideo.setItem(self.twVideo.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
 
-            if nPlayer == PLAYER2:
-                if self.lwVideo.count() > 1:
-                    QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
-                    return False
-                self.lwVideo_2.addItems([fileName])
 
-            self.fileName2hash[fileName] = fileContentMD5
+        if nPlayer == PLAYER2:
+            if self.lwVideo.count() > 1:
+                QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+                return False
+            self.lwVideo_2.addItems([fileName])
+
+            #self.fileName2hash[fileName] = fileContentMD5
 
 
     def remove_media(self, nPlayer):
@@ -399,6 +424,8 @@ class Observation(QDialog, Ui_Form):
         '''
 
         if nPlayer == PLAYER1:
+
+            '''
             for selectedItem in self.lwVideo.selectedItems():
                 mem = selectedItem.text()
                 self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
@@ -408,10 +435,20 @@ class Observation(QDialog, Ui_Form):
                    and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count())]:
                     try:
                         del self.media_file_info[ self.fileName2hash[mem]]
-                        del self.fileName2hash[mem]
+                        #del self.fileName2hash[mem]
                         del self.mediaDurations[mem]
                     except:
                         pass
+            '''
+
+            if self.twVideo.selectedIndexes():
+                mediaPath = self.twVideo.item(self.twVideo.selectedIndexes()[0].row(),0).text()
+                self.twVideo.removeRow(self.twVideo.selectedIndexes()[0].row())
+
+                if mediaPath not in [ self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
+                    del self.mediaDurations[mediaPath]
+                    del self.mediaFPS[mediaPath]
+
 
         if nPlayer == PLAYER2:
             for selectedItem in self.lwVideo_2.selectedItems():

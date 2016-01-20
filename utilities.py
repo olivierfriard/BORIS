@@ -55,23 +55,6 @@ def url2path(url):
         path = path[1:]
     return path
 
-"""
-def getTimeValues( n ):
-    '''
-    get tick and max scale values for time diagram time axe
-    '''
-    if int(n/10**int(math.log10(n))) == round( n/10**int(math.log10(n)) ):
-        tick = 10**int(math.log10(n))
-        m = (int(n/(10**int(math.log10(n))))+0.5)*10**int(math.log10(n))
-    else:
-        tick = 10**int(math.log10(n))
-        m = (int(n/(10**int(math.log10(n))))+1)*10**int(math.log10(n))
-
-    while m/tick <5:
-        tick = tick/2
-
-    return tick, m
-"""
 
 
 def time2seconds(time):
@@ -186,6 +169,14 @@ def playWithVLC(fileName):
 def accurate_video_analysis(ffmpeg_bin, fileName):
     """
     analyse frame rate and video duration with ffmpeg
+
+    return:
+    total number of frames
+    duration in ms (for compatibility)
+    duration in s
+    frame per second
+    hasVideo: boolean
+    hasAudio: boolean
     """
 
     if sys.platform.startswith("win"):
@@ -276,7 +267,7 @@ def accurate_video_analysis(ffmpeg_bin, fileName):
 
 
 class ThreadSignal(QObject):
-    sig = pyqtSignal(int, float, str, str, str)
+    sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
 
 
 class Process(QThread):
@@ -293,5 +284,5 @@ class Process(QThread):
         self.signal = ThreadSignal()
 
     def run(self):
-        nframe, videoTime, videoDuration, fps = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
-        self.signal.sig.emit(nframe, videoTime, videoDuration, fps, self.fileContentMD5, self.nPlayer, self.filePath)
+        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
+        self.signal.sig.emit(nframe, videoTime, videoDuration, fps,  hasVideo, hasAudio, self.fileContentMD5, self.nPlayer, self.filePath)

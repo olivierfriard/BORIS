@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Tue Dec 15 14:23:01 2015
+# Created: Wed Jan 20 16:17:27 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(602, 632)
+        Form.resize(602, 658)
         self.verticalLayout_3 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
@@ -131,6 +131,21 @@ class Ui_Form(object):
         self.verticalLayout.addItem(spacerItem1)
         self.horizontalLayout_4.addLayout(self.verticalLayout)
         self.verticalLayout_7.addLayout(self.horizontalLayout_4)
+        self.twVideo = QtGui.QTableWidget(self.tabVideo)
+        self.twVideo.setObjectName(_fromUtf8("twVideo"))
+        self.twVideo.setColumnCount(5)
+        self.twVideo.setRowCount(0)
+        item = QtGui.QTableWidgetItem()
+        self.twVideo.setHorizontalHeaderItem(0, item)
+        item = QtGui.QTableWidgetItem()
+        self.twVideo.setHorizontalHeaderItem(1, item)
+        item = QtGui.QTableWidgetItem()
+        self.twVideo.setHorizontalHeaderItem(2, item)
+        item = QtGui.QTableWidgetItem()
+        self.twVideo.setHorizontalHeaderItem(3, item)
+        item = QtGui.QTableWidgetItem()
+        self.twVideo.setHorizontalHeaderItem(4, item)
+        self.verticalLayout_7.addWidget(self.twVideo)
         self.cbVisualizeSpectrogram = QtGui.QCheckBox(self.tabVideo)
         self.cbVisualizeSpectrogram.setObjectName(_fromUtf8("cbVisualizeSpectrogram"))
         self.verticalLayout_7.addWidget(self.cbVisualizeSpectrogram)
@@ -231,8 +246,18 @@ class Ui_Form(object):
         self.pbRemoveVideo.setText(_translate("Form", "Remove media", None))
         self.pbAddMediaFromDir.setText(_translate("Form", "Add all media\n"
 "from directory", None))
+        item = self.twVideo.horizontalHeaderItem(0)
+        item.setText(_translate("Form", "Path", None))
+        item = self.twVideo.horizontalHeaderItem(1)
+        item.setText(_translate("Form", "Duration", None))
+        item = self.twVideo.horizontalHeaderItem(2)
+        item.setText(_translate("Form", "FPS", None))
+        item = self.twVideo.horizontalHeaderItem(3)
+        item.setText(_translate("Form", "Video", None))
+        item = self.twVideo.horizontalHeaderItem(4)
+        item.setText(_translate("Form", "Audio", None))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram", None))
-        self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Close current behaviors between videos", None))
+        self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files", None))
         self.label_2.setText(_translate("Form", "Media file paths for second player (will be played simultaneously)", None))
         self.pbAddVideo_2.setText(_translate("Form", "Add media", None))
         self.pbRemoveVideo_2.setText(_translate("Form", "Remove media", None))
