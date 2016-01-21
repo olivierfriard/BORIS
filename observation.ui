@@ -196,7 +196,10 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
-            <widget class="QTableWidget" name="twVideo">
+            <widget class="QTableWidget" name="twVideo1">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
              <property name="selectionMode">
               <enum>QAbstractItemView::SingleSelection</enum>
              </property>
@@ -298,11 +301,6 @@ from directory</string>
             <widget class="QTableWidget" name="twVideo2">
              <column>
               <property name="text">
-               <string>New Column</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
                <string>Path</string>
               </property>
              </column>
@@ -314,6 +312,11 @@ from directory</string>
              <column>
               <property name="text">
                <string>FPS</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Video</string>
               </property>
              </column>
              <column>

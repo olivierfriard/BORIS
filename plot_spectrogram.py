@@ -70,7 +70,7 @@ class Spectrogram(QWidget):
         self.scene.setSceneRect(0, 0, 100, 100)
 
         self.line = QGraphicsLineItem(0, 0, 0, self.h, scene = self.scene)
-        self.line.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         self.line.setZValue(100.0)
         self.scene.addItem(self.line)
 
@@ -100,7 +100,9 @@ class Spectrogram(QWidget):
 def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
     def extract_wav(mediaFile, tmp_dir):
-        '''extract wav from media file'''
+        """
+        extract wav from media file
+        """
 
         wavTmpPath = "{tmp_dir}{sep}{mediaBaseName}.wav".format(tmp_dir=tmp_dir,
                                                                   sep=os.sep,
@@ -148,7 +150,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
     sound_info, frame_rate = get_wav_info(wav_file)
 
     wav_length = round(len(sound_info) / frame_rate, 3)
-    print('wav tot length', wav_length)
 
     i = 0
     while True:
@@ -183,6 +184,3 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
     return fileName1stChunk
 
-if __name__ == "__main__":
-    media_file = sys.argv[1]
-    graph_spectrogram(media_file, 20)

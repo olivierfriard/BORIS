@@ -42,27 +42,6 @@ from observation_ui import Ui_Form
 out = ''
 fps = 0
 
-"""
-class ThreadSignalSpectrogram(QObject):
-    sig = pyqtSignal(str)
-
-
-class ProcessSpectro(QThread):
-    '''
-    process for spectrogram creation
-    '''
-    def __init__(self, chunk_length, parent=None):
-        QThread.__init__(self, parent)
-        self.fileName = ''
-        self.chunk_length = chunk_length
-        self.signal = ThreadSignalSpectrogram()
-
-    def run(self):
-        print(self.filename, self.chunk_length)
-        fileName1stChunk = plot_spectrogram.graph_spectrogram(self.fileName, self.chunk_length)
-        self.signal.sig.emit(fileName1stChunk)
-"""
-
 class Observation(QDialog, Ui_Form):
 
     def __init__(self, log_level, parent=None):
@@ -85,14 +64,7 @@ class Observation(QDialog, Ui_Form):
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect( self.pbCancel_clicked )
 
-        self.media_file_info = {}
-        self.fileName2hash = {}
-
-        self.flagAnalysisRunning = False
-        self.spectrogramFinished = False
-
-        self.mediaDurations = {}
-        self.mediaFPS = {}
+        self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
 
         self.cbVisualizeSpectrogram.setEnabled(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
@@ -120,18 +92,9 @@ class Observation(QDialog, Ui_Form):
 
         if self.cbVisualizeSpectrogram.isChecked():
 
-            if not self.ffmpeg_bin:
-                QMessageBox.warning(self, programName, ("You chose to visualize the spectrogram during observation "
-                                                       "but FFmpeg was not found and it is required for this feature.<br>"
-                                                       "See File > Preferences menu option > Frame-by-frame mode"))
-                self.cbVisualizeSpectrogram.setChecked(False)
-                return
-
-
-            response = dialog.MessageDialog(programName, ("You chose to visualize the spectrogram for the media in player #1.<br>"
-                                                          "Choose YES to generate the spectrogram.\n\n"
-                                                          "Spectrogram generation can take some time for long media, be patient"), [YES, NO ])
-            if response == YES:
+            if dialog.MessageDialog(programName, ("You chose to visualize the spectrogram for the media in player #1.<br>"
+                                                  "Choose YES to generate the spectrogram.\n\n"
+                                                  "Spectrogram generation can take some time for long media, be patient"), [YES, NO]) == YES:
 
                 # check temp dir for images from ffmpeg
                 if not self.ffmpeg_cache_dir:
@@ -142,64 +105,20 @@ class Observation(QDialog, Ui_Form):
                 self.lbMediaAnalysis.setText("<b>Spectrogram generation...</b>")
                 QApplication.processEvents()
 
-                for index in range(self.lwVideo.count()):
-                    _ = plot_spectrogram.graph_spectrogram(mediaFile=self.lwVideo.item(index).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+                for row in range(self.twVideo1.rowCount()):
+                    _ = plot_spectrogram.graph_spectrogram(mediaFile=self.twVideo1.item(row, 0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
 
                 self.lbMediaAnalysis.setText("<b>Spectrogram was generated successfully</b>")
                 QApplication.processEvents()
-
-
-                """
-                self.spectrogramFinished = False
-                process = ProcessSpectro()
-                process.signal.sig.connect(self.processSpectrogramCompleted)
-
-
-                print(self.lwVideo.item(0).text() )
-
-                process.fileName = self.lwVideo.item(0).text()
-                process.chunk_length = CHUNK
-                process.start()
-
-                print('started')
-
-                while not process.isRunning():
-                    time.sleep(0.01)
-                    continue
-
-
-                print('started2')
-                """
 
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
 
 
-    def widgetEnabled(self, flag):
-        '''
-        enable/disable widget for selecting media file
-        '''
-        self.tabProjectType.setEnabled(flag)
-        if not flag:
-            self.lbMediaAnalysis.setText("<b>A media analysis is running</b>")
-        else:
-            self.lbMediaAnalysis.setText('')
-
-
     def pbCancel_clicked(self):
 
-        if self.flagAnalysisRunning:
-            if dialog.MessageDialog(programName, "A media analysis is running. Do you want to cancel the new observation?", [YES, NO ]) == YES:
-                self.flagAnalysisRunning = False
-                self.reject()
-        else:
-            self.reject()
+        self.reject()
 
-
-    def closeEvent(self, event):
-        if self.flagAnalysisRunning:
-            QMessageBox.warning(self, programName , "A media analysis is running. Please wait before closing window")
-            event.ignore()
 
 
     def pbOK_clicked(self):
@@ -210,10 +129,6 @@ class Observation(QDialog, Ui_Form):
                 return True
             except ValueError:
                 return False
-
-        if self.flagAnalysisRunning:
-            QMessageBox.warning(self, programName , "A media analysis is running. Please wait before closing window")
-            return
 
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
@@ -239,135 +154,41 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName , "The observation id <b>{0}</b> is already used!<br>{1}<br>{2}".format(self.leObservationId.text(),
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['description'],
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['date']))
-
                 return
 
         # check if media list #2 populated and media list #1 empty
-        if self.tabProjectType.currentIndex() == 0 and not self.lwVideo.count():
+        if self.tabProjectType.currentIndex() == 0 and not self.twVideo1.rowCount():
             QMessageBox.critical(self, programName , "Add a media file in the first media player!" )
             return
 
         self.accept()
 
-    '''
-    def processCompleted(self, nframe, videoTime, videoDuration, fps, fileContentMD5, nPlayer, fileName):
-        """
-        function triggered at the end of media file analysis with FFMPEG
-        """
-
-        if fps:
-            self.media_file_info[fileContentMD5]["nframe"] = int(fps * videoDuration)
-            self.mediaFPS[fileName] = fps
-        else:
-            QMessageBox.critical(self, programName, ("BORIS is not able to determine the frame rate of the video "
-                                                     "even after accurate analysis.\nCheck your video."),
-                                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
-
-        self.widgetEnabled(True)
-
-        if self.flagAnalysisRunning:
-            QMessageBox.information(self, programName, "Video analysis done:<br>Duration: {duration} s.<br>Frame rate: {fps} FPS.".format(duration=seconds2time(self.mediaDurations[fileName]),
-                                                                                                                            fps=fps),
-                                                                                                                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-        self.flagAnalysisRunning = False
-        self.add_media_to_listview(nPlayer, fileName, fileContentMD5)
-        return True
-    '''
 
     def check_media(self, fileName, nPlayer):
 
-        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_video_analysis( self.ffmpeg_bin, fileName )
+        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, fileName)
+
+        print('videoDuration',videoDuration)
+        print('fps', fps, type(fps))
 
 
-        self.mediaDurations[fileName] = videoDuration
-        self.mediaFPS[fileName] = fps
+        if videoDuration:
+            self.mediaDurations[fileName] = videoDuration
+            self.mediaFPS[fileName] = fps
+            self.mediaHasVideo[fileName] = hasVideo
+            self.mediaHasAudio[fileName] = hasAudio
 
-
-        print( self.mediaDurations[fileName] )
-        print( self.mediaFPS[fileName] )
-
-        self.add_media_to_listview(nPlayer, fileName, '')
-
-        """
-        try:
-            logging.info("self.mediaDurations: {}".format(self.mediaDurations))
-            mediaLength = self.mediaDurations[fileName]
-            mediaFPS = self.mediaFPS[fileName]
-        except:
-            # check if md5 checksum already in project_media_file_info dictionary
-            fileContentMD5 = hashfile( fileName, hashlib.md5())
-            if (not "project_media_file_info" in self.pj) \
-               or ("project_media_file_info" in self.pj and not fileContentMD5 in self.pj["project_media_file_info"]):
-
-                print( 'play in vlc' )
-                out, fps, nvout = playWithVLC(fileName)
-
-                print( out, fps, nvout  )
-
-                if out != "media error":
-                    self.media_file_info[fileContentMD5] = {"video_length": int(out) }
-                    self.mediaDurations[fileName] = int(out) / 1000
-                else:
-                    QMessageBox.critical(self, programName, "This file do not seem to be a playable media file.")
-                    return
-
-                # check FPS
-                if nvout:  # media file has video
-                    if fps:
-                        self.media_file_info[fileContentMD5]["nframe"] = int(fps * int(out) / 1000)
-                        self.mediaFPS[fileName] = fps
-                    else:
-
-                        if dialog.MessageDialog(programName, ("BORIS is not able to determine the frame rate of the video.\n"
-                                                                      "Launch accurate video analysis?"), [YES, NO]) == YES:
-
-
-                            nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
-                            self.mediaFPS[fileName] = fps
-                            '''
-                            self.process = Process()  # class in utilities.py
-                            self.process.signal.sig.connect(self.processCompleted)
-                            self.process.fileContentMD5 = fileContentMD5
-                            self.process.filePath = fileName # mediaPathName
-                            self.process.ffmpeg_bin = self.ffmpeg_bin
-                            self.process.nPlayer = nPlayer
-                            self.process.start()
-
-                            while not self.process.isRunning():
-                                time.sleep(0.01)
-                                continue
-
-                            self.flagAnalysisRunning = True
-                            self.widgetEnabled(False)
-                            '''
-
-                        else:
-                            self.media_file_info[fileContentMD5]["nframe"] = 0
-                else:
-                    self.media_file_info[fileContentMD5]["nframe"] = 0
-
-            else:
-                if "project_media_file_info" in self.pj and fileContentMD5 in self.pj["project_media_file_info"]:
-                    try:
-                        self.mediaDurations[fileName] = self.pj["project_media_file_info"][fileContentMD5]["video_length"] / 1000
-                        self.mediaFPS[fileName] = self.pj["project_media_file_info"][fileContentMD5]["nframe"] / (self.pj["project_media_file_info"][fileContentMD5]["video_length"] / 1000)
-                        self.media_file_info[fileContentMD5]["video_length"] = self.pj["project_media_file_info"][fileContentMD5]["video_length"]
-                        self.media_file_info[fileContentMD5]["nframe"] = self.pj["project_media_file_info"][fileContentMD5]["nframe"]
-                    except:
-                        pass
-        """
-
-
+            self.add_media_to_listview(nPlayer, fileName, '')
+        else:
+            QMessageBox.critical(self, programName, "This file does not seem to be a media file..." )
 
 
     def add_media(self, nPlayer):
-        '''
+        """
         add media in player
-        '''
+        """
         # check if more media in player1 before adding media to player2
-        if nPlayer == PLAYER2 and self.lwVideo.count() > 1:
+        if nPlayer == PLAYER2 and self.twVideo1.rowCount() > 1:
             QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
             return
 
@@ -377,45 +198,73 @@ class Observation(QDialog, Ui_Form):
         if fileName:
             self.check_media(fileName, nPlayer)
 
-        self.cbVisualizeSpectrogram.setEnabled( self.lwVideo.count() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0)
+        self.cbVisualizeSpectrogram.setEnabled( self.twVideo1.rowCount() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
     def add_media_from_dir(self, nPlayer):
-        '''
+        """
         add all media from a selected directory
-        '''
+        """
         dirName = QFileDialog().getExistingDirectory(self, "Select directory")
         if dirName:
             for fileName in glob.glob(dirName + os.sep + "*" ):
                 self.check_media(fileName, nPlayer)
-        self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0)
+        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
         '''
         add media file path to list widget
         '''
+        if self.twVideo1.rowCount() and self.twVideo2.rowCount():
+            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+            return False
+
+        if self.twVideo2.rowCount() > 1:
+            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+            return False
+
+
         if nPlayer == PLAYER1:
-            if self.lwVideo.count() and self.lwVideo_2.count():
+            twVideo = self.twVideo1
+        if nPlayer == PLAYER2:
+            twVideo = self.twVideo2
+
+
+        twVideo.setRowCount(twVideo.rowCount() + 1)
+        twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(fileName) )
+        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
+        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
+        twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{} ".format(self.mediaHasVideo[fileName])))
+        twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{} ".format(self.mediaHasAudio[fileName])))
+
+        '''
+            if self.twVideo1.rowCount() and self.twVideo2.rowCount():
                 QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
                 return False
-            self.lwVideo.addItems([fileName])
 
-            self.twVideo.setRowCount( self.twVideo.rowCount() + 1)
-            self.twVideo.setItem(self.twVideo.rowCount()-1, 0, QTableWidgetItem(fileName) )
-            self.twVideo.setItem(self.twVideo.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
-            self.twVideo.setItem(self.twVideo.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
+            self.twVideo1.setRowCount( self.twVideo1.rowCount() + 1)
+            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 0, QTableWidgetItem(fileName) )
+            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
+            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
+            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 3, QTableWidgetItem("{} ".format(self.mediaHasVideo[fileName])))
+            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 4, QTableWidgetItem("{} ".format(self.mediaHasAudio[fileName])))
 
 
         if nPlayer == PLAYER2:
-            if self.lwVideo.count() > 1:
-                QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
-                return False
-            self.lwVideo_2.addItems([fileName])
+
+            self.twVideo2.setRowCount( self.twVideo2.rowCount() + 1)
+            self.twVideo2.setItem(self.twVideo2.rowCount()-1, 0, QTableWidgetItem(fileName) )
+            self.twVideo2.setItem(self.twVideo2.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
+            self.twVideo2.setItem(self.twVideo2.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
+
+
+            #self.lwVideo_2.addItems([fileName])
 
             #self.fileName2hash[fileName] = fileContentMD5
+        '''
 
 
     def remove_media(self, nPlayer):
@@ -441,16 +290,17 @@ class Observation(QDialog, Ui_Form):
                         pass
             '''
 
-            if self.twVideo.selectedIndexes():
-                mediaPath = self.twVideo.item(self.twVideo.selectedIndexes()[0].row(),0).text()
-                self.twVideo.removeRow(self.twVideo.selectedIndexes()[0].row())
+            if self.twVideo1.selectedIndexes():
+                mediaPath = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(),0).text()
+                self.twVideo1.removeRow(self.twVideo1.selectedIndexes()[0].row())
 
-                if mediaPath not in [ self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
+                if mediaPath not in [self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
                     del self.mediaDurations[mediaPath]
                     del self.mediaFPS[mediaPath]
 
 
         if nPlayer == PLAYER2:
+            '''
             for selectedItem in self.lwVideo_2.selectedItems():
                 mem = selectedItem.text()
                 self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
@@ -464,6 +314,14 @@ class Observation(QDialog, Ui_Form):
                         del self.mediaDurations[selectedItem.text()]
                     except:
                         pass
+            '''
+            if self.twVideo2.selectedIndexes():
+                mediaPath = self.twVideo2.item(self.twVideo2.selectedIndexes()[0].row(),0).text()
+                self.twVideo2.removeRow(self.twVideo2.selectedIndexes()[0].row())
 
-        self.cbVisualizeSpectrogram.setEnabled(self.lwVideo.count() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.lwVideo.count() > 0 )
+                if mediaPath not in [ self.twVideo1.item(idx, 0).text() for idx in range(self.twVideo1.rowCount())]:
+                    del self.mediaDurations[mediaPath]
+                    del self.mediaFPS[mediaPath]
+
+        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.twVideo1.rowCount() > 0 )

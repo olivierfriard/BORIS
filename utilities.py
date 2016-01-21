@@ -166,7 +166,7 @@ def playWithVLC(fileName):
     return out, fps, nvout
 
 
-def accurate_video_analysis(ffmpeg_bin, fileName):
+def accurate_media_analysis(ffmpeg_bin, fileName):
     """
     analyse frame rate and video duration with ffmpeg
 
@@ -284,5 +284,5 @@ class Process(QThread):
         self.signal = ThreadSignal()
 
     def run(self):
-        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_video_analysis( self.ffmpeg_bin, self.filePath )
+        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, self.filePath )
         self.signal.sig.emit(nframe, videoTime, videoDuration, fps,  hasVideo, hasAudio, self.fileContentMD5, self.nPlayer, self.filePath)
