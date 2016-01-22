@@ -1331,7 +1331,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         md5FileName = hashlib.md5(currentMedia.encode('utf-8')).hexdigest()
 
-        logging.debug('imagesList {0}'.format(self.imagesList))
+        #logging.debug('imagesList {0}'.format(self.imagesList))
         logging.debug('image {0}'.format( '%s-%d' % (md5FileName, int(frameCurrentMedia / fps))))
 
         ffmpeg_command = '"{ffmpeg_bin}" -ss {pos} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS_{fileName}-{pos}_%d.{extension}"'.format(
