@@ -105,9 +105,9 @@ def safeFileName(s):
     return fileName
 
 def eol2space(s):
-    '''
+    """
     replace EOL char by space for all platforms
-    '''
+    """
     return s.replace('\r\n',' ').replace('\n',' ').replace('\r',' ' )
 
 
@@ -119,10 +119,7 @@ def test_ffmpeg_path(FFmpegPath):
     out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
     out, error = out.decode('utf-8'), error.decode('utf-8')
 
-    if 'avconv' in out:
-        return False, 'Please use FFmpeg in place of avconv.\nSee https://www.ffmpeg.org'
-
-    if 'the Libav developers' in error:
+    if ('avconv' in out) or ('the Libav developers' in error):
         return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
 
     if not 'ffmpeg version' in out and not 'ffmpeg version' in error:
@@ -185,16 +182,18 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
         cmdOutput = '/dev/null'
     #command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
     command2 = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
+    
+    print('command2',command2)
 
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
     error = p.communicate()[1].decode('utf-8')
 
     rows = error.split('\r')
-    '''print(rows)
+    print(rows)
     print(len(rows))
 
-    print( rows[0].split("\n") )'''
+    print( rows[0].split("\n") )
 
     # video duration
     duration = 0
@@ -264,11 +263,8 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
 
     return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
 
-
-
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
-
 
 class Process(QThread):
     """

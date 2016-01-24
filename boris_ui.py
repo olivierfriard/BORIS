@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Dec 15 12:49:07 2015
+# Created: Mon Jan 25 00:34:08 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 352, 402))
+        self.page.setGeometry(QtCore.QRect(0, 0, 362, 404))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 19))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -321,6 +321,8 @@ class Ui_MainWindow(object):
         self.actionEdit_selected_events.setObjectName(_fromUtf8("actionEdit_selected_events"))
         self.actionShow_spectrogram = QtGui.QAction(MainWindow)
         self.actionShow_spectrogram.setObjectName(_fromUtf8("actionShow_spectrogram"))
+        self.actionExport_events_as_Praat_TextGrid = QtGui.QAction(MainWindow)
+        self.actionExport_events_as_Praat_TextGrid.setObjectName(_fromUtf8("actionExport_events_as_Praat_TextGrid"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -364,6 +366,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.menuExport_events.menuAction())
         self.menuObservations.addAction(self.menuExport_aggregated_events.menuAction())
         self.menuObservations.addAction(self.actionExportEventString)
+        self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionMedia_file_information)
@@ -509,4 +512,5 @@ class Ui_MainWindow(object):
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)", None))
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
+        self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid", None))
 

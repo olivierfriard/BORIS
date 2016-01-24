@@ -458,6 +458,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menuExport_events.setEnabled(flag)
         self.menuExport_aggregated_events.setEnabled(flag)
         self.actionExportEventString.setEnabled(flag)
+        self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
 
         self.actionDelete_all_observations.setEnabled(flagObs)
         self.actionSelect_observations.setEnabled(flagObs)
@@ -544,6 +545,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExportEventsSQL.triggered.connect(lambda: self.export_aggregated_events("sql"))
         self.actionAggregatedEventsTabularFormat.triggered.connect(lambda: self.export_aggregated_events("tab"))
+
+        self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
 
         # menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
@@ -4231,11 +4234,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         QMessageBox.information(self, programName , 'subtitles file(s) created in media files path')
 
 
-
     def export_aggregated_events(self, format_):
-        '''
+        """
         export aggregated events in SQL (sql) or Tabular format (tab)
-        '''
+        """
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
@@ -4253,7 +4255,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if format_ == "sql":
             fileName = fd.getSaveFileName(self, "Export aggregated events in SQL format", "" , "SQL dump file file (*.sql);;All files (*)")
-            out = '''CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT);''' + os.linesep
+            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT);" + os.linesep
             out += "BEGIN TRANSACTION;" + os.linesep
             template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop} );""" + os.linesep
 
@@ -4269,6 +4271,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage("Exporting aggregated events", 0)
         app.processEvents()
 
+        flagUnpairedEventFound = False
+
         for obsId in selectedObservations:
 
             cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors )
@@ -4280,23 +4284,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     cursor.execute( "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior) )
                     rows = list(cursor.fetchall() )
 
-                    if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:  # unpaired events
+                    if STATE in self.eventType(behavior).upper() and len( rows ) % 2:  # unpaired events
+                        flagUnpairedEventFound = True
                         continue
 
                     for idx, row in enumerate(rows):
 
-                        if 'POINT' in self.eventType(behavior).upper():
+                        if POINT in self.eventType(behavior).upper():
 
                             out += template.format( observation=obsId,
                                                     date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
                                                     subject=subject,
                                                     behavior=behavior,
                                                     modifiers=row[1],
-                                                    event_type='POINT',
+                                                    event_type=POINT,
                                                     start=row[0],
                                                     stop=0)
 
-                        if 'STATE' in self.eventType(behavior).upper():
+                        if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
 
                                 out += template.format( observation=obsId,
@@ -4304,7 +4309,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         subject=subject,
                                                         behavior=behavior,
                                                         modifiers=row[1],
-                                                        event_type='STATE',
+                                                        event_type=STATE,
                                                         start=row[0],
                                                         stop=rows[idx + 1][0])
 
@@ -4314,7 +4319,116 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         with open(fileName, "w") as f:
             f.write( out )
 
+        if flagUnpairedEventFound:
+            QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
+                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
         self.statusbar.showMessage("Aggregated events exported successfully", 10000)
+
+
+
+    def export_state_events_as_textgrid(self):
+        """
+        export state events as Praat textgrid
+        """
+
+        result, selectedObservations = self.selectObservations(SINGLE)
+
+        if not selectedObservations:
+            return
+
+        selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0,
+                                                                                  flagShowIncludeModifiers=False,
+                                                                                  flagShowExcludeBehaviorsWoEvents=False)
+
+        if not selectedSubjects or not selectedBehaviors:
+            return
+
+        fileName = QFileDialog(self).getSaveFileName(self, "Export events as TextGrid", "" , "TextGrid (*.textgrid);;All files (*)")
+        if not fileName:
+            return
+
+        self.statusbar.showMessage("Exporting events as TextGrid", 0)
+
+        out = """File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0 
+xmax = 98.38814058956916 
+tiers? <exists> 
+size = {subjectNum} 
+item []: 
+"""
+        subjectheader = """    item [{subjectIdx}]:
+        class = "IntervalTier"
+        name = "{subject}"
+        xmin = {intervalsMin} 
+        xmax = {intervalsMax}
+        intervals: size = {intervalsSize}
+"""
+
+        template = """        intervals [{count}]:
+            xmin = {xmin} 
+            xmax = {xmax}
+            text = "{name}" 
+"""
+
+        flagUnpairedEventFound = False
+
+        for obsId in selectedObservations:
+
+            cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors )
+            cursor.execute( "SELECT count(distinct subject) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(selectedSubjects)))
+            subjectsNum = int(list(cursor.fetchall())[0][0])
+
+            cursor.execute( "SELECT min(occurence), max(occurence) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(selectedSubjects)))
+            subjectsMin, subjectsMax = list(cursor.fetchall())[0]
+
+
+            out = """File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = {subjectsMin} 
+xmax = {subjectsMax}
+tiers? <exists> 
+size = {subjectsNum} 
+item []: 
+""".format(subjectsNum=subjectsNum, subjectsMin=subjectsMin,subjectsMax=subjectsMax )
+
+            subjectIdx = 0
+            for subject in selectedSubjects:
+                
+                subjectIdx += 1
+
+                cursor.execute( "SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
+                intervalsSize = int(list(cursor.fetchall())[0][0]/2)
+
+                cursor.execute( "SELECT min(occurence), max(occurence) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
+                intervalsMin, intervalsMax = list(cursor.fetchall())[0]
+
+                out += subjectheader.format( subjectIdx=subjectIdx, subject=subject, intervalsSize=intervalsSize, intervalsMin=intervalsMin, intervalsMax=intervalsMax )
+
+                cursor.execute( "SELECT occurence, code FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence", (obsId, subject) )
+                rows = list(cursor.fetchall() )
+
+                count = 0
+                for idx, row in enumerate(rows):
+
+                        if idx % 2 == 0:
+                            count += 1
+                            out += template.format(count=count, name=row[1], xmin=row[0], xmax=rows[idx + 1][0] )
+
+
+        with open(fileName, "w") as f:
+            f.write( out )
+
+        if flagUnpairedEventFound:
+            QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
+                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+        self.statusbar.showMessage("Events exported successfully", 10000)
+
+
 
 
     def media_file_info(self):
@@ -4935,10 +5049,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def hsVideo_sliderMoved(self):
-        '''
+        """
         media position slider moved
         adjust media position
-        '''
+        """
 
         if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
 
@@ -5000,7 +5114,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # current media time
             mediaTime = self.mediaplayer.get_time()
 
-            #highlight current event in tw events and scroll event list
+            # highlight current event in tw events and scroll event list
             self.get_events_current_row()
 
             # check if second video
@@ -6353,6 +6467,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         import events from file
         '''
 
+        logging.debug("""Function "import observation" not yet implemented""")
+        QMessageBox.warning(None, programName, """Function "import observation" not yet implemented""", 
+            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
         self.statusbar.showMessage('Function not yet implemented', 5000)
 
 
@@ -6650,12 +6768,18 @@ if __name__=="__main__":
 
     # check FFmpeg
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-        r, msg = test_ffmpeg_path("ffmpeg")
+        flagFFmpegOK = False
+        for path in [sys.path[0] + "/ffmpeg", "ffmpeg"]:
+            r, msg = test_ffmpeg_path(path)
+            if r:
+                flagFFmpegOK = True
+                ffmpeg_bin = path
+                break
+
         if not r:
             logging.critical("FFmpeg is not available")
-            QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             sys.exit(3)
-        ffmpeg_bin = "ffmpeg"
 
     if sys.platform.startswith("win"):
         r, msg = test_ffmpeg_path("ffmpeg.exe")
@@ -6664,8 +6788,6 @@ if __name__=="__main__":
             QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             sys.exit(3)
         ffmpeg_bin = "ffmpeg.exe"
-
-
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)

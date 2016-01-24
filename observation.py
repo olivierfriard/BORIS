@@ -165,6 +165,8 @@ class Observation(QDialog, Ui_Form):
 
 
     def check_media(self, fileName, nPlayer):
+        
+        print('self.ffmpeg_bin',self.ffmpeg_bin)
 
         nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, fileName)
 
