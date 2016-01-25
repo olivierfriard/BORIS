@@ -163,7 +163,7 @@ def playWithVLC(fileName):
     return out, fps, nvout
 
 
-c:\def accurate_media_analysis(ffmpeg_bin, fileName):
+def accurate_media_analysis(ffmpeg_bin, fileName):
     """
     analyse frame rate and video duration with ffmpeg
 
