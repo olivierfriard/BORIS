@@ -163,7 +163,7 @@ def playWithVLC(fileName):
     return out, fps, nvout
 
 
-def accurate_media_analysis(ffmpeg_bin, fileName):
+c:\def accurate_media_analysis(ffmpeg_bin, fileName):
     """
     analyse frame rate and video duration with ffmpeg
 
@@ -182,7 +182,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
         cmdOutput = '/dev/null'
     #command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
     command2 = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
-    
+
     print('command2',command2)
 
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)

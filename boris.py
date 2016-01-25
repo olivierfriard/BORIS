@@ -4353,24 +4353,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = """File type = "ooTextFile"
 Object class = "TextGrid"
 
-xmin = 0 
-xmax = 98.38814058956916 
-tiers? <exists> 
-size = {subjectNum} 
-item []: 
+xmin = 0
+xmax = 98.38814058956916
+tiers? <exists>
+size = {subjectNum}
+item []:
 """
         subjectheader = """    item [{subjectIdx}]:
         class = "IntervalTier"
         name = "{subject}"
-        xmin = {intervalsMin} 
+        xmin = {intervalsMin}
         xmax = {intervalsMax}
         intervals: size = {intervalsSize}
 """
 
         template = """        intervals [{count}]:
-            xmin = {xmin} 
+            xmin = {xmin}
             xmax = {xmax}
-            text = "{name}" 
+            text = "{name}"
 """
 
         flagUnpairedEventFound = False
@@ -4388,16 +4388,16 @@ item []:
             out = """File type = "ooTextFile"
 Object class = "TextGrid"
 
-xmin = {subjectsMin} 
+xmin = {subjectsMin}
 xmax = {subjectsMax}
-tiers? <exists> 
-size = {subjectsNum} 
-item []: 
+tiers? <exists>
+size = {subjectsNum}
+item []:
 """.format(subjectsNum=subjectsNum, subjectsMin=subjectsMin,subjectsMax=subjectsMax )
 
             subjectIdx = 0
             for subject in selectedSubjects:
-                
+
                 subjectIdx += 1
 
                 cursor.execute( "SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
@@ -6468,7 +6468,7 @@ item []:
         '''
 
         logging.debug("""Function "import observation" not yet implemented""")
-        QMessageBox.warning(None, programName, """Function "import observation" not yet implemented""", 
+        QMessageBox.warning(None, programName, """Function "import observation" not yet implemented""",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.statusbar.showMessage('Function not yet implemented', 5000)
@@ -6782,12 +6782,15 @@ if __name__=="__main__":
             sys.exit(3)
 
     if sys.platform.startswith("win"):
-        r, msg = test_ffmpeg_path("ffmpeg.exe")
+
+        print("sys.path[0]", sys.path[0])
+
+        r, msg = test_ffmpeg_path(sys.path[0] + "/ffmpeg.exe")
         if not r:
             logging.critical("FFmpeg is not available")
             QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             sys.exit(3)
-        ffmpeg_bin = "ffmpeg.exe"
+        ffmpeg_bin = sys.path[0] + "/ffmpeg.exe"
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)
