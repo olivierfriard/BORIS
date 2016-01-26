@@ -162,6 +162,44 @@ def playWithVLC(fileName):
 
     return out, fps, nvout
 
+def check_ffmpeg_path():
+    """
+    check ffmpeg path
+    """
+    if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
+        flagFFmpegOK = False
+        for path in [sys.path[0] + "/ffmpeg", "ffmpeg"]:
+            r, msg = test_ffmpeg_path(path)
+            if r:
+                flagFFmpegOK = True
+                ffmpeg_bin = path
+                break
+
+        if not r:
+            logging.critical("FFmpeg is not available")
+            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            sys.exit(3)
+
+    if sys.platform.startswith("win"):
+
+        print("sys.path[0]", sys.path[0])
+        print("os.getcwd", os.getcwd())
+        print("argv[0]", sys.argv[0])
+
+        with open('boris.log', 'w') as f:
+            print( "sys.path "+ sys.path[0] , file=f)
+            print( "os.getcwg " + os.getcwd(), file=f)
+            print("argv[0] " + sys.argv[0] , file=f )
+
+        r, msg = test_ffmpeg_path(sys.path[0] + os.sep + "ffmpeg.exe")
+        if not r:
+            logging.critical("FFmpeg is not available")
+            QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            sys.exit(3)
+        ffmpeg_bin = sys.path[0] + "/ffmpeg.exe"
+
+    return ffmpeg_bin
+
 
 def accurate_media_analysis(ffmpeg_bin, fileName):
     """

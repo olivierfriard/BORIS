@@ -2701,7 +2701,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cursor = db.cursor()
 
-        cursor.execute("CREATE TABLE events ( observation TEXT, subject TEXT, code TEXT, type TEXT, modifiers TEXT, occurence FLOAT);")
+        cursor.execute("CREATE TABLE events ( observation TEXT, subject TEXT, code TEXT, type TEXT, modifiers TEXT, occurence FLOAT, comment TEXT);")
 
         for subject_to_analyze in selectedSubjects:
 
@@ -2711,7 +2711,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if event[2] in selectedBehaviors:
 
-                        # extract time, code and modifier  ( time0, subject1, code2, modifier3 )
+                        # extract time, code, modifier and comment ( time:0, subject:1, code:2, modifier:3, comment:4 )
                         if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == '') \
                             or ( event[1] == subject_to_analyze ):
 
@@ -2725,8 +2725,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             else:
                                 eventType = POINT
 
-                            r = cursor.execute('''INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)''', \
-                            (obsId, subjectStr, event[2], eventType, event[3], str(event[0])))
+                            r = cursor.execute('''INSERT INTO events (observation, subject, code, type, modifiers, occurence, comment) VALUES (?,?,?,?,?,?,?)''', \
+                            (obsId, subjectStr, event[2], eventType, event[3], str(event[0]), event[4]))
 
         db.commit()
         return cursor
@@ -4255,14 +4255,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if format_ == "sql":
             fileName = fd.getSaveFileName(self, "Export aggregated events in SQL format", "" , "SQL dump file file (*.sql);;All files (*)")
-            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT);" + os.linesep
+            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             out += "BEGIN TRANSACTION;" + os.linesep
-            template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop} );""" + os.linesep
+            template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         if format_ == "tab":
             fileName = fd.getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
-            out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{1}".format("\t", os.linesep)
-            template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}" + os.linesep
+            out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
+            template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
 
         if not fileName:
             return
@@ -4275,16 +4275,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for obsId in selectedObservations:
 
-            cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors )
+            cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
             for subject in selectedSubjects:
 
                 for behavior in selectedBehaviors:
 
-                    cursor.execute( "SELECT occurence, modifiers FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior) )
-                    rows = list(cursor.fetchall() )
+                    cursor.execute( "SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior) )
+                    rows = list(cursor.fetchall())
 
-                    if STATE in self.eventType(behavior).upper() and len( rows ) % 2:  # unpaired events
+                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
                         flagUnpairedEventFound = True
                         continue
 
@@ -4299,11 +4299,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     modifiers=row[1],
                                                     event_type=POINT,
                                                     start=row[0],
-                                                    stop=0)
+                                                    stop=0,
+                                                    comment_start=row[2],
+                                                    comment_stop="")
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-
                                 out += template.format( observation=obsId,
                                                         date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
                                                         subject=subject,
@@ -4311,13 +4312,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         modifiers=row[1],
                                                         event_type=STATE,
                                                         start=row[0],
-                                                        stop=rows[idx + 1][0])
+                                                        stop=rows[idx + 1][0],
+                                                        comment_start=row[2],
+                                                        comment_stop=rows[idx + 1][2])
 
         if format_ == "sql":
             out += "END TRANSACTION;" + os.linesep
 
-        with open(fileName, "w") as f:
-            f.write( out )
+        try:
+            with open(fileName, "w") as f:
+                f.write( out )
+        except:
+            errorMsg = sys.exc_info()[1].strerror
+            logging.critical(errorMsg)
+            QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
         if flagUnpairedEventFound:
             QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
@@ -4419,14 +4428,22 @@ item []:
                             out += template.format(count=count, name=row[1], xmin=row[0], xmax=rows[idx + 1][0] )
 
 
-        with open(fileName, "w") as f:
-            f.write( out )
+        try:
+            with open(fileName, "w") as f:
+                f.write( out )
 
-        if flagUnpairedEventFound:
-            QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
-                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            if flagUnpairedEventFound:
+                QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
+                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+    
+            self.statusbar.showMessage("Events exported successfully", 10000)
 
-        self.statusbar.showMessage("Events exported successfully", 10000)
+        except:
+            errorMsg = sys.exc_info()[1].strerror
+            logging.critical(errorMsg)
+            QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+
 
 
 
@@ -4730,9 +4747,9 @@ item []:
 
 
     def add_event(self):
-        '''
+        """
         manually add event to observation
-        '''
+        """
 
         if not self.observationId:
             self.no_observation()
@@ -5026,7 +5043,8 @@ item []:
             ver = 'v. {0}'.format(__version__)
 
         players = []
-        players.append( "VLC media player v. {0}".format( bytes_to_str(vlc.libvlc_get_version())))
+        players.append("VLC media player v. {0}".format( bytes_to_str(vlc.libvlc_get_version())))
+        players.append("FFmpeg path: {}".format(self.ffmpeg_bin))
 
         """
         TODO: remove
@@ -5622,15 +5640,13 @@ item []:
 
         if self.pj[OBSERVATIONS][self.observationId]["type"] in [MEDIA]:
 
+            if self.playerType == VIEWER:
+                return Decimal(0)
+
             if self.playerType == VLC:
 
                 if self.playMode == FFMPEG:
                     # cumulative time
-
-                    '''
-                    memLaps = Decimal( self.FFmpegGlobalFrame * ( 1000 / self.fps.values()[0]) / 1000).quantize(Decimal('.001')) \
-                              + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal('.001'))
-                    '''
 
                     memLaps = Decimal( self.FFmpegGlobalFrame * ( 1000 / list(self.fps.values())[0]) / 1000).quantize(Decimal('.001'))
 
@@ -5642,11 +5658,6 @@ item []:
                     memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) \
                               + self.mediaplayer.get_time()) / 1000 ,3))) \
 
-                    '''
-                    memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) \
-                              + self.mediaplayer.get_time()) / 1000 ,3))) \
-                              + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]
-                    '''
                     return memLaps
 
 
@@ -6192,14 +6203,14 @@ item []:
 
 
     def export_tabular_events(self, outputFormat):
-        '''
+        """
         export events from selected observations in various formats: ODS, TSV, XLS
-        '''
+        """
 
         def complete(l, max):
-            '''
+            """
             complete list with empty string until len = max
-            '''
+            """
             while len(l) < max:
                 l.append("")
             return l
@@ -6269,36 +6280,36 @@ item []:
                 rows.append(["Media file(s)"])
             else:
                 rows.append(["Live observation"])
-            rows.append( [''] )
+            rows.append([""])
 
             if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
 
                 for idx in self.pj[OBSERVATIONS][obsId][FILE]:
                     for media in self.pj[OBSERVATIONS][obsId][FILE][idx]:
-                        rows.append( [ 'Player #{0}'.format(idx), media ] )
-            rows.append( [''] )
+                        rows.append(['Player #{0}'.format(idx), media])
+            rows.append([""])
 
             # date
             if "date" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(['Observation date', self.pj[OBSERVATIONS][obsId]["date"].replace('T',' ')])
-            rows.append( [''] )
+                rows.append(['Observation date', self.pj[OBSERVATIONS][obsId]["date"].replace('T', ' ')])
+            rows.append([""])
 
             # description
             if "description" in self.pj[OBSERVATIONS][obsId]:
                 rows.append(['Description', eol2space(self.pj[OBSERVATIONS][obsId]["description"])])
-            rows.append([''])
+            rows.append([""])
 
             # time offset
             if "time offset" in self.pj[OBSERVATIONS][obsId]:
                 rows.append(['Time offset (s)', self.pj[OBSERVATIONS][obsId]["time offset"]])
-            rows.append([''])
+            rows.append([""])
 
 
             # independant variables
             if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
-                rows.append( [ 'independent variables' ])
+                rows.append(['independent variables'])
 
-                rows.append( [ 'variable', 'value' ] )
+                rows.append(['variable', 'value'])
 
                 for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
                     rows.append(  [ variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable] ])
@@ -6362,15 +6373,20 @@ item []:
             for row in rows:
                 data.append( complete( row, maxLen ) )
 
-            if outputFormat == 'tsv':
-                with open(fileName,'w') as f:
-                    f.write(data.tsv)
-            if outputFormat == 'ods':
-                with open(fileName,'wb') as f:
-                    f.write(data.ods)
-            if outputFormat == 'xls':
-                with open(fileName,'wb') as f:
-                    f.write(data.xls)
+            try:
+                if outputFormat == 'tsv':
+                    with open(fileName,'w') as f:
+                        f.write(data.tsv)
+                if outputFormat == 'ods':
+                    with open(fileName,'wb') as f:
+                        f.write(data.ods)
+                if outputFormat == 'xls':
+                    with open(fileName,'wb') as f:
+                        f.write(data.xls)
+            except:
+                errorMsg = sys.exc_info()[1].strerror
+                logging.critical(errorMsg)
+                QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             del data
 
@@ -6400,37 +6416,41 @@ item []:
         if not selected_subjects:
             return
 
-        fd = QFileDialog(self)
-        fileName = fd.getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
         if fileName:
-            with open(fileName, "w") as outFile:
-                for obsId in selected_observations:
-                    # observation id
-                    outFile.write("# observation id: {0}{1}".format(obsId, os.linesep) )
-                    # observation descrition
-                    outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
-                    # media file name
-                    if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
-                        outFile.write('# Media file name: {0}{1}{1}'.format(', '.join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
-                    if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
-                        outFile.write('# Live observation{0}{0}'.format(os.linesep))
-                for subj in selected_subjects:
-                    if subj:
-                        subj_str = '{0}{1}:{0}'.format(os.linesep, subj)
-                    else:
-                        subj_str = '{0}No focal subject:{0}'.format(os.linesep)
-                    outFile.write(subj_str)
-                    for obs in selected_observations:
-                        s = ''
-                        for event in self.pj[OBSERVATIONS][obs][EVENTS]:
-                            if event[ pj_obs_fields['subject']] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields['subject']] == ''):
-                                s += event[pj_obs_fields['code']].replace(' ', '_') + self.behaviouralStringsSeparator
-                        # remove last separator (if separator not empty)
-                        if self.behaviouralStringsSeparator:
-                            s = s[0 : -len(self.behaviouralStringsSeparator)]
-                        if s:
-                            outFile.write(s + os.linesep)
+            try:
+                with open(fileName, "w") as outFile:
+                    for obsId in selected_observations:
+                        # observation id
+                        outFile.write("# observation id: {0}{1}".format(obsId, os.linesep) )
+                        # observation descrition
+                        outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
+                        # media file name
+                        if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
+                            outFile.write('# Media file name: {0}{1}{1}'.format(', '.join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
+                        if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
+                            outFile.write('# Live observation{0}{0}'.format(os.linesep))
+                    for subj in selected_subjects:
+                        if subj:
+                            subj_str = '{0}{1}:{0}'.format(os.linesep, subj)
+                        else:
+                            subj_str = '{0}No focal subject:{0}'.format(os.linesep)
+                        outFile.write(subj_str)
+                        for obs in selected_observations:
+                            s = ''
+                            for event in self.pj[OBSERVATIONS][obs][EVENTS]:
+                                if event[ pj_obs_fields['subject']] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields['subject']] == ''):
+                                    s += event[pj_obs_fields['code']].replace(' ', '_') + self.behaviouralStringsSeparator
+                            # remove last separator (if separator not empty)
+                            if self.behaviouralStringsSeparator:
+                                s = s[0 : -len(self.behaviouralStringsSeparator)]
+                            if s:
+                                outFile.write(s + os.linesep)
+            except:
+                errorMsg = sys.exc_info()[1].strerror
+                logging.critical(errorMsg)
+                QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def closeEvent(self, event):
@@ -6767,37 +6787,8 @@ if __name__=="__main__":
         sys.exit(2)
 
     # check FFmpeg
-    if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
-        flagFFmpegOK = False
-        for path in [sys.path[0] + "/ffmpeg", "ffmpeg"]:
-            r, msg = test_ffmpeg_path(path)
-            if r:
-                flagFFmpegOK = True
-                ffmpeg_bin = path
-                break
+    ffmpeg_bin = check_ffmpeg_path()
 
-        if not r:
-            logging.critical("FFmpeg is not available")
-            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            sys.exit(3)
-
-    if sys.platform.startswith("win"):
-
-        print("sys.path[0]", sys.path[0])
-        print("os.getcwd", os.getcwd())
-        print("argv[0]", sys.argv[0])
-
-        with open('boris.log', 'w') as f:
-            print( "sys.path "+ sys.path[0] , file=f)
-            print( "os.getcwg " + os.getcwd(), file=f)
-            print("argv[0] " + sys.argv[0] , file=f )
-
-        r, msg = test_ffmpeg_path(sys.path[0] + os.sep + "ffmpeg.exe")
-        if not r:
-            logging.critical("FFmpeg is not available")
-            QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            sys.exit(3)
-        ffmpeg_bin = sys.path[0] + "/ffmpeg.exe"
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)
