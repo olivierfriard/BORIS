@@ -6784,8 +6784,15 @@ if __name__=="__main__":
     if sys.platform.startswith("win"):
 
         print("sys.path[0]", sys.path[0])
+        print("os.getcwd", os.getcwd())
+        print("argv[0]", sys.argv[0])
 
-        r, msg = test_ffmpeg_path(sys.path[0] + "/ffmpeg.exe")
+        with open('boris.log', 'w') as f:
+            print( "sys.path "+ sys.path[0] , file=f)
+            print( "os.getcwg " + os.getcwd(), file=f)
+            print("argv[0] " + sys.argv[0] , file=f )
+
+        r, msg = test_ffmpeg_path(sys.path[0] + os.sep + "ffmpeg.exe")
         if not r:
             logging.critical("FFmpeg is not available")
             QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
