@@ -180,25 +180,22 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
         cmdOutput = 'NUL'
     else:
         cmdOutput = '/dev/null'
-    #command2 = '"{0}" -i "{1}" -ss 0 -t 60 -f image2pipe -qscale 31 - > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
-    command2 = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
 
-    print('command2',command2)
+    command2 = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
 
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-    error = p.communicate()[1].decode('utf-8')
+    duration, fps, hasVideo, hasAudio  = 0, 0, False, False
+    try:
+        error = p.communicate()[1].decode('utf-8')
+    except:
+        return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
 
-    rows = error.split('\r')
-    print(rows)
-    print(len(rows))
-
-    print( rows[0].split("\n") )
+    rows = error.split("\n")
 
     # video duration
-    duration = 0
     try:
-        for r in rows[0].split("\n"):
+        for r in rows:
             if 'Duration' in r:
                 duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
                 break
@@ -208,7 +205,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     # fps
     fps = 0
     try:
-        for r in rows[0].split("\n"):
+        for r in rows:
             if ' fps,' in r:
                 re_results = re.search(', (.{1,5}) fps,', r, re.IGNORECASE)
                 if re_results:
@@ -220,7 +217,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     # check for video stream
     hasVideo = False
     try:
-        for r in rows[0].split("\n"):
+        for r in rows:
             if 'Stream #' in r and 'Video:' in r:
                 hasVideo = True
                 break
@@ -230,7 +227,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     # check for audio stream
     hasAudio = False
     try:
-        for r in rows[0].split("\n"):
+        for r in rows:
             if 'Stream #' in r and 'Audio:' in r:
                 hasAudio = True
                 break
