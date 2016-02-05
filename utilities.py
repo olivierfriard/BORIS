@@ -26,6 +26,7 @@ import re
 import subprocess
 import urllib.parse
 import sys
+import os
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from decimal import *
