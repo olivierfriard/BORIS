@@ -184,6 +184,7 @@ def check_ffmpeg_path():
     if sys.platform.startswith("win"):
 
         print("sys.path[0]", sys.path[0])
+        print("dirname sys.path[0]", os.path.dirname(sys.path[0]))
         print("os.getcwd", os.getcwd())
         print("argv[0]", sys.argv[0])
 
@@ -198,7 +199,7 @@ def check_ffmpeg_path():
             logging.critical("FFmpeg is not available")
             QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             sys.exit(3)
-        ffmpeg_bin = sys.path[0] + "/ffmpeg.exe"
+        ffmpeg_bin = os.path.dirname(sys.argv[0]) + os.sep + "ffmpeg.exe"
 
     return ffmpeg_bin
 
