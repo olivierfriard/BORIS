@@ -189,17 +189,18 @@ def check_ffmpeg_path():
         print("argv[0]", sys.argv[0])
 
         with open('boris.log', 'w') as f:
-            print( "sys.path "+ sys.path[0], file=f)
+            print( "sys.path[0] "+ sys.path[0], file=f)
+            print("dirname sys.path[0]", os.path.dirname(sys.path[0]))
             print( "os.getcwg " + os.getcwd(), file=f)
             print("argv[0] " + sys.argv[0], file=f)
 
         #r, msg = test_ffmpeg_path(sys.path[0] + os.sep + "ffmpeg.exe")
-        r, msg = test_ffmpeg_path(os.path.dirname(sys.argv[0]) + os.sep + "ffmpeg.exe")
+        r, msg = test_ffmpeg_path(os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe")
         if not r:
             logging.critical("FFmpeg is not available")
             QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             sys.exit(3)
-        ffmpeg_bin = os.path.dirname(sys.argv[0]) + os.sep + "ffmpeg.exe"
+        ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
 
     return ffmpeg_bin
 
