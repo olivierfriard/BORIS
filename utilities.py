@@ -27,6 +27,8 @@ import subprocess
 import urllib.parse
 import sys
 import os
+import logging
+from config import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from decimal import *
@@ -118,12 +120,14 @@ def test_ffmpeg_path(FFmpegPath):
     """
 
     out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
-    out, error = out.decode('utf-8'), error.decode('utf-8')
+    #out, error = out.decode('utf-8'), error.decode('utf-8')
+    print(out)
+    print(error)
 
-    if ('avconv' in out) or ('the Libav developers' in error):
+    if (b'avconv' in out) or (b'the Libav developers' in error):
         return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
 
-    if not 'ffmpeg version' in out and not 'ffmpeg version' in error:
+    if b'ffmpeg version' not in out and b'ffmpeg version' not in error:
         return False, 'It seems that <b>{}</b> is not the correct FFmpeg program...<br>See https://www.ffmpeg.org'.format(FFmpegPath  )
 
     return True, ''
