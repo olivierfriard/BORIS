@@ -173,7 +173,7 @@ def check_ffmpeg_path():
     """
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
-        if os.path.isfile( os.path.dirname(sys.path[0]) ):
+        if os.path.isfile( sys.path[0] ):
             ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg"
         else:
             ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg"
@@ -181,7 +181,7 @@ def check_ffmpeg_path():
         with open(os.path.expanduser('~') + os.sep + 'boris.log', 'w') as f:
             print( "sys.path[0] "+ sys.path[0], file=f)
 
-            print( "is file {}".format(os.path.isfile( os.path.dirname(sys.path[0]) )), file=f )
+            print( "is file {}".format(os.path.isfile( sys.path[0] )), file=f )
 
             print("dirname sys.path[0]", os.path.dirname(sys.path[0]), file=f)
             print("ffmpeg_bin", ffmpeg_bin, file=f)
