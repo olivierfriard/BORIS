@@ -203,7 +203,7 @@ def check_ffmpeg_path():
         with open(os.path.expanduser('~') + os.sep + 'boris.log', 'w') as f:
             print( "sys.path[0] "+ sys.path[0], file=f)
             print("dirname sys.path[0]", os.path.dirname(sys.path[0]), file=f)
-            print("test_dir", test_dir , file=f)
+            print("test_dir ffmpeg", test_dir + os.sep + "ffmpeg.exe", file=f)
             print( "os.getcwg " + os.getcwd(), file=f)
             print("argv[0] " + sys.argv[0], file=f)
 
