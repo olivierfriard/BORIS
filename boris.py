@@ -687,7 +687,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
-                currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
+                currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
                 logging.debug('currentMediaTmpPath', currentMediaTmpPath)
 
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
@@ -743,11 +743,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             print('self.mediaplayer.get_media().get_mrl()',self.mediaplayer.get_media().get_mrl()  )
 
-            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
-
-            print('url2path self.mediaplayer.get_media().get_mrl()',url2path(self.mediaplayer.get_media().get_mrl() ) )
-
-            print('unquote url2path self.mediaplayer.get_media().get_mrl()',urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl() ) ))
+            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
 
             currentChunkFileName = "{}.wav.{}-{}.spectrogram.png".format(currentMediaTmpPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length)
 
@@ -4641,8 +4637,12 @@ item []:
 
                     current_media_path = url2path(self.mediaplayer.get_media().get_mrl())
                     dirName, fileName = os.path.split(current_media_path)
-                    time = str(self.mediaplayer.get_time())
-                    self.mediaplayer.video_take_snapshot(0, dirName + os.sep + os.path.splitext( fileName )[0] +  '_'+ time +'.png' ,0,0)
+                    self.mediaplayer.video_take_snapshot(0, "{dirName}{sep}{fileNameWOExt}_{time}.png".format(
+                                                              dirName=dirName,
+                                                              sep=os.sep,
+                                                              fileNameWOExt=os.path.splitext(fileName)[0],
+                                                              time=self.mediaplayer.get_time())
+                                                        ,0,0)
 
                     # check if multi mode
                     # second video together
@@ -4651,9 +4651,11 @@ item []:
                         current_media_path = url2path(self.mediaplayer2.get_media().get_mrl())
 
                         dirName, fileName = os.path.split( current_media_path )
-                        time = str(self.mediaplayer2.get_time())
-                        self.mediaplayer2.video_take_snapshot(0, dirName + os.sep + os.path.splitext( fileName )[0] +  '_'+ time +'.png' ,0,0)
-
+                        self.mediaplayer2.video_take_snapshot(0, "{dirName}{sep}{fileNameWOExt}_{time}.png".format(
+                                                              dirName=dirName,
+                                                              sep=os.sep,
+                                                              fileNameWOExt=os.path.splitext(fileName)[0],
+                                                              time=self.mediaplayer2.get_time()) ,0,0)
 
 
     def video_normalspeed_activated(self):
