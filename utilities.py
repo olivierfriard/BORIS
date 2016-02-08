@@ -202,7 +202,7 @@ def check_ffmpeg_path():
         print("sys.path[0]", sys.path[0])
         print("dirname sys.path[0]", os.path.dirname(sys.path[0]) )
 
-        if os.path.isfile( os.path.dirname(sys.path[0]) ):
+        if os.path.isfile(sys.path[0]):
             ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
         else:
             ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg.exe"
