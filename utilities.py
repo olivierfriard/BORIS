@@ -188,23 +188,32 @@ def check_ffmpeg_path():
     if sys.platform.startswith("win"):
 
         print("sys.path[0]", sys.path[0])
-        print("dirname sys.path[0]", os.path.dirname(sys.path[0]))
+        print("dirname sys.path[0]", os.path.dirname(sys.path[0]) )
+
+        if os.path.isfile( os.path.dirname(sys.path[0]) ):
+            test_dir = os.path.dirname(sys.path[0])
+        else:
+            test_dir = sys.path[0]
+
+        print("test dir", test_dir)
+
         print("os.getcwd", os.getcwd())
         print("argv[0]", sys.argv[0])
 
-        with open('boris.log', 'w') as f:
+        with open(os.path.expanduser('~') + os.sep + 'boris.log', 'w') as f:
             print( "sys.path[0] "+ sys.path[0], file=f)
-            print("dirname sys.path[0]", os.path.dirname(sys.path[0]))
+            print("dirname sys.path[0]", os.path.dirname(sys.path[0]), file=f)
+            print("test_dir", test_dir )
             print( "os.getcwg " + os.getcwd(), file=f)
             print("argv[0] " + sys.argv[0], file=f)
 
         #r, msg = test_ffmpeg_path(sys.path[0] + os.sep + "ffmpeg.exe")
-        r, msg = test_ffmpeg_path(os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe")
+        r, msg = test_ffmpeg_path( test_dir + os.sep + "ffmpeg.exe")
         if not r:
             logging.critical("FFmpeg is not available")
             QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             sys.exit(3)
-        ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
+        ffmpeg_bin = test_dir + os.sep + "ffmpeg.exe"
 
     return ffmpeg_bin
 
