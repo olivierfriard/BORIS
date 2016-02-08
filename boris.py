@@ -653,12 +653,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def show_spectrogram(self):
-        '''show spectrogram window if any
-        '''
+        """
+        show spectrogram window if any
+        """
         try:
             self.spectro.show()
         except:
-
+            logging.debug('spectro show not OK')
             # remember if player paused
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
             self.pause_video()
@@ -686,7 +687,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
-                currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
+                currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
+                logging.debug('currentMediaTmpPath', currentMediaTmpPath)
 
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
 
@@ -722,8 +724,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playMode == FFMPEG:
                 # get time in current media
                 currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame, list(self.fps.values())[0] )
-                print('currentMedia',currentMedia)
-                print('frameCurrentMedia',frameCurrentMedia)
 
                 currentMediaTime = frameCurrentMedia / list(self.fps.values())[0] *1000
 
@@ -740,7 +740,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 tmp_dir = self.ffmpeg_cache_dir
 
-            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
+
+            print('self.mediaplayer.get_media().get_mrl()',self.mediaplayer.get_media().get_mrl()  )
+
+            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
+
+            print('url2path self.mediaplayer.get_media().get_mrl()',url2path(self.mediaplayer.get_media().get_mrl() ) )
+
+            print('unquote url2path self.mediaplayer.get_media().get_mrl()',urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl() ) ))
 
             currentChunkFileName = "{}.wav.{}-{}.spectrogram.png".format(currentMediaTmpPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length)
 
@@ -1830,7 +1837,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 tmp_dir = self.ffmpeg_cache_dir
 
-            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
+            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
 
             if not os.path.isfile("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length)):
                 if dialog.MessageDialog(programName, ("Spectrogram file not found.\n"
