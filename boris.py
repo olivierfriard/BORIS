@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.73"
-__version_date__ = "2016-01-12"
+__version__ = "2.8"
+__version_date__ = "2016-02-08"
 __DEV__ = False
 
 import sys
@@ -4435,7 +4435,7 @@ item []:
             if flagUnpairedEventFound:
                 QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-    
+
             self.statusbar.showMessage("Events exported successfully", 10000)
 
         except:
