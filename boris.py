@@ -548,6 +548,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
 
+
+        self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
+
         # menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
 
@@ -635,6 +638,98 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
+
+    def extract_events(self):
+        """
+        extract sequences from media file correponding to coded events
+        """
+        result, selectedObservations = self.selectObservations(SELECT1)
+
+        if not selectedObservations:
+            return
+
+        selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0,
+                                                                                  flagShowIncludeModifiers=False,
+                                                                                  flagShowExcludeBehaviorsWoEvents=False)
+
+        if not selectedSubjects or not selectedBehaviors:
+            return
+
+
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to extract events", os.path.expanduser('~'), options=QFileDialog(self).ShowDirsOnly)
+        if not exportDir:
+            return
+
+        """ffmpeg -i input.wmv -ss 30 -c copy -t 10 output.wmv"""
+        flagUnpairedEventFound = False
+
+        cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
+
+        for obsId in  selectedObservations:
+            for subject in selectedSubjects:
+
+                for behavior in selectedBehaviors:
+
+                    cursor.execute( "SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior) )
+                    rows = list(cursor.fetchall())
+
+                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
+                        flagUnpairedEventFound = True
+                        continue
+
+                    for idx, row in enumerate(rows):
+
+                        '''
+                        if POINT in self.eventType(behavior).upper():
+
+                            out += template.format( observation=obsId,
+                                                    date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
+                                                    subject=subject,
+                                                    behavior=behavior,
+                                                    modifiers=row[1],
+                                                    event_type=POINT,
+                                                    start=row[0],
+                                                    stop=0,
+                                                    comment_start=row[2],
+                                                    comment_stop="")
+                        '''
+
+                        if STATE in self.eventType(behavior).upper():
+                            if idx % 2 == 0:
+                                print( subject, behavior,row[0],rows[idx + 1][0])
+
+                                print(self.getCurrentMediaByTime(PLAYER1, obsId, row[0]))
+
+                                ffmpeg_command = """{ffmpeg_bin} -i /home/olivier/crop.avi -ss {start} -to {stop} "{dir}{sep}{output}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
+                                start=row[0],
+                                stop=rows[idx + 1][0],
+                                dir=exportDir,
+                                sep=os.sep,
+                                output=subject+behavior,
+                                extension=os.path.splitext("/home/olivier/crop.avi")[-1])
+
+                                print( ffmpeg_command )
+                                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+                                out, error = p.communicate()
+                                out = out.decode('utf-8')
+                                error = error.decode('utf-8')
+
+
+                                '''
+                                out += template.format( observation=obsId,
+                                                        date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
+                                                        subject=subject,
+                                                        behavior=behavior,
+                                                        modifiers=row[1],
+                                                        event_type=STATE,
+                                                        start=row[0],
+                                                        stop=rows[idx + 1][0],
+                                                        comment_start=row[2],
+                                                        comment_stop=rows[idx + 1][2])
+                                '''
+
+
+
     def generate_spectrogram(self):
         '''
         generate spectrogram of all media files loaded in player #1
@@ -659,7 +754,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             self.spectro.show()
         except:
-            logging.debug('spectro show not OK')
+            logging.debug("spectro show not OK")
             # remember if player paused
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
             self.pause_video()
@@ -990,7 +1085,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if flagPaused:
                                         self.mediaListPlayer.pause()
 
-                                    self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
+                                    self.mediaplayer.set_time( newTime - sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media())]))
 
                                     break
                                 tot += d
@@ -1259,6 +1354,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 frameCurrentMedia = requiredFrame - sum(self.duration[0:idx]) / frameMs
                 break
         return currentMedia, round(frameCurrentMedia)
+
+
+    def getCurrentMediaByTime(self, player, obsId, globalTime):
+        """
+        get:
+        player
+        globalTime
+
+        returns:
+        currentMedia
+        frameCurrentMedia
+        """
+        currentMedia, currentMediaTime = '', 0
+
+        globalTimeMs = globalTime * 1000
+
+        print('globalTimeMs',globalTimeMs)
+        print( self.duration )
+
+        for idx, media in enumerate(self.pj[OBSERVATIONS][obsId][FILE][player]):
+            if globalTimeMs < sum(self.duration[0:idx + 1 ]):
+                currentMedia = media
+                currentMediaTime = globalTimeMs - sum(self.duration[0:idx])
+                break
+
+        return currentMedia, round(currentMediaTime/1000,3)
 
 
 

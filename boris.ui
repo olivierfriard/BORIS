@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>362</width>
-             <height>404</height>
+             <width>352</width>
+             <height>402</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>938</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -171,6 +171,7 @@
     <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionMedia_file_information"/>
+    <addaction name="actionExtract_events_from_media_files"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">
     <property name="title">
@@ -793,6 +794,11 @@
   <action name="actionExport_events_as_Praat_TextGrid">
    <property name="text">
     <string>Export events as Praat TextGrid</string>
+   </property>
+  </action>
+  <action name="actionExtract_events_from_media_files">
+   <property name="text">
+    <string>Extract events from media files</string>
    </property>
   </action>
  </widget>
