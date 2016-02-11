@@ -459,6 +459,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menuExport_aggregated_events.setEnabled(flag)
         self.actionExportEventString.setEnabled(flag)
         self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
+        self.actionExtract_events_from_media_files.setEnabled(flag)
 
         self.actionDelete_all_observations.setEnabled(flagObs)
         self.actionSelect_observations.setEnabled(flagObs)
@@ -497,7 +498,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionVisualize_data.setEnabled( self.pj[OBSERVATIONS] != {} )
 
 
-    def connections(self):
+m    def connections(self):
 
         # menu file
         self.actionNew_project.triggered.connect(self.new_project_activated)
