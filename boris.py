@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.8"
-__version_date__ = "2016-02-09"
+__version__ = "2.81"
+__version_date__ = "2016-02-11"
 __DEV__ = False
 
 import sys
@@ -498,7 +498,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionVisualize_data.setEnabled( self.pj[OBSERVATIONS] != {} )
 
 
-m    def connections(self):
+    def connections(self):
 
         # menu file
         self.actionNew_project.triggered.connect(self.new_project_activated)
@@ -4404,7 +4404,7 @@ m    def connections(self):
         export state events as Praat textgrid
         """
 
-        result, selectedObservations = self.selectObservations(SINGLE)
+        result, selectedObservations = self.selectObservations(SELECT1)
 
         if not selectedObservations:
             return
@@ -4485,11 +4485,14 @@ item []:
 
                 count = 0
                 for idx, row in enumerate(rows):
-
                         if idx % 2 == 0:
                             count += 1
                             out += template.format(count=count, name=row[1], xmin=row[0], xmax=rows[idx + 1][0] )
-
+                            try:
+                                out += template.format(count=count+1, name="null", xmin=rows[idx + 1][0], xmax=rows[idx + 2][0] )
+                                count += 1
+                            except:
+                                print('finished')
 
         try:
             with open(fileName, "w") as f:
