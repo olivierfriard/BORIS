@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.81"
-__version_date__ = "2016-02-11"
+__version_date__ = "2016-02-12"
 __DEV__ = False
 
 import sys
@@ -792,7 +792,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for spectrogram visualization
         """
 
-        logging.debug('spectro out')
 
         if not "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] or not self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
             return
@@ -2766,7 +2765,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         populate the db databse with events from selectedObservations, selectedSubjects and selectedBehaviors
         """
-        db = sqlite3.connect(':memory:')
+        db = sqlite3.connect(":memory:")
+        db.row_factory = sqlite3.Row
 
         cursor = db.cursor()
 
@@ -2784,7 +2784,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == '') \
                             or ( event[1] == subject_to_analyze ):
 
-                            if event[1] == '':
+                            if event[1] == "":
                                 subjectStr = NO_FOCAL_SUBJECT
                             else:
                                 subjectStr = event[1]
@@ -3496,7 +3496,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
-                totalMediaLength = self.observationTotalMediaLength( obsId )
+                totalMediaLength = self.observationTotalMediaLength(obsId)
             else: # LIVE
                 if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
@@ -3517,7 +3517,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedSubjects or not selectedBehaviors:
             return
 
-        cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
+        cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
         o = {}
 
@@ -3554,10 +3554,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         o[subject][behaviorOut].append( [ row[0], rows[idx + 1][0] ]  )
                                     except:
                                         if NO_FOCAL_SUBJECT in subject:
-                                            sbj = ''
+                                            sbj = ""
                                         else:
-                                            sbj =  'for subject <b>{0}</b>'.format( subject )
-                                        QMessageBox.critical(self, programName, 'The STATE behavior <b>{0}</b> is not paired{1}'.format(behaviorOut, sbj) )
+                                            sbj =  "for subject <b>{0}</b>".format( subject )
+                                        QMessageBox.critical(self, programName, "The STATE behavior <b>{0}</b> is not paired{1}".format(behaviorOut, sbj) )
 
                 else:
 
@@ -4317,7 +4317,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fd = QFileDialog(self)
 
         if format_ == "sql":
-            fileName = fd.getSaveFileName(self, "Export aggregated events in SQL format", "" , "SQL dump file file (*.sql);;All files (*)")
+            fileName = fd.getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
             out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             out += "BEGIN TRANSACTION;" + os.linesep
             template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
@@ -4350,6 +4350,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
                         flagUnpairedEventFound = True
                         continue
+
+                    print(rows)
 
                     for idx, row in enumerate(rows):
 
@@ -4453,8 +4455,13 @@ item []:
             cursor.execute( "SELECT count(distinct subject) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(selectedSubjects)))
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
+
+            '''
             cursor.execute( "SELECT min(occurence), max(occurence) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(selectedSubjects)))
             subjectsMin, subjectsMax = list(cursor.fetchall())[0]
+            '''
+            subjectsMin = 0
+            subjectsMax = self.observationTotalMediaLength(obsId)
 
 
             out = """File type = "ooTextFile"
@@ -4465,34 +4472,57 @@ xmax = {subjectsMax}
 tiers? <exists>
 size = {subjectsNum}
 item []:
-""".format(subjectsNum=subjectsNum, subjectsMin=subjectsMin,subjectsMax=subjectsMax )
+""".format(subjectsNum=subjectsNum, subjectsMin=subjectsMin, subjectsMax=subjectsMax)
 
             subjectIdx = 0
             for subject in selectedSubjects:
 
                 subjectIdx += 1
 
-                cursor.execute( "SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
+                cursor.execute("SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
                 intervalsSize = int(list(cursor.fetchall())[0][0]/2)
 
-                cursor.execute( "SELECT min(occurence), max(occurence) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
+                '''
+                cursor.execute("SELECT min(occurence), max(occurence) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
                 intervalsMin, intervalsMax = list(cursor.fetchall())[0]
+                '''
+                intervalsMin, intervalsMax = 0, self.observationTotalMediaLength(obsId)
 
-                out += subjectheader.format( subjectIdx=subjectIdx, subject=subject, intervalsSize=intervalsSize, intervalsMin=intervalsMin, intervalsMax=intervalsMax )
+                out += subjectheader
 
-                cursor.execute( "SELECT occurence, code FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence", (obsId, subject) )
+                cursor.execute("SELECT occurence, code FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence", (obsId, subject))
                 rows = list(cursor.fetchall() )
 
                 count = 0
+
+                if rows[0]["occurence"] > 0:
+                    count += 1
+                    out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"] )
+
+
                 for idx, row in enumerate(rows):
-                        if idx % 2 == 0:
+                    if idx % 2 == 0:
+
+                        # check if events not interlacced
+                        if row["code"] != rows[idx + 1]["code"]:
+                            QMessageBox.critical(None, programName, "The events are interlacced. It is not possible to produce the Praat TextGrid file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                            return
+
+                        count += 1
+                        out += template.format(count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"] )
+                        try:
+                            out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
                             count += 1
-                            out += template.format(count=count, name=row[1], xmin=row[0], xmax=rows[idx + 1][0] )
-                            try:
-                                out += template.format(count=count+1, name="null", xmin=rows[idx + 1][0], xmax=rows[idx + 2][0] )
-                                count += 1
-                            except:
-                                print('finished')
+                        except:
+                            logging.debug("intervals fifnished")
+
+                if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):
+                    count += 1
+                    out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=self.observationTotalMediaLength(obsId) )
+
+                # add info
+                out = out.format( subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
+
 
         try:
             with open(fileName, "w") as f:
