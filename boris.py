@@ -642,7 +642,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extract_events(self):
         """
-        extract sequences from media file correponding to coded events
+        extract sequences from media file correponding to coded state events
+        TODO: add extract for point event (-/+ offset)
         """
         result, selectedObservations = self.selectObservations(SELECT1)
 
@@ -667,6 +668,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
         for obsId in  selectedObservations:
+            
+            duration1 = []   # in seconds
+            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+                duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+            
+            print('duration1', duration1)
+            
             for subject in selectedSubjects:
 
                 for behavior in selectedBehaviors:
@@ -697,23 +705,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                print( subject, behavior,row[0],rows[idx + 1][0])
 
-                                print(self.getCurrentMediaByTime(PLAYER1, obsId, row[0]))
+                                print( subject, behavior,row[0],rows[idx + 1]["occurence"])
+                                print(self.getCurrentMediaByTime(PLAYER1, obsId, row["occurence"]))
 
-                                ffmpeg_command = """{ffmpeg_bin} -i /home/olivier/crop.avi -ss {start} -to {stop} "{dir}{sep}{output}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
-                                start=row[0],
-                                stop=rows[idx + 1][0],
+                                mediaFileIdx = [idx for idx,x in enumerate(duration1) if row["occurence"]>=sum(duration1[0:idx])][-1]
+                                
+                                print('mediaFileIdx',mediaFileIdx)
+                                #mediaLength = self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] * 1000
+
+                                ffmpeg_command = """{ffmpeg_bin} -i {input} -ss {start} -to {stop} "{dir}{sep}{subject}_{behavior}_{start}-{stop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
+                                input=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
+                                start=row["occurence"],
+                                stop=rows[idx + 1]["occurence"],
                                 dir=exportDir,
                                 sep=os.sep,
-                                output=subject+behavior,
-                                extension=os.path.splitext("/home/olivier/crop.avi")[-1])
+                                subject=subject,
+                                behavior=behavior,
+                                
+                                extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])[-1])
 
                                 print( ffmpeg_command )
-                                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+                                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                                 out, error = p.communicate()
+                                '''
                                 out = out.decode('utf-8')
                                 error = error.decode('utf-8')
+                                '''
 
 
                                 '''
@@ -1001,27 +1019,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew = False):
-        '''
+        """
         check BORIS web site for updates
-        '''
+        """
         try:
-            if __version__ == 'DEV':
-                versionURL = 'http://penelope.unito.it/boris/static/ver_dev.dat'
-                dev_date = urllib.request.urlopen( versionURL ).read().decode('utf-8').strip()
-                if dev_date > __version_date__:
-                    msg = 'A new development version is available.<br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.<br><br>Remember to report all bugs you will find! ;-)'
-                else:
-                    msg = 'You are using the last DEVELOPMENT version'
+            versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
+            lastVersion = Decimal(urllib.request.urlopen( versionURL ).read().strip().decode('utf-8'))
+            self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
 
+            if lastVersion > Decimal(__version__):
+                msg = 'A new version is available: v. <b>%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.' % lastVersion
             else:
-                versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
-                lastVersion = Decimal(urllib.request.urlopen( versionURL ).read().strip().decode('utf-8'))
-                self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
-
-                if lastVersion > Decimal(__version__):
-                    msg = 'A new version is available: v. <b>%s</b><br>Go to <a href="http://penelope.unito.it/boris">http://penelope.unito.it/boris</a> to install it.' % lastVersion
-                else:
-                    msg = 'The version you are using is the last one: <b>%s</b>' %  __version__
+                msg = 'The version you are using is the last one: <b>%s</b>' %  __version__
 
             QMessageBox.information(self, programName, msg)
 
@@ -1374,7 +1383,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print( self.duration )
 
         for idx, media in enumerate(self.pj[OBSERVATIONS][obsId][FILE][player]):
-            if globalTimeMs < sum(self.duration[0:idx + 1 ]):
+            if globalTimeMs < sum(self.duration[0:idx + 1]):
                 currentMedia = media
                 currentMediaTime = globalTimeMs - sum(self.duration[0:idx])
                 break
@@ -1466,8 +1475,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                              ))
 
         # extract State events
-        StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM]
-                                if 'State' in self.pj[ETHOGRAM][y]['type']] ]
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM]
+                                if 'State' in self.pj[ETHOGRAM][y]['type']]]
 
         self.currentStates = {}
 
@@ -1492,13 +1501,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.currentSubject:
             # get index of focal subject (by name)
             idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
-            self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ idx ])))
+            self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[ idx ])))
         else:
-            self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ])))
+            self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
 
         # show selected subjects
         for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
-            self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
+            self.twSubjects.item(int(idx), len( subjectsFields ) ).setText(",".join(self.currentStates[idx]) )
 
         # show tracking cursor
         self.get_events_current_row()
@@ -1518,14 +1527,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # video will be drawn in this widget
         self.videoframe = QtGui.QFrame()
         self.palette = self.videoframe.palette()
-        self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0,0,0))
+        self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0, 0, 0))
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
 
         self.volumeslider = QtGui.QSlider(QtCore.Qt.Vertical, self)
         self.volumeslider.setMaximum(100)
         self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
-        self.volumeslider.setToolTip('Volume')
+        self.volumeslider.setToolTip("Volume")
         self.volumeslider.sliderMoved.connect(self.setVolume)
 
         self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
