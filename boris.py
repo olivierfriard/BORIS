@@ -687,66 +687,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                     for idx, row in enumerate(rows):
+                        
+                        print(idx)
 
-                        '''
+                        mediaFileIdx = [idx1 for idx1,x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+
                         if POINT in self.eventType(behavior).upper():
+                            ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{subject}_{behavior}_{start}-{stop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
+                            input=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
+                            start= 0.0 if row["occurence"] < 3 else round(row["occurence"]-3,3),
 
-                            out += template.format( observation=obsId,
-                                                    date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
-                                                    subject=subject,
-                                                    behavior=behavior,
-                                                    modifiers=row[1],
-                                                    event_type=POINT,
-                                                    start=row[0],
-                                                    stop=0,
-                                                    comment_start=row[2],
-                                                    comment_stop="")
-                        '''
+                            stop=round(row["occurence"] + 3,3),
+                            dir=exportDir,
+                            sep=os.sep,
+                            obsId=obsId,
+                            subject=subject,
+                            behavior=behavior,
+                            extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])[-1])
+
+                            print( ffmpeg_command )
+                            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                            out, error = p.communicate()
+
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
 
-                                print( subject, behavior,row[0],rows[idx + 1]["occurence"])
-                                print(self.getCurrentMediaByTime(PLAYER1, obsId, row["occurence"]))
-
-                                mediaFileIdx = [idx for idx,x in enumerate(duration1) if row["occurence"]>=sum(duration1[0:idx])][-1]
-                                
-                                print('mediaFileIdx',mediaFileIdx)
-                                #mediaLength = self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] * 1000
-
-                                ffmpeg_command = """{ffmpeg_bin} -i {input} -ss {start} -to {stop} "{dir}{sep}{subject}_{behavior}_{start}-{stop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
+                                ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{subject}_{behavior}_{start}-{stop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
                                 input=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
-                                start=row["occurence"],
-                                stop=rows[idx + 1]["occurence"],
+                                start=round(row["occurence"],3),
+                                stop=round(rows[idx + 1]["occurence"],3),
                                 dir=exportDir,
                                 sep=os.sep,
+                                obsId=obsId,
                                 subject=subject,
                                 behavior=behavior,
-                                
                                 extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])[-1])
 
                                 print( ffmpeg_command )
                                 p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                                 out, error = p.communicate()
-                                '''
-                                out = out.decode('utf-8')
-                                error = error.decode('utf-8')
-                                '''
 
-
-                                '''
-                                out += template.format( observation=obsId,
-                                                        date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
-                                                        subject=subject,
-                                                        behavior=behavior,
-                                                        modifiers=row[1],
-                                                        event_type=STATE,
-                                                        start=row[0],
-                                                        stop=rows[idx + 1][0],
-                                                        comment_start=row[2],
-                                                        comment_stop=rows[idx + 1][2])
-                                '''
-
+        self.statusbar.showMessage('Sequences extracted to {}'.format(exportDir), 5000)
 
 
     def generate_spectrogram(self):
