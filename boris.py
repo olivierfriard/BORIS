@@ -668,13 +668,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
         for obsId in  selectedObservations:
-            
+
             duration1 = []   # in seconds
             for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
                 duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
-            
+
             print('duration1', duration1)
-            
+
             for subject in selectedSubjects:
 
                 for behavior in selectedBehaviors:
@@ -687,7 +687,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                     for idx, row in enumerate(rows):
-                        
+
                         print(idx)
 
                         mediaFileIdx = [idx1 for idx1,x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
@@ -4496,7 +4496,7 @@ item []:
 
                         # check if events not interlacced
                         if row["code"] != rows[idx + 1]["code"]:
-                            QMessageBox.critical(None, programName, "The events are interlacced. It is not possible to produce the Praat TextGrid file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                            QMessageBox.critical(None, programName, "The events are interlaced. It is not possible to produce the Praat TextGrid file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                             return
 
                         count += 1
