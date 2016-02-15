@@ -4486,6 +4486,7 @@ item []:
 
                 count = 0
 
+                # check if 1st behavior starts at the beginning
                 if rows[0]["occurence"] > 0:
                     count += 1
                     out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"] )
@@ -4502,17 +4503,22 @@ item []:
                         count += 1
                         out += template.format(count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"] )
                         try:
-                            out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
-                            count += 1
+                            # check if difference is <= 0.001
+                            if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
+                                out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
+                                count += 1
+                            else:
+                                rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
                         except:
-                            logging.debug("intervals fifnished")
+                            logging.debug("intervals finished")
 
+                # check if last event ends at the end of media file
                 if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):
                     count += 1
                     out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=self.observationTotalMediaLength(obsId) )
 
                 # add info
-                out = out.format( subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
+                out = out.format(subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
 
 
         try:
@@ -4529,9 +4535,6 @@ item []:
             errorMsg = sys.exc_info()[1].strerror
             logging.critical(errorMsg)
             QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-
-
 
 
 
