@@ -58,6 +58,8 @@ def url2path(url):
         path = path[1:]
     return path
 
+def float2decimal(f):
+    return Decimal(str(f))
 
 
 def time2seconds(time):

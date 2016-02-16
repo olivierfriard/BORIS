@@ -4409,7 +4409,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedSubjects or not selectedBehaviors:
             return
 
-        fileName = QFileDialog(self).getSaveFileName(self, "Export events as TextGrid", "" , "TextGrid (*.textgrid);;All files (*)")
+        fileName = QFileDialog(self).getSaveFileName(self, "Export events as TextGrid", "", "TextGrid (*.textgrid);;All files (*)")
         if not fileName:
             return
 
@@ -4440,20 +4440,16 @@ item []:
 
         flagUnpairedEventFound = False
 
+
         for obsId in selectedObservations:
+
+            totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)
 
             cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors )
             cursor.execute( "SELECT count(distinct subject) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(selectedSubjects)))
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
-
-            '''
-            cursor.execute( "SELECT min(occurence), max(occurence) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(selectedSubjects)))
-            subjectsMin, subjectsMax = list(cursor.fetchall())[0]
-            '''
-            subjectsMin = 0
-            subjectsMax = self.observationTotalMediaLength(obsId)
-
+            subjectsMin, subjectsMax = 0, totalMediaDuration
 
             out = """File type = "ooTextFile"
 Object class = "TextGrid"
@@ -4477,12 +4473,15 @@ item []:
                 cursor.execute("SELECT min(occurence), max(occurence) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
                 intervalsMin, intervalsMax = list(cursor.fetchall())[0]
                 '''
-                intervalsMin, intervalsMax = 0, self.observationTotalMediaLength(obsId)
+                intervalsMin, intervalsMax = 0, totalMediaDuration
 
                 out += subjectheader
 
                 cursor.execute("SELECT occurence, code FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence", (obsId, subject))
-                rows = list(cursor.fetchall() )
+                rows = [ {"occurence":r["occurence"], "code":r["code"]}  for r in cursor.fetchall()]
+
+                print(rows)
+
 
                 count = 0
 
@@ -4502,20 +4501,46 @@ item []:
 
                         count += 1
                         out += template.format(count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"] )
-                        try:
-                            # check if difference is <= 0.001
-                            if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
+                        '''try:
+                            # check if difference is > 0.001
+                            if float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"]) > 0.001:
+
+                                logging.debug( type(rows[idx + 2]["occurence"]) )
+
+                                logging.debug("difference: {}-{}={}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+
                                 out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
                                 count += 1
                             else:
+                                logging.debug("difference <=0.001: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
                                 rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
+                                logging.debug("difference after: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
                         except:
-                            logging.debug("intervals finished")
+                            logging.debug("intervals finished")'''
+
+
+                        # check if difference is > 0.001
+                        print(len(rows), idx + 2)
+                        if len(rows) > idx + 2:
+                            if float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"]) > 0.001:
+
+                                logging.debug( type(rows[idx + 2]["occurence"]) )
+
+                                logging.debug("difference: {}-{}={}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+
+                                out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
+                                count += 1
+                            else:
+                                logging.debug("difference <=0.001: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+                                rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
+                                logging.debug("difference after: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+
+
 
                 # check if last event ends at the end of media file
                 if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):
                     count += 1
-                    out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=self.observationTotalMediaLength(obsId) )
+                    out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration )
 
                 # add info
                 out = out.format(subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
@@ -4539,23 +4564,23 @@ item []:
 
 
     def media_file_info(self):
-        '''
+        """
         show info about current video
-        '''
+        """
         if self.observationId and self.playerType == VLC:
 
 
             media = self.mediaplayer.get_media()
 
 
-            logging.info('State: {}'.format(self.mediaplayer.get_state()))
-            logging.info('Media (get_mrl): {}'.format(bytes_to_str(media.get_mrl())))
+            logging.info("State: {}".format(self.mediaplayer.get_state()))
+            logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
 
             logging.info("media.get_meta(0): {}".format(media.get_meta(0)))
 
-            logging.info(('Track: %s/%s' % (self.mediaplayer.video_get_track(), self.mediaplayer.video_get_track_count())))
+            logging.info("Track: {}/{}".format(self.mediaplayer.video_get_track(), self.mediaplayer.video_get_track_count()))
 
-            logging.info('number of media in media list: %d' % self.media_list.count() )
+            logging.info("number of media in media list: {}".format(self.media_list.count()))
 
             logging.info(('get time: %s  duration: %s' % (self.mediaplayer.get_time(), media.get_duration())))
             logging.info(('Position: %s %%' % self.mediaplayer.get_position()))
