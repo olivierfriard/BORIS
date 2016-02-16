@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.81"
-__version_date__ = "2016-02-12"
+__version__ = "2.82"
+__version_date__ = "2016-02-16"
 __DEV__ = False
 
 import sys
@@ -472,7 +472,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
-        self.menuCreate_subtitles_2.setEnabled(flagObs)
+        self.menuCreate_subtitles_2.setEnabled(flag)
 
         self.actionJumpForward.setEnabled( self.playerType == VLC)
         self.actionJumpBackward.setEnabled( self.playerType == VLC)
@@ -642,10 +642,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extract_events(self):
         """
-        extract sequences from media file correponding to coded state events
-        TODO: add extract for point event (-/+ offset)
+        extract sequences from media file corresponding to coded events
+        in case of point event, from -3 to +3 seconds are extracted
+
         """
-        result, selectedObservations = self.selectObservations(SELECT1)
+
+
+        result, selectedObservations = self.selectObservations(MULTIPLE)
 
         if not selectedObservations:
             return
@@ -662,79 +665,102 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not exportDir:
             return
 
-        """ffmpeg -i input.wmv -ss 30 -c copy -t 10 output.wmv"""
         flagUnpairedEventFound = False
 
         cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
         for obsId in  selectedObservations:
 
-            duration1 = []   # in seconds
-            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+            for nplayer in [PLAYER1, PLAYER2]:
 
-            print('duration1', duration1)
+                if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                    continue
 
-            for subject in selectedSubjects:
+                duration1 = []   # in seconds
+                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                    duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
 
-                for behavior in selectedBehaviors:
+                logging.debug("duration player {}: {}".format(nplayer, duration1))
 
-                    cursor.execute( "SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior) )
-                    rows = list(cursor.fetchall())
+                for subject in selectedSubjects:
 
-                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
-                        flagUnpairedEventFound = True
-                        continue
+                    for behavior in selectedBehaviors:
 
-                    for idx, row in enumerate(rows):
+                        cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior))
+                        rows = list(cursor.fetchall())
 
-                        print(idx)
+                        if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
+                            flagUnpairedEventFound = True
+                            continue
 
-                        mediaFileIdx = [idx1 for idx1,x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                        for idx, row in enumerate(rows):
 
-                        if POINT in self.eventType(behavior).upper():
-                            ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{subject}_{behavior}_{start}-{stop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
-                            input=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
-                            start= 0.0 if row["occurence"] < 3 else round(row["occurence"]-3,3),
+                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
-                            stop=round(row["occurence"] + 3,3),
-                            dir=exportDir,
-                            sep=os.sep,
-                            obsId=obsId,
-                            subject=subject,
-                            behavior=behavior,
-                            extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])[-1])
+                            if POINT in self.eventType(behavior).upper():
 
-                            print( ffmpeg_command )
-                            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-                            out, error = p.communicate()
+                                globalStart = 0.0 if row["occurence"] < 3 else round(row["occurence"] - 3, 3)
+                                globalStop = round(row["occurence"] + 3, 3)
 
+                                start = round(row["occurence"] - 3 - sum( duration1[0:mediaFileIdx]), 3)
+                                if start < 3:
+                                    start = 0.0
+                                stop = round(row["occurence"] + 3 - sum( duration1[0:mediaFileIdx]))
 
-                        if STATE in self.eventType(behavior).upper():
-                            if idx % 2 == 0:
+                                ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """\
+                                .format(ffmpeg_bin=ffmpeg_bin,
+                                        input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                        start=start,
+                                        stop=stop,
+                                        globalStart=globalStart,
+                                        globalStop=globalStop,
+                                        dir=exportDir,
+                                        sep=os.sep,
+                                        obsId=obsId,
+                                        player="PLAYER{}".format(nplayer),
+                                        subject=subject,
+                                        behavior=behavior,
+                                        extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx])[-1])
 
-                                ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{subject}_{behavior}_{start}-{stop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
-                                input=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
-                                start=round(row["occurence"],3),
-                                stop=round(rows[idx + 1]["occurence"],3),
-                                dir=exportDir,
-                                sep=os.sep,
-                                obsId=obsId,
-                                subject=subject,
-                                behavior=behavior,
-                                extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])[-1])
-
-                                print( ffmpeg_command )
+                                logging.debug("ffmpeg command: {}".format( ffmpeg_command ))
                                 p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
                                 out, error = p.communicate()
 
-        self.statusbar.showMessage('Sequences extracted to {}'.format(exportDir), 5000)
+
+                            if STATE in self.eventType(behavior).upper():
+                                if idx % 2 == 0:
+
+                                    globalStart = round(row["occurence"], 3)
+                                    globalStop = round(rows[idx + 1]["occurence"], 3)
+
+                                    start = round(row["occurence"] - sum( duration1[0:mediaFileIdx]), 3)
+                                    stop = round(rows[idx + 1]["occurence"] - sum( duration1[0:mediaFileIdx]))
+
+                                    ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
+                                    input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                    start=start,
+                                    stop=stop,
+                                    globalStart=globalStart,
+                                    globalStop=globalStop,
+                                    dir=exportDir,
+                                    sep=os.sep,
+                                    obsId=obsId,
+                                    player="PLAYER{}".format(nplayer),
+                                    subject=subject,
+                                    behavior=behavior,
+                                    extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx])[-1])
+
+                                    logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+                                    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                                    out, error = p.communicate()
+
+        self.statusbar.showMessage("Sequences extracted to {} directory".format(exportDir), 0)
 
 
     def generate_spectrogram(self):
-        '''
+        """
         generate spectrogram of all media files loaded in player #1
-        '''
+        """
 
         # check temp dir for images from ffmpeg
         if not self.ffmpeg_cache_dir:
@@ -4211,11 +4237,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def create_subtitles(self):
-        '''
+        """
         create subtitles for selected observations, subjects and behaviors
-        '''
+        """
 
-        result, selectedObservations = self.selectObservations( MULTIPLE )
+        result, selectedObservations = self.selectObservations(MULTIPLE)
 
         logging.debug("Selected observations: {0}".format(selectedObservations))
 
@@ -4227,38 +4253,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedSubjects or not selectedBehaviors:
             return
 
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser('~'), options=QFileDialog(self).ShowDirsOnly)
+        if not exportDir:
+            return
+
         cursor = self.loadEventsInDB( selectedSubjects, selectedObservations, selectedBehaviors )
+
+        flagUnpairedEventFound = False
 
         for obsId in selectedObservations:
 
-            # extract file name of first video of first player
+            for nplayer in [PLAYER1, PLAYER2]:
 
-            for media in self.pj[OBSERVATIONS][ obsId ][FILE][PLAYER1]:
+                if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                    continue
 
-                if os.path.isfile( media ):
-                    fileName = media + '.srt'
-                else:
-                    if dialog.MessageDialog(programName, "{0} not found!\nDo you want to choose another place to save subtitles? ".format(media), [YES, NO]) == YES:
-                        fd = QFileDialog(self)
-                        fileName = fd.getSaveFileName(self, "Save subtitles file', '','Subtitles files (*.srt *.txt);;All files (*)")
-                        if not fileName:
-                            continue
-                    else:
-                        continue
+                duration1 = []   # in seconds
+                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                    duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
 
-                # TODO add subtitle for enqueued media
+                print('duration1', duration1)
 
-                subtitles = []
+                subtitles = {}
                 for subject in selectedSubjects:
 
                     for behavior in selectedBehaviors:
 
                         cursor.execute( "SELECT occurence, modifiers FROM events where observation = ? AND subject = ? AND  code = ? ORDER BY code, occurence", (obsId, subject, behavior) )
                         rows = list(cursor.fetchall() )
-                        if 'STATE' in self.eventType(behavior).upper() and len( rows ) % 2:
+                        if STATE in self.eventType(behavior).upper() and len( rows ) % 2:
+                            #continue
+                            flagUnpairedEventFound = True
                             continue
 
                         for idx, row in enumerate(rows):
+
+                            print( row["occurence"] )
+
+                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                            if mediaFileIdx not in subtitles:
+                                subtitles[mediaFileIdx] = []
 
                             # subtitle color
                             if subject == NO_FOCAL_SUBJECT:
@@ -4268,24 +4302,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             behaviorStr = behavior
                             if includeModifiers == YES and row[1]:
-                                behaviorStr += ' ({0})'.format(row[1].replace('|',', '))
+                                behaviorStr += " ({0})".format(row[1].replace("|", ", "))
 
-                            if 'POINT' in self.eventType(behavior).upper():
-                                laps =  '{0} --> {1}'.format(seconds2time(row[0]).replace('.',','), seconds2time(row[0] + 0.5).replace('.',',') )
-                                subtitles.append( [laps, '<font color="{0}">{1}: {2}</font>'.format(col, subject, behaviorStr) ] )
+                            if POINT in self.eventType(behavior).upper():
+                                laps =  "{0} --> {1}".format(seconds2time(row["occurence"]).replace(".", ","), seconds2time(row["occurence"] + 0.5).replace(".", ",") )
+                                subtitles[mediaFileIdx].append( [laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr) ] )
 
-                            if 'STATE' in self.eventType(behavior).upper():
+                            if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
-                                    laps =  '{0} --> {1}'.format(seconds2time(row[0]).replace('.',','), seconds2time(rows[idx + 1][0]).replace('.',','))
-                                    subtitles.append( [laps, '<font color="{0}">{1}: {2}</font>'.format(col, subject, behaviorStr) ] )
 
-                subtitles.sort()
+                                    start = seconds2time(round(row["occurence"] - sum( duration1[0:mediaFileIdx]), 3)).replace('.',',')
+                                    stop = seconds2time(round(rows[idx + 1]["occurence"] - sum( duration1[0:mediaFileIdx]), 3)).replace('.',',')
 
-                with open(fileName, 'w') as f:
-                    for idx, sub in enumerate(subtitles):
-                        f.write( '{0}{3}{1}{3}{2}{3}{3}'.format(idx + 1, sub[0], sub[1], os.linesep ))
+                                    laps =  "{start} --> {stop}".format(start=start, stop=stop)
+                                    subtitles[mediaFileIdx].append( [laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr) ] )
 
-        QMessageBox.information(self, programName , 'subtitles file(s) created in media files path')
+                #print(subtitles)
+                try:
+                    for mediaIdx in subtitles:
+                        #print(mediaIdx, mediaIdx)
+                        subtitles[mediaIdx].sort()
+                        with open( "{exportDir}{sep}{fileName}.srt".format(exportDir=exportDir, sep=os.sep, fileName=os.path.basename(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaIdx])), "w") as f:
+                            for idx, sub in enumerate(subtitles[mediaIdx]):
+                                f.write("{0}{3}{1}{3}{2}{3}{3}".format(idx + 1, sub[0], sub[1], os.linesep))
+                except:
+                    errorMsg = sys.exc_info()[1].strerror
+                    logging.critical(errorMsg)
+                    QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+
+        self.statusbar.showMessage("Subtitles file(s) created in {} directory".format(exportDir), 0)
 
 
     def export_aggregated_events(self, format_):
@@ -4397,7 +4443,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export state events as Praat textgrid
         """
 
-        result, selectedObservations = self.selectObservations(SELECT1)
+        result, selectedObservations = self.selectObservations(MULTIPLE)
 
         if not selectedObservations:
             return
@@ -4409,13 +4455,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedSubjects or not selectedBehaviors:
             return
 
+        '''
         fileName = QFileDialog(self).getSaveFileName(self, "Export events as TextGrid", "", "TextGrid (*.textgrid);;All files (*)")
         if not fileName:
             return
+        '''
+
+
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as TextGrid", os.path.expanduser('~'), options=QFileDialog(self).ShowDirsOnly)
+        if not exportDir:
+            return
+
+
 
         self.statusbar.showMessage("Exporting events as TextGrid", 0)
 
-        out = """File type = "ooTextFile"
+        for obsId in selectedObservations:
+
+            out = """File type = "ooTextFile"
 Object class = "TextGrid"
 
 xmin = 0
@@ -4424,7 +4481,7 @@ tiers? <exists>
 size = {subjectNum}
 item []:
 """
-        subjectheader = """    item [{subjectIdx}]:
+            subjectheader = """    item [{subjectIdx}]:
         class = "IntervalTier"
         name = "{subject}"
         xmin = {intervalsMin}
@@ -4432,16 +4489,14 @@ item []:
         intervals: size = {intervalsSize}
 """
 
-        template = """        intervals [{count}]:
+            template = """        intervals [{count}]:
             xmin = {xmin}
             xmax = {xmax}
             text = "{name}"
 """
 
-        flagUnpairedEventFound = False
 
-
-        for obsId in selectedObservations:
+            flagUnpairedEventFound = False
 
             totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)
 
@@ -4469,10 +4524,6 @@ item []:
                 cursor.execute("SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
                 intervalsSize = int(list(cursor.fetchall())[0][0]/2)
 
-                '''
-                cursor.execute("SELECT min(occurence), max(occurence) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
-                intervalsMin, intervalsMax = list(cursor.fetchall())[0]
-                '''
                 intervalsMin, intervalsMax = 0, totalMediaDuration
 
                 out += subjectheader
@@ -4535,8 +4586,6 @@ item []:
                                 rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
                                 logging.debug("difference after: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
 
-
-
                 # check if last event ends at the end of media file
                 if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):
                     count += 1
@@ -4546,20 +4595,20 @@ item []:
                 out = out.format(subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
 
 
-        try:
-            with open(fileName, "w") as f:
-                f.write( out )
+            try:
+                with open( "{exportDir}{sep}{obsId}.textGrid".format( exportDir=exportDir, sep=os.sep, obsId=obsId ), "w") as f:
+                    f.write(out)
 
-            if flagUnpairedEventFound:
-                QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
-                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                if flagUnpairedEventFound:
+                    QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
+                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-            self.statusbar.showMessage("Events exported successfully", 10000)
+                self.statusbar.showMessage("Events exported successfully", 10000)
 
-        except:
-            errorMsg = sys.exc_info()[1].strerror
-            logging.critical(errorMsg)
-            QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            except:
+                errorMsg = sys.exc_info()[1].strerror
+                logging.critical(errorMsg)
+                QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
 
@@ -6501,6 +6550,9 @@ item []:
                 QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             del data
+
+        self.statusbar.showMessage("Events exported", 0)
+
 
 
 
