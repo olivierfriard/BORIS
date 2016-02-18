@@ -460,9 +460,16 @@ from directory</string>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pbOK">
+      <widget class="QPushButton" name="pbSave">
        <property name="text">
-        <string>OK</string>
+        <string>Save</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pbLaunch">
+       <property name="text">
+        <string>Launch</string>
        </property>
       </widget>
      </item>

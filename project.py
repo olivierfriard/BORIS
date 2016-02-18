@@ -100,6 +100,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbImportBehaviorsFromProject.clicked.connect(self.pbImportBehaviorsFromProject_clicked)
 
         self.pbImportFromJWatcher.clicked.connect(self.pbImportFromJWatcher_clicked)
+        self.pbImportFromTextFile.clicked.connect(self.pbImportFromTextFile_clicked)
 
         self.twBehaviors.cellChanged[int, int].connect(self.twObservations_cellChanged)
         self.twBehaviors.cellDoubleClicked[int, int].connect(self.twObservations_cellDoubleClicked)
@@ -186,16 +187,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         signalMapper.mapped['int'].connect(self.variableTypeChanged)
 
     def pbRemoveVariable_clicked(self):
-        '''
+        """
         remove the selected independent variable
-        '''
+        """
         logging.debug("remove selected independent variable")
 
         if not self.twVariables.selectedIndexes():
             QMessageBox.warning(self, programName, "First select a variable to remove")
         else:
 
-            response = dialog.MessageDialog(programName, 'Remove the selected variable?', [YES, CANCEL])
+            response = dialog.MessageDialog(programName, "Remove the selected variable?", [YES, CANCEL])
             if response == YES:
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
@@ -205,10 +206,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
         fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Import independent variables from project file', '', 'Project files (*.boris);;All files (*)')
+        fileName = fd.getOpenFileName(self, "Import independent variables from project file", "", "Project files (*.boris);;All files (*)")
         if fileName:
 
-            with open(fileName, 'r') as infile:
+            with open(fileName, "r") as infile:
                 s = infile.read()
 
             try:
@@ -493,21 +494,19 @@ class projectDialog(QDialog, Ui_dlgProject):
                         self.twBehaviors.removeRow(row_mem[codeToDelete])
 
     def pbImportFromJWatcher_clicked(self):
-        '''
+        """
         import behaviors configuration from JWatcher (GDL file)
-        '''
+        """
         if self.twBehaviors.rowCount():
-
-            response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', CANCEL])
+            response = dialog.MessageDialog(programName, "There are behaviors already configured. Do you want to append behaviors or replace them?", ['Append', 'Replace', CANCEL])
             if response == CANCEL:
                 return
 
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Import behaviors from JWatcher', '', 'Global Definition File (*.gdf);;All files (*)')
+        fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
 
         if fileName:
 
-            if response == 'Replace':
+            if self.twBehaviors.rowCount() and response == 'Replace':
                 self.twBehaviors.setRowCount(0)
 
             with open(fileName, 'r') as f:
@@ -517,11 +516,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if row and row[0] == '#':
                     continue
 
-                if 'Behavior.name.' in row and '=' in row:
+                if "Behavior.name." in row and "=" in row:
                     key, code = row.split('=')
-                    key = key.replace('Behavior.name.', '')
+                    key = key.replace("Behavior.name.", "")
                     # read description
-                    if idx < len(rows) and 'Behavior.description.' in rows[idx+1]:
+                    if idx < len(rows) and "Behavior.description." in rows[idx+1]:
                         description = rows[idx+1].split('=')[-1]
 
                     behavior = {'key': key, 'code': code, 'description': description, 'modifiers': '', 'excluded': '', 'coding map': ''}
@@ -531,8 +530,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     signalMapper = QSignalMapper(self)
 
                     for field_type in behavioursFields:
-
-                        if field_type == 'type':
+                        if field_type == TYPE:
                             # add type combobox
                             comboBox = QComboBox()
                             comboBox.addItems(observation_types)
@@ -542,11 +540,90 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
                         else:
                             item = QTableWidgetItem(behavior[field_type])
-                            if field_type in ['excluded', 'coding map', 'modifiers']:
+                            if field_type in ["excluded", "coding map", "modifiers"]:
                                 item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
                     signalMapper.mapped['int'].connect(self.comboBoxChanged)
+
+    def check_text_file_type(self, rows):
+        sepList = ["\t", ",", ";"]
+        for sep in sepList:
+            cs = []
+            for row in rows:
+                cs.append(row.count(sep))
+            if len(set(cs)) == 1:
+                return sep, cs[0]
+        return None, None
+
+
+    def pbImportFromTextFile_clicked(self):
+
+        if self.twBehaviors.rowCount():
+            response = dialog.MessageDialog(programName, "There are behaviors already configured. Do you want to append behaviors or replace them?", ['Append', 'Replace', CANCEL])
+            if response == CANCEL:
+                return
+
+        fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
+
+        if fileName:
+
+            if self.twBehaviors.rowCount() and response == 'Replace':
+                self.twBehaviors.setRowCount(0)
+
+            with open(fileName, "r") as f:
+                rows = [r.strip() for r in f.readlines()]
+
+            sep, num = self.check_text_file_type(rows)
+
+            print(sep, num)
+
+            if not sep:
+                QMessageBox.critical(self, programName, "Separator character not found! Use plain text file and TAB or comma as value separator")
+            else:
+
+                for row in rows:
+
+                    if num == 2:  # 3 fields
+                        type_, key, code = row.split(sep)
+                        description = ""
+                    if num == 3:  # 4 fields
+                        type_, key, code, description = row.split(sep)
+
+                    behavior = {'key': key, 'code': code, 'description': description, 'modifiers': '', 'excluded': '', 'coding map': ''}
+                    print(behavior)
+                    self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+
+                    signalMapper = QSignalMapper(self)
+
+                    for field_type in behavioursFields:
+                        if field_type == TYPE:
+                            # add type combobox
+                            comboBox = QComboBox()
+                            comboBox.addItems(observation_types)
+
+                            if POINT in type_.upper():
+                                comboBox.setCurrentIndex(0)
+                            if STATE in type_.upper():
+                                comboBox.setCurrentIndex(1)
+
+                            signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
+                            comboBox.currentIndexChanged["int"].connect(signalMapper.map)
+                            self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
+                        else:
+                            item = QTableWidgetItem(behavior[field_type])
+                            if field_type in ["excluded", "coding map", "modifiers"]:
+                                item.setFlags(Qt.ItemIsEnabled)
+                            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
+
+                    signalMapper.mapped['int'].connect(self.comboBoxChanged)
+
+
+
+
+
+
+
 
     def twObservations_cellChanged(self, row, column):
 
@@ -561,7 +638,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(r, fields['key']):
                 if self.twBehaviors.item(r, fields['key']).text().upper() not in ['F' + str(i) for i in range(1, 13)] \
                    and len(self.twBehaviors.item(r, fields['key']).text()) > 1:
-                    self.lbObservationsState.setText('<font color="red">Key length &gt; 1</font>')
+                    self.lbObservationsState.setText("""<font color="red">Key length &gt; 1</font>""")
                     return
 
                 keys.append(self.twBehaviors.item(r, fields['key']).text())
@@ -573,7 +650,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check code
             if self.twBehaviors.item(r, fields['code']):
                 if self.twBehaviors.item(r, fields['code']).text() in codes:
-                    self.lbObservationsState.setText('<font color="red">Code duplicated at line %d </font>' % (r + 1))
+                    self.lbObservationsState.setText("""<font color="red">Code duplicated at line {} </font>""".format(r + 1))
                 else:
                     if self.twBehaviors.item(r, fields['code']).text():
                         codes.append(self.twBehaviors.item(r, fields['code']).text())
@@ -583,14 +660,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(r, fields['key']):
 
                 if self.twSubjects.item(r, fields['key']).text() in keys:
-                    self.lbObservationsState.setText('<font color="red">Key found in subjects list at line %d </font>' % (r + 1))
+                    self.lbObservationsState.setText("""<font color="red">Key found in subjects list at line {} </font>""".format(r + 1))
 
     def pb_clone_behavior_clicked(self):
-        '''
+        """
         clone the selected configuration
-        '''
+        """
         if not self.twBehaviors.selectedIndexes():
-            QMessageBox.about(self, programName, 'First select a behavior')
+            QMessageBox.about(self, programName, "First select a behavior")
         else:
             self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -613,24 +690,24 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field], item)
 
     def pbRemoveBehavior_clicked(self):
-        '''
+        """
         remove behavior
-        '''
+        """
 
         if not self.twBehaviors.selectedIndexes():
-            QMessageBox.warning(self, programName, 'First select a behaviour to remove')
+            QMessageBox.warning(self, programName, "First select a behaviour to remove")
         else:
 
-            response = dialog.MessageDialog(programName, 'Remove the selected behavior?', ['Yes', 'Cancel'])
-            if response == 'Yes':
+            response = dialog.MessageDialog(programName, "Remove the selected behavior?", [YES, 'Cancel'])
+            if response == YES:
 
                 # check if behavior already used in observations
 
                 codeToDelete = self.twBehaviors.item(self.twBehaviors.selectedIndexes()[0].row(), 2).text()
 
                 codesInObs = []
-                for obs in self.pj['observations']:
-                    events = self.pj['observations'][obs]['events']
+                for obs in self.pj[OBSERVATIONS]:
+                    events = self.pj[OBSERVATIONS][obs]['events']
                     for event in events:
                         codesInObs.append(event[2])
 
@@ -657,7 +734,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for field_type in fields:
             item = QTableWidgetItem()
-            if field_type == 'type':
+            if field_type == TYPE:
                 # add type combobox
                 comboBox = QComboBox()
                 comboBox.addItems(observation_types)
@@ -677,9 +754,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         signalMapper.mapped['int'].connect(self.comboBoxChanged)
 
     def comboBoxChanged(self, row):
-        '''
+        """
         event type combobox changed
-        '''
+        """
 
         combobox = self.twBehaviors.cellWidget(row, fields['type'])
         if 'with coding map' in observation_types[combobox.currentIndex()]:
@@ -707,9 +784,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.item(row, behavioursFields['coding map']).setText('')
 
     def pbAddSubject_clicked(self):
-        '''
+        """
         add a subject
-        '''
+        """
 
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
         for col in range(0, len(subjectsFields)):
@@ -717,16 +794,16 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
 
     def pbRemoveSubject_clicked(self):
-        '''
+        """
         remove selected subject from subjects list
         control before if subject used in observations
-        '''
+        """
         if not self.twSubjects.selectedIndexes():
             QMessageBox.warning(self, programName, 'First select a subject to remove')
         else:
 
-            response = dialog.MessageDialog(programName, 'Remove the selected subject?', ['Yes', 'Cancel'])
-            if response == 'Yes':
+            response = dialog.MessageDialog(programName, 'Remove the selected subject?', [YES, 'Cancel'])
+            if response == YES:
 
                 flagDel = False
                 if self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1):
@@ -831,9 +908,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twObservations.removeRow(self.twObservations.selectedIndexes()[0].row())
 
     def pbOK_clicked(self):
-        '''
+        """
         verify behaviours and subjects configuration
-        '''
+        """
 
         if self.lbObservationsState.text():
             QMessageBox.warning(self, programName, self.lbObservationsState.text())
@@ -956,6 +1033,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.indVar[str(len(self.indVar))] = row
 
         self.accept()
+
 
     def pbCancel_clicked(self):
         self.reject()

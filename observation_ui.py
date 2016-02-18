@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Thu Jan 21 14:30:24 2016
+# Created: Thu Feb 18 14:07:03 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -222,9 +222,12 @@ class Ui_Form(object):
         self.pbCancel = QtGui.QPushButton(Form)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout.addWidget(self.pbCancel)
-        self.pbOK = QtGui.QPushButton(Form)
-        self.pbOK.setObjectName(_fromUtf8("pbOK"))
-        self.horizontalLayout.addWidget(self.pbOK)
+        self.pbSave = QtGui.QPushButton(Form)
+        self.pbSave.setObjectName(_fromUtf8("pbSave"))
+        self.horizontalLayout.addWidget(self.pbSave)
+        self.pbLaunch = QtGui.QPushButton(Form)
+        self.pbLaunch.setObjectName(_fromUtf8("pbLaunch"))
+        self.horizontalLayout.addWidget(self.pbLaunch)
         self.verticalLayout_3.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Form)
@@ -288,5 +291,6 @@ class Ui_Form(object):
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabLive), _translate("Form", "Live", None))
         self.lbMediaAnalysis.setText(_translate("Form", "BORIS", None))
         self.pbCancel.setText(_translate("Form", "Cancel", None))
-        self.pbOK.setText(_translate("Form", "OK", None))
+        self.pbSave.setText(_translate("Form", "Save", None))
+        self.pbLaunch.setText(_translate("Form", "Launch", None))
 

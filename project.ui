@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>3</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -226,6 +226,13 @@ from a BORIS project</string>
                  </property>
                  <property name="text">
                   <string>Import from JWatcher</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pbImportFromTextFile">
+                 <property name="text">
+                  <string>Import from text file</string>
                  </property>
                 </widget>
                </item>

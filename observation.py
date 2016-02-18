@@ -61,8 +61,9 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.clicked.connect( self.generate_spectrogram )
 
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel.clicked.connect( self.pbCancel_clicked )
+        self.pbSave.clicked.connect(self.pbSave_clicked)
+        self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
+        self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
 
@@ -116,13 +117,12 @@ class Observation(QDialog, Ui_Form):
 
 
     def pbCancel_clicked(self):
-
         self.reject()
 
-
-
-    def pbOK_clicked(self):
-
+    def check_parameters(self):
+        """
+        check observation parameters
+        """
         def is_numeric(s):
             try:
                 float(s)
@@ -133,7 +133,7 @@ class Observation(QDialog, Ui_Form):
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
             QMessageBox.warning(self, programName , "<b>{}</b> is not recognized as a valid time offset format".format(self.leTimeOffset.text()))
-            return
+            return False
 
         # check if indep variables are correct type
         for row in range(0, self.twIndepVariables.rowCount()):
@@ -141,12 +141,12 @@ class Observation(QDialog, Ui_Form):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
                 if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
                     QMessageBox.critical(self, programName , "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
-                    return
+                    return False
 
         # check if observation id not empty
         if not self.leObservationId.text():
             QMessageBox.warning(self, programName , "The <b>observation id</b> is mandatory and must be unique!" )
-            return
+            return False
 
         # check if new obs and observation id already present or if edit obs and id changed
         if (self.mode == "new") or (self.mode == "edit" and self.leObservationId.text() != self.mem_obs_id):
@@ -154,18 +154,29 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName , "The observation id <b>{0}</b> is already used!<br>{1}<br>{2}".format(self.leObservationId.text(),
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['description'],
                                                                                                                              self.pj['observations'][self.leObservationId.text()]['date']))
-                return
+                return False
 
         # check if media list #2 populated and media list #1 empty
         if self.tabProjectType.currentIndex() == 0 and not self.twVideo1.rowCount():
             QMessageBox.critical(self, programName , "Add a media file in the first media player!" )
-            return
+            return False
 
-        self.accept()
+        return True
+
+
+    def pbLaunch_clicked(self):
+
+        if self.check_parameters():
+            self.done(2)
+
+    def pbSave_clicked(self):
+
+        if self.check_parameters():
+            self.accept()
 
 
     def check_media(self, fileName, nPlayer):
-        
+
         print('self.ffmpeg_bin',self.ffmpeg_bin)
 
         nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, fileName)

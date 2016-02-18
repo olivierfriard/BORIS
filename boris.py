@@ -110,7 +110,7 @@ class TempDirCleanerThread(QThread):
         def run(self):
             while self.exiting == False:
                 if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
-                    fl = sorted((os.path.getctime(self.tempdir+f),self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
+                    fl = sorted((os.path.getctime(self.tempdir + f),self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
                     for ts,f in fl[0:int(len(fl)/10)]:
                         os.remove(f)
                 time.sleep(30)
@@ -643,7 +643,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def extract_events(self):
         """
         extract sequences from media file corresponding to coded events
-        in case of point event, from -3 to +3 seconds are extracted
+        in case of point event, from -n to +n seconds are extracted (n = self.repositioningTimeOffset)
 
         """
 
@@ -661,8 +661,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
 
-        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to extract events", os.path.expanduser('~'), options=QFileDialog(self).ShowDirsOnly)
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to extract events", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
+            return
+
+        # check self.repositioningTimeOffset
+        text, ok = QtGui.QInputDialog.getDouble(self, "Offset to substract/add to start/stop times", "Time offset (in seconds):", 0.0, 0.0, 86400, 1)
+        if not ok:
+            return
+        try:
+            timeOffset = float2decimal(text)
+        except:
+            print("time offset not recognized!")
             return
 
         flagUnpairedEventFound = False
@@ -686,8 +696,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     for behavior in selectedBehaviors:
 
-                        cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior))
-                        rows = list(cursor.fetchall())
+                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subject, behavior))
+                        rows = [{"occurence":float2decimal(r["occurence"])}  for r in cursor.fetchall()]
 
                         if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
                             flagUnpairedEventFound = True
@@ -697,15 +707,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
+                            globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
+                            start = round(row["occurence"] - timeOffset - sum(duration1[0:mediaFileIdx]), 3)
+                            if start < timeOffset:
+                                start = Decimal("0.000")
+
                             if POINT in self.eventType(behavior).upper():
 
-                                globalStart = 0.0 if row["occurence"] < 3 else round(row["occurence"] - 3, 3)
-                                globalStop = round(row["occurence"] + 3, 3)
+                                #globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
+                                globalStop = round(row["occurence"] + timeOffset, 3)
 
-                                start = round(row["occurence"] - 3 - sum( duration1[0:mediaFileIdx]), 3)
-                                if start < 3:
-                                    start = 0.0
-                                stop = round(row["occurence"] + 3 - sum( duration1[0:mediaFileIdx]))
+                                #start = round(row["occurence"] - timeOffset - sum(duration1[0:mediaFileIdx]), 3)
+                                #if start < timeOffset:
+                                #    start = Decimal("0.000")
+                                stop = round(row["occurence"] + timeOffset - sum(duration1[0:mediaFileIdx]))
 
                                 ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """\
                                 .format(ffmpeg_bin=ffmpeg_bin,
@@ -730,11 +745,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
 
-                                    globalStart = round(row["occurence"], 3)
-                                    globalStop = round(rows[idx + 1]["occurence"], 3)
+                                    #globalStart = round(row["occurence"], 3)
+                                    globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
 
-                                    start = round(row["occurence"] - sum( duration1[0:mediaFileIdx]), 3)
-                                    stop = round(rows[idx + 1]["occurence"] - sum( duration1[0:mediaFileIdx]))
+                                    #start = round(row["occurence"] - sum( duration1[0:mediaFileIdx]), 3)
+                                    stop = round(rows[idx + 1]["occurence"] + timeOffset - sum( duration1[0:mediaFileIdx]))
 
                                     ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
                                     input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
@@ -895,6 +910,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.show()
         self.hide()
 
+
     def open_observation(self):
         """
         open an observation
@@ -1002,11 +1018,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # load events in table widget
                 self.loadEventsInTW(self.observationId)
 
-                if self.pj[OBSERVATIONS][self.observationId]['type'] == LIVE:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
                     self.playerType = LIVE
                     self.initialize_new_live_observation()
 
-                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                     if not self.initialize_new_observation_vlc():
                         self.observationId = ''
@@ -1247,12 +1263,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setText( " Focal subject: <b>%s</b>" % (self.currentSubject) )
 
     def preferences(self):
-        '''
+        """
         show preferences window
-        '''
-        if self.observationId:
+        """
+
+
+        '''if self.observationId:
             QMessageBox.warning(self, programName, "Close the running observation before modifying preferences.")
-            return
+            return'''
 
         preferencesWindow = preferences.Preferences()
 
@@ -1264,7 +1282,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         preferencesWindow.sbffSpeed.setValue( self.fast )
 
-        preferencesWindow.sbRepositionTimeOffset.setValue( self.repositioningTimeOffset )
+        preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
 
         preferencesWindow.sbSpeedStep.setValue( self.play_rate_step)
 
@@ -1343,7 +1361,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId:
                 self.loadEventsInTW( self.observationId )
                 self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
-
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
@@ -1484,7 +1501,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # extract State events
         StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM]
-                                if 'State' in self.pj[ETHOGRAM][y]['type']]]
+                                if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
 
         self.currentStates = {}
 
@@ -1898,7 +1915,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.toolBar.setEnabled(True)
 
-        self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
+        self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
         #self.timer.start(200)
 
@@ -1907,7 +1924,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.timer_out()
 
-        self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
+        self.lbSpeed.setText("x{:.3f}".format(self.play_rate))
 
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
@@ -2144,12 +2161,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def new_observation(self, mode=NEW, obsId=''):
-        '''
+        """
         define a new observation or edit an existing observation
-        '''
+        """
         # check if current observation must be closed to create a new one
         if mode == NEW and self.observationId:
-            response = dialog.MessageDialog(programName, 'The current observation will be closed. Do you want to continue?', [YES, NO])
+            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
             if response == NO:
                 return
             else:
@@ -2157,7 +2174,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         observationWindow = observation.Observation(logging.getLogger().getEffectiveLevel())
 
-        #observationWindow.setGeometry(self.pos().x() + 100, self.pos().y() + 130, 600, 400)
         observationWindow.pj = self.pj
         observationWindow.mode = mode
         observationWindow.mem_obs_id = obsId
@@ -2184,7 +2200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # var type
                 item = QTableWidgetItem()
-                item.setText( self.pj[INDEPENDENT_VARIABLES][i]['type']  )
+                item.setText( self.pj[INDEPENDENT_VARIABLES][i][TYPE]  )
                 item.setFlags(Qt.ItemIsEnabled)   # not modifiable
                 observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 1, item)
 
@@ -2216,7 +2232,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == EDIT:
 
-            observationWindow.setWindowTitle('Edit observation "{}"'.format(obsId))
+            observationWindow.setWindowTitle("""Edit observation "{}" """.format(obsId))
             mem_obs_id = obsId
             observationWindow.leObservationId.setText( obsId )
             observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss") )
@@ -2225,6 +2241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]["media_info"]["length"]
             observationWindow.mediaFPS = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"]
             '''
+            TODO: fix
             observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"]
             observationWindow.mediaHasAudio = self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"]
             '''
@@ -2279,34 +2296,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
 
 
-            '''
-            if PLAYER1 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-
-                observationWindow.twVideo1.setRowCount(0)
-                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                    observationWindow.twVideo1.setRowCount( observationWindow.twVideo1.rowCount() + 1)
-                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount()-1, 0, QTableWidgetItem(mediaFile))
-
-                    self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
-
-                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                    observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
-
-
-            # check if simultaneous 2nd media
-            if PLAYER2 in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:   # media for 2nd player
-
-                observationWindow.twVideo2.setRowCount(0)
-                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:
-                    observationWindow.twVideo2.setRowCount( observationWindow.twVideo2.rowCount() + 1)
-                    observationWindow.twVideo2.setItem(observationWindow.twVideo2.rowCount()-1, 0, QTableWidgetItem(mediaFile))
-
-                    self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
-
-                    observationWindow.twVideo2.setItem(observationWindow.twVideo2.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                    observationWindow.twVideo2.setItem(observationWindow.twVideo2.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
-            '''
-
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
 
@@ -2323,7 +2312,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
 
-        if observationWindow.exec_():
+        rv = observationWindow.exec_()
+
+        if rv:
 
             self.projectChanged = True
 
@@ -2331,15 +2322,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == NEW:
                 self.observationId = new_obs_id
-                self.pj[OBSERVATIONS][self.observationId] = { FILE: [], 'type': '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
+                self.pj[OBSERVATIONS][self.observationId] = { FILE: [], TYPE: '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
 
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
 
-                logging.info('observation id {0} changed in {1}'.format(obsId, new_obs_id))
+                logging.info("observation id {} changed in {}".format(obsId, new_obs_id))
 
-                self.pj[OBSERVATIONS][ new_obs_id ] = self.pj[OBSERVATIONS][ obsId ]
-                del self.pj[OBSERVATIONS][ obsId ]
+                self.pj[OBSERVATIONS][new_obs_id] = self.pj[OBSERVATIONS][obsId]
+                del self.pj[OBSERVATIONS][obsId]
 
             # observation date
             self.pj[OBSERVATIONS][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
@@ -2347,7 +2338,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][new_obs_id]['description'] = observationWindow.teDescription.toPlainText()
 
             # observation type: read project type from tab text
-            self.pj[OBSERVATIONS][new_obs_id]['type'] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
+            self.pj[OBSERVATIONS][new_obs_id][TYPE] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
 
             # independent variables for observation
             self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES] = {}
@@ -2384,7 +2375,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fileName = {}
 
             # media
-            if self.pj[OBSERVATIONS][new_obs_id]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [MEDIA]:
 
                 fileName[PLAYER1] = []
                 if observationWindow.twVideo1.rowCount():
@@ -2416,18 +2407,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.info('pj: {0}'.format(  self.pj ))
                 '''
 
-            if mode == NEW:
+            #if mode == NEW:
+
+            if rv == 1: # save
+                self.observationId = ""
+                self.menu_options()
+
+            if rv == 2:  # launch
+
+                self.observationId = new_obs_id
+
+                print(self.pj[OBSERVATIONS][self.observationId])
 
                 # title of dock widget
                 self.dwObservations.setWindowTitle('Events for "{}" observation'.format(self.observationId))
 
-                if self.pj[OBSERVATIONS][self.observationId]['type'] in [LIVE]:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE]:
 
                     self.playerType = LIVE
                     self.initialize_new_live_observation()
 
                 else:
                     self.playerType = VLC
+
+                    # load events in table widget
+                    if mode == EDIT:
+                        self.loadEventsInTW(self.observationId)
+
                     self.initialize_new_observation_vlc()
 
                 self.menu_options()
@@ -2438,7 +2444,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close current observation
         """
 
-        logging.info('Close observation {}'.format(self.playerType))
+        logging.info("Close observation {}".format(self.playerType))
 
         self.observationId = ""
 
@@ -2754,14 +2760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if timeOffset:
-
-            if self.timeFormat == S:
-                r = str( timeOffset )
-            elif self.timeFormat == HHMMSS:
-
-                r = seconds2time( timeOffset )
-
-            self.lbTimeOffset.setText('Time offset: <b>%s</b>' % r )
+            self.lbTimeOffset.setText("Time offset: <b>{}</b>".format( timeOffset if self.timeFormat == S else  seconds2time(timeOffset)  ))
         else:
             self.lbTimeOffset.clear()
 
@@ -2773,7 +2772,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for idx in self.pj[ETHOGRAM]:
             if self.pj[ETHOGRAM][idx]['code'] == code:
-                return self.pj[ETHOGRAM][idx]['type']
+                return self.pj[ETHOGRAM][idx][TYPE]
         return None
 
 
@@ -2801,15 +2800,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == '') \
                             or ( event[1] == subject_to_analyze ):
 
-                            if event[1] == "":
-                                subjectStr = NO_FOCAL_SUBJECT
-                            else:
-                                subjectStr = event[1]
+                            subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else  event[1]
 
-                            if STATE in self.eventType(event[2]).upper():
-                                eventType = STATE
-                            else:
-                                eventType = POINT
+                            eventType = STATE if STATE in self.eventType(event[2]).upper() else POINT
 
                             r = cursor.execute('''INSERT INTO events (observation, subject, code, type, modifiers, occurence, comment) VALUES (?,?,?,?,?,?,?)''', \
                             (obsId, subjectStr, event[2], eventType, event[3], str(event[0]), event[4]))
@@ -2821,9 +2814,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def extract_observed_subjects(self, selected_observations):
-        '''
+        """
         extract unique subjects from obs_id observation
-        '''
+        """
 
         observed_subjects = []
 
@@ -3671,8 +3664,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if 'replace audio' in self.pj[OBSERVATIONS][obs]:
                     del self.pj[OBSERVATIONS][obs]['replace audio']
 
-                if self.pj[OBSERVATIONS][obs]['type'] in ['VIDEO','AUDIO']:
-                    self.pj[OBSERVATIONS][obs]['type'] = MEDIA
+                if self.pj[OBSERVATIONS][obs][TYPE] in ['VIDEO','AUDIO']:
+                    self.pj[OBSERVATIONS][obs][TYPE] = MEDIA
 
                 # convert old media list in new one
                 if len( self.pj[OBSERVATIONS][obs][FILE] ):
@@ -3943,12 +3936,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 2, item)
 
                     mediaList = []
-                    if self.pj[OBSERVATIONS][obs]['type'] in [MEDIA]:
+                    if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
                         for idx in self.pj[OBSERVATIONS][obs][FILE]:
                             for media in self.pj[OBSERVATIONS][obs][FILE][idx]:
                                 mediaList.append('#%s: %s' % (idx , media))
 
-                    elif self.pj[OBSERVATIONS][obs]['type'] in [LIVE]:
+                    elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                         mediaList = [LIVE]
 
                     item = QTableWidgetItem('\n'.join( mediaList ))
@@ -3970,7 +3963,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         item = QTableWidgetItem()
 
-                        if field == 'type':
+                        if field == TYPE:
 
                             # add combobox with event type
                             newProjectWindow.comboBoxes.append(QComboBox())
@@ -4006,7 +3999,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     for idx, field in enumerate( tw_indVarFields ):
 
-                        if field == 'type':
+                        if field == TYPE:
 
                             comboBox = QComboBox()
                             comboBox.addItems([NUMERIC, TEXT])
@@ -4172,7 +4165,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeLive.setText(self.convertTime(currentTime))
 
         # extract State events
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y]['type']]]
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
 
         self.currentStates = {}
         # add states for no focal subject
@@ -4388,35 +4381,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flagUnpairedEventFound = True
                         continue
 
-                    print(rows)
-
                     for idx, row in enumerate(rows):
 
                         if POINT in self.eventType(behavior).upper():
 
                             out += template.format( observation=obsId,
-                                                    date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
+                                                    date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                                     subject=subject,
                                                     behavior=behavior,
-                                                    modifiers=row[1],
+                                                    modifiers=row["modifiers"],
                                                     event_type=POINT,
-                                                    start=row[0],
+                                                    start=row["occurence"],
                                                     stop=0,
-                                                    comment_start=row[2],
+                                                    comment_start=row["comment"],
                                                     comment_stop="")
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
                                 out += template.format( observation=obsId,
-                                                        date=self.pj[OBSERVATIONS][obsId]['date'].replace('T',' '),
+                                                        date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                                         subject=subject,
                                                         behavior=behavior,
-                                                        modifiers=row[1],
+                                                        modifiers=row["modifiers"],
                                                         event_type=STATE,
-                                                        start=row[0],
-                                                        stop=rows[idx + 1][0],
-                                                        comment_start=row[2],
-                                                        comment_stop=rows[idx + 1][2])
+                                                        start=row["occurence"],
+                                                        stop=rows[idx + 1]["occurence"],
+                                                        comment_start=row["comment"],
+                                                        comment_stop=rows[idx + 1]["comment"])
 
         if format_ == "sql":
             out += "END TRANSACTION;" + os.linesep
@@ -4434,7 +4425,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-        self.statusbar.showMessage("Aggregated events exported successfully", 10000)
+        self.statusbar.showMessage("Aggregated events exported successfully", 0)
 
 
 
@@ -4529,10 +4520,7 @@ item []:
                 out += subjectheader
 
                 cursor.execute("SELECT occurence, code FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence", (obsId, subject))
-                rows = [ {"occurence":r["occurence"], "code":r["code"]}  for r in cursor.fetchall()]
-
-                print(rows)
-
+                rows = [{"occurence":float2decimal(r["occurence"]), "code":r["code"]}  for r in cursor.fetchall()]
 
                 count = 0
 
@@ -4540,7 +4528,6 @@ item []:
                 if rows[0]["occurence"] > 0:
                     count += 1
                     out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"] )
-
 
                 for idx, row in enumerate(rows):
                     if idx % 2 == 0:
@@ -4552,39 +4539,21 @@ item []:
 
                         count += 1
                         out += template.format(count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"] )
-                        '''try:
-                            # check if difference is > 0.001
-                            if float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"]) > 0.001:
-
-                                logging.debug( type(rows[idx + 2]["occurence"]) )
-
-                                logging.debug("difference: {}-{}={}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
-
-                                out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
-                                count += 1
-                            else:
-                                logging.debug("difference <=0.001: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
-                                rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
-                                logging.debug("difference after: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
-                        except:
-                            logging.debug("intervals finished")'''
-
 
                         # check if difference is > 0.001
-                        print(len(rows), idx + 2)
                         if len(rows) > idx + 2:
-                            if float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"]) > 0.001:
+                            if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
 
                                 logging.debug( type(rows[idx + 2]["occurence"]) )
 
-                                logging.debug("difference: {}-{}={}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+                                logging.debug("difference: {}-{}={}".format( rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] ))
 
                                 out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"] )
                                 count += 1
                             else:
-                                logging.debug("difference <=0.001: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+                                logging.debug("difference <=0.001: {} - {} = {}".format( rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] ))
                                 rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
-                                logging.debug("difference after: {} - {} = {}".format( float2decimal(rows[idx + 2]["occurence"]), float2decimal(rows[idx + 1]["occurence"]), float2decimal(rows[idx + 2]["occurence"]) - float2decimal(rows[idx + 1]["occurence"] )))
+                                logging.debug("difference after: {} - {} = {}".format( rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] ))
 
                 # check if last event ends at the end of media file
                 if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):
@@ -4782,7 +4751,7 @@ item []:
         snapshot is saved on media path
         """
 
-        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
             if self.playerType == VLC:
 
@@ -5235,7 +5204,7 @@ item []:
         adjust media position
         """
 
-        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
             if self.playerType == VLC and self.playMode == VLC:
                 sliderPos = self.hsVideo.value() / (slider_maximum - 1)
@@ -5287,7 +5256,7 @@ item []:
         if not self.observationId:
             return
 
-        if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
             # cumulative time
             currentTime = self.getLaps() * 1000
@@ -5349,7 +5318,7 @@ item []:
                 # current state(s)
 
                 # extract State events
-                StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y]['type'].upper()] ]
+                StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()] ]
 
                 self.currentStates = {}
 
@@ -5504,7 +5473,7 @@ item []:
         take consideration of subject
         '''
 
-        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x]['type'].upper() ]
+        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper() ]
 
         for row in range(0, self.twEvents.rowCount()):
 
@@ -5531,9 +5500,9 @@ item []:
 
                 if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]) % 2: # test if odd
 
-                    self.twEvents.item(row, tw_obs_fields['type'] ).setText('STOP')
+                    self.twEvents.item(row, tw_obs_fields[TYPE] ).setText('STOP')
                 else:
-                    self.twEvents.item(row, tw_obs_fields['type'] ).setText('START')
+                    self.twEvents.item(row, tw_obs_fields[TYPE] ).setText('START')
 
 
     def update_events_start_stop2(self, events):
@@ -5543,7 +5512,7 @@ item []:
         '''
 
 
-        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x]['type'].upper() ]
+        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper() ]
 
         eventsFlagged = []
         for event in events:
@@ -5605,7 +5574,7 @@ item []:
             if event['modifiers']:
 
                 # pause media
-                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                     if self.playerType == VLC:
 
@@ -5641,7 +5610,7 @@ item []:
                         modifier_str = '|'.join( modifiers )
 
                 # restart media
-                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                     if self.playerType == VLC:
 
@@ -5834,7 +5803,7 @@ item []:
         if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
 
             # pause if media and media playing
-            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                 if self.playerType == VLC:
                     memState = self.mediaListPlayer.get_state()
                     if memState == vlc.State.Playing:
@@ -5854,7 +5823,7 @@ item []:
             event['from map'] = self.codingMapWindow.getCodes()
 
             # restart media
-            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                 if self.playerType == VLC:
                     if memState == vlc.State.Playing:
@@ -5908,7 +5877,7 @@ item []:
             return
 
         # play / pause with space bar
-        if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
             if self.mediaListPlayer.get_state() != vlc.State.Paused:
                 self.pause_video()
             else:
@@ -6007,7 +5976,7 @@ item []:
             if count > 1:
 
                 flagPlayerPlaying = False
-                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                     if self.playerType == VLC:
                         if self.mediaListPlayer.get_state() != vlc.State.Paused:
                             flagPlayerPlaying = True
@@ -6019,7 +5988,7 @@ item []:
                 if obs_idx:
                     count = 1
 
-                if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA] and flagPlayerPlaying:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA] and flagPlayerPlaying:
                     self.play_video()
 
             if count == 1:
@@ -6028,7 +5997,7 @@ item []:
                 if not self.currentSubject and self.alertNoFocalSubject:
 
                     flagPlayerPlaying = False
-                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+                    if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
                             if self.mediaListPlayer.get_state() != vlc.State.Paused:
                                 flagPlayerPlaying = True
@@ -6036,7 +6005,7 @@ item []:
 
                     response = dialog.MessageDialog(programName, 'The focal subject is not defined. Do you want to continue?\nUse Preferences menu option to modify this behaviour.', [YES, NO])
 
-                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA] and flagPlayerPlaying:
+                    if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA] and flagPlayerPlaying:
                         self.play_video()
 
                     if response == NO:
@@ -6443,7 +6412,7 @@ item []:
                 rows.append(["Live observation"])
             rows.append([""])
 
-            if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
+            if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
 
                 for idx in self.pj[OBSERVATIONS][obsId][FILE]:
                     for media in self.pj[OBSERVATIONS][obsId][FILE][idx]:
@@ -6591,9 +6560,9 @@ item []:
                         # observation descrition
                         outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
                         # media file name
-                        if self.pj[OBSERVATIONS][obsId]['type'] in [MEDIA]:
+                        if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
                             outFile.write('# Media file name: {0}{1}{1}'.format(', '.join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
-                        if self.pj[OBSERVATIONS][obsId]['type'] in [LIVE]:
+                        if self.pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
                             outFile.write('# Live observation{0}{0}'.format(os.linesep))
                     for subj in selected_subjects:
                         if subj:
@@ -6727,7 +6696,7 @@ item []:
         '''
         button 'play' activated
         '''
-        if self.observationId and self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
+        if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
             self.play_video()
 
 

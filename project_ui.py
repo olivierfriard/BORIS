@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Sun Jun 14 17:14:59 2015
+# Created: Thu Feb 18 14:57:06 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -130,6 +130,9 @@ class Ui_dlgProject(object):
         self.pbImportFromJWatcher.setEnabled(True)
         self.pbImportFromJWatcher.setObjectName(_fromUtf8("pbImportFromJWatcher"))
         self.verticalLayout_11.addWidget(self.pbImportFromJWatcher)
+        self.pbImportFromTextFile = QtGui.QPushButton(self.tabConfiguration)
+        self.pbImportFromTextFile.setObjectName(_fromUtf8("pbImportFromTextFile"))
+        self.verticalLayout_11.addWidget(self.pbImportFromTextFile)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem)
         self.horizontalLayout_11.addLayout(self.verticalLayout_11)
@@ -273,7 +276,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(2)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -310,6 +313,7 @@ class Ui_dlgProject(object):
         self.pbImportBehaviorsFromProject.setText(_translate("dlgProject", "Import behaviors\n"
 "from a BORIS project", None))
         self.pbImportFromJWatcher.setText(_translate("dlgProject", "Import from JWatcher", None))
+        self.pbImportFromTextFile.setText(_translate("dlgProject", "Import from text file", None))
         self.lbObservationsState.setText(_translate("dlgProject", "TextLabel", None))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabConfiguration), _translate("dlgProject", "Ethogram", None))
         self.twSubjects.setSortingEnabled(True)
