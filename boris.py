@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.82"
-__version_date__ = "2016-02-16"
+__version_date__ = "2016-02-22"
 __DEV__ = False
 
 import sys
@@ -5541,15 +5541,15 @@ item []:
 
 
     def checkSameEvent(self, obsId, time, subject, code ):
-        '''
+        """
         check if a same event is already in events list (time, subject, code)
-        '''
+        """
         return [ time, subject, code ] in [[x[0],x[1],x[2]] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
 
 
     def writeEvent(self, event, memTime):
-        '''
+        """
         add event from pressed key to observation
 
         offset is added to event time
@@ -5559,7 +5559,7 @@ item []:
         load events in tableview
 
         scroll to active event
-        '''
+        """
 
         logging.debug("write event - event: {0}".format( event ))
 
@@ -5687,37 +5687,7 @@ item []:
         self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
 
         # reload all events in tw
-        """
-        self.twEvents.setRowCount(0)
-        for idx,o in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
 
-            self.twEvents.setRowCount(self.twEvents.rowCount() + 1)
-
-            # time
-            item = QTableWidgetItem( self.convertTime(o[ 0 ] ) )
-
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, 0, item)
-            # subject
-            item = QTableWidgetItem( o[ 1 ]  )
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, 1, item)
-            # code
-            item = QTableWidgetItem( o[ 2 ]  )
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, 2, item)
-
-            # type
-            item = QTableWidgetItem( ''  )
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, 3, item)
-
-            # modifier
-            item = QTableWidgetItem( o[ 3 ] )
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, 4, item)
-
-            # comment
-            item = QTableWidgetItem( o[ 4 ]  )
-            self.twEvents.setItem(self.twEvents.rowCount() - 1, 5, item)
-
-        self.update_events_start_stop()
-        """
         self.loadEventsInTW(self.observationId)
 
         item = self.twEvents.item([i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
@@ -5730,10 +5700,10 @@ item []:
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
-        '''
+        """
         fill listwidget with all events coded by key
         return index of behaviour
-        '''
+        """
 
         # check if key duplicated
         items = []
@@ -5747,16 +5717,14 @@ item []:
 
                 self.detailedObs[txt] = idx
 
-        response = ''
+        response = ""
 
-        item, ok = QInputDialog.getItem(self, programName, 'The <b>' + obs_key + '</b> key codes more events.<br>Choose the correct one:' , items, 0, False)
+        item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more events.<br>Choose the correct one:".format(obs_key), items, 0, False)
 
         if ok and item:
             obs_idx = self.detailedObs[ item ]
             return obs_idx
-
         else:
-
             return None
 
 
