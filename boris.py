@@ -33,7 +33,7 @@ import logging
 import platform
 
 if int(platform.python_version_tuple()[0]) < 3:
-    logging.critical("BORIS requires Python 3!")
+    logging.critical("BORIS requires Python 3+!")
     sys.exit()
 
 try:
@@ -47,7 +47,7 @@ import qrc_boris
 from config import *
 
 video, live = 0, 1
-script_out = ''
+script_out = ""
 script_fps = -2
 
 import time
@@ -232,6 +232,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     mediaTotalLength = None
 
     saveMediaFilePath = True
+    
+    measurement_w = None
 
     behaviouralStringsSeparator = '|'
 
@@ -471,6 +473,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCheckStateEvents.setEnabled(flagObs)
 
         self.actionShow_spectrogram.setEnabled(flagObs)
+        self.menuMeasure.setEnabled(flagObs)
+        self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
+
 
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
@@ -551,7 +556,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
 
-
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
         # menu playback
@@ -560,6 +564,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Tools
         self.actionMapCreator.triggered.connect(self.map_creator)
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
+        self.actionDistance.triggered.connect(self.distance)
 
         # menu Analyze
         self.actionTime_budget.triggered.connect(self.time_budget)
@@ -1429,7 +1434,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         fps = list(self.fps.values())[0]
 
-        logging.debug("fps {0}".format( fps ))
+        logging.debug("fps {0}".format(fps))
 
         frameMs = 1000 / fps
 
@@ -1451,7 +1456,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.timer_spectro_out()
 
 
-        md5FileName = hashlib.md5(currentMedia.encode('utf-8')).hexdigest()
+        md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
         #logging.debug('imagesList {0}'.format(self.imagesList))
         logging.debug('image {0}'.format( '%s-%d' % (md5FileName, int(frameCurrentMedia / fps))))
@@ -1488,15 +1493,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.warning("image not found: {0}".format(img))
             return
 
-        pixmap = QtGui.QPixmap(img)
-        self.lbFFmpeg.setPixmap(pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+        self.pixmap = QtGui.QPixmap(img)
+        self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
         self.FFmpegGlobalFrame = requiredFrame
 
         currentTime = self.getLaps() * 1000
 
         self.lbTime.setText( "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
-                             currentMediaName=self.mediaplayer.get_media().get_meta(0),
-                             currentTime=self.convertTime( currentTime /1000),
+                             currentMediaName=currentMedia,
+                             currentTime=self.convertTime(currentTime / 1000),
                              totalTime=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)),
                              currentFrame=round(self.FFmpegGlobalFrame)
                              ))
@@ -1539,12 +1544,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show tracking cursor
         self.get_events_current_row()
 
+    def close_measurement_widget(self):
+        self.measurement_w.close()
+        self.measurement_w = None
+
+    def distance(self):
+        import measurement_widget
+        self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
+        self.measurement_w.closeSignal.connect(self.close_measurement_widget)
+        self.measurement_w.show()
+
+
     def getPoslbFFmpeg(self , event):
-        x = event.pos().x()
-        y = event.pos().y()
-        if self.memx != -1 and self.memy != -1:
-            print(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5  )
-        self.memx, self.memy = x, y
+        """
+        return click position on frame and distance between 2 last clicks
+        """
+        if self.measurement_w:
+            x = event.pos().x()
+            y = event.pos().y()
+            if event.button() == 1:   # left
+                painter	= QPainter()
+                painter.begin(self.lbFFmpeg.pixmap())
+                painter.setPen(QColor("blue"))
+                painter.drawEllipse(QPoint(x,y), 5, 5)
+                painter.end()
+                self.lbFFmpeg.update()
+                self.memx, self.memy = x, y
+    
+            if event.button() == 2 and self.memx != -1 and self.memy != -1:
+                logging.debug("{} {} {}".format(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
+                painter	= QPainter()
+                painter.begin(self.lbFFmpeg.pixmap())
+                painter.setPen(QColor("red"))
+                painter.drawEllipse(QPoint(x,y), 5, 5)
+                painter.drawLine(self.memx, self.memy, x, y)
+                painter.end()
+                self.lbFFmpeg.update()
+                self.measurement_w.pte.appendPlainText("Time: {} (frame {}) distance: {:.3g}".format(self.getLaps(), self.FFmpegGlobalFrame, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
+                self.memx, self.memy = -1, -1
 
 
 
@@ -3039,9 +3076,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def time_budget(self):
-        '''
+        """
         time budget
-        '''
+        """
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
         logging.debug("Selected observations: {0}".format(selectedObservations))
@@ -3200,7 +3237,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # widget for results visualization
-        self.tb = timeBudgetResults( logging.getLogger().getEffectiveLevel(), self.pj)
+        self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
 
         # observations list
         self.tb.label.setText("Selected observations")
@@ -4758,6 +4795,8 @@ item []:
         self.actionSlower.setEnabled( self.playMode == VLC )
 
         logging.info( 'new play mode: {0}'.format( self.playMode ))
+        
+        self.menu_options()
 
 
     def snapshot(self):

@@ -31,10 +31,10 @@ import tablib
 from config import *
 
 class timeBudgetResults(QWidget):
-    '''
+    """
     class for displaying time budget results in new window
     a function for exporting data in TSV format is implemented
-    '''
+    """
 
     def __init__(self, log_level, pj):
         super(timeBudgetResults, self).__init__()
@@ -47,7 +47,7 @@ class timeBudgetResults(QWidget):
         self.lw.setEnabled(False)
         self.lw.setMaximumHeight(100)
         self.lbTotalObservedTime = QLabel()
-        self.lbTotalObservedTime.setText('')
+        self.lbTotalObservedTime.setText("")
         self.twTB = QTableWidget()
                 
         hbox = QVBoxLayout(self)
@@ -80,25 +80,22 @@ class timeBudgetResults(QWidget):
 
 
     def pbSave_clicked(self):
-        '''
+        """
         save time budget analysis results in TSV, CSV, ODS, XLS format
-        '''
+        """
 
         def complete(l, max):
-            '''
+            """
             complete list with empty string until len = max
-            '''
+            """
             while len(l) < max:
-                l.append('')
+                l.append("")
             return l
 
+        logging.debug("save time budget results to file")
 
-        logging.debug('save time budget results to file')
+        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save Time budget analysis', '','Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)')
 
-        fd = QFileDialog(self)
-        fileName, filter_ = fd.getSaveFileNameAndFilter(self, 'Save Time budget analysis', '','Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)')
-
-        print('filter_',filter_)
         if fileName:
 
             rows = []
@@ -140,7 +137,7 @@ class timeBudgetResults(QWidget):
 
             maxLen = max( [len(r) for r in rows] )
             data = tablib.Dataset()
-            data.title = 'Time budget'
+            data.title = "Time budget"
             
             for row in rows:
                 data.append( complete( row, maxLen ) )
