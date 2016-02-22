@@ -163,9 +163,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                         self.twVariables.item(row, tw_indVarFields.index('label')).text()))
 
     def pbAddVariable_clicked(self):
-        '''
+        """
         add an independent variable
-        '''
+        """
         logging.debug("add an independent variable")
 
         self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
@@ -215,7 +215,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             try:
                 project = json.loads(s)
             except:
-                QMessageBox.warning(None, programName, 'Error while reading independent variables from selected file', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.warning(None, programName, "Error while reading independent variables from selected file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
             # independent variables
@@ -224,7 +224,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # check if variables are already present
                 if self.twVariables.rowCount():
 
-                    response = dialog.MessageDialog(programName, 'There are independent variables already configured. Do you want to append independent variables or replace them?', ['Append', 'Replace', CANCEL])
+                    response = dialog.MessageDialog(programName, "There are independent variables already configured. Do you want to append independent variables or replace them?", ['Append', 'Replace', CANCEL])
 
                     if response == 'Replace':
                         self.twVariables.setRowCount(0)
@@ -260,14 +260,14 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twVariables.resizeColumnsToContents()
 
             else:
-                QMessageBox.warning(self, programName, 'No independent variables found in project')
+                QMessageBox.warning(self, programName, "No independent variables found in project")
 
     def pbImportSubjectsFromProject_clicked(self):
-        '''
+        """
         import subjects from another project
-        '''
+        """
         fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Import subjects from project file', '', 'Project files (*.boris);;All files (*)')
+        fileName = fd.getOpenFileName(self, "Import subjects from project file", "", "Project files (*.boris);;All files (*)")
 
         if fileName:
 
@@ -277,7 +277,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             try:
                 project = json.loads(s)
             except:
-                QMessageBox.warning(None, programName, 'Error while reading subjects from selected file', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.warning(None, programName, "Error while reading subjects from selected file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
             # configuration of behaviours
@@ -558,6 +558,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def pbImportFromTextFile_clicked(self):
+        """
+        import ethogram from text file
+        ethogram must be organized like:
+        typeOfBehavior separator key separator behaviorCode [separator description]
+
+        """
 
         if self.twBehaviors.rowCount():
             response = dialog.MessageDialog(programName, "There are behaviors already configured. Do you want to append behaviors or replace them?", ['Append', 'Replace', CANCEL])
@@ -584,10 +590,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 for row in rows:
 
-                    if num == 2:  # 3 fields
+                    if num == 2:  # 3 fields: type, key, code
                         type_, key, code = row.split(sep)
                         description = ""
-                    if num == 3:  # 4 fields
+                    if num == 3:  # 4 fields:  type, key, code, description
                         type_, key, code, description = row.split(sep)
 
                     behavior = {'key': key, 'code': code, 'description': description, 'modifiers': '', 'excluded': '', 'coding map': ''}

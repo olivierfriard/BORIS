@@ -261,6 +261,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # FFmpeg
     allowFrameByFrame = False
 
+    memx, memy = -1, -1
+
     # path for ffmpeg/ffmpeg.exe program
     ffmpeg_bin = ''
     ffmpeg_cache_dir = ''
@@ -1462,7 +1464,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         imageDir=self.imageDirectory,
         sep=os.sep,
         fileName=md5FileName,
-        extension='jpg' )
+        extension="jpg")
 
         logging.debug('ffmpeg command: {0}'.format(ffmpeg_command))
 
@@ -1483,16 +1485,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                'extension': 'jpg'}
 
         if not os.path.isfile(img):
-            logging.warning('image not found: {0}'.format( img ))
+            logging.warning("image not found: {0}".format(img))
             return
 
-        pixmap = QtGui.QPixmap( img )
-        self.lbFFmpeg.setPixmap( pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+        pixmap = QtGui.QPixmap(img)
+        self.lbFFmpeg.setPixmap(pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
         self.FFmpegGlobalFrame = requiredFrame
 
         currentTime = self.getLaps() * 1000
 
-        self.lbTime.setText( '{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>'.format(
+        self.lbTime.setText( "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
                              currentMediaName=self.mediaplayer.get_media().get_meta(0),
                              currentTime=self.convertTime( currentTime /1000),
                              totalTime=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)),
@@ -1536,6 +1538,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # show tracking cursor
         self.get_events_current_row()
+
+    def getPoslbFFmpeg(self , event):
+        x = event.pos().x()
+        y = event.pos().y()
+        if self.memx != -1 and self.memy != -1:
+            print(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5  )
+        self.memx, self.memy = x, y
+
 
 
     def initialize_video_tab(self):
@@ -1591,6 +1601,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.ffmpegLayout = QHBoxLayout()
         self.lbFFmpeg = QLabel(self)
         self.lbFFmpeg.setBackgroundRole(QPalette.Base)
+        self.lbFFmpeg.mousePressEvent = self.getPoslbFFmpeg
 
         self.ffmpegLayout.addWidget(self.lbFFmpeg)
 
@@ -4644,6 +4655,10 @@ item []:
             logging.debug("switch_playing_mode new global current time: {} {}".format( globalCurrentTime, type(globalCurrentTime) ))
 
             # seek VLC on current time from FFmpeg mode
+
+            logging.debug("globalCurrentTime: {0}".format(globalCurrentTime))
+            logging.debug("self.duration: {0}".format(self.duration))
+
             for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                 if globalCurrentTime < sum(self.duration[0:idx + 1]):
 
@@ -4665,7 +4680,7 @@ item []:
 
             self.FFmpegTimer.stop()
 
-            logging.info( 'ffmpeg timer stopped')
+            logging.info("ffmpeg timer stopped")
 
             # set thread for cleaning temp directory
             if self.ffmpeg_cache_dir_max_size:

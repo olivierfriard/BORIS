@@ -11,12 +11,12 @@ This file is part of BORIS.
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   any later version.
-  
+
   BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
@@ -74,7 +74,7 @@ def intersection(A, B, C, D):
 
     else:
 
-        # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN) 
+        # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
         xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
         ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
 
@@ -107,7 +107,7 @@ class MapCreatorWindow(QMainWindow):
         _start=0
         elList = []
         points = []
-        
+
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
             self.setBackgroundBrush( QColor( 128, 128, 128 ) )
@@ -177,8 +177,8 @@ class MapCreatorWindow(QMainWindow):
         fileMenu.addAction(self.saveMapAction)
         fileMenu.addAction(self.saveAsMapAction)
         fileMenu.addAction(self.exitAction)
-        
-        
+
+
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
 
@@ -206,7 +206,7 @@ class MapCreatorWindow(QMainWindow):
         self.btColor.setVisible(False)
         self.btColor.setStyleSheet("QWidget {background-color:%s}" % self.areaColor.name())
         self.hlayout.addWidget(self.btColor)
-        
+
         self.slAlpha = QSlider(Qt.Horizontal)
         self.slAlpha.setRange(20, 100)
         self.slAlpha.setValue(50)
@@ -256,7 +256,7 @@ class MapCreatorWindow(QMainWindow):
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush( self.areaColor )
-            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba() 
+            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba()
 
         if self.closedPolygon:
             self.closedPolygon.setBrush( self.areaColor )
@@ -277,7 +277,7 @@ class MapCreatorWindow(QMainWindow):
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush( self.areaColor )
-            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba() 
+            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba()
 
         if self.closedPolygon:
             self.closedPolygon.setBrush( self.areaColor )
@@ -332,9 +332,9 @@ class MapCreatorWindow(QMainWindow):
                     self.selectedPolygonAreaCode = areaCode
 
                     self.selectedPolygonMemBrush = self.selectedPolygon.brush()
-                    
+
                     self.selectedPolygon.setPen( QPen(QColor(255,0,0,255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin) )
-                    
+
                     self.leAreaCode.setText( areaCode )
                     self.leAreaCode.setVisible(True)
 
@@ -391,7 +391,7 @@ class MapCreatorWindow(QMainWindow):
                 if len( self.view.points ) >= 3:
 
                     for idx, point in enumerate(self.view.points[:-2]):
-                    
+
                         if intersection(  self.view.points[ idx ], self.view.points[ idx + 1 ], self.view.points[ -1 ], (  int(end.x()), int(end.y()))  ) :
                             QMessageBox.critical(self, '' , 'The polygon edges can not be intersected')
                             return
@@ -450,7 +450,7 @@ class MapCreatorWindow(QMainWindow):
 
                 self.view.scene().addItem( ellipse )
                 self.view.elList.append(ellipse)
-                
+
                 self.view.points.append( ( self.view._start.x(), self.view._start.y()) )
 
 
@@ -469,7 +469,7 @@ class MapCreatorWindow(QMainWindow):
         '''
 
         if self.flagMapChanged:
-            
+
             response = dialog.MessageDialog(programName + ' - Map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
 
             if response == 'Save':
@@ -478,10 +478,10 @@ class MapCreatorWindow(QMainWindow):
 
             if response == 'Cancel':
                 return
- 
+
 
         self.cancelMap()
- 
+
         text, ok = QInputDialog.getText(self, 'Map name', 'Enter a name for the new map')
         if ok:
             self.mapName = text
@@ -495,7 +495,7 @@ class MapCreatorWindow(QMainWindow):
         if self.mapName in ['areas','bitmap']:
             QMessageBox.critical(self, '' , 'This name is not allowed' )
             return
-            
+
 
         self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
 
@@ -513,7 +513,7 @@ class MapCreatorWindow(QMainWindow):
         '''
 
         if self.flagMapChanged:
-            
+
             response = dialog.MessageDialog(programName + ' - Map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
 
             if response == 'Save':
@@ -532,7 +532,7 @@ class MapCreatorWindow(QMainWindow):
         if fileName:
 
             self.codingMap = json.loads( open( fileName , 'r').read() )
-            
+
             self.mapName = self.codingMap['name']
 
             self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
@@ -543,13 +543,13 @@ class MapCreatorWindow(QMainWindow):
 
             self.areasList = self.codingMap['areas']   ### dictionary of dictionaries
             bitmapContent = binascii.a2b_base64( self.codingMap['bitmap'] )
-    
+
             self.pixmap.loadFromData(bitmapContent)
 
             self.btCancelArea.setVisible(True)
 
 
-            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height()) 
+            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixItem = QGraphicsPixmapItem(self.pixmap)
             pixItem.setPos(0,0)
             self.view.scene().addItem(pixItem)
@@ -567,7 +567,7 @@ class MapCreatorWindow(QMainWindow):
 
                 # draw polygon
                 polygon = QGraphicsPolygonItem(None, None)
-                
+
                 polygon.setPolygon(newPolygon)
 
                 polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
@@ -642,7 +642,7 @@ class MapCreatorWindow(QMainWindow):
         if not self.fileName:
             fd = QFileDialog(self)
             self.fileName = fd.getSaveFileName(self, 'Save coding map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
-            
+
             if self.fileName and os.path.splitext(self.fileName)[1] != '.boris_map':
                 self.fileName += '.boris_map'
 
@@ -663,7 +663,7 @@ class MapCreatorWindow(QMainWindow):
         if self.selectedPolygon:
             self.selectedPolygon.setPen( QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin) )
             self.selectedPolygon = None
-            
+
         self.flagNewArea = True
         self.btSaveArea.setVisible(True)
         self.btNewArea.setVisible(False)
@@ -725,7 +725,7 @@ class MapCreatorWindow(QMainWindow):
         self.view.elList = []
         self.flagNewArea = False
         self.closedPolygon = None
-        
+
         self.btSaveArea.setVisible(False)
         self.lb.setVisible(False)
         self.leAreaCode.setVisible(False)
@@ -804,7 +804,7 @@ class MapCreatorWindow(QMainWindow):
         maxSize = 512
 
         fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Load bitmap', '', 'bitmap files (*.png *.jpg);;All files (*)')
+        fileName = fd.getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
         if fileName:
             self.bitmapFileName = fileName
 
@@ -817,20 +817,20 @@ class MapCreatorWindow(QMainWindow):
             # scale image
             #pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
 
-            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height()) 
+            self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixItem = QGraphicsPixmapItem(self.pixmap)
             pixItem.setPos(0,0)
             self.view.scene().addItem(pixItem)
-    
+
             self.btNewArea.setVisible(True)
-    
+
             self.btLoad.setVisible(False)
             self.saveMapAction.setEnabled(True)
             self.saveAsMapAction.setEnabled(True)
             self.mapNameAction.setEnabled(True)
-    
+
             self.statusBar().showMessage('Click "New area" to create a new area')
- 
+
             self.flagMapChanged = True
 
 
