@@ -5003,9 +5003,9 @@ item []:
 
 
     def edit_event(self):
-        '''
+        """
         edit each event items from the selected row
-        '''
+        """
         if not self.observationId:
             self.no_observation()
             return
@@ -5013,11 +5013,11 @@ item []:
         if self.twEvents.selectedItems():
 
             editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel())
-            editWindow.setWindowTitle('Edit event parameters')
+            editWindow.setWindowTitle("Edit event parameters")
 
             # pass project to window
             editWindow.pj = self.pj
-            editWindow.currentModifier = ''
+            editWindow.currentModifier = ""
 
             row = self.twEvents.selectedItems()[0].row()
 
@@ -5027,31 +5027,32 @@ item []:
 
             if self.timeFormat == S:
                 editWindow.teTime.setVisible(False)
-                editWindow.dsbTime.setValue( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ 0 ] )
+                editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
 
-            sortedSubjects = [''] + sorted( [ self.pj[SUBJECTS][x]['name'] for x in self.pj[SUBJECTS] ])
+            sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
-            editWindow.cobSubject.addItems( sortedSubjects )
+            editWindow.cobSubject.addItems(sortedSubjects)
 
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] in sortedSubjects:
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][SUBJECT_EVENT_FIELD] in sortedSubjects:
                 editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] ) )
             else:
-                QMessageBox.warning(self, programName, "The subject <b>%s</b> do not exists more in the subject's list" %   self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject'] ]  )
-                editWindow.cobSubject.setCurrentIndex( 0 )
+                QMessageBox.warning(self, programName, "The subject <b>%s</b> do not exists more in the subject's list" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject']])
+                editWindow.cobSubject.setCurrentIndex(0)
 
-            sortedCodes = sorted( [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] ])
+            sortedCodes = sorted( [ self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
 
             editWindow.cobCode.addItems( sortedCodes )
 
             # check if selected code is in code's list (no modification of codes)
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['code'] ] in sortedCodes:
-                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['code'] ] ) )
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] in sortedCodes:
+                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
             else:
-                logging.warning("The code <b>{0}</b> do not exists more in the code's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['code'] ] ) )
-                QMessageBox.warning(self, programName, "The code <b>%s</b> do not exists more in the code's list" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['code'] ])
-                editWindow.cobCode.setCurrentIndex( 0 )
+                logging.warning("The code <b>{0}</b> do not exists more in the code's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
+                QMessageBox.warning(self, programName, "The code <b>%s</b> do not exists more in the code's list" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"]])
+                editWindow.cobCode.setCurrentIndex(0)
 
 
+            logging.debug("original modifiers: {}".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]))
             # pass current modifier(s) to window
             """
             editWindow.currentModifier = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
@@ -5082,12 +5083,15 @@ item []:
 
                 for obs_idx in self.pj[ETHOGRAM]:
 
-                    if self.pj[ETHOGRAM][obs_idx]['code'] == editWindow.cobCode.currentText():
+                    if self.pj[ETHOGRAM][obs_idx]["code"] == editWindow.cobCode.currentText():
                         event = self.full_event(obs_idx)
-                        event['subject'] = editWindow.cobSubject.currentText()
-                        event['comment'] = editWindow.leComment.toPlainText()
-                        event['row'] = row
-                        self.writeEvent( event, newTime)
+                        event["subject"] = editWindow.cobSubject.currentText()
+                        event["comment"] = editWindow.leComment.toPlainText()
+                        event["row"] = row
+
+                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
+
+                        self.writeEvent(event, newTime)
                         break
 
 
@@ -5557,13 +5561,14 @@ item []:
         scroll to active event
         '''
 
-        logging.debug('write event - event: {0}'.format( event ))
+        logging.debug("write event - event: {0}".format( event ))
 
         # add time offset
         memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal('.001'))
 
         # check if a same event is already in events list (time, subject, code)
-        if not 'row' in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event['code'] ):
+        # "row" present in case of event editing
+        if not "row" in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event['code'] ):
             QMessageBox.warning(self, programName, "The same event already exists!\nSame time, code and subject.")
             return
 
@@ -5588,7 +5593,6 @@ item []:
                             if memState == vlc.State.Playing:
                                 self.pause_video()
 
-
                 modifiersList = []
                 if '|' in event['modifiers']:
                     modifiersStringsList = event['modifiers'].split('|')
@@ -5598,7 +5602,10 @@ item []:
                 else:
                     modifiersList.append([s.strip() for s in event['modifiers'].split(',')])
 
-                modifierSelector = select_modifiers.ModifiersRadioButton(event['code'], modifiersList, '', 'normal')
+                # check if editing (original_modifiers key)
+                currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
+
+                modifierSelector = select_modifiers.ModifiersRadioButton(event['code'], modifiersList, currentModifiers, "normal")
 
                 if modifierSelector.exec_():
                     modifiers = modifierSelector.getModifiers()
@@ -5607,7 +5614,7 @@ item []:
                         if modifier_str == 'None':
                             modifier_str = ''
                     else:
-                        modifier_str = '|'.join( modifiers )
+                        modifier_str = "|".join( modifiers )
 
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -5794,13 +5801,13 @@ item []:
 
 
     def full_event(self, obs_idx):
-        '''
+        """
         ask modifiers from coding if configured and add them under 'from map' key
-        '''
+        """
 
         event = dict(self.pj[ETHOGRAM][obs_idx])
         # check if coding map
-        if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
+        if "coding map" in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]["coding map"]:
 
             # pause if media and media playing
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -5809,7 +5816,7 @@ item []:
                     if memState == vlc.State.Playing:
                         self.pause_video()
 
-            self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj[ETHOGRAM][obs_idx]['coding map'] ] )
+            self.codingMapWindow = coding_map.codingMapWindowClass( self.pj["coding_map"][ self.pj[ETHOGRAM][obs_idx]["coding map"] ] )
 
             self.codingMapWindow.resize(640, 640)
             if self.codingMapWindowGeometry:
@@ -5820,7 +5827,7 @@ item []:
 
             self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
 
-            event['from map'] = self.codingMapWindow.getCodes()
+            event["from map"] = self.codingMapWindow.getCodes()
 
             # restart media
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:

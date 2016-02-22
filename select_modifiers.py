@@ -11,12 +11,12 @@ This file is part of BORIS.
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   any later version.
-  
+
   BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
@@ -37,15 +37,15 @@ class ModifiersRadioButton(QDialog):
 
         self.setWindowTitle(config.programName)
 
-        currentModifierList = currentModifier.split('|')
+        currentModifierList = currentModifier.split("|")
 
-        Vlayout = QVBoxLayout() 
-        widget = QWidget(self)  
+        Vlayout = QVBoxLayout()
+        widget = QWidget(self)
         widget.setLayout(Vlayout)
-    
-        if mode == 'normal':
+
+        if mode == "normal":
             label = QLabel()
-            label.setText('Choose the modifier{0} for <b>{1}</b> event'.format( 's'*(len(modifiers_list)>1), code))
+            label.setText("Choose the modifier{0} for <b>{1}</b> event".format( 's'*(len(modifiers_list)>1), code))
             Vlayout.addWidget(label)
 
         count = 1
@@ -53,7 +53,7 @@ class ModifiersRadioButton(QDialog):
 
             if len(modifiers_list) > 1:
                 lb = QLabel()
-                lb.setText('Modifiers #%d' % count)
+                lb.setText("Modifiers #{}".format(count))
                 count += 1
                 Vlayout.addWidget(lb)
 
@@ -103,7 +103,7 @@ class ModifiersRadioButton(QDialog):
         for i in range(0, l.count()):   # iterate on all widget/layout
             layout = l.itemAt(i).layout()
             if (layout) and (type(layout) is QHBoxLayout):
-                for j in range(0, layout.count()):   # iterate on all widget 
+                for j in range(0, layout.count()):   # iterate on all widget
                     widget = layout.itemAt(j).widget()
                     if (widget != 0) and (type(widget) is QRadioButton):
                         if '(' + chr(ek + 32) + ')' in widget.text():
@@ -121,7 +121,7 @@ class ModifiersRadioButton(QDialog):
         for i in range(0, l.count()):   # iterate on all widget/layout
             layout = l.itemAt(i).layout()
             if (layout) and (type(layout) is QHBoxLayout):
-                for j in range(0, layout.count()):   # iterate on all widget 
+                for j in range(0, layout.count()):   # iterate on all widget
                     widget = layout.itemAt(j).widget()
                     if (widget != 0) and (type(widget) is QRadioButton):
                         if widget.isChecked():
