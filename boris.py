@@ -1615,7 +1615,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.memPoints.append((x, y))
 
                     if len( self.memPoints ) == 3:
-                        self.measurement_w.pte.appendPlainText("Time: {} (frame {}) Angle: {}".format( angle(self.getLaps(), self.FFmpegGlobalFrame, self.memPoints[1], self.memPoints[0], self.memPoints[2]) ))
+                        self.measurement_w.pte.appendPlainText("Time: {} (frame {}) Angle: {}".format( self.getLaps(), self.FFmpegGlobalFrame, angle( self.memPoints[1], self.memPoints[0], self.memPoints[2]) ))
                         self.measurement_w.flagSaved = False
 
 
