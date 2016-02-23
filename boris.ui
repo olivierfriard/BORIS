@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>362</width>
-             <height>404</height>
+             <width>352</width>
+             <height>402</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>938</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -197,15 +197,9 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <widget class="QMenu" name="menuMeasure">
-     <property name="title">
-      <string>Measure</string>
-     </property>
-     <addaction name="actionDistance"/>
-    </widget>
     <addaction name="actionMapCreator"/>
     <addaction name="actionShow_spectrogram"/>
-    <addaction name="menuMeasure"/>
+    <addaction name="actionDistance"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -810,7 +804,7 @@
   </action>
   <action name="actionDistance">
    <property name="text">
-    <string>Distance</string>
+    <string>Measurement</string>
    </property>
   </action>
  </widget>

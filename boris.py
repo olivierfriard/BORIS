@@ -234,6 +234,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     saveMediaFilePath = True
 
     measurement_w = None
+    memPoints = []
 
     behaviouralStringsSeparator = '|'
 
@@ -473,7 +474,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCheckStateEvents.setEnabled(flagObs)
 
         self.actionShow_spectrogram.setEnabled(flagObs)
-        self.menuMeasure.setEnabled(flagObs)
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
 
 
@@ -827,6 +827,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
                 # connect signal from spectrogram class to testsignal function to receive keypress events
+                self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.spectro.sendEvent.connect(self.signal_from_spectrogram)
                 self.spectro.show()
                 self.timer_spectro.start()
@@ -857,7 +858,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # get time in current media
                 currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame, list(self.fps.values())[0] )
 
-                currentMediaTime = frameCurrentMedia / list(self.fps.values())[0] *1000
+                currentMediaTime = frameCurrentMedia / list(self.fps.values())[0] * 1000
 
         currentChunk = int(currentMediaTime / 1000 / self.chunk_length)
 
@@ -1551,8 +1552,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def distance(self):
         import measurement_widget
         self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
+        self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.measurement_w.closeSignal.connect(self.close_measurement_widget)
         self.measurement_w.show()
+
+
+
 
 
     def getPoslbFFmpeg(self, event):
@@ -1562,27 +1567,56 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.measurement_w:
             x = event.pos().x()
             y = event.pos().y()
-            if event.button() == 1:   # left
-                painter	= QPainter()
-                painter.begin(self.lbFFmpeg.pixmap())
-                painter.setPen(QColor("blue"))
-                painter.drawEllipse(QPoint(x,y), 5, 5)
-                painter.end()
-                self.lbFFmpeg.update()
-                self.memx, self.memy = x, y
 
-            if event.button() == 2 and self.memx != -1 and self.memy != -1:
-                logging.debug("{} {} {}".format(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
-                painter	= QPainter()
-                painter.begin(self.lbFFmpeg.pixmap())
-                painter.setPen(QColor("red"))
-                painter.drawEllipse(QPoint(x,y), 5, 5)
-                painter.drawLine(self.memx, self.memy, x, y)
-                painter.end()
-                self.lbFFmpeg.update()
-                self.measurement_w.pte.appendPlainText("Time: {} (frame {}) distance: {:.3g}".format(self.getLaps(), self.FFmpegGlobalFrame, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
-                self.measurement_w.flagSaved = False
-                self.memx, self.memy = -1, -1
+            if self.measurement_w.rbDistance.isChecked():
+                if event.button() == 1:   # left
+                    painter	= QPainter()
+                    painter.begin(self.lbFFmpeg.pixmap())
+                    painter.setPen(QColor("blue"))
+                    painter.drawEllipse(QPoint(x,y), 5, 5)
+                    painter.end()
+                    self.lbFFmpeg.update()
+                    self.memx, self.memy = x, y
+
+                if event.button() == 2 and self.memx != -1 and self.memy != -1:
+                    logging.debug("{} {} {}".format(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
+                    painter	= QPainter()
+                    painter.begin(self.lbFFmpeg.pixmap())
+                    painter.setPen(QColor("red"))
+                    painter.drawEllipse(QPoint(x,y), 5, 5)
+                    painter.drawLine(self.memx, self.memy, x, y)
+                    painter.end()
+                    self.lbFFmpeg.update()
+                    self.measurement_w.pte.appendPlainText("Time: {} (frame {}) distance: {:.3g}".format(self.getLaps(), self.FFmpegGlobalFrame, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
+                    self.measurement_w.flagSaved = False
+                    self.memx, self.memy = -1, -1
+
+            if self.measurement_w.rbAngle.isChecked():
+                if event.button() == 1:   # left
+                    painter	= QPainter()
+                    painter.begin(self.lbFFmpeg.pixmap())
+                    painter.setPen(QColor("blue"))
+                    painter.drawEllipse(QPoint(x,y), 5, 5)
+                    painter.end()
+                    self.lbFFmpeg.update()
+                    self.memPoints =[(x,y)]
+                if event.button() == 2 and len(self.memPoints):
+                    painter	= QPainter()
+                    painter.begin(self.lbFFmpeg.pixmap())
+                    if len(self.memPoints) == 1:
+                        painter.setPen(QColor("red"))
+                    else:
+                        painter.setPen(QColor("blue"))
+                    painter.drawEllipse(QPoint(x,y), 5, 5)
+                    painter.setPen(QColor("red"))
+                    painter.drawLine(self.memPoints[-1][0], self.memPoints[-1][1] , x, y)
+                    painter.end()
+                    self.lbFFmpeg.update()
+                    self.memPoints.append((x, y))
+
+                    if len( self.memPoints ) == 3:
+                        self.measurement_w.pte.appendPlainText("Time: {} (frame {}) Angle: {}".format( angle(self.getLaps(), self.FFmpegGlobalFrame, self.memPoints[1], self.memPoints[0], self.memPoints[2]) ))
+                        self.measurement_w.flagSaved = False
 
 
 
@@ -1638,6 +1672,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.ffmpegLayout = QHBoxLayout()
         self.lbFFmpeg = QLabel(self)
+        self.lbFFmpeg.setAlignment(Qt.AlignLeft | Qt.AlignTop  )
         self.lbFFmpeg.setBackgroundRole(QPalette.Base)
         self.lbFFmpeg.mousePressEvent = self.getPoslbFFmpeg
 
@@ -2002,6 +2037,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
             # connect signal from spectrogram class to testsignal function to receive keypress events
+            self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.spectro.sendEvent.connect(self.signal_from_spectrogram)
             self.spectro.show()
             self.timer_spectro.start()
@@ -5631,7 +5667,7 @@ item []:
             # check if event has modifiers
             modifier_str = ''
 
-            if event['modifiers']:
+            if event["modifiers"]:
 
                 # pause media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -5649,11 +5685,10 @@ item []:
                                 self.pause_video()
 
                 modifiersList = []
-                if '|' in event['modifiers']:
-                    modifiersStringsList = event['modifiers'].split('|')
+                if "|" in event["modifiers"]:
+                    modifiersStringsList = event["modifiers"].split("|")
                     for modifiersString in modifiersStringsList:
                         modifiersList.append([s.strip() for s in modifiersString.split(',')])
-
                 else:
                     modifiersList.append([s.strip() for s in event['modifiers'].split(',')])
 
@@ -5666,8 +5701,8 @@ item []:
                     modifiers = modifierSelector.getModifiers()
                     if len(modifiers) == 1:
                         modifier_str = modifiers[0]
-                        if modifier_str == 'None':
-                            modifier_str = ''
+                        if modifier_str == "None":
+                            modifier_str = ""
                     else:
                         modifier_str = "|".join( modifiers )
 

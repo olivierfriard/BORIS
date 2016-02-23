@@ -41,16 +41,25 @@ class wgMeasurement(QWidget):
 
         logging.basicConfig(level=log_level)
 
-        hbox = QVBoxLayout(self)
+        vbox = QVBoxLayout(self)
+
+        self.rbDistance = QRadioButton("Distance")
+        vbox.addWidget(self.rbDistance)
+
+        self.rbAngle = QRadioButton("Angle")
+        vbox.addWidget(self.rbAngle)
+
+        self.rbArea = QRadioButton("Area")
+        vbox.addWidget(self.rbArea)
 
         self.pte = QPlainTextEdit()
-        hbox.addWidget(self.pte)
+        vbox.addWidget(self.pte)
 
         self.pbSave = QPushButton("Save results")
-        hbox.addWidget(self.pbSave)
+        vbox.addWidget(self.pbSave)
 
         self.pbClose = QPushButton("Close")
-        hbox.addWidget(self.pbClose)
+        vbox.addWidget(self.pbClose)
 
         self.setWindowTitle("Measurement")
 

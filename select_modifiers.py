@@ -28,7 +28,6 @@ from PyQt4.QtGui import *
 import re
 import config
 
-
 class ModifiersRadioButton(QDialog):
 
     def __init__(self, code, modifiers_list, currentModifier, mode):   # mode: normal / embeded
@@ -111,10 +110,10 @@ class ModifiersRadioButton(QDialog):
 
 
     def getModifiers(self):
-        '''
+        """
         get modifiers
         returns list of selected modifiers
-        '''
+        """
 
         l = self.layout()
         modifiers = []

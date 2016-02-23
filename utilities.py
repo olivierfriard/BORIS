@@ -32,6 +32,22 @@ from config import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from decimal import *
+import math
+
+def distance( p1,p2 ):
+    """
+    distance between 2 points
+    """
+    x1, y1 = p1
+    x2, y2 = p2
+    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
+
+def angle(p1, p2, p3):
+    """
+    angle between 3 points (p1 is the vertex)
+    return angle in degree
+    """
+    return math.acos( (distance(p1,p2)**2 + distance(p1,p3)**2 - distance(p2,p3)**2) / (2 * distance(p1,p2) * distance(p1,p3)) )/math.pi*180
 
 
 def hashfile(fileName, hasher, blocksize=65536):

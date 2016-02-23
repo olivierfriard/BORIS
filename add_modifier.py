@@ -28,7 +28,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from add_modifier_ui import Ui_Dialog
 
-
 class addModifierDialog(QDialog, Ui_Dialog):
 
     def __init__(self, modifiersStr, parent=None):
@@ -58,13 +57,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         # create tab
         for i in range(len(self.modifiersSets_list) - 1):
-            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #%d" % (i + 2))
+            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(i + 2))
 
         # set first tab as active
         self.lwModifiers.addItems(self.modifiersSets_list[0])
 
     def addSet(self):
-        self.tabWidgetModifiersSets.addTab(QWidget(), 'Set #%d' % (len(self.modifiersSets_list)+1))
+        self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(len(self.modifiersSets_list)+1))
         self.modifiersSets_list.append([])
 
     def removeSet(self):

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Feb 22 22:52:16 2016
+# Created: Tue Feb 23 16:32:53 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 362, 404))
+        self.page.setGeometry(QtCore.QRect(0, 0, 352, 402))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -84,8 +84,6 @@ class Ui_MainWindow(object):
         self.menuPlayback.setObjectName(_fromUtf8("menuPlayback"))
         self.menuTools = QtGui.QMenu(self.menubar)
         self.menuTools.setObjectName(_fromUtf8("menuTools"))
-        self.menuMeasure = QtGui.QMenu(self.menuTools)
-        self.menuMeasure.setObjectName(_fromUtf8("menuMeasure"))
         MainWindow.setMenuBar(self.menubar)
         self.toolBar = QtGui.QToolBar(MainWindow)
         self.toolBar.setEnabled(True)
@@ -387,10 +385,9 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionPause)
         self.menuPlayback.addAction(self.actionPrevious)
         self.menuPlayback.addAction(self.actionNext)
-        self.menuMeasure.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionMapCreator)
         self.menuTools.addAction(self.actionShow_spectrogram)
-        self.menuTools.addAction(self.menuMeasure.menuAction())
+        self.menuTools.addAction(self.actionDistance)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
@@ -427,7 +424,6 @@ class Ui_MainWindow(object):
         self.menuAnalyze.setTitle(_translate("MainWindow", "Analyze", None))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback", None))
         self.menuTools.setTitle(_translate("MainWindow", "Tools", None))
-        self.menuMeasure.setTitle(_translate("MainWindow", "Measure", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
         self.dwConfiguration.setWindowTitle(_translate("MainWindow", "Ethogram", None))
         item = self.twConfiguration.horizontalHeaderItem(0)
@@ -524,5 +520,5 @@ class Ui_MainWindow(object):
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid", None))
         self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract events from media files", None))
-        self.actionDistance.setText(_translate("MainWindow", "Distance", None))
+        self.actionDistance.setText(_translate("MainWindow", "Measurement", None))
 
