@@ -232,7 +232,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     mediaTotalLength = None
 
     saveMediaFilePath = True
-    
+
     measurement_w = None
 
     behaviouralStringsSeparator = '|'
@@ -1555,7 +1555,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.measurement_w.show()
 
 
-    def getPoslbFFmpeg(self , event):
+    def getPoslbFFmpeg(self, event):
         """
         return click position on frame and distance between 2 last clicks
         """
@@ -1570,7 +1570,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 painter.end()
                 self.lbFFmpeg.update()
                 self.memx, self.memy = x, y
-    
+
             if event.button() == 2 and self.memx != -1 and self.memy != -1:
                 logging.debug("{} {} {}".format(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
                 painter	= QPainter()
@@ -1581,6 +1581,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 painter.end()
                 self.lbFFmpeg.update()
                 self.measurement_w.pte.appendPlainText("Time: {} (frame {}) distance: {:.3g}".format(self.getLaps(), self.FFmpegGlobalFrame, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
+                self.measurement_w.flagSaved = False
                 self.memx, self.memy = -1, -1
 
 
@@ -4795,7 +4796,7 @@ item []:
         self.actionSlower.setEnabled( self.playMode == VLC )
 
         logging.info( 'new play mode: {0}'.format( self.playMode ))
-        
+
         self.menu_options()
 
 
