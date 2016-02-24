@@ -1564,60 +1564,96 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         return click position on frame and distance between 2 last clicks
         """
+
+        def draw_point(x, y, color):
+            painter	= QPainter()
+            painter.begin(self.lbFFmpeg.pixmap())
+            painter.setPen(QColor(color))
+            painter.drawEllipse(QPoint(x, y), 5, 5)
+            painter.end()
+            self.lbFFmpeg.update()
+
+        def draw_line(x1, y1, x2, y2, color):
+            painter	= QPainter()
+            painter.begin(self.lbFFmpeg.pixmap())
+            painter.setPen(QColor(color))
+            painter.drawLine(x1,y1,x2,y2)
+            painter.end()
+            self.lbFFmpeg.update()
+
+
         if self.measurement_w:
             x = event.pos().x()
             y = event.pos().y()
 
+            # distance
             if self.measurement_w.rbDistance.isChecked():
                 if event.button() == 1:   # left
-                    painter	= QPainter()
-                    painter.begin(self.lbFFmpeg.pixmap())
-                    painter.setPen(QColor("blue"))
-                    painter.drawEllipse(QPoint(x,y), 5, 5)
-                    painter.end()
-                    self.lbFFmpeg.update()
+                    draw_point(x,y,"blue")
                     self.memx, self.memy = x, y
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
-                    logging.debug("{} {} {}".format(x, y, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
-                    painter	= QPainter()
-                    painter.begin(self.lbFFmpeg.pixmap())
-                    painter.setPen(QColor("red"))
-                    painter.drawEllipse(QPoint(x,y), 5, 5)
-                    painter.drawLine(self.memx, self.memy, x, y)
-                    painter.end()
-                    self.lbFFmpeg.update()
-                    self.measurement_w.pte.appendPlainText("Time: {} (frame {}) distance: {:.3g}".format(self.getLaps(), self.FFmpegGlobalFrame, ((x - self.memx)**2 + (y - self.memy)**2)**0.5))
+                    draw_point(x, y, "red")
+                    draw_line(self.memx, self.memy, x, y, "red")
+
+                    d = ((x - self.memx)**2 + (y - self.memy)**2)**0.5
+                    try:
+                        d = d / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
+                    except:
+                        QMessageBox.critical(self, programName, "Check reference and pixel values! Values must be numeric.", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+                    self.measurement_w.pte.appendPlainText("Time: {}\tFrame: {}\tDistance: {}".format(self.getLaps(),
+                                                                                                         self.FFmpegGlobalFrame,
+                                                                                                         round(d, 1)))
                     self.measurement_w.flagSaved = False
                     self.memx, self.memy = -1, -1
 
+            # angle 1st clic -> vertex
             if self.measurement_w.rbAngle.isChecked():
-                if event.button() == 1:   # left
-                    painter	= QPainter()
-                    painter.begin(self.lbFFmpeg.pixmap())
-                    painter.setPen(QColor("blue"))
-                    painter.drawEllipse(QPoint(x,y), 5, 5)
-                    painter.end()
-                    self.lbFFmpeg.update()
-                    self.memPoints =[(x,y)]
+                if event.button() == 1:   # left for vertex
+                    draw_point(x, y, "red")
+                    self.memPoints = [(x, y)]
+
                 if event.button() == 2 and len(self.memPoints):
-                    painter	= QPainter()
-                    painter.begin(self.lbFFmpeg.pixmap())
-                    if len(self.memPoints) == 1:
-                        painter.setPen(QColor("red"))
-                    else:
-                        painter.setPen(QColor("blue"))
-                    painter.drawEllipse(QPoint(x,y), 5, 5)
-                    painter.setPen(QColor("red"))
-                    painter.drawLine(self.memPoints[-1][0], self.memPoints[-1][1] , x, y)
-                    painter.end()
-                    self.lbFFmpeg.update()
+                    draw_point(x, y, "blue")
+                    draw_line(self.memPoints[0][0], self.memPoints[0][1], x, y, "blue")
+
                     self.memPoints.append((x, y))
 
                     if len( self.memPoints ) == 3:
-                        self.measurement_w.pte.appendPlainText("Time: {} (frame {}) Angle: {}".format( self.getLaps(), self.FFmpegGlobalFrame, angle( self.memPoints[1], self.memPoints[0], self.memPoints[2]) ))
+                        self.measurement_w.pte.appendPlainText("Time: {}\tFrame: {}\tAngle: {}".format(self.getLaps(),
+                                                                                                      self.FFmpegGlobalFrame,
+                                                                                                      round(angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)
+                                                                                                      )
+                                                                                                      )
                         self.measurement_w.flagSaved = False
+                        self.memPoints = []
 
+            # Area
+            if self.measurement_w.rbArea.isChecked():
+                if event.button() == 1:   # left
+                    draw_point(x, y,"blue")
+                    if len(self.memPoints):
+                        draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
+                    self.memPoints.append((x, y))
+
+                if event.button() == 2 and len(self.memPoints) >= 2:
+                    draw_point(x, y, "red")
+                    draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
+                    self.memPoints.append((x, y))
+                    # close polygon
+                    draw_line(self.memPoints[-1][0], self.memPoints[-1][1], self.memPoints[0][0], self.memPoints[0][1], "blue")
+                    a = polygon_area(self.memPoints)
+                    try:
+                        a = a / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
+                    except:
+                        QMessageBox.critical(self, programName, """Check reference and pixel values! Values must be numeric.""", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+                    self.measurement_w.pte.appendPlainText("Time: {}\tFrame: {}\tArea: {}".format(self.getLaps(),
+                                                                                                     self.FFmpegGlobalFrame,
+                                                                                                     round(a, 1)))
+
+                    self.memPoints = []
 
 
     def initialize_video_tab(self):

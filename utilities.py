@@ -44,16 +44,30 @@ def distance( p1,p2 ):
 
 def angle(p1, p2, p3):
     """
-    angle between 3 points (p1 is the vertex)
+    angle between 3 points (p1 must be the vertex)
     return angle in degree
     """
     return math.acos( (distance(p1,p2)**2 + distance(p1,p3)**2 - distance(p2,p3)**2) / (2 * distance(p1,p2) * distance(p1,p3)) )/math.pi*180
 
+def polygon_area(poly):
+    """
+    area of polygon
+    from http://www.mathopenref.com/coordpolygonarea.html
+    """
+    tot = 0
+    for p in range(len(poly)):
+        x1, y1 = poly[p]
+        n = (p + 1) % len(poly)
+        x2, y2 = poly[n]
+        tot += x1 * y2 - x2 * y1
+
+    return abs(tot / 2)
+
 
 def hashfile(fileName, hasher, blocksize=65536):
-    '''
+    """
     return hash of file content
-    '''
+    """
     with open(fileName,'rb') as afile:
         buf = afile.read(blocksize)
         while len(buf) > 0:
@@ -63,10 +77,10 @@ def hashfile(fileName, hasher, blocksize=65536):
 
 
 def url2path(url):
-    '''
+    """
     convert URL in local path name
     under windows, check if path name begin with /
-    '''
+    """
 
     path = urllib.parse.unquote(urllib.parse.urlparse(url).path)
     # check / for windows

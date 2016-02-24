@@ -41,27 +41,52 @@ class wgMeasurement(QWidget):
 
         logging.basicConfig(level=log_level)
 
+        self.setWindowTitle("Measurement")
+
         vbox = QVBoxLayout(self)
 
         self.rbDistance = QRadioButton("Distance")
         vbox.addWidget(self.rbDistance)
 
-        self.rbAngle = QRadioButton("Angle")
-        vbox.addWidget(self.rbAngle)
-
         self.rbArea = QRadioButton("Area")
         vbox.addWidget(self.rbArea)
+
+        hbox1 = QHBoxLayout(self)
+
+        self.lbRef = QLabel("Reference")
+        hbox1.addWidget(self.lbRef)
+
+        self.lbPx = QLabel("Pixels")
+        hbox1.addWidget(self.lbPx)
+
+        vbox.addLayout(hbox1)
+
+        hbox1 = QHBoxLayout(self)
+
+        self.leRef = QLineEdit()
+        self.leRef.setText("1")
+        hbox1.addWidget(self.leRef)
+
+        self.lePx = QLineEdit()
+        self.lePx.setText("1")
+        hbox1.addWidget(self.lePx)
+
+        vbox.addLayout(hbox1)
+
+        self.rbAngle = QRadioButton("Angle")
+        vbox.addWidget(self.rbAngle)
 
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)
 
+        hbox2 = QHBoxLayout(self)
         self.pbSave = QPushButton("Save results")
-        vbox.addWidget(self.pbSave)
+        hbox2.addWidget(self.pbSave)
 
         self.pbClose = QPushButton("Close")
-        vbox.addWidget(self.pbClose)
+        hbox2.addWidget(self.pbClose)
 
-        self.setWindowTitle("Measurement")
+        vbox.addLayout(hbox2)
 
         self.pbClose.clicked.connect(self.pbClose_clicked)
         self.pbSave.clicked.connect(self.pbSave_clicked)

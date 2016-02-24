@@ -11,12 +11,12 @@ This file is part of BORIS.
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   any later version.
-  
+
   BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
@@ -49,7 +49,7 @@ class timeBudgetResults(QWidget):
         self.lbTotalObservedTime = QLabel()
         self.lbTotalObservedTime.setText("")
         self.twTB = QTableWidget()
-                
+
         hbox = QVBoxLayout(self)
 
         hbox.addWidget(self.label)
@@ -65,7 +65,6 @@ class timeBudgetResults(QWidget):
 
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
-
 
         self.pbClose = QPushButton("Close")
         hbox2.addWidget(self.pbClose)
@@ -108,7 +107,7 @@ class timeBudgetResults(QWidget):
             # check if only one observation was selected
             if self.lw.count() == 1:
                 rows.append( [''] )
-                
+
                 # write independant variables to file
                 if INDEPENDENT_VARIABLES in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
                     rows.append( ['Independent variables:'] )
@@ -118,14 +117,14 @@ class timeBudgetResults(QWidget):
             rows.append( [''] )
             rows.append( [''] )
             rows.append( ['Time budget:'] )
-            
+
             # write header
             cols = []
             for col in range(self.twTB.columnCount() ):
                 cols.append( self.twTB.horizontalHeaderItem(col).text() )
 
             rows.append( cols )
-            
+
             rows.append( [''] )
 
             for row in range( self.twTB.rowCount()):
@@ -138,7 +137,7 @@ class timeBudgetResults(QWidget):
             maxLen = max( [len(r) for r in rows] )
             data = tablib.Dataset()
             data.title = "Time budget"
-            
+
             for row in rows:
                 data.append( complete( row, maxLen ) )
 
@@ -164,7 +163,7 @@ class timeBudgetResults(QWidget):
             if fileName.upper().endswith('.ODS'):
                 with open(fileName,'wb') as f:
                     f.write(data.ods)
-                return            
+                return
 
             if fileName.upper().endswith('.XLS'):
                 with open(fileName,'wb') as f:
