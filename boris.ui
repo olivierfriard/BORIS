@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>938</width>
+    <width>1108</width>
     <height>604</height>
    </rect>
   </property>
@@ -75,7 +75,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>352</width>
+             <width>522</width>
              <height>402</height>
             </rect>
            </property>
@@ -96,7 +96,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>938</width>
+     <width>1108</width>
      <height>22</height>
     </rect>
    </property>
@@ -236,6 +236,8 @@
    <addaction name="actionNext"/>
    <addaction name="actionSnapshot"/>
    <addaction name="actionFrame_by_frame"/>
+   <addaction name="actionFrame_backward"/>
+   <addaction name="actionFrame_forward"/>
   </widget>
   <widget class="QDockWidget" name="dwConfiguration">
    <property name="floating">
@@ -805,6 +807,16 @@
   <action name="actionDistance">
    <property name="text">
     <string>Geometric measurement</string>
+   </property>
+  </action>
+  <action name="actionFrame_forward">
+   <property name="text">
+    <string>Frame forward</string>
+   </property>
+  </action>
+  <action name="actionFrame_backward">
+   <property name="text">
+    <string>frame backward</string>
    </property>
   </action>
  </widget>

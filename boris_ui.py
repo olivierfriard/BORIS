@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Feb 25 11:50:31 2016
+# Created: Thu Feb 25 12:41:23 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(938, 604)
+        MainWindow.resize(1108, 604)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.centralwidget)
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 352, 402))
+        self.page.setGeometry(QtCore.QRect(0, 0, 522, 402))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 938, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -327,6 +327,10 @@ class Ui_MainWindow(object):
         self.actionExtract_events_from_media_files.setObjectName(_fromUtf8("actionExtract_events_from_media_files"))
         self.actionDistance = QtGui.QAction(MainWindow)
         self.actionDistance.setObjectName(_fromUtf8("actionDistance"))
+        self.actionFrame_forward = QtGui.QAction(MainWindow)
+        self.actionFrame_forward.setObjectName(_fromUtf8("actionFrame_forward"))
+        self.actionFrame_backward = QtGui.QAction(MainWindow)
+        self.actionFrame_backward.setObjectName(_fromUtf8("actionFrame_backward"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -406,6 +410,8 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionNext)
         self.toolBar.addAction(self.actionSnapshot)
         self.toolBar.addAction(self.actionFrame_by_frame)
+        self.toolBar.addAction(self.actionFrame_backward)
+        self.toolBar.addAction(self.actionFrame_forward)
 
         self.retranslateUi(MainWindow)
         self.toolBox.setCurrentIndex(0)
@@ -521,4 +527,6 @@ class Ui_MainWindow(object):
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid", None))
         self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract events from media files", None))
         self.actionDistance.setText(_translate("MainWindow", "Geometric measurement", None))
+        self.actionFrame_forward.setText(_translate("MainWindow", "Frame forward", None))
+        self.actionFrame_backward.setText(_translate("MainWindow", "frame backward", None))
 

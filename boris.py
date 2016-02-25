@@ -309,7 +309,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNext.setIcon(QIcon(':/next.png'))
 
         self.actionSnapshot.setIcon(QIcon(':/snapshot.png'))
+
         self.actionFrame_by_frame.setIcon(QIcon(':/frame_mode'))
+        self.actionFrame_backward.setIcon(QIcon(':/frame_backward'))
+        self.actionFrame_forward.setIcon(QIcon(':/frame_forward'))
+
 
         self.setWindowTitle('%s (%s)' % (programName, __version__))
 
@@ -318,12 +322,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             datadir = os.path.dirname(os.path.realpath(__file__))
 
-        self.lbLogoBoris.setPixmap(QPixmap( datadir + "/logo_boris_500px.png"))
+        self.lbLogoBoris.setPixmap(QPixmap(datadir + "/logo_boris_500px.png"))
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
 
 
-        self.lbLogoUnito.setPixmap(QPixmap( datadir + "/dbios_unito.png"))
+        self.lbLogoUnito.setPixmap(QPixmap(datadir + "/dbios_unito.png"))
         self.lbLogoUnito.setScaledContents(False)
         self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
@@ -495,6 +499,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSnapshot.setEnabled(self.playerType == VLC)
         self.actionFrame_by_frame.setEnabled(True)
 
+        self.actionFrame_backward.setEnabled(flagObs and (self.playMode == FFMPEG))
+        self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
+
         # statusbar label
         self.lbTime.setVisible( self.playerType == VLC )
         self.lbSubject.setVisible( self.playerType == VLC )
@@ -593,6 +600,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSnapshot.triggered.connect(self.snapshot)
 
         self.actionFrame_by_frame.triggered.connect(self.switch_playing_mode)
+
+        self.actionFrame_backward.triggered.connect(self.frame_backward)
+        self.actionFrame_forward.triggered.connect(self.frame_forward)
 
         # table Widget double click
         self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
@@ -1563,10 +1573,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         def draw_point(x, y, color):
+            RADIUS = 6
             painter	= QPainter()
             painter.begin(self.lbFFmpeg.pixmap())
             painter.setPen(QColor(color))
-            painter.drawEllipse(QPoint(x, y), 5, 5)
+            painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
+            # cross inside circle
+            painter.drawLine(x - RADIUS, y, x + RADIUS, y)
+            painter.drawLine(x, y - RADIUS, x, y + RADIUS)
             painter.end()
             self.lbFFmpeg.update()
 
@@ -1574,7 +1588,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             painter	= QPainter()
             painter.begin(self.lbFFmpeg.pixmap())
             painter.setPen(QColor(color))
-            painter.drawLine(x1,y1,x2,y2)
+            painter.drawLine(x1, y1, x2, y2)
             painter.end()
             self.lbFFmpeg.update()
 
@@ -5927,6 +5941,25 @@ item []:
 
         return event
 
+    def frame_backward(self):
+        """
+        go one frame back
+        """
+
+        if self.playMode == FFMPEG:
+            logging.debug("current frame {0}".format( self.FFmpegGlobalFrame ))
+            if self.FFmpegGlobalFrame > 1:
+                self.FFmpegGlobalFrame -= 2
+                #newTime = 1000 * self.FFmpegGlobalFrame / list(self.fps.values())[0]
+                self.FFmpegTimerOut()
+                logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
+
+    def frame_forward(self):
+        """
+        go one frame forward
+        """
+        if self.playMode == FFMPEG:
+            self.FFmpegTimerOut()
 
 
     def keyPressEvent(self, event):
@@ -5952,7 +5985,7 @@ item []:
             app.beep()
 
         if self.playerType == VIEWER:
-            QMessageBox.critical(self, programName, 'The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode.')
+            QMessageBox.critical(self, programName, "The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode.")
             return
 
         # check if media ever played
@@ -5980,31 +6013,23 @@ item []:
                 self.play_video()
             return
 
+        # frame-by-frame mode
         if self.playMode == FFMPEG:
             if ek == 47 or ek == Qt.Key_Left:   # /   one frame back
 
                 logging.debug("current frame {0}".format( self.FFmpegGlobalFrame ))
-
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
-
-
-
                     newTime = 1000 * self.FFmpegGlobalFrame / list(self.fps.values())[0]
                     self.FFmpegTimerOut()
-
                     logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
-
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
 
                 logging.debug("(next) current frame {0}".format( self.FFmpegGlobalFrame ))
-
                 self.FFmpegTimerOut()
-
                 logging.debug("(next) new frame {0}".format( self.FFmpegGlobalFrame ))
-
                 return
 
 
