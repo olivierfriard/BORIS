@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Thu Feb 18 14:07:03 2016
+# Created: Thu Feb 25 11:49:51 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -292,5 +292,5 @@ class Ui_Form(object):
         self.lbMediaAnalysis.setText(_translate("Form", "BORIS", None))
         self.pbCancel.setText(_translate("Form", "Cancel", None))
         self.pbSave.setText(_translate("Form", "Save", None))
-        self.pbLaunch.setText(_translate("Form", "Launch", None))
+        self.pbLaunch.setText(_translate("Form", "Start", None))
 

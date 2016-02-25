@@ -1557,9 +1557,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.measurement_w.show()
 
 
-
-
-
     def getPoslbFFmpeg(self, event):
         """
         return click position on frame and distance between 2 last clicks
@@ -1589,7 +1586,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # distance
             if self.measurement_w.rbDistance.isChecked():
                 if event.button() == 1:   # left
-                    draw_point(x,y,"blue")
+                    draw_point(x ,y, "blue")
                     self.memx, self.memy = x, y
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
@@ -1632,7 +1629,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Area
             if self.measurement_w.rbArea.isChecked():
                 if event.button() == 1:   # left
-                    draw_point(x, y,"blue")
+                    draw_point(x, y, "blue")
                     if len(self.memPoints):
                         draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
                     self.memPoints.append((x, y))
@@ -1703,8 +1700,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionFrame_by_frame.setEnabled(False)
 
-        """if FFMPEG in self.availablePlayers:
-        """
 
         self.ffmpegLayout = QHBoxLayout()
         self.lbFFmpeg = QLabel(self)

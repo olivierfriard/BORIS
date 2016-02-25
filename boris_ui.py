@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Feb 23 16:32:53 2016
+# Created: Thu Feb 25 11:50:31 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -520,5 +520,5 @@ class Ui_MainWindow(object):
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid", None))
         self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract events from media files", None))
-        self.actionDistance.setText(_translate("MainWindow", "Measurement", None))
+        self.actionDistance.setText(_translate("MainWindow", "Geometric measurement", None))
 

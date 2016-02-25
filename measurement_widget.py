@@ -41,15 +41,20 @@ class wgMeasurement(QWidget):
 
         logging.basicConfig(level=log_level)
 
-        self.setWindowTitle("Measurement")
+        self.setWindowTitle("Geometric measurement")
 
         vbox = QVBoxLayout(self)
 
-        self.rbDistance = QRadioButton("Distance")
+        self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
         vbox.addWidget(self.rbDistance)
 
-        self.rbArea = QRadioButton("Area")
+        self.rbArea = QRadioButton("Area (left click for are vertices, right click to close area)")
         vbox.addWidget(self.rbArea)
+
+        self.rbAngle = QRadioButton("Angle (vertex: left click, segments: right click)")
+        vbox.addWidget(self.rbAngle)
+
+        vbox.addWidget(QLabel("<b>Scale</b>"))
 
         hbox1 = QHBoxLayout(self)
 
@@ -72,9 +77,6 @@ class wgMeasurement(QWidget):
         hbox1.addWidget(self.lePx)
 
         vbox.addLayout(hbox1)
-
-        self.rbAngle = QRadioButton("Angle")
-        vbox.addWidget(self.rbAngle)
 
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)

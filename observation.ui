@@ -469,7 +469,7 @@ from directory</string>
      <item>
       <widget class="QPushButton" name="pbLaunch">
        <property name="text">
-        <string>Launch</string>
+        <string>Start</string>
        </property>
       </widget>
      </item>
