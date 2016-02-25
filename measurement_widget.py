@@ -48,7 +48,7 @@ class wgMeasurement(QWidget):
         self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
         vbox.addWidget(self.rbDistance)
 
-        self.rbArea = QRadioButton("Area (left click for are vertices, right click to close area)")
+        self.rbArea = QRadioButton("Area (left click for area vertices, right click to close area)")
         vbox.addWidget(self.rbArea)
 
         self.rbAngle = QRadioButton("Angle (vertex: left click, segments: right click)")
