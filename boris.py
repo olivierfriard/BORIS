@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.9"
-__version_date__ = "2016-02-25"
+__version__ = "2.91"
+__version_date__ = "2016-02-26"
 __DEV__ = False
 
 import sys
@@ -4395,8 +4395,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
                     duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
 
-                print('duration1', duration1)
-
                 subtitles = {}
                 for subject in selectedSubjects:
 
@@ -4474,18 +4472,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedSubjects or not selectedBehaviors:
             return
 
-        fd = QFileDialog(self)
-
         if format_ == "sql":
-            fileName = fd.getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
+            fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
             out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             out += "BEGIN TRANSACTION;" + os.linesep
             template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         if format_ == "tab":
-            fileName = fd.getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
-            out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
-            template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
+            fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
+            out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
+            template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
 
         if not fileName:
             return
@@ -4497,6 +4493,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         flagUnpairedEventFound = False
 
         for obsId in selectedObservations:
+            
+            duration1 = []   # in seconds
+            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+                duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
 
             cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
@@ -4512,11 +4512,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                     for idx, row in enumerate(rows):
+                        
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
                         if POINT in self.eventType(behavior).upper():
 
                             out += template.format( observation=obsId,
                                                     date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
+                                                    media_file=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
+                                                    total_length=sum(duration1),
+                                                    fps=self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]],
                                                     subject=subject,
                                                     behavior=behavior,
                                                     modifiers=row["modifiers"],
@@ -4530,6 +4535,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if idx % 2 == 0:
                                 out += template.format( observation=obsId,
                                                         date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
+                                                        media_file=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
+                                                        total_length=sum(duration1),
+                                                        fps=self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]],
                                                         subject=subject,
                                                         behavior=behavior,
                                                         modifiers=row["modifiers"],
