@@ -3053,8 +3053,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             behaviorsSelection.lw.setItemWidget(behaviorsSelection.item, behaviorsSelection.ch)
 
-        behaviorsSelection.setWindowTitle('Select behaviors to analyze')
-        behaviorsSelection.label.setText('Available behaviors')
+        behaviorsSelection.setWindowTitle("Select behaviors to analyze")
+        behaviorsSelection.label.setText("Available behaviors")
 
         behav_sel = []
 
@@ -3071,11 +3071,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def choose_obs_subj_behav(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True):
-        '''
-        show param window
-        allow user to select subjects and behaviors
+        """
+        show param window for selection subjects and behaviors
         for plot user can select the max time (if media length is known)
-        '''
+        """
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.selectedObservations = selectedObservations
@@ -3088,11 +3087,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbExcludeBehaviors.setVisible(False)
         # hide max time
         if not maxTime:
-            paramPanelWindow.sbMaxTime.setVisible(False)
             paramPanelWindow.lbMaxTime.setVisible(False)
+            paramPanelWindow.teMaxTime.setVisible(False)
         else:
-            paramPanelWindow.sbMaxTime.setValue(maxTime/60)  # max time in minutes
-
+            paramPanelWindow.teMaxTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
 
         # extract subjects present in observations
         observedSubjects = self.extract_observed_subjects( selectedObservations )
@@ -3108,7 +3106,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-        all_subjects = sorted([self.pj[SUBJECTS][x]['name'] for x in self.pj[SUBJECTS]])
+        all_subjects = sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
         for subject in all_subjects:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -3141,21 +3139,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
         if not paramPanelWindow.exec_():
-            return [],[],YES,False,0
+            return [], [], YES, False, 0
 
         selectedSubjects = paramPanelWindow.selectedSubjects
         selectedBehaviors = paramPanelWindow.selectedBehaviors
 
-        logging.debug( selectedSubjects )
-        logging.debug( selectedBehaviors )
+        logging.debug("selected subjects: {}".format(selectedSubjects))
+        logging.debug("selected behaviors: {}".format(selectedBehaviors))
 
         if paramPanelWindow.cbIncludeModifiers.isChecked():
             includeModifiers = YES
         else:
             includeModifiers = NO
 
-        return selectedSubjects, selectedBehaviors, includeModifiers, paramPanelWindow.cbExcludeBehaviors.isChecked(), paramPanelWindow.sbMaxTime.value()
-
+        return selectedSubjects, selectedBehaviors, includeModifiers,\
+               paramPanelWindow.cbExcludeBehaviors.isChecked(),\
+               time2seconds(paramPanelWindow.teMaxTime.time().toString(HHMMSSZZZ))
 
     def time_budget(self):
         """
@@ -3186,7 +3185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if selectedObsTotalMediaLength == -1: # an observation media length is not available
             # propose to user to use max event time
-            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO ]) == YES:
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO]) == YES:
                 maxTime = 0 # max length for all events all subjects
                 for obsId in selectedObservations:
                     maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
@@ -3327,8 +3326,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tb.lw.addItem(obs)
 
         if selectedObsTotalMediaLength:
-            #self.tb.lbTotalObservedTime.setText( "Total media length: {0} s  (~ {1} min)".format(round(selectedObsTotalMediaLength,3), round(selectedObsTotalMediaLength/60,2)) )
-            self.tb.lbTotalObservedTime.setText( "Total media length: {0} decimal minutes".format( round(selectedObsTotalMediaLength/60,2)) )
+            
+            self.tb.lbTotalObservedTime.setText( "Total media length: {0}".format(seconds2time(selectedObsTotalMediaLength)))
         else:
             self.tb.lbTotalObservedTime.setText( "Total media length: not available")
 
@@ -3650,9 +3649,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         selectedSubjects, selectedBehaviors, includeModifiers, excludeBehaviorsWithoutEvents, totalMediaLength = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
 
-        logging.debug("totalMediaLength: {0} min".format(totalMediaLength))
+        logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
 
-        totalMediaLength = int(totalMediaLength * 60)
+        totalMediaLength = int(totalMediaLength)
 
         if not selectedSubjects or not selectedBehaviors:
             return
@@ -3677,9 +3676,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = cursor.fetchall()
 
                         if modifier[0]:
-                            behaviorOut = '{0} ({1})'.format(behavior, modifier[0].replace('|', ','))
+                            behaviorOut = "{0} ({1})".format(behavior, modifier[0].replace('|', ','))
                         else:
-                            behaviorOut = '{0}'.format(behavior)
+                            behaviorOut = "{0}".format(behavior)
 
                         if not behaviorOut in o[subject]:
                             o[subject][behaviorOut] = []
@@ -3731,9 +3730,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def open_project_json(self, projectFileName):
-        '''
+        """
         open project  json
-        '''
+        """
         logging.info("open project: {0}".format(projectFileName))
         if not os.path.isfile(projectFileName):
             QMessageBox.warning(self, programName , "File not found")
@@ -5232,39 +5231,10 @@ item []:
                         event["subject"] = editWindow.cobSubject.currentText()
                         event["comment"] = editWindow.leComment.toPlainText()
                         event["row"] = row
-
                         event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
 
                         self.writeEvent(event, newTime)
                         break
-
-
-                # check mod type (QPushButton or QDialog)
-                """
-                if type(editWindow.mod)  is select_modifiers.ModifiersRadioButton:
-                    modifiers = editWindow.mod.getModifiers()
-
-                    if len(modifiers) == 1:
-                        modifier_str = modifiers[0]
-                        if modifier_str == 'None':
-                            modifier_str = ''
-                    else:
-                        modifier_str = '|'.join( modifiers )
-
-                #QPushButton coding map
-                if type(editWindow.mod)  is QPushButton:
-                    modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
-                """
-
-                """
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][row] = [newTime, editWindow.cobSubject.currentText(),
-                 editWindow.cobCode.currentText(),
-                  modifier_str ,
-                  editWindow.leComment.toPlainText()]
-
-                self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
-                self.loadEventsInTW( self.observationId )
-                """
 
         else:
             QMessageBox.warning(self, programName, "Select an event to edit")

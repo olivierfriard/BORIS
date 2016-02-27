@@ -34,6 +34,25 @@ from PyQt4.QtGui import *
 from decimal import *
 import math
 
+
+def bestTimeUnit(t: int) -> str:
+    """
+    Return time in best format
+
+    Keyword argument:
+    t -- time (in seconds)
+    """
+    unit = "s"
+    if t >=  60:
+        t = t / 60
+        unit = "min"
+    if t > 60:
+        t = t / 60
+        unit = "h"
+    return t, unit
+
+
+
 def distance( p1,p2 ):
     """
     distance between 2 points
@@ -110,9 +129,9 @@ def time2seconds(time):
 
 
 def seconds2time(sec):
-    '''
+    """
     convert seconds to hh:mm:ss.sss format
-    '''
+    """
     flagNeg = sec < 0
     sec = abs(sec)
 
