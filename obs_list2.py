@@ -69,10 +69,10 @@ class observationsList_widget(QDialog):
         self.pbOpen = QPushButton('Open')
         hbox2.addWidget(self.pbOpen)
 
-        self.pbEdit = QPushButton('Edit')
+        self.pbEdit = QPushButton("Edit")
         hbox2.addWidget(self.pbEdit)
 
-        self.pbSelect = QPushButton('Select')
+        self.pbSelect = QPushButton("OK")
         hbox2.addWidget(self.pbSelect)
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)

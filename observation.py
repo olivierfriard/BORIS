@@ -39,7 +39,7 @@ import logging
 
 from observation_ui import Ui_Form
 
-out = ''
+out = ""
 fps = 0
 
 class Observation(QDialog, Ui_Form):
@@ -259,55 +259,13 @@ class Observation(QDialog, Ui_Form):
         twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
         twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
 
-        '''
-            if self.twVideo1.rowCount() and self.twVideo2.rowCount():
-                QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
-                return False
-
-            self.twVideo1.setRowCount( self.twVideo1.rowCount() + 1)
-            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 0, QTableWidgetItem(fileName) )
-            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
-            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
-            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 3, QTableWidgetItem("{} ".format(self.mediaHasVideo[fileName])))
-            self.twVideo1.setItem(self.twVideo1.rowCount()-1, 4, QTableWidgetItem("{} ".format(self.mediaHasAudio[fileName])))
-
-
-        if nPlayer == PLAYER2:
-
-            self.twVideo2.setRowCount( self.twVideo2.rowCount() + 1)
-            self.twVideo2.setItem(self.twVideo2.rowCount()-1, 0, QTableWidgetItem(fileName) )
-            self.twVideo2.setItem(self.twVideo2.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
-            self.twVideo2.setItem(self.twVideo2.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
-
-
-            #self.lwVideo_2.addItems([fileName])
-
-            #self.fileName2hash[fileName] = fileContentMD5
-        '''
-
 
     def remove_media(self, nPlayer):
-        '''
+        """
         remove selected item from list widget
-        '''
+        """
 
         if nPlayer == PLAYER1:
-
-            '''
-            for selectedItem in self.lwVideo.selectedItems():
-                mem = selectedItem.text()
-                self.lwVideo.takeItem(self.lwVideo.row(selectedItem))
-
-                # check if media file path no more in the 2 listwidget
-                if not mem in [ self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count())] \
-                   and not mem in [ self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count())]:
-                    try:
-                        del self.media_file_info[ self.fileName2hash[mem]]
-                        #del self.fileName2hash[mem]
-                        del self.mediaDurations[mem]
-                    except:
-                        pass
-            '''
 
             if self.twVideo1.selectedIndexes():
                 mediaPath = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(),0).text()
@@ -319,21 +277,6 @@ class Observation(QDialog, Ui_Form):
 
 
         if nPlayer == PLAYER2:
-            '''
-            for selectedItem in self.lwVideo_2.selectedItems():
-                mem = selectedItem.text()
-                self.lwVideo_2.takeItem(self.lwVideo_2.row(selectedItem))
-
-                # check if media file path no more in the 2 listwidget
-                if not mem in [self.lwVideo.item(idx).text() for idx in range(self.lwVideo.count())] \
-                   and not mem in [self.lwVideo_2.item(idx).text() for idx in range(self.lwVideo_2.count())]:
-                    try:
-                        del self.media_file_info[self.fileName2hash[selectedItem.text()]]
-                        del self.fileName2hash[selectedItem.text()]
-                        del self.mediaDurations[selectedItem.text()]
-                    except:
-                        pass
-            '''
             if self.twVideo2.selectedIndexes():
                 mediaPath = self.twVideo2.item(self.twVideo2.selectedIndexes()[0].row(),0).text()
                 self.twVideo2.removeRow(self.twVideo2.selectedIndexes()[0].row())
