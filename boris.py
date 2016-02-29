@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.91"
-__version_date__ = "2016-02-26"
+__version_date__ = "2016-02-29"
 __DEV__ = False
 
 import sys
@@ -3326,7 +3326,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tb.lw.addItem(obs)
 
         if selectedObsTotalMediaLength:
-            
             self.tb.lbTotalObservedTime.setText( "Total media length: {0}".format(seconds2time(selectedObsTotalMediaLength)))
         else:
             self.tb.lbTotalObservedTime.setText( "Total media length: not available")
@@ -3355,7 +3354,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if row['duration'] != '-' and row['duration'] != 0 and row['duration'] != UNPAIRED and selectedObsTotalMediaLength:
                 item = QTableWidgetItem(str( round( row['duration'] / float(selectedObsTotalMediaLength) * 100,1)  ) )
             else:
-                item = QTableWidgetItem( '-' )
+                item = QTableWidgetItem("-")
 
             item.setFlags(Qt.ItemIsEnabled)
             self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
@@ -4516,7 +4515,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                     for idx, row in enumerate(rows):
-                        
+
                         mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
                         if POINT in self.eventType(behavior).upper():
@@ -6525,42 +6524,52 @@ item []:
 
             # date
             if "date" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(['Observation date', self.pj[OBSERVATIONS][obsId]["date"].replace('T', ' ')])
+                rows.append(["Observation date", self.pj[OBSERVATIONS][obsId]["date"].replace('T', ' ')])
             rows.append([""])
 
             # description
             if "description" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(['Description', eol2space(self.pj[OBSERVATIONS][obsId]["description"])])
+                rows.append(["Description", eol2space(self.pj[OBSERVATIONS][obsId]["description"])])
             rows.append([""])
 
             # time offset
             if "time offset" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(['Time offset (s)', self.pj[OBSERVATIONS][obsId]["time offset"]])
+                rows.append(["Time offset (s)", self.pj[OBSERVATIONS][obsId]["time offset"]])
             rows.append([""])
-
 
             # independant variables
             if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(['independent variables'])
+                rows.append(["independent variables"])
 
-                rows.append(['variable', 'value'])
+                rows.append(["variable", "value"])
 
                 for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
                     rows.append(  [ variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable] ])
 
-            rows.append( [''] )
+            rows.append([""])
 
-            # write header
+            # write table header
             col = 0
-            header = []
-            for c in pj_events_fields:
-                if c == 'modifier':
-                    for x in range(1, max_modifiers + 1):
-                        header.append('Modifier %d' % x )
-                else:
-                    header.append( c )
+            header = ["Time"]
+            if includeMediaInfo == YES:
+                header.extend(["Media file path", "Media total length", "FPS"])
 
-            header.append('status')
+            header.extend(["Subject", "Behavior"])
+            for x in range(1, max_modifiers + 1):
+                header.append("Modifier {}".format(x))
+            header.extend(["Comment", "Status"])
+
+            '''
+            for c in pj_events_fields:
+                if c == "modifier":
+                    for x in range(1, max_modifiers + 1):
+                        header.append("Modifier {}".format(x))
+                else:
+                    header.append(c)
+
+
+            header.append("status")
+            '''
             rows.append(header)
 
             duration1 = []   # in seconds
@@ -6576,8 +6585,8 @@ item []:
 
                     fields = []
                     fields.append(float(event[EVENT_TIME_FIELD_IDX]))
-                    
-                    if includeMediaInfo:
+
+                    if includeMediaInfo == YES:
                         mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])][-1]
                         fields.append(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])
                         # media total length
@@ -6590,7 +6599,7 @@ item []:
                     fields.append(event[COMMENT_EVENT_FIELD_IDX].replace(os.linesep, ' '))
                     # status
                     fields.append(event[-1])
-                    
+
                     '''
                     for c in pj_events_fields:
 
@@ -6629,14 +6638,14 @@ item []:
                 data.append( complete( row, maxLen ) )
 
             try:
-                if outputFormat == 'tsv':
-                    with open(fileName,'w') as f:
+                if outputFormat == "tsv":
+                    with open(fileName, "w") as f:
                         f.write(data.tsv)
-                if outputFormat == 'ods':
-                    with open(fileName,'wb') as f:
+                if outputFormat == "ods":
+                    with open(fileName, "wb") as f:
                         f.write(data.ods)
-                if outputFormat == 'xls':
-                    with open(fileName,'wb') as f:
+                if outputFormat == "xls":
+                    with open(fileName, "wb") as f:
                         f.write(data.xls)
             except:
                 errorMsg = sys.exc_info()[1].strerror
@@ -6716,10 +6725,10 @@ item []:
         check if current project is saved and close program
         '''
         if self.projectChanged:
-            response = dialog.MessageDialog(programName, 'What to do about the current unsaved project?', ['Save', 'Discard', 'Cancel'])
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", ['Save', 'Discard', 'Cancel'])
 
-            if response == 'Save':
-                if self.save_project_activated() == 'not saved':
+            if response == "Save":
+                if self.save_project_activated() == "not saved":
                     event.ignore()
 
             if response == 'Cancel':
@@ -6741,22 +6750,22 @@ item []:
 
 
     def import_observations(self):
-        '''
+        """
         import events from file
-        '''
+        """
 
         logging.debug("""Function "import observation" not yet implemented""")
         QMessageBox.warning(None, programName, """Function "import observation" not yet implemented""",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-        self.statusbar.showMessage('Function not yet implemented', 5000)
+        self.statusbar.showMessage("Function not yet implemented", 5000)
 
 
 
     def play_video(self):
-        '''
+        """
         play video
-        '''
+        """
 
         if self.playerType == VLC:
 
@@ -6777,10 +6786,10 @@ item []:
 
 
     def pause_video(self):
-        '''
+        """
         pause media
         do not pause media if already paused (otherwise media will be played)
-        '''
+        """
 
         if self.playerType == VLC:
 
@@ -6795,7 +6804,7 @@ item []:
                     self.mediaListPlayer.pause()
                     # wait for pause
 
-                    logging.debug('pause_video: player #1 state: {0}'.format(self.mediaListPlayer.get_state()))
+                    logging.debug("pause_video: player #1 state: {0}".format(self.mediaListPlayer.get_state()))
                     # second video together
                     if self.simultaneousMedia:
                         self.mediaListPlayer2.pause()
@@ -6818,9 +6827,9 @@ item []:
 
 
     def play_activated(self):
-        '''
+        """
         button 'play' activated
-        '''
+        """
         if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
             self.play_video()
 

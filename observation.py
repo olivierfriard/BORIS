@@ -165,32 +165,32 @@ class Observation(QDialog, Ui_Form):
 
 
     def pbLaunch_clicked(self):
+        """Close window and start observation"""
 
         if self.check_parameters():
             self.done(2)
 
     def pbSave_clicked(self):
-
+        """Close window and save observation"""
         if self.check_parameters():
             self.accept()
 
 
     def check_media(self, fileName, nPlayer):
+        """
+        parameters:
 
-        print('self.ffmpeg_bin',self.ffmpeg_bin)
+        fileName -- path of media file
+        nPlayer -- player #
+        """
 
-        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, fileName)
-
-        print('videoDuration',videoDuration)
-        print('fps', fps, type(fps))
-
+        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, fileName)
 
         if videoDuration:
             self.mediaDurations[fileName] = videoDuration
             self.mediaFPS[fileName] = fps
             self.mediaHasVideo[fileName] = hasVideo
             self.mediaHasAudio[fileName] = hasAudio
-
             self.add_media_to_listview(nPlayer, fileName, '')
         else:
             QMessageBox.critical(self, programName, "This file does not seem to be a media file..." )
@@ -228,15 +228,21 @@ class Observation(QDialog, Ui_Form):
 
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
-        '''
+        """
         add media file path to list widget
-        '''
+        """
+
+        if not self.twVideo1.rowCount() and nPlayer == PLAYER2:
+            QMessageBox.critical(self, programName, "Add the first media file to Player #1")
+            return False
+
+
         if self.twVideo1.rowCount() and self.twVideo2.rowCount():
-            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
             return False
 
         if self.twVideo2.rowCount() > 1:
-            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
             return False
 
 
@@ -248,10 +254,10 @@ class Observation(QDialog, Ui_Form):
 
         twVideo.setRowCount(twVideo.rowCount() + 1)
         twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(fileName) )
-        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.mediaDurations[fileName])))
-        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.mediaFPS[fileName])))
-        twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{} ".format(self.mediaHasVideo[fileName])))
-        twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{} ".format(self.mediaHasAudio[fileName])))
+        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format(seconds2time(self.mediaDurations[fileName]))))
+        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format(self.mediaFPS[fileName])))
+        twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
+        twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
 
         '''
             if self.twVideo1.rowCount() and self.twVideo2.rowCount():
