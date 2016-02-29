@@ -3262,7 +3262,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else:  # no modifiers
                     if POINT in self.eventType(behavior).upper():
-                        cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ?  order by observation, occurence", ( subject, behavior ) )
+                        cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ?  order by observation, occurence", (subject, behavior ) )
                         rows =  cursor.fetchall()
 
                         if not len( rows ):
@@ -3276,7 +3276,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 inter_duration += float(row[0]) - float(rows[idx - 1][0])
 
                         if len(selectedObservations) > 1 or inter_duration == 0:
-                            inter_duration =  'NA'
+                            inter_duration = "NA"
                         else:
                             inter_duration = round(inter_duration/(len(rows) - 1),3)
 
@@ -3307,8 +3307,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     inter_duration += float( rows[idx+1][0]) - float( row[0])
 
                             if len(selectedObservations) > 1 or inter_duration == 0:
-                                inter_duration = 'NA'
-                                inter_duration_mean = '-'
+                                inter_duration = "NA"
+                                inter_duration_mean = "-"
                             else:
                                 inter_duration_mean = round(inter_duration / (len(rows) / 2 - 1), 3)
 
@@ -3464,9 +3464,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def plot_events(self):
-        '''
+        """
         plot events with matplotlib
-        '''
+        """
 
         try:
             import matplotlib.pyplot as plt
@@ -4471,28 +4471,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedSubjects or not selectedBehaviors:
             return
 
+        includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+
         if format_ == "sql":
             fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
-            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
+            if includeMediaInfo == NO:
+                out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
+            else:
+                pass # TODO
             out += "BEGIN TRANSACTION;" + os.linesep
             template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         if format_ == "tab":
             fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
-            out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
-            template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
+            if includeMediaInfo == YES:
+                out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
+                template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
+            else:
+                out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
+                template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
 
         if not fileName:
             return
 
-        app.processEvents()
         self.statusbar.showMessage("Exporting aggregated events", 0)
-        app.processEvents()
-
         flagUnpairedEventFound = False
 
         for obsId in selectedObservations:
-            
             duration1 = []   # in seconds
             for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
                 duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
@@ -6457,8 +6462,10 @@ item []:
         if not selectedSubjects or not selectedBehaviors:
             return
 
+        includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+
+        fd = QFileDialog(self)
         if len(selectedObservations) > 1:  # choose directory for exporting more observations
-            fd = QFileDialog(self)
             exportDir = fd.getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser('~'), options=fd.ShowDirsOnly)
             if not exportDir:
                 return
@@ -6466,8 +6473,6 @@ item []:
         for obsId in selectedObservations:
 
             if len(selectedObservations) == 1:
-                fd = QFileDialog(self)
-
                 if outputFormat == "tsv":
                     defaultFilter = "Tab Separated Values (*.tsv);;All files (*)"
                 if outputFormat == "ods":
@@ -6483,7 +6488,7 @@ item []:
             else:
                 fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
 
-            eventsWithStatus = self.update_events_start_stop2( self.pj[OBSERVATIONS][obsId][EVENTS] )
+            eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
 
             max_modifiers = 0
             for event in eventsWithStatus:
@@ -6558,6 +6563,10 @@ item []:
             header.append('status')
             rows.append(header)
 
+            duration1 = []   # in seconds
+            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+                duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+
             out = ''
             for event in eventsWithStatus:
 
@@ -6565,34 +6574,51 @@ item []:
                    or (event[SUBJECT_EVENT_FIELD] == '' and NO_FOCAL_SUBJECT in selectedSubjects)) \
                    and (event[BEHAVIOR_EVENT_FIELD] in selectedBehaviors):
 
-                    col = 0
                     fields = []
+                    fields.append(float(event[EVENT_TIME_FIELD_IDX]))
+                    
+                    if includeMediaInfo:
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])][-1]
+                        fields.append(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])
+                        # media total length
+                        fields.append(str(sum(duration1)))
+                        # fps
+                        fields.append(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]])
+
+                    fields.append(event[EVENT_SUBJECT_FIELD_IDX])
+                    fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                    fields.append(event[COMMENT_EVENT_FIELD_IDX].replace(os.linesep, ' '))
+                    # status
+                    fields.append(event[-1])
+                    
+                    '''
                     for c in pj_events_fields:
 
-                        if c == 'modifier':
+                        if c == "modifier":
                             if event[pj_obs_fields[c]]:
-                                modifiers = event[pj_obs_fields[c]].split('|')
+                                modifiers = event[pj_obs_fields[c]].split("|")
                                 while len(modifiers) < max_modifiers:
-                                    modifiers.append('')
+                                    modifiers.append("")
 
                                 for m in modifiers:
-                                    fields.append( m )
+                                    fields.append(m)
                             else:
                                 for dummy in range(max_modifiers):
-                                    fields.append( '' )
+                                    fields.append("")
 
                         elif c == 'time':
-                            fields.append( float( event[pj_obs_fields[c]]) )
+                            fields.append(float(event[pj_obs_fields[c]]))
 
                         elif c == 'comment':
-                            fields.append( event[pj_obs_fields[c]].replace(os.linesep, ' ') )
+                            fields.append(event[pj_obs_fields[c]].replace(os.linesep, ' '))
 
                         else:
-                            fields.append( event[pj_obs_fields[c]] )
+                            fields.append(event[pj_obs_fields[c]])
+
 
                     # append status START/STOP
                     fields.append( event[-1] )
-
+                    '''
                     rows.append( fields )
 
             maxLen = max( [len(r) for r in rows] )
