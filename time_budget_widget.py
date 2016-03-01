@@ -93,7 +93,7 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save Time budget analysis', '','Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)')
+        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "","Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
 
         if fileName:
 
@@ -111,8 +111,8 @@ class timeBudgetResults(QWidget):
                 # write independant variables to file
                 if INDEPENDENT_VARIABLES in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ]:
                     rows.append( ['Independent variables:'] )
-                    for var in self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ]:
-                        rows.append( [ var, self.pj[ OBSERVATIONS ][  self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] ] )
+                    for var in self.pj[ OBSERVATIONS ][self.lw.item(0).text()][INDEPENDENT_VARIABLES]:
+                        rows.append([var, self.pj[ OBSERVATIONS ][self.lw.item(0).text() ][ INDEPENDENT_VARIABLES ][ var ] ] )
 
             rows.append( [''] )
             rows.append( [''] )
@@ -124,8 +124,7 @@ class timeBudgetResults(QWidget):
                 cols.append( self.twTB.horizontalHeaderItem(col).text() )
 
             rows.append( cols )
-
-            rows.append( [''] )
+            rows.append([""])
 
             for row in range( self.twTB.rowCount()):
                 values = []

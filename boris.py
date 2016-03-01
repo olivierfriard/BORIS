@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.91"
-__version_date__ = "2016-02-29"
+__version_date__ = "2016-03-01"
 __DEV__ = False
 
 import sys
@@ -3218,7 +3218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if not distinct_modifiers:
                         if not excludeBehaviorsWoEvents:
-                            out.append({'subject': subject , 'behavior': behavior, 'modifiers': '-' , 'duration': '-', 'duration_mean': '-', "duration_stdev": "-",'number': 0, 'inter_duration_mean': '-', "inter_duration_stdev":"-"})
+                            out.append({"subject": subject , "behavior": behavior, "modifiers": "-", "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0, "inter_duration_mean": "-", "inter_duration_stdev": "-"})
                         continue
 
                     if POINT in self.eventType(behavior).upper():
@@ -3231,13 +3231,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if idx:
                                     all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
 
-                            out.append({'subject': subject, \
-                                        'behavior': behavior, \
-                                        'modifiers': modifier[0], \
-                                        'duration': '-', \
-                                        'duration_mean': '-', \
+                            out.append({"subject": subject, \
+                                        "behavior": behavior, \
+                                        "modifiers": modifier[0], \
+                                        "duration": "-", \
+                                        "duration_mean": "-", \
                                         "duration_stdev": "-", \
-                                        'number': len(rows), \
+                                        "number": len(rows), \
                                         "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
                                         "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                         })
@@ -3249,8 +3249,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             rows = list(cursor.fetchall())
 
                             if len(rows) % 2:
-                                out.append({'subject': subject , 'behavior': behavior, 'modifiers': modifier[0], 'duration': UNPAIRED, 'duration_mean': UNPAIRED, "duration_stdev": UNPAIRED, \
-                                           'number': UNPAIRED, 'inter_duration_mean': UNPAIRED, "inter_duration_stdev": UNPAIRED } )
+                                out.append({"subject": subject , "behavior": behavior, "modifiers": modifier[0], "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED, \
+                                           "number": UNPAIRED, "inter_duration_mean": UNPAIRED, "inter_duration_stdev": UNPAIRED } )
                             else:
                                 all_event_durations, all_event_interdurations = [], []
                                 for idx, row in enumerate(rows):
@@ -3259,13 +3259,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if idx % 2 and idx != len(rows) - 1:
                                         all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
 
-                                out.append({'subject': subject, \
-                                            'behavior': behavior, \
-                                            'modifiers': modifier[0], \
-                                            'duration': round(sum(all_event_durations), 3), \
-                                            'duration_mean': round(statistics.mean(all_event_durations), 3), \
-                                            'duration_stdev': round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA", \
-                                            'number': int(len(rows)/2), \
+                                out.append({"subject": subject, \
+                                            "behavior": behavior, \
+                                            "modifiers": modifier[0], \
+                                            "duration": round(sum(all_event_durations), 3), \
+                                            "duration_mean": round(statistics.mean(all_event_durations), 3), \
+                                            "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA", \
+                                            "number": int(len(rows)/2), \
                                             "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
                                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA" \
                                             })
@@ -3278,7 +3278,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if not len(rows):
                             if not excludeBehaviorsWoEvents:
-                                out.append({'subject': subject, 'behavior': behavior, 'modifiers': 'NA', 'duration': '-', 'duration_mean': '-', 'duration_stdev':"-", 'number': 0, 'inter_duration_mean': '-', "inter_duration_stdev":"-"})
+                                out.append({"subject": subject, "behavior": behavior, "modifiers": "NA", "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0, "inter_duration_mean": "-", "inter_duration_stdev":"-"})
                             continue
 
                         all_event_interdurations = []
@@ -3286,11 +3286,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if idx > 0:
                                 all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
 
-                        out.append({'subject': subject, \
-                                    'behavior': behavior, \
-                                    'modifiers': 'NA', \
-                                    'duration': '-', \
-                                    "duration_mean": '-', \
+                        out.append({"subject": subject, \
+                                    "behavior": behavior, \
+                                    "modifiers": "NA", \
+                                    "duration": "-", \
+                                    "duration_mean": "-", \
                                     "duration_stdev": "-", \
                                     "number": len(rows), \
                                     "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
@@ -3303,12 +3303,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = list(cursor.fetchall() )
 
                         if not len(rows):
-                            if not excludeBehaviorsWoEvents:
-                                out.append({ "subject": subject , "behavior": behavior, "modifiers": "NA", "duration": 0, "mean": 0, "number": 0, "inter_duration_mean": "-"})
+                            if not excludeBehaviorsWoEvents: # include behaviors without events
+                                out.append({ "subject": subject , "behavior": behavior, "modifiers": "NA", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-", "inter_duration_stdev": "-"})
                             continue
                         if len( rows ) % 2:
-                            out.append({"subject": subject , "behavior": behavior, "modifiers": "NA", "duration": UNPAIRED, "mean": UNPAIRED,\
-                                           "number": UNPAIRED, "inter_duration_mean": UNPAIRED } )
+                            out.append({"subject": subject, "behavior": behavior, "modifiers": "NA", "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED, "number": UNPAIRED, "inter_duration_mean": UNPAIRED, "inter_duration_stdev": UNPAIRED})
                         else:
                             all_event_durations, all_event_interdurations = [], []
                             for idx, row in enumerate(rows):
@@ -3350,10 +3349,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for row in out:
             self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
 
+            print(row)
+
             column = 0
 
             for field in fields:
-                item = QTableWidgetItem(str( row[field]).replace(' ()','' ))
+                item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
                 # no modif allowed
                 item.setFlags(Qt.ItemIsEnabled)
                 self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)

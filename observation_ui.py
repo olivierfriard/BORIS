@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Thu Feb 25 11:49:51 2016
+# Created: Tue Mar  1 11:28:11 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -252,7 +252,7 @@ class Ui_Form(object):
         self.rbSubstract.setText(_translate("Form", "Substract", None))
         self.leTimeOffset.setText(_translate("Form", "0", None))
         self.teTimeOffset.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz", None))
-        self.label_5.setText(_translate("Form", "Media file paths", None))
+        self.label_5.setText(_translate("Form", "Media files for first player", None))
         item = self.twVideo1.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Path", None))
         item = self.twVideo1.horizontalHeaderItem(1)
@@ -269,7 +269,7 @@ class Ui_Form(object):
 "from directory", None))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram", None))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files", None))
-        self.label_2.setText(_translate("Form", "Media file paths for second player (will be played simultaneously)", None))
+        self.label_2.setText(_translate("Form", "Media file for second player (will be played simultaneously)", None))
         item = self.twVideo2.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Path", None))
         item = self.twVideo2.horizontalHeaderItem(1)
