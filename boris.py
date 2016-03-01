@@ -180,9 +180,9 @@ class checkingBox_list(QDialog):
 ROW = -1
 
 class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
-    '''
+    """
     painter for twEvents with current time highlighting
-    '''
+    """
     def __init__(self, parent=None):
         super(StyledItemDelegateTriangle, self).__init__(parent)
 
@@ -236,7 +236,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     saveMediaFilePath = True
 
     measurement_w = None
-    memPoints = []
+    memPoints = []   # memory of clicke points for measurement tool
 
     behaviouralStringsSeparator = '|'
 
@@ -261,7 +261,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     projectWindowGeometry = 0   # memorize size of project window
 
-    imageDirectory = ''
+    imageDirectory = ""   # image cache directory
 
     # FFmpeg
     allowFrameByFrame = False
@@ -276,14 +276,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # dictionary for FPS storing
     fps = {}
 
-    playerType = ''
-    playMode = VLC
+    playerType = ""   # player type can be VLC for video mode LIVE for live observation
+    playMode = VLC    # player mode can be VLC of FMPEG (for frame-by-frame mode)
 
     # spectrogram
-    chunk_length = 60  # lunghezza chunk spectrogram in seconds
-    #memChunk = ''
+    chunk_length = 60  # spectrogram chunk length in seconds
 
-    memMedia = ''
+    memMedia = ""
 
     cleaningThread = TempDirCleanerThread()
 
@@ -426,9 +425,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def menu_options(self):
-        '''
+        """
         enable/disable menu option
-        '''
+        """
         logging.debug("menu_options function")
 
         flag = self.project
@@ -663,10 +662,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         extract sequences from media file corresponding to coded events
         in case of point event, from -n to +n seconds are extracted (n = self.repositioningTimeOffset)
-
         """
-
-
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
         if not selectedObservations:
@@ -1956,19 +1952,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         app.processEvents()
 
-
         self.mediaplayer.set_time(0)
 
         # no subtitles
         #self.mediaplayer.video_set_spu(0)
 
-
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.FFmpegTimerOut)
 
-        self.FFmpegTimerTick = 40
-        self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
+        print( self.fps.values() )
+        try:
+            self.FFmpegTimerTick = int(1000 / list(self.fps.values())[0])
+        except:
+            self.FFmpegTimerTick = 40
 
+        self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
 
         # check for second media to be played together
         if PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
@@ -1989,7 +1987,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     media = self.instance.media_new( mediaFile )
                     media.parse()
 
-                    logging.debug( 'media file 2 {0}  duration {1}'.format(mediaFile, media.get_duration()))
+                    logging.debug("media file 2 {0}  duration {1}".format(mediaFile, media.get_duration()))
 
                     self.media_list2.add_media(media)
 
@@ -2018,11 +2016,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.mediaListPlayer2.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                         break
 
-                '''
-                while self.mediaListPlayer2.get_state() != vlc.State.Playing and self.mediaListPlayer2.get_state() != vlc.State.Ended:
-                    time.sleep(2)
-                '''
-
                 self.mediaListPlayer2.pause()
                 app.processEvents()
 
@@ -2032,12 +2025,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
                         self.mediaplayer2.set_time( int( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000) )
 
-
                 # no subtitles
                 #self.mediaplayer2.video_set_spu(0)
 
-
-        '''self.initialize_video_tab()'''
 
         self.videoTab.setEnabled(True)
 
@@ -2047,8 +2037,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
-
-        #self.timer.start(200)
 
         self.memMedia = ''
         self.currentSubject = ''
@@ -2098,13 +2086,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(event)
 
     def eventFilter(self, source, event):
-        '''
+        """
         send event from class (QScrollArea) to mainwindow
-        '''
+        """
         if event.type() == QtCore.QEvent.KeyPress:
             key = event.key()
             if key in [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right, Qt.Key_PageDown, Qt.Key_PageUp]:
-                self.keyPressEvent( event )
+                self.keyPressEvent(event)
 
         return QMainWindow.eventFilter(self, source, event)
 
@@ -2136,7 +2124,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             row += 1
 
         self.update_events_start_stop()
-
 
 
     def selectObservations(self, mode):
@@ -2241,9 +2228,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if result == 0:  # cancel
-            resultStr = ''
+            resultStr = ""
         if result == 1:   # select
-            resultStr = 'ok'
+            resultStr = "ok"
         if result == 2:   # open
             resultStr = OPEN
         if result == 3:   # edit
@@ -2253,9 +2240,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def initialize_new_live_observation(self):
-        '''
+        """
         initialize new live observation
-        '''
+        """
 
         self.playerType = LIVE
         self.playMode = LIVE
@@ -2279,7 +2266,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(False)
 
         self.liveObservationStarted = False
-        self.textButton.setText('Start live observation')
+        self.textButton.setText("Start live observation")
         if self.timeFormat == HHMMSS:
             self.lbTimeLive.setText("00:00:00.000")
         if self.timeFormat == S:
@@ -2393,7 +2380,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.timeFormat == HHMMSS:
 
                 time = QTime()
-                h,m,s_dec = seconds2time( abs(self.pj[OBSERVATIONS][obsId]['time offset'])).split(':')
+                h,m,s_dec = seconds2time( abs(self.pj[OBSERVATIONS][obsId]["time offset"])).split(':')
                 s, ms = s_dec.split('.')
                 time.setHMS(int(h),int(m),int(s),int(ms))
                 observationWindow.teTimeOffset.setTime( time )
@@ -5194,7 +5181,7 @@ item []:
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][SUBJECT_EVENT_FIELD] in sortedSubjects:
                 editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] ) )
             else:
-                QMessageBox.warning(self, programName, "The subject <b>%s</b> do not exists more in the subject's list" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject']])
+                QMessageBox.warning(self, programName, "The subject <b>{}</b> do not exists more in the subject's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject']]))
                 editWindow.cobSubject.setCurrentIndex(0)
 
             sortedCodes = sorted( [ self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
@@ -5456,7 +5443,7 @@ item []:
                 self.currentStates = {}
 
                 # add states for no focal subject
-                self.currentStates[''] = []
+                self.currentStates[""] = []
                 for sbc in StateBehaviorsCodes:
                     if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
                         self.currentStates[''].append(sbc)
@@ -5480,22 +5467,22 @@ item []:
                 txt = []
                 for cs in self.currentStates[idx]:
                     for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                        if ev[0] > currentTimeOffset :   # time
+                        if ev[EVENT_TIME_FIELD_IDX] > currentTimeOffset :   # time
                             break
-                        if ev[1] == self.currentSubject:   # subject
-                            if ev[2] == cs:       # code
-                                cm[cs] = ev[3]    # current modifier for current state
+                        if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:   # subject
+                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:       # code
+                                cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]    # current modifier for current state
                     # state and modifiers (if any)
                     txt.append( cs + " ({}) ".format(cm[cs])*(cm[cs] != "") )
 
                 txt = ", ".join(txt)
 
-                # remove key code
+                # show current state(s)
                 self.lbCurrentStates.setText( re.sub(" \(.\)", "", txt) )
 
                 # show selected subjects
-                for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
-                    self.twSubjects.item(int(idx), len( subjectsFields ) ).setText( ','.join(self.currentStates[idx]) )
+                for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
+                    self.twSubjects.item(int(idx), len(subjectsFields)).setText(','.join(self.currentStates[idx]) )
 
                 mediaName = self.mediaplayer.get_media().get_meta(0)
 
@@ -6671,35 +6658,33 @@ item []:
 
 
     def export_string_events(self):
-        '''
+        """
         export events from selected observations by subject in string format to plain text file
         behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
         for use with BSA (see http://penelope.unito.it/bsa)
-        '''
+        """
 
-        # ask user to select observations
-        result, selected_observations = self.selectObservations(MULTIPLE)
+        # ask user observations to analyze
+        result, selectedObservations = self.selectObservations(MULTIPLE)
 
-        if not selected_observations:
+        if not selectedObservations:
             return
 
-        logging.debug("observations to export: {0}".format( selected_observations))
+        selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0,
+                                                                                  flagShowIncludeModifiers=False,
+                                                                                  flagShowExcludeBehaviorsWoEvents=False)
 
-        # filter subjects in observations
-        observedSubjects = self.extract_observed_subjects( selected_observations )
-
-        # ask user subject to analyze
-        selected_subjects = self.select_subjects( observedSubjects )
-
-        if not selected_subjects:
+        if not selectedSubjects or not selectedBehaviors:
             return
 
         fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
+        cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
+
         if fileName:
             try:
                 with open(fileName, "w") as outFile:
-                    for obsId in selected_observations:
+                    for obsId in selectedObservations:
                         # observation id
                         outFile.write("# observation id: {0}{1}".format(obsId, os.linesep) )
                         # observation descrition
@@ -6709,17 +6694,31 @@ item []:
                             outFile.write('# Media file name: {0}{1}{1}'.format(', '.join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
                             outFile.write('# Live observation{0}{0}'.format(os.linesep))
-                    for subj in selected_subjects:
+
+                    for subj in selectedSubjects:
                         if subj:
-                            subj_str = '{0}{1}:{0}'.format(os.linesep, subj)
+                            subj_str = "{0}{1}:{0}".format(os.linesep, subj)
                         else:
-                            subj_str = '{0}No focal subject:{0}'.format(os.linesep)
+                            subj_str = "{0}No focal subject:{0}".format(os.linesep)
                         outFile.write(subj_str)
-                        for obs in selected_observations:
-                            s = ''
-                            for event in self.pj[OBSERVATIONS][obs][EVENTS]:
-                                if event[ pj_obs_fields['subject']] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields['subject']] == ''):
+
+
+
+
+                        for obsId in selectedObservations:
+                            s = ""
+
+                            currentStates = []
+
+                            eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+
+                            for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
+
+                                #if POINT in self.eventType(  event[EVENT_BEHAVIOR_FIELD_IDX]  ).upper():
+
+                                if event[ pj_obs_fields["subject"]] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields["subject"]] == ""):
                                     s += event[pj_obs_fields['code']].replace(' ', '_') + self.behaviouralStringsSeparator
+
                             # remove last separator (if separator not empty)
                             if self.behaviouralStringsSeparator:
                                 s = s[0 : -len(self.behaviouralStringsSeparator)]
