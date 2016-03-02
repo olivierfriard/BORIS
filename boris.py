@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.91"
-__version_date__ = "2016-03-01"
+__version__ = "2.92"
+__version_date__ = "2016-03-02"
 __DEV__ = False
 
 import sys
@@ -6664,6 +6664,9 @@ item []:
         for use with BSA (see http://penelope.unito.it/bsa)
         """
 
+        def replace_spaces(l):
+            return [x.replace(" ", "_") for x in l]
+
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
@@ -6679,7 +6682,7 @@ item []:
 
         fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
-        cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
+        #cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
         if fileName:
             try:
@@ -6688,12 +6691,12 @@ item []:
                         # observation id
                         outFile.write("# observation id: {0}{1}".format(obsId, os.linesep) )
                         # observation descrition
-                        outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep,' ' ), os.linesep) )
+                        outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]['description'].replace(os.linesep, " "), os.linesep))
                         # media file name
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
-                            outFile.write('# Media file name: {0}{1}{1}'.format(', '.join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
+                            outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
-                            outFile.write('# Live observation{0}{0}'.format(os.linesep))
+                            outFile.write("# Live observation{0}{0}".format(os.linesep))
 
                     for subj in selectedSubjects:
                         if subj:
@@ -6703,8 +6706,6 @@ item []:
                         outFile.write(subj_str)
 
 
-
-
                         for obsId in selectedObservations:
                             s = ""
 
@@ -6712,12 +6713,34 @@ item []:
 
                             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
 
+                            for event in eventsWithStatus:
+                                print(event)
+                                if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
+
+                                    if event[-1] == POINT:
+                                        if currentStates:
+                                            s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+                                        else:
+                                            s += event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+                                        s += self.behaviouralStringsSeparator
+
+                                    if event[-1] == 'START':
+                                        currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                                        s += "+".join(replace_spaces(currentStates)) + self.behaviouralStringsSeparator
+
+                                    if event[-1] == 'STOP':
+                                        if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
+                                            currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
+                                        if currentStates:
+                                            s += "+".join(replace_spaces(currentStates)) + self.behaviouralStringsSeparator
+
+
+                            '''
                             for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
 
-                                #if POINT in self.eventType(  event[EVENT_BEHAVIOR_FIELD_IDX]  ).upper():
-
                                 if event[ pj_obs_fields["subject"]] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields["subject"]] == ""):
-                                    s += event[pj_obs_fields['code']].replace(' ', '_') + self.behaviouralStringsSeparator
+                                    s += event[pj_obs_fields["code"]].replace(" ", "_") + self.behaviouralStringsSeparator
+                            '''
 
                             # remove last separator (if separator not empty)
                             if self.behaviouralStringsSeparator:
@@ -6735,13 +6758,13 @@ item []:
         check if current project is saved and close program
         '''
         if self.projectChanged:
-            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", ['Save', 'Discard', 'Cancel'])
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", ['Save', 'Discard', CANCEL])
 
             if response == "Save":
                 if self.save_project_activated() == "not saved":
                     event.ignore()
 
-            if response == 'Cancel':
+            if response == CANCEL:
                 event.ignore()
 
         self.saveConfigFile()
