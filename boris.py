@@ -1063,8 +1063,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check BORIS web site for updates
         """
         try:
-            versionURL = 'http://penelope.unito.it/boris/static/ver.dat'
-            lastVersion = Decimal(urllib.request.urlopen( versionURL ).read().strip().decode('utf-8'))
+            versionURL = "http://penelope.unito.it/boris/static/ver.dat"
+            lastVersion = Decimal(urllib.request.urlopen( versionURL ).read().strip().decode("utf-8"))
             self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
 
             if lastVersion > Decimal(__version__):
@@ -5720,7 +5720,7 @@ item []:
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                modifierSelector = select_modifiers.ModifiersRadioButton(event['code'], modifiersList, currentModifiers, "normal")
+                modifierSelector = select_modifiers.ModifiersRadioButton(event["code"], modifiersList, currentModifiers, "normal")
 
                 if modifierSelector.exec_():
                     modifiers = modifierSelector.getModifiers()

@@ -57,7 +57,7 @@ class ModifiersRadioButton(QDialog):
                 Vlayout.addWidget(lb)
 
             group = QButtonGroup(widget)
-            HLayout = QHBoxLayout()
+            HLayout = QVBoxLayout()
 
             txt = 'None'
             r = QRadioButton(txt)
