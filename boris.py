@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.92"
-__version_date__ = "2016-03-02"
+__version__ = "2.93"
+__version_date__ = "2016-03-03"
 __DEV__ = False
 
 import sys
