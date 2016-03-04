@@ -5713,14 +5713,14 @@ item []:
                 if "|" in event["modifiers"]:
                     modifiersStringsList = event["modifiers"].split("|")
                     for modifiersString in modifiersStringsList:
-                        modifiersList.append([s.strip() for s in modifiersString.split(',')])
+                        modifiersList.append([s.strip() for s in modifiersString.split(",")])
                 else:
-                    modifiersList.append([s.strip() for s in event['modifiers'].split(',')])
+                    modifiersList.append([s.strip() for s in event["modifiers"].split(",")])
 
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                modifierSelector = select_modifiers.ModifiersRadioButton(event["code"], modifiersList, currentModifiers, "normal")
+                modifierSelector = select_modifiers.ModifiersRadioButton(event["code"], modifiersList, currentModifiers)
 
                 if modifierSelector.exec_():
                     modifiers = modifierSelector.getModifiers()
