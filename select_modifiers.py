@@ -30,8 +30,6 @@ import config
 
 class ModifiersRadioButton(QDialog):
 
-    #sendEvent = pyqtSignal(QEvent)
-
     def __init__(self, code, modifiers_list, currentModifier):
 
         super(ModifiersRadioButton, self).__init__()
@@ -60,7 +58,10 @@ class ModifiersRadioButton(QDialog):
             lw = QListWidget(widget)
             lw.setObjectName("lw_modifiers")
             lw.installEventFilter(self)
-            lw.addItem(QListWidgetItem("None"))
+
+            item = QListWidgetItem("None")
+            lw.addItem(item)
+            lw.setItemSelected(item, True)
 
             for modifier in modifiers:
 
@@ -73,68 +74,38 @@ class ModifiersRadioButton(QDialog):
 
             Vlayout.addWidget(lw)
 
+        pbCancel = QPushButton("Cancel")
+        pbCancel.clicked.connect(self.reject)
+        Vlayout.addWidget(pbCancel)
         pbOK = QPushButton("OK")
+        pbOK.setDefault(True)
         pbOK.clicked.connect(self.pbOK_clicked)
         Vlayout.addWidget(pbOK)
 
         self.setLayout(Vlayout)
 
         self.installEventFilter(self)
+        #self.setMinimumSize(630, 50)
+        self.setMaximumSize(1024 , 960)
 
-        #self.show()
 
     def eventFilter(self, receiver, event):
-        '''
+        """
         send event (if keypress) to main window
-        '''
+        """
         if(event.type() == QEvent.KeyPress):
             ek = event.key()
             print(ek, chr(ek))
-            print("({})".format(ek).upper())
+            print("({})".format(chr(ek)).upper())
 
             for widget in self.children():
                 if widget.objectName() == "lw_modifiers":
-                    for item in widget.items():
-                        if "({})".format(ek).upper() in item.text().upper():
-                            widget.setItemSelected(item, True)
-
+                    for index in range(widget.count()):
+                        if "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
+                            widget.setItemSelected(widget.item(index), True)
             return True
         else:
             return False
-
-    """
-    def keyPressEvent(self, event):
-        print("keypressed")
-
-        ek = event.key()
-
-        print( ek )
-        print('(' + chr(ek + 32) + ')')
-
-        if ek == 16777220 or ek == 16777221:
-            self.accept()
-            return
-
-        for widget in self.children():
-            if widget.objectName() == "lw_modifiers":
-                for item in widget.selectedItems():
-                    if '(' + chr(ek + 32) + ')' in item.text():
-                        widget.setItemSelected(item, True)
-
-        '''
-        # check radio button if key are pressed
-        l = self.layout()
-        modifiers = []
-        for i in range(0, l.count()):   # iterate on all widget/layout
-            layout = l.itemAt(i).layout()
-            if (layout) and (type(layout) is QHBoxLayout):
-                for j in range(0, layout.count()):   # iterate on all widget
-                    widget = layout.itemAt(j).widget()
-                    if (widget != 0) and (type(widget) is QRadioButton):
-                        if '(' + chr(ek + 32) + ')' in widget.text():
-                            widget.setChecked(True)
-        '''
-    """
 
     def getModifiers(self):
         """
@@ -145,10 +116,8 @@ class ModifiersRadioButton(QDialog):
         for widget in self.children():
             if widget.objectName() == "lw_modifiers":
                 for item in widget.selectedItems():
-                    modifiers.append(re.sub(" \(.\)", "",item.text()))
+                    modifiers.append(re.sub(" \(.\)", "", item.text()))
         return modifiers
-
-
 
     def pbOK_clicked(self):
         self.accept()

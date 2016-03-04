@@ -5720,9 +5720,11 @@ item []:
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
+                print( 'currentModifiers', currentModifiers)
                 modifierSelector = select_modifiers.ModifiersRadioButton(event["code"], modifiersList, currentModifiers)
 
                 if modifierSelector.exec_():
+                    print('exec')
                     modifiers = modifierSelector.getModifiers()
                     if len(modifiers) == 1:
                         modifier_str = modifiers[0]
@@ -5730,6 +5732,8 @@ item []:
                             modifier_str = ""
                     else:
                         modifier_str = "|".join( modifiers )
+                else:
+                    modifier_str = currentModifiers
 
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
