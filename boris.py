@@ -295,28 +295,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.availablePlayers = availablePlayers
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
-        self.setWindowIcon(QIcon(':/logo.png'))
-        self.actionPlay.setIcon(QIcon(':/play.png'))
-        self.actionPause.setIcon(QIcon(':/pause.png'))
-        self.actionReset.setIcon(QIcon(':/reset.png'))
-        self.actionJumpBackward.setIcon(QIcon(':/jump_backward.png'))
-        self.actionJumpForward.setIcon(QIcon(':/jump_forward.png'))
+        self.setWindowIcon(QIcon(":/logo.png"))
+        self.actionPlay.setIcon(QIcon(":/play.png"))
+        self.actionPause.setIcon(QIcon(":/pause.png"))
+        self.actionReset.setIcon(QIcon(":/reset.png"))
+        self.actionJumpBackward.setIcon(QIcon(":/jump_backward.png"))
+        self.actionJumpForward.setIcon(QIcon(":/jump_forward.png"))
 
-        self.actionFaster.setIcon(QIcon(':/faster.png'))
-        self.actionSlower.setIcon(QIcon(':/slower.png'))
-        self.actionNormalSpeed.setIcon(QIcon(':/normal_speed.png'))
+        self.actionFaster.setIcon(QIcon(":/faster.png"))
+        self.actionSlower.setIcon(QIcon(":/slower.png"))
+        self.actionNormalSpeed.setIcon(QIcon(":/normal_speed.png"))
 
-        self.actionPrevious.setIcon(QIcon(':/previous.png'))
-        self.actionNext.setIcon(QIcon(':/next.png'))
+        self.actionPrevious.setIcon(QIcon(":/previous.png"))
+        self.actionNext.setIcon(QIcon(":/next.png"))
 
-        self.actionSnapshot.setIcon(QIcon(':/snapshot.png'))
+        self.actionSnapshot.setIcon(QIcon(":/snapshot.png"))
 
-        self.actionFrame_by_frame.setIcon(QIcon(':/frame_mode'))
-        self.actionFrame_backward.setIcon(QIcon(':/frame_backward'))
-        self.actionFrame_forward.setIcon(QIcon(':/frame_forward'))
+        self.actionFrame_by_frame.setIcon(QIcon(":/frame_mode"))
+        self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
+        self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
 
 
-        self.setWindowTitle('%s (%s)' % (programName, __version__))
+        self.setWindowTitle("{} ({})".format(programName, __version__))
 
         try:
             datadir = sys._MEIPASS
@@ -396,9 +396,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def create_live_tab(self):
-        '''
+        """
         create tab with widget for live observation
-        '''
+        """
 
         self.liveLayout = QtGui.QGridLayout()
         self.textButton = QPushButton("Start live observation")
@@ -2276,10 +2276,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveTimer.stop()
 
     def new_observation_triggered(self):
-        self.new_observation(mode=NEW, obsId='')
+        self.new_observation(mode=NEW, obsId="")
 
 
-    def new_observation(self, mode=NEW, obsId=''):
+    def new_observation(self, mode=NEW, obsId=""):
         """
         define a new observation or edit an existing observation
         """
@@ -2365,6 +2365,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.mediaHasAudio = self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"]
             '''
 
+            # offset
             if self.timeFormat == S:
 
                 observationWindow.leTimeOffset.setText( self.convertTime( abs(self.pj[OBSERVATIONS][obsId]["time offset"]) ))
@@ -2380,17 +2381,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.timeFormat == HHMMSS:
 
                 time = QTime()
-                h,m,s_dec = seconds2time( abs(self.pj[OBSERVATIONS][obsId]["time offset"])).split(':')
-                s, ms = s_dec.split('.')
-                time.setHMS(int(h),int(m),int(s),int(ms))
-                observationWindow.teTimeOffset.setTime( time )
+                h,m,s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset"])).split(":")
+                s, ms = s_dec.split(".")
+                time.setHMS(int(h), int(m), int(s), int(ms))
+                observationWindow.teTimeOffset.setTime(time)
 
                 if "time offset second player" in self.pj[OBSERVATIONS][obsId]:
                     time = QTime()
-                    h,m,s_dec = seconds2time( abs(self.pj[OBSERVATIONS][obsId]["time offset second player"])).split(':')
-                    s, ms = s_dec.split('.')
-                    time.setHMS(int(h),int(m),int(s),int(ms))
-                    observationWindow.teTimeOffset_2.setTime( time )
+                    h,m,s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset second player"])).split(':')
+                    s, ms = s_dec.split(".")
+                    time.setHMS(int(h), int(m), int(s), int(ms))
+                    observationWindow.teTimeOffset_2.setTime(time)
 
                     if self.pj[OBSERVATIONS][obsId]["time offset second player"] <= 0:
                         observationWindow.rbEarlier.setChecked(True)
@@ -2401,18 +2402,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
 
-            for player, twVideo in zip( [PLAYER1,PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
+            for player, twVideo in zip([PLAYER1,PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
 
                 if player in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
                     twVideo.setRowCount(0)
                     for mediaFile in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
                         twVideo.setRowCount(twVideo.rowCount() + 1)
                         twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(mediaFile))
-
-                        self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
-
-                        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{} s".format(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{} ".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
+                        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
 
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
