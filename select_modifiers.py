@@ -95,13 +95,14 @@ class ModifiersRadioButton(QDialog):
         """
         if(event.type() == QEvent.KeyPress):
             ek = event.key()
-            print(ek, chr(ek))
-            print("({})".format(chr(ek)).upper())
+
+            print(ek)
+            '''print("({})".format(chr(ek)).upper())'''
 
             for widget in self.children():
                 if widget.objectName() == "lw_modifiers":
                     for index in range(widget.count()):
-                        if "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
+                        if ek < 0x110000 and "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
                             widget.setItemSelected(widget.item(index), True)
             return True
         else:
