@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.93"
-__version_date__ = "2016-03-04"
+__version_date__ = "2016-03-11"
 __DEV__ = False
 
 import sys
@@ -2408,9 +2408,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     twVideo.setRowCount(0)
                     for mediaFile in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
                         twVideo.setRowCount(twVideo.rowCount() + 1)
-                        twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(mediaFile))
-                        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
+                        twVideo.setItem(twVideo.rowCount() - 1, 0, QTableWidgetItem(mediaFile))
+                        twVideo.setItem(twVideo.rowCount() - 1, 1, QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                        twVideo.setItem(twVideo.rowCount() - 1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
 
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
@@ -2466,18 +2466,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # observation time offset
             if self.timeFormat == HHMMSS:
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]  = time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = time2seconds(observationWindow.teTimeOffset_2.time().toString('hh:mm:ss.zzz'))
 
             if self.timeFormat == S:
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] =  abs(Decimal( observationWindow.leTimeOffset.text() ))
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] =  abs(Decimal( observationWindow.leTimeOffset_2.text() ))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = abs(Decimal( observationWindow.leTimeOffset.text() ))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = abs(Decimal( observationWindow.leTimeOffset_2.text() ))
 
             if observationWindow.rbSubstract.isChecked():
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]  = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]
 
             if observationWindow.rbEarlier.isChecked():
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER]  = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER]
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER]
 
 
             self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
@@ -2537,7 +2537,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 print(self.pj[OBSERVATIONS][self.observationId])
 
                 # title of dock widget
-                self.dwObservations.setWindowTitle('Events for "{}" observation'.format(self.observationId))
+                self.dwObservations.setWindowTitle("""Events for "{}" observation""".format(self.observationId))
 
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE]:
 
@@ -2752,29 +2752,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.checkForNewVersion = False
 
             if self.checkForNewVersion:
-                if settings.value('last_check_for_new_version') and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
+                if settings.value("last_check_for_new_version") and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
-
-            # frame-by-frame tab
-            """
-            self.allowFrameByFrame = False
-            try:
-                self.allowFrameByFrame = ( settings.value('allow_frame_by_frame') == 'true' )
-            except:
-                self.allowFrameByFrame = False
-
-            if not self.ffmpeg_bin:
-                try:
-                    self.ffmpeg_bin = settings.value('ffmpeg_bin')
-                    if not self.ffmpeg_bin:
-                        self.ffmpeg_bin = ''
-                except:
-                    self.ffmpeg_bin = ''
-            """
 
             self.ffmpeg_cache_dir = ''
             try:
-                self.ffmpeg_cache_dir = settings.value('ffmpeg_cache_dir')
+                self.ffmpeg_cache_dir = settings.value("ffmpeg_cache_dir")
                 if not self.ffmpeg_cache_dir:
                     self.ffmpeg_cache_dir = ''
             except:
@@ -2782,81 +2765,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.ffmpeg_cache_dir_max_size = 0
             try:
-                self.ffmpeg_cache_dir_max_size = int(settings.value('ffmpeg_cache_dir_max_size'))
+                self.ffmpeg_cache_dir_max_size = int(settings.value("ffmpeg_cache_dir_max_size"))
                 if not self.ffmpeg_cache_dir_max_size:
                     self.ffmpeg_cache_dir_max_size = 0
             except:
                 self.ffmpeg_cache_dir_max_size = 0
 
-        """
-        if self.allowFrameByFrame:
-            r, msg = test_ffmpeg_path(self.ffmpeg_bin)
-            if r:
-                self.availablePlayers.append(FFMPEG)
-            else:
-                logging.warning(msg)
-
-                if sys.platform.startswith('win') and os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe' ):
-                    self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg.exe'
-
-                elif sys.platform.startswith('linux'):
-
-                    # test if ffmpeg is on same path of main script
-                    #logging.debug('ffmpeg embedded {}'.format(os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' )))
-                    if os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg' ):
-                        self.ffmpeg_bin = os.path.dirname(os.path.realpath(__file__)) + os.sep + 'ffmpeg'
-
-                    # test if FFmpeg installed on path
-                    else:
-                        r, msg = test_ffmpeg_path('ffmpeg')
-                        if r:
-                            self.ffmpeg_bin = 'ffmpeg'
-
-                r, _ = test_ffmpeg_path(self.ffmpeg_bin)
-                if r:
-                    self.availablePlayers.append(FFMPEG)
-                else:
-                    self.allowFrameByFrame = False
-        """
-
-
-        """logging.debug( 'available players: {}'.format(self.availablePlayers ))
-        """
-
-
 
     def saveConfigFile(self, lastCheckForNewVersion=0):
-        '''
+        """
         save config file
-        '''
+        """
 
-        logging.info('save config file')
+        logging.info("save config file")
 
-        if __version__ == 'DEV':
-            iniFilePath = os.path.expanduser('~') + os.sep + '.boris_dev'
+        if __version__ == "DEV":
+            iniFilePath = os.path.expanduser("~") + os.sep + ".boris_dev"
         else:
-            iniFilePath = os.path.expanduser('~') + os.sep + '.boris'
+            iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
 
         settings = QSettings(iniFilePath, QSettings.IniFormat)
-        settings.setValue('MainWindow/Size', self.size())
-        settings.setValue('MainWindow/Position', self.pos())
-        settings.setValue('Time/Format', self.timeFormat )
-        settings.setValue('Time/Repositioning_time_offset', self.repositioningTimeOffset )
-        settings.setValue('Time/fast_forward_speed', self.fast )
-        settings.setValue('Time/play_rate_step', self.play_rate_step)
-        settings.setValue('Save_media_file_path', self.saveMediaFilePath )
-        settings.setValue('Automatic_backup', self.automaticBackup )
-        settings.setValue('behavioural_strings_separator', self.behaviouralStringsSeparator )
-        settings.setValue('confirm_sound', self.confirmSound)
-        settings.setValue('embed_player', self.embedPlayer)
-        settings.setValue('alert_nosubject', self.alertNoFocalSubject)
-        settings.setValue('tracking_cursor_above_event', self.trackingCursorAboveEvent)
-        settings.setValue('check_for_new_version', self.checkForNewVersion)
+        settings.setValue("MainWindow/Size", self.size())
+        settings.setValue("MainWindow/Position", self.pos())
+        settings.setValue("Time/Format", self.timeFormat )
+        settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset )
+        settings.setValue("Time/fast_forward_speed", self.fast )
+        settings.setValue("Time/play_rate_step", self.play_rate_step)
+        settings.setValue("Save_media_file_path", self.saveMediaFilePath )
+        settings.setValue("Automatic_backup", self.automaticBackup )
+        settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator )
+        settings.setValue("confirm_sound", self.confirmSound)
+        settings.setValue("embed_player", self.embedPlayer)
+        settings.setValue("alert_nosubject", self.alertNoFocalSubject)
+        settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
+        settings.setValue("check_for_new_version", self.checkForNewVersion)
         if lastCheckForNewVersion:
-            settings.setValue('last_check_for_new_version', lastCheckForNewVersion)
+            settings.setValue("last_check_for_new_version", lastCheckForNewVersion)
 
-        settings.setValue('ffmpeg_cache_dir', self.ffmpeg_cache_dir)
-        settings.setValue('ffmpeg_cache_dir_max_size', self.ffmpeg_cache_dir_max_size)
+        settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
+        settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
 
 
 
@@ -2984,11 +2931,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if '' in observed_subjects:
             subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
             subjectsSelection.ch = QCheckBox()
-            subjectsSelection.ch.setText( NO_FOCAL_SUBJECT )
+            subjectsSelection.ch.setText(NO_FOCAL_SUBJECT)
             subjectsSelection.ch.setChecked(True)
             subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
 
-        all_subjects = sorted( [  self.pj[SUBJECTS][x][ 'name' ]  for x in self.pj[SUBJECTS] ] )
+        all_subjects = sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
         for subject in all_subjects:
             subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
@@ -3000,8 +2947,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
 
-        subjectsSelection.setWindowTitle('Select subjects to analyze')
-        subjectsSelection.label.setText('Available subjects')
+        subjectsSelection.setWindowTitle("Select subjects to analyze")
+        subjectsSelection.label.setText("Available subjects")
 
         subj_sel = []
 
@@ -3011,21 +2958,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 check_box = subjectsSelection.lw.itemWidget(subjectsSelection.lw.item(idx))
                 if check_box.isChecked():
-                    subj_sel.append( check_box.text() )
+                    subj_sel.append(check_box.text())
 
             return subj_sel
         else:
             return []
 
     def select_behaviors(self, observedBehaviors):
-        '''
+        """
         allow user to select behaviors
         preselection in observedBehaviors
-        '''
+        """
 
         behaviorsSelection = checkingBox_list()
 
-        allBehaviors = sorted( [  self.pj[ETHOGRAM][x][ 'code' ]  for x in self.pj[ETHOGRAM] ] )
+        allBehaviors = sorted( [  self.pj[ETHOGRAM][x]['code']  for x in self.pj[ETHOGRAM] ] )
 
         for behavior in allBehaviors:
 
@@ -4215,9 +4162,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def save_project_json(self, projectFileName):
-        '''
+        """
         save project to JSON file
-        '''
+        """
         def decimal_default(obj):
             if isinstance(obj, Decimal):
                 return float(obj)
@@ -4228,8 +4175,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pj['project_format_version'] = project_format_version
 
         try:
-            f = open(projectFileName, 'w')
-            f.write(json.dumps(self.pj, indent=4, default=decimal_default))
+            f = open(projectFileName, "w")
+            f.write(json.dumps(self.pj, indent=1, default=decimal_default))
             f.close()
         except:
             logging.critical( 'The project file can not be saved' )

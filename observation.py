@@ -251,7 +251,6 @@ class Observation(QDialog, Ui_Form):
         if nPlayer == PLAYER2:
             twVideo = self.twVideo2
 
-
         twVideo.setRowCount(twVideo.rowCount() + 1)
         twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(fileName) )
         twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format(seconds2time(self.mediaDurations[fileName]))))
