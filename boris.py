@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.93"
-__version_date__ = "2016-03-11"
+__version__ = "2.94"
+__version_date__ = "2016-03-14"
 __DEV__ = False
 
 import sys
@@ -5772,21 +5772,22 @@ item []:
         # check if key duplicated
         items = []
         for idx in self.pj[ETHOGRAM]:
-            if self.pj[ETHOGRAM][idx]['key'] == obs_key:
+            if self.pj[ETHOGRAM][idx]["key"] == obs_key:
 
-                txt = self.pj[ETHOGRAM][idx]['code']
-                if  self.pj[ETHOGRAM][idx]['description']:
-                    txt += ' - ' + self.pj[ETHOGRAM][idx]['description']
-                items.append(txt)
+                code_descr = self.pj[ETHOGRAM][idx]["code"]
+                if  self.pj[ETHOGRAM][idx]["description"]:
+                    code_descr += " - " + self.pj[ETHOGRAM][idx]["description"]
+                items.append(code_descr)
+                self.detailedObs[code_descr] = idx
 
-                self.detailedObs[txt] = idx
+        items.sort()
 
-        response = ""
+        item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items, 0, False)
 
-        item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more events.<br>Choose the correct one:".format(obs_key), items, 0, False)
+        print(ok, item)
 
         if ok and item:
-            obs_idx = self.detailedObs[ item ]
+            obs_idx = self.detailedObs[item]
             return obs_idx
         else:
             return None
@@ -5819,7 +5820,7 @@ item []:
                 if self.playMode == FFMPEG:
                     # cumulative time
 
-                    memLaps = Decimal( self.FFmpegGlobalFrame * ( 1000 / list(self.fps.values())[0]) / 1000).quantize(Decimal('.001'))
+                    memLaps = Decimal( self.FFmpegGlobalFrame * ( 1000 / list(self.fps.values())[0]) / 1000).quantize(Decimal(".001"))
 
                     return memLaps
 
@@ -6008,7 +6009,7 @@ item []:
 
         if (ek in function_keys) or ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])):
 
-            obs_idx = -1
+            obs_idx, subj_idx  = -1, -1
             count = 0
 
             if (ek in function_keys):
@@ -6016,15 +6017,29 @@ item []:
             else:
                 ek_unichr = chr(ek)
 
+            # count key occurence in ethogram
             for o in self.pj[ETHOGRAM]:
-
-                if self.pj[ETHOGRAM][o]['key'] == ek_unichr:
+                if self.pj[ETHOGRAM][o]["key"] == ek_unichr:
                     obs_idx = o
                     count += 1
 
-            # check if key codes more events
-            if count > 1:
+            # check if key defines a suject
+            flag_subject = False
+            for idx in self.pj[SUBJECTS]:
+                if ek_unichr == self.pj[SUBJECTS][idx]["key"]:
+                    subj_idx = idx
 
+            # select between code and subject
+            if subj_idx != -1 and count:
+                r = dialog.MessageDialog(programName, "This key defines a behavior and a subject. Choose one", ["&Behavior", "&Subject"])
+                if r == "&Subject":
+                    count = 0
+                if r == "&Behavior":
+                    subj_idx = -1
+
+
+            # check if key codes more events
+            if subj_idx == -1 and count > 1:
                 flagPlayerPlaying = False
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                     if self.playerType == VLC:
@@ -6033,7 +6048,9 @@ item []:
                             self.pause_video()
 
                 # let user choose event
-                obs_idx = self.fill_lwDetailed( ek_unichr, memLaps)
+                obs_idx = self.fill_lwDetailed(ek_unichr, memLaps)
+
+                logging.debug("obs_idx: {}".format(obs_idx))
 
                 if obs_idx:
                     count = 1
@@ -6042,7 +6059,6 @@ item []:
                     self.play_video()
 
             if count == 1:
-
                 # check if focal subject is defined
                 if not self.currentSubject and self.alertNoFocalSubject:
 
@@ -6060,38 +6076,6 @@ item []:
 
                     if response == NO:
                         return
-                """
-                event = dict( self.pj[ETHOGRAM][obs_idx] )
-                # check if coding map
-                if 'coding map' in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]['coding map']:
-
-                    # pause if media and media playing
-                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-                        if self.playerType == VLC:
-                            memState = self.mediaListPlayer.get_state()
-                            if memState == vlc.State.Playing:
-                                self.pause_video()
-
-                    self.codingMapWindow = coding_map.codingMapWindowClass( self.pj['coding_map'][ self.pj[ETHOGRAM][obs_idx]['coding map'] ] )
-
-                    self.codingMapWindow.resize(640, 640)
-                    if self.codingMapWindowGeometry:
-                         self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
-
-                    if not self.codingMapWindow.exec_():
-                        return
-
-                    self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
-
-                    event['from map'] = self.codingMapWindow.getCodes()
-
-                    # restart media
-                    if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-
-                        if self.playerType == VLC:
-                            if memState == vlc.State.Playing:
-                                self.play_video()
-                """
 
                 event = self.full_event(obs_idx)
 
@@ -6102,7 +6086,6 @@ item []:
                 # check if key defines a suject
                 flag_subject = False
                 for idx in self.pj[SUBJECTS]:
-
                     if ek_unichr == self.pj[SUBJECTS][idx]['key']:
                         flag_subject = True
 
@@ -6113,53 +6096,16 @@ item []:
                             self.selectSubject( self.pj[SUBJECTS][idx]['name'] )
 
                 if not flag_subject:
+                    self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
 
-
-                    self.statusbar.showMessage( 'Key not assigned (%s)' % ek_unichr , 5000)
-
-
-        # coding map
-        '''
-        if ek == 16777216:    # ESC
-
-            # pause if media and media playing
-            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-                if self.playerType == VLC:
-                    memState = self.mediaListPlayer.get_state()
-                    if memState == vlc.State.Playing:
-                        self.pause_video()
-                if self.playerType == OPENCV:
-                    memState = self.FFmpegTimerOut.isActive()
-                    if memState:
-                        self.pause_video()
-
-            self.codingMap = coding_map.codingMapWindow('prova_map.boris_map')
-            self.codingMap.resize(640, 640)
-            self.codingMap.exec_()
-            print 'returned', self.codingMap.getCodes()
-
-
-            self.writeEvent({ "code": self.codingMap.getCodes(), "key": "map","modifiers": "", "excluded":"", "type": "Point event"}, memLaps)
-
-            # restart media
-            if self.pj[OBSERVATIONS][self.observationId]['type'] in [MEDIA]:
-
-                if self.playerType == VLC:
-                    if memState == vlc.State.Playing:
-                        self.play_video()
-
-                if self.playerType == OPENCV:
-                    if memState:
-                        self.play_video()
-        '''
 
 
 
     def twEvents_doubleClicked(self):
-        '''
+        """
         seek video to double clicked position ( add self.repositioningTimeOffset value)
         substract time offset if any
-        '''
+        """
 
         if self.twEvents.selectedIndexes():
 

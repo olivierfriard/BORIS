@@ -53,9 +53,10 @@ subjectsFields = ['key', 'name', 'description']
 
 UNPAIRED = 'UNPAIRED'
 
-YES = 'Yes'
-NO = 'No'
-CANCEL = 'Cancel'
+YES = "Yes"
+NO = "No"
+CANCEL = "Cancel"
+REMOVE = "Remove"
 
 NO_FOCAL_SUBJECT = 'No focal subject'
 
