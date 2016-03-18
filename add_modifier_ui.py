@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'add_modifier.ui'
 #
-# Created: Thu Mar 26 12:33:53 2015
-#      by: PyQt4 UI code generator 4.11.3
+# Created: Fri Mar 18 14:59:10 2016
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -47,6 +47,10 @@ class Ui_Dialog(object):
         self.leCode = QtGui.QLineEdit(Dialog)
         self.leCode.setObjectName(_fromUtf8("leCode"))
         self.verticalLayout_2.addWidget(self.leCode)
+        self.label = QtGui.QLabel(Dialog)
+        self.label.setWordWrap(True)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.verticalLayout_2.addWidget(self.label)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
@@ -112,6 +116,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Set modifiers", None))
         self.lbModifier.setText(_translate("Dialog", "Modifier", None))
         self.lbCode.setText(_translate("Dialog", "Key code", None))
+        self.label.setText(_translate("Dialog", "Key code is case insensitive. Type one character or a function key (F1, F2... F12)", None))
         self.pbAddModifier.setText(_translate("Dialog", "-->", None))
         self.pbModifyModifier.setText(_translate("Dialog", "<--", None))
         self.tabWidgetModifiersSets.setTabText(self.tabWidgetModifiersSets.indexOf(self.set1), _translate("Dialog", "Set #1", None))

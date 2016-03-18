@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -43,16 +43,17 @@ class ModifiersRadioButton(QDialog):
         widget.setLayout(Vlayout)
 
         label = QLabel()
-        label.setText("Choose the modifier{0} for <b>{1}</b> event".format( 's'*(len(modifiers_list)>1), code))
+        label.setText("Choose the modifier{0} for <b>{1}</b> event".format( 's'*(len(modifiers_list) > 1), code))
         Vlayout.addWidget(label)
 
-        count = 1
+        self.modifiersSetNumber = 0
+
         for idx, modifiers in enumerate(modifiers_list):
 
+            self.modifiersSetNumber += 1
             if len(modifiers_list) > 1:
                 lb = QLabel()
-                lb.setText("Modifiers #{}".format(count))
-                count += 1
+                lb.setText("Modifiers #{}".format(self.modifiersSetNumber))
                 Vlayout.addWidget(lb)
 
             lw = QListWidget(widget)
@@ -95,15 +96,29 @@ class ModifiersRadioButton(QDialog):
         """
         if(event.type() == QEvent.KeyPress):
             ek = event.key()
-
-            print(ek)
-            '''print("({})".format(chr(ek)).upper())'''
+            # close dialog if enter pressed
+            if ek == 16777220:
+                self.accept()
+                return True
 
             for widget in self.children():
                 if widget.objectName() == "lw_modifiers":
                     for index in range(widget.count()):
-                        if ek < 0x110000 and "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
+
+                        if ek in config.function_keys:
+                            if "({})".format(config.function_keys[ek]) in widget.item(index).text().upper():
+                                widget.setItemSelected(widget.item(index), True)
+                                if self.modifiersSetNumber == 1:
+                                    self.accept()
+                                    return True
+
+                        if ek < 1114112 and "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
                             widget.setItemSelected(widget.item(index), True)
+                            # close dialog if one set of modifiers
+                            if self.modifiersSetNumber == 1:
+                                self.accept()
+                                return True
+
             return True
         else:
             return False
@@ -117,7 +132,7 @@ class ModifiersRadioButton(QDialog):
         for widget in self.children():
             if widget.objectName() == "lw_modifiers":
                 for item in widget.selectedItems():
-                    modifiers.append(re.sub(" \(.\)", "", item.text()))
+                    modifiers.append(re.sub(" \(.*\)", "", item.text()))
         return modifiers
 
     def pbOK_clicked(self):

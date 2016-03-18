@@ -5225,7 +5225,9 @@ item []:
 
 
     def actionUser_guide_triggered(self):
-        ''' open user guide URL if it exists otherwise open user guide URL'''
+        """
+        open user guide URL if it exists otherwise open user guide URL
+        """
         userGuideFile = os.path.dirname(os.path.realpath(__file__)) + "/boris_user_guide.pdf"
         if os.path.isfile( userGuideFile ) :
             if sys.platform.startswith("linux"):
@@ -5251,9 +5253,12 @@ item []:
 
         QMessageBox.about(self, "About " + programName,"""<b>{prog_name}</b> {ver} - {date}
         <p>Copyright &copy; 2012-2016 Olivier Friard - Marco Gamba<br>
-        Department of Life Sciences and Systems Biology - University of Torino - Italy<br>
+        Department of Life Sciences and Systems Biology<br>
+        University of Torino - Italy<br>
         <br>
-        The author would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
+        BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>
+        <br>
+        The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
         <br>
         See <a href="http://penelope.unito.it/boris">penelope.unito.it/boris</a> for more details.<br>
         <p>Python {python_ver} - Qt {qt_ver} - PyQt4 {pyqt_ver} on {system}<br><br>
@@ -5423,7 +5428,7 @@ item []:
                 txt = ", ".join(txt)
 
                 # show current state(s)
-                self.lbCurrentStates.setText( re.sub(" \(.\)", "", txt) )
+                self.lbCurrentStates.setText( re.sub(" \(.*\)", "", txt) )
 
                 # show selected subjects
                 for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
@@ -5729,15 +5734,15 @@ item []:
 
 
         # remove key code from modifiers
-        modifier_str = re.sub(' \(.\)', '', modifier_str)
+        modifier_str = re.sub(" \(.*\)", "", modifier_str)
 
-        if 'comment' in event:
-            comment = event['comment']
+        if "comment" in event:
+            comment = event["comment"]
         else:
-            comment = ''
+            comment = ""
 
-        if 'subject' in event:
-            subject = event['subject']
+        if "subject" in event:
+            subject = event["subject"]
         else:
             subject = self.currentSubject
 
@@ -5783,8 +5788,6 @@ item []:
         items.sort()
 
         item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items, 0, False)
-
-        print(ok, item)
 
         if ok and item:
             obs_idx = self.detailedObs[item]
@@ -5914,6 +5917,11 @@ item []:
         if self.confirmSound:
             app.beep()
 
+        if self.playerType == VLC and self.mediaListPlayer.get_state() != vlc.State.Paused:
+            flagPlayerPlaying = True
+        else:
+            flagPlayerPlaying = False
+
         if self.playerType == VIEWER:
             QMessageBox.critical(self, programName, "The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode.")
             return
@@ -6031,6 +6039,13 @@ item []:
 
             # select between code and subject
             if subj_idx != -1 and count:
+
+                if self.playerType == VLC:
+                    if self.mediaListPlayer.get_state() != vlc.State.Paused:
+                        flagPlayerPlaying = True
+                        self.pause_video()
+
+
                 r = dialog.MessageDialog(programName, "This key defines a behavior and a subject. Choose one", ["&Behavior", "&Subject"])
                 if r == "&Subject":
                     count = 0
@@ -6040,7 +6055,6 @@ item []:
 
             # check if key codes more events
             if subj_idx == -1 and count > 1:
-                flagPlayerPlaying = False
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                     if self.playerType == VLC:
                         if self.mediaListPlayer.get_state() != vlc.State.Paused:
@@ -6055,21 +6069,19 @@ item []:
                 if obs_idx:
                     count = 1
 
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA] and flagPlayerPlaying:
-                    self.play_video()
+            if self.playerType == VLC and flagPlayerPlaying:
+                self.play_video()
 
             if count == 1:
                 # check if focal subject is defined
                 if not self.currentSubject and self.alertNoFocalSubject:
-
-                    flagPlayerPlaying = False
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
                             if self.mediaListPlayer.get_state() != vlc.State.Paused:
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
-                    response = dialog.MessageDialog(programName, 'The focal subject is not defined. Do you want to continue?\nUse Preferences menu option to modify this behaviour.', [YES, NO])
+                    response = dialog.MessageDialog(programName, "The focal subject is not defined. Do you want to continue?\nUse Preferences menu option to modify this behaviour.", [YES, NO])
 
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA] and flagPlayerPlaying:
                         self.play_video()

@@ -41,6 +41,16 @@
           <widget class="QLineEdit" name="leCode"/>
          </item>
          <item>
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Key code is case insensitive. Type one character or a function key (F1, F2... F12)</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="verticalSpacer">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
