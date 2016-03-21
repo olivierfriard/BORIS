@@ -31,6 +31,9 @@ import dialog
 
 class addModifierDialog(QDialog, Ui_Dialog):
 
+    tabMem = -1
+    itemPositionMem = -1
+
     def __init__(self, modifiersStr, parent=None):
 
         super(addModifierDialog, self).__init__(parent)
@@ -39,9 +42,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.modifierStr = modifiersStr
 
         self.pbAddModifier.clicked.connect(self.addModifier)
+        self.pbAddModifier.setIcon(QIcon(":/frame_forward"))
         self.pbAddSet.clicked.connect(self.addSet)
         self.pbRemoveSet.clicked.connect(self.removeSet)
         self.pbModifyModifier.clicked.connect(self.modifyModifier)
+        self.pbModifyModifier.setIcon(QIcon(":/frame_backward"))
+
+        self.pbMoveUp.clicked.connect(self.moveModifierUp)
+        self.pbMoveDown.clicked.connect(self.moveModifierDown)
+
+        self.pbMoveSetLeft.clicked.connect(self.moveSetLeft)
+        self.pbMoveSetRight.clicked.connect(self.moveSetRight)
+
         self.pbRemoveModifier.clicked.connect(self.removeModifier)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
@@ -62,39 +74,100 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         # set first tab as active
         self.lwModifiers.addItems(self.modifiersSets_list[0])
+        self.tabMem = 0
+
+    def moveSetLeft(self):
+        """
+        move selected modifiers set left
+        """
+
+        if self.tabWidgetModifiersSets.currentIndex():
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex() - 1],  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ] =  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ], self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() - 1]
+            self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() - 1 )
+            self.tabMem = self.tabWidgetModifiersSets.currentIndex()
+
+    def moveSetRight(self):
+        """
+        move selected modifiers set right
+        """
+
+        print( "index", self.tabWidgetModifiersSets.currentIndex() )
+        print( self.modifiersSets_list )
+
+        if self.tabWidgetModifiersSets.currentIndex() < self.tabWidgetModifiersSets.count() - 1:
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex() + 1],  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ] =  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ], self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() + 1]
+            self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() + 1)
+            self.tabMem = self.tabWidgetModifiersSets.currentIndex()
+
+    def moveModifierUp(self):
+        """
+        move up the selected modifier
+        """
+
+        if self.lwModifiers.currentRow() >= 0:
+            currentRow = self.lwModifiers.currentRow()
+            currentItem = self.lwModifiers.takeItem(currentRow)
+            self.lwModifiers.insertItem(currentRow - 1, currentItem)
+            self.lwModifiers.setCurrentItem(currentItem)
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+
+
+    def moveModifierDown(self):
+        """
+        move down the selected modifier
+        """
+        if self.lwModifiers.currentRow() >= 0:
+            currentRow = self.lwModifiers.currentRow()
+            currentItem = self.lwModifiers.takeItem(currentRow)
+            self.lwModifiers.insertItem(currentRow + 1, currentItem)
+            self.lwModifiers.setCurrentItem(currentItem)
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
 
     def addSet(self):
         """
         Add a set of modifiers
         """
-        self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(len(self.modifiersSets_list) + 1))
-        self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
-        self.modifiersSets_list.append([])
+        if len(self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()]):
+            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(len(self.modifiersSets_list) + 1))
+            self.modifiersSets_list.append([])
+            self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
+            self.tabMem = self.tabWidgetModifiersSets.currentIndex()
+
+        else:
+            QMessageBox.information(self, programName, "It is not possible to add a modifiers' set while the current modifiers' set is empty.")
 
     def removeSet(self):
         """
         remove set of modifiers
         """
-        if dialog.MessageDialog(programName, "Are you sure to remove this set of modifiers?", [YES, NO]) == YES:
-            self.modifiersSets_list.pop(self.tabWidgetModifiersSets.currentIndex())
-            self.tabWidgetModifiersSets.removeTab(self.tabWidgetModifiersSets.currentIndex())
+        if len(self.modifiersSets_list) > 1:
+            if dialog.MessageDialog(programName, "Are you sure to remove this set of modifiers?", [YES, NO]) == YES:
+                self.modifiersSets_list.pop(self.tabWidgetModifiersSets.currentIndex())
+                self.tabWidgetModifiersSets.removeTab(self.tabWidgetModifiersSets.currentIndex())
+        else:
+            QMessageBox.information(self, programName, "It is not possible to remove the last modifiers' set.")
+
 
     def modifyModifier(self):
         """
         modify modifier <- arrow
         """
 
-        if self.lwModifiers.currentIndex().row() >= 0:
+        if self.lwModifiers.currentRow() >= 0:
             txt = self.lwModifiers.currentItem().text()
-            code = ''
-            if '(' in txt and ')' in txt:
-                code = txt.split('(')[1].split(')')[0]
+            code = ""
+            if "(" in txt and ")" in txt:
+                code = txt.split("(")[1].split(")")[0]
 
-            self.leModifier.setText(txt.split('(')[0].strip())
+            self.leModifier.setText(txt.split("(")[0].strip())
             self.leCode.setText(code)
 
             self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()].remove(self.lwModifiers.currentItem().text())
-            self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
+            self.itemPositionMem = self.lwModifiers.currentRow()
+            self.lwModifiers.takeItem(self.lwModifiers.currentRow())
+        else:
+            QMessageBox.information(self, programName, "Select a modifier to modify from the modifiers set")
+
 
     def removeModifier(self):
         """
@@ -102,8 +175,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
 
         if self.lwModifiers.currentIndex().row() >= 0:
-            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()].remove(self.lwModifiers.currentItem().text())
             self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
 
     def addModifier(self):
         """
@@ -138,10 +211,14 @@ class addModifierDialog(QDialog, Ui_Dialog):
                     return
                 txt += " ({})".format(self.leCode.text().upper())
 
-            self.lwModifiers.addItem(txt)
-            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()].append(txt)
-            self.leModifier.setText('')
-            self.leCode.setText('')
+            if self.itemPositionMem != -1:
+                self.lwModifiers.insertItem(self.itemPositionMem, txt)
+            else:
+                self.lwModifiers.addItem(txt)
+
+            self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+            self.leModifier.setText("")
+            self.leCode.setText("")
 
         else:
             QMessageBox.critical(self, programName, "No modifier to add!")
@@ -151,11 +228,25 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         user changed the tab widget
         """
-        self.lwModifiers.clear()
-        self.leCode.clear()
-        self.leModifier.clear()
+        # check if modifier field empty
+        if self.leModifier.text() and tabIndex != self.tabMem:
+            if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
+                                                  "If you change the modifier's set it will be lost.<br>"
+                                                  "Do you want to change modifiers set"), [YES, NO ]) == NO:
+                self.tabWidgetModifiersSets.setCurrentIndex(self.tabMem)
+                return
 
-        self.lwModifiers.addItems(self.modifiersSets_list[tabIndex])
+        if tabIndex != self.tabMem:
+            self.lwModifiers.clear()
+            self.leCode.clear()
+            self.leModifier.clear()
+
+            self.tabMem = tabIndex
+
+            print(tabIndex)
+            print(self.modifiersSets_list)
+
+            self.lwModifiers.addItems(self.modifiersSets_list[tabIndex])
 
     def getModifiers(self):
 

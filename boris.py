@@ -47,8 +47,6 @@ import qrc_boris
 from config import *
 
 video, live = 0, 1
-script_out = ""
-script_fps = -2
 
 import time
 import os
@@ -1708,7 +1706,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.videoTab.setLayout(self.vboxlayout)
 
-        self.toolBox.insertItem(VIDEO_TAB, self.videoTab, 'Audio/Video')
+        self.toolBox.insertItem(VIDEO_TAB, self.videoTab, "Audio/Video")
 
         self.actionFrame_by_frame.setEnabled(False)
 
@@ -2038,8 +2036,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
-        self.memMedia = ''
-        self.currentSubject = ''
+        self.memMedia, self.currentSubject = "", ""
 
         self.timer_out()
 
@@ -2080,9 +2077,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
     def signal_from_spectrogram(self, event):
-        '''
+        """
         receive signal from spectrogram widget
-        '''
+        """
         self.keyPressEvent(event)
 
     def eventFilter(self, source, event):

@@ -6,18 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>522</width>
-    <height>344</height>
+    <width>638</width>
+    <height>510</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Set modifiers</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_7">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_6">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
@@ -70,14 +70,14 @@
          <item>
           <widget class="QPushButton" name="pbAddModifier">
            <property name="text">
-            <string>--&gt;</string>
+            <string/>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pbModifyModifier">
            <property name="text">
-            <string>&lt;--</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -97,41 +97,67 @@
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_5">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout">
+          <widget class="QTabWidget" name="tabWidgetModifiersSets">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="tabPosition">
+            <enum>QTabWidget::North</enum>
+           </property>
+           <property name="tabShape">
+            <enum>QTabWidget::Rounded</enum>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <property name="elideMode">
+            <enum>Qt::ElideNone</enum>
+           </property>
+           <property name="documentMode">
+            <bool>true</bool>
+           </property>
+           <widget class="QWidget" name="set1">
+            <attribute name="title">
+             <string>Set #1</string>
+            </attribute>
+           </widget>
+          </widget>
+         </item>
+         <item>
+          <widget class="QListWidget" name="lwModifiers"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QTabWidget" name="tabWidgetModifiersSets">
-             <property name="tabPosition">
-              <enum>QTabWidget::North</enum>
+            <widget class="QPushButton" name="pbMoveUp">
+             <property name="text">
+              <string>Move modifier up</string>
              </property>
-             <property name="currentIndex">
-              <number>0</number>
-             </property>
-             <property name="elideMode">
-              <enum>Qt::ElideNone</enum>
-             </property>
-             <widget class="QWidget" name="set1">
-              <attribute name="title">
-               <string>Set #1</string>
-              </attribute>
-             </widget>
             </widget>
            </item>
            <item>
-            <widget class="QListWidget" name="lwModifiers"/>
+            <widget class="QPushButton" name="pbMoveDown">
+             <property name="text">
+              <string>Move modifier down</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
-            <widget class="QPushButton" name="pbRemoveModifier">
-             <property name="text">
-              <string>Remove modifier</string>
-             </property>
-            </widget>
-           </item>
+          <widget class="QPushButton" name="pbRemoveModifier">
+           <property name="text">
+            <string>Remove modifier</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QPushButton" name="pbAddSet">
              <property name="text">
@@ -147,6 +173,37 @@
             </widget>
            </item>
           </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_4">
+           <item>
+            <widget class="QPushButton" name="pbMoveSetLeft">
+             <property name="text">
+              <string>Move set left</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pbMoveSetRight">
+             <property name="text">
+              <string>Move set right</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </item>

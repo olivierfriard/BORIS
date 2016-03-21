@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Thu Feb 18 14:57:06 2016
+# Created: Mon Mar 21 17:15:32 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -300,7 +300,7 @@ class Ui_dlgProject(object):
         item = self.twBehaviors.horizontalHeaderItem(3)
         item.setText(_translate("dlgProject", "Description", None))
         item = self.twBehaviors.horizontalHeaderItem(4)
-        item.setText(_translate("dlgProject", "Modifiers", None))
+        item.setText(_translate("dlgProject", "Modifiers (double-clic on cell to modify)", None))
         item = self.twBehaviors.horizontalHeaderItem(5)
         item.setText(_translate("dlgProject", "Exclusion", None))
         item = self.twBehaviors.horizontalHeaderItem(6)
