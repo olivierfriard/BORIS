@@ -159,7 +159,7 @@
                </column>
                <column>
                 <property name="text">
-                 <string>Modifiers (double-clic on cell to modify)</string>
+                 <string>Modifiers</string>
                 </property>
                </column>
                <column>

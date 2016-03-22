@@ -55,8 +55,7 @@ class ExclusionMatrix(QDialog):
 
         hbox2 = QHBoxLayout(self)
 
-        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding,
-                                 QSizePolicy.Minimum)
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
         hbox2.addWidget(self.pbCancel)
@@ -67,7 +66,6 @@ class ExclusionMatrix(QDialog):
         self.setLayout(hbox)
 
         self.setWindowTitle("Behaviors exclusion matrix")
-        #self.resize(800, 300)
 
     def pbOK_clicked(self):
         self.accept()
@@ -85,8 +83,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.setupUi(self)
 
-        self.lbObservationsState.setText('')
-        self.lbSubjectsState.setText('')
+        self.lbObservationsState.setText("")
+        self.lbSubjectsState.setText("")
 
         # ethogram tab
         self.pbAddBehavior.clicked.connect(self.pbAddBehavior_clicked)
@@ -104,6 +102,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.twBehaviors.cellChanged[int, int].connect(self.twBehaviors_cellChanged)
         self.twBehaviors.cellDoubleClicked[int, int].connect(self.twBehaviors_cellDoubleClicked)
+
+        # left align table header
+        for i in range(self.twBehaviors.columnCount()):
+            self.twBehaviors.horizontalHeaderItem(i).setTextAlignment(Qt.AlignLeft)
 
         # subjects
         self.pbAddSubject.clicked.connect(self.pbAddSubject_clicked)
