@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.94"
-__version_date__ = "2016-03-22"
+__version__ = "2.95"
+__version_date__ = "2016-03-30"
 __DEV__ = False
 
 import sys
@@ -2399,15 +2399,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
 
-            for player, twVideo in zip([PLAYER1,PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
+            for player, twVideo in zip([PLAYER1, PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
 
                 if player in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
                     twVideo.setRowCount(0)
                     for mediaFile in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
                         twVideo.setRowCount(twVideo.rowCount() + 1)
                         twVideo.setItem(twVideo.rowCount() - 1, 0, QTableWidgetItem(mediaFile))
-                        twVideo.setItem(twVideo.rowCount() - 1, 1, QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                        twVideo.setItem(twVideo.rowCount() - 1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
+                        try:
+                            twVideo.setItem(twVideo.rowCount() - 1, 1, QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                            twVideo.setItem(twVideo.rowCount() - 1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
+                        except:
+                            pass
 
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
