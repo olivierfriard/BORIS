@@ -549,16 +549,16 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def check_text_file_type(self, rows):
         """
-        check file
+        check text file
         returns separator and number of fields (if unique)
         """
-        sepList = ["\t", ",", ";"]
-        for sep in sepList:
+        separators = "\t,;"
+        for separator in separators:
             cs = []
             for row in rows:
-                cs.append(row.count(sep))
+                cs.append(row.count(separator))
             if len(set(cs)) == 1:
-                return sep, cs[0]
+                return separator, cs[0] + 1
         return None, None
 
 
@@ -585,24 +585,29 @@ class projectDialog(QDialog, Ui_dlgProject):
             with open(fileName, "r") as f:
                 rows = [r.strip() for r in f.readlines()]
 
-            sep, num = self.check_text_file_type(rows)
+            fieldSeparator, fieldsNumber = self.check_text_file_type(rows)
 
-            print(sep, num)
+            logging.debug("fields separator: {}  fields number: {}".format(fieldSeparator, fieldsNumber))
 
-            if not sep:
+            if fieldSeparator is None:
                 QMessageBox.critical(self, programName, "Separator character not found! Use plain text file and TAB or comma as value separator")
             else:
 
                 for row in rows:
 
-                    if num == 2:  # 3 fields: type, key, code
-                        type_, key, code = row.split(sep)
-                        description = ""
-                    if num == 3:  # 4 fields:  type, key, code, description
-                        type_, key, code, description = row.split(sep)
+                    type_, key, code, description = "", "", "", ""
 
-                    behavior = {'key': key, 'code': code, 'description': description, 'modifiers': '', 'excluded': '', 'coding map': ''}
-                    print(behavior)
+                    if fieldsNumber == 3:  # fields: type, key, code
+                        type_, key, code = row.split(fieldSeparator)
+                        description = ""
+                    if fieldsNumber == 4:  # fields:  type, key, code, description
+                        type_, key, code, description = row.split(fieldSeparator)
+
+                    if fieldsNumber > 4:
+                        type_, key, code, description = row.split(fieldSeparator)[:4]
+
+                    behavior = {"key": key, "code": code, "description": description, "modifiers": "", "excluded": "", "coding map": ""}
+
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
                     signalMapper = QSignalMapper(self)
