@@ -3414,7 +3414,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
             import matplotlib.colors as matcolors
+            from matplotlib import dates    
             import numpy as np
+            import datetime
         except:
             logging.warning("matplotlib plotting library not installed")
             QMessageBox.warning(None, programName, """The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",\
@@ -3471,15 +3473,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ax.set_xlabel('Time (s)')
             ax.set_ylabel('Behaviors')
 
+            fmtr = dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
+            ax.xaxis.set_major_formatter(fmtr)
+
+
             plt.ylim( len(lbl), -0.5)
 
             if not videoLength:
                 videoLength = maxTime
 
             if self.pj[OBSERVATIONS][obsId]["time offset"]:
-                plt.xlim( round(self.pj[OBSERVATIONS][obsId]["time offset"]),round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2))
+                plt.xlim(round(self.pj[OBSERVATIONS][obsId]["time offset"]), round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2))
             else:
-                plt.xlim(0, round(videoLength) + 2)
+
+                t0 = datetime.datetime(1970, 1, 1, int(0/3600), int((0-int(0/3600)*3600)/60), int(0%60), round(round(0%1,3)*1e6))
+                t1 = round(videoLength) + 2
+                tmax = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1e6))
+                # plt.xlim(tmin, tmax)
+
+                plt.xlim(t0, tmax)
+                #plt.xlim(0, round(videoLength) + 2)
 
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
@@ -3491,7 +3504,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not flagFirstSubject:
                     if excludeBehaviorsWithoutEvents:
                         count += 1
-                    ax.axhline(y=(count-1), linewidth=1, color='black')
+                    ax.axhline(y=(count-1), linewidth=1, color="black")
                     ax.hlines(np.array([count]), np.array([0]), np.array([0]), lw=LINE_WIDTH, color=col)
                 else:
                     flagFirstSubject = False
@@ -3538,8 +3551,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     col_count += 1
 
-                ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
-                ax.plot(pointsx,pointsy, 'r^' )
+                ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x1]), \
+                np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x2]),\
+                lw=LINE_WIDTH, color=col)
+
+                #ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
+
+                ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in pointsx]), pointsy, 'r^')
+                #ax.plot(pointsx,pointsy, 'r^' )
 
                 #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
