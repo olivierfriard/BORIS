@@ -3420,7 +3420,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
             import matplotlib.colors as matcolors
-            from matplotlib import dates    
+            from matplotlib import dates
             import numpy as np
             import datetime
         except:
@@ -3472,16 +3472,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
             fig = plt.figure(figsize=(20, int(len(lbl) * .8 )))
 
-            fig.suptitle('Time diagram of observation {}'.format(obsId), fontsize=14)
+            fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
 
             ax = fig.add_subplot(111)
             labels = ax.set_yticklabels(lbl)
-            ax.set_xlabel('Time (s)')
-            ax.set_ylabel('Behaviors')
 
-            if self.timeFormat == HHMMSS: 
+            ax.set_ylabel("Behaviors")
+
+            if self.timeFormat == HHMMSS:
                 fmtr = dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
                 ax.xaxis.set_major_formatter(fmtr)
+                ax.set_xlabel("Time (hh:mm:ss)")
+            else:
+                ax.set_xlabel("Time (s)")
 
 
             plt.ylim( len(lbl), -0.5)
@@ -3492,7 +3495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["time offset"]:
                 t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"])
                 t1 = round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
-                if self.timeFormat == HHMMSS:  
+                if self.timeFormat == HHMMSS:
                     t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1e6))
                     t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1e6))
                     plt.xlim(t0d, t1d)
@@ -3501,7 +3504,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 t0 = 0
                 t1 = round(videoLength) + 2
-                if self.timeFormat == HHMMSS:                
+                if self.timeFormat == HHMMSS:
                     t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1e6))
                     t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1e6))
                     plt.xlim(t0d, t1d)
@@ -3566,7 +3569,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     col_count += 1
 
-                if self.timeFormat == HHMMSS:  
+                if self.timeFormat == HHMMSS:
                     ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x1]), \
                     np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x2]),\
                     lw=LINE_WIDTH, color=col)
@@ -3574,7 +3577,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.timeFormat == S:
                     ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
 
-                if self.timeFormat == HHMMSS: 
+                if self.timeFormat == HHMMSS:
                     ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in pointsx]), pointsy, 'r^')
 
                 if self.timeFormat == S:
