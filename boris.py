@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.95"
-__version_date__ = "2016-03-30"
+__version__ = "2.96"
+__version_date__ = "2016-04-06"
 __DEV__ = False
 
 import sys
@@ -3436,11 +3436,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             LINE_WIDTH = line_width
             #colors = list(matcolors.cnames.keys())
-            colors = ['blue','green','red','cyan','magenta','yellow','lime',
-                      'darksalmon','purple','orange','maroon','silver',
-                      'slateblue','hotpink','steelblue','darkgoldenrod']
-            all_behaviors = []
-            observedBehaviors = []
+            colors = ["blue","green","red","cyan","magenta","yellow","lime",
+                      "darksalmon", "purple", "orange", "maroon", "silver",
+                      "slateblue", "hotpink", "steelblue", "darkgoldenrod"]
+            all_behaviors, observedBehaviors = [], []
             maxTime = 0  # max time in all events of all subjects
 
             for subject in  sorted( list(obs.keys())):
