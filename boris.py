@@ -2188,9 +2188,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             mediaList = []
             if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
-                for player in sorted(self.pj[OBSERVATIONS][obs][FILE].keys()):
-                    for media in self.pj[OBSERVATIONS][obs][FILE][player]:
-                        mediaList.append('#{0}: {1}'.format(player, media))
+                if self.pj[OBSERVATIONS][obs][FILE]:
+                    for player in sorted(self.pj[OBSERVATIONS][obs][FILE].keys()):
+                        for media in self.pj[OBSERVATIONS][obs][FILE][player]:
+                            mediaList.append("#{0}: {1}".format(player, media))
 
                 media = os.linesep.join( mediaList )
             elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
@@ -2354,8 +2355,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss") )
             observationWindow.teDescription.setPlainText( self.pj[OBSERVATIONS][obsId]["description"] )
 
-            observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]["media_info"]["length"]
-            observationWindow.mediaFPS = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"]
+            try:
+                observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]["media_info"]["length"]
+                observationWindow.mediaFPS = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"]
+            except:
+                observationWindow.mediaDurations = {}
+                observationWindow.mediaFPS = {}
+
             '''
             TODO: fix
             observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"]
