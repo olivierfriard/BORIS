@@ -1883,7 +1883,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
             except:
                 logging.debug("media_info key not found")
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, fileName)
+                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, mediaFile)
                 if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
                     self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
                     if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
