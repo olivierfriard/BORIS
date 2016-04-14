@@ -141,23 +141,20 @@ def find_lib():
             dll = ctypes.CDLL('libvlc.so.5')
 
     elif sys.platform.startswith('win'):
+        print("ciao")
 
         # check if VLC directory present
-        if os.path.isdir(os.path.dirname(os.path.realpath(__file__)) + '\VLC'):
-
-            mem_dir = os.getcwd()
-            try:
-                os.chdir( os.path.dirname(os.path.realpath(__file__)) + '\VLC' )
-            except:
-                print('VLC directory not accessible')
-
+        if True:
+            print(os.path.dirname(os.path.realpath(__file__)))
+            os.chdir(os.path.dirname(os.path.realpath(__file__)))    
+            dll = ctypes.CDLL('libvlc.dll')
             try:
                 dll = ctypes.CDLL('libvlc.dll')
+                print(dll)
             except OSError:
                 print('VLC lib not found')
 
-            os.chdir(mem_dir)
-            plugin_path = os.path.dirname(os.path.realpath(__file__)) + '\VLC'
+            plugin_path = os.path.dirname(os.path.realpath(__file__)) 
             '''
             print(__file__ )
             print(os.path.realpath(__file__) )
@@ -171,7 +168,6 @@ def find_lib():
         else: # search system for libvlc.dll
 
             p = find_library('libvlc.dll')
-            print("p", p)
 
             if p is None:
                 try:  # some registry settings
@@ -187,7 +183,6 @@ def find_lib():
                 except ImportError:  # no PyWin32
                     print('no pywin32')
                     pass
-                print("plugin path", plugin_path)
 
                 if plugin_path is None:
                      # try some standard locations.
@@ -197,7 +192,6 @@ def find_lib():
                         if os.path.exists(p):
                             plugin_path = os.path.dirname(p)
                             break
-                print("plugin path", plugin_path)
 
                 if plugin_path is not None:  # try loading
                     p = os.getcwd()
@@ -208,7 +202,6 @@ def find_lib():
                     os.chdir(p)
                 else:  # may fail
                     dll = ctypes.CDLL('libvlc.dll')
-                    print("dll", dll)
             else:
                 plugin_path = os.path.dirname(p)
                 dll = ctypes.CDLL(p)
