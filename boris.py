@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.96"
-__version_date__ = "2016-04-12"
+__version__ = "2.97"
+__version_date__ = "2016-04-16"
 __DEV__ = False
 
 import sys
@@ -3112,14 +3112,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
-                totalMediaLength = self.observationTotalMediaLength( obsId )
+                totalMediaLength = self.observationTotalMediaLength(obsId)
                 logging.debug("media length for {0} : {1}".format(obsId,totalMediaLength ))
             else: # LIVE
                 if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
-            if totalMediaLength == -1 or totalMediaLength == 0:
+            if totalMediaLength in [0, -1]:
                 selectedObsTotalMediaLength = -1
                 break
             selectedObsTotalMediaLength += totalMediaLength
@@ -3161,108 +3161,130 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if POINT in self.eventType(behavior).upper():
                         for modifier in distinct_modifiers:
-                            cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
+                            cursor.execute( "SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
                             rows = cursor.fetchall()
 
+                            # inter events duration
                             all_event_interdurations = []
                             for idx, row in enumerate(rows):
-                                if idx:
-                                    all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
+                                if idx and row[1] == rows[idx - 1][1]:
+                                    all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
-                            out.append({"subject": subject, \
-                                        "behavior": behavior, \
-                                        "modifiers": modifier[0], \
-                                        "duration": "-", \
-                                        "duration_mean": "-", \
-                                        "duration_stdev": "-", \
-                                        "number": len(rows), \
-                                        "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
+                            out.append({"subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": modifier[0],
+                                        "duration": "-",
+                                        "duration_mean": "-",
+                                        "duration_stdev": "-",
+                                        "number": len(rows),
+                                        "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA", 
                                         "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                         })
 
 
                     if STATE in self.eventType(behavior).upper():
                         for modifier in distinct_modifiers:
-                            cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", (subject, behavior, modifier[0]) )
+                            cursor.execute( "SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", (subject, behavior, modifier[0]) )
                             rows = list(cursor.fetchall())
 
                             if len(rows) % 2:
-                                out.append({"subject": subject , "behavior": behavior, "modifiers": modifier[0], "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED, \
-                                           "number": UNPAIRED, "inter_duration_mean": UNPAIRED, "inter_duration_stdev": UNPAIRED } )
+                                out.append({"subject": subject, "behavior": behavior,
+                                            "modifiers": modifier[0], "duration": UNPAIRED,
+                                            "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                            "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                            "inter_duration_stdev": UNPAIRED})
                             else:
                                 all_event_durations, all_event_interdurations = [], []
                                 for idx, row in enumerate(rows):
+                                    # event
                                     if idx % 2 == 0:
                                         all_event_durations.append(float(rows[idx + 1][0]) - float(row[0]))
-                                    if idx % 2 and idx != len(rows) - 1:
+                                    
+                                    # inter event if same observation
+                                    if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
                                         all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
 
-                                out.append({"subject": subject, \
-                                            "behavior": behavior, \
-                                            "modifiers": modifier[0], \
-                                            "duration": round(sum(all_event_durations), 3), \
-                                            "duration_mean": round(statistics.mean(all_event_durations), 3), \
-                                            "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA", \
-                                            "number": int(len(rows)/2), \
-                                            "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
-                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA" \
+                                out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": modifier[0],
+                                            "duration": round(sum(all_event_durations), 3),
+                                            "duration_mean": round(statistics.mean(all_event_durations), 3),
+                                            "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
+                                            "number": int(len(rows)/2),
+                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                             })
 
                 else:  # no modifiers
 
                     if POINT in self.eventType(behavior).upper():
-                        cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ?  order by observation, occurence", (subject, behavior ) )
+                        cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
                         rows = cursor.fetchall()
 
                         if not len(rows):
                             if not excludeBehaviorsWoEvents:
-                                out.append({"subject": subject, "behavior": behavior, "modifiers": "NA", "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0, "inter_duration_mean": "-", "inter_duration_stdev":"-"})
+                                out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                                            "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0,
+                                            "inter_duration_mean": "-", "inter_duration_stdev": "-"})
                             continue
 
+                        # inter events duration
                         all_event_interdurations = []
                         for idx, row in enumerate(rows):
-                            if idx > 0:
+                            if idx and row[1] == rows[idx - 1][1]:
                                 all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
 
-                        out.append({"subject": subject, \
-                                    "behavior": behavior, \
-                                    "modifiers": "NA", \
-                                    "duration": "-", \
-                                    "duration_mean": "-", \
-                                    "duration_stdev": "-", \
-                                    "number": len(rows), \
-                                    "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
+                        out.append({"subject": subject,
+                                    "behavior": behavior,
+                                    "modifiers": "NA",
+                                    "duration": "-",
+                                    "duration_mean": "-",
+                                    "duration_stdev": "-",
+                                    "number": len(rows),
+                                    #"inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3),
+                                    "inter_duration_mean" : round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
                                     "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                     })
 
 
                     if STATE in self.eventType(behavior).upper():
-                        cursor.execute( "SELECT occurence FROM events where subject = ? AND code = ? order by observation, occurence", (subject, behavior) )
-                        rows = list(cursor.fetchall() )
+                        cursor.execute( "SELECT occurence,observation FROM events where subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
+                        rows = list(cursor.fetchall())
 
                         if not len(rows):
                             if not excludeBehaviorsWoEvents: # include behaviors without events
-                                out.append({ "subject": subject , "behavior": behavior, "modifiers": "NA", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-", "inter_duration_stdev": "-"})
+                                out.append({"subject": subject , "behavior": behavior,
+                                            "modifiers": "NA", "duration": 0, "duration_mean": 0,
+                                            "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
+                                            "inter_duration_stdev": "-"})
                             continue
-                        if len( rows ) % 2:
-                            out.append({"subject": subject, "behavior": behavior, "modifiers": "NA", "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED, "number": UNPAIRED, "inter_duration_mean": UNPAIRED, "inter_duration_stdev": UNPAIRED})
+                        if len(rows) % 2:
+                            out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                                        "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                        "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                        "inter_duration_stdev": UNPAIRED})
                         else:
                             all_event_durations, all_event_interdurations = [], []
                             for idx, row in enumerate(rows):
+                                # event
                                 if idx % 2 == 0:
+                                    print( float(rows[idx + 1][0]) , float(row[0] ))
                                     all_event_durations.append(float(rows[idx + 1][0]) - float(row[0]))
-                                if idx % 2 and idx != len(rows) - 1:
+
+                                # inter event if same observation
+                                if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                    print( float(rows[idx + 1][0]), float(row[0] ))
                                     all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
 
-                            out.append({"subject": subject, \
-                                        "behavior": behavior, \
-                                        "modifiers": "NA", \
-                                        "duration": round(sum(all_event_durations), 3), \
-                                        "duration_mean": round(statistics.mean(all_event_durations), 3), \
-                                        "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA", \
-                                        "number": int(len(rows) / 2), \
-                                        "inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3), \
-                                        "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA" \
+                            out.append({"subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": "NA",
+                                        "duration": round(sum(all_event_durations), 3),
+                                        "duration_mean": round(statistics.mean(all_event_durations), 3),
+                                        "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
+                                        "number": int(len(rows) / 2),
+                                        "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                        "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                         })
 
         # widget for results visualization
