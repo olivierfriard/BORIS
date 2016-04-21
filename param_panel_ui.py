@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created: Sat Feb 27 19:01:29 2016
+# Created: Thu Apr 21 11:06:19 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,9 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.resize(670, 626)
-        self.verticalLayout = QtGui.QVBoxLayout(Dialog)
+        self.verticalLayout_2 = QtGui.QVBoxLayout(Dialog)
+        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.lbSubjects = QtGui.QLabel(Dialog)
         self.lbSubjects.setObjectName(_fromUtf8("lbSubjects"))
@@ -73,12 +75,18 @@ class Ui_Dialog(object):
         self.verticalLayout.addWidget(self.cbExcludeBehaviors)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
-        self.lbMaxTime = QtGui.QLabel(Dialog)
-        self.lbMaxTime.setObjectName(_fromUtf8("lbMaxTime"))
-        self.horizontalLayout.addWidget(self.lbMaxTime)
-        self.teMaxTime = QtGui.QTimeEdit(Dialog)
-        self.teMaxTime.setObjectName(_fromUtf8("teMaxTime"))
-        self.horizontalLayout.addWidget(self.teMaxTime)
+        self.lbStartTime = QtGui.QLabel(Dialog)
+        self.lbStartTime.setObjectName(_fromUtf8("lbStartTime"))
+        self.horizontalLayout.addWidget(self.lbStartTime)
+        self.teStartTime = QtGui.QTimeEdit(Dialog)
+        self.teStartTime.setObjectName(_fromUtf8("teStartTime"))
+        self.horizontalLayout.addWidget(self.teStartTime)
+        self.lbEndTime = QtGui.QLabel(Dialog)
+        self.lbEndTime.setObjectName(_fromUtf8("lbEndTime"))
+        self.horizontalLayout.addWidget(self.lbEndTime)
+        self.teEndTime = QtGui.QTimeEdit(Dialog)
+        self.teEndTime.setObjectName(_fromUtf8("teEndTime"))
+        self.horizontalLayout.addWidget(self.teEndTime)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -93,6 +101,7 @@ class Ui_Dialog(object):
         self.pbOK.setObjectName(_fromUtf8("pbOK"))
         self.horizontalLayout_2.addWidget(self.pbOK)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_2.addLayout(self.verticalLayout)
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -109,8 +118,10 @@ class Ui_Dialog(object):
         self.pbReverseBehaviorsSelection.setText(_translate("Dialog", "Reverse selection", None))
         self.cbIncludeModifiers.setText(_translate("Dialog", "Include modifiers", None))
         self.cbExcludeBehaviors.setText(_translate("Dialog", "Exclude behaviors without events", None))
-        self.lbMaxTime.setText(_translate("Dialog", "Max time value", None))
-        self.teMaxTime.setDisplayFormat(_translate("Dialog", "hh:mm:ss.zzz", None))
+        self.lbStartTime.setText(_translate("Dialog", "Start time", None))
+        self.teStartTime.setDisplayFormat(_translate("Dialog", "hh:mm:ss.zzz", None))
+        self.lbEndTime.setText(_translate("Dialog", "End time", None))
+        self.teEndTime.setDisplayFormat(_translate("Dialog", "hh:mm:ss.zzz", None))
         self.pbCancel.setText(_translate("Dialog", "Cancel", None))
         self.pbOK.setText(_translate("Dialog", "OK", None))
 

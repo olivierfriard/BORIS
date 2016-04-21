@@ -28,7 +28,7 @@ import os
 import logging
 
 from config import *
-from param_panel_ui import Ui_Dialog
+from param_panel2_ui import Ui_Dialog
 
 class Param_panel(QDialog, Ui_Dialog):
 
@@ -37,14 +37,13 @@ class Param_panel(QDialog, Ui_Dialog):
         super(Param_panel, self).__init__(parent)
         self.setupUi(self)
 
-        self.pbSelectAllSubjects.clicked.connect( lambda: self.subjects_button_clicked('select all')  )
-        self.pbUnselectAllSubjects.clicked.connect( lambda: self.subjects_button_clicked('unselect all')  )
-        self.pbReverseSubjectsSelection.clicked.connect( lambda: self.subjects_button_clicked('reverse selection')  )
+        self.pbSelectAllSubjects.clicked.connect( lambda: self.subjects_button_clicked("select all"))
+        self.pbUnselectAllSubjects.clicked.connect( lambda: self.subjects_button_clicked("unselect all"))
+        self.pbReverseSubjectsSelection.clicked.connect( lambda: self.subjects_button_clicked("reverse selection"))
 
-        self.pbSelectAllBehaviors.clicked.connect( lambda: self.behaviors_button_clicked('select all')  )
-        self.pbUnselectAllBehaviors.clicked.connect( lambda: self.behaviors_button_clicked('unselect all')  )
-        self.pbReverseBehaviorsSelection.clicked.connect( lambda: self.behaviors_button_clicked('reverse selection')  )
-
+        self.pbSelectAllBehaviors.clicked.connect( lambda: self.behaviors_button_clicked("select all"))
+        self.pbUnselectAllBehaviors.clicked.connect( lambda: self.behaviors_button_clicked("unselect all"))
+        self.pbReverseBehaviorsSelection.clicked.connect( lambda: self.behaviors_button_clicked("reverse selection"))
 
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)
@@ -53,22 +52,22 @@ class Param_panel(QDialog, Ui_Dialog):
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))
-            if command == 'select all':
-                cb.setChecked( True )
-            if command == 'unselect all':
-                cb.setChecked( False )
-            if command == 'reverse selection':
-                cb.setChecked( not cb.isChecked() )
+            if command == "select all":
+                cb.setChecked(True)
+            if command == "unselect all":
+                cb.setChecked(False)
+            if command == "reverse selection":
+                cb.setChecked(not cb.isChecked() )
 
     def behaviors_button_clicked(self, command):
         for idx in range(self.lwBehaviors.count()):
             cb = self.lwBehaviors.itemWidget(self.lwBehaviors.item(idx))
-            if command == 'select all':
-                cb.setChecked( True )
-            if command == 'unselect all':
-                cb.setChecked( False )
-            if command == 'reverse selection':
-                cb.setChecked( not cb.isChecked() )
+            if command == "select all":
+                cb.setChecked(True)
+            if command == "unselect all":
+                cb.setChecked(False)
+            if command == "reverse selection":
+                cb.setChecked(not cb.isChecked())
 
 
     def ok(self):
@@ -77,14 +76,14 @@ class Param_panel(QDialog, Ui_Dialog):
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))
             if cb.isChecked():
-                selectedSubjects.append( cb.text() )
+                selectedSubjects.append(cb.text())
         self.selectedSubjects = selectedSubjects
 
         selectedBehaviors = []
         for idx in range(self.lwBehaviors.count()):
             cb = self.lwBehaviors.itemWidget(self.lwBehaviors.item(idx))
             if cb.isChecked():
-                selectedBehaviors.append( cb.text() )
+                selectedBehaviors.append(cb.text())
         self.selectedBehaviors = selectedBehaviors
 
         self.accept()
@@ -96,11 +95,11 @@ class Param_panel(QDialog, Ui_Dialog):
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))
             if cb and cb.isChecked():
-                selectedSubjects.append( cb.text() )
+                selectedSubjects.append(cb.text())
 
         observedBehaviors = self.extract_observed_behaviors( self.selectedObservations, selectedSubjects )
 
-        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+        logging.debug("observed behaviors: {0}".format(observedBehaviors))
 
         for idx in range(self.lwBehaviors.count()):
             cb = self.lwBehaviors.itemWidget(self.lwBehaviors.item(idx))

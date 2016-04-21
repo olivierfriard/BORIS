@@ -57,6 +57,8 @@ YES = "Yes"
 NO = "No"
 CANCEL = "Cancel"
 REMOVE = "Remove"
+SAVE = "Save"
+DISCARD = "Discard"
 
 NO_FOCAL_SUBJECT = 'No focal subject'
 
