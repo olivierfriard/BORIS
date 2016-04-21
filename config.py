@@ -73,8 +73,10 @@ behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers
 
 observation_types = ['Point event', 'State event', 'Point event with coding map', 'State event with coding map']
 
-# fields from observation (list for order)
+# fields for events table
 tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
+
+# fields for project events list
 pj_events_fields = ['time', 'subject', 'code', 'modifier', 'comment']
 
 tw_indVarFields = ['label','description', 'type', 'default value']
@@ -136,6 +138,9 @@ MEDIA_FILE_INFO = 'media_file_info'
 
 STATE = 'STATE'
 POINT = 'POINT'
+
+START = "START"
+STOP = "STOP"
 
 PLAYER1 = '1'
 PLAYER2 = '2'

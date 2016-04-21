@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.97"
-__version_date__ = "2016-04-16"
+__version_date__ = "2016-04-21"
 __DEV__ = False
 
 import sys
@@ -3203,15 +3203,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if STATE in self.eventType(behavior).upper():
                         for modifier in distinct_modifiers:
+                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                          (subject, behavior, modifier[0]))
+                            '''
                             if len(selectedObservations) > 1:
                                 cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
                                                (subject, behavior, modifier[0]))
                             else:
                                 cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
                                                (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-
+                            '''
                             rows = list(cursor.fetchall())
-
                             if len(rows) % 2:
                                 out.append({"subject": subject, "behavior": behavior,
                                             "modifiers": modifier[0], "duration": UNPAIRED,
@@ -3223,19 +3225,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 for idx, row in enumerate(rows):
                                     # event
                                     if idx % 2 == 0:
-                                        all_event_durations.append(float(rows[idx + 1][0]) - float(row[0]))
+                                        new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                        if len(selectedObservations) == 1:
+                                            if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
+                                               or \
+                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
+                                                continue
+
+                                            if new_init < plot_parameters["start time"]:
+                                                new_init = float(plot_parameters["start time"])
+                                            if new_end > plot_parameters["end time"]:
+                                                new_end = float(plot_parameters["end time"])
+
+                                        all_event_durations.append( new_end - new_init)
 
                                     # inter event if same observation
                                     if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                        all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
+                                        if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
+                                            all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                                        #all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
 
                                 out.append({"subject": subject,
                                             "behavior": behavior,
                                             "modifiers": modifier[0],
                                             "duration": round(sum(all_event_durations), 3),
-                                            "duration_mean": round(statistics.mean(all_event_durations), 3),
+                                            "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
                                             "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
-                                            "number": int(len(rows)/2),
+                                            "number": len(all_event_durations),
                                             "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
                                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                             })
@@ -3243,7 +3260,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:  # no modifiers
 
                     if POINT in self.eventType(behavior).upper():
-                        cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
 
                         if len(selectedObservations) > 1:
                             cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
@@ -3251,7 +3267,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
                                            (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
 
-                        rows = cursor.fetchall()
+                        rows = list(cursor.fetchall())
+
+                        if len(selectedObservations) == 1:
+                            new_rows = []
+                            for occurence, observation in rows:
+                                new_occurence = max(float(plot_parameters["start time"]), occurence)
+                                new_occurence = min( new_occurence, float( plot_parameters["end time"]) )
+                                new_rows.append( [new_occurence, observation])
+                            rows = list(new_rows)
 
                         if not len(rows):
                             if not plot_parameters["exclude behaviors"]:
@@ -3273,18 +3297,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     "duration_mean": "-",
                                     "duration_stdev": "-",
                                     "number": len(rows),
-                                    #"inter_duration_mean": "NA" if (len(selectedObservations) > 1 or sum(all_event_interdurations) == 0) else round(statistics.mean(all_event_interdurations), 3),
                                     "inter_duration_mean" : round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
                                     "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                     })
 
 
                     if STATE in self.eventType(behavior).upper():
-                        if len(selectedObservations) > 1:
-                            cursor.execute( "SELECT occurence,observation FROM events where subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                        else:
-                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
-                                           (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+                        cursor.execute( "SELECT occurence,observation FROM events where subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
                         rows = list(cursor.fetchall())
 
                         if not len(rows):
@@ -3304,21 +3323,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             for idx, row in enumerate(rows):
                                 # event
                                 if idx % 2 == 0:
-                                    print( float(rows[idx + 1][0]) , float(row[0] ))
-                                    all_event_durations.append(float(rows[idx + 1][0]) - float(row[0]))
+                                    new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                    if len(selectedObservations) == 1:
+                                        if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
+                                           or \
+                                           (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
+                                            continue
+
+                                        if new_init < plot_parameters["start time"]:
+                                            new_init = float(plot_parameters["start time"])
+                                        if new_end > plot_parameters["end time"]:
+                                            new_end = float(plot_parameters["end time"])
+
+                                    all_event_durations.append( new_end - new_init)
 
                                 # inter event if same observation
                                 if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                    print( float(rows[idx + 1][0]), float(row[0] ))
-                                    all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+                                    if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
+                                        all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
 
                             out.append({"subject": subject,
                                         "behavior": behavior,
                                         "modifiers": "NA",
                                         "duration": round(sum(all_event_durations), 3),
-                                        "duration_mean": round(statistics.mean(all_event_durations), 3),
+                                        "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
                                         "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
-                                        "number": int(len(rows) / 2),
+                                        "number": len(all_event_durations),
                                         "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
                                         "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                         })
@@ -3359,12 +3389,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # % of total time
             if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
-                item = QTableWidgetItem(str( round( row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
+                if len(selectedObservations) > 1:
+                    item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
+                else:
+                    item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
             else:
                 item = QTableWidgetItem("-")
 
             item.setFlags(Qt.ItemIsEnabled)
-            self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
+            self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
 
         self.tb.twTB.resizeColumnsToContents()
 
@@ -3487,10 +3520,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        def plot_time_ranges(obs, obsId, videoLength, excludeBehaviorsWithoutEvents, line_width):
-            '''
+        def plot_time_ranges(obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
+            """
             create "hlines" matplotlib plot
-            '''
+            """
 
             LINE_WIDTH = line_width
             #colors = list(matcolors.cnames.keys())
@@ -3500,7 +3533,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             all_behaviors, observedBehaviors = [], []
             maxTime = 0  # max time in all events of all subjects
 
-            for subject in  sorted( list(obs.keys())):
+            for subject in sorted(list(obs.keys())):
 
                 for behavior in sorted(list(obs[subject].keys())):
 
@@ -3527,7 +3560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lbl = lbl[:-1]  # remove last empty line
 
             #fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
-            fig = plt.figure(figsize=(20, int(len(lbl) * .8 )))
+            fig = plt.figure(figsize=(20, int(len(lbl) * .8)))
 
             fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
 
@@ -3543,31 +3576,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 ax.set_xlabel("Time (s)")
 
-
-            plt.ylim( len(lbl), -0.5)
+            plt.ylim(len(lbl), -0.5)
 
             if not videoLength:
                 videoLength = maxTime
 
+            '''
             if self.pj[OBSERVATIONS][obsId]["time offset"]:
                 t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"])
                 t1 = round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
                 if self.timeFormat == HHMMSS:
-                    t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1e6))
-                    t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1e6))
+                    t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1000000))
+                    t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1000000))
                     plt.xlim(t0d, t1d)
+
                 if self.timeFormat == S:
                     plt.xlim(t0, t1)
             else:
                 t0 = 0
                 t1 = round(videoLength) + 2
                 if self.timeFormat == HHMMSS:
-                    t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1e6))
-                    t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1e6))
+                    t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1000000))
+                    t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1000000))
                     plt.xlim(t0d, t1d)
 
                 if self.timeFormat == S:
                     plt.xlim(t0, t1)
+            '''
+
+            if self.pj[OBSERVATIONS][obsId]["time offset"]:
+                t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + minTime)
+                t1 = round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
+            else:
+                t0 = minTime
+                t1 = round(videoLength)
+
+            if self.timeFormat == HHMMSS:
+                t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1000000))
+                t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1000000))
+                plt.xlim(t0d, t1d)
+
+            if self.timeFormat == S:
+                plt.xlim(t0, t1)
+
+
 
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
@@ -3722,7 +3774,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     distinct_modifiers = list(cursor.fetchall())
 
                     for modifier in distinct_modifiers:
-                        cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence", ( subject, behavior, modifier[0] ))
+                        cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                      (subject, behavior, modifier[0]))
+
                         rows = cursor.fetchall()
 
                         if modifier[0]:
@@ -3747,10 +3801,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         else:
                                             sbj = "for subject <b>{0}</b>".format(subject)
                                         QMessageBox.critical(self, programName, "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj) )
-
                 else:
-
-                    cursor.execute( "SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior) )
+                    cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ?  ORDER BY observation, occurence",
+                                  (subject, behavior ))
                     rows = list(cursor.fetchall())
 
                     if not len(rows) and plot_parameters["exclude behaviors"]:
@@ -3771,12 +3824,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if idx % 2 == 0:
                                 o[subject][behaviorOut].append([row[0], rows[idx + 1][0]])
 
+                '''
+                new_o = []
+                for idx, interval in enumerate(o[subject][behaviorOut]):
+
+                    new_init, new_end = interval
+                    if interval[0] < plot_parameters["start time"]:
+                        new_init = float(plot_parameters["start time"])
+
+                    if interval[1] > plot_parameters["end time"]:
+                        new_end = float(plot_parameters["end time"])
+
+                    if  plot_parameters["start time"] <= new_init <= plot_parameters["end time"]  and plot_parameters["start time"] <= new_end <= plot_parameters["end time"]:
+                        new_o.append( [new_init, new_end])
+
+                o[subject][behaviorOut] = list(new_o)
+                '''
+
+
+
         logging.debug("intervals: {}".format(o))
         logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
         logging.debug("excludeBehaviorsWithoutEvents: {}".format(plot_parameters["exclude behaviors"]))
 
-        if not plot_time_ranges(o, selectedObservations[0], plot_parameters["end time"], plot_parameters["exclude behaviors"], line_width=10):
-            QMessageBox.warning(self, programName , "Check events")
+        if not plot_time_ranges(o, selectedObservations[0], plot_parameters["start time"], plot_parameters["end time"], plot_parameters["exclude behaviors"], line_width=10):
+            QMessageBox.warning(self, programName, "Check events")
 
 
     def open_project_json(self, projectFileName):
@@ -3785,7 +3857,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         logging.info("open project: {0}".format(projectFileName))
         if not os.path.isfile(projectFileName):
-            QMessageBox.warning(self, programName , "File not found")
+            QMessageBox.warning(self, programName, "File not found")
             return
 
         s = open(projectFileName, "r").read()
@@ -3793,7 +3865,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             self.pj = json.loads(s)
         except:
-            QMessageBox.critical(self, programName , "This project file seems corrupted" )
+            QMessageBox.critical(self, programName, "This project file seems corrupted")
             return
 
         self.projectChanged = False
@@ -3803,7 +3875,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][obs]["time offset"] = Decimal(str(self.pj[OBSERVATIONS][obs]["time offset"]) )
 
             for idx,event in enumerate(self.pj[OBSERVATIONS][obs][EVENTS]):
-                self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields['time']]))
+                self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]]))
 
         # add coding_map key to old project files
         if not "coding_map" in self.pj:
@@ -3826,7 +3898,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "project_description": "",
             "subjects_conf" : {},
             "behaviors_conf": {},
-            "observations": {} }
+            "observations": {}}
             return
 
 
@@ -3858,8 +3930,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # convert VIDEO, AUDIO -> MEDIA
             for idx in [x for x in self.pj[SUBJECTS]]:
                 key, name = self.pj[SUBJECTS][idx]
-                self.pj[SUBJECTS][idx] = {'key': key, 'name': name, 'description':''}
-            QMessageBox.information(self, programName , 'The project file was converted to the new format (v. %s) in use with your version of BORIS.<br>Choose a new file name for saving it.' % project_format_version)
+                self.pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
+            QMessageBox.information(self, programName, "The project file was converted to the new format (v. %s) in use with your version of BORIS.<br>Choose a new file name for saving it." % project_format_version)
             projectFileName = ''
 
         '''
@@ -4348,6 +4420,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.currentStates = {}
         # add states for no focal subject
+
+        # TODO: replace with function
         self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
             if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
@@ -5413,6 +5487,22 @@ item []:
             self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
             self.twEvents.scrollToItem( self.twEvents.item(ROW, 0) )
 
+    def get_current_states_by_subject(self, stateBehaviorsCodes, events, subjects, time):
+        """
+        get current states for subjects at given time
+
+        """
+        currentStates = {}
+        for idx in subjects:
+            currentStates[idx] = []
+            for sbc in stateBehaviorsCodes:
+                if len([x[ EVENT_BEHAVIOR_FIELD_IDX ] for x in events
+                                                       if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                                                          and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                                                          and x[EVENT_TIME_FIELD_IDX] <= time]) % 2: # test if odd
+                    currentStates[idx].append(sbc)
+        return currentStates
+
 
 
     def timer_out(self, scrollSlider=True):
@@ -5488,51 +5578,52 @@ item []:
                 # current state(s)
 
                 # extract State events
-                StateBehaviorsCodes = [ self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()] ]
+                StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
 
                 self.currentStates = {}
 
-                # add states for no focal subject
-                self.currentStates[""] = []
-                for sbc in StateBehaviorsCodes:
-                    if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
-                        self.currentStates[''].append(sbc)
+                # add current states for all subject and for "no focal subject"
 
-                # add states for all configured subjects
-                for idx in self.pj[SUBJECTS]:
-                    # add subject index
+                self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes, self.pj[OBSERVATIONS][self.observationId][EVENTS], dict(self.pj[SUBJECTS], **{"": {"name": ""}}), currentTimeOffset)
+                '''
+                subjects_and_nofocal = dict(self.pj[SUBJECTS], **{"": {"name": ""}})  # add "" for NO FOCAL SUBJECT
+                for idx in subjects_and_nofocal:
                     self.currentStates[idx] = []
                     for sbc in StateBehaviorsCodes:
-                        if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTimeOffset  ] ) % 2: # test if odd
+                        if len([x[ pj_obs_fields["code"]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                                                               if x[ pj_obs_fields["subject"]] == subjects_and_nofocal[idx]["name"]
+                                                                  and x[ pj_obs_fields["code"]] == sbc
+                                                                  and x[ pj_obs_fields["time"]] <= currentTimeOffset  ] ) % 2: # test if odd
                             self.currentStates[idx].append(sbc)
+                '''
 
                 # show current subject
                 cm = {}
                 if self.currentSubject:
                     # get index of focal subject (by name)
-                    idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
+                    idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
                 else:
-                    idx = ''
+                    idx = ""
 
+                # show current state(s)
                 txt = []
                 for cs in self.currentStates[idx]:
                     for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                        if ev[EVENT_TIME_FIELD_IDX] > currentTimeOffset :   # time
+                        if ev[EVENT_TIME_FIELD_IDX] > currentTimeOffset:
                             break
-                        if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:   # subject
-                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:       # code
-                                cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]    # current modifier for current state
+                        if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
+                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
+                                cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
                     # state and modifiers (if any)
-                    txt.append( cs + " ({}) ".format(cm[cs])*(cm[cs] != "") )
+                    txt.append(cs + " ({}) ".format(cm[cs])*(cm[cs] != ""))
 
                 txt = ", ".join(txt)
 
-                # show current state(s)
-                self.lbCurrentStates.setText( re.sub(" \(.*\)", "", txt) )
+                self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
 
-                # show selected subjects
+                # show current states in subjects table
                 for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
-                    self.twSubjects.item(int(idx), len(subjectsFields)).setText(','.join(self.currentStates[idx]) )
+                    self.twSubjects.item(int(idx), len(subjectsFields)).setText(",".join(self.currentStates[idx]))
 
                 mediaName = self.mediaplayer.get_media().get_meta(0)
 
@@ -5544,7 +5635,7 @@ item []:
                                                                               total_time=self.convertTime(Decimal(self.mediaTotalLength)))
 
                     if self.media_list.count() > 1:
-                        msg += " | total: <b>%s / %s</b>" % ((self.convertTime(Decimal(currentTime/1000)), \
+                        msg += " | total: <b>%s / %s</b>" % ((self.convertTime(Decimal(currentTime / 1000)),
                                                                self.convertTime(Decimal(totalGlobalTime / 1000))))
                     if self.mediaListPlayer.get_state() == vlc.State.Paused:
                         msg += " (paused)"
@@ -5589,8 +5680,6 @@ item []:
                             event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}
 
                             self.writeEvent(event, currentTime / 1000 - Decimal("0.001"))
-
-
 
                             #self.loadEventsInTW(self.observationId)
 
@@ -5639,17 +5728,19 @@ item []:
 
     def update_events_start_stop(self):
         """
-        update status start/stop of events
+        update status start/stop of events in Events table
         take consideration of subject
+
+        do not return value
         """
 
-        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper() ]
+        stateEventsList = [self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
 
         for row in range(0, self.twEvents.rowCount()):
 
             t = self.twEvents.item(row, tw_obs_fields['time'] ).text()
 
-            if ':' in t:
+            if ":" in t:
                 time = time2seconds(t)
             else:
                 time = Decimal(t)
@@ -5659,23 +5750,21 @@ item []:
 
             # check if code is state
             if code in stateEventsList:
-
                 # how many code before with same subject?
-
                 if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS] if x[pj_obs_fields["code"]] == code and x[pj_obs_fields["time"]] < time and x[pj_obs_fields["subject"]] == subject]) % 2: # test if odd
-                    self.twEvents.item(row, tw_obs_fields[TYPE] ).setText("STOP")
+                    self.twEvents.item(row, tw_obs_fields[TYPE]).setText(STOP)
                 else:
-                    self.twEvents.item(row, tw_obs_fields[TYPE] ).setText("START")
+                    self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
 
 
     def update_events_start_stop2(self, events):
-        '''
+        """
         returns events with status (START/STOP or POINT)
         take consideration of subject
-        '''
 
+        """
 
-        stateEventsList = [ self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper() ]
+        stateEventsList = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
 
         eventsFlagged = []
         for event in events:
@@ -5686,13 +5775,13 @@ item []:
             if code in stateEventsList:
 
                 # how many code before with same subject?
-                if len( [ x[ pj_obs_fields['code'] ] for x in events if x[ pj_obs_fields['code'] ] == code and x[ pj_obs_fields['time'] ]  < time and x[ pj_obs_fields['subject'] ] == subject]) % 2: # test if odd
-                    flag = 'STOP'
+                if len([x[pj_obs_fields['code']] for x in events if x[pj_obs_fields['code']] == code and x[ pj_obs_fields['time']] < time and x[pj_obs_fields['subject']] == subject]) % 2: # test if odd
+                    flag = STOP
                 else:
-                    flag = 'START'
+                    flag = START
 
             else:
-                flag = 'POINT'
+                flag = POINT
 
             eventsFlagged.append(event + [flag])
 
@@ -5763,11 +5852,9 @@ item []:
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                print( 'currentModifiers', currentModifiers)
                 modifierSelector = select_modifiers.ModifiersRadioButton(event["code"], modifiersList, currentModifiers)
 
                 if modifierSelector.exec_():
-                    print('exec')
                     modifiers = modifierSelector.getModifiers()
                     if len(modifiers) == 1:
                         modifier_str = modifiers[0]
@@ -5792,20 +5879,20 @@ item []:
                                 self.play_video()
 
         else:
-            modifier_str = event['from map']
+            modifier_str = event["from map"]
 
         # update current state
-        if not 'row' in event:
+        if not "row" in event:
             if self.currentSubject:
                 csj = []
                 for idx in self.currentStates:
-                    if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]['name'] == self.currentSubject:
+                    if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]["name"] == self.currentSubject:
                         csj = self.currentStates[idx]
                         break
 
             else:  # no focal subject
                 try:
-                    csj = self.currentStates['']
+                    csj = self.currentStates[""]
                 except:
                     csj = []
 
@@ -5821,9 +5908,9 @@ item []:
                             cm[cs] = ev[3]
 
             for cs in csj :
-                if (event['excluded'] and cs in event['excluded'].split(',') ) or ( event['code'] == cs and cm[cs] != modifier_str) :
+                if (event['excluded'] and cs in event['excluded'].split(',')) or ( event['code'] == cs and cm[cs] != modifier_str):
                     # add excluded state event to observations (= STOP them)
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime - Decimal('0.001'), self.currentSubject, cs, cm[cs], ''] )
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""])
 
 
         # remove key code from modifiers
@@ -5840,7 +5927,7 @@ item []:
             subject = self.currentSubject
 
         # add event to pj
-        if 'row' in event:
+        if "row" in event:
             self.pj[OBSERVATIONS][self.observationId][EVENTS][event['row']] =  [memTime, subject, event['code'], modifier_str, comment]
         else:
             self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime, subject, event['code'], modifier_str, comment] )
