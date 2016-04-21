@@ -28,7 +28,7 @@ import os
 import logging
 
 from config import *
-from param_panel2_ui import Ui_Dialog
+from param_panel_ui import Ui_Dialog
 
 class Param_panel(QDialog, Ui_Dialog):
 
