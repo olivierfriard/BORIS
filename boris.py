@@ -50,7 +50,7 @@ video, live = 0, 1
 
 import time
 import os
-from encodings import hex_codec
+#from encodings import hex_codec
 import json
 from decimal import *
 import re
@@ -60,7 +60,6 @@ import sqlite3
 import urllib.parse
 import urllib.request
 import urllib.error
-import urllib.parse
 import tempfile
 import glob
 import subprocess
@@ -98,22 +97,22 @@ from time_budget_widget import *
 import select_modifiers
 
 class TempDirCleanerThread(QThread):
-        '''
-        class for cleaning image cache directory with thread
-        '''
-        def __init__(self, parent = None):
-            QThread.__init__(self, parent)
-            self.exiting = False
-            self.tempdir = ''
-            self.ffmpeg_cache_dir_max_size = 0
+    '''
+    class for cleaning image cache directory with thread
+    '''
+    def __init__(self, parent = None):
+        QThread.__init__(self, parent)
+        self.exiting = False
+        self.tempdir = ''
+        self.ffmpeg_cache_dir_max_size = 0
 
-        def run(self):
-            while self.exiting == False:
-                if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
-                    fl = sorted((os.path.getctime(self.tempdir + f),self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
-                    for ts,f in fl[0:int(len(fl)/10)]:
-                        os.remove(f)
-                time.sleep(30)
+    def run(self):
+        while self.exiting == False:
+            if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
+                fl = sorted((os.path.getctime(self.tempdir + f),self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
+                for ts,f in fl[0:int(len(fl)/10)]:
+                    os.remove(f)
+            time.sleep(30)
 
 
 class checkingBox_list(QDialog):
@@ -1287,29 +1286,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
         preferencesWindow.sbffSpeed.setValue( self.fast )
-
         preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
-
         preferencesWindow.sbSpeedStep.setValue( self.play_rate_step)
-
         # automatic backup
         preferencesWindow.sbAutomaticBackup.setValue( self.automaticBackup )
-
         # separator for behavioural strings
         preferencesWindow.leSeparator.setText( self.behaviouralStringsSeparator )
-
         # confirm sound
         preferencesWindow.cbConfirmSound.setChecked( self.confirmSound )
-
         # embed player
         preferencesWindow.cbEmbedPlayer.setChecked( self.embedPlayer )
-
         # alert no focal subject
         preferencesWindow.cbAlertNoFocalSubject.setChecked( self.alertNoFocalSubject )
-
         # tracking cursor above event
         preferencesWindow.cbTrackingCursorAboveEvent.setChecked( self.trackingCursorAboveEvent )
-
         # check for new version
         preferencesWindow.cbCheckForNewVersion.setChecked( self.checkForNewVersion )
 
@@ -1326,8 +1316,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.lbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         preferencesWindow.sbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
         '''
-
-
         preferencesWindow.lbFFmpegPath.setText("FFmpeg path: {}".format(self.ffmpeg_bin))
         preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
         preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
@@ -1370,6 +1358,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
+
+            self.scan_sampling_time = preferencesWindow.sbScanSampling.value()
 
             self.menu_options()
 
@@ -2486,6 +2476,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # cbCloseCurrentBehaviorsBetweenVideo
             self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
 
+            if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
+                self.pj[OBSERVATIONS][new_obs_id]["scan_sampling_time"] = observationWindow.sbScanSampling.value()
+
             # media file
             fileName = {}
 
@@ -2529,10 +2522,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.menu_options()
 
             if rv == 2:  # launch
-
                 self.observationId = new_obs_id
-
-                print(self.pj[OBSERVATIONS][self.observationId])
 
                 # title of dock widget
                 self.dwObservations.setWindowTitle("""Events for "{}" observation""".format(self.observationId))
@@ -4411,6 +4401,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def liveTimer_out(self):
+        """
+        timer for live observation
+        """
 
         currentTime = self.getLaps()
         self.lbTimeLive.setText(self.convertTime(currentTime))
@@ -4421,7 +4414,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.currentStates = {}
         # add states for no focal subject
 
-        # TODO: replace with function
+        # TODO: replace with function (see timerout)
         self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
             if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
@@ -4432,7 +4425,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # add subject index
             self.currentStates[idx] = []
             for sbc in StateBehaviorsCodes:
-                if len(  [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
+                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
                     self.currentStates[idx].append(sbc)
 
         # show current states
@@ -4445,15 +4438,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # show selected subjects
         for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
-            self.twSubjects.item(int(idx), len(subjectsFields) ).setText( ','.join(self.currentStates[idx]) )
+            self.twSubjects.item(int(idx), len(subjectsFields) ).setText(','.join(self.currentStates[idx]))
+
+        # check scan sampling
+        print(int(currentTime))
+
+        if "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]:
+            if self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
+                if  int(currentTime) % self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"] == 0:
+                    app.beep()
+                    self.liveTimer.stop()
+                    self.textButton.setText("Live observation stopped (scan sampling)")
+
+
+
 
 
     def start_live_observation(self):
-        '''
+        """
         activate the live observation mode (without media file)
-        '''
+        """
 
-        logging.debug("start live observation, self.liveObservationStarted: {0}".format(self.liveObservationStarted))
+        logging.debug("start live observation, self.liveObservationStarted: {}".format(self.liveObservationStarted))
+
+        if "scan sampling" in self.textButton.text():
+            self.textButton.setText("Stop live observation")
+            self.liveTimer.start(100)
+            return
+
 
         if not self.liveObservationStarted:
 
@@ -4470,6 +4482,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # start timer
             self.liveTimer.start(100)
         else:
+
             self.textButton.setText("Start live observation")
             self.liveStartTime = None
             self.liveTimer.stop()
@@ -5987,7 +6000,7 @@ item []:
 
             if self.liveObservationStarted:
                 now = QTime()
-                now.start()
+                now.start()  # current time
                 memLaps = Decimal(str(round( self.liveStartTime.msecsTo(now) / 1000, 3)))
                 return memLaps
             else:
@@ -6011,7 +6024,7 @@ item []:
 
                     # cumulative time
                     memLaps = Decimal(str(round(( sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) \
-                              + self.mediaplayer.get_time()) / 1000 ,3))) \
+                              + self.mediaplayer.get_time()) / 1000 , 3)))
 
                     return memLaps
 
@@ -6135,7 +6148,7 @@ item []:
         if self.playMode == FFMPEG:
             if ek == 47 or ek == Qt.Key_Left:   # /   one frame back
 
-                logging.debug("current frame {0}".format( self.FFmpegGlobalFrame ))
+                logging.debug("current frame {0}".format( self.FFmpegGlobalFrame))
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
                     newTime = 1000 * self.FFmpegGlobalFrame / list(self.fps.values())[0]
@@ -6145,9 +6158,9 @@ item []:
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
 
-                logging.debug("(next) current frame {0}".format( self.FFmpegGlobalFrame ))
+                logging.debug("(next) current frame {0}".format( self.FFmpegGlobalFrame))
                 self.FFmpegTimerOut()
-                logging.debug("(next) new frame {0}".format( self.FFmpegGlobalFrame ))
+                logging.debug("(next) new frame {0}".format( self.FFmpegGlobalFrame))
                 return
 
 
@@ -6183,14 +6196,20 @@ item []:
 
         # check if key is function key
         if (ek in function_keys):
-            flag_function = True
-            if function_keys[ ek ] in [self.pj[ETHOGRAM][x]['key'] for x in self.pj[ETHOGRAM]]:
+            if function_keys[ek] in [self.pj[ETHOGRAM][x]['key'] for x in self.pj[ETHOGRAM]]:
                 obs_key = function_keys[ek]
-        else:
-            flag_function = False
 
         # get video time
-        memLaps = self.getLaps()
+
+
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE] and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
+            if self.timeFormat == HHMMSS:
+                memLaps = time2seconds(self.lbTimeLive.text())
+            if self.timeFormat == S:
+                memLaps = Decimal(self.lbTimeLive.text())
+
+        else:
+            memLaps = self.getLaps()
 
         if memLaps == None:
             return

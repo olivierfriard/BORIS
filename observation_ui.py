@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Tue Mar  1 11:28:11 2016
+# Created: Thu Apr 28 15:28:20 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -206,6 +206,28 @@ class Ui_Form(object):
         self.tabProjectType.addTab(self.tabVideo, _fromUtf8(""))
         self.tabLive = QtGui.QWidget()
         self.tabLive.setObjectName(_fromUtf8("tabLive"))
+        self.verticalLayout_5 = QtGui.QVBoxLayout(self.tabLive)
+        self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
+        self.verticalLayout_4 = QtGui.QVBoxLayout()
+        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
+        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
+        self.label_4 = QtGui.QLabel(self.tabLive)
+        self.label_4.setObjectName(_fromUtf8("label_4"))
+        self.horizontalLayout_3.addWidget(self.label_4)
+        self.sbScanSampling = QtGui.QSpinBox(self.tabLive)
+        self.sbScanSampling.setMaximum(1000000)
+        self.sbScanSampling.setObjectName(_fromUtf8("sbScanSampling"))
+        self.horizontalLayout_3.addWidget(self.sbScanSampling)
+        self.label_6 = QtGui.QLabel(self.tabLive)
+        self.label_6.setObjectName(_fromUtf8("label_6"))
+        self.horizontalLayout_3.addWidget(self.label_6)
+        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(spacerItem4)
+        self.verticalLayout_4.addLayout(self.horizontalLayout_3)
+        spacerItem5 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_4.addItem(spacerItem5)
+        self.verticalLayout_5.addLayout(self.verticalLayout_4)
         self.tabProjectType.addTab(self.tabLive, _fromUtf8(""))
         self.verticalLayout_9.addWidget(self.tabProjectType)
         self.verticalLayout_3.addLayout(self.verticalLayout_9)
@@ -217,8 +239,8 @@ class Ui_Form(object):
         self.lbMediaAnalysis.setFont(font)
         self.lbMediaAnalysis.setObjectName(_fromUtf8("lbMediaAnalysis"))
         self.horizontalLayout.addWidget(self.lbMediaAnalysis)
-        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout.addItem(spacerItem4)
+        spacerItem6 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem6)
         self.pbCancel = QtGui.QPushButton(Form)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout.addWidget(self.pbCancel)
@@ -288,6 +310,8 @@ class Ui_Form(object):
         self.leTimeOffset_2.setText(_translate("Form", "0", None))
         self.teTimeOffset_2.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz", None))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabVideo), _translate("Form", "Media", None))
+        self.label_4.setText(_translate("Form", "Scan sampling every", None))
+        self.label_6.setText(_translate("Form", "seconds", None))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabLive), _translate("Form", "Live", None))
         self.lbMediaAnalysis.setText(_translate("Form", "BORIS", None))
         self.pbCancel.setText(_translate("Form", "Cancel", None))
