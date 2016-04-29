@@ -62,7 +62,6 @@ import urllib.request
 import urllib.error
 import tempfile
 import glob
-import subprocess
 import statistics
 
 import dialog
@@ -1359,8 +1358,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
 
-            self.scan_sampling_time = preferencesWindow.sbScanSampling.value()
-
             self.menu_options()
 
             self.saveConfigFile()
@@ -2265,8 +2262,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # check if current observation must be closed to create a new one
         if mode == NEW and self.observationId:
-            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
-            if response == NO:
+            if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO]) == NO:
                 return
             else:
                 self.close_observation()
@@ -2333,7 +2329,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             observationWindow.setWindowTitle("""Edit observation "{}" """.format(obsId))
             mem_obs_id = obsId
-            observationWindow.leObservationId.setText( obsId )
+            observationWindow.leObservationId.setText(obsId)
             observationWindow.dteDate.setDateTime( QDateTime.fromString( self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss") )
             observationWindow.teDescription.setPlainText( self.pj[OBSERVATIONS][obsId]["description"] )
 
@@ -2406,6 +2402,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
+                if "scan_sampling_time" in self.pj[OBSERVATIONS][obsId]:
+                    observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId]["scan_sampling_time"])
+
 
              # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
@@ -2416,6 +2415,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
             if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
+
+
 
         rv = observationWindow.exec_()
 
@@ -3500,7 +3501,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
-            import matplotlib.colors as matcolors
+            #import matplotlib.colors as matcolors
             from matplotlib import dates
             import numpy as np
             import datetime
@@ -6204,9 +6205,9 @@ item []:
 
         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE] and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
             if self.timeFormat == HHMMSS:
-                memLaps = time2seconds(self.lbTimeLive.text())
+                memLaps = Decimal(int(time2seconds(self.lbTimeLive.text())))
             if self.timeFormat == S:
-                memLaps = Decimal(self.lbTimeLive.text())
+                memLaps = Decimal(int(Decimal(self.lbTimeLive.text())))
 
         else:
             memLaps = self.getLaps()
@@ -6678,7 +6679,6 @@ item []:
             for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
                 duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
 
-            out = ''
             for event in eventsWithStatus:
 
                 if ((event[SUBJECT_EVENT_FIELD] in plot_parameters["selected subjects"]) \
