@@ -2654,8 +2654,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             iniFilePath = os.path.expanduser('~') + os.sep + '.boris'
 
-        if os.path.isfile( iniFilePath ):
-            settings = QSettings(iniFilePath , QSettings.IniFormat)
+        if os.path.isfile(iniFilePath):
+            settings = QSettings(iniFilePath, QSettings.IniFormat)
 
             size = settings.value('MainWindow/Size')
             if size:
