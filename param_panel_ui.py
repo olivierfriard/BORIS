@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created: Thu Apr 21 11:06:19 2016
+# Created: Mon May  2 15:21:57 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -81,12 +81,22 @@ class Ui_Dialog(object):
         self.teStartTime = QtGui.QTimeEdit(Dialog)
         self.teStartTime.setObjectName(_fromUtf8("teStartTime"))
         self.horizontalLayout.addWidget(self.teStartTime)
+        self.dsbStartTime = QtGui.QDoubleSpinBox(Dialog)
+        self.dsbStartTime.setDecimals(3)
+        self.dsbStartTime.setMaximum(1000000.0)
+        self.dsbStartTime.setObjectName(_fromUtf8("dsbStartTime"))
+        self.horizontalLayout.addWidget(self.dsbStartTime)
         self.lbEndTime = QtGui.QLabel(Dialog)
         self.lbEndTime.setObjectName(_fromUtf8("lbEndTime"))
         self.horizontalLayout.addWidget(self.lbEndTime)
         self.teEndTime = QtGui.QTimeEdit(Dialog)
         self.teEndTime.setObjectName(_fromUtf8("teEndTime"))
         self.horizontalLayout.addWidget(self.teEndTime)
+        self.dsbEndTime = QtGui.QDoubleSpinBox(Dialog)
+        self.dsbEndTime.setDecimals(3)
+        self.dsbEndTime.setMaximum(1000000.0)
+        self.dsbEndTime.setObjectName(_fromUtf8("dsbEndTime"))
+        self.horizontalLayout.addWidget(self.dsbEndTime)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem)
         self.verticalLayout.addLayout(self.horizontalLayout)

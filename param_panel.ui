@@ -117,6 +117,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QDoubleSpinBox" name="dsbStartTime">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>1000000.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="lbEndTime">
          <property name="text">
           <string>End time</string>
@@ -127,6 +137,16 @@
         <widget class="QTimeEdit" name="teEndTime">
          <property name="displayFormat">
           <string>hh:mm:ss.zzz</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="dsbEndTime">
+         <property name="decimals">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <double>1000000.000000000000000</double>
          </property>
         </widget>
        </item>

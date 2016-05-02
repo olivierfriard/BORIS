@@ -4,7 +4,7 @@
 
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,7 @@ class Observation(QDialog, Ui_Form):
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
 
-        self.cbVisualizeSpectrogram.clicked.connect( self.generate_spectrogram )
+        self.cbVisualizeSpectrogram.clicked.connect(self.generate_spectrogram)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)

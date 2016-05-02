@@ -3010,13 +3010,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbExcludeBehaviors.setVisible(False)
         # hide max time
         if maxTime:
-            paramPanelWindow.teStartTime.setTime(QtCore.QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
-            paramPanelWindow.teEndTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
+            if self.timeFormat == HHMMSS:
+                paramPanelWindow.teStartTime.setTime(QtCore.QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
+                paramPanelWindow.teEndTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
+                paramPanelWindow.dsbStartTime.setVisible(False)
+                paramPanelWindow.dsbEndTime.setVisible(False)
+
+            if self.timeFormat == S:
+                paramPanelWindow.dsbStartTime.setValue(0.0)
+                paramPanelWindow.dsbEndTime.setValue(maxTime)
+                paramPanelWindow.teStartTime.setVisible(False)
+                paramPanelWindow.teEndTime.setVisible(False)
+
         else:
             paramPanelWindow.lbStartTime.setVisible(False)
-            paramPanelWindow.teStartTime.setVisible(False)
             paramPanelWindow.lbEndTime.setVisible(False)
+
+            paramPanelWindow.teStartTime.setVisible(False)
             paramPanelWindow.teEndTime.setVisible(False)
+
+            paramPanelWindow.dsbStartTime.setVisible(False)
+            paramPanelWindow.dsbEndTime.setVisible(False)
 
 
         # extract subjects present in observations
@@ -3048,7 +3062,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
 
-        allBehaviors = sorted( [  self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] ] )
+        allBehaviors = sorted( [  self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         logging.debug('allBehaviors: {0}'.format(allBehaviors))
 
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
@@ -3075,16 +3089,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("selected subjects: {}".format(selectedSubjects))
         logging.debug("selected behaviors: {}".format(selectedBehaviors))
 
-        '''return (selectedSubjects, selectedBehaviors, includeModifiers,
-               paramPanelWindow.cbExcludeBehaviors.isChecked(),
-               time2seconds(paramPanelWindow.teMaxTime.time().toString(HHMMSSZZZ)))'''
+        if self.timeFormat == HHMMSS:
+            startTime = time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
+            endTime = time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
+        if self.timeFormat == S:
+            startTime = Decimal(paramPanelWindow.dsbStartTime.value())
+            endTime = Decimal(paramPanelWindow.dsbEndTime.value())
+
 
         return {"selected subjects": selectedSubjects,
                 "selected behaviors": selectedBehaviors,
                 "include modifiers": paramPanelWindow.cbIncludeModifiers.isChecked(),
                 "exclude behaviors": paramPanelWindow.cbExcludeBehaviors.isChecked(),
-                "start time": time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ)),
-                "end time": time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
+                "start time": startTime,
+                "end time": endTime
                 }
 
     def time_budget(self):
@@ -3135,8 +3153,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
-
-        print(plot_parameters)
 
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"] )
 
@@ -3572,48 +3588,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not videoLength:
                 videoLength = maxTime
 
-            '''
-            if self.pj[OBSERVATIONS][obsId]["time offset"]:
-                t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"])
-                t1 = round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
-                if self.timeFormat == HHMMSS:
-                    t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1000000))
-                    t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1000000))
-                    plt.xlim(t0d, t1d)
-
-                if self.timeFormat == S:
-                    plt.xlim(t0, t1)
-            else:
-                t0 = 0
-                t1 = round(videoLength) + 2
-                if self.timeFormat == HHMMSS:
-                    t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1000000))
-                    t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1000000))
-                    plt.xlim(t0d, t1d)
-
-                if self.timeFormat == S:
-                    plt.xlim(t0, t1)
-            '''
-
             if self.pj[OBSERVATIONS][obsId]["time offset"]:
                 t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + minTime)
-                t1 = round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
+                t1 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
             else:
                 t0 = round(minTime)
                 t1 = round(videoLength)
+            subjectPosition = t0 + (t1-t0) * 0.05
 
             if self.timeFormat == HHMMSS:
                 t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600)/60), int(t0 % 60), round(round(t0 % 1,3)*1000000))
                 t1d = datetime.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600)/60), int(t1 % 60), round(round(t1 % 1,3)*1000000))
-                sp = t0 + (t1 - t0) / 10
-                subject_position = datetime.datetime(1970, 1, 1, int(sp / 3600), int((sp - int(sp / 3600) * 3600)/60), int(sp % 60), round(round(sp % 1,3)*1000000))
+                subjectPositiond = datetime.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600)/60), int(subjectPosition % 60), round(round(subjectPosition % 1,3)*1000000))
 
             if self.timeFormat == S:
                 t0d = t0
                 t1d = t1
-                subject_position = t0 + (t1-t0) / 10
+                subjectPositiond = subjectPosition
 
-            print(t0, t0d, subject_position)
             plt.xlim(t0d, t1d)
 
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
@@ -3631,8 +3623,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     flagFirstSubject = False
 
-                #ax.text(round(float(t1d) * 0.05), count - 0.5 , subject)
-                ax.text( subject_position, count - 0.5 , subject)
+                ax.text( subjectPositiond, count - 0.5, subject)
 
                 behaviors = obs[subject]
 
@@ -4421,33 +4412,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add states for no focal subject
 
         # TODO: replace with function (see timerout)
+
+        self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes,
+                                                                self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                currentTime)
+
+        '''
         self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
             if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
                 self.currentStates[''].append(sbc)
+        '''
 
         # add states for all configured subjects
         for idx in self.pj[SUBJECTS]:
             # add subject index
             self.currentStates[idx] = []
             for sbc in StateBehaviorsCodes:
-                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
+                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ] if x[ pj_obs_fields['subject']] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ] ) % 2: # test if odd
                     self.currentStates[idx].append(sbc)
 
         # show current states
         if self.currentSubject:
             # get index of focal subject (by name)
             idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
-            self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ idx ])))
+            self.lbCurrentStates.setText('%s' % (', '.join(self.currentStates[ idx ])))
         else:
-            self.lbCurrentStates.setText(  '%s' % (', '.join(self.currentStates[ '' ])))
+            self.lbCurrentStates.setText('%s' % (', '.join(self.currentStates[ '' ])))
 
         # show selected subjects
         for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
             self.twSubjects.item(int(idx), len(subjectsFields) ).setText(','.join(self.currentStates[idx]))
 
         # check scan sampling
-        print(int(currentTime))
+        #print(int(currentTime))
 
         if "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]:
             if self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
@@ -4782,7 +4781,7 @@ item []:
                 subjectIdx += 1
 
                 cursor.execute("SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
-                intervalsSize = int(list(cursor.fetchall())[0][0]/2)
+                intervalsSize = int(list(cursor.fetchall())[0][0] / 2)
 
                 intervalsMin, intervalsMax = 0, totalMediaDuration
 
