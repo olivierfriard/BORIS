@@ -7188,13 +7188,13 @@ if __name__=="__main__":
         availablePlayers.append(VLC)
     except:
         logging.critical("VLC media player not found")
-        QMessageBox.critical(None, programName, "This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc",\
+        QMessageBox.critical(None, programName, "This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
 
     logging.info("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        QMessageBox.critical(None, programName, "The VLC media player seems very old ({}).<br>Go to http://www.videolan.org/vlc to update it".format( \
+        QMessageBox.critical(None, programName, "The VLC media player seems very old ({}).<br>Go to http://www.videolan.org/vlc to update it".format(
             vlc.libvlc_get_version()), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         logging.critical("The VLC media player seems old ({}). Go to http://www.videolan.org/vlc to update it".format(vlc.libvlc_get_version()))
@@ -7208,7 +7208,7 @@ if __name__=="__main__":
     window = MainWindow(availablePlayers, ffmpeg_bin)
 
     if __version__ == "DEV":
-        QMessageBox.warning(None, programName, "This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs", \
+        QMessageBox.warning(None, programName, "This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     if args:
