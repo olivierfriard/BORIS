@@ -3599,18 +3599,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + minTime)
                 t1 = round( self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
             else:
-                t0 = minTime
+                t0 = round(minTime)
                 t1 = round(videoLength)
 
             if self.timeFormat == HHMMSS:
-                t0d = datetime.datetime(1970, 1, 1, int(t0/3600), int((t0-int(t0/3600)*3600)/60), int(t0%60), round(round(t0%1,3)*1000000))
-                t1d = datetime.datetime(1970, 1, 1, int(t1/3600), int((t1-int(t1/3600)*3600)/60), int(t1%60), round(round(t1%1,3)*1000000))
-                plt.xlim(t0d, t1d)
+                t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600)/60), int(t0 % 60), round(round(t0 % 1,3)*1000000))
+                t1d = datetime.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600)/60), int(t1 % 60), round(round(t1 % 1,3)*1000000))
+                sp = t0 + (t1 - t0) / 10
+                subject_position = datetime.datetime(1970, 1, 1, int(sp / 3600), int((sp - int(sp / 3600) * 3600)/60), int(sp % 60), round(round(sp % 1,3)*1000000))
 
             if self.timeFormat == S:
-                plt.xlim(t0, t1)
+                t0d = t0
+                t1d = t1
+                subject_position = t0 + (t1-t0) / 10
 
-
+            print(t0, t0d, subject_position)
+            plt.xlim(t0d, t1d)
 
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
@@ -3627,7 +3631,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     flagFirstSubject = False
 
-                ax.text(round(float(videoLength) * 0.05), count - 0.5 , subject)
+                #ax.text(round(float(t1d) * 0.05), count - 0.5 , subject)
+                ax.text( subject_position, count - 0.5 , subject)
 
                 behaviors = obs[subject]
 
@@ -3640,15 +3645,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if obs[subject][ b ]:
                             for t1, t2 in obs[subject][ b ]:
                                 if t1 == t2:
-                                    pointsx.append( t1 )
-                                    pointsy.append( count )
-                                    ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
+                                    pointsx.append(t1)
+                                    pointsy.append(count)
+                                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
                                 else:
-                                    x1.append( t1 )
-                                    x2.append( t2 )
+                                    x1.append(t1)
+                                    x2.append(t2)
                                     y.append(count)
-                                    col.append( colors[ col_count % len(colors)] )
-                                    ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
+                                    col.append( colors[ col_count % len(colors)])
+                                    ax.axhline(y=count ,linewidth=1, color="lightgray", zorder=-1)
                             count += 1
                         else:
                             x1.append(0)
@@ -3663,25 +3668,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             x1.append(0)
                             x2.append(0)
                             y.append(count)
-                            col.append( 'white' )
+                            col.append("white")
                             ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
                             count += 1
 
                     col_count += 1
 
                 if self.timeFormat == HHMMSS:
-                    ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x1]), \
-                    np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x2]),\
+                    ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x1]),
+                    np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x2]),
                     lw=LINE_WIDTH, color=col)
 
                 if self.timeFormat == S:
                     ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
 
                 if self.timeFormat == HHMMSS:
-                    ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in pointsx]), pointsy, 'r^')
+                    ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in pointsx]), pointsy, "r^")
 
                 if self.timeFormat == S:
-                    ax.plot(pointsx,pointsy, 'r^' )
+                    ax.plot(pointsx,pointsy, "r^" )
 
                 #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
