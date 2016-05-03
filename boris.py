@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.97"
-__version_date__ = "2016-04-21"
+__version_date__ = "2016-05-03"
 __DEV__ = False
 
 import sys
@@ -50,7 +50,6 @@ video, live = 0, 1
 
 import time
 import os
-#from encodings import hex_codec
 import json
 from decimal import *
 import re
@@ -96,13 +95,13 @@ from time_budget_widget import *
 import select_modifiers
 
 class TempDirCleanerThread(QThread):
-    '''
+    """
     class for cleaning image cache directory with thread
-    '''
+    """
     def __init__(self, parent = None):
         QThread.__init__(self, parent)
         self.exiting = False
-        self.tempdir = ''
+        self.tempdir = ""
         self.ffmpeg_cache_dir_max_size = 0
 
     def run(self):
@@ -113,64 +112,6 @@ class TempDirCleanerThread(QThread):
                     os.remove(f)
             time.sleep(30)
 
-
-class checkingBox_list(QDialog):
-    '''
-    class for selecting items from a ListWidget by checking a box
-    '''
-
-    def __init__(self):
-        super(checkingBox_list, self).__init__()
-
-        self.label = QLabel()
-        self.label.setText("Available observations")
-
-        self.lw = QListWidget()
-        self.lw.doubleClicked.connect(self.pbOK_clicked)
-
-        hbox = QVBoxLayout(self)
-
-        hbox.addWidget(self.label)
-        hbox.addWidget(self.lw)
-
-        self.pbSelectAll = QPushButton("Select all")
-        self.pbSelectAll.clicked.connect(self.pbSelectAll_clicked)
-
-        self.pbUnSelectAll = QPushButton("Unselect all")
-        self.pbUnSelectAll.clicked.connect(self.pbUnSelectAll_clicked)
-
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-
-        hbox2 = QHBoxLayout(self)
-        hbox2.addWidget(self.pbSelectAll)
-        hbox2.addWidget(self.pbUnSelectAll)
-        hbox2.addWidget(self.pbCancel)
-        hbox2.addWidget(self.pbOK)
-
-        hbox.addLayout(hbox2)
-
-        self.setLayout(hbox)
-        self.setWindowTitle('')
-
-    def pbSelectAll_clicked(self):
-        '''check all items'''
-        for idx in range(self.lw.count()):
-            self.lw.itemWidget(self.lw.item(idx)).setChecked(True)
-
-    def pbUnSelectAll_clicked(self):
-        '''uncheck all items'''
-        for idx in range(self.lw.count()):
-            self.lw.itemWidget(self.lw.item(idx)).setChecked(False)
-
-    def pbOK_clicked(self):
-        self.accept()
-
-    def pbCancel_clicked(self):
-        self.reject()
 
 
 ROW = -1
@@ -311,7 +252,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
 
-
         self.setWindowTitle("{} ({})".format(programName, __version__))
 
         try:
@@ -356,7 +296,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTime.setFrameStyle(QFrame.StyledPanel)
         self.lbTime.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTime)
-
 
         # current subjects
         self.lbSubject = QLabel()
@@ -436,7 +375,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 pn = "Unnamed project"
 
-        self.setWindowTitle( "{}{}{}".format(self.observationId + " - "*(self.observationId != ""), pn+(" - "*(pn != "")), programName) )
+        self.setWindowTitle("{}{}{}".format(self.observationId + " - "*(self.observationId != ""), pn+(" - "*(pn != "")), programName))
 
 
         # project menu
@@ -459,7 +398,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionAdd_event.setEnabled(flagObs)
         self.actionClose_observation.setEnabled(flagObs)
-        self.actionLoad_observations_file.setEnabled(flagObs)
+        #self.actionLoad_observations_file.setEnabled(flagObs)
+        self.actionLoad_observations_file.setEnabled(False)  # not yet implemented
 
         self.menuExport_events.setEnabled(flag)
         self.menuExport_aggregated_events.setEnabled(flag)
@@ -842,7 +782,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for spectrogram visualization
         """
 
-
         if not "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] or not self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
             return
 
@@ -885,8 +824,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if dialog.MessageDialog(programName, ("Spectrogram file not found.<br>"
                                                       "Do you want to generate it now?<br>"
                                                       "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
-
-
 
                     self.generate_spectrogram()
                     self.timer_spectro.start()
@@ -953,8 +890,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.menu_options()
 
             self.menu_options()
-            # title of dock widget
-            self.dwObservations.setWindowTitle('Events for "{}" observation'.format(self.observationId))
+            # title of dock widget  “  ”
+            self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
 
 
     def edit_observation(self):
@@ -1013,10 +950,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # check if an observation is running
         if self.observationId:
-            QMessageBox.critical(self, programName , "You must close the running observation before." )
+            QMessageBox.critical(self, programName, "You must close the running observation before.")
             return
 
-        result, selectedObs = self.selectObservations( SINGLE )
+        result, selectedObs = self.selectObservations(SINGLE)
 
         if selectedObs:
 
@@ -1040,7 +977,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.menu_options()
                 # title of dock widget
-                self.dwObservations.setWindowTitle('Events for "{}" observation'.format(self.observationId))
+                self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
 
 
             if result == EDIT:
@@ -2907,92 +2844,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return observed_behaviors
 
 
-
-    def select_subjects(self, observed_subjects):
-        '''
-        allow user to select subjects
-        add no subject if observations do no contain subject
-        '''
-
-        subjectsSelection = checkingBox_list()
-
-        # add 'No focal subject'
-        if '' in observed_subjects:
-            subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
-            subjectsSelection.ch = QCheckBox()
-            subjectsSelection.ch.setText(NO_FOCAL_SUBJECT)
-            subjectsSelection.ch.setChecked(True)
-            subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
-
-        all_subjects = sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-
-        for subject in all_subjects:
-            subjectsSelection.item = QListWidgetItem(subjectsSelection.lw)
-            subjectsSelection.ch = QCheckBox()
-            subjectsSelection.ch.setText( subject )
-
-            if subject in observed_subjects:
-                subjectsSelection.ch.setChecked(True)
-
-            subjectsSelection.lw.setItemWidget(subjectsSelection.item, subjectsSelection.ch)
-
-        subjectsSelection.setWindowTitle("Select subjects to analyze")
-        subjectsSelection.label.setText("Available subjects")
-
-        subj_sel = []
-
-        if subjectsSelection.exec_():
-
-            for idx in range(subjectsSelection.lw.count()):
-
-                check_box = subjectsSelection.lw.itemWidget(subjectsSelection.lw.item(idx))
-                if check_box.isChecked():
-                    subj_sel.append(check_box.text())
-
-            return subj_sel
-        else:
-            return []
-
-    def select_behaviors(self, observedBehaviors):
-        """
-        allow user to select behaviors
-        preselection in observedBehaviors
-        """
-
-        behaviorsSelection = checkingBox_list()
-
-        allBehaviors = sorted( [  self.pj[ETHOGRAM][x]['code']  for x in self.pj[ETHOGRAM] ] )
-
-        for behavior in allBehaviors:
-
-            logging.debug('behavior: {0}'.format(behavior))
-
-            behaviorsSelection.item = QListWidgetItem(behaviorsSelection.lw)
-            behaviorsSelection.ch = QCheckBox()
-            behaviorsSelection.ch.setText( behavior )
-
-            if behavior in observedBehaviors:
-                behaviorsSelection.ch.setChecked(True)
-
-            behaviorsSelection.lw.setItemWidget(behaviorsSelection.item, behaviorsSelection.ch)
-
-        behaviorsSelection.setWindowTitle("Select behaviors to analyze")
-        behaviorsSelection.label.setText("Available behaviors")
-
-        behav_sel = []
-
-        if behaviorsSelection.exec_():
-
-            for idx in range(behaviorsSelection.lw.count()):
-                check_box = behaviorsSelection.lw.itemWidget(behaviorsSelection.lw.item(idx))
-                if check_box.isChecked():
-                    behav_sel.append( check_box.text() )
-
-            return behav_sel
-        else:
-            return []
-
-
     def choose_obs_subj_behav(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True):
         """
         show param window for selection subjects and behaviors
@@ -3095,6 +2946,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == S:
             startTime = Decimal(paramPanelWindow.dsbStartTime.value())
             endTime = Decimal(paramPanelWindow.dsbEndTime.value())
+        if startTime > endTime:
+            QMessageBox.warning(None, programName, "The start time is after the end time", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return {"selected subjects": [], "selected behaviors": []}
 
 
         return {"selected subjects": selectedSubjects,
@@ -3124,7 +2978,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 totalMediaLength = self.observationTotalMediaLength(obsId)
                 logging.debug("media length for {0} : {1}".format(obsId,totalMediaLength ))
             else: # LIVE
-                if self.pj[OBSERVATIONS][ obsId ][EVENTS]:
+                if self.pj[OBSERVATIONS][obsId][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
@@ -3523,7 +3377,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import datetime
         except:
             logging.warning("matplotlib plotting library not installed")
-            QMessageBox.warning(None, programName, """The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",\
+            QMessageBox.warning(None, programName, """The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
@@ -4859,19 +4713,13 @@ item []:
         """
         if self.observationId and self.playerType == VLC:
 
-
             media = self.mediaplayer.get_media()
-
 
             logging.info("State: {}".format(self.mediaplayer.get_state()))
             logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
-
             logging.info("media.get_meta(0): {}".format(media.get_meta(0)))
-
             logging.info("Track: {}/{}".format(self.mediaplayer.video_get_track(), self.mediaplayer.video_get_track_count()))
-
             logging.info("number of media in media list: {}".format(self.media_list.count()))
-
             logging.info(('get time: %s  duration: %s' % (self.mediaplayer.get_time(), media.get_duration())))
             logging.info(('Position: %s %%' % self.mediaplayer.get_position()))
             logging.info(('FPS: %s' % (self.mediaplayer.get_fps())))
@@ -4882,20 +4730,19 @@ item []:
             logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
             logging.info('has_vout? {0}'.format(self.mediaplayer.has_vout()))
 
-
             if platform.system() in ['Linux', 'Darwin']:
                 out = ""
                 for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
                     for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
 
-                        r = os.system( 'file -b "{}"'.format(file_) )
-                        if not r:
-                            out +=  "<b>{}</b><br>".format(os.path.basename(file_))
-                            out += subprocess.getoutput('file -b "{}"'.format(file_) ) + '<br>'
+                        #r = os.system( 'file -b "{}"'.format(file_) )
+                        #if not r:
+                        out +=  "<b>{}</b><br>".format(os.path.basename(file_))
+                        out += subprocess.getoutput('file -b "{}"'.format(file_) ) + '<br>'
             else:
                 out = "Current media file name: <b>{}</b><br>".format(url2path(media.get_mrl()))
 
-            QMessageBox.about(self, programName + " - Media file information", out + "<br><br>Total duration: {} s".format( self.convertTime(sum(self.duration)/1000)))
+            QMessageBox.about(self, programName + " - Media file information", "{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
 
 
     def switch_playing_mode(self):
@@ -5014,9 +4861,9 @@ item []:
 
 
         # enable/disable speed button
-        self.actionNormalSpeed.setEnabled( self.playMode == VLC )
-        self.actionFaster.setEnabled( self.playMode == VLC )
-        self.actionSlower.setEnabled( self.playMode == VLC )
+        self.actionNormalSpeed.setEnabled( self.playMode == VLC)
+        self.actionFaster.setEnabled( self.playMode == VLC)
+        self.actionSlower.setEnabled( self.playMode == VLC)
 
         logging.info( 'new play mode: {0}'.format( self.playMode ))
 
@@ -5040,7 +4887,7 @@ item []:
 
                             dirName, fileName = os.path.split(media)
 
-                            snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + '_' + str(self.FFmpegGlobalFrame) +'.png'
+                            snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame) + ".png"
 
                             self.lbFFmpeg.pixmap().save(snapshotFilePath)
                             self.statusbar.showMessage("Snapshot saved in {}".format(snapshotFilePath), 0)
@@ -5072,20 +4919,10 @@ item []:
 
 
     def video_normalspeed_activated(self):
-        '''
+        """
         set playing speed at normal speed
-        '''
+        """
 
-
-        '''
-        if self.playMode == FFMPEG:
-
-            if self.FFmpegTimer.interval() > 0:
-                self.FFmpegTimer.setInterval( int( 1000/list(self.fps.values())[0] )  )
-            self.lbSpeed.setText('x{:.3f}'.format(1.0))
-
-        else:
-        '''
         if self.playerType == VLC and self.playMode == VLC:
 
             self.play_rate = 1
@@ -5104,19 +4941,10 @@ item []:
 
 
     def video_faster_activated(self):
-        '''
+        """
         increase playing speed by play_rate_step value
-        '''
+        """
 
-        '''
-        if self.playMode == FFMPEG:
-
-            if self.FFmpegTimer.interval() > 0:
-                self.FFmpegTimer.setInterval( self.FFmpegTimer.interval() - 2 )
-            self.lbSpeed.setText('x%.3f' %  (1/self.FFmpegTimer.interval()/ (list(self.fps.values())[0]/1000)))
-
-        else:
-        '''
         if self.playerType == VLC and self.playMode == VLC:
 
             if self.play_rate + self.play_rate_step <= 8:
@@ -5133,23 +4961,10 @@ item []:
             logging.info('play rate: {:.3f}'.format(self.play_rate))
 
 
-
-
     def video_slower_activated(self):
-        '''
+        """
         decrease playing speed by play_rate_step value
-        '''
-
-        '''
-        if self.playMode == FFMPEG:
-
-            if self.FFmpegTimer.interval() < 10000:
-                self.FFmpegTimer.setInterval( self.FFmpegTimer.interval() + 2 )
-
-            self.lbSpeed.setText('x%.3f' %  (1/self.FFmpegTimer.interval()/ (  list(self.fps.values())[0]/1000  )))
-
-        else:
-        '''
+        """
 
         if self.playerType == VLC and self.playMode == VLC:
 
@@ -5250,35 +5065,6 @@ item []:
                     self.writeEvent(event, newTime)
                     break
 
-            '''
-            new_event = { 'time': newTime, \
-            'subject': editWindow.cobSubject.currentText(), \
-            'code': editWindow.cobCode.currentText() ,\
-            'type': '',\
-            'modifier': modifier_str,\
-            'comment': editWindow.leComment.toPlainText() }
-
-            print('new event', new_event)
-            '''
-            '''
-            if self.checkSameEvent(self.observationId, newTime, editWindow.cobSubject.currentText(), editWindow.cobCode.currentText()):
-                QMessageBox.warning(self, programName, 'The same event already exists!\nSame time, code and subject.')
-                return
-
-            self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [ newTime, editWindow.cobSubject.currentText(),  editWindow.cobCode.currentText() , modifier_str, editWindow.leComment.toPlainText()]  )
-
-            self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
-
-            self.loadEventsInTW( self.observationId )
-
-            # get item from twEvents at memTime row position
-            item = self.twEvents.item(  [i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS] ) if t[0] == memTime][0], 0  )
-
-            self.twEvents.scrollToItem( item )
-
-            self.projectChanged = True
-            '''
-
 
     def edit_event(self):
         """
@@ -5325,8 +5111,8 @@ item []:
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] in sortedCodes:
                 editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
             else:
-                logging.warning("The code <b>{0}</b> do not exists more in the code's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
-                QMessageBox.warning(self, programName, "The code <b>%s</b> do not exists more in the code's list" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"]])
+                logging.warning("The behaviour <b>{0}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
+                QMessageBox.warning(self, programName, "The behaviour <b>%s</b> do not exists more in the ethogram" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"]])
                 editWindow.cobCode.setCurrentIndex(0)
 
 
@@ -6888,9 +6674,6 @@ item []:
         except:
             pass
 
-
-
-
     def actionQuit_activated(self):
         self.close()
 
@@ -7203,13 +6986,8 @@ if __name__=="__main__":
     # check FFmpeg
     ffmpeg_bin = check_ffmpeg_path()
 
-
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)
-
-    if __version__ == "DEV":
-        QMessageBox.warning(None, programName, "This version is a DEVELOPMENT version and must be used only for testing.\nPlease report all bugs",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     if args:
         logging.debug("args[0]: " + os.path.abspath(args[0]))

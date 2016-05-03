@@ -166,8 +166,6 @@ def find_lib():
             print( plugin_path )
             '''
 
-
-
         else: # search system for libvlc.dll
 
             p = find_library('libvlc.dll')

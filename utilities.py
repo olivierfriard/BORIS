@@ -224,20 +224,10 @@ def check_ffmpeg_path():
     """
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
-        if os.path.isfile( sys.path[0] ):
+        if os.path.isfile(sys.path[0]):
             ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg"
         else:
             ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg"
-
-        """
-        with open(os.path.expanduser('~') + os.sep + 'boris.log', 'w') as f:
-            print( "sys.path[0] "+ sys.path[0], file=f)
-
-            print( "is file {}".format(os.path.isfile( sys.path[0] )), file=f )
-
-            print("dirname sys.path[0]", os.path.dirname(sys.path[0]), file=f)
-            print("ffmpeg_bin", ffmpeg_bin, file=f)
-        """
 
         for path in [ffmpeg_bin, "ffmpeg"]:
             r, msg = test_ffmpeg_path(path)
@@ -256,17 +246,6 @@ def check_ffmpeg_path():
             ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
         else:
             ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg.exe"
-
-
-        """
-        with open(os.path.expanduser('~') + os.sep + 'boris.log', 'w') as f:
-            print( "sys.path[0] "+ sys.path[0], file=f)
-
-            print( "is file {}".format(os.path.isfile( os.path.dirname(sys.path[0]) )), file=f )
-
-            print("dirname sys.path[0]", os.path.dirname(sys.path[0]), file=f)
-            print("ffmpeg_bin", ffmpeg_bin, file=f)
-        """
 
         r, msg = test_ffmpeg_path( ffmpeg_bin)
         if not r:
