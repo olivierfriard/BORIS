@@ -242,16 +242,23 @@ def check_ffmpeg_path():
 
     if sys.platform.startswith("win"):
 
-        if os.path.isfile(sys.path[0]):
-            ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
-        else:
-            ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg.exe"
+        r = False
+        if os.path.isdir( os.path.abspath( os.path.join(sys.path[0] , os.pardir )) + "\\FFmpeg"):
+            ffmpeg_bin = os.path.abspath( os.path.join(sys.path[0] , os.pardir )) + "\\FFmpeg\\ffmpeg.exe" 
+            print(ffmpeg_bin)
+            r, msg = test_ffmpeg_path( ffmpeg_bin)
 
-        r, msg = test_ffmpeg_path( ffmpeg_bin)
         if not r:
-            logging.critical("FFmpeg is not available")
-            QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            sys.exit(3)
+            if os.path.isfile(sys.path[0]):
+                ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
+            else:
+                ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg.exe"
+
+            r, msg = test_ffmpeg_path( ffmpeg_bin)
+            if not r:
+                logging.critical("FFmpeg is not available")
+                QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                sys.exit(3)
 
     return ffmpeg_bin
 
