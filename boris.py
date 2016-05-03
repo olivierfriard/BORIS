@@ -5221,7 +5221,8 @@ item []:
             ver = 'v. {0}'.format(__version__)
 
         players = []
-        players.append("VLC media player v. {0}".format( bytes_to_str(vlc.libvlc_get_version())))
+        players.append("VLC media player v. {}".format(bytes_to_str(vlc.libvlc_get_version())))
+        players.append("VLC libraries path: {}".format(vlc.plugin_path))
         players.append("FFmpeg path: {}".format(self.ffmpeg_bin))
 
 
@@ -6966,14 +6967,14 @@ if __name__=="__main__":
     availablePlayers = []
 
     # load VLC
-    try:
-        import vlc
-        availablePlayers.append(VLC)
-    except:
+    import vlc
+    if vlc.dll is None:
         logging.critical("VLC media player not found")
         QMessageBox.critical(None, programName, "This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
+
+    availablePlayers.append(VLC)
 
     logging.info("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
