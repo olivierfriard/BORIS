@@ -224,7 +224,7 @@ def check_ffmpeg_path():
     """
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
-        if os.path.isfile(sys.path[0]):
+        if os.path.isfile(sys.path[0]): # sys.path[0] is a file with PyInstaller 
             ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg"
         else:
             ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg"
