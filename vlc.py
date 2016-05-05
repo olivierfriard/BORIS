@@ -233,6 +233,48 @@ def find_lib():
 
 
     elif sys.platform.startswith('darwin'):
+
+        dll = None
+        syspath = sys.path[0]
+        if os.path.exists( os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib" ):
+            try:
+                dll = ctypes.CDLL(os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib")
+                plugin_path = os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/plugins"
+                #os.environ["VLC_PLUGIN_PATH"] = os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/plugins"
+            except:
+                print("error on {} library".format(os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib"))
+
+            '''d += 'modules'
+            if os.path.isdir(d):
+                plugin_path = d
+            '''
+        if dll is None:
+
+            if os.path.exists( syspath + "/VLC/lib/libvlc.dylib" ):
+                try:
+                    dll = ctypes.CDLL(syspath + "/VLC/lib/libvlc.dylib")
+                    plugin_path = syspath + "/VLC/plugins"
+                except:
+                    print("error on {} library".format(syspath + "/VLC/plugins"))
+
+        if dll is None:  # search system
+            d = '/Applications/VLC.app/Contents/MacOS/'
+            p = d + 'lib/libvlc.dylib'
+            if os.path.exists(p):
+                try:
+                    dll = ctypes.CDLL(p)
+                    os.environ["VLC_PLUGIN_PATH"] = d + 'plugins'
+                except:
+                    print("error. VLC not found in /Applications/VLC")
+
+        if dll is None:  # hope, some PATH is set...
+            try:
+                dll = ctypes.CDLL('libvlc.dylib')
+            except:
+                print("error lib not found: " + 'libvlc.dylib')
+
+
+        """
         # FIXME: should find a means to configure path
         d = '/Applications/VLC.app/Contents/MacOS/'
         p = d + 'lib/libvlc.dylib'
@@ -248,6 +290,7 @@ def find_lib():
 
         else:  # hope, some PATH is set...
             dll = ctypes.CDLL('libvlc.dylib')
+        """
 
     else:
         raise NotImplementedError('%s: %s not supported' % (sys.argv[0], sys.platform))

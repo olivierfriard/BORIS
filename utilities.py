@@ -222,45 +222,58 @@ def check_ffmpeg_path():
     """
     check ffmpeg path
     """
+
+    if os.path.isfile(sys.path[0]):  # pyinstaller
+        syspath = os.path.dirname(sys.path[0])
+    else:
+        syspath = sys.path[0]
+
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
-        if os.path.isfile(sys.path[0]): # sys.path[0] is a file with PyInstaller 
-            ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg"
-        else:
-            ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg"
-
-        for path in [ffmpeg_bin, "ffmpeg"]:
-            r, msg = test_ffmpeg_path(path)
+        r = False
+        if os.path.exists( os.path.abspath(os.path.join(syspath, os.pardir )) + "/FFmpeg/ffmpeg"):
+            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir )) + "/FFmpeg/ffmpeg"
+            r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
-                ffmpeg_bin = path
-                break
+                return ffmpeg_bin
 
-        if not r:
+        # check if ffmpeg in same directory than boris.py
+        if os.path.exists( syspath + "/ffmpeg"):
+            ffmpeg_bin = syspath + "/ffmpeg"
+            r, msg = test_ffmpeg_path(ffmpeg_bin)
+            if r:
+               return ffmpeg_bin
+
+        # check for ffmpeg in system path
+        ffmpeg_bin = "ffmpeg"
+        r, msg = test_ffmpeg_path(ffmpeg_bin)
+        if r:
+            return ffmpeg_bin
+        else:
             logging.critical("FFmpeg is not available")
             QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            sys.exit(3)
+            return False
 
     if sys.platform.startswith("win"):
 
         r = False
-        if os.path.isdir( os.path.abspath( os.path.join(sys.path[0] , os.pardir )) + "\\FFmpeg"):
-            ffmpeg_bin = os.path.abspath( os.path.join(sys.path[0] , os.pardir )) + "\\FFmpeg\\ffmpeg.exe" 
-            print(ffmpeg_bin)
+        if os.path.exists(os.path.abspath(os.path.join(syspath, os.pardir)) + "\\FFmpeg\\ffmpeg.exe"):
+            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir )) + "\\FFmpeg\\ffmpeg.exe"
             r, msg = test_ffmpeg_path( ffmpeg_bin)
+            if r:
+                return ffmpeg_bin
 
-        if not r:
-            if os.path.isfile(sys.path[0]):
-                ffmpeg_bin = os.path.dirname(sys.path[0]) + os.sep + "ffmpeg.exe"
+        if os.path.exists(syspath + "\\ffmpeg.exe"):
+            ffmpeg_bin = syspath + "\\ffmpeg.exe"
+            r, msg = test_ffmpeg_path( ffmpeg_bin)
+            if r:
+                return ffmpeg_bin
             else:
-                ffmpeg_bin = sys.path[0] + os.sep + "ffmpeg.exe"
-
-            r, msg = test_ffmpeg_path( ffmpeg_bin)
-            if not r:
                 logging.critical("FFmpeg is not available")
                 QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                sys.exit(3)
+                return False
 
-    return ffmpeg_bin
+    return False
 
 
 def accurate_media_analysis(ffmpeg_bin, fileName):

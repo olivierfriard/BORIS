@@ -6986,6 +6986,8 @@ if __name__=="__main__":
 
     # check FFmpeg
     ffmpeg_bin = check_ffmpeg_path()
+    if not ffmpeg_bin:
+        sys.exit(3)
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)
