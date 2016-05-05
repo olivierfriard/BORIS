@@ -25,8 +25,9 @@ This file is part of BORIS.
 
 
 __version__ = "2.97"
-__version_date__ = "2016-05-03"
+__version_date__ = "2016-05-05"
 __DEV__ = False
+BITMAP_EXT = "png"
 
 import sys
 import logging
@@ -1392,7 +1393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         imageDir=self.imageDirectory,
         sep=os.sep,
         fileName=md5FileName,
-        extension="jpg")
+        extension=BITMAP_EXT)
 
         logging.debug('ffmpeg command: {0}'.format(ffmpeg_command))
 
@@ -1410,7 +1411,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         img = '%(imageDir)s%(sep)sBORIS_%(fileName)s-%(second)d_%(frame)d.%(extension)s' % \
               {'imageDir': self.imageDirectory, 'sep': os.sep, 'fileName': md5FileName, 'second':  int(frameCurrentMedia / fps),
                'frame':( frameCurrentMedia - int(frameCurrentMedia / fps) * fps) + 1,
-               'extension': 'jpg'}
+               'extension': BITMAP_EXT}
 
         if not os.path.isfile(img):
             logging.warning("image not found: {0}".format(img))
@@ -6950,6 +6951,7 @@ if __name__=="__main__":
     app = QApplication(sys.argv)
 
     # splashscreen
+
     if not options.nosplashscreen:
         start = time.time()
         splash = QSplashScreen(QPixmap( os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
