@@ -6384,6 +6384,7 @@ item []:
 
             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
 
+            # check max number of modifiers
             max_modifiers = 0
             for event in eventsWithStatus:
                 for c in pj_events_fields:
@@ -6473,9 +6474,9 @@ item []:
 
             for event in eventsWithStatus:
 
-                if ((event[SUBJECT_EVENT_FIELD] in plot_parameters["selected subjects"]) \
-                   or (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in plot_parameters["selected subjects"])) \
-                   and (event[BEHAVIOR_EVENT_FIELD] in plot_parameters["selected behaviors"]):
+                if (((event[SUBJECT_EVENT_FIELD] in plot_parameters["selected subjects"])
+                   or (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in plot_parameters["selected subjects"]))
+                   and (event[BEHAVIOR_EVENT_FIELD] in plot_parameters["selected behaviors"])):
 
                     fields = []
                     fields.append(float(event[EVENT_TIME_FIELD_IDX]))
@@ -6490,6 +6491,15 @@ item []:
 
                     fields.append(event[EVENT_SUBJECT_FIELD_IDX])
                     fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                    #fields.append(event[EVENT_MODIFIER_FIELD_IDX])
+                    print("modifirs: #{}#".format(event[EVENT_MODIFIER_FIELD_IDX]))
+
+                    modifiers = event[EVENT_MODIFIER_FIELD_IDX].split("|")
+                    while len(modifiers) < max_modifiers:
+                        modifiers.append("")
+
+                    for m in modifiers:
+                        fields.append(m)
                     fields.append(event[COMMENT_EVENT_FIELD_IDX].replace(os.linesep, " "))
                     # status
                     fields.append(event[-1])
