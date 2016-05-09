@@ -6102,9 +6102,6 @@ item []:
                 if not flag_subject:
                     self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
 
-
-
-
     def twEvents_doubleClicked(self):
         """
         seek video to double clicked position ( add self.repositioningTimeOffset value)
@@ -6455,17 +6452,6 @@ item []:
                 header.append("Modifier {}".format(x))
             header.extend(["Comment", "Status"])
 
-            '''
-            for c in pj_events_fields:
-                if c == "modifier":
-                    for x in range(1, max_modifiers + 1):
-                        header.append("Modifier {}".format(x))
-                else:
-                    header.append(c)
-
-
-            header.append("status")
-            '''
             rows.append(header)
 
             duration1 = []   # in seconds
@@ -6504,34 +6490,6 @@ item []:
                     # status
                     fields.append(event[-1])
 
-                    '''
-                    for c in pj_events_fields:
-
-                        if c == "modifier":
-                            if event[pj_obs_fields[c]]:
-                                modifiers = event[pj_obs_fields[c]].split("|")
-                                while len(modifiers) < max_modifiers:
-                                    modifiers.append("")
-
-                                for m in modifiers:
-                                    fields.append(m)
-                            else:
-                                for dummy in range(max_modifiers):
-                                    fields.append("")
-
-                        elif c == 'time':
-                            fields.append(float(event[pj_obs_fields[c]]))
-
-                        elif c == 'comment':
-                            fields.append(event[pj_obs_fields[c]].replace(os.linesep, ' '))
-
-                        else:
-                            fields.append(event[pj_obs_fields[c]])
-
-
-                    # append status START/STOP
-                    fields.append( event[-1] )
-                    '''
                     rows.append( fields )
 
             maxLen = max( [len(r) for r in rows])
@@ -6579,18 +6537,10 @@ item []:
         if not selectedObservations:
             return
 
-        '''selectedSubjects, selectedBehaviors, _, _, _ = self.choose_obs_subj_behav(selectedObservations, maxTime=0,
-                                                                                  flagShowIncludeModifiers=False,
-                                                                                  flagShowExcludeBehaviorsWoEvents=False)
-
-        if not selectedSubjects or not selectedBehaviors:
-            return'''
-
         plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
-
 
         fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
@@ -6646,13 +6596,6 @@ item []:
                                         if currentStates:
                                             s += "+".join(replace_spaces(currentStates)) + self.behaviouralStringsSeparator
 
-
-                            '''
-                            for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
-
-                                if event[ pj_obs_fields["subject"]] == subj or (subj == NO_FOCAL_SUBJECT and event[pj_obs_fields["subject"]] == ""):
-                                    s += event[pj_obs_fields["code"]].replace(" ", "_") + self.behaviouralStringsSeparator
-                            '''
 
                             # remove last separator (if separator not empty)
                             if self.behaviouralStringsSeparator:
