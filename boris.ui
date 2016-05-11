@@ -257,7 +257,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QTableWidget" name="twConfiguration">
+        <widget class="QTableWidget" name="twEthogram">
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
@@ -817,6 +817,19 @@
   <action name="actionFrame_backward">
    <property name="text">
     <string>frame backward</string>
+   </property>
+  </action>
+  <action name="actionFilterBehaviors">
+   <property name="text">
+    <string>Filter behaviors</string>
+   </property>
+  </action>
+  <action name="actionShowAllBehaviors">
+   <property name="text">
+    <string>Show all behaviors</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all behaviors</string>
    </property>
   </action>
  </widget>

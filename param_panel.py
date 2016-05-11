@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -37,13 +37,13 @@ class Param_panel(QDialog, Ui_Dialog):
         super(Param_panel, self).__init__(parent)
         self.setupUi(self)
 
-        self.pbSelectAllSubjects.clicked.connect( lambda: self.subjects_button_clicked("select all"))
-        self.pbUnselectAllSubjects.clicked.connect( lambda: self.subjects_button_clicked("unselect all"))
-        self.pbReverseSubjectsSelection.clicked.connect( lambda: self.subjects_button_clicked("reverse selection"))
+        self.pbSelectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("select all"))
+        self.pbUnselectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("unselect all"))
+        self.pbReverseSubjectsSelection.clicked.connect(lambda: self.subjects_button_clicked("reverse selection"))
 
-        self.pbSelectAllBehaviors.clicked.connect( lambda: self.behaviors_button_clicked("select all"))
-        self.pbUnselectAllBehaviors.clicked.connect( lambda: self.behaviors_button_clicked("unselect all"))
-        self.pbReverseBehaviorsSelection.clicked.connect( lambda: self.behaviors_button_clicked("reverse selection"))
+        self.pbSelectAllBehaviors.clicked.connect(lambda: self.behaviors_button_clicked("select all"))
+        self.pbUnselectAllBehaviors.clicked.connect(lambda: self.behaviors_button_clicked("unselect all"))
+        self.pbReverseBehaviorsSelection.clicked.connect(lambda: self.behaviors_button_clicked("reverse selection"))
 
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)

@@ -76,7 +76,7 @@ import map_creator
 import select_modifiers
 from utilities import *
 import tablib
-import obs_list2
+import observations_list
 import plot_spectrogram
 
 def bytes_to_str(b):
@@ -117,7 +117,7 @@ class TempDirCleanerThread(QThread):
 
 ROW = -1
 
-class StyledItemDelegateTriangle(QtGui.QStyledItemDelegate):
+class StyledItemDelegateTriangle(QStyledItemDelegate):
     """
     painter for twEvents with current time highlighting
     """
@@ -544,8 +544,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # table Widget double click
         self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
-        self.twConfiguration.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
+        self.twEthogram.itemDoubleClicked.connect(self.twEthogram_doubleClicked)
         self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
+
+        # Actions for twEthogram context menu
+
+        self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
+
+        self.actionFilterBehaviors.triggered.connect(self.filter_behaviors)
+        self.twEthogram.addAction(self.actionFilterBehaviors)
+
+        self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)
+        self.twEthogram.addAction(self.actionShowAllBehaviors)
 
         # Actions for twEvents context menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -594,6 +604,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
+    def show_all_behaviors(self):
+        """
+        show all behaviors in ethogram
+        """
+        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+
+
+
+    def filter_behaviors(self):
+        """
+        allow user to filter behaviors in ethogram
+        """
+
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.lwSubjects.setVisible(False)
+
+        paramPanelWindow.pbSelectAllSubjects.setVisible(False)
+        paramPanelWindow.pbUnselectAllSubjects.setVisible(False)
+        paramPanelWindow.pbReverseSubjectsSelection.setVisible(False)
+
+        paramPanelWindow.lbSubjects.setVisible(False)
+        paramPanelWindow.cbIncludeModifiers.setVisible(False)
+        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+        paramPanelWindow.lbStartTime.setVisible(False)
+        paramPanelWindow.teStartTime.setVisible(False)
+        paramPanelWindow.dsbStartTime.setVisible(False)
+        paramPanelWindow.lbEndTime.setVisible(False)
+        paramPanelWindow.teEndTime.setVisible(False)
+        paramPanelWindow.dsbEndTime.setVisible(False)
+
+        allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+        print(allBehaviors)
+        for behavior in allBehaviors:
+            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
+            paramPanelWindow.ch = QCheckBox()
+            paramPanelWindow.ch.setText(behavior)
+            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+        if paramPanelWindow.exec_():
+            self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
+
+
 
     def extract_events(self):
         """
@@ -615,7 +667,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check self.repositioningTimeOffset
-        text, ok = QtGui.QInputDialog.getDouble(self, "Offset to substract/add to start/stop times", "Time offset (in seconds):", 0.0, 0.0, 86400, 1)
+        text, ok = QInputDialog.getDouble(self, "Offset to substract/add to start/stop times", "Time offset (in seconds):", 0.0, 0.0, 86400, 1)
         if not ok:
             return
         try:
@@ -1592,13 +1644,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.media_list = self.instance.media_list_new()
 
         # video will be drawn in this widget
-        self.videoframe = QtGui.QFrame()
+        self.videoframe = QFrame()
         self.palette = self.videoframe.palette()
-        self.palette.setColor (QtGui.QPalette.Window, QtGui.QColor(0, 0, 0))
+        self.palette.setColor (QPalette.Window, QColor(0, 0, 0))
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
 
-        self.volumeslider = QtGui.QSlider(QtCore.Qt.Vertical, self)
+        self.volumeslider = QSlider(QtCore.Qt.Vertical, self)
         self.volumeslider.setMaximum(100)
         self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
         self.volumeslider.setToolTip("Volume")
@@ -1608,11 +1660,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.hsVideo.setMaximum(slider_maximum)
         self.hsVideo.sliderMoved.connect(self.hsVideo_sliderMoved)
 
-        self.video1layout = QtGui.QHBoxLayout()
+        self.video1layout = QHBoxLayout()
         self.video1layout.addWidget(self.videoframe)
         self.video1layout.addWidget(self.volumeslider)
 
-        self.vboxlayout = QtGui.QVBoxLayout()
+        self.vboxlayout = QVBoxLayout()
 
         self.vboxlayout.addLayout(self.video1layout)
 
@@ -1630,13 +1682,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.ffmpegLayout = QHBoxLayout()
         self.lbFFmpeg = QLabel(self)
-        self.lbFFmpeg.setAlignment(Qt.AlignLeft | Qt.AlignTop  )
+        self.lbFFmpeg.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.lbFFmpeg.setBackgroundRole(QPalette.Base)
         self.lbFFmpeg.mousePressEvent = self.getPoslbFFmpeg
 
         self.ffmpegLayout.addWidget(self.lbFFmpeg)
 
-        self.ffmpegTab = QtGui.QWidget()
+        self.ffmpegTab = QWidget()
         self.ffmpegTab.setLayout(self.ffmpegLayout)
 
         self.toolBox.insertItem(FRAME_TAB, self.ffmpegTab, "Frame by frame")
@@ -2041,12 +2093,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def selectObservations(self, mode):
-        '''
+        """
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
-        '''
+        """
 
-        obsList = obs_list2.observationsList_widget()
+        obsList = observations_list.observationsList_widget()
 
         obsList.pbOpen.setVisible(False)
         obsList.pbEdit.setVisible(False)
@@ -2914,7 +2966,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
 
-        allBehaviors = sorted( [  self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+        allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         logging.debug('allBehaviors: {0}'.format(allBehaviors))
 
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
@@ -2980,7 +3032,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug("media length for {0} : {1}".format(obsId,totalMediaLength ))
             else: # LIVE
                 if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                    totalMediaLength = max(self.pj[OBSERVATIONS][ obsId ][EVENTS])[0]
+                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
             if totalMediaLength in [0, -1]:
@@ -3698,6 +3750,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         open project json
         """
         logging.info("open project: {0}".format(projectFileName))
+
+
         if not os.path.isfile(projectFileName):
             QMessageBox.warning(self, programName, "File not found")
             return
@@ -3823,7 +3877,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.projectChanged = memProjectChanged
 
-        self.load_obs_in_lwConfiguration()
+        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
 
         self.load_subjects_in_twSubjects()
 
@@ -3953,7 +4007,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             # empty main window tables
-            self.twConfiguration.setRowCount(0)   # behaviors
+            self.twEthogram.setRowCount(0)   # behaviors
             self.twSubjects.setRowCount(0)
             self.twEvents.setRowCount(0)
 
@@ -4157,12 +4211,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
 
-                self.twConfiguration.setRowCount(0)
-
+                self.twEthogram.setRowCount(0)
                 self.pj[ETHOGRAM] =  newProjectWindow.obs
-
-                self.load_obs_in_lwConfiguration()
-
+                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
                 self.pj[SUBJECTS] =  newProjectWindow.subjects_conf
 
                 self.load_subjects_in_twSubjects()
@@ -4229,17 +4280,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project
         """
+        logging.debug("Project file name: {}".format(self.projectFileName))
 
         if not self.projectFileName:
-            if not self.pj['project_name']:
-                txt = 'NONAME.boris'
+            if not self.pj["project_name"]:
+                txt = "NONAME.boris"
             else:
                 txt = self.pj['project_name'] + '.boris'
-            os.chdir( os.path.expanduser("~")  )
+            os.chdir( os.path.expanduser("~"))
             self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
 
             if not self.projectFileName:
-                return 'not saved'
+                return "not saved"
 
             # add .boris if filter = 'Projects file (*.boris)'
             if  filtr == 'Projects file (*.boris)' and os.path.splitext(self.projectFileName)[1] != '.boris':
@@ -4250,7 +4302,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.save_project_json(self.projectFileName)
 
-        return ''
+        return ""
 
 
     def liveTimer_out(self):
@@ -4474,6 +4526,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if includeMediaInfo == NO:
                 out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             else:
+                out = ""
                 pass # TODO
             out += "BEGIN TRANSACTION;" + os.linesep
             template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
@@ -4728,7 +4781,7 @@ item []:
             logging.info(('Rate: %s' % self.mediaplayer.get_rate()))
             logging.info(('Video size: %s' % str(self.mediaplayer.video_get_size(0))))  # num=0
             logging.info(('Scale: %s' % self.mediaplayer.video_get_scale()))
-            logging.info(('Aspect ratio: %s' % self.mediaplayer.video_get_aspect_ratio()))
+            logging.info(('Aspect ratio: {}'.format(self.mediaplayer.video_get_aspect_ratio())))
             logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
             logging.info('has_vout? {0}'.format(self.mediaplayer.has_vout()))
 
@@ -5180,14 +5233,14 @@ item []:
         add event by double-clicking in ethogram list
         '''
         if self.observationId:
-            if self.twConfiguration.selectedIndexes():
+            if self.twEthogram.selectedIndexes():
 
-                ethogramRow = self.twConfiguration.selectedIndexes()[0].row()
+                ethogramRow = self.twEthogram.selectedIndexes()[0].row()
 
                 logging.debug('ethogram row: {0}'.format(ethogramRow  ))
                 logging.debug(self.pj[ETHOGRAM][str(ethogramRow)])
 
-                code = self.twConfiguration.item(ethogramRow, 1).text()
+                code = self.twEthogram.item(ethogramRow, 1).text()
 
                 event = self.full_event( str(ethogramRow) )
 
@@ -5238,7 +5291,7 @@ item []:
         The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
         <br>
         See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>
-        <p>Python {python_ver} - Qt {qt_ver} - PyQt4 {pyqt_ver} on {system}<br><br>
+        <p>Python {python_ver} - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br><br>
         {players}""".format(prog_name=programName,
                             ver=ver,
                             date=__version_date__,
@@ -5496,21 +5549,18 @@ item []:
                 self.timer.stop()
 
 
-    def load_obs_in_lwConfiguration(self):
+    def load_behaviors_in_twEthogram(self, behaviorsToShow):
         """
         fill ethogram table with ethogram from pj
         """
 
-        self.twConfiguration.setRowCount(0)
-
+        self.twEthogram.setRowCount(0)
         if self.pj[ETHOGRAM]:
-
-            for idx in [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys() ])]:
-
-                self.twConfiguration.setRowCount(self.twConfiguration.rowCount() + 1)
-
-                for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
-                    self.twConfiguration.setItem(self.twConfiguration.rowCount() - 1, col , QTableWidgetItem( self.pj[ETHOGRAM][idx][field] ))
+            for idx in [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+                if self.pj[ETHOGRAM][idx]["code"] in behaviorsToShow:
+                    self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
+                    for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
+                        self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(self.pj[ETHOGRAM][idx][field]))
 
 
     def load_subjects_in_twSubjects(self):
@@ -5639,7 +5689,8 @@ item []:
                     if self.playerType == VLC:
 
                         if self.playMode == FFMPEG:
-                            memState = self.FFmpegTimerOut.isActive()
+                            #memState = self.FFmpegTimerOut.isActive()
+                            memState = self.FFmpegTimer.isActive()
                             if memState:
                                 self.pause_video()
                         else:
