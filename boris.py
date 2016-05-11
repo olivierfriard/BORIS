@@ -24,8 +24,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.97"
-__version_date__ = "2016-05-05"
+__version__ = "2.98"
+__version_date__ = "2016-05-11"
 __DEV__ = False
 BITMAP_EXT = "png"
 
@@ -4212,22 +4212,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project asking for a new file name
         """
-        self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
-
-        if not self.projectFileName:
+        projectNewFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
+        if not projectNewFileName:
             return "Not saved"
+        else:
 
-        # add .boris if filter = 'Projects file (*.boris)'
-        if  filtr == "Projects file (*.boris)" and os.path.splitext(self.projectFileName)[1] != ".boris":
-            self.projectFileName += ".boris"
+            # add .boris if filter = 'Projects file (*.boris)'
+            if  filtr == "Projects file (*.boris)" and os.path.splitext(projectNewFileName)[1] != ".boris":
+                projectNewFileName += ".boris"
 
-        self.save_project_json(self.projectFileName)
+            self.save_project_json(projectNewFileName)
+            self.projectFileName = projectNewFileName
 
 
     def save_project_activated(self):
-        '''
+        """
         save current project
-        '''
+        """
 
         if not self.projectFileName:
             if not self.pj['project_name']:
