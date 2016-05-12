@@ -239,7 +239,7 @@
    <addaction name="actionFrame_backward"/>
    <addaction name="actionFrame_forward"/>
   </widget>
-  <widget class="QDockWidget" name="dwConfiguration">
+  <widget class="QDockWidget" name="dwEthogram">
    <property name="floating">
     <bool>false</bool>
    </property>

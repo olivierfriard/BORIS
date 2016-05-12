@@ -92,7 +92,7 @@ def bytes_to_str(b):
     else:
         return b
 
-from time_budget_widget import *
+from time_budget_widget import timeBudgetResults
 import select_modifiers
 
 class TempDirCleanerThread(QThread):
@@ -277,7 +277,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # start with dock widget invisible
         self.dwObservations.setVisible(False)
-        self.dwConfiguration.setVisible(False)
+        self.dwEthogram.setVisible(False)
         self.dwSubjects.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
@@ -635,14 +635,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.dsbEndTime.setVisible(False)
 
         allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-        print(allBehaviors)
+
+        # behaviors  filtered
+        filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+
         for behavior in allBehaviors:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
             paramPanelWindow.ch = QCheckBox()
             paramPanelWindow.ch.setText(behavior)
+            if behavior in filtered_behaviors:
+                paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
         if paramPanelWindow.exec_():
+            if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
+                self.projectChanged = True
             self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
 
 
@@ -923,7 +930,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        result, selectedObs = self.selectObservations( OPEN )
+        result, selectedObs = self.selectObservations(OPEN)
 
         if selectedObs:
             self.observationId = selectedObs[0]
@@ -931,11 +938,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # load events in table widget
             self.loadEventsInTW(self.observationId)
 
-            if self.pj[OBSERVATIONS][self.observationId][ TYPE ] == LIVE:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
                 self.playerType = LIVE
                 self.initialize_new_live_observation()
 
-            if self.pj[OBSERVATIONS][self.observationId][ TYPE ] in [MEDIA]:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                 if not self.initialize_new_observation_vlc():
                     self.observationId = ""
@@ -1771,9 +1778,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def initialize_new_observation_vlc(self):
-        '''
+        """
         initialize new observation for VLC
-        '''
+        """
 
         logging.debug('initialize new observation for VLC')
 
@@ -1905,9 +1912,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         # show first frame of video
-        logging.debug("playing media #{0}".format( 0 ))
+        logging.debug("playing media #{0}".format(0))
 
-        self.mediaListPlayer.play_item_at_index( 0 )
+        self.mediaListPlayer.play_item_at_index(0)
         app.processEvents()
 
         # play mediaListPlayer for a while to obtain media information
@@ -2003,7 +2010,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.toolBar.setEnabled(True)
 
-        self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+        self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
         self.memMedia, self.currentSubject = "", ""
 
@@ -2042,6 +2049,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.sendEvent.connect(self.signal_from_spectrogram)
             self.spectro.show()
             self.timer_spectro.start()
+
+
+        # check if "filtered behaviors"
+        if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
+            self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
         return True
 
@@ -3923,7 +3935,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbLogoUnito.setVisible(False)
         self.lbLogoBoris.setVisible(False)
 
-        self.dwConfiguration.setVisible(True)
+        self.dwEthogram.setVisible(True)
         self.dwSubjects.setVisible(True)
 
         self.projectChanged = True
@@ -3952,7 +3964,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
-        self.dwConfiguration.setVisible(False)
+        self.dwEthogram.setVisible(False)
         self.dwSubjects.setVisible(False)
 
         self.projectChanged = False
@@ -5562,6 +5574,14 @@ item []:
                     for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
                         self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(self.pj[ETHOGRAM][idx][field]))
 
+        if self.twEthogram.rowCount() < len(self.pj[ETHOGRAM].keys()):
+            self.dwEthogram.setWindowTitle("Ethogram (filtered {0}/{1})".format(self.twEthogram.rowCount(), len(self.pj[ETHOGRAM].keys())))
+
+            if self.observationId:
+                self.pj[OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviorsToShow
+        else:
+            self.dwEthogram.setWindowTitle("Ethogram")
+
 
     def load_subjects_in_twSubjects(self):
         """
@@ -5579,7 +5599,7 @@ item []:
                 self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2 , QTableWidgetItem( self.pj[SUBJECTS][ idx ][field] ))
 
             # add cell for current state(s) after last subject field
-            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields) , QTableWidgetItem( '' ))
+            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields) , QTableWidgetItem(""))
 
 
 

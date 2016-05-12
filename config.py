@@ -123,6 +123,8 @@ MULTIPLE = 'multiple'
 
 SELECT1 = 'select1'
 
+FILTERED_BEHAVIORS = "filtered behaviors"
+
 NUMERIC = 'numeric'
 TEXT = 'text'
 INDEPENDENT_VARIABLES = 'independent_variables'

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed May 11 15:53:24 2016
+# Created: Thu May 12 11:46:09 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -90,10 +90,10 @@ class Ui_MainWindow(object):
         self.toolBar.setToolTip(_fromUtf8(""))
         self.toolBar.setObjectName(_fromUtf8("toolBar"))
         MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
-        self.dwConfiguration = QtGui.QDockWidget(MainWindow)
-        self.dwConfiguration.setFloating(False)
-        self.dwConfiguration.setFeatures(QtGui.QDockWidget.DockWidgetFloatable|QtGui.QDockWidget.DockWidgetMovable)
-        self.dwConfiguration.setObjectName(_fromUtf8("dwConfiguration"))
+        self.dwEthogram = QtGui.QDockWidget(MainWindow)
+        self.dwEthogram.setFloating(False)
+        self.dwEthogram.setFeatures(QtGui.QDockWidget.DockWidgetFloatable|QtGui.QDockWidget.DockWidgetMovable)
+        self.dwEthogram.setObjectName(_fromUtf8("dwEthogram"))
         self.dockWidgetContents_3 = QtGui.QWidget()
         self.dockWidgetContents_3.setObjectName(_fromUtf8("dockWidgetContents_3"))
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.dockWidgetContents_3)
@@ -123,8 +123,8 @@ class Ui_MainWindow(object):
         self.twEthogram.setHorizontalHeaderItem(5, item)
         self.verticalLayout_4.addWidget(self.twEthogram)
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
-        self.dwConfiguration.setWidget(self.dockWidgetContents_3)
-        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dwConfiguration)
+        self.dwEthogram.setWidget(self.dockWidgetContents_3)
+        MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dwEthogram)
         self.statusbar = QtGui.QStatusBar(MainWindow)
         self.statusbar.setSizeGripEnabled(True)
         self.statusbar.setObjectName(_fromUtf8("statusbar"))
@@ -435,7 +435,7 @@ class Ui_MainWindow(object):
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback", None))
         self.menuTools.setTitle(_translate("MainWindow", "Tools", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
-        self.dwConfiguration.setWindowTitle(_translate("MainWindow", "Ethogram", None))
+        self.dwEthogram.setWindowTitle(_translate("MainWindow", "Ethogram", None))
         item = self.twEthogram.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Key", None))
         item = self.twEthogram.horizontalHeaderItem(1)
