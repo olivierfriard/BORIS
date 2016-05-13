@@ -34,7 +34,7 @@ import logging
 import platform
 
 if int(platform.python_version_tuple()[0]) < 3:
-    logging.critical("BORIS requires Python 3+!")
+    logging.critical("BORIS requires Python 3.4+!")
     sys.exit()
 
 try:
@@ -548,9 +548,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twSubjects.itemDoubleClicked.connect(self.twSubjects_doubleClicked)
 
         # Actions for twEthogram context menu
-
         self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
-
         self.actionFilterBehaviors.triggered.connect(self.filter_behaviors)
         self.twEthogram.addAction(self.actionFilterBehaviors)
 
@@ -1704,9 +1702,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_by_frame.setEnabled(True)
 
     def initialize_2nd_video_tab(self):
-        '''
+        """
         initialize second video player (use only if first player initialized)
-        '''
+        """
         self.mediaplayer2 = self.instance.media_player_new()
 
         self.media_list2 = self.instance.media_list_new()
