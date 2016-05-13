@@ -255,10 +255,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.setWindowTitle("{} ({})".format(programName, __version__))
 
+        '''
         try:
             datadir = sys._MEIPASS
         except Exception:
             datadir = os.path.dirname(os.path.realpath(__file__))
+        '''
+
+        if os.path.isfile(sys.path[0]):  # for pyinstaller
+            datadir = os.path.dirname(sys.path[0])
+        else:
+            datadir = sys.path[0]
 
         self.lbLogoBoris.setPixmap(QPixmap(datadir + "/logo_boris_500px.png"))
         self.lbLogoBoris.setScaledContents(False)
