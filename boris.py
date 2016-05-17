@@ -32,8 +32,8 @@ import sys
 import logging
 import platform
 
-if int(platform.python_version_tuple()[0]) < 3:
-    logging.critical("BORIS requires Python 3.4+!")
+if platform.python_version() < "3.4":
+    logging.critical("BORIS requires Python 3.4+! You are using v. {}")
     sys.exit()
 
 try:
