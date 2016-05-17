@@ -77,9 +77,9 @@ observation_types = ['Point event', 'State event', 'Point event with coding map'
 tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
 
 # fields for project events list
-pj_events_fields = ['time', 'subject', 'code', 'modifier', 'comment']
+pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
 
-tw_indVarFields = ['label','description', 'type', 'default value']
+tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
 
 # create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}
@@ -125,8 +125,10 @@ SELECT1 = 'select1'
 
 FILTERED_BEHAVIORS = "filtered behaviors"
 
-NUMERIC = 'numeric'
-TEXT = 'text'
+NUMERIC = "numeric"
+TEXT = "text"
+SET_OF_VALUES = "value from set"
+
 INDEPENDENT_VARIABLES = 'independent_variables'
 OBSERVATIONS = 'observations'
 

@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>1</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -413,6 +413,11 @@ from a BORIS project</string>
              <column>
               <property name="text">
                <string>Predefined value</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Set of values</string>
               </property>
              </column>
             </widget>

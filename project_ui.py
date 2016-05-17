@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Tue Mar 22 14:21:12 2016
+# Created: Tue May 17 14:31:01 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -200,7 +200,7 @@ class Ui_dlgProject(object):
         self.twVariables.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.twVariables.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.twVariables.setObjectName(_fromUtf8("twVariables"))
-        self.twVariables.setColumnCount(4)
+        self.twVariables.setColumnCount(5)
         self.twVariables.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.twVariables.setHorizontalHeaderItem(0, item)
@@ -210,6 +210,8 @@ class Ui_dlgProject(object):
         self.twVariables.setHorizontalHeaderItem(2, item)
         item = QtGui.QTableWidgetItem()
         self.twVariables.setHorizontalHeaderItem(3, item)
+        item = QtGui.QTableWidgetItem()
+        self.twVariables.setHorizontalHeaderItem(4, item)
         self.twVariables.horizontalHeader().setSortIndicatorShown(True)
         self.horizontalLayout_13.addWidget(self.twVariables)
         self.verticalLayout_12 = QtGui.QVBoxLayout()
@@ -276,7 +278,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(1)
+        self.tabProject.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -338,6 +340,8 @@ class Ui_dlgProject(object):
         item.setText(_translate("dlgProject", "Type", None))
         item = self.twVariables.horizontalHeaderItem(3)
         item.setText(_translate("dlgProject", "Predefined value", None))
+        item = self.twVariables.horizontalHeaderItem(4)
+        item.setText(_translate("dlgProject", "Set of values", None))
         self.pbAddVariable.setText(_translate("dlgProject", "Add variable", None))
         self.pbRemoveVariable.setText(_translate("dlgProject", "Remove variable", None))
         self.pbImportVarFromProject.setText(_translate("dlgProject", "Import variables\n"

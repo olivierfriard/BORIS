@@ -118,6 +118,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
         self.twVariables.cellChanged[int, int].connect(self.twVariables_cellChanged)
+        self.twVariables.cellDoubleClicked[int, int].connect(self.twVariables_cellDoubleClicked)
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
@@ -126,6 +127,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
+
 
     def twBehaviors_cellDoubleClicked(self, row, column):
 
@@ -143,10 +145,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
 
+
     def check_variable_default_value(self, txt, varType):
         """
         check if variable default value is compatible with variable type
         """
+        # check for numeric type
         if varType == 0:  # numeric
             try:
                 if txt:
@@ -154,17 +158,26 @@ class projectDialog(QDialog, Ui_dlgProject):
                 return True
             except:
                 return False
+
         return True
+
 
     def variableTypeChanged(self, row):
         """
         variable type combobox changed
         """
-        if not self.check_variable_default_value(self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
+
+        if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex() == 2:
+            if not self.twVariables.item(row, tw_indVarFields.index("possible values")).text():
+                self.twVariables.item(row, tw_indVarFields.index("possible values")).setText("Double-click to add values")
+                self.twVariables.item(row, tw_indVarFields.index("possible values")).setBackground(Qt.red)
+
+        elif not self.check_variable_default_value(self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
                                                  self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex()):
             QMessageBox.warning(self, programName + " - Independent variables error", "The default value ({0}) of variable <b>{1}</b> is not compatible with variable type".format(
                         self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
                         self.twVariables.item(row, tw_indVarFields.index("label")).text()))
+
 
     def pbAddVariable_clicked(self):
         """
@@ -175,20 +188,42 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
         signalMapper = QSignalMapper(self)
         for idx, field in enumerate(tw_indVarFields):
-
             if field == "type":
                 # add type combobox
                 comboBox = QComboBox()
-                comboBox.addItem(NUMERIC)
-                comboBox.addItem(TEXT)
+                comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
                 comboBox.setCurrentIndex(0)
                 self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
                 signalMapper.setMapping(comboBox, self.twVariables.rowCount() - 1)
-                comboBox.currentIndexChanged['int'].connect(signalMapper.map)
-
+                comboBox.currentIndexChanged["int"].connect(signalMapper.map)
             else:
-                self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, QTableWidgetItem(''))
+                item = QTableWidgetItem("")
+                self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
+                if field == "possible values":
+                    item.setFlags(Qt.ItemIsEnabled)
+
         signalMapper.mapped['int'].connect(self.variableTypeChanged)
+
+    def twVariables_cellDoubleClicked(self, row, column):
+
+        # check if double click on coding map
+
+        if column == tw_indVarFields.index("possible values"):
+            if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex() == 2: # variable type: set of values
+                text = self.twVariables.item(row, column).text()
+                if text == "Double-click to add values":
+                    text = ""
+                newText, ok = QInputDialog.getText(self, "Independent variable", "Possible values: (comma separated)", QLineEdit.Normal, text)
+                if ok:
+                    if newText:
+                        newText = ",".join([x.strip() for x in newText.split(",")])
+                        self.twVariables.item(row, column).setText(newText)
+                        self.twVariables.item(row, column).setBackground(self.twVariables.item(row, column - 1).background())
+                    else:
+                        self.twVariables.item(row, column).setText("Double-click to add values")
+                        self.twVariables.item(row, column).setBackground(Qt.red)
+
+
 
     def pbRemoveVariable_clicked(self):
         """
@@ -732,11 +767,11 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def pbAddBehavior_clicked(self):
-        '''
+        """
         add a behavior
-        '''
+        """
 
-        response = 'Point event'
+        response = "Point event"
 
         # Add behavior to table
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
@@ -756,13 +791,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, fields[field_type], comboBox)
             else:
-
                 if field_type in ['excluded', 'coding map', 'modifiers']:
                     item.setFlags(Qt.ItemIsEnabled)
-
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field_type], item)
 
         signalMapper.mapped['int'].connect(self.comboBoxChanged)
+
 
     def comboBoxChanged(self, row):
         """
@@ -889,18 +923,33 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
     def twVariables_cellChanged(self, row, column):
-        '''
+        """
         check if variable default values are compatible with variable type
-        '''
+        """
         flagOK = True
         for r in range(self.twVariables.rowCount()):
             try:
-                if not self.check_variable_default_value(self.twVariables.item(r, tw_indVarFields.index('default value')).text(),
-                       self.twVariables.cellWidget(r, tw_indVarFields.index('type')).currentIndex()):
+                if not self.check_variable_default_value(self.twVariables.item(r, tw_indVarFields.index("default value")).text(),
+                       self.twVariables.cellWidget(r, tw_indVarFields.index("type")).currentIndex()):
                     QMessageBox.warning(self, programName + " - Independent variables error", "The default value ({0}) of variable <b>{1}</b> is not compatible with variable type".format(self.twVariables.item(r, tw_indVarFields.index('default value')).text(), self.twVariables.item(r, tw_indVarFields.index('label')).text()))
                     flagOK = False
+                    break
             except:
                 pass
+
+            try:
+                if (self.twVariables.item(r, tw_indVarFields.index("default value")).text()
+                and self.twVariables.item(r, tw_indVarFields.index("possible values")).text()
+                and self.twVariables.item(r, tw_indVarFields.index("possible values")).text() != "Double-click to add values"):
+                    if self.twVariables.item(r, tw_indVarFields.index("default value")).text() not in self.twVariables.item(r, tw_indVarFields.index("possible values")).text().split(","):
+                        QMessageBox.warning(self, programName + " - Independent variables error", "The default value (<b>{0}</b>) of variable <b>{1}</b> is not in the set of accepted values".format(
+                                            self.twVariables.item(r, tw_indVarFields.index("default value")).text(),
+                                            self.twVariables.item(r, tw_indVarFields.index("label")).text()))
+                        flagOK = False
+                        break
+            except:
+                pass
+
         return flagOK
 
     def pbRemoveObservation_clicked(self):
@@ -943,7 +992,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(row, 0):
                 key = self.twSubjects.item(row, 0).text()
             else:
-                key = ''
+                key = ""
 
             # check subject name
             if self.twSubjects.item(row, 1):
@@ -960,7 +1009,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(row, 2):
                 subjectDescription = self.twSubjects.item(row, 2).text()
             else:
-                subjectDescription = ''
+                subjectDescription = ""
 
             self.subjects_conf[str(len(self.subjects_conf))] = {'key': key, 'name': subjectName, 'description': subjectDescription}
 
@@ -1011,7 +1060,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             del self.pj['coding_map'][cm]
 
         if missing_data:
-            QMessageBox.warning(self, programName, 'Missing data in behaviors configuration at row %s !' % (','.join(missing_data)))
+            QMessageBox.warning(self, programName, "Missing data in behaviors configuration at row{} !".format(",".join(missing_data)))
             return
 
         # delete coding maps loaded in pj and not cited in ethogram
@@ -1020,7 +1069,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             del self.pj['coding_map'][ loadedCodingMap ]
         '''
 
-        # check independent variables
+        # independent variables
+
+        # check if type compatible with predefined value
         if not self.twVariables_cellChanged(0, 0):
             return
 
@@ -1029,20 +1080,26 @@ class projectDialog(QDialog, Ui_dlgProject):
             row = {}
             for idx, field in enumerate(tw_indVarFields):
 
-                if field == 'type':
-
+                if field == "type":
                     combobox = self.twVariables.cellWidget(r, idx)
-
                     if combobox.currentIndex() == 0:
                         row[field] = NUMERIC
 
                     if combobox.currentIndex() == 1:
                         row[field] = TEXT
+
+                    if combobox.currentIndex() == 2:
+                        row[field] = SET_OF_VALUES
+                        if (not self.twVariables.item(r, tw_indVarFields.index("possible values")).text()
+                             or self.twVariables.item(r, tw_indVarFields.index("possible values")).text() == "Double-click to add values"):
+                            QMessageBox.warning(self, programName, "The set of values is not defined for variable <b>{}</b>!".format(self.twVariables.item(r, tw_indVarFields.index("label")).text()))
+                            return
+
                 else:
                     if self.twVariables.item(r, idx):
                         row[field] = self.twVariables.item(r, idx).text()
                     else:
-                        row[field] = ''
+                        row[field] = ""
 
             self.indVar[str(len(self.indVar))] = row
 

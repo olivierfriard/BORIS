@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -25,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.98"
-__version_date__ = "2016-05-11"
+__version_date__ = "2016-05-17"
 __DEV__ = False
 BITMAP_EXT = "png"
 
@@ -2289,7 +2288,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if INDEPENDENT_VARIABLES in self.pj:
 
             observationWindow.twIndepVariables.setRowCount(0)
-            for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
+            for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
 
                 observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
@@ -2302,7 +2301,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # var type
                 item = QTableWidgetItem()
-                item.setText( self.pj[INDEPENDENT_VARIABLES][i][TYPE]  )
+                item.setText( self.pj[INDEPENDENT_VARIABLES][i]["type"])
                 item.setFlags(Qt.ItemIsEnabled)   # not modifiable
                 observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 1, item)
 
@@ -2315,10 +2314,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 elif mode == NEW:
                     txt = self.pj[INDEPENDENT_VARIABLES][i]["default value"]
                 else:
-                    txt = ''
+                    txt = ""
 
-                item.setText( txt )
-                observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2, item)
+                if self.pj[INDEPENDENT_VARIABLES][i]["type"] == SET_OF_VALUES:
+                    comboBox = QComboBox()
+                    comboBox.addItems(self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(","))
+                    if txt in self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(","):
+                        comboBox.setCurrentIndex(self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(",").index(txt))
+                    observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1, 2, comboBox)
+                else:
+                    item.setText(txt)
+                    observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2, item)
 
 
             observationWindow.twIndepVariables.resizeColumnsToContents()
@@ -2455,15 +2461,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # independent variables for observation
             self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES] = {}
-            for r in range(0, observationWindow.twIndepVariables.rowCount()):
+            for r in range(observationWindow.twIndepVariables.rowCount()):
 
                 # set dictionary as label (col 0) => value (col 2)
-                self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][ observationWindow.twIndepVariables.item(r, 0).text() ] = observationWindow.twIndepVariables.item(r, 2).text()
+                if observationWindow.twIndepVariables.item(r, 1).text() == SET_OF_VALUES:
+                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
+                else:
+                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = observationWindow.twIndepVariables.item(r, 2).text()
 
             # observation time offset
             if self.timeFormat == HHMMSS:
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = time2seconds(observationWindow.teTimeOffset.time().toString('hh:mm:ss.zzz'))
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = time2seconds(observationWindow.teTimeOffset_2.time().toString('hh:mm:ss.zzz'))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = time2seconds(observationWindow.teTimeOffset.time().toString(HHMMSSZZZ))
+                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = time2seconds(observationWindow.teTimeOffset_2.time().toString(HHMMSSZZZ))
 
             if self.timeFormat == S:
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = abs(Decimal( observationWindow.leTimeOffset.text() ))
@@ -4034,16 +4043,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.projectWindowGeometry:
             newProjectWindow.restoreGeometry( self.projectWindowGeometry)
 
-        newProjectWindow.setWindowTitle(mode + ' project')
+        newProjectWindow.setWindowTitle(mode + " project")
         newProjectWindow.tabProject.setCurrentIndex(0)   # project information
 
         newProjectWindow.obs = self.pj[ETHOGRAM]
         newProjectWindow.subjects_conf = self.pj[SUBJECTS]
 
-        if self.pj['time_format'] == S:
+        if self.pj["time_format"] == S:
             newProjectWindow.rbSeconds.setChecked(True)
 
-        if self.pj['time_format'] == HHMMSS:
+        if self.pj["time_format"] == HHMMSS:
             newProjectWindow.rbHMS.setChecked(True)
 
         if mode == NEW:
@@ -4053,21 +4062,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == EDIT:
 
-            if self.pj['project_name']:
+            if self.pj["project_name"]:
                 newProjectWindow.leProjectName.setText(self.pj["project_name"])
 
-            newProjectWindow.lbProjectFilePath.setText( 'Project file path: ' + self.projectFileName )
+            newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName )
 
             if self.pj['project_description']:
                 newProjectWindow.teDescription.setPlainText(self.pj["project_description"])
 
             if self.pj['project_date']:
 
-                q = QDateTime.fromString(self.pj['project_date'], 'yyyy-MM-ddThh:mm:ss')
+                q = QDateTime.fromString(self.pj["project_date"], "yyyy-MM-ddThh:mm:ss")
 
-                newProjectWindow.dteDate.setDateTime( q )
+                newProjectWindow.dteDate.setDateTime(q)
             else:
-                newProjectWindow.dteDate.setDateTime( QDateTime.currentDateTime() )
+                newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
 
             # load subjects in editor
@@ -4162,23 +4171,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
                     for idx, field in enumerate(tw_indVarFields):
-
-                        if field == TYPE:
-
+                        if field == "type":
                             comboBox = QComboBox()
-                            comboBox.addItems([NUMERIC, TEXT])
-
-                            comboBox.setCurrentIndex( 0 )
+                            comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
+                            comboBox.setCurrentIndex(0)
                             if self.pj[ INDEPENDENT_VARIABLES ][i][field] == TEXT:
-                                comboBox.setCurrentIndex( 1 )
-
+                                comboBox.setCurrentIndex(1)
+                            if self.pj[ INDEPENDENT_VARIABLES ][i][field] == SET_OF_VALUES:
+                                comboBox.setCurrentIndex(2)
                             newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, comboBox)
-
                         else:
-
                             item = QTableWidgetItem()
-                            item.setText( self.pj[INDEPENDENT_VARIABLES][i][field] )
-                            newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx,item)
+                            item.setText( self.pj[INDEPENDENT_VARIABLES][i][field])
+                            newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
 
