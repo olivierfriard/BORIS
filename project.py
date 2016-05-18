@@ -894,9 +894,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         check if subject not unique
         """
 
-        subjects = []
-        keys = []
-
+        subjects, keys = [], []
         self.lbSubjectsState.setText("")
 
         for r in range(self.twSubjects.rowCount()):

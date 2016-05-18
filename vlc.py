@@ -185,7 +185,6 @@ def find_lib():
 
             print("Check for system VLC")
             p = find_library("libvlc.dll")
-            print("p", p)
 
             if p is None:
                 print("VLC system library not found")
