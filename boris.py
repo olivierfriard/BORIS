@@ -4170,20 +4170,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
+                    signalMapper = QSignalMapper(self)
                     for idx, field in enumerate(tw_indVarFields):
                         if field == "type":
                             comboBox = QComboBox()
                             comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
-                            comboBox.setCurrentIndex(0)
+                            comboBox.setCurrentIndex(NUMERIC_idx)
                             if self.pj[ INDEPENDENT_VARIABLES ][i][field] == TEXT:
-                                comboBox.setCurrentIndex(1)
+                                comboBox.setCurrentIndex(TEXT_idx)
                             if self.pj[ INDEPENDENT_VARIABLES ][i][field] == SET_OF_VALUES:
-                                comboBox.setCurrentIndex(2)
+                                comboBox.setCurrentIndex(SET_OF_VALUES_idx)
                             newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, comboBox)
+                            signalMapper.setMapping(comboBox, newProjectWindow.twVariables.rowCount() - 1)
+                            comboBox.currentIndexChanged["int"].connect(signalMapper.map)
+                            signalMapper.mapped["int"].connect(newProjectWindow.variableTypeChanged)
+
                         else:
-                            item = QTableWidgetItem()
-                            item.setText( self.pj[INDEPENDENT_VARIABLES][i][field])
+                            item = QTableWidgetItem("")
+                            if field in self.pj[INDEPENDENT_VARIABLES][i]:
+                                item.setText( self.pj[INDEPENDENT_VARIABLES][i][field])
+                            if field == "possible values":
+                                item.setFlags(Qt.ItemIsEnabled)
+
                             newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
+
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
 

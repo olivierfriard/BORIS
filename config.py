@@ -126,8 +126,11 @@ SELECT1 = 'select1'
 FILTERED_BEHAVIORS = "filtered behaviors"
 
 NUMERIC = "numeric"
+NUMERIC_idx = 0
 TEXT = "text"
+TEXT_idx = 1
 SET_OF_VALUES = "value from set"
+SET_OF_VALUES_idx = 2
 
 INDEPENDENT_VARIABLES = 'independent_variables'
 OBSERVATIONS = 'observations'
