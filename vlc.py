@@ -149,21 +149,30 @@ def find_lib():
         else:
             syspath = sys.path[0]
 
-        print("Check for local VLC libraries in " + os.path.abspath(os.path.join(syspath, os.pardir )) + "\\VLC")
-        if os.path.isdir( os.path.abspath( os.path.join(syspath, os.pardir )) + "\\VLC"):
-            mem_dir = os.getcwd()
-            try:
-                os.chdir( os.path.abspath( os.path.join(syspath, os.pardir )) + "\\VLC" )
-            except:
-                print("VLC directory not accessible: {}".format(os.path.abspath(os.path.join(syspath, os.pardir)) + "\\VLC"))
-            try:
-                dll = ctypes.CDLL('libvlc.dll')
-                os.chdir(mem_dir)
-                plugin_path = os.path.abspath( os.path.join(syspath , os.pardir )) + "\\VLC"
-                print("Local VLC libraries found in " + plugin_path)
-            except OSError:
-                print('Local VLC libraries not found')
-                os.chdir(mem_dir)
+        print("check for VLC libraries in BORIS directory")
+        try:
+            dll = ctypes.CDLL("libvlc.dll")
+            plugin_path = syspath
+            print("VLC libraries found in " + syspath)
+        except:
+            print('VLC libraries not found')
+
+        if dll is None:
+            print("Check for local VLC libraries in " + os.path.abspath(os.path.join(syspath, os.pardir )) + "\\VLC")
+            if os.path.isdir( os.path.abspath( os.path.join(syspath, os.pardir )) + "\\VLC"):
+                mem_dir = os.getcwd()
+                try:
+                    os.chdir( os.path.abspath( os.path.join(syspath, os.pardir )) + "\\VLC" )
+                except:
+                    print("VLC directory not accessible: {}".format(os.path.abspath(os.path.join(syspath, os.pardir)) + "\\VLC"))
+                try:
+                    dll = ctypes.CDLL('libvlc.dll')
+                    os.chdir(mem_dir)
+                    plugin_path = os.path.abspath( os.path.join(syspath , os.pardir )) + "\\VLC"
+                    print("Local VLC libraries found in " + plugin_path)
+                except OSError:
+                    print('Local VLC libraries not found')
+                    os.chdir(mem_dir)
 
         # search in boris src directory
         if dll is None:
