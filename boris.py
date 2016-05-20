@@ -44,7 +44,6 @@ except:
     sys.exit()
 
 import qrc_boris
-from config import *
 
 video, live = 0, 1
 
@@ -77,6 +76,8 @@ from utilities import *
 import tablib
 import observations_list
 import plot_spectrogram
+
+from config import *
 
 def bytes_to_str(b):
     """
@@ -3199,8 +3200,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else:  # no modifiers
 
-                    print(POINT)
-                    print(type(POINT))
                     if POINT in self.eventType(behavior).upper():
 
                         if len(selectedObservations) > 1:

@@ -23,11 +23,12 @@ This file is part of BORIS.
 """
 
 
-from config import *
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from add_modifier_ui import Ui_Dialog
 import dialog
+from config import *
 
 class addModifierDialog(QDialog, Ui_Dialog):
 
