@@ -3199,6 +3199,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 else:  # no modifiers
 
+                    print(POINT)
+                    print(type(POINT))
                     if POINT in self.eventType(behavior).upper():
 
                         if len(selectedObservations) > 1:
