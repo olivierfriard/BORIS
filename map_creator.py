@@ -22,8 +22,14 @@ This file is part of BORIS.
 
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import decimal
 from decimal import getcontext
 import json
@@ -413,7 +419,10 @@ class MapCreatorWindow(QMainWindow):
                         newPolygon.append(QPoint(p[0], p[1]))
 
                     # draw polygon a red polygon
-                    self.closedPolygon = QGraphicsPolygonItem(newPolygon, None, None)
+                    if QT_VERSION_STR[0] == "4":
+                        self.closedPolygon = QGraphicsPolygonItem(newPolygon, None, None)
+                    else:
+                        self.closedPolygon = QGraphicsPolygonItem(newPolygon)
 
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
 
@@ -526,8 +535,10 @@ class MapCreatorWindow(QMainWindow):
             self.cancelMap()
 
 
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
 
         if fileName:
 
@@ -566,7 +577,10 @@ class MapCreatorWindow(QMainWindow):
                 clr.setRgba( self.areasList[ areaCode ]['color'] )
 
                 # draw polygon
-                polygon = QGraphicsPolygonItem(None, None)
+                if QT_VERSION_STR[0] == "4":
+                    polygon = QGraphicsPolygonItem(None, None)
+                else:
+                    polygon = QGraphicsPolygonItem()
 
                 polygon.setPolygon(newPolygon)
 
@@ -628,8 +642,10 @@ class MapCreatorWindow(QMainWindow):
 
 
     def saveAsMap_clicked(self):
-        fd = QFileDialog(self)
-        self.fileName = fd.getSaveFileName(self, 'Save coding map as', '' , 'BORIS MAP (*.boris_map);;All files (*)')
+        if QT_VERSION_STR[0] == "4":
+            self.fileName = QFileDialog(self).getSaveFileName(self, 'Save coding map as', '' , 'BORIS MAP (*.boris_map);;All files (*)')
+        else:
+            self.fileName, _ = fd.getSaveFileName(self, 'Save coding map as', '' , 'BORIS MAP (*.boris_map);;All files (*)')
 
         if self.fileName:
             if os.path.splitext(self.fileName)[1] != '.boris_map':
@@ -640,8 +656,11 @@ class MapCreatorWindow(QMainWindow):
     def saveMap_clicked(self):
 
         if not self.fileName:
-            fd = QFileDialog(self)
-            self.fileName = fd.getSaveFileName(self, 'Save coding map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
+            if QT_VERSION_STR[0] == "4":
+                self.fileName = QFileDialog(self).getSaveFileName(self, 'Save coding map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
+            else:
+                self.fileName, _ = QFileDialog(self).getSaveFileName(self, 'Save coding map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
+
 
             if self.fileName and os.path.splitext(self.fileName)[1] != '.boris_map':
                 self.fileName += '.boris_map'
@@ -803,8 +822,11 @@ class MapCreatorWindow(QMainWindow):
 
         maxSize = 512
 
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
+
         if fileName:
             self.bitmapFileName = fileName
 

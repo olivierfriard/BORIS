@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -22,9 +22,16 @@ This file is part of BORIS.
 
 """
 
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import logging
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+
 import os
 import tablib
 
@@ -93,7 +100,10 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "","Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "","Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+        else:
+            fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "","Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
 
         if fileName:
 

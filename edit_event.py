@@ -24,12 +24,21 @@ This file is part of BORIS.
 
 
 import logging
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
 
 from config import *
 
-from edit_event_ui import Ui_Form
+if QT_VERSION_STR[0] == "4":
+    from edit_event_ui import Ui_Form
+else:
+    from edit_event_ui5 import Ui_Form
 
 class DlgEditEvent(QDialog, Ui_Form):
 

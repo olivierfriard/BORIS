@@ -24,8 +24,14 @@ Copyright 2012-2016 Olivier Friard
 
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import os
 import time
 import hashlib
@@ -37,7 +43,10 @@ import plot_spectrogram
 import glob
 import logging
 
-from observation_ui import Ui_Form
+if QT_VERSION_STR[0] == "4":
+    from observation_ui import Ui_Form
+else:
+    from observation_ui5 import Ui_Form
 
 out = ""
 fps = 0
@@ -206,7 +215,10 @@ class Observation(QDialog, Ui_Form):
             return
 
         os.chdir(os.path.expanduser("~"))
-        fileName = QFileDialog(self).getOpenFileName(self, "Add media file", "", "All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Add media file", "", "All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Add media file", "", "All files (*)")
 
         if fileName:
             self.check_media(fileName, nPlayer)
@@ -285,4 +297,4 @@ class Observation(QDialog, Ui_Form):
                     del self.mediaFPS[mediaPath]
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.twVideo1.rowCount() > 0 )
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.twVideo1.rowCount() > 0)

@@ -21,6 +21,13 @@ Copyright 2012-2016 Olivier Friard
   MA 02110-1301, USA.
 
 """
+
+try:
+    from PyQt5.QtCore import *
+except:
+    from PyQt4.QtCore import *
+
+
 import math
 import re
 import subprocess
@@ -29,8 +36,7 @@ import sys
 import os
 import logging
 from config import *
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+
 from decimal import *
 import math
 
@@ -53,7 +59,7 @@ def bestTimeUnit(t: int) -> str:
 
 
 
-def distance( p1,p2 ):
+def distance(p1, p2):
     """
     distance between 2 points
     """

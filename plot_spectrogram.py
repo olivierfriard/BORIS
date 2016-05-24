@@ -31,8 +31,14 @@ http://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-
 
 """
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import sys
 import os
 import wave
@@ -69,7 +75,10 @@ class Spectrogram(QWidget):
 
         self.scene.setSceneRect(0, 0, 100, 100)
 
-        self.line = QGraphicsLineItem(0, 0, 0, self.h, scene = self.scene)
+        if QT_VERSION_STR[0] == "4":
+            self.line = QGraphicsLineItem(0, 0, 0, self.h, scene = self.scene)
+        else:
+            self.line = QGraphicsLineItem(0, 0, 0, self.h)
         self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         self.line.setZValue(100.0)
         self.scene.addItem(self.line)

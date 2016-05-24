@@ -23,8 +23,13 @@ This file is part of BORIS.
 """
 
 import logging
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
 
 from config import *
 import dialog
@@ -108,7 +113,10 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            fileName = QFileDialog(self).getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
+            if QT_VERSION_STR[0] == "4":
+                fileName = QFileDialog(self).getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
+            else:
+                fileName, _ = QFileDialog(self).getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
             if fileName:
                 with open(fileName, "w") as f:
                     f.write(self.pte.toPlainText())

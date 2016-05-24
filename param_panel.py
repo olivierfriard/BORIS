@@ -22,13 +22,23 @@ This file is part of BORIS.
 
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import os
 import logging
 
 from config import *
-from param_panel_ui import Ui_Dialog
+
+if QT_VERSION_STR[0] == "4":
+    from param_panel_ui import Ui_Dialog
+else:
+    from param_panel_ui5 import Ui_Dialog
 
 class Param_panel(QDialog, Ui_Dialog):
 

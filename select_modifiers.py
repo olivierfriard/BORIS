@@ -23,8 +23,15 @@ This file is part of BORIS.
 """
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
+
 import re
 import config
 
@@ -62,7 +69,10 @@ class ModifiersRadioButton(QDialog):
 
             item = QListWidgetItem("None")
             lw.addItem(item)
-            lw.setItemSelected(item, True)
+            if QT_VERSION_STR[0] == "4":
+                lw.setItemSelected(item, True)
+            else:
+                item.setSelected(True)
 
             for modifier in modifiers:
 
@@ -71,7 +81,12 @@ class ModifiersRadioButton(QDialog):
 
                 if currentModifierList != [""]:
                     if re.sub(" \(.\)", "", modifier) == currentModifierList[idx]:
-                        lw.setItemSelected(item, True)
+
+                        if QT_VERSION_STR[0] == "4":
+                            lw.setItemSelected(item, True)
+                        else:
+                            item.setSelected(True)
+
 
             Vlayout.addWidget(lw)
 
@@ -107,13 +122,23 @@ class ModifiersRadioButton(QDialog):
 
                         if ek in config.function_keys:
                             if "({})".format(config.function_keys[ek]) in widget.item(index).text().upper():
-                                widget.setItemSelected(widget.item(index), True)
+                                if QT_VERSION_STR[0] == "4":
+                                    widget.setItemSelected(widget.item(index), True)
+
+                                else:
+                                    widget.item(index).setSelected(True)
+
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
 
                         if ek < 1114112 and "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
-                            widget.setItemSelected(widget.item(index), True)
+                            
+                            if QT_VERSION_STR[0] == "4":
+                                widget.setItemSelected(widget.item(index), True)
+                            else:
+                                widget.item(index).setSelected(True)
+
                             # close dialog if one set of modifiers
                             if self.modifiersSetNumber == 1:
                                 self.accept()

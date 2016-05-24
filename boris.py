@@ -37,11 +37,19 @@ if platform.python_version() < "3.4":
     sys.exit()
 
 try:
-    from PyQt4.QtCore import *
-    from PyQt4.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+
+    from PyQt5.QtWidgets import *
 except:
-    logging.critical("PyQt4 not installed!")
-    sys.exit()
+    logging.critical("PyQt5 not installed!\nTry PyQt4")
+    try:
+        from PyQt4.QtCore import *
+        from PyQt4.QtGui import *
+    except:
+        logging.critical("PyQt4 not installed!\nTry PyQt4")
+        sys.exit()
+
 
 import qrc_boris
 
@@ -63,7 +71,10 @@ import glob
 import statistics
 
 import dialog
-from boris_ui import *
+if QT_VERSION_STR[0] == "4":
+    from boris_ui import *
+else:
+    from boris_ui5 import *
 from edit_event import *
 from project import *
 import preferences
@@ -3934,8 +3945,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
 
         if fileName:
             self.open_project_json(fileName)
@@ -4296,7 +4309,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project asking for a new file name
         """
-        projectNewFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            projectNewFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
+        else:
+            projectNewFileName, filtr = QFileDialog(self).getSaveFileName(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
         if not projectNewFileName:
             return "Not saved"
         else:
@@ -4321,7 +4337,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 txt = self.pj['project_name'] + '.boris'
             os.chdir( os.path.expanduser("~"))
-            self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
+            if QT_VERSION_STR[0] == "4":
+                self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
+            else:
+                self.projectFileName, filtr = QFileDialog(self).getSaveFileName(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
 
             if not self.projectFileName:
                 return "not saved"
@@ -4555,7 +4574,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
 
         if format_ == "sql":
-            fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
+            if QT_VERSION_STR[0] == "4":
+                fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
+            else:
+                fileName, _ = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
             if includeMediaInfo == NO:
                 out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             else:
@@ -4565,7 +4587,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         if format_ == "tab":
-            fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
+            if QT_VERSION_STR[0] == "4":
+                fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
+            else:
+                fileName, _ = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
             if includeMediaInfo == YES:
                 out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
                 template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
@@ -6466,7 +6491,10 @@ item []:
 
                 defaultName = obsId + "." + outputFormat
 
-                fileName = fd.getSaveFileName(self, "Export events", defaultName, defaultFilter)
+                if QT_VERSION_STR[0] == "4":
+                    fileName = fd.getSaveFileName(self, "Export events", defaultName, defaultFilter)
+                else:
+                    fileName, _ = fd.getSaveFileName(self, "Export events", defaultName, defaultFilter)
                 if not fileName:
                     return
             else:
@@ -6635,7 +6663,10 @@ item []:
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
         #cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 

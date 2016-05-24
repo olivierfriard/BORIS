@@ -23,10 +23,19 @@ This file is part of BORIS.
 """
 
 
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from add_modifier_ui import Ui_Dialog
+if QT_VERSION_STR[0] == "4":
+    from add_modifier_ui import Ui_Dialog
+else:
+    from add_modifier_ui5 import Ui_Dialog
+
 import dialog
 from config import *
 
@@ -243,9 +252,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.leModifier.clear()
 
             self.tabMem = tabIndex
-
-            print(tabIndex)
-            print(self.modifiersSets_list)
 
             self.lwModifiers.addItems(self.modifiersSets_list[tabIndex])
 

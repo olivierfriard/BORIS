@@ -23,14 +23,24 @@ This file is part of BORIS.
 """
 
 import logging
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import json
 
 from config import *
 from add_modifier import *
 import dialog
-from project_ui import Ui_dlgProject
+
+if QT_VERSION_STR[0] == "4":
+    from project_ui import Ui_dlgProject
+else:
+    from project_ui5 import Ui_dlgProject
 
 
 class ExclusionMatrix(QDialog):
@@ -257,8 +267,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         import independent variables from another project
         """
 
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, "Import independent variables from project file", "", "Project files (*.boris);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Import independent variables from project file", "", "Project files (*.boris);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import independent variables from project file", "", "Project files (*.boris);;All files (*)")
         if fileName:
 
             with open(fileName, "r") as infile:
@@ -318,8 +330,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         import subjects from another project
         """
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, "Import subjects from project file", "", "Project files (*.boris);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "", "Project files (*.boris);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "", "Project files (*.boris);;All files (*)")
 
         if fileName:
 
@@ -365,8 +379,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         import behaviors from another project
         """
 
-        fd = QFileDialog(self)
-        fileName = fd.getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
         if fileName:
 
             with open(fileName, 'r') as infile:
@@ -551,8 +567,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == CANCEL:
                 return
 
-        fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
-
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
         if fileName:
 
             if self.twBehaviors.rowCount() and response == 'Replace':
@@ -623,7 +641,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == CANCEL:
                 return
 
-        fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
 
         if fileName:
 
@@ -822,7 +843,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         if "with coding map" in observation_types[combobox.currentIndex()]:
             # let user select a coding maop
             fd = QFileDialog(self)
-            fileName = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
+            if QT_VERSION_STR[0] == "4":
+                fileName = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
+            else:
+                fileName, _ = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
 
             if fileName:
                 import json

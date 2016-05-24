@@ -22,13 +22,23 @@ This file is part of BORIS.
 
 """
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
+
 import os
 
 from config import *
 from utilities import *
-from preferences_ui import Ui_prefDialog
+
+if QT_VERSION_STR[0] == "4":
+    from preferences_ui import Ui_prefDialog
+else:
+    from preferences_ui5 import Ui_prefDialog
 
 class Preferences(QDialog, Ui_prefDialog):
 

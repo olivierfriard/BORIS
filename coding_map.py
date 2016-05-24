@@ -11,12 +11,12 @@ This file is part of BORIS.
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   any later version.
-  
+
   BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
@@ -24,8 +24,13 @@ This file is part of BORIS.
 
 codeSeparator = ','
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+try:
+    from PyQt5.QtGui import *
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
 
 import json
 import binascii
@@ -42,7 +47,7 @@ class codingMapWindowClass(QDialog):
         _start=0
         elList = []
         points = []
-        
+
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
             self.setScene(QGraphicsScene(self))
@@ -85,7 +90,7 @@ class codingMapWindowClass(QDialog):
         self.btDone.setVisible(True)
 
         hBoxLayout.addWidget(self.btDone)
-        
+
 
         #Vlayout.addWidget(self.btDone)
         Vlayout.addLayout(hBoxLayout)
@@ -139,8 +144,8 @@ class codingMapWindowClass(QDialog):
 
         pixmap = QPixmap()
         pixmap.loadFromData(bitmapContent)
-        
-        self.view.setSceneRect(0, 0, pixmap.size().width(), pixmap.size().height()) 
+
+        self.view.setSceneRect(0, 0, pixmap.size().width(), pixmap.size().height())
         pixItem = QGraphicsPixmapItem(pixmap)
         pixItem.setPos(0,0)
         self.view.scene().addItem(pixItem)
@@ -157,13 +162,13 @@ class codingMapWindowClass(QDialog):
 
             # draw polygon
             polygon = QGraphicsPolygonItem( None, None)
-            
+
             polygon.setPolygon(newPolygon)
-    
+
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
-    
+
             polygon.setBrush( QBrush(clr, Qt.SolidPattern))
-    
+
             self.view.scene().addItem( polygon )
             self.polygonsList2[ area ] = polygon
 
@@ -174,10 +179,10 @@ if __name__ == '__main__':
 
     import sys
     app = QApplication(sys.argv)
-    
+
     if len(sys.argv)>1:
         cm = json.loads( open( sys.argv[1] , 'r').read() )
-    
+
         codingMapWindow = codingMapWindowClass(cm)
         codingMapWindow.resize(640, 640)
         codingMapWindow.show()
