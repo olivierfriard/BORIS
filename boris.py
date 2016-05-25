@@ -1474,8 +1474,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
         out, error = p.communicate()
-        out = out.decode('utf-8')
-        error = error.decode('utf-8')
+        out, error = out.decode('utf-8'), error.decode('utf-8')
 
         if error:
             logging.debug('ffmpeg error: {0}'.format( error ))
@@ -1483,10 +1482,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.imagesList.update( [ '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) ] )
 
 
+        '''
         img = '%(imageDir)s%(sep)sBORIS_%(fileName)s-%(second)d_%(frame)d.%(extension)s' % \
               {'imageDir': self.imageDirectory, 'sep': os.sep, 'fileName': md5FileName, 'second':  int(frameCurrentMedia / fps),
                'frame':( frameCurrentMedia - int(frameCurrentMedia / fps) * fps) + 1,
                'extension': BITMAP_EXT}
+
+        '''
+
+        img = "{imageDir}{sep}BORIS_{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
+                                                                                    sep=os.sep,
+                                                                                    fileName=md5FileName,
+                                                                                    second=int(frameCurrentMedia / fps),
+                                                                                    frame=int((frameCurrentMedia - int(frameCurrentMedia / fps) * fps) + 1),
+                                                                                    extension=BITMAP_EXT)
 
         if not os.path.isfile(img):
             logging.warning("image not found: {0}".format(img))
@@ -5349,14 +5358,18 @@ item []:
         The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
         <br>
         See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>
-        <p>Python {python_ver} - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br><br>
+        <p>Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br>
+        CPU type: {cpu_info}<br>
+        <br>
         {players}""".format(prog_name=programName,
                             ver=ver,
                             date=__version_date__,
                             python_ver=platform.python_version(),
+                            architecture="64-bit" if sys.maxsize > 2**32 else "32-bit",
                             pyqt_ver=PYQT_VERSION_STR,
                             system=platform.system(),
                             qt_ver=QT_VERSION_STR,
+                            cpu_info=platform.machine(),
                             players="<br>".join(players)))
 
 
