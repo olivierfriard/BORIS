@@ -26,10 +26,32 @@ This file is part of BORIS.
 __version__ = "2.98"
 __version_date__ = "2016-05-17"
 __DEV__ = False
-BITMAP_EXT = "png"
+BITMAP_EXT = "jpg"
 
 import sys
 import logging
+
+
+# check if argument
+from optparse import OptionParser
+usage = "usage: %prog [options]"
+parser = OptionParser(usage=usage)
+
+parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
+parser.add_option("-v", "--version", action = "store_true", default = False, dest = "version", help = "Print version")
+parser.add_option("-n", "--nosplashscreen", action = "store_true", default = False, help = "No splash screen")
+
+(options, args) = parser.parse_args()
+
+if options.version:
+    print("version {0} release date: {1}".format(__version__, __version_date__))
+    sys.exit(0)
+
+if options.debug:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
+
 import platform
 
 if platform.python_version() < "3.4":
@@ -42,10 +64,11 @@ try:
 
     from PyQt5.QtWidgets import *
 except:
-    logging.critical("PyQt5 not installed!\nTry PyQt4")
+    logging.info("PyQt5 not installed!\nTrying with PyQt4")
     try:
         from PyQt4.QtCore import *
         from PyQt4.QtGui import *
+
     except:
         logging.critical("PyQt4 not installed!\nTry PyQt4")
         sys.exit()
@@ -1431,6 +1454,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("FFmpegTimerOut function")
 
+        global BITMAP_EXT
+
         fps = list(self.fps.values())[0]
 
         logging.debug("fps {0}".format(fps))
@@ -1470,7 +1495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fileName=md5FileName,
         extension=BITMAP_EXT)
 
-        logging.debug('ffmpeg command: {0}'.format(ffmpeg_command))
+        logging.debug("ffmpeg command: {0}".format(ffmpeg_command))
 
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
         out, error = p.communicate()
@@ -1481,14 +1506,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.imagesList.update( [ '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) ] )
 
-
-        '''
-        img = '%(imageDir)s%(sep)sBORIS_%(fileName)s-%(second)d_%(frame)d.%(extension)s' % \
-              {'imageDir': self.imageDirectory, 'sep': os.sep, 'fileName': md5FileName, 'second':  int(frameCurrentMedia / fps),
-               'frame':( frameCurrentMedia - int(frameCurrentMedia / fps) * fps) + 1,
-               'extension': BITMAP_EXT}
-
-        '''
 
         img = "{imageDir}{sep}BORIS_{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                     sep=os.sep,
@@ -1502,12 +1519,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         self.pixmap = QtGui.QPixmap(img)
+        if self.pixmap.isNull():
+            BITMAP_EXT = "png"
+
         self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
         self.FFmpegGlobalFrame = requiredFrame
 
         currentTime = self.getLaps() * 1000
 
-        self.lbTime.setText( "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
+        self.lbTime.setText("{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
                              currentMediaName=currentMedia,
                              currentTime=self.convertTime(currentTime / 1000),
                              totalTime=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)),
@@ -5337,6 +5357,8 @@ item []:
     def actionAbout_activated(self):
         """ about dialog """
 
+        print(logging.getLogger().getEffectiveLevel())
+
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
         else:
@@ -7023,20 +7045,6 @@ item []:
 
 if __name__=="__main__":
 
-    # check if argument
-    from optparse import OptionParser
-    usage = "usage: %prog [options]"
-    parser = OptionParser(usage=usage)
-
-    parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
-    parser.add_option("-v", "--version", action = "store_true", default = False, dest = "version", help = "Print version")
-    parser.add_option("-n", "--nosplashscreen", action = "store_true", default = False, help = "No splash screen")
-
-    (options, args) = parser.parse_args()
-
-    if options.version:
-        print("version: {0}".format(__version__))
-        sys.exit(0)
 
     app = QApplication(sys.argv)
 
@@ -7044,17 +7052,13 @@ if __name__=="__main__":
 
     if not options.nosplashscreen:
         start = time.time()
-        splash = QSplashScreen(QPixmap( os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
+        splash = QSplashScreen(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
         splash.show()
         splash.raise_()
         while time.time() - start < 1:
             time.sleep(0.001)
             app.processEvents()
 
-    if options.debug:
-        logging.basicConfig(level=logging.DEBUG)
-    else:
-        logging.basicConfig(level=logging.INFO)
 
     availablePlayers = []
 
