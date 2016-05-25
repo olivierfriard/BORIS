@@ -24,8 +24,10 @@ Copyright 2012-2016 Olivier Friard
 
 try:
     from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
 except:
     from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
 
 
 import math
@@ -185,9 +187,9 @@ def test_ffmpeg_path(FFmpegPath):
         return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
 
     if (b'ffmpeg version' not in out) and (b'ffmpeg version' not in error):
-        return False, 'It seems that <b>{}</b> is not the correct FFmpeg program...<br>See https://www.ffmpeg.org'.format(FFmpegPath  )
+        return False, "FFmpeg is required but it was not found...<br>See https://www.ffmpeg.org"
 
-    return True, ''
+    return True, ""
 
 
 def playWithVLC(fileName):
