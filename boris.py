@@ -24,12 +24,17 @@ This file is part of BORIS.
 
 
 __version__ = "2.98"
-__version_date__ = "2016-05-17"
+__version_date__ = "2016-05-27"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
+
+import os
 import sys
-import logging
+import platform
+if sys.platform == "darwin": # for MacOS
+    os.environ["LC_ALL"] = "en_US.UTF-8"
+
 
 
 # check if argument
@@ -47,12 +52,15 @@ if options.version:
     print("version {0} release date: {1}".format(__version__, __version_date__))
     sys.exit(0)
 
+
+# set logging parameters
+import logging
 if options.debug:
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.INFO)
 
-import platform
+
 
 if platform.python_version() < "3.4":
     logging.critical("BORIS requires Python 3.4+! You are using v. {}")
@@ -79,7 +87,6 @@ import qrc_boris
 video, live = 0, 1
 
 import time
-import os
 import json
 from decimal import *
 import re
@@ -4577,9 +4584,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             for idx, sub in enumerate(subtitles[mediaIdx]):
                                 f.write("{0}{3}{1}{3}{2}{3}{3}".format(idx + 1, sub[0], sub[1], os.linesep))
                 except:
-                    errorMsg = sys.exc_info()[1].strerror
+                    errorMsg = sys.exc_info()[1]
                     logging.critical(errorMsg)
-                    QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
         self.statusbar.showMessage("Subtitles file(s) created in {} directory".format(exportDir), 0)
@@ -4694,9 +4701,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             with open(fileName, "w") as f:
                 f.write( out )
         except:
-            errorMsg = sys.exc_info()[1].strerror
+            errorMsg = sys.exc_info()[1]
             logging.critical(errorMsg)
-            QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
         if flagUnpairedEventFound:
@@ -4843,9 +4850,9 @@ item []:
                 self.statusbar.showMessage("Events exported successfully", 10000)
 
             except:
-                errorMsg = sys.exc_info()[1].strerror
+                errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
 
@@ -6633,8 +6640,6 @@ item []:
 
                     fields.append(event[EVENT_SUBJECT_FIELD_IDX])
                     fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-                    #fields.append(event[EVENT_MODIFIER_FIELD_IDX])
-                    print("modifirs: #{}#".format(event[EVENT_MODIFIER_FIELD_IDX]))
 
                     modifiers = event[EVENT_MODIFIER_FIELD_IDX].split("|")
                     while len(modifiers) < max_modifiers:
@@ -6648,9 +6653,19 @@ item []:
 
                     rows.append( fields )
 
-            maxLen = max( [len(r) for r in rows])
+            maxLen = max([len(r) for r in rows])
             data = tablib.Dataset()
-            data.title = obsId
+
+            # check if worksheet name will be > 31 char
+            if outputFormat == "xls":
+                if len(obsId) > 31:
+                    data.title = obsId[0:31]
+                    QMessageBox.warning(None, programName, ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
+                                                            "The limit on worksheet name length is 31 characters").format(obsId, obsId[0:31]),
+                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+            else:
+                data.title = obsId
 
             for row in rows:
                 data.append( complete(row, maxLen))
@@ -6665,10 +6680,18 @@ item []:
                 if outputFormat == "xls":
                     with open(fileName, "wb") as f:
                         f.write(data.xls)
+                '''
+                if outputFormat == "xlsx":
+                    with open(fileName, "wb") as f:
+                        f.write(data.xlsx)
+                '''
+
             except:
-                errorMsg = sys.exc_info()[1].strerror
+                #errorMsg = sys.exc_info()[1].strerror
+                errorMsg = sys.exc_info()[1]
+
                 logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             del data
 
@@ -6762,9 +6785,9 @@ item []:
                             if s:
                                 outFile.write(s + os.linesep)
             except:
-                errorMsg = sys.exc_info()[1].strerror
+                errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, errorMsg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def closeEvent(self, event):
