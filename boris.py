@@ -4607,7 +4607,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+        includeMediaInfo = None
+        for obsId in selectedObservations:
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+                includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+                break
 
         if format_ == "sql":
             if QT_VERSION_STR[0] == "4":
@@ -4620,13 +4624,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 out = ""
                 pass # TODO
             out += "BEGIN TRANSACTION;" + os.linesep
-            template = """INSERT INTO events ( observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop ) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
+            template = """INSERT INTO events (observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         if format_ == "tab":
             if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
+                fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "", "Events file (*.tsv *.txt);;All files (*)")
             else:
-                fileName, _ = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "" , "Events file (*.tsv *.txt);;All files (*)")
+                fileName, _ = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "", "Events file (*.tsv *.txt);;All files (*)")
             if includeMediaInfo == YES:
                 out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
                 template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
@@ -4641,9 +4645,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         flagUnpairedEventFound = False
 
         for obsId in selectedObservations:
+
             duration1 = []   # in seconds
-            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+                try:
+                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+                        duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+                except:
+                    pass
 
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
@@ -4660,18 +4669,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     for idx, row in enumerate(rows):
 
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                        if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                            mediaFileString = self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]
+                            fpsString = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]]
+                        else:
+                            mediaFileString = "LIVE"
+                            fpsString = "NA"
 
                         if POINT in self.eventType(behavior).upper():
 
-                            out += template.format( observation=obsId,
+                            out += template.format(observation=obsId,
                                                     date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
-                                                    media_file=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
+                                                    media_file=mediaFileString,
                                                     total_length=sum(duration1),
-                                                    fps=self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]],
+                                                    fps=fpsString,
                                                     subject=subject,
                                                     behavior=behavior,
-                                                    modifiers=row["modifiers"],
+                                                    modifiers=row["modifiers"].strip(),
                                                     event_type=POINT,
                                                     start=row["occurence"],
                                                     stop=0,
@@ -4680,14 +4695,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                out += template.format( observation=obsId,
+                                out += template.format(observation=obsId,
                                                         date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
-                                                        media_file=self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx],
+                                                        media_file=mediaFileString,
                                                         total_length=sum(duration1),
-                                                        fps=self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]],
+                                                        fps=fpsString,
                                                         subject=subject,
                                                         behavior=behavior,
-                                                        modifiers=row["modifiers"],
+                                                        modifiers=row["modifiers"].strip(),
                                                         event_type=STATE,
                                                         start=row["occurence"],
                                                         stop=rows[idx + 1]["occurence"],
@@ -6513,7 +6528,11 @@ item []:
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+        includeMediaInfo = None
+        for obsId in selectedObservations:
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+                includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+                break
 
         fd = QFileDialog(self)
         if len(selectedObservations) > 1:  # choose directory for exporting more observations
@@ -6618,8 +6637,12 @@ item []:
             rows.append(header)
 
             duration1 = []   # in seconds
-            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+                try:
+                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+                        duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+                except:
+                    pass
 
             for event in eventsWithStatus:
 
