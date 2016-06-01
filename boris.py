@@ -36,7 +36,6 @@ if sys.platform == "darwin": # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
 
 
-
 # check if argument
 from optparse import OptionParser
 usage = "usage: %prog [options]"
@@ -69,7 +68,6 @@ if platform.python_version() < "3.4":
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
-
     from PyQt5.QtWidgets import *
 except:
     logging.info("PyQt5 not installed!\nTrying with PyQt4")
@@ -80,7 +78,6 @@ except:
     except:
         logging.critical("PyQt4 not installed!\nTry PyQt4")
         sys.exit()
-
 
 import qrc_boris
 

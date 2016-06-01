@@ -248,28 +248,33 @@ def find_lib():
         else:
             syspath = sys.path[0]
 
-        print("Check for VLC libraries in " + os.path.abspath(os.path.join(syspath, os.pardir )) + "/VLC/lib")
-        if os.path.exists( os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib" ):
+        print("Check for VLC libraries in " + syspath + "/VLC/lib")
+        if os.path.exists(syspath + "/VLC/lib/libvlc.dylib" ):
             try:
-                dll = ctypes.CDLL(os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib")
-                plugin_path = os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/plugins"
-                #os.environ["VLC_PLUGIN_PATH"] = os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/plugins"
+                dll = ctypes.CDLL(syspath + "/VLC/lib/libvlc.dylib")
+                plugin_path = syspath + "/VLC/plugins"
+                os.environ["VLC_PLUGIN_PATH"] = plugin_path
+                print("VLC libraries found in {}/VLC/lib".format(syspath))
             except:
-                print("error on {} library".format(os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib"))
+                print("error on {} library".format(syspath + "/VLC/plugins"))
 
-            '''d += 'modules'
-            if os.path.isdir(d):
-                plugin_path = d
-            '''
 
         if dll is None:
-            print("Check for VLC libraries in " + syspath + "/VLC/lib")
-            if os.path.exists( syspath + "/VLC/lib/libvlc.dylib" ):
+            print("Check for VLC libraries in {}/VLC/lib".format(os.path.abspath(os.path.join(syspath, os.pardir ))))
+            if os.path.exists( os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib" ):
                 try:
-                    dll = ctypes.CDLL(syspath + "/VLC/lib/libvlc.dylib")
-                    plugin_path = syspath + "/VLC/plugins"
+                    dll = ctypes.CDLL(os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib")
+                    plugin_path = os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/plugins"
+                    os.environ["VLC_PLUGIN_PATH"] = plugin_path
+                    print("VLC libraries found in {}/VLC/lib".format(os.path.abspath(os.path.join(syspath, os.pardir ))))
+
                 except:
-                    print("error on {} library".format(syspath + "/VLC/plugins"))
+                    print("error on {} library".format(os.path.abspath(os.path.join(syspath, os.pardir)) + "/VLC/lib/libvlc.dylib"))
+
+                '''d += 'modules'
+                if os.path.isdir(d):
+                    plugin_path = d
+                '''
 
 
         if dll is None:  # search system
