@@ -173,15 +173,15 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 
             if index.row() == ROW:
 
-                polygonTriangle = QtGui.QPolygon(3)
+                polygonTriangle = QPolygon(3)
                 polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
                 polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y()-5))
                 polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y()+5))
 
                 painter.save()
                 painter.setRenderHint(painter.Antialiasing)
-                painter.setBrush(QtGui.QBrush(QtGui.QColor(QtCore.Qt.red)))
-                painter.setPen(QtGui.QPen(QtGui.QColor(QtCore.Qt.red)))
+                painter.setBrush(QBrush(QColor(QtCore.Qt.red)))
+                painter.setPen(QPen(QColor(QtCore.Qt.red)))
                 painter.drawPolygon(polygonTriangle)
                 painter.restore()
 
@@ -384,7 +384,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         create tab with widget for live observation
         """
 
-        self.liveLayout = QtGui.QGridLayout()
+        self.liveLayout = QGridLayout()
         self.textButton = QPushButton("Start live observation")
         self.textButton.clicked.connect(self.start_live_observation)
         self.liveLayout.addWidget(self.textButton)
@@ -402,7 +402,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.liveLayout.addWidget(self.lbTimeLive)
 
-        self.liveTab = QtGui.QWidget()
+        self.liveTab = QWidget()
         self.liveTab.setLayout(self.liveLayout)
 
         self.toolBox.insertItem(2, self.liveTab, 'Live')
@@ -1525,7 +1525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.warning("image not found: {0}".format(img))
             return
 
-        self.pixmap = QtGui.QPixmap(img)
+        self.pixmap = QPixmap(img)
         if self.pixmap.isNull():
             BITMAP_EXT = "png"
 
@@ -1768,20 +1768,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         app.processEvents()
 
-        self.videoframe2 = QtGui.QFrame()
+        self.videoframe2 = QFrame()
         self.palette2 = self.videoframe2.palette()
-        self.palette2.setColor (QtGui.QPalette.Window, QtGui.QColor(0,0,0))
+        self.palette2.setColor (QPalette.Window, QColor(0,0,0))
         self.videoframe2.setPalette(self.palette2)
         self.videoframe2.setAutoFillBackground(True)
 
-        self.volumeslider2 = QtGui.QSlider(QtCore.Qt.Vertical, self)
+        self.volumeslider2 = QSlider(QtCore.Qt.Vertical, self)
         self.volumeslider2.setMaximum(100)
         self.volumeslider2.setValue(self.mediaplayer2.audio_get_volume())
         self.volumeslider2.setToolTip("Volume")
 
         self.volumeslider2.sliderMoved.connect(self.setVolume2)
 
-        self.video2layout = QtGui.QHBoxLayout()
+        self.video2layout = QHBoxLayout()
         self.video2layout.addWidget(self.videoframe2)
         self.video2layout.addWidget(self.volumeslider2)
 
