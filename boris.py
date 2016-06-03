@@ -1955,7 +1955,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # for mac always embed player
         if sys.platform == "darwin": # for MacOS
-            self.mediaplayer.set_nsobject(self.videoframe.winId())
+            self.mediaplayer.set_nsobject(int(self.videoframe.winId()))
 
         # check if fps changes between media
         """
