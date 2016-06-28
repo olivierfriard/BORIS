@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.98"
-__version_date__ = "2016-05-27"
+__version__ = "2.981"
+__version_date__ = "2016-06-28"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -6742,7 +6742,7 @@ item []:
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -6782,6 +6782,7 @@ item []:
                             currentStates = []
 
                             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+                            print(eventsWithStatus)
 
                             for event in eventsWithStatus:
 
@@ -6792,17 +6793,31 @@ item []:
                                             s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
                                         else:
                                             s += event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+
+
+                                        if plot_parameters["include modifiers"]:
+                                            s += "&" + event[3].replace("|", "+")
+
                                         s += self.behaviouralStringsSeparator
 
                                     if event[-1] == "START":
                                         currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-                                        s += "+".join(replace_spaces(currentStates)) + self.behaviouralStringsSeparator
+                                        s += "+".join(replace_spaces(currentStates))
+
+                                        if plot_parameters["include modifiers"]:
+                                            s += "&" + event[3].replace("|", "+")
+                                        s += self.behaviouralStringsSeparator
+
 
                                     if event[-1] == "STOP":
                                         if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
                                             currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
                                         if currentStates:
-                                            s += "+".join(replace_spaces(currentStates)) + self.behaviouralStringsSeparator
+                                            s += "+".join(replace_spaces(currentStates))
+
+                                            if plot_parameters["include modifiers"]:
+                                                s += "&" + event[3].replace("|", "+")
+                                            s += self.behaviouralStringsSeparator
 
 
                             # remove last separator (if separator not empty)
