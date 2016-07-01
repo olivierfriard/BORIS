@@ -38,8 +38,9 @@ class wgMeasurement(QWidget):
     """
     """
 
-    closeSignal = pyqtSignal()
+    closeSignal, clearSignal = pyqtSignal(), pyqtSignal()
     flagSaved = True
+    draw_mem = []
 
     def __init__(self, log_level):
         super(wgMeasurement, self).__init__()
@@ -86,7 +87,15 @@ class wgMeasurement(QWidget):
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)
 
+        self.cbPersistentMeasurements = QCheckBox("Measurements are persistent")
+        self.cbPersistentMeasurements.setChecked(True)
+        vbox.addWidget(self.cbPersistentMeasurements)
+
         hbox2 = QHBoxLayout(self)
+
+        self.pbClear = QPushButton("Clear measurements")
+        hbox2.addWidget(self.pbClear)
+
         self.pbSave = QPushButton("Save results")
         hbox2.addWidget(self.pbSave)
 
@@ -95,8 +104,18 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox2)
 
+        self.pbClear.clicked.connect(self.pbClear_clicked)
         self.pbClose.clicked.connect(self.pbClose_clicked)
         self.pbSave.clicked.connect(self.pbSave_clicked)
+
+    def pbClear_clicked(self):
+        """
+        clear measurements draw and results
+        """
+        self.draw_mem = []
+        self.pte.clear()
+        self.clearSignal.emit()
+
 
     def pbClose_clicked(self):
         if not self.flagSaved:
@@ -123,4 +142,3 @@ class wgMeasurement(QWidget):
                 self.flagSaved = True
         else:
             QMessageBox.information(self, programName, "There are no results to save")
-

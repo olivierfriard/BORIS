@@ -1470,8 +1470,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
-        logging.debug("required frame: {0}".format( requiredFrame ))
-        logging.debug("sum self.duration {0}".format( sum(self.duration)))
+        logging.debug("required frame: {0}".format(requiredFrame))
+        logging.debug("sum self.duration {0}".format(sum(self.duration)))
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.duration):
@@ -1527,6 +1527,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             BITMAP_EXT = "png"
 
         self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+
+        if self.measurement_w:
+            if self.measurement_w.cbPersistentMeasurements.isChecked():
+                for element in self.measurement_w.draw_mem:
+                    if element[0] == "line":
+                        x1, y1, x2, y2 = element[1:]
+                        self.draw_line(x1, y1, x2, y2, "red")
+                        #self.draw_point(x1, y1, "blue")
+                        #self.draw_point(x2, y2, "blue")
+
+                    if element[0] == "angle":
+                        x1, y1 = element[1][0]
+                        x2, y2 = element[1][1]
+                        x3, y3 = element[1][2]
+                        self.draw_line(x1, y1, x2, y2, "red")
+                        self.draw_line(x1, y1, x3, y3, "red")
+                        #self.draw_point(x1, y1, "blue")
+                        #self.draw_point(x2, y2, "blue")
+                        #self.draw_point(x3, y3, "blue")
+                    if element[0] == "polygon":
+                        polygon = QPolygon()
+                        for point in element[1]:
+                            polygon.append(QPoint(point[0], point[1]))
+                        painter = QPainter()
+                        painter.begin(self.lbFFmpeg.pixmap())
+                        painter.setPen(QColor("red"))
+                        painter.drawPolygon(polygon)
+                        painter.end()
+                        self.lbFFmpeg.update()
+            else:
+                self.measurement_w.draw_mem = []
+
         self.FFmpegGlobalFrame = requiredFrame
 
         currentTime = self.getLaps() * 1000
@@ -1539,13 +1571,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                              ))
 
         # extract State events
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM]
-                                if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM]
+                                if "State" in self.pj[ETHOGRAM][y][TYPE]]]
 
         self.currentStates = {}
 
         # add states for no focal subject
-        self.currentStates[ '' ] = []
+        self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
             if len([x[ pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
                        if x[pj_obs_fields['subject']] == '' and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime /1000]) % 2: # test if odd
@@ -1580,38 +1612,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.measurement_w.close()
         self.measurement_w = None
 
+    def clear_measurements(self):
+        if self.FFmpegGlobalFrame > 1:
+            self.FFmpegGlobalFrame -= 1
+            self.FFmpegTimerOut()
+
+
     def distance(self):
         import measurement_widget
         self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
+        self.measurement_w.draw_mem = []
         self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.measurement_w.closeSignal.connect(self.close_measurement_widget)
+        self.measurement_w.clearSignal.connect(self.clear_measurements)
+
         self.measurement_w.show()
+
+
+
+    def draw_point(self, x, y, color):
+        RADIUS = 6
+        painter = QPainter()
+        painter.begin(self.lbFFmpeg.pixmap())
+        painter.setPen(QColor(color))
+        painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
+        # cross inside circle
+        painter.drawLine(x - RADIUS, y, x + RADIUS, y)
+        painter.drawLine(x, y - RADIUS, x, y + RADIUS)
+        painter.end()
+        self.lbFFmpeg.update()
+
+    def draw_line(self, x1, y1, x2, y2, color):
+        painter = QPainter()
+        painter.begin(self.lbFFmpeg.pixmap())
+        painter.setPen(QColor(color))
+        painter.drawLine(x1, y1, x2, y2)
+        painter.end()
+        self.lbFFmpeg.update()
+
 
 
     def getPoslbFFmpeg(self, event):
         """
         return click position on frame and distance between 2 last clicks
         """
-
-        def draw_point(x, y, color):
-            RADIUS = 6
-            painter	= QPainter()
-            painter.begin(self.lbFFmpeg.pixmap())
-            painter.setPen(QColor(color))
-            painter.drawEllipse(QPoint(x, y), RADIUS, RADIUS)
-            # cross inside circle
-            painter.drawLine(x - RADIUS, y, x + RADIUS, y)
-            painter.drawLine(x, y - RADIUS, x, y + RADIUS)
-            painter.end()
-            self.lbFFmpeg.update()
-
-        def draw_line(x1, y1, x2, y2, color):
-            painter	= QPainter()
-            painter.begin(self.lbFFmpeg.pixmap())
-            painter.setPen(QColor(color))
-            painter.drawLine(x1, y1, x2, y2)
-            painter.end()
-            self.lbFFmpeg.update()
 
 
         if self.measurement_w:
@@ -1621,12 +1665,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # distance
             if self.measurement_w.rbDistance.isChecked():
                 if event.button() == 1:   # left
-                    draw_point(x ,y, "blue")
+                    self.draw_point(x ,y, "blue")
                     self.memx, self.memy = x, y
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
-                    draw_point(x, y, "red")
-                    draw_line(self.memx, self.memy, x, y, "red")
+                    self.draw_point(x, y, "red")
+                    self.draw_line(self.memx, self.memy, x, y, "red")
+
+                    self.measurement_w.draw_mem.append(["line", self.memx, self.memy, x, y]) 
 
                     d = ((x - self.memx)**2 + (y - self.memy)**2)**0.5
                     try:
@@ -1643,12 +1689,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # angle 1st clic -> vertex
             if self.measurement_w.rbAngle.isChecked():
                 if event.button() == 1:   # left for vertex
-                    draw_point(x, y, "red")
+                    self.draw_point(x, y, "red")
                     self.memPoints = [(x, y)]
 
                 if event.button() == 2 and len(self.memPoints):
-                    draw_point(x, y, "blue")
-                    draw_line(self.memPoints[0][0], self.memPoints[0][1], x, y, "blue")
+                    self.draw_point(x, y, "blue")
+                    self.draw_line(self.memPoints[0][0], self.memPoints[0][1], x, y, "blue")
 
                     self.memPoints.append((x, y))
 
@@ -1656,26 +1702,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.measurement_w.pte.appendPlainText("Time: {}\tFrame: {}\tAngle: {}".format(self.getLaps(),
                                                                                                       self.FFmpegGlobalFrame,
                                                                                                       round(angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)
+                        
                                                                                                       )
                                                                                                       )
                         self.measurement_w.flagSaved = False
+                        self.measurement_w.draw_mem.append(["angle", self.memPoints]) 
                         self.memPoints = []
 
             # Area
             if self.measurement_w.rbArea.isChecked():
                 if event.button() == 1:   # left
-                    draw_point(x, y, "blue")
+                    self.draw_point(x, y, "blue")
                     if len(self.memPoints):
-                        draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
+                        self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
                     self.memPoints.append((x, y))
 
                 if event.button() == 2 and len(self.memPoints) >= 2:
-                    draw_point(x, y, "red")
-                    draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
+                    self.draw_point(x, y, "red")
+                    self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
                     self.memPoints.append((x, y))
                     # close polygon
-                    draw_line(self.memPoints[-1][0], self.memPoints[-1][1], self.memPoints[0][0], self.memPoints[0][1], "blue")
+                    self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], self.memPoints[0][0], self.memPoints[0][1], "blue")
                     a = polygon_area(self.memPoints)
+                    self.measurement_w.draw_mem.append(["polygon", self.memPoints]) 
+
                     try:
                         a = a / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
                     except:
