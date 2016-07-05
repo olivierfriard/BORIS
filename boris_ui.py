@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu May 12 11:46:09 2016
+# Created: Tue Jul  5 15:49:58 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -76,8 +76,6 @@ class Ui_MainWindow(object):
         self.menuObservations.setObjectName(_fromUtf8("menuObservations"))
         self.menuExport_events = QtGui.QMenu(self.menuObservations)
         self.menuExport_events.setObjectName(_fromUtf8("menuExport_events"))
-        self.menuExport_aggregated_events = QtGui.QMenu(self.menuObservations)
-        self.menuExport_aggregated_events.setObjectName(_fromUtf8("menuExport_aggregated_events"))
         self.menuAnalyze = QtGui.QMenu(self.menubar)
         self.menuAnalyze.setObjectName(_fromUtf8("menuAnalyze"))
         self.menuPlayback = QtGui.QMenu(self.menubar)
@@ -335,6 +333,8 @@ class Ui_MainWindow(object):
         self.actionFilterBehaviors.setObjectName(_fromUtf8("actionFilterBehaviors"))
         self.actionShowAllBehaviors = QtGui.QAction(MainWindow)
         self.actionShowAllBehaviors.setObjectName(_fromUtf8("actionShowAllBehaviors"))
+        self.actionExport_aggregated_events = QtGui.QAction(MainWindow)
+        self.actionExport_aggregated_events.setObjectName(_fromUtf8("actionExport_aggregated_events"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -354,8 +354,6 @@ class Ui_MainWindow(object):
         self.menuExport_events.addAction(self.actionExportEventTabular_XLS)
         self.menuExport_events.addSeparator()
         self.menuExport_events.addSeparator()
-        self.menuExport_aggregated_events.addAction(self.actionAggregatedEventsTabularFormat)
-        self.menuExport_aggregated_events.addAction(self.actionExportEventsSQL)
         self.menuObservations.addAction(self.actionNew_observation)
         self.menuObservations.addAction(self.actionOpen_observation)
         self.menuObservations.addAction(self.actionEdit_observation_2)
@@ -376,7 +374,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuExport_events.menuAction())
-        self.menuObservations.addAction(self.menuExport_aggregated_events.menuAction())
+        self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
         self.menuObservations.addSeparator()
@@ -430,7 +428,6 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(_translate("MainWindow", "File", None))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations", None))
         self.menuExport_events.setTitle(_translate("MainWindow", "Export events", None))
-        self.menuExport_aggregated_events.setTitle(_translate("MainWindow", "Export aggregated events", None))
         self.menuAnalyze.setTitle(_translate("MainWindow", "Analyze", None))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback", None))
         self.menuTools.setTitle(_translate("MainWindow", "Tools", None))
@@ -536,4 +533,5 @@ class Ui_MainWindow(object):
         self.actionFilterBehaviors.setText(_translate("MainWindow", "Filter behaviors", None))
         self.actionShowAllBehaviors.setText(_translate("MainWindow", "Show all behaviors", None))
         self.actionShowAllBehaviors.setToolTip(_translate("MainWindow", "Show all behaviors", None))
+        self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events", None))
 

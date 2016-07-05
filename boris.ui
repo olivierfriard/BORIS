@@ -138,13 +138,6 @@
      <addaction name="separator"/>
      <addaction name="separator"/>
     </widget>
-    <widget class="QMenu" name="menuExport_aggregated_events">
-     <property name="title">
-      <string>Export aggregated events</string>
-     </property>
-     <addaction name="actionAggregatedEventsTabularFormat"/>
-     <addaction name="actionExportEventsSQL"/>
-    </widget>
     <addaction name="actionNew_observation"/>
     <addaction name="actionOpen_observation"/>
     <addaction name="actionEdit_observation_2"/>
@@ -165,7 +158,7 @@
     <addaction name="actionLoad_observations_file"/>
     <addaction name="separator"/>
     <addaction name="menuExport_events"/>
-    <addaction name="menuExport_aggregated_events"/>
+    <addaction name="actionExport_aggregated_events"/>
     <addaction name="actionExportEventString"/>
     <addaction name="actionExport_events_as_Praat_TextGrid"/>
     <addaction name="separator"/>
@@ -830,6 +823,11 @@
    </property>
    <property name="toolTip">
     <string>Show all behaviors</string>
+   </property>
+  </action>
+  <action name="actionExport_aggregated_events">
+   <property name="text">
+    <string>Export aggregated events</string>
    </property>
   </action>
  </widget>

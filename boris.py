@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.981"
-__version_date__ = "2016-06-28"
+__version__ = "2.982"
+__version_date__ = "2016-07-05"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -448,7 +448,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionLoad_observations_file.setEnabled(False)  # not yet implemented
 
         self.menuExport_events.setEnabled(flag)
-        self.menuExport_aggregated_events.setEnabled(flag)
+        self.actionExport_aggregated_events.setEnabled(flag)
+
         self.actionExportEventString.setEnabled(flag)
         self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
         self.actionExtract_events_from_media_files.setEnabled(flag)
@@ -541,8 +542,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExportEventString.triggered.connect(self.export_string_events)
 
-        self.actionExportEventsSQL.triggered.connect(lambda: self.export_aggregated_events("sql"))
-        self.actionAggregatedEventsTabularFormat.triggered.connect(lambda: self.export_aggregated_events("tab"))
+        self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
 
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
 
@@ -1528,34 +1528,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
 
+        # redraw measurements from previous frames
         if self.measurement_w:
             if self.measurement_w.cbPersistentMeasurements.isChecked():
-                for element in self.measurement_w.draw_mem:
-                    if element[0] == "line":
-                        x1, y1, x2, y2 = element[1:]
-                        self.draw_line(x1, y1, x2, y2, "red")
-                        #self.draw_point(x1, y1, "blue")
-                        #self.draw_point(x2, y2, "blue")
+                print(self.measurement_w.draw_mem)
+                for frame in self.measurement_w.draw_mem:
+                    print(frame)
 
-                    if element[0] == "angle":
-                        x1, y1 = element[1][0]
-                        x2, y2 = element[1][1]
-                        x3, y3 = element[1][2]
-                        self.draw_line(x1, y1, x2, y2, "red")
-                        self.draw_line(x1, y1, x3, y3, "red")
-                        #self.draw_point(x1, y1, "blue")
-                        #self.draw_point(x2, y2, "blue")
-                        #self.draw_point(x3, y3, "blue")
-                    if element[0] == "polygon":
-                        polygon = QPolygon()
-                        for point in element[1]:
-                            polygon.append(QPoint(point[0], point[1]))
-                        painter = QPainter()
-                        painter.begin(self.lbFFmpeg.pixmap())
-                        painter.setPen(QColor("red"))
-                        painter.drawPolygon(polygon)
-                        painter.end()
-                        self.lbFFmpeg.update()
+                    if frame == self.FFmpegGlobalFrame + 1:
+                        elementsColor = "lime"
+                    else:
+                        elementsColor = "red"
+
+                    for element in self.measurement_w.draw_mem[frame]:
+                        if element[0] == "line":
+                            x1, y1, x2, y2 = element[1:]
+                            self.draw_line(x1, y1, x2, y2, elementsColor)
+                            self.draw_point(x1, y1, elementsColor)
+                            self.draw_point(x2, y2, elementsColor)
+
+                        if element[0] == "angle":
+                            x1, y1 = element[1][0]
+                            x2, y2 = element[1][1]
+                            x3, y3 = element[1][2]
+                            self.draw_line(x1, y1, x2, y2, elementsColor)
+                            self.draw_line(x1, y1, x3, y3, elementsColor)
+                            self.draw_point(x1, y1, elementsColor)
+                            self.draw_point(x2, y2, elementsColor)
+                            self.draw_point(x3, y3, elementsColor)
+                        if element[0] == "polygon":
+                            polygon = QPolygon()
+                            for point in element[1]:
+                                polygon.append(QPoint(point[0], point[1]))
+                            painter = QPainter()
+                            painter.begin(self.lbFFmpeg.pixmap())
+                            painter.setPen(QColor(elementsColor))
+                            painter.drawPolygon(polygon)
+                            painter.end()
+                            self.lbFFmpeg.update()
             else:
                 self.measurement_w.draw_mem = []
 
@@ -1608,9 +1618,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show tracking cursor
         self.get_events_current_row()
 
+
     def close_measurement_widget(self):
         self.measurement_w.close()
         self.measurement_w = None
+
 
     def clear_measurements(self):
         if self.FFmpegGlobalFrame > 1:
@@ -1619,9 +1631,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def distance(self):
+        """
+        active the geometric measurement window
+        """
         import measurement_widget
         self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
-        self.measurement_w.draw_mem = []
+        self.measurement_w.draw_mem = {}
         self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.measurement_w.closeSignal.connect(self.close_measurement_widget)
         self.measurement_w.clearSignal.connect(self.clear_measurements)
@@ -1631,6 +1646,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def draw_point(self, x, y, color):
+        """
+        draw point on frame-by-frame image
+        """
         RADIUS = 6
         painter = QPainter()
         painter.begin(self.lbFFmpeg.pixmap())
@@ -1643,6 +1661,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFFmpeg.update()
 
     def draw_line(self, x1, y1, x2, y2, color):
+        """
+        draw line on frame-by-frame image
+        """
         painter = QPainter()
         painter.begin(self.lbFFmpeg.pixmap())
         painter.setPen(QColor(color))
@@ -1656,8 +1677,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         return click position on frame and distance between 2 last clicks
         """
-
-
         if self.measurement_w:
             x = event.pos().x()
             y = event.pos().y()
@@ -1665,16 +1684,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # distance
             if self.measurement_w.rbDistance.isChecked():
                 if event.button() == 1:   # left
-                    self.draw_point(x ,y, "blue")
+                    self.draw_point(x ,y, "lime")
                     self.memx, self.memy = x, y
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
-                    self.draw_point(x, y, "red")
-                    self.draw_line(self.memx, self.memy, x, y, "red")
+                    self.draw_point(x, y, "lime")
+                    self.draw_line(self.memx, self.memy, x, y, "lime")
 
-                    self.measurement_w.draw_mem.append(["line", self.memx, self.memy, x, y]) 
+                    if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append(["line", self.memx, self.memy, x, y])
+                    else:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [["line", self.memx, self.memy, x, y]]
 
-                    d = ((x - self.memx)**2 + (y - self.memy)**2)**0.5
+
+                    d = ((x - self.memx) ** 2 + (y - self.memy) ** 2) ** 0.5
                     try:
                         d = d / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
                     except:
@@ -1689,12 +1712,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # angle 1st clic -> vertex
             if self.measurement_w.rbAngle.isChecked():
                 if event.button() == 1:   # left for vertex
-                    self.draw_point(x, y, "red")
+                    self.draw_point(x, y, "lime")
                     self.memPoints = [(x, y)]
 
                 if event.button() == 2 and len(self.memPoints):
-                    self.draw_point(x, y, "blue")
-                    self.draw_line(self.memPoints[0][0], self.memPoints[0][1], x, y, "blue")
+                    self.draw_point(x, y, "lime")
+                    self.draw_line(self.memPoints[0][0], self.memPoints[0][1], x, y, "lime")
 
                     self.memPoints.append((x, y))
 
@@ -1702,30 +1725,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.measurement_w.pte.appendPlainText("Time: {}\tFrame: {}\tAngle: {}".format(self.getLaps(),
                                                                                                       self.FFmpegGlobalFrame,
                                                                                                       round(angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)
-                        
-                                                                                                      )
-                                                                                                      )
+                                                                                                      ))
                         self.measurement_w.flagSaved = False
-                        self.measurement_w.draw_mem.append(["angle", self.memPoints]) 
+                        if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
+                            self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append(["angle", self.memPoints])
+                        else:
+                            self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [["angle", self.memPoints]]
+
                         self.memPoints = []
 
             # Area
             if self.measurement_w.rbArea.isChecked():
                 if event.button() == 1:   # left
-                    self.draw_point(x, y, "blue")
+                    self.draw_point(x, y, "lime")
                     if len(self.memPoints):
-                        self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
+                        self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "lime")
                     self.memPoints.append((x, y))
 
                 if event.button() == 2 and len(self.memPoints) >= 2:
-                    self.draw_point(x, y, "red")
-                    self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "blue")
+                    self.draw_point(x, y, "lime")
+                    self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], x, y, "lime")
                     self.memPoints.append((x, y))
                     # close polygon
-                    self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], self.memPoints[0][0], self.memPoints[0][1], "blue")
+                    self.draw_line(self.memPoints[-1][0], self.memPoints[-1][1], self.memPoints[0][0], self.memPoints[0][1], "lime")
                     a = polygon_area(self.memPoints)
-                    self.measurement_w.draw_mem.append(["polygon", self.memPoints]) 
 
+                    if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append(["polygon", self.memPoints])
+                    else:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [["polygon", self.memPoints]]
                     try:
                         a = a / (float(self.measurement_w.lePx.text())**2) * float(self.measurement_w.leRef.text())**2
                     except:
@@ -1842,9 +1870,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def check_if_media_available(self):
-        '''
+        """
         check if every media available for observationId
-        '''
+        """
 
         if not PLAYER1 in self.pj[OBSERVATIONS][self.observationId][FILE]:
             return False
@@ -4645,9 +4673,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage("Subtitles file(s) created in {} directory".format(exportDir), 0)
 
 
-    def export_aggregated_events(self, format_):
+    def export_aggregated_events(self):
         """
-        export aggregated events in SQL (sql) or Tabular format (tab)
+        export aggregated events in SQL (sql) or Tabular format (tsv, csv, xls, ods)
+        format is selected using the filename extension
         """
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -4663,14 +4692,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         includeMediaInfo = None
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+                #includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+                includeMediaInfo = YES
                 break
 
-        if format_ == "sql":
-            if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
-            else:
-                fileName, _ = QFileDialog(self).getSaveFileName(self, "Export aggregated events in SQL format", "", "SQL dump file file (*.sql);;All files (*)")
+        dummy = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", "Tab separated values (*.tsv *.txt);;Comma separated values (*.csv);;Open Document Spreadsheet (*.ods);;Microsoft Excel (*.xls);;SQL dump file file (*.sql);;All files (*)")
+        if type(dummy) is tuple:
+            fileName, _ = dummy
+        else:
+            fileName = dummy
+        if fileName.upper().endswith(".TSV") or fileName.upper().endswith(".TXT"):
+            outputFormat = "tsv"
+        elif fileName.upper().endswith(".CSV"):
+            outputFormat = "csv"
+        elif fileName.upper().endswith(".XLS"):
+            outputFormat = "xls"
+        elif fileName.upper().endswith(".ODS"):
+            outputFormat = "ods"
+        elif fileName.upper().endswith(".SQL"):
+            outputFormat = "sql"
+
+        else:
+            QMessageBox.warning(self, programName, "The file extension should be .txt, .tsv, .csv, .ods, .xls or .sql", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        if not fileName:
+            return
+
+        if outputFormat == "sql":
             if includeMediaInfo == NO:
                 out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             else:
@@ -4679,22 +4728,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             out += "BEGIN TRANSACTION;" + os.linesep
             template = """INSERT INTO events (observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
-        if format_ == "tab":
-            if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "", "Events file (*.tsv *.txt);;All files (*)")
-            else:
-                fileName, _ = QFileDialog(self).getSaveFileName(self, "Export aggregated events in tabular format", "", "Events file (*.tsv *.txt);;All files (*)")
+        else:
+
+            data = tablib.Dataset()
+            data.title = "Aggregated events"
+            data.append(["Observation id", "Observation date", "Media file", "Total media length", "FPS", "Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
+
+            '''
             if includeMediaInfo == YES:
                 out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
                 template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
             else:
                 out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
                 template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
+            '''
 
-        if not fileName:
-            return
 
-        self.statusbar.showMessage("Exporting aggregated events", 0)
+        self.statusbar.showMessage("Exporting aggregated events in {} format".format(outputFormat), 0)
         flagUnpairedEventFound = False
 
         for obsId in selectedObservations:
@@ -4713,7 +4763,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for behavior in plot_parameters["selected behaviors"]:
 
-                    cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ", (obsId, subject, behavior))
+                    cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence", (obsId, subject, behavior))
                     rows = list(cursor.fetchall())
 
                     if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
@@ -4732,7 +4782,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if POINT in self.eventType(behavior).upper():
 
-                            out += template.format(observation=obsId,
+                            if outputFormat == "sql":
+                                out += template.format(observation=obsId,
                                                     date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                                     media_file=mediaFileString,
                                                     total_length=sum(duration1),
@@ -4745,10 +4796,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     stop=0,
                                                     comment_start=row["comment"],
                                                     comment_stop="")
+                            else:
+                                data.append([obsId,
+                                            self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
+                                            mediaFileString,
+                                            sum(duration1),
+                                            fpsString,
+                                            subject,
+                                            behavior,
+                                            row["modifiers"].strip(),
+                                            POINT,
+                                            row["occurence"],
+                                            0,
+                                            row["comment"],
+                                            ""
+                                            ])
+
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                out += template.format(observation=obsId,
+                                if outputFormat == "sql":
+                                    out += template.format(observation=obsId,
                                                         date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                                         media_file=mediaFileString,
                                                         total_length=sum(duration1),
@@ -4762,20 +4830,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         comment_start=row["comment"],
                                                         comment_stop=rows[idx + 1]["comment"])
 
-        if format_ == "sql":
+                                else:
+                                    data.append([obsId,
+                                            self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
+                                            mediaFileString,
+                                            sum(duration1),
+                                            fpsString,
+                                            subject,
+                                            behavior,
+                                            row["modifiers"].strip(),
+                                            STATE,
+                                            row["occurence"],
+                                            rows[idx + 1]["occurence"],
+                                            row["comment"],
+                                            rows[idx + 1]["comment"]
+                                            ])
+
+
+        if outputFormat == "sql":
             out += "END TRANSACTION;" + os.linesep
-
-        try:
-            with open(fileName, "w") as f:
-                f.write( out )
-        except:
-            errorMsg = sys.exc_info()[1]
-            logging.critical(errorMsg)
-            QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
+            try:
+                with open(fileName, "w") as f:
+                    f.write(out)
+            except:
+                errorMsg = sys.exc_info()[1]
+                logging.critical(errorMsg)
+                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        else:
+            if outputFormat == "tsv":
+                with open(fileName, "w") as f:
+                    f.write(data.tsv)
+            if outputFormat == "csv":
+                with open(fileName, "w") as f:
+                    f.write(data.csv)
+            if outputFormat == "ods":
+                with open(fileName, "wb") as f:
+                    f.write(data.ods)
+            if outputFormat == "xls":
+                with open(fileName, "wb") as f:
+                    f.write(data.xls)
 
         if flagUnpairedEventFound:
-            QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
+            QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.statusbar.showMessage("Aggregated events exported successfully", 0)
@@ -4870,7 +4966,7 @@ item []:
 
                 if rows[0]["occurence"] > 0:
                     count += 1
-                    out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"] )
+                    out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
 
                 for idx, row in enumerate(rows):
                     if idx % 2 == 0:

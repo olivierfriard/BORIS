@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created: Tue Jul  5 15:50:10 2016
+#      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -61,8 +62,6 @@ class Ui_MainWindow(object):
         self.menuObservations.setObjectName("menuObservations")
         self.menuExport_events = QtWidgets.QMenu(self.menuObservations)
         self.menuExport_events.setObjectName("menuExport_events")
-        self.menuExport_aggregated_events = QtWidgets.QMenu(self.menuObservations)
-        self.menuExport_aggregated_events.setObjectName("menuExport_aggregated_events")
         self.menuAnalyze = QtWidgets.QMenu(self.menubar)
         self.menuAnalyze.setObjectName("menuAnalyze")
         self.menuPlayback = QtWidgets.QMenu(self.menubar)
@@ -82,7 +81,6 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_3 = QtWidgets.QWidget()
         self.dockWidgetContents_3.setObjectName("dockWidgetContents_3")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.dockWidgetContents_3)
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -123,7 +121,6 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_2 = QtWidgets.QWidget()
         self.dockWidgetContents_2.setObjectName("dockWidgetContents_2")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.dockWidgetContents_2)
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -151,7 +148,6 @@ class Ui_MainWindow(object):
         self.dockWidgetContents = QtWidgets.QWidget()
         self.dockWidgetContents.setObjectName("dockWidgetContents")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.dockWidgetContents)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.twSubjects = QtWidgets.QTableWidget(self.dockWidgetContents)
         self.twSubjects.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -323,6 +319,8 @@ class Ui_MainWindow(object):
         self.actionFilterBehaviors.setObjectName("actionFilterBehaviors")
         self.actionShowAllBehaviors = QtWidgets.QAction(MainWindow)
         self.actionShowAllBehaviors.setObjectName("actionShowAllBehaviors")
+        self.actionExport_aggregated_events = QtWidgets.QAction(MainWindow)
+        self.actionExport_aggregated_events.setObjectName("actionExport_aggregated_events")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -342,8 +340,6 @@ class Ui_MainWindow(object):
         self.menuExport_events.addAction(self.actionExportEventTabular_XLS)
         self.menuExport_events.addSeparator()
         self.menuExport_events.addSeparator()
-        self.menuExport_aggregated_events.addAction(self.actionAggregatedEventsTabularFormat)
-        self.menuExport_aggregated_events.addAction(self.actionExportEventsSQL)
         self.menuObservations.addAction(self.actionNew_observation)
         self.menuObservations.addAction(self.actionOpen_observation)
         self.menuObservations.addAction(self.actionEdit_observation_2)
@@ -364,7 +360,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuExport_events.menuAction())
-        self.menuObservations.addAction(self.menuExport_aggregated_events.menuAction())
+        self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
         self.menuObservations.addSeparator()
@@ -419,7 +415,6 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations"))
         self.menuExport_events.setTitle(_translate("MainWindow", "Export events"))
-        self.menuExport_aggregated_events.setTitle(_translate("MainWindow", "Export aggregated events"))
         self.menuAnalyze.setTitle(_translate("MainWindow", "Analyze"))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback"))
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
@@ -525,4 +520,5 @@ class Ui_MainWindow(object):
         self.actionFilterBehaviors.setText(_translate("MainWindow", "Filter behaviors"))
         self.actionShowAllBehaviors.setText(_translate("MainWindow", "Show all behaviors"))
         self.actionShowAllBehaviors.setToolTip(_translate("MainWindow", "Show all behaviors"))
+        self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events"))
 

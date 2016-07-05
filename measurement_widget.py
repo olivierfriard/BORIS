@@ -112,7 +112,7 @@ class wgMeasurement(QWidget):
         """
         clear measurements draw and results
         """
-        self.draw_mem = []
+        self.draw_mem = {}
         self.pte.clear()
         self.clearSignal.emit()
 
