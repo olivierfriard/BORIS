@@ -114,6 +114,7 @@ from utilities import *
 import tablib
 import observations_list
 import plot_spectrogram
+import behaviors_map
 
 from config import *
 
@@ -464,6 +465,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionShow_spectrogram.setEnabled(flagObs)
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
+        self.actionBehaviors_map.setEnabled(flagObs)
 
 
         self.actionMedia_file_information.setEnabled(flagObs)
@@ -560,6 +562,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionMapCreator.triggered.connect(self.map_creator)
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
+        self.actionBehaviors_map.triggered.connect(self.behaviors_map)
 
         # menu Analyze
         self.actionTime_budget.triggered.connect(self.time_budget)
@@ -651,6 +654,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+    def clickSignal(self, behaviorCode):
+        print(behaviorCode)
+
+
+    def behaviors_map(self):
+
+        try:
+            self.bm.show()
+        except:
+
+            allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+            self.bm = behaviors_map.BehaviorsMap(allBehaviors)
+            self.bm.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.bm.clickSignal.connect(self.clickSignal)
+            self.bm.show()
+
 
     def show_all_behaviors(self):
         """

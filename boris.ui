@@ -183,6 +183,7 @@
     <addaction name="actionMapCreator"/>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionDistance"/>
+    <addaction name="actionBehaviors_map"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -818,6 +819,11 @@
   <action name="actionExport_aggregated_events">
    <property name="text">
     <string>Export aggregated events</string>
+   </property>
+  </action>
+  <action name="actionBehaviors_map">
+   <property name="text">
+    <string>Behaviors map</string>
    </property>
   </action>
  </widget>

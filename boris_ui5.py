@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Jul  6 10:34:03 2016
+# Created: Wed Jul  6 17:16:04 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -319,6 +319,8 @@ class Ui_MainWindow(object):
         self.actionShowAllBehaviors.setObjectName("actionShowAllBehaviors")
         self.actionExport_aggregated_events = QtWidgets.QAction(MainWindow)
         self.actionExport_aggregated_events.setObjectName("actionExport_aggregated_events")
+        self.actionBehaviors_map = QtWidgets.QAction(MainWindow)
+        self.actionBehaviors_map.setObjectName("actionBehaviors_map")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -373,6 +375,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionMapCreator)
         self.menuTools.addAction(self.actionShow_spectrogram)
         self.menuTools.addAction(self.actionDistance)
+        self.menuTools.addAction(self.actionBehaviors_map)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
@@ -513,4 +516,5 @@ class Ui_MainWindow(object):
         self.actionShowAllBehaviors.setText(_translate("MainWindow", "Show all behaviors"))
         self.actionShowAllBehaviors.setToolTip(_translate("MainWindow", "Show all behaviors"))
         self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events"))
+        self.actionBehaviors_map.setText(_translate("MainWindow", "Behaviors map"))
 
