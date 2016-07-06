@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Jul  5 15:50:10 2016
+# Created: Wed Jul  6 10:34:03 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -60,8 +60,6 @@ class Ui_MainWindow(object):
         self.menuFile.setObjectName("menuFile")
         self.menuObservations = QtWidgets.QMenu(self.menubar)
         self.menuObservations.setObjectName("menuObservations")
-        self.menuExport_events = QtWidgets.QMenu(self.menuObservations)
-        self.menuExport_events.setObjectName("menuExport_events")
         self.menuAnalyze = QtWidgets.QMenu(self.menubar)
         self.menuAnalyze.setObjectName("menuAnalyze")
         self.menuPlayback = QtWidgets.QMenu(self.menubar)
@@ -264,8 +262,8 @@ class Ui_MainWindow(object):
         self.actionEdit_observation.setObjectName("actionEdit_observation")
         self.actionCheckUpdate = QtWidgets.QAction(MainWindow)
         self.actionCheckUpdate.setObjectName("actionCheckUpdate")
-        self.actionExportEventTabular_TSV = QtWidgets.QAction(MainWindow)
-        self.actionExportEventTabular_TSV.setObjectName("actionExportEventTabular_TSV")
+        self.actionExportEvents = QtWidgets.QAction(MainWindow)
+        self.actionExportEvents.setObjectName("actionExportEvents")
         self.actionExportEventString = QtWidgets.QAction(MainWindow)
         self.actionExportEventString.setObjectName("actionExportEventString")
         self.actionClose_project = QtWidgets.QAction(MainWindow)
@@ -335,11 +333,6 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionPreferences)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
-        self.menuExport_events.addAction(self.actionExportEventTabular_TSV)
-        self.menuExport_events.addAction(self.actionExportEventTabular_ODS)
-        self.menuExport_events.addAction(self.actionExportEventTabular_XLS)
-        self.menuExport_events.addSeparator()
-        self.menuExport_events.addSeparator()
         self.menuObservations.addAction(self.actionNew_observation)
         self.menuObservations.addAction(self.actionOpen_observation)
         self.menuObservations.addAction(self.actionEdit_observation_2)
@@ -359,7 +352,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
-        self.menuObservations.addAction(self.menuExport_events.menuAction())
+        self.menuObservations.addAction(self.actionExportEvents)
         self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
@@ -414,7 +407,6 @@ class Ui_MainWindow(object):
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations"))
-        self.menuExport_events.setTitle(_translate("MainWindow", "Export events"))
         self.menuAnalyze.setTitle(_translate("MainWindow", "Analyze"))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback"))
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
@@ -492,7 +484,7 @@ class Ui_MainWindow(object):
         self.actionJumpBackward.setToolTip(_translate("MainWindow", "Jump backward"))
         self.actionEdit_observation.setText(_translate("MainWindow", "Edit observation"))
         self.actionCheckUpdate.setText(_translate("MainWindow", "Check for updates"))
-        self.actionExportEventTabular_TSV.setText(_translate("MainWindow", "Tab Separated Values (tsv)"))
+        self.actionExportEvents.setText(_translate("MainWindow", "Export events"))
         self.actionExportEventString.setText(_translate("MainWindow", "Export events as behavioural strings"))
         self.actionClose_project.setText(_translate("MainWindow", "Close project"))
         self.actionObservationsList.setText(_translate("MainWindow", "Observations list"))

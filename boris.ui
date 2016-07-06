@@ -128,16 +128,6 @@
     <property name="title">
      <string>Observations</string>
     </property>
-    <widget class="QMenu" name="menuExport_events">
-     <property name="title">
-      <string>Export events</string>
-     </property>
-     <addaction name="actionExportEventTabular_TSV"/>
-     <addaction name="actionExportEventTabular_ODS"/>
-     <addaction name="actionExportEventTabular_XLS"/>
-     <addaction name="separator"/>
-     <addaction name="separator"/>
-    </widget>
     <addaction name="actionNew_observation"/>
     <addaction name="actionOpen_observation"/>
     <addaction name="actionEdit_observation_2"/>
@@ -157,7 +147,7 @@
     <addaction name="separator"/>
     <addaction name="actionLoad_observations_file"/>
     <addaction name="separator"/>
-    <addaction name="menuExport_events"/>
+    <addaction name="actionExportEvents"/>
     <addaction name="actionExport_aggregated_events"/>
     <addaction name="actionExportEventString"/>
     <addaction name="actionExport_events_as_Praat_TextGrid"/>
@@ -684,9 +674,9 @@
     <string>Check for updates</string>
    </property>
   </action>
-  <action name="actionExportEventTabular_TSV">
+  <action name="actionExportEvents">
    <property name="text">
-    <string>Tab Separated Values (tsv)</string>
+    <string>Export events</string>
    </property>
   </action>
   <action name="actionExportEventString">

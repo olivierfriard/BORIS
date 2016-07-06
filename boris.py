@@ -447,7 +447,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.actionLoad_observations_file.setEnabled(flagObs)
         self.actionLoad_observations_file.setEnabled(False)  # not yet implemented
 
-        self.menuExport_events.setEnabled(flag)
+        '''self.menuExport_events.setEnabled(flag)'''
+        self.actionExportEvents.setEnabled(flag)
         self.actionExport_aggregated_events.setEnabled(flag)
 
         self.actionExportEventString.setEnabled(flag)
@@ -536,9 +537,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
+        '''
         self.actionExportEventTabular_TSV.triggered.connect(lambda: self.export_tabular_events("tsv"))
         self.actionExportEventTabular_ODS.triggered.connect(lambda: self.export_tabular_events("ods"))
         self.actionExportEventTabular_XLS.triggered.connect(lambda: self.export_tabular_events("xls"))
+        '''
+        self.actionExportEvents.triggered.connect(self.export_tabular_events)
+
 
         self.actionExportEventString.triggered.connect(self.export_string_events)
 
@@ -4675,7 +4680,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def export_aggregated_events(self):
         """
-        export aggregated events in SQL (sql) or Tabular format (tsv, csv, xls, ods)
+        export aggregated events in SQL (sql) or Tabular format (tsv, csv, xls, ods, html)
         format is selected using the filename extension
         """
 
@@ -4696,37 +4701,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 includeMediaInfo = YES
                 break
 
-        dummy = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", "Tab separated values (*.tsv *.txt);;Comma separated values (*.csv);;Open Document Spreadsheet (*.ods);;Microsoft Excel (*.xls);;SQL dump file file (*.sql);;All files (*)")
+        dummy = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ("Tab separated values (*.tsv *.txt);;"
+                                                                                         "Comma separated values (*.csv);;"
+                                                                                         "Open Document Spreadsheet (*.ods);;"
+                                                                                         "Microsoft Excel (*.xls);;"
+                                                                                         "HTML (*.html *.htm);;"
+                                                                                         "SQL dump file file (*.sql);;"
+                                                                                         "All files (*)"))
         if type(dummy) is tuple:
             fileName, _ = dummy
         else:
             fileName = dummy
-        if fileName.upper().endswith(".TSV") or fileName.upper().endswith(".TXT"):
-            outputFormat = "tsv"
-        elif fileName.upper().endswith(".CSV"):
-            outputFormat = "csv"
-        elif fileName.upper().endswith(".XLS"):
-            outputFormat = "xls"
-        elif fileName.upper().endswith(".ODS"):
-            outputFormat = "ods"
-        elif fileName.upper().endswith(".SQL"):
-            outputFormat = "sql"
-
-        else:
-            QMessageBox.warning(self, programName, "The file extension should be .txt, .tsv, .csv, .ods, .xls or .sql", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
-
         if not fileName:
             return
 
+        outputFormat = ""
+        availableFormats = ("tsv", "txt", "csv", "xls", "ods", "html", "sql")
+        for fileExtension in availableFormats:
+            if fileName.upper().endswith("." + fileExtension.upper()):
+                outputFormat = fileExtension.replace("txt", "tsv")
+
+        if not outputFormat:
+            QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
         if outputFormat == "sql":
-            if includeMediaInfo == NO:
-                out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
-            else:
-                out = ""
-                pass # TODO
+            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, media_file TEXT, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
             out += "BEGIN TRANSACTION;" + os.linesep
-            template = """INSERT INTO events (observation, date, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}","{subject}","{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
+            template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         else:
 
@@ -4734,17 +4736,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             data.title = "Aggregated events"
             data.append(["Observation id", "Observation date", "Media file", "Total media length", "FPS", "Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
 
-            '''
-            if includeMediaInfo == YES:
-                out = "Observation id{0}Observation date{0}Media file{0}Total media length{0}FPS{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
-                template = "{observation}\t{date}\t{media_file}\t{total_length}\t{fps}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
-            else:
-                out = "Observation id{0}Observation date{0}Subject{0}Behavior{0}Modifiers{0}Behavior type{0}Start{0}Stop{0}Comment start{0}Comment stop{1}".format("\t", os.linesep)
-                template = "{observation}\t{date}\t{subject}\t{behavior}\t{modifiers}\t{event_type}\t{start}\t{stop}\t{comment_start}\t{comment_stop}" + os.linesep
-            '''
 
-
-        self.statusbar.showMessage("Exporting aggregated events in {} format".format(outputFormat), 0)
+        self.statusbar.showMessage("Exporting aggregated events in {} format".format(outputFormat.upper()), 0)
         flagUnpairedEventFound = False
 
         for obsId in selectedObservations:
@@ -4863,6 +4856,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if outputFormat == "csv":
                 with open(fileName, "w") as f:
                     f.write(data.csv)
+            if outputFormat == "html":
+                with open(fileName, "w") as f:
+                    f.write(data.html)
             if outputFormat == "ods":
                 with open(fileName, "wb") as f:
                     f.write(data.ods)
@@ -6653,9 +6649,9 @@ item []:
                 self.loadEventsInTW(self.observationId)
 
 
-    def export_tabular_events(self, outputFormat):
+    def export_tabular_events(self):
         """
-        export events from selected observations in various formats: ODS, TSV, XLS
+        export events from selected observations in various formats: TSV, CSV, ODS, XLS
         """
 
         def complete(l, max):
@@ -6680,34 +6676,51 @@ item []:
         includeMediaInfo = None
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
+                '''includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])'''
+                includeMediaInfo = YES
                 break
 
-        fd = QFileDialog(self)
         if len(selectedObservations) > 1:  # choose directory for exporting more observations
-            exportDir = fd.getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"), options=fd.ShowDirsOnly)
+
+            items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)", "Microsoft Excel (*.xls)", "HTML (*.html)")
+            item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
+            if not ok:
+                return
+            outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
+
+            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
             if not exportDir:
                 return
 
         for obsId in selectedObservations:
 
             if len(selectedObservations) == 1:
-                if outputFormat == "tsv":
-                    defaultFilter = "Tab Separated Values (*.tsv);;All files (*)"
-                if outputFormat == "ods":
-                    defaultFilter = "Open Document Spreadsheet (*.ods);;All files (*)"
-                if outputFormat == "xls":
-                    defaultFilter = "Microsoft Excel (*.xls);;All files (*)"
 
-                defaultName = obsId + "." + outputFormat
-
-                if QT_VERSION_STR[0] == "4":
-                    fileName = fd.getSaveFileName(self, "Export events", defaultName, defaultFilter)
+                dummy = QFileDialog(self).getSaveFileName(self, "Export events", obsId, ("Tab separated values (*.tsv *.txt);;"
+                                                                                                              "Comma separated values (*.csv);;"
+                                                                                                              "Open Document Spreadsheet (*.ods);;"
+                                                                                                              "Microsoft Excel (*.xls);;"
+                                                                                                              "HTML (*.html);;"
+                                                                                                              "All files (*)"))
+                if type(dummy) is tuple:
+                    fileName, _ = dummy
                 else:
-                    fileName, _ = fd.getSaveFileName(self, "Export events", defaultName, defaultFilter)
+                    fileName = dummy
                 if not fileName:
                     return
+
+                outputFormat = ""
+                availableFormats = ("tsv", "txt", "csv", "xls", "ods", "html")
+                for fileExtension in availableFormats:
+                    if fileName.upper().endswith("." + fileExtension.upper()):
+                        outputFormat = fileExtension.replace("txt", "tsv")
+
+                if not outputFormat:
+                    QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    return
+
             else:
+
                 fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
 
             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
@@ -6806,7 +6819,8 @@ item []:
                         mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])][-1]
                         fields.append(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])
                         # media total length
-                        fields.append(str(sum(duration1)))
+                        print(duration1)
+                        fields.append(str(sum([float(x) for x in duration1] )))
                         # fps
                         fields.append(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]])
 
@@ -6846,12 +6860,19 @@ item []:
                 if outputFormat == "tsv":
                     with open(fileName, "w") as f:
                         f.write(data.tsv)
+                if outputFormat == "csv":
+                    with open(fileName, "w") as f:
+                        f.write(data.csv)
                 if outputFormat == "ods":
                     with open(fileName, "wb") as f:
                         f.write(data.ods)
                 if outputFormat == "xls":
                     with open(fileName, "wb") as f:
                         f.write(data.xls)
+                if outputFormat == "html":
+                    with open(fileName, "w") as f:
+                        f.write(data.html)
+
                 '''
                 if outputFormat == "xlsx":
                     with open(fileName, "wb") as f:
