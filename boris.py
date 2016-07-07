@@ -655,8 +655,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
-    def clickSignal(self, behaviorCode):
+
+    def click_signal_from_behaviors_map(self, behaviorCode):
         print(behaviorCode)
+        sendEventSignal = pyqtSignal(QEvent)
+
+
+        sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+
+        #q = QKeyEvent()
+        q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
+
+        self.keyPressEvent(q)
+
+
+
+
+    def signal_from_behaviors_map(self, event):
+        """
+        receive signal from behaviors map
+        """
+        self.keyPressEvent(event)
 
 
     def behaviors_map(self):
@@ -668,7 +687,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
             self.bm = behaviors_map.BehaviorsMap(allBehaviors)
             self.bm.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.bm.clickSignal.connect(self.clickSignal)
+            self.bm.sendEventSignal.connect(self.signal_from_behaviors_map)
+            self.bm.clickSignal.connect(self.click_signal_from_behaviors_map)
             self.bm.show()
 
 
@@ -869,6 +889,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show spectrogram window if any
         """
+
+        if self.playerType == LIVE:
+            QMessageBox.warning(self, programName, "The spectrogram visualization is not available for live observations")
+            return
+
         try:
             self.spectro.show()
         except:
@@ -2724,6 +2749,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.observationId = ""
 
+        try:
+            self.bm.close()
+            del self.bm
+        except:
+            pass
+
+
         if self.playerType == LIVE:
 
             self.liveObservationStarted = False
@@ -2788,7 +2820,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
 
-        self.statusbar.showMessage('',0)
+        self.statusbar.showMessage("", 0)
 
         # delete layout
         self.toolBar.setEnabled(False)
@@ -2801,7 +2833,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbTime.clear()
         self.lbSubject.clear()
-        self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
+        self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
 
         self.lbTimeOffset.clear()
         self.lbSpeed.clear()
@@ -3654,7 +3686,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lbl = lbl[:-1]  # remove last empty line
 
             #fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
-            fig = plt.figure(figsize=(20, int(len(lbl) * .8)))
+
+            print(int(len(lbl) * .8)  )
+
+            #fig = plt.figure(figsize=(20, int(len(lbl) * .8)))
+            fig = plt.figure(figsize=(20, 10))
 
             fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
 
@@ -3814,15 +3850,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("totalMediaLength: {0}".format(totalMediaLength))
 
-        '''
-        return {"selected subjects": selectedSubjects,
-                "selected behaviors": selectedBehaviors,
-                "include modifiers": paramPanelWindow.cbIncludeModifiers.isChecked(),
-                "exclude behaviors": paramPanelWindow.cbExcludeBehaviors.isChecked(),
-                "start time": time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ)),
-                "end time": time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
-                }
-        '''
         plot_parameters = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
 
         logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
@@ -3914,8 +3941,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 o[subject][behaviorOut] = list(new_o)
                 '''
-
-
 
         logging.debug("intervals: {}".format(o))
         logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
@@ -6222,6 +6247,10 @@ item []:
 
 
     def keyPressEvent(self, event):
+
+        print("text #{}#".format(event.text()))
+        print(event.text == "\n")
+
         '''
         if (event.modifiers() & Qt.ShiftModifier):   # SHIFT
 
@@ -6259,13 +6288,15 @@ item []:
                 return
 
         ek = event.key()
+        #if ek == Qt.Key_Enter and event.text():
 
-        logging.debug("key event {0}".format( ek ))
+
+        logging.debug("key event {0}".format(ek))
 
         if ek in [16777248, 16777249, 16777217, 16781571]: # shift tab ctrl
             return
 
-        if ek == 16777216: # ESC
+        if ek == Qt.Key_Escape:  #16777216:
             self.switch_playing_mode()
             return
 
@@ -6347,21 +6378,28 @@ item []:
         if memLaps == None:
             return
 
-        if (ek in function_keys) or ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])):
+        if ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])) or (ek in function_keys) or (ek == Qt.Key_Enter and event.text()):
 
             obs_idx, subj_idx  = -1, -1
             count = 0
 
             if (ek in function_keys):
                 ek_unichr = function_keys[ek]
-            else:
+            elif ek != Qt.Key_Enter:
                 ek_unichr = chr(ek)
 
-            # count key occurence in ethogram
-            for o in self.pj[ETHOGRAM]:
-                if self.pj[ETHOGRAM][o]["key"] == ek_unichr:
-                    obs_idx = o
-                    count += 1
+            if ek == Qt.Key_Enter and event.text():
+                ek_unichr = ""
+                for o in self.pj[ETHOGRAM]:
+                    if self.pj[ETHOGRAM][o]["code"] == event.text():
+                        obs_idx = o
+                        count += 1
+            else:
+                # count key occurence in ethogram
+                for o in self.pj[ETHOGRAM]:
+                    if self.pj[ETHOGRAM][o]["key"] == ek_unichr:
+                        obs_idx = o
+                        count += 1
 
             # check if key defines a suject
             flag_subject = False

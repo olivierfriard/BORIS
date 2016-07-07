@@ -67,18 +67,19 @@ class Spectrogram(QWidget):
 
         self.resize(1000, self.h + 50)
 
-        self.setMinimumHeight( self.h + 50)
-        self.setMaximumHeight( self.h + 50)
+        self.setMinimumHeight(self.h + 50)
+        self.setMaximumHeight(self.h + 50)
 
         self.scene = QGraphicsScene(self)
-        self.scene.setBackgroundBrush (QColor(0, 0, 0, 255))
+        self.scene.setBackgroundBrush(QColor(0, 0, 0, 255))
 
         self.scene.setSceneRect(0, 0, 100, 100)
 
         if QT_VERSION_STR[0] == "4":
-            self.line = QGraphicsLineItem(0, 0, 0, self.h, scene = self.scene)
+            self.line = QGraphicsLineItem(0, 0, 0, self.h, scen =self.scene)
         else:
             self.line = QGraphicsLineItem(0, 0, 0, self.h)
+
         self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
         self.line.setZValue(100.0)
         self.scene.addItem(self.line)
