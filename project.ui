@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>3</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -159,6 +159,11 @@
                </column>
                <column>
                 <property name="text">
+                 <string>Category</string>
+                </property>
+               </column>
+               <column>
+                <property name="text">
                  <string>Modifiers</string>
                 </property>
                </column>
@@ -169,7 +174,7 @@
                </column>
                <column>
                 <property name="text">
-                 <string>Coding map</string>
+                 <string>Modifiers coding map</string>
                 </property>
                </column>
               </widget>
@@ -205,6 +210,26 @@
                 </widget>
                </item>
                <item>
+                <widget class="QPushButton" name="pbBehaviorsCategories">
+                 <property name="text">
+                  <string>Behavioral categories</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QPushButton" name="pbExclusionMatrix">
                  <property name="text">
                   <string>Exclusion matrix</string>
@@ -235,19 +260,6 @@ from a BORIS project</string>
                   <string>Import from text file</string>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="verticalSpacer_3">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
               </layout>
              </item>

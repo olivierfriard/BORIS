@@ -84,6 +84,63 @@ class ExclusionMatrix(QDialog):
         self.reject()
 
 
+class BehavioralCategories(QDialog):
+
+    def __init__(self, behavioralCategories):
+        super(BehavioralCategories, self).__init__()
+
+        self.setWindowTitle("Behavioral categories")
+
+        self.vbox = QVBoxLayout(self)
+
+        self.label = QLabel()
+        self.label.setText("Behavioral categories")
+        self.vbox.addWidget(self.label)
+
+        self.lw = QListWidget()
+
+        for category in behavioralCategories:
+            item = QListWidgetItem(category)
+            self.lw.addItem(item)
+
+        self.vbox.addWidget(self.lw)
+
+        self.hbox0 = QHBoxLayout(self)
+        self.pbAddCategory = QPushButton("Add category")
+        self.pbAddCategory.clicked.connect(self.pbAddCategory_clicked)
+        self.pbRemoveCategory = QPushButton("Remove category")
+        self.pbRemoveCategory.clicked.connect(self.pbRemoveCategory_clicked)
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.hbox0.addItem(spacerItem)
+        self.hbox0.addWidget(self.pbRemoveCategory)
+        self.hbox0.addWidget(self.pbAddCategory)
+        self.vbox.addLayout(self.hbox0)
+
+        hbox1 = QHBoxLayout(self)
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.accept)
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        hbox1.addItem(spacerItem)
+        hbox1.addWidget(self.pbCancel)
+        hbox1.addWidget(self.pbOK)
+        self.vbox.addLayout(hbox1)
+
+        self.setLayout(self.vbox)
+
+
+    def pbAddCategory_clicked(self):
+        category, ok = QInputDialog.getText(self, "New behavioral category", "Category name:")
+        if ok:
+            self.lw.addItem(QListWidgetItem(category))
+
+    def pbRemoveCategory_clicked(self):
+        for SelectedItem in self.lw.selectedItems():
+            self.lw.takeItem(self.lw.row(SelectedItem))
+
+
+
 class projectDialog(QDialog, Ui_dlgProject):
 
     def __init__(self, log_level, parent=None):
@@ -102,6 +159,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbRemoveBehavior.clicked.connect(self.pbRemoveBehavior_clicked)
         self.pbRemoveAllBehaviors.clicked.connect(self.pbRemoveAllBehaviors_clicked)
+
+        self.pbBehaviorsCategories.clicked.connect(self.pbBehaviorsCategories_clicked)
 
         self.pbExclusionMatrix.clicked.connect(self.pbExclusionMatrix_clicked)
 
@@ -138,8 +197,31 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.reject)
 
+    def pbBehaviorsCategories_clicked(self):
+
+        if BEHAVIORAL_CATEGORIES in self.pj:
+            bc = BehavioralCategories(self.pj[BEHAVIORAL_CATEGORIES])
+        else:
+            bc = BehavioralCategories([])
+
+        if bc.exec_():
+            self.pj[BEHAVIORAL_CATEGORIES] = []
+            for index in range(bc.lw.count()):
+                self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text())
 
     def twBehaviors_cellDoubleClicked(self, row, column):
+        """
+        manage double-click on ethogram table:
+        * category
+        * coding map
+        * modifiers
+
+        """
+
+        # check if double click on category
+        if column == behavioursFields["category"]:
+            self.category_doubleclicked(row)
+
 
         # check if double click on coding map
         if column == behavioursFields["coding map"]:
@@ -154,6 +236,28 @@ class projectDialog(QDialog, Ui_dlgProject):
                 addModifierWindow.setWindowTitle("""Set modifiers for "{}" behavior""".format(self.twBehaviors.item(row, 2).text()))
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
+
+
+    def category_doubleclicked(self, row):
+        """
+        select category for behavior
+        """
+        if BEHAVIORAL_CATEGORIES in self.pj:
+            categories = ["None"] +self.pj[BEHAVIORAL_CATEGORIES]
+        else:
+            categories = ["None"]
+
+        if self.twBehaviors.item(row, behavioursFields["category"]).text() in categories:
+            selected = categories.index(self.twBehaviors.item(row, behavioursFields["category"]).text())
+        else:
+            selected = 0
+
+        category, ok = QInputDialog.getItem(self, "Select a behavioral category", "Behavioral categories", categories, selected, False)
+
+        if ok and category:
+            if category == "None":
+                category = ""
+            self.twBehaviors.item(row, behavioursFields["category"]).setText(category)
 
 
     def check_variable_default_value(self, txt, varType):
@@ -176,9 +280,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         variable type combobox changed
         """
-
-        print("variable changed")
-        print(self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex())
 
         if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex() == SET_OF_VALUES_idx:
             if not self.twVariables.item(row, tw_indVarFields.index("possible values")).text():
@@ -812,7 +913,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         signalMapper = QSignalMapper(self)
 
-        for field_type in fields:
+        for field_type in behavioursFields:
             item = QTableWidgetItem()
             if field_type == TYPE:
                 # add type combobox
@@ -822,14 +923,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
                 comboBox.currentIndexChanged['int'].connect(signalMapper.map)
-
-                self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, fields[field_type], comboBox)
+                self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
             else:
 
-                if field_type in ['excluded', 'coding map', 'modifiers']:
+                if field_type in ["category", "excluded", "coding map", "modifiers"]:
                     item.setFlags(Qt.ItemIsEnabled)
 
-                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field_type], item)
+                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
         signalMapper.mapped['int'].connect(self.comboBoxChanged)
 
@@ -862,7 +962,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # if coding map already exists do not reset the behavior type if no filename selected
                 if not self.twBehaviors.item(row, behavioursFields['coding map']).text():
                     QMessageBox.critical(self, programName, 'No coding map was selected.\nEvent type will be reset to "Point event"')
-                    self.twBehaviors.cellWidget(row, fields['type']).setCurrentIndex(0)
+                    self.twBehaviors.cellWidget(row, behavioursFields['type']).setCurrentIndex(0)
         else:
             self.twBehaviors.item(row, behavioursFields['modifiers']).setText('')
             self.twBehaviors.item(row, behavioursFields['coding map']).setText('')
@@ -1007,6 +1107,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 del self.pj['observations'][obs_id]
                 self.twObservations.removeRow(self.twObservations.selectedIndexes()[0].row())
 
+
     def pbOK_clicked(self):
         """
         verify behaviours and subjects configuration
@@ -1061,31 +1162,28 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(0, self.twBehaviors.rowCount()):
 
             row = {}
-            for field in fields:
-                if field == 'type':
-                    combobox = self.twBehaviors.cellWidget(r, fields['type'])
+            for field in behavioursFields:
+                if field == "type":
+                    combobox = self.twBehaviors.cellWidget(r, behavioursFields['type'])
                     row[field] = observation_types[combobox.currentIndex()]
                 else:
                     if self.twBehaviors.item(r, behavioursFields[field]):
                         # check for | char in code
-                        if field == 'code' and '|' in self.twBehaviors.item(r, fields[field]).text():
-                            QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in code <b>%s</b> !" % self.twBehaviors.item(r, fields[field]).text())
+                        if field == "code" and "|" in self.twBehaviors.item(r, behavioursFields[field]).text():
+                            QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in code <b>{}</b> !".format(self.twBehaviors.item(r, behavioursFields[field]).text()))
                             return
 
-                        row[field] = self.twBehaviors.item(r, fields[field]).text()
+                        row[field] = self.twBehaviors.item(r, behavioursFields[field]).text()
                     else:
-                        row[field] = ''
+                        row[field] = ""
 
             if (row['type']) and (row['key']) and (row['code']):
-
                 self.obs[str(len(self.obs))] = row
-
             else:
-
                 missing_data.append(str(r + 1))
 
-            if self.twBehaviors.item(r, behavioursFields['coding map']).text():
-                codingMapsList.append(self.twBehaviors.item(r, behavioursFields['coding map']).text())
+            if self.twBehaviors.item(r, behavioursFields["coding map"]).text():
+                codingMapsList.append(self.twBehaviors.item(r, behavioursFields["coding map"]).text())
 
         # remove coding map from project if not in ethogram
         cmToDelete = []

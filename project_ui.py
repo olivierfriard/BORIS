@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Tue May 17 14:31:01 2016
+# Created: Fri Jul  8 09:59:28 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -87,7 +87,7 @@ class Ui_dlgProject(object):
         self.twBehaviors.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.twBehaviors.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.twBehaviors.setObjectName(_fromUtf8("twBehaviors"))
-        self.twBehaviors.setColumnCount(7)
+        self.twBehaviors.setColumnCount(8)
         self.twBehaviors.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.twBehaviors.setHorizontalHeaderItem(0, item)
@@ -103,6 +103,8 @@ class Ui_dlgProject(object):
         self.twBehaviors.setHorizontalHeaderItem(5, item)
         item = QtGui.QTableWidgetItem()
         self.twBehaviors.setHorizontalHeaderItem(6, item)
+        item = QtGui.QTableWidgetItem()
+        self.twBehaviors.setHorizontalHeaderItem(7, item)
         self.twBehaviors.horizontalHeader().setSortIndicatorShown(True)
         self.twBehaviors.verticalHeader().setSortIndicatorShown(False)
         self.horizontalLayout_11.addWidget(self.twBehaviors)
@@ -120,6 +122,11 @@ class Ui_dlgProject(object):
         self.pbRemoveAllBehaviors = QtGui.QPushButton(self.tabConfiguration)
         self.pbRemoveAllBehaviors.setObjectName(_fromUtf8("pbRemoveAllBehaviors"))
         self.verticalLayout_11.addWidget(self.pbRemoveAllBehaviors)
+        self.pbBehaviorsCategories = QtGui.QPushButton(self.tabConfiguration)
+        self.pbBehaviorsCategories.setObjectName(_fromUtf8("pbBehaviorsCategories"))
+        self.verticalLayout_11.addWidget(self.pbBehaviorsCategories)
+        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_11.addItem(spacerItem)
         self.pbExclusionMatrix = QtGui.QPushButton(self.tabConfiguration)
         self.pbExclusionMatrix.setObjectName(_fromUtf8("pbExclusionMatrix"))
         self.verticalLayout_11.addWidget(self.pbExclusionMatrix)
@@ -133,8 +140,6 @@ class Ui_dlgProject(object):
         self.pbImportFromTextFile = QtGui.QPushButton(self.tabConfiguration)
         self.pbImportFromTextFile.setObjectName(_fromUtf8("pbImportFromTextFile"))
         self.verticalLayout_11.addWidget(self.pbImportFromTextFile)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout_11.addItem(spacerItem)
         self.horizontalLayout_11.addLayout(self.verticalLayout_11)
         self.verticalLayout_5.addLayout(self.horizontalLayout_11)
         self.lbObservationsState = QtGui.QLabel(self.tabConfiguration)
@@ -278,7 +283,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(3)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -302,15 +307,18 @@ class Ui_dlgProject(object):
         item = self.twBehaviors.horizontalHeaderItem(3)
         item.setText(_translate("dlgProject", "Description", None))
         item = self.twBehaviors.horizontalHeaderItem(4)
-        item.setText(_translate("dlgProject", "Modifiers", None))
+        item.setText(_translate("dlgProject", "Category", None))
         item = self.twBehaviors.horizontalHeaderItem(5)
-        item.setText(_translate("dlgProject", "Exclusion", None))
+        item.setText(_translate("dlgProject", "Modifiers", None))
         item = self.twBehaviors.horizontalHeaderItem(6)
-        item.setText(_translate("dlgProject", "Coding map", None))
+        item.setText(_translate("dlgProject", "Exclusion", None))
+        item = self.twBehaviors.horizontalHeaderItem(7)
+        item.setText(_translate("dlgProject", "Modifiers coding map", None))
         self.pbAddBehavior.setText(_translate("dlgProject", "Add behavior", None))
         self.pbCloneBehavior.setText(_translate("dlgProject", "Clone behavior", None))
         self.pbRemoveBehavior.setText(_translate("dlgProject", "Remove behavior", None))
         self.pbRemoveAllBehaviors.setText(_translate("dlgProject", "Remove all behaviors", None))
+        self.pbBehaviorsCategories.setText(_translate("dlgProject", "Behavioral categories", None))
         self.pbExclusionMatrix.setText(_translate("dlgProject", "Exclusion matrix", None))
         self.pbImportBehaviorsFromProject.setText(_translate("dlgProject", "Import behaviors\n"
 "from a BORIS project", None))

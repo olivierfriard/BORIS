@@ -706,6 +706,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setWindowTitle("Select the behaviors to show in the ethogram table")
         paramPanelWindow.lwSubjects.setVisible(False)
 
         paramPanelWindow.pbSelectAllSubjects.setVisible(False)
@@ -3116,6 +3117,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setWindowTitle("Select subjects and behaviors")
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
@@ -4252,9 +4254,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.teDescription.setPlainText(self.pj["project_description"])
 
             if self.pj['project_date']:
-
                 q = QDateTime.fromString(self.pj["project_date"], "yyyy-MM-ddThh:mm:ss")
-
                 newProjectWindow.dteDate.setDateTime(q)
             else:
                 newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
@@ -4262,18 +4262,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # load subjects in editor
             if self.pj[SUBJECTS]:
-
                 for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
-                    for i, field in enumerate( subjectsFields ):
+                    for i, field in enumerate(subjectsFields):
                         item = QTableWidgetItem(self.pj[SUBJECTS][idx][field])
                         newProjectWindow.twSubjects.setItem(newProjectWindow.twSubjects.rowCount() - 1, i ,item)
 
                 newProjectWindow.twSubjects.resizeColumnsToContents()
 
-
             # load observation in project window
             newProjectWindow.twObservations.setRowCount(0)
+
             if self.pj[OBSERVATIONS]:
 
                 for obs in sorted( self.pj[OBSERVATIONS].keys() ):
@@ -4313,7 +4312,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
-                    for field in fields:
+                    for field in behavioursFields:
 
                         item = QTableWidgetItem()
 
@@ -4327,7 +4326,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
                             newProjectWindow.comboBoxes[-1].currentIndexChanged['int'].connect(newProjectWindow.signalMapper.map)
 
-                            newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, fields[field], newProjectWindow.comboBoxes[-1])
+                            newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], newProjectWindow.comboBoxes[-1])
 
                         else:
                             if field in self.pj[ETHOGRAM][i]:
@@ -4335,10 +4334,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             else:
                                 item.setText("")
 
-                            if field in ['excluded', 'coding map', 'modifiers']:
+                            if field in ["category", "excluded", "coding map", "modifiers"]:
                                 item.setFlags(Qt.ItemIsEnabled)
 
-                            newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, fields[field] ,item)
+                            newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
                 newProjectWindow.signalMapper.mapped["int"].connect(newProjectWindow.comboBoxChanged)
 
@@ -4383,26 +4382,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == NEW:
 
-            self.pj = {"time_format": HHMMSS,\
-            "project_date": "", \
-            "project_name": "", \
-            "project_description": "", \
-            SUBJECTS : {},\
-            ETHOGRAM: {}, \
+            self.pj = {"time_format": HHMMSS,
+            "project_date": "",
+            "project_name": "",
+            "project_description": "",
+            SUBJECTS : {},
+            ETHOGRAM: {},
             OBSERVATIONS: {},
+            BEHAVIORAL_CATEGORIES : [],
             "coding_map": {} }
 
         # pass copy of self.pj
         newProjectWindow.pj = dict(self.pj)
 
-
         if newProjectWindow.exec_():  #button OK
 
             # retrieve project dict from window
-            self.pj = dict( newProjectWindow.pj )
+            self.pj = dict(newProjectWindow.pj)
 
             if mode == NEW:
-                self.projectFileName = ''
+                self.projectFileName = ""
 
             self.project = True
 
@@ -4420,10 +4419,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj['time_format'] = self.timeFormat
 
             # configuration
-            if newProjectWindow.lbObservationsState.text() != '':
+            if newProjectWindow.lbObservationsState.text() != "":
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
-
                 self.twEthogram.setRowCount(0)
                 self.pj[ETHOGRAM] =  newProjectWindow.obs
                 self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
@@ -4432,7 +4430,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.load_subjects_in_twSubjects()
 
                 # load variables
-                self.pj[ INDEPENDENT_VARIABLES ] =  newProjectWindow.indVar
+                self.pj[INDEPENDENT_VARIABLES] =  newProjectWindow.indVar
 
             self.initialize_new_project()
             self.menu_options()

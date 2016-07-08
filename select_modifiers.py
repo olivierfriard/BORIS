@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 """
 
-
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -30,7 +29,6 @@ try:
 except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
-
 
 import re
 import config
@@ -133,7 +131,7 @@ class ModifiersRadioButton(QDialog):
                                     return True
 
                         if ek < 1114112 and "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
-                            
+
                             if QT_VERSION_STR[0] == "4":
                                 widget.setItemSelected(widget.item(index), True)
                             else:

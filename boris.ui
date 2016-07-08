@@ -823,7 +823,7 @@
   </action>
   <action name="actionBehaviors_map">
    <property name="text">
-    <string>Behaviors map</string>
+    <string>Behavioral pad</string>
    </property>
   </action>
  </widget>

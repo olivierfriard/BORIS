@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created: Fri Jul  8 09:59:28 2016
+#      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,7 +22,6 @@ class Ui_dlgProject(object):
         self.tabInformation = QtWidgets.QWidget()
         self.tabInformation.setObjectName("tabInformation")
         self.formLayout = QtWidgets.QFormLayout(self.tabInformation)
-        self.formLayout.setContentsMargins(0, 0, 0, 0)
         self.formLayout.setObjectName("formLayout")
         self.label = QtWidgets.QLabel(self.tabInformation)
         self.label.setObjectName("label")
@@ -60,7 +60,6 @@ class Ui_dlgProject(object):
         self.tabConfiguration = QtWidgets.QWidget()
         self.tabConfiguration.setObjectName("tabConfiguration")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.tabConfiguration)
-        self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -74,7 +73,7 @@ class Ui_dlgProject(object):
         self.twBehaviors.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.twBehaviors.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.twBehaviors.setObjectName("twBehaviors")
-        self.twBehaviors.setColumnCount(7)
+        self.twBehaviors.setColumnCount(8)
         self.twBehaviors.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.twBehaviors.setHorizontalHeaderItem(0, item)
@@ -90,6 +89,8 @@ class Ui_dlgProject(object):
         self.twBehaviors.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
         self.twBehaviors.setHorizontalHeaderItem(6, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.twBehaviors.setHorizontalHeaderItem(7, item)
         self.twBehaviors.horizontalHeader().setSortIndicatorShown(True)
         self.twBehaviors.verticalHeader().setSortIndicatorShown(False)
         self.horizontalLayout_11.addWidget(self.twBehaviors)
@@ -107,6 +108,11 @@ class Ui_dlgProject(object):
         self.pbRemoveAllBehaviors = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbRemoveAllBehaviors.setObjectName("pbRemoveAllBehaviors")
         self.verticalLayout_11.addWidget(self.pbRemoveAllBehaviors)
+        self.pbBehaviorsCategories = QtWidgets.QPushButton(self.tabConfiguration)
+        self.pbBehaviorsCategories.setObjectName("pbBehaviorsCategories")
+        self.verticalLayout_11.addWidget(self.pbBehaviorsCategories)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_11.addItem(spacerItem)
         self.pbExclusionMatrix = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbExclusionMatrix.setObjectName("pbExclusionMatrix")
         self.verticalLayout_11.addWidget(self.pbExclusionMatrix)
@@ -120,8 +126,6 @@ class Ui_dlgProject(object):
         self.pbImportFromTextFile = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbImportFromTextFile.setObjectName("pbImportFromTextFile")
         self.verticalLayout_11.addWidget(self.pbImportFromTextFile)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.verticalLayout_11.addItem(spacerItem)
         self.horizontalLayout_11.addLayout(self.verticalLayout_11)
         self.verticalLayout_5.addLayout(self.horizontalLayout_11)
         self.lbObservationsState = QtWidgets.QLabel(self.tabConfiguration)
@@ -132,7 +136,6 @@ class Ui_dlgProject(object):
         self.tabSubjects = QtWidgets.QWidget()
         self.tabSubjects.setObjectName("tabSubjects")
         self.verticalLayout_16 = QtWidgets.QVBoxLayout(self.tabSubjects)
-        self.verticalLayout_16.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_16.setObjectName("verticalLayout_16")
         self.verticalLayout_14 = QtWidgets.QVBoxLayout()
         self.verticalLayout_14.setObjectName("verticalLayout_14")
@@ -177,7 +180,6 @@ class Ui_dlgProject(object):
         self.tabIndependentVariables = QtWidgets.QWidget()
         self.tabIndependentVariables.setObjectName("tabIndependentVariables")
         self.verticalLayout_18 = QtWidgets.QVBoxLayout(self.tabIndependentVariables)
-        self.verticalLayout_18.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_18.setObjectName("verticalLayout_18")
         self.horizontalLayout_13 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_13.setObjectName("horizontalLayout_13")
@@ -222,7 +224,6 @@ class Ui_dlgProject(object):
         self.tabObservations = QtWidgets.QWidget()
         self.tabObservations.setObjectName("tabObservations")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.tabObservations)
-        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -268,7 +269,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(3)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -293,15 +294,18 @@ class Ui_dlgProject(object):
         item = self.twBehaviors.horizontalHeaderItem(3)
         item.setText(_translate("dlgProject", "Description"))
         item = self.twBehaviors.horizontalHeaderItem(4)
-        item.setText(_translate("dlgProject", "Modifiers"))
+        item.setText(_translate("dlgProject", "Category"))
         item = self.twBehaviors.horizontalHeaderItem(5)
-        item.setText(_translate("dlgProject", "Exclusion"))
+        item.setText(_translate("dlgProject", "Modifiers"))
         item = self.twBehaviors.horizontalHeaderItem(6)
-        item.setText(_translate("dlgProject", "Coding map"))
+        item.setText(_translate("dlgProject", "Exclusion"))
+        item = self.twBehaviors.horizontalHeaderItem(7)
+        item.setText(_translate("dlgProject", "Modifiers coding map"))
         self.pbAddBehavior.setText(_translate("dlgProject", "Add behavior"))
         self.pbCloneBehavior.setText(_translate("dlgProject", "Clone behavior"))
         self.pbRemoveBehavior.setText(_translate("dlgProject", "Remove behavior"))
         self.pbRemoveAllBehaviors.setText(_translate("dlgProject", "Remove all behaviors"))
+        self.pbBehaviorsCategories.setText(_translate("dlgProject", "Behavioral categories"))
         self.pbExclusionMatrix.setText(_translate("dlgProject", "Exclusion matrix"))
         self.pbImportBehaviorsFromProject.setText(_translate("dlgProject", "Import behaviors\n"
 "from a BORIS project"))

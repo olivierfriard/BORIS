@@ -41,7 +41,7 @@ class BehaviorsMap(QWidget):
     def __init__(self, behaviorsList, parent = None):
         super(BehaviorsMap, self).__init__(parent)
 
-        self.setWindowTitle("Behaviors map")
+        self.setWindowTitle("Behavioral pad")
 
         self.grid = QGridLayout(self)
 
@@ -57,9 +57,9 @@ class BehaviorsMap(QWidget):
                 self.addWidget(behaviorsList[c], i, j)
                 c += 1
 
-    def addWidget(self, behaviorCode,i,j):
+    def addWidget(self, behaviorCode, i, j):
 
-        self.grid.addWidget(Test(),i,j)
+        self.grid.addWidget(Test(), i, j)
         index = self.grid.count() - 1
         widget = self.grid.itemAt(index).widget()
 

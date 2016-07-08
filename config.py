@@ -46,6 +46,7 @@ TIME_OFFSET_SECOND_PLAYER='time offset second player'
 CODING_MAP = 'coding_map'
 SUBJECTS = 'subjects_conf'
 ETHOGRAM = 'behaviors_conf'
+BEHAVIORAL_CATEGORIES = "behavioral_categories"
 
 subjects_config = ['key', 'id']
 
@@ -66,10 +67,11 @@ TYPE = "type"
 FILE = "file"
 
 # fields for event configuration
-#fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5}
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
-# fields in behaviours table from project window
-behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
+
+# fields in ethogram table from project window
+# behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
+behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'category': 4, 'modifiers': 5, 'excluded': 6, 'coding map': 7}
 
 observation_types = ['Point event', 'State event', 'Point event with coding map', 'State event with coding map']
 

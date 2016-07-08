@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Jul  6 17:16:04 2016
+# Created: Thu Jul  7 15:25:28 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -516,5 +516,5 @@ class Ui_MainWindow(object):
         self.actionShowAllBehaviors.setText(_translate("MainWindow", "Show all behaviors"))
         self.actionShowAllBehaviors.setToolTip(_translate("MainWindow", "Show all behaviors"))
         self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events"))
-        self.actionBehaviors_map.setText(_translate("MainWindow", "Behaviors map"))
+        self.actionBehaviors_map.setText(_translate("MainWindow", "Behavioral pad"))
 
