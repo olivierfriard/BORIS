@@ -218,6 +218,15 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         """
 
+        # check if double click on excluded column
+        if column == behavioursFields["excluded"]:
+            QMessageBox.information(self, programName, "Use the 'Exclusion matrix' button to manage excluded behaviors")
+
+        # check if double click on 'coding map' column
+        if column == behavioursFields["coding map"]:
+            QMessageBox.information(self, programName, "Change the behavior type on first column to select a coding map")
+
+
         # check if double click on category
         if column == behavioursFields["category"]:
             self.category_doubleclicked(row)
@@ -537,13 +546,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 QMessageBox.warning(self, programName, 'No behaviors configuration found in project')
 
+
     def pbExclusionMatrix_clicked(self):
         """
         activate exclusion matrix window
         """
 
         if not self.twBehaviors.rowCount():
-            QMessageBox.warning(None, programName, "Behaviors list is empty!", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(None, programName, "The ethogram is empty!", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         ex = ExclusionMatrix()
@@ -626,6 +636,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             item = QTableWidgetItem(','.join(new_excl[e]))
                             item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(r, fields['excluded'], item)
+
 
     def pbRemoveAllBehaviors_clicked(self):
 
@@ -723,6 +734,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         for separator in separators:
             cs = []
             for row in rows:
+
                 cs.append(row.count(separator))
             if len(set(cs)) == 1:
                 return separator, cs[0] + 1
@@ -752,8 +764,18 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.rowCount() and response == 'Replace':
                 self.twBehaviors.setRowCount(0)
 
-            with open(fileName, "r") as f:
-                rows = [r.strip() for r in f.readlines()]
+            with open(fileName, mode="rb") as f:
+                rows_b = f.read().splitlines()
+
+            rows = []
+            idx = 1
+            for row in rows_b:
+                try:
+                    rows.append(row.decode("utf-8"))
+                except:
+                    QMessageBox.critical(None, programName, "Error while reading file\nThe line # {}\n{}\ncontains characters that are not readable.".format(idx,row), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    return
+                idx += 1
 
             fieldSeparator, fieldsNumber = self.check_text_file_type(rows)
 
@@ -776,7 +798,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if fieldsNumber > 4:
                         type_, key, code, description = row.split(fieldSeparator)[:4]
 
-                    behavior = {"key": key, "code": code, "description": description, "modifiers": "", "excluded": "", "coding map": ""}
+                    behavior = {"key": key, "code": code, "description": description, "modifiers": "", "excluded": "", "coding map": "", "category": ""}
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -798,7 +820,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
                         else:
                             item = QTableWidgetItem(behavior[field_type])
-                            if field_type in ["excluded", "coding map", "modifiers"]:
+                            if field_type in ["excluded", "coding map", "modifiers", "category"]:
                                 item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
@@ -1195,7 +1217,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             del self.pj['coding_map'][cm]
 
         if missing_data:
-            QMessageBox.warning(self, programName, "Missing data in behaviors configuration at row{} !".format(",".join(missing_data)))
+            QMessageBox.warning(self, programName, "Missing data in ethogram at row{} !".format(",".join(missing_data)))
             return
 
         # delete coding maps loaded in pj and not cited in ethogram

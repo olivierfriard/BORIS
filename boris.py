@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.982"
-__version_date__ = "2016-07-05"
+__version_date__ = "2016-07-26"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -3225,6 +3225,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "start time": startTime,
                 "end time": endTime
                 }
+
 
     def time_budget(self):
         """
