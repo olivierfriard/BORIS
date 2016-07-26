@@ -702,7 +702,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if idx < len(rows) and "Behavior.description." in rows[idx+1]:
                         description = rows[idx+1].split('=')[-1]
 
-                    behavior = {'key': key, 'code': code, 'description': description, 'modifiers': '', 'excluded': '', 'coding map': ''}
+                    behavior = {"key": key, "code": code, "description": description, "modifiers": "", "excluded": "", "coding map": "", "category": ""}
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 

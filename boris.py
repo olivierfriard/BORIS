@@ -3232,6 +3232,215 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         time budget
         """
 
+        def time_budget_analysis(cursor, plot_parameters):
+            out = []
+            for subject in plot_parameters["selected subjects"]:
+
+                for behavior in plot_parameters["selected behaviors"]:
+
+                    if plot_parameters["include modifiers"]:
+
+                        cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
+                        distinct_modifiers = list(cursor.fetchall())
+
+                        if not distinct_modifiers:
+                            if not plot_parameters["exclude behaviors"]:
+                                out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "-",
+                                            "duration": "-",
+                                            "duration_mean": "-",
+                                            "duration_stdev": "-",
+                                            "number": 0,
+                                            "inter_duration_mean": "-",
+                                            "inter_duration_stdev": "-"})
+                            continue
+
+                        if POINT in self.eventType(behavior).upper():
+                            for modifier in distinct_modifiers:
+                                if len(selectedObservations) > 1:
+                                    cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                                   (subject, behavior, modifier[0]))
+                                else:
+                                    cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+
+                                rows = cursor.fetchall()
+
+                                # inter events duration
+                                all_event_interdurations = []
+                                for idx, row in enumerate(rows):
+                                    if idx and row[1] == rows[idx - 1][1]:
+                                        all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
+
+                                out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": modifier[0],
+                                            "duration": "-",
+                                            "duration_mean": "-",
+                                            "duration_stdev": "-",
+                                            "number": len(rows),
+                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                            })
+
+
+                        if STATE in self.eventType(behavior).upper():
+                            for modifier in distinct_modifiers:
+                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                              (subject, behavior, modifier[0]))
+                                '''
+                                if len(selectedObservations) > 1:
+                                    cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                                   (subject, behavior, modifier[0]))
+                                else:
+                                    cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+                                '''
+                                rows = list(cursor.fetchall())
+                                if len(rows) % 2:
+                                    out.append({"subject": subject, "behavior": behavior,
+                                                "modifiers": modifier[0], "duration": UNPAIRED,
+                                                "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                                "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                                "inter_duration_stdev": UNPAIRED})
+                                else:
+                                    all_event_durations, all_event_interdurations = [], []
+                                    for idx, row in enumerate(rows):
+                                        # event
+                                        if idx % 2 == 0:
+                                            new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                            if len(selectedObservations) == 1:
+                                                if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
+                                                   or \
+                                                   (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
+                                                    continue
+
+                                                if new_init < plot_parameters["start time"]:
+                                                    new_init = float(plot_parameters["start time"])
+                                                if new_end > plot_parameters["end time"]:
+                                                    new_end = float(plot_parameters["end time"])
+
+                                            all_event_durations.append( new_end - new_init)
+
+                                        # inter event if same observation
+                                        if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                            if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
+                                                all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                                            #all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
+
+                                    out.append({"subject": subject,
+                                                "behavior": behavior,
+                                                "modifiers": modifier[0],
+                                                "duration": round(sum(all_event_durations), 3),
+                                                "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
+                                                "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
+                                                "number": len(all_event_durations),
+                                                "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                                "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                                })
+
+                    else:  # no modifiers
+
+                        if POINT in self.eventType(behavior).upper():
+
+                            if len(selectedObservations) > 1:
+                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            else:
+                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                               (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+
+                            rows = list(cursor.fetchall())
+
+                            if len(selectedObservations) == 1:
+                                new_rows = []
+                                for occurence, observation in rows:
+                                    new_occurence = max(float(plot_parameters["start time"]), occurence)
+                                    new_occurence = min( new_occurence, float( plot_parameters["end time"]) )
+                                    new_rows.append( [new_occurence, observation])
+                                rows = list(new_rows)
+
+                            if not len(rows):
+                                if not plot_parameters["exclude behaviors"]:
+                                    out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                                                "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0,
+                                                "inter_duration_mean": "-", "inter_duration_stdev": "-"})
+                                continue
+
+                            # inter events duration
+                            all_event_interdurations = []
+                            for idx, row in enumerate(rows):
+                                if idx and row[1] == rows[idx - 1][1]:
+                                    all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
+
+                            out.append({"subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": "NA",
+                                        "duration": "-",
+                                        "duration_mean": "-",
+                                        "duration_stdev": "-",
+                                        "number": len(rows),
+                                        "inter_duration_mean" : round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                        "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                        })
+
+
+                        if STATE in self.eventType(behavior).upper():
+                            cursor.execute( "SELECT occurence,observation FROM events where subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            rows = list(cursor.fetchall())
+
+                            if not len(rows):
+                                if not plot_parameters["exclude behaviors"]: # include behaviors without events
+                                    out.append({"subject": subject , "behavior": behavior,
+                                                "modifiers": "NA", "duration": 0, "duration_mean": 0,
+                                                "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
+                                                "inter_duration_stdev": "-"})
+                                continue
+                            if len(rows) % 2:
+                                out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                                            "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                            "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                            "inter_duration_stdev": UNPAIRED})
+                            else:
+                                all_event_durations, all_event_interdurations = [], []
+                                for idx, row in enumerate(rows):
+                                    # event
+                                    if idx % 2 == 0:
+                                        new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                        if len(selectedObservations) == 1:
+                                            if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
+                                               or \
+                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
+                                                continue
+
+                                            if new_init < plot_parameters["start time"]:
+                                                new_init = float(plot_parameters["start time"])
+                                            if new_end > plot_parameters["end time"]:
+                                                new_end = float(plot_parameters["end time"])
+
+                                        all_event_durations.append( new_end - new_init)
+
+                                    # inter event if same observation
+                                    if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                        if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
+                                            all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                                out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "NA",
+                                            "duration": round(sum(all_event_durations), 3),
+                                            "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
+                                            "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
+                                            "number": len(all_event_durations),
+                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                            })
+
+            return out
+
+
+
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
         logging.debug("Selected observations: {0}".format(selectedObservations))
@@ -3270,217 +3479,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if len(selectedObservations) > 1:
             plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0)
+            flagGroup = dialog.MessageDialog(programName, "Group observations?", [YES, NO]) == YES
         else:
             plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=selectedObsTotalMediaLength)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"] )
-
-        out = []
-        for subject in plot_parameters["selected subjects"]:
-
-            for behavior in plot_parameters["selected behaviors"]:
-
-                if plot_parameters["include modifiers"]:
-
-                    cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
-                    distinct_modifiers = list(cursor.fetchall())
-
-                    if not distinct_modifiers:
-                        if not plot_parameters["exclude behaviors"]:
-                            out.append({"subject": subject,
-                                        "behavior": behavior,
-                                        "modifiers": "-",
-                                        "duration": "-",
-                                        "duration_mean": "-",
-                                        "duration_stdev": "-",
-                                        "number": 0,
-                                        "inter_duration_mean": "-",
-                                        "inter_duration_stdev": "-"})
-                        continue
-
-                    if POINT in self.eventType(behavior).upper():
-                        for modifier in distinct_modifiers:
-                            if len(selectedObservations) > 1:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
-                                               (subject, behavior, modifier[0]))
-                            else:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
-                                               (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-
-                            rows = cursor.fetchall()
-
-                            # inter events duration
-                            all_event_interdurations = []
-                            for idx, row in enumerate(rows):
-                                if idx and row[1] == rows[idx - 1][1]:
-                                    all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
-
-                            out.append({"subject": subject,
-                                        "behavior": behavior,
-                                        "modifiers": modifier[0],
-                                        "duration": "-",
-                                        "duration_mean": "-",
-                                        "duration_stdev": "-",
-                                        "number": len(rows),
-                                        "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
-                                        "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
-                                        })
+        if (len(selectedObservations) > 1 and flagGroup) or (len(selectedObservations) == 1):
+            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            out = time_budget_analysis(cursor, plot_parameters)
+        else:
+            for obsId in selectedObservations:
+                cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
+                out = time_budget_analysis(cursor, plot_parameters)
 
 
-                    if STATE in self.eventType(behavior).upper():
-                        for modifier in distinct_modifiers:
-                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
-                                          (subject, behavior, modifier[0]))
-                            '''
-                            if len(selectedObservations) > 1:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
-                                               (subject, behavior, modifier[0]))
-                            else:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
-                                               (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-                            '''
-                            rows = list(cursor.fetchall())
-                            if len(rows) % 2:
-                                out.append({"subject": subject, "behavior": behavior,
-                                            "modifiers": modifier[0], "duration": UNPAIRED,
-                                            "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
-                                            "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
-                                            "inter_duration_stdev": UNPAIRED})
-                            else:
-                                all_event_durations, all_event_interdurations = [], []
-                                for idx, row in enumerate(rows):
-                                    # event
-                                    if idx % 2 == 0:
-                                        new_init, new_end = float(row[0]), float(rows[idx + 1][0])
-                                        if len(selectedObservations) == 1:
-                                            if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
-                                               or \
-                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
-                                                continue
-
-                                            if new_init < plot_parameters["start time"]:
-                                                new_init = float(plot_parameters["start time"])
-                                            if new_end > plot_parameters["end time"]:
-                                                new_end = float(plot_parameters["end time"])
-
-                                        all_event_durations.append( new_end - new_init)
-
-                                    # inter event if same observation
-                                    if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                        if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
-                                            all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
-
-                                        #all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
-
-                                out.append({"subject": subject,
-                                            "behavior": behavior,
-                                            "modifiers": modifier[0],
-                                            "duration": round(sum(all_event_durations), 3),
-                                            "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
-                                            "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
-                                            "number": len(all_event_durations),
-                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
-                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
-                                            })
-
-                else:  # no modifiers
-
-                    if POINT in self.eventType(behavior).upper():
-
-                        if len(selectedObservations) > 1:
-                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                        else:
-                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
-                                           (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-
-                        rows = list(cursor.fetchall())
-
-                        if len(selectedObservations) == 1:
-                            new_rows = []
-                            for occurence, observation in rows:
-                                new_occurence = max(float(plot_parameters["start time"]), occurence)
-                                new_occurence = min( new_occurence, float( plot_parameters["end time"]) )
-                                new_rows.append( [new_occurence, observation])
-                            rows = list(new_rows)
-
-                        if not len(rows):
-                            if not plot_parameters["exclude behaviors"]:
-                                out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
-                                            "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0,
-                                            "inter_duration_mean": "-", "inter_duration_stdev": "-"})
-                            continue
-
-                        # inter events duration
-                        all_event_interdurations = []
-                        for idx, row in enumerate(rows):
-                            if idx and row[1] == rows[idx - 1][1]:
-                                all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
-
-                        out.append({"subject": subject,
-                                    "behavior": behavior,
-                                    "modifiers": "NA",
-                                    "duration": "-",
-                                    "duration_mean": "-",
-                                    "duration_stdev": "-",
-                                    "number": len(rows),
-                                    "inter_duration_mean" : round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
-                                    "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
-                                    })
-
-
-                    if STATE in self.eventType(behavior).upper():
-                        cursor.execute( "SELECT occurence,observation FROM events where subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                        rows = list(cursor.fetchall())
-
-                        if not len(rows):
-                            if not plot_parameters["exclude behaviors"]: # include behaviors without events
-                                out.append({"subject": subject , "behavior": behavior,
-                                            "modifiers": "NA", "duration": 0, "duration_mean": 0,
-                                            "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
-                                            "inter_duration_stdev": "-"})
-                            continue
-                        if len(rows) % 2:
-                            out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
-                                        "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
-                                        "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
-                                        "inter_duration_stdev": UNPAIRED})
-                        else:
-                            all_event_durations, all_event_interdurations = [], []
-                            for idx, row in enumerate(rows):
-                                # event
-                                if idx % 2 == 0:
-                                    new_init, new_end = float(row[0]), float(rows[idx + 1][0])
-                                    if len(selectedObservations) == 1:
-                                        if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
-                                           or \
-                                           (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
-                                            continue
-
-                                        if new_init < plot_parameters["start time"]:
-                                            new_init = float(plot_parameters["start time"])
-                                        if new_end > plot_parameters["end time"]:
-                                            new_end = float(plot_parameters["end time"])
-
-                                    all_event_durations.append( new_end - new_init)
-
-                                # inter event if same observation
-                                if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
-                                    if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
-                                        all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
-
-                            out.append({"subject": subject,
-                                        "behavior": behavior,
-                                        "modifiers": "NA",
-                                        "duration": round(sum(all_event_durations), 3),
-                                        "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
-                                        "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
-                                        "number": len(all_event_durations),
-                                        "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
-                                        "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
-                                        })
 
         # widget for results visualization
         self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
@@ -3490,13 +3504,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obs in selectedObservations:
             self.tb.lw.addItem(obs)
 
+        # media length
         if len(selectedObservations) > 1:
             if selectedObsTotalMediaLength:
-                self.tb.lbTotalObservedTime.setText("Total media length: {0}".format(seconds2time(selectedObsTotalMediaLength)))
+                if self.timeFormat == HHMMSS:
+                    self.tb.lbTotalObservedTime.setText("Total media length: {}".format(seconds2time(selectedObsTotalMediaLength)))
+                if self.timeFormat == S:
+                    self.tb.lbTotalObservedTime.setText("Total media length: {:0.3f}".format(float(selectedObsTotalMediaLength)))
             else:
                 self.tb.lbTotalObservedTime.setText("Total media length: not available")
         else:
-            self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
+
+            if self.timeFormat == HHMMSS:
+                self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
+            if self.timeFormat == S:
+                self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
+
 
         tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
                      "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
@@ -4745,25 +4768,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 includeMediaInfo = YES
                 break
 
-        dummy = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ("Tab separated values (*.tsv *.txt);;"
-                                                                                         "Comma separated values (*.csv);;"
-                                                                                         "Open Document Spreadsheet (*.ods);;"
-                                                                                         "Microsoft Excel (*.xls);;"
-                                                                                         "HTML (*.html *.htm);;"
-                                                                                         "SQL dump file file (*.sql);;"
-                                                                                         "All files (*)"))
-        if type(dummy) is tuple:
-            fileName, _ = dummy
-        else:
-            fileName = dummy
-        if not fileName:
-            return
+        fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
+                       "Comma Separated Values (*.txt *.csv);;"
+                       "Microsoft Excel XLS (*.xls);;"
+                       "Open Document Spreadsheet ODS (*.ods);;"
+                       "HTML (*.html);;"
+                       "SQL dump file file (*.sql);;"
+                       "All files (*)")
+        while True:
+            if QT_VERSION_STR[0] == "4":
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export aggregated events", "", fileFormats)
+            else:
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", fileFormats)
 
-        outputFormat = ""
-        availableFormats = ("tsv", "txt", "csv", "xls", "ods", "html", "sql")
-        for fileExtension in availableFormats:
-            if fileName.upper().endswith("." + fileExtension.upper()):
-                outputFormat = fileExtension.replace("txt", "tsv")
+
+            '''dummy = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ("Tab separated values (*.tsv *.txt);;"
+                                                                                             "Comma separated values (*.csv);;"
+                                                                                             "Open Document Spreadsheet (*.ods);;"
+                                                                                             "Microsoft Excel (*.xls);;"
+                                                                                             "HTML (*.html *.htm);;"
+                                                                                             "SQL dump file file (*.sql);;"
+                                                                                             "All files (*)"))
+
+            if type(dummy) is tuple:
+                fileName, _ = dummy
+            else:
+                fileName = dummy
+            '''
+            if not fileName:
+                return
+
+            outputFormat = ""
+            availableFormats = ("tsv", "csv", "xls", "ods", "html", "sql")
+            for fileExtension in availableFormats:
+                if fileExtension in filter_:
+                    outputFormat = fileExtension
+                    if not fileName.upper().endswith("." + fileExtension.upper()):
+                        fileName += "." + fileExtension
+
+            if not outputFormat:
+                QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            else:
+                break
+
 
         if not outputFormat:
             QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -6711,6 +6758,7 @@ item []:
         export events from selected observations in various formats: TSV, CSV, ODS, XLS
         """
 
+
         def complete(l, max):
             """
             complete list with empty string until len = max
@@ -6753,28 +6801,47 @@ item []:
 
             if len(selectedObservations) == 1:
 
-                dummy = QFileDialog(self).getSaveFileName(self, "Export events", obsId, ("Tab separated values (*.tsv *.txt);;"
-                                                                                                              "Comma separated values (*.csv);;"
-                                                                                                              "Open Document Spreadsheet (*.ods);;"
-                                                                                                              "Microsoft Excel (*.xls);;"
-                                                                                                              "HTML (*.html);;"
-                                                                                                              "All files (*)"))
-                if type(dummy) is tuple:
-                    fileName, _ = dummy
-                else:
-                    fileName = dummy
-                if not fileName:
-                    return
+                fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
+                               "Comma Separated Values (*.txt *.csv);;"
+                               "Microsoft Excel XLS (*.xls);;"
+                               "Open Document Spreadsheet ODS (*.ods);;"
+                               "HTML (*.html);;"
+                               "All files (*)")
+                while True:
+                    if QT_VERSION_STR[0] == "4":
+                        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export events", "", fileFormats)
+                    else:
+                        fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export events", "", fileFormats)
 
-                outputFormat = ""
-                availableFormats = ("tsv", "txt", "csv", "xls", "ods", "html")
-                for fileExtension in availableFormats:
-                    if fileName.upper().endswith("." + fileExtension.upper()):
-                        outputFormat = fileExtension.replace("txt", "tsv")
 
-                if not outputFormat:
-                    QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                    return
+                    '''
+                    dummy = QFileDialog(self).getSaveFileName(self, "Export events", obsId, ("Tab separated values (*.tsv *.txt);;"
+                                                                                                                  "Comma separated values (*.txt *.csv);;"
+                                                                                                                  "Open Document Spreadsheet (*.ods);;"
+                                                                                                                  "Microsoft Excel (*.xls);;"
+                                                                                                                  "HTML (*.html);;"
+                                                                                                                  "All files (*)"))
+                    if type(dummy) is tuple:
+                        fileName, _ = dummy
+                    else:
+                        fileName = dummy
+                    '''
+
+                    if not fileName:
+                        return
+
+                    outputFormat = ""
+                    availableFormats = ("tsv", "csv", "xls", "ods", "html")
+                    for fileExtension in availableFormats:
+                        if fileExtension in filter_:
+                            outputFormat = fileExtension
+                            if not fileName.upper().endswith("." + fileExtension.upper()):
+                                fileName += "." + fileExtension
+
+                    if not outputFormat:
+                        QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    else:
+                        break
 
             else:
 
@@ -6838,7 +6905,7 @@ item []:
                 rows.append(["variable", "value"])
 
                 for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
-                    rows.append(  [ variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable] ])
+                    rows.append([variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]])
 
             rows.append([""])
 
@@ -6870,14 +6937,13 @@ item []:
                    and (event[BEHAVIOR_EVENT_FIELD] in plot_parameters["selected behaviors"])):
 
                     fields = []
-                    fields.append(float(event[EVENT_TIME_FIELD_IDX]))
+                    fields.append(intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
 
                     if includeMediaInfo == YES:
                         mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])][-1]
-                        fields.append(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])
+                        fields.append(intfloatstr(str( self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx] )))
                         # media total length
-                        print(duration1)
-                        fields.append(str(sum([float(x) for x in duration1] )))
+                        fields.append(str(sum([float(x) for x in duration1])))
                         # fps
                         fields.append(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]])
 

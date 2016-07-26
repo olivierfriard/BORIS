@@ -36,11 +36,12 @@ import os
 import tablib
 
 from config import *
+from utilities import intfloatstr
 
 class timeBudgetResults(QWidget):
     """
     class for displaying time budget results in new window
-    a function for exporting data in TSV format is implemented
+    a function for exporting data in TSV, CSV, XLS and ODS formats is implemented
     """
 
     def __init__(self, log_level, pj):
@@ -49,7 +50,7 @@ class timeBudgetResults(QWidget):
         logging.basicConfig(level=log_level)
         self.pj = pj
         self.label = QLabel()
-        self.label.setText('')
+        self.label.setText("")
         self.lw = QListWidget()
         self.lw.setEnabled(False)
         self.lw.setMaximumHeight(100)
@@ -66,7 +67,6 @@ class timeBudgetResults(QWidget):
 
         hbox2 = QHBoxLayout(self)
 
-
         self.pbSave = QPushButton("Save results")
         hbox2.addWidget(self.pbSave)
 
@@ -79,7 +79,6 @@ class timeBudgetResults(QWidget):
         hbox.addLayout(hbox2)
 
         self.setWindowTitle("Time budget")
-
 
         self.pbClose.clicked.connect(self.close)
         self.pbSave.clicked.connect(self.pbSave_clicked)
@@ -100,40 +99,53 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        if QT_VERSION_STR[0] == "4":
-            fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
-        else:
-            fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+        while True:
+            if QT_VERSION_STR[0] == "4":
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+            else:
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
 
-        if not fileName:
-            return
+            if not fileName:
+                return
 
-        outputFormat = ""
-        availableFormats = ("tsv", "csv", "xls", "ods")
-        for fileExtension in availableFormats:
-            if fileExtension in filter_ and not fileName.upper().endswith("." + fileExtension.upper()):
-                fileName += "." + fileExtension
-                outputFormat = fileExtension
-        if not outputFormat:
-            QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
+            outputFormat = ""
+            availableFormats = ("tsv", "csv", "xls", "ods")
+            for fileExtension in availableFormats:
+
+                if fileExtension in filter_:
+                    outputFormat = fileExtension
+                    if not fileName.upper().endswith("." + fileExtension.upper()):
+                        fileName += "." + fileExtension
+
+
+                '''
+                if fileExtension in filter_ and not fileName.upper().endswith("." + fileExtension.upper()):
+                    fileName += "." + fileExtension
+                if fileExtension in filter_:
+                    outputFormat = fileExtension
+                '''
+
+            if not outputFormat:
+                QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            else:
+                break
 
         if fileName:
 
             rows = []
 
             # observations list
-            rows.append(['Observations:'])
+            rows.append(["Observations:"])
             for idx in range(self.lw.count()):
                 rows.append([self.lw.item(idx).text()])
 
             # check if only one observation was selected
             if self.lw.count() == 1:
-                rows.append([''])
+                rows.append([""])
 
                 # write independant variables to file
                 if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(0).text()]:
-                    rows.append(['Independent variables:'])
+                    rows.append(["Independent variables:"])
                     for var in self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES]:
                         rows.append([var, self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES][var]])
 
@@ -152,6 +164,10 @@ class timeBudgetResults(QWidget):
             for row in range(self.twTB.rowCount()):
                 values = []
                 for col in range(self.twTB.columnCount()):
+
+                    values.append(intfloatstr(self.twTB.item(row,col).text()))
+
+                    '''
                     try:
                         val = int(self.twTB.item(row,col).text())
                         values.append(val)
@@ -161,6 +177,7 @@ class timeBudgetResults(QWidget):
                             values.append("{:0.3f}".format(val))
                         except:
                             values.append(self.twTB.item(row,col).text())
+                    '''
 
                 rows.append(values)
 
@@ -172,23 +189,22 @@ class timeBudgetResults(QWidget):
             for row in rows:
                 data.append(complete(row, maxLen))
 
-            if outputFormat == 'tsv':
-                with open(fileName, 'w') as f:
+            if outputFormat == "tsv":
+                with open(fileName, "w") as f:
                     f.write(data.tsv)
                 return
 
-            if outputFormat == 'csv':
+            if outputFormat == "csv":
                 with open(fileName,'w') as f:
                     f.write(data.csv)
                 return
 
-            if outputFormat == 'ods':
+            if outputFormat == "ods":
                 with open(fileName,'wb') as f:
                     f.write(data.ods)
                 return
 
-            if outputFormat == 'xls':
-                with open(fileName,'wb') as f:
+            if outputFormat == "xls":
+                with open(fileName,"wb") as f:
                     f.write(data.xls)
                 return
-

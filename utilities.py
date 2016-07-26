@@ -60,6 +60,21 @@ def bestTimeUnit(t: int) -> str:
     return t, unit
 
 
+def intfloatstr(s):
+    """
+    convert str in int or float or return str
+    """
+
+    try:
+        val = int(s)
+        return val
+    except:
+        try:
+            val = float(s)
+            return "{:0.3f}".format(val)
+        except:
+            return s
+
 
 def distance(p1, p2):
     """
