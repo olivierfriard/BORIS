@@ -3486,13 +3486,92 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
+        # check if time_budget window must be used
         if (len(selectedObservations) > 1 and flagGroup) or (len(selectedObservations) == 1):
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
             out = time_budget_analysis(cursor, plot_parameters)
         else:
+
+            items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)", "Microsoft Excel (*.xls)", "HTML (*.html)")
+            item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
+            if not ok:
+                return
+            outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
+
+            flagWorkBook = False
+            if outputFormat == "xls":
+                flagWorkBook = dialog.MessageDialog(programName, "Choose the type of Excel file", ["Single sheets", "Workbook"]) == "Workbook"
+                if flagWorkBook:
+                    workbook = tablib.Databook()
+
+            if not flagWorkBook:
+                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the time budget analysis", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
+                if not exportDir:
+                    return
+
+            fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
             for obsId in selectedObservations:
+
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
                 out = time_budget_analysis(cursor, plot_parameters)
+
+                data = tablib.Dataset()
+                data.title = obsId
+                data.headers = fields + ["% total time"]
+
+                for row in out:
+                    values = []
+                    for field in fields:
+                        values.append( str(row[field]).replace(" ()", "") )
+
+                    # % of total time
+                    if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                        if len(selectedObservations) > 1:
+                            values.append(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1))
+                        else:
+                            values.append(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1))
+                    else:
+                        values.append("-")
+
+                    data.append(values)
+
+                if flagWorkBook:
+                    workbook.add_sheet(data)
+                else:
+
+                    fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
+
+                    if outputFormat == "tsv":
+                        with open(fileName, "w") as f:
+                            f.write(data.tsv)
+
+                    if outputFormat == "csv":
+                        with open(fileName,'w') as f:
+                            f.write(data.csv)
+
+                    if outputFormat == "ods":
+                        with open(fileName,'wb') as f:
+                            f.write(data.ods)
+
+                    if outputFormat == "html":
+                        with open(fileName,'w') as f:
+                            f.write(data.html)
+
+                    if outputFormat == "xls":
+
+                        if len(obsId) > 31:
+                            data.title = obsId[0:31]
+                            QMessageBox.warning(None, programName, ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
+                                                                    "The limit on worksheet name length is 31 characters").format(obsId, data.title),
+                                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+                        with open(fileName,"wb") as f:
+                            f.write(data.xls)
+
+            if flagWorkBook:
+                with open('/tmp/wb.xls', 'wb') as f:
+                    f.write(workbook.xls)
+            return
 
 
 
