@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.982"
-__version_date__ = "2016-07-26"
+__version_date__ = "2016-07-27"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -3530,7 +3530,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 data = tablib.Dataset()
                 data.title = obsId
-                data.headers = fields + ["% total time"]
+                data.headers = fields + ["% of total media length"]
 
                 for row in out:
                     values = []
@@ -4444,7 +4444,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             newProjectWindow.comboBoxes[-1].setCurrentIndex(observation_types.index(self.pj[ETHOGRAM][i][field]))
 
                             newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
-                            newProjectWindow.comboBoxes[-1].currentIndexChanged['int'].connect(newProjectWindow.signalMapper.map)
+                            newProjectWindow.comboBoxes[-1].currentIndexChanged["int"].connect(newProjectWindow.signalMapper.map)
 
                             newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], newProjectWindow.comboBoxes[-1])
 
