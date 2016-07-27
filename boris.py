@@ -3499,10 +3499,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
             flagWorkBook = False
-            if outputFormat == "xls":
-                flagWorkBook = dialog.MessageDialog(programName, "Choose the type of Excel file", ["Single sheets", "Workbook"]) == "Workbook"
+            if outputFormat in ["xls", "ods"]:
+                flagWorkBook = dialog.MessageDialog(programName, "Choose the type of file", ["Single sheets", "Workbook"]) == "Workbook"
                 if flagWorkBook:
                     workbook = tablib.Databook()
+                    if outputFormat == "xls":
+                        filters = "Microsoft Excel XLS (*.xls);;All files (*)"
+                    if outputFormat == "ods":
+                        filters = "Open Document Spreadsheet ODS (*.ods);;All files (*)"
+
+                    if QT_VERSION_STR[0] == "4":
+                        WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
+                    else:
+                        WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
+
+                    if not WBfileName:
+                        return
+
 
             if not flagWorkBook:
                 exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the time budget analysis", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
@@ -3569,8 +3582,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             f.write(data.xls)
 
             if flagWorkBook:
-                with open('/tmp/wb.xls', 'wb') as f:
-                    f.write(workbook.xls)
+                if outputFormat == "xls":
+                    with open(WBfileName, 'wb') as f:
+                        f.write(workbook.xls)
+                if outputFormat == "ods":
+                    with open(WBfileName, 'wb') as f:
+                        f.write(workbook.ods)
             return
 
 
