@@ -46,7 +46,7 @@ Licence
 
 Distributed with a `GPL license <COPYING.TXT>`_::
 
-Copyrigth (C) 2016 Olivier Friard
+Copyright (C) 2016 Olivier Friard
 
 
 
