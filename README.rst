@@ -12,7 +12,7 @@ Documentation
 The official documentation is hosted here:
 http://boris.readthedocs.io/
 
-The documentation provides a good starting point for learning how BORIS.
+The documentation provides a good starting point for learning how to use BORIS.
 
 Bug reports and feature requests
 --------------------------------
