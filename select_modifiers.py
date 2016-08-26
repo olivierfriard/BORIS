@@ -33,13 +33,14 @@ except:
 import re
 import config
 
-class ModifiersRadioButton(QDialog):
+class ModifiersList(QDialog):
 
     def __init__(self, code, modifiers_list, currentModifier):
 
-        super(ModifiersRadioButton, self).__init__()
+        super(ModifiersList, self).__init__()
 
         self.setWindowTitle(config.programName)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         currentModifierList = currentModifier.split("|")
 
@@ -48,7 +49,7 @@ class ModifiersRadioButton(QDialog):
         widget.setLayout(Vlayout)
 
         label = QLabel()
-        label.setText("Choose the modifier{0} for <b>{1}</b> event".format( 's'*(len(modifiers_list) > 1), code))
+        label.setText("Choose the modifier{0} for <b>{1}</b> event".format("s" * (len(modifiers_list) > 1), code))
         Vlayout.addWidget(label)
 
         self.modifiersSetNumber = 0
@@ -85,7 +86,6 @@ class ModifiersRadioButton(QDialog):
                         else:
                             item.setSelected(True)
 
-
             Vlayout.addWidget(lw)
 
         pbCancel = QPushButton("Cancel")
@@ -110,7 +110,8 @@ class ModifiersRadioButton(QDialog):
         if(event.type() == QEvent.KeyPress):
             ek = event.key()
             # close dialog if enter pressed
-            if ek == 16777220:
+            if ek == 16777220:   # Key_Enter
+            #if ek == Qt.Key_Enter:
                 self.accept()
                 return True
 

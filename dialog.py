@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -33,8 +33,9 @@ except:
 
 import config
 
+
 def MessageDialog(title, text, buttons):
-    response = ''
+    response = ""
     message = QMessageBox()
     message.setWindowTitle(title)
     message.setText(text)
@@ -42,14 +43,75 @@ def MessageDialog(title, text, buttons):
     for button in buttons:
         message.addButton(button, QMessageBox.YesRole)
 
+    message.setWindowFlags(Qt.WindowStaysOnTopHint)
     message.exec_()
     return message.clickedButton().text()
 
 
+class DuplicateBehaviorCode(QDialog):
+
+    def __init__(self, text, codes_list):
+
+        super(DuplicateBehaviorCode, self).__init__()
+
+        self.setWindowTitle(config.programName)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+        Vlayout = QVBoxLayout()
+        widget = QWidget(self)
+        widget.setLayout(Vlayout)
+
+        label = QLabel()
+        label.setText(text)
+        Vlayout.addWidget(label)
+
+        self.lw = QListWidget(widget)
+        self.lw.setObjectName("lw_modifiers")
+        #TODO: to be enabled
+        #lw.installEventFilter(self)
+
+        '''
+        if QT_VERSION_STR[0] == "4":
+            lw.setItemSelected(item, True)
+        else:
+            item.setSelected(True)
+        '''
+
+        for code in codes_list:
+            item = QListWidgetItem(code)
+            self.lw.addItem(item)
+
+        Vlayout.addWidget(self.lw)
+
+        pbCancel = QPushButton("Cancel")
+        pbCancel.clicked.connect(self.reject)
+        Vlayout.addWidget(pbCancel)
+        pbOK = QPushButton("OK")
+        pbOK.setDefault(True)
+        pbOK.clicked.connect(self.pbOK_clicked)
+        Vlayout.addWidget(pbOK)
+
+        self.setLayout(Vlayout)
+
+        #self.installEventFilter(self)
+
+        self.setMaximumSize(1024 , 960)
+
+    def getCode(self):
+        """
+        get selected behavior code
+        """
+        if self.lw.selectedItems():
+            return self.lw.selectedItems()[0].text()
+
+    def pbOK_clicked(self):
+        self.accept()
+
+
 class JumpTo(QDialog):
-    '''
+    """
     "jump to" dialog box
-    '''
+    """
 
     def __init__(self, timeFormat):
         super(JumpTo, self).__init__()
@@ -86,9 +148,9 @@ class JumpTo(QDialog):
 
 
 class EditSelectedEvents(QDialog):
-    '''
+    """
     "edit selected events" dialog box
-    '''
+    """
 
     def __init__(self):
         super(EditSelectedEvents, self).__init__()
@@ -128,15 +190,15 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked()and not self.rbComment.isChecked():
-            QMessageBox.warning(None, config.programName, "You must select a field to be edited",\
+            QMessageBox.warning(None, config.programName, "You must select a field to be edited",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
         if self.rbBehavior.isChecked() and self.leText.text().upper() not in self.all_behaviors:
-            QMessageBox.warning(None, config.programName, "This behavior is not in ethogram",\
+            QMessageBox.warning(None, config.programName, "This behavior is not in ethogram",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
         if self.rbSubject.isChecked() and self.leText.text().upper() not in self.all_subjects:
-            QMessageBox.warning(None, config.programName, "This subject is not in subject's list",\
+            QMessageBox.warning(None, config.programName, "This subject is not in subject's list",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 

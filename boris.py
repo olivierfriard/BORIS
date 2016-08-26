@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.982"
-__version_date__ = "2016-07-27"
+__version_date__ = "2016-08-26"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -685,7 +685,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except:
 
             allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-            self.bm = behaviors_map.BehaviorsMap(allBehaviors)
+            self.bm = behaviors_map.BehaviorsMap(self.pj)
             self.bm.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.bm.sendEventSignal.connect(self.signal_from_behaviors_map)
             self.bm.clickSignal.connect(self.click_signal_from_behaviors_map)
@@ -6124,17 +6124,20 @@ item []:
         logging.debug("write event - event: {0}".format( event ))
 
         # add time offset
-        memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal('.001'))
+        memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
 
         # check if a same event is already in events list (time, subject, code)
         # "row" present in case of event editing
-        if not "row" in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event['code'] ):
-            QMessageBox.warning(self, programName, "The same event already exists!\nSame time, code and subject.")
+        if not "row" in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event["code"] ):
+
+            _ = dialog.MessageDialog(programName, "The same event already exists (same time, code and subject).", ["OK"])
+
+            #QMessageBox.warning(self, programName, "The same event already exists (same time, code and subject).")
             return
 
         if not "from map" in event:   # modifiers only for behaviors without coding map
             # check if event has modifiers
-            modifier_str = ''
+            modifier_str = ""
 
             if event["modifiers"]:
 
@@ -6144,7 +6147,6 @@ item []:
                     if self.playerType == VLC:
 
                         if self.playMode == FFMPEG:
-                            #memState = self.FFmpegTimerOut.isActive()
                             memState = self.FFmpegTimer.isActive()
                             if memState:
                                 self.pause_video()
@@ -6165,7 +6167,7 @@ item []:
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                modifierSelector = select_modifiers.ModifiersRadioButton(event["code"], modifiersList, currentModifiers)
+                modifierSelector = select_modifiers.ModifiersList(event["code"], modifiersList, currentModifiers)
 
                 if modifierSelector.exec_():
                     modifiers = modifierSelector.getModifiers()
@@ -6280,13 +6282,22 @@ item []:
 
         items.sort()
 
-        item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items, 0, False)
+        dbc = dialog.DuplicateBehaviorCode("The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items)
+        if dbc.exec_():
+            code = dbc.getCode()
+            if code:
+                return self.detailedObs[code]
+            else:
+                return None
 
+        '''
+        item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items, 0, False)
         if ok and item:
             obs_idx = self.detailedObs[item]
             return obs_idx
         else:
             return None
+        '''
 
 
     def getLaps(self):
@@ -6610,17 +6621,18 @@ item []:
                 # check if key defines a suject
                 flag_subject = False
                 for idx in self.pj[SUBJECTS]:
-                    if ek_unichr == self.pj[SUBJECTS][idx]['key']:
+                    if ek_unichr == self.pj[SUBJECTS][idx]["key"]:
                         flag_subject = True
 
                         # select or deselect current subject
-                        if self.currentSubject == self.pj[SUBJECTS][idx]['name']:
+                        if self.currentSubject == self.pj[SUBJECTS][idx]["name"]:
                             self.deselectSubject()
                         else:
-                            self.selectSubject( self.pj[SUBJECTS][idx]['name'] )
+                            self.selectSubject( self.pj[SUBJECTS][idx]["name"])
 
                 if not flag_subject:
                     self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
+
 
     def twEvents_doubleClicked(self):
         """

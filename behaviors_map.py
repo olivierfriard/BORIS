@@ -31,6 +31,7 @@ except:
     from PyQt4.QtCore import *
 
 import sys
+from config import *
 
 
 class BehaviorsMap(QWidget):
@@ -38,15 +39,24 @@ class BehaviorsMap(QWidget):
     clickSignal = pyqtSignal(str)
     sendEventSignal = pyqtSignal(QEvent)
 
-    def __init__(self, behaviorsList, parent = None):
+    def __init__(self, pj, parent = None):
         super(BehaviorsMap, self).__init__(parent)
+        self.pj = pj
 
         self.setWindowTitle("Behavioral pad")
-
         self.grid = QGridLayout(self)
-
         self.installEventFilter(self)
 
+        self.colors_dict = {}
+        if BEHAVIORAL_CATEGORIES in self.pj:
+            for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM]])):
+                self.colors_dict[category] = CATEGORY_COLORS_LIST[ idx % len(CATEGORY_COLORS_LIST)]
+
+
+        if self.colors_dict:
+            behaviorsList = sorted([[pj[ETHOGRAM][x]["category"], pj[ETHOGRAM][x]["code"]] for x in pj[ETHOGRAM]])
+        else:
+            behaviorsList = sorted([["", pj[ETHOGRAM][x]["code"]] for x in pj[ETHOGRAM]])
         dim = int(len(behaviorsList)**0.5 + 0.999)
 
         c = 0
@@ -54,17 +64,23 @@ class BehaviorsMap(QWidget):
             for j in range(1, dim + 1):
                 if c >= len(behaviorsList):
                     break
-                self.addWidget(behaviorsList[c], i, j)
+                self.addWidget(behaviorsList[c][1], i, j)
                 c += 1
+
 
     def addWidget(self, behaviorCode, i, j):
 
-        self.grid.addWidget(Test(), i, j)
+        self.grid.addWidget(Button(), i, j)
         index = self.grid.count() - 1
         widget = self.grid.itemAt(index).widget()
 
         if widget is not None:
             widget.pushButton.setText(behaviorCode)
+            if self.colors_dict:
+                color = self.colors_dict[[self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behaviorCode][0]]
+            else:
+                color = CATEGORY_COLORS_LIST[0]
+            widget.pushButton.setStyleSheet("background-color: {}; border-radius: 0px; min-width: 50px;max-width: 200px; min-height:50px; max-height:200px; font-weight: bold;".format(color))
             widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
 
     def click(self, behaviorCode):
@@ -82,20 +98,12 @@ class BehaviorsMap(QWidget):
 
 
 
-class Test(QWidget):
-    def __init__( self, parent=None):
-        super(Test, self).__init__(parent)
+class Button(QWidget):
+    def __init__(self, parent=None):
+        super(Button, self).__init__(parent)
         self.pushButton = QPushButton()
-        self.pushButton.setStyleSheet("background-color: red; border-radius: 0px; min-width: 50px;max-width: 200px; min-height:50px; max-height:200px")
+        self.pushButton.setFocusPolicy(Qt.NoFocus)
         layout = QHBoxLayout()
         layout.addWidget(self.pushButton)
         self.setLayout(layout)
 
-
-'''
-app = QApplication(sys.argv)
-behaviorsMap = BehaviorsMap(["AA","BB", "CC", "DD","EE","FF","GG","HH", "JJ"])
-behaviorsMap.show()
-app.exec_()
-
-'''
