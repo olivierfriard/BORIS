@@ -134,6 +134,7 @@ def bytes_to_str(b):
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 
+
 class TempDirCleanerThread(QThread):
     """
     class for cleaning image cache directory with thread
@@ -148,7 +149,7 @@ class TempDirCleanerThread(QThread):
         while self.exiting == False:
             if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
                 fl = sorted((os.path.getctime(self.tempdir + f),self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
-                for ts,f in fl[0:int(len(fl)/10)]:
+                for ts, f in fl[0:int(len(fl) / 10)]:
                     os.remove(f)
             time.sleep(30)
 
@@ -172,9 +173,9 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
             if index.row() == ROW:
 
                 polygonTriangle = QPolygon(3)
-                polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x()+15, option.rect.y()))
-                polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y()-5))
-                polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y()+5))
+                polygonTriangle.setPoint(0, QtCore.QPoint(option.rect.x() + 15, option.rect.y()))
+                polygonTriangle.setPoint(1, QtCore.QPoint(option.rect.x(), option.rect.y() - 5))
+                polygonTriangle.setPoint(2, QtCore.QPoint(option.rect.x(), option.rect.y() + 5))
 
                 painter.save()
                 painter.setRenderHint(painter.Antialiasing)
@@ -1006,9 +1007,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow = map_creator.MapCreatorWindow()
         self.mapCreatorWindow.move(self.pos())
         self.mapCreatorWindow.resize(640, 640)
-        self.mapCreatorWindow.closed.connect(self.show)
+        #self.mapCreatorWindow.closed.connect(self.show)
         self.mapCreatorWindow.show()
-        self.hide()
+        #self.hide()
 
 
     def open_observation(self):
@@ -3225,6 +3226,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "start time": startTime,
                 "end time": endTime
                 }
+
+
+
+
 
 
     def time_budget(self):
@@ -5969,7 +5974,7 @@ item []:
                         if subjIdx:
                             subjName = self.pj[SUBJECTS][subjIdx]["name"]
                         else:
-                            subjName = ''
+                            subjName = ""
 
                         for behav in self.currentStates[subjIdx]:
 
