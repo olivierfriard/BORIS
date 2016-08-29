@@ -58,6 +58,8 @@ class Param_panel(QDialog, Ui_Dialog):
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)
 
+        self.lwBehaviors.itemClicked.connect(self.behavior_item_clicked)
+
 
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
@@ -82,6 +84,7 @@ class Param_panel(QDialog, Ui_Dialog):
 
     def ok(self):
 
+
         selectedSubjects = []
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))
@@ -89,14 +92,44 @@ class Param_panel(QDialog, Ui_Dialog):
                 selectedSubjects.append(cb.text())
         self.selectedSubjects = selectedSubjects
 
+        '''
         selectedBehaviors = []
         for idx in range(self.lwBehaviors.count()):
             cb = self.lwBehaviors.itemWidget(self.lwBehaviors.item(idx))
             if cb.isChecked():
                 selectedBehaviors.append(cb.text())
         self.selectedBehaviors = selectedBehaviors
+        '''
+
+        selectedBehaviors = []
+        for idx in range(self.lwBehaviors.count()):
+            if self.lwBehaviors.item(idx).checkState() == Qt.Checked:
+                selectedBehaviors.append(self.lwBehaviors.item(idx).text())
+        self.selectedBehaviors = selectedBehaviors
 
         self.accept()
+
+
+    def behavior_item_clicked(self, item):
+        print("item clicked")
+
+        if item.data(33) == "category":
+            category = item.data(34)
+            for i in range(self.lwBehaviors.count()):
+                if self.lwBehaviors.item(i).data(34) == category and self.lwBehaviors.item(i).data(33) != "category":
+
+                    '''
+                    if self.lwBehaviors.item(i).checkState() == Qt.Unchecked:
+                        self.lwBehaviors.item(i).setCheckState(Qt.Checked)
+                    else:
+                        self.lwBehaviors.item(i).setCheckState(Qt.Unchecked)
+                    '''
+                    if item.data(35):
+                        self.lwBehaviors.item(i).setCheckState(Qt.Unchecked)
+                    else:
+                        self.lwBehaviors.item(i).setCheckState(Qt.Checked)
+
+            item.setData(35, not item.data(35))
 
 
 
@@ -112,5 +145,14 @@ class Param_panel(QDialog, Ui_Dialog):
         logging.debug("observed behaviors: {0}".format(observedBehaviors))
 
         for idx in range(self.lwBehaviors.count()):
+            '''
             cb = self.lwBehaviors.itemWidget(self.lwBehaviors.item(idx))
-            cb.setChecked( cb.text() in observedBehaviors )
+            cb.setChecked( cb.text() in observedBehaviors)
+            '''
+
+            if self.lwBehaviors.item(idx).data(33) != "category":
+                if  self.lwBehaviors.item(idx).text() in observedBehaviors:
+                    self.lwBehaviors.item(idx).setCheckState(Qt.Checked)
+                else:
+                    self.lwBehaviors.item(idx).setCheckState(Qt.Unchecked)
+

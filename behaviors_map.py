@@ -50,7 +50,7 @@ class BehaviorsMap(QWidget):
         self.colors_dict = {}
         if BEHAVIORAL_CATEGORIES in self.pj:
             for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM]])):
-                self.colors_dict[category] = CATEGORY_COLORS_LIST[ idx % len(CATEGORY_COLORS_LIST)]
+                self.colors_dict[category] = CATEGORY_COLORS_LIST[idx % len(CATEGORY_COLORS_LIST)]
 
 
         if self.colors_dict:
