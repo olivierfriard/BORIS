@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Jul  7 15:25:28 2016
+# Created: Tue Aug 30 14:55:50 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -321,6 +321,8 @@ class Ui_MainWindow(object):
         self.actionExport_aggregated_events.setObjectName("actionExport_aggregated_events")
         self.actionBehaviors_map = QtWidgets.QAction(MainWindow)
         self.actionBehaviors_map.setObjectName("actionBehaviors_map")
+        self.actionTime_budget_by_behaviors_category = QtWidgets.QAction(MainWindow)
+        self.actionTime_budget_by_behaviors_category.setObjectName("actionTime_budget_by_behaviors_category")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -363,6 +365,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionMedia_file_information)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
         self.menuAnalyze.addAction(self.actionTime_budget)
+        self.menuAnalyze.addAction(self.actionTime_budget_by_behaviors_category)
         self.menuAnalyze.addAction(self.actionVisualize_data)
         self.menuPlayback.addAction(self.actionJumpForward)
         self.menuPlayback.addAction(self.actionJumpBackward)
@@ -517,4 +520,5 @@ class Ui_MainWindow(object):
         self.actionShowAllBehaviors.setToolTip(_translate("MainWindow", "Show all behaviors"))
         self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events"))
         self.actionBehaviors_map.setText(_translate("MainWindow", "Behavioral pad"))
+        self.actionTime_budget_by_behaviors_category.setText(_translate("MainWindow", "Time budget by behaviors category"))
 

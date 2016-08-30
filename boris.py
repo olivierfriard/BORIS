@@ -115,7 +115,7 @@ import tablib
 import observations_list
 import plot_spectrogram
 import behaviors_map
-import time_budget
+
 
 from config import *
 
@@ -567,8 +567,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_map.triggered.connect(self.behaviors_map)
 
         # menu Analyze
-        '''self.actionTime_budget.triggered.connect(self.time_budget)        '''
-        self.actionTime_budget.triggered.connect(self.time_budget_by_category)
+        #self.actionTime_budget.triggered.connect(self.time_budget)
+        self.actionTime_budget.triggered.connect(lambda: self.time_budget_by_category("by_behavior"))
+        self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget_by_category("by_category"))
 
         self.actionVisualize_data.triggered.connect(self.plot_events)
 
@@ -757,7 +758,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -3071,6 +3072,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return cursor
 
 
+    '''
     def loadEventsInDB_by_category(self, selectedSubjects, selectedObservations, selectedBehaviors):
         """
         populate the db databse with events from selectedObservations, selectedSubjects and selectedBehaviors
@@ -3107,6 +3109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         db.commit()
         return cursor
+    '''
 
 
 
@@ -3150,7 +3153,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return observed_behaviors
 
-
+    '''
     def choose_obs_subj_behav(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True):
         """
         show param window for:
@@ -3271,6 +3274,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "start time": startTime,
                 "end time": endTime
                 }
+    '''
 
 
 
@@ -3356,42 +3360,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
         logging.debug('observed behaviors: {0}'.format(observedBehaviors))
 
-        categories = self.pj[BEHAVIORAL_CATEGORIES]
+        if BEHAVIORAL_CATEGORIES in self.pj:
+            categories = self.pj[BEHAVIORAL_CATEGORIES]
+        else:
+            categories = ["###no category###"]
 
         for category in categories:
 
-            paramPanelWindow.item = QListWidgetItem(category)
+            if category != "###no category###":
+                paramPanelWindow.item = QListWidgetItem(category)
+                paramPanelWindow.item.setData(33, "category")
+                paramPanelWindow.item.setData(34, category)
+                paramPanelWindow.item.setData(35, False)
 
-            paramPanelWindow.item.setData(33, "category")
-            paramPanelWindow.item.setData(34, category)
-            paramPanelWindow.item.setData(35, False)
-
-            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
             for behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]]:
 
-                if behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["category"] == category]:
+                if (categories == ["###no category###"]) or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["category"] == category]):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in observedBehaviors:
                         paramPanelWindow.item.setCheckState(Qt.Checked)
                     else:
                         paramPanelWindow.item.setCheckState(Qt.Unchecked)
-                    '''
-                    paramPanelWindow.ch = QCheckBox()
-                    paramPanelWindow.ch.setText(behavior)
 
-
-                    if behavior in observedBehaviors:
-                        paramPanelWindow.ch.setChecked(True)
-                    '''
-                    paramPanelWindow.item.setData(33, behavior)
-                    paramPanelWindow.item.setData(34, category)
+                    if category != "###no category###":
+                        paramPanelWindow.item.setData(33, behavior)
+                        paramPanelWindow.item.setData(34, category)
                     paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-                    '''
-                    paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-                    '''
 
         if not paramPanelWindow.exec_():
             return {"selected subjects": [],
@@ -3429,6 +3427,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     #TIME BUDGET
+    '''
 
     def time_budget(self):
         """
@@ -3672,10 +3671,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
 
         if len(selectedObservations) > 1:
-            plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0)
+            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0)
             flagGroup = dialog.MessageDialog(programName, "Group observations?", [YES, NO]) == YES
         else:
-            plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=selectedObsTotalMediaLength)
+            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -3844,25 +3843,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tb.twTB.resizeColumnsToContents()
 
         self.tb.show()
+    '''
 
 
 
 
-    def time_budget_by_category(self):
+    def time_budget_by_category(self, mode):
         """
         time budget by_category
         """
 
-        def time_budget_analysis_by_category(cursor, plot_parameters):
+        def time_budget_analysis_by_category(cursor, plot_parameters, by_category=False):
 
             categories = {}
+            out = []
             for subject in plot_parameters["selected subjects"]:
-                out = []
+                out_cat = []
 
                 categories[subject] = {}
 
                 for behavior in plot_parameters["selected behaviors"]:
-                #for behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]]:
 
                     if plot_parameters["include modifiers"]:
 
@@ -3899,7 +3899,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if idx and row[1] == rows[idx - 1][1]:
                                         all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
-                                out.append({"subject": subject,
+                                out_cat.append({"subject": subject,
                                             "behavior": behavior,
                                             "modifiers": modifier[0],
                                             "duration": "-",
@@ -3948,7 +3948,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                             #all_event_interdurations.append(float( rows[idx + 1][0]) - float(row[0]))
 
-                                    out.append({"subject": subject,
+                                    out_cat.append({"subject": subject,
                                                 "behavior": behavior,
                                                 "modifiers": modifier[0],
                                                 "duration": round(sum(all_event_durations), 3),
@@ -3992,7 +3992,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if idx and row[1] == rows[idx - 1][1]:
                                     all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
 
-                            out.append({"subject": subject,
+                            out_cat.append({"subject": subject,
                                         "behavior": behavior,
                                         "modifiers": "NA",
                                         "duration": "-",
@@ -4044,7 +4044,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
                                             all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
 
-                                out.append({"subject": subject,
+                                out_cat.append({"subject": subject,
                                             "behavior": behavior,
                                             "modifiers": "NA",
                                             "duration": round(sum(all_event_durations), 3),
@@ -4055,19 +4055,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                             })
 
-                            #
-                for behav in out:
-                    category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior'] ][0]
+                out += out_cat
+                if by_category:
+                    for behav in out_cat:
+                        category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
 
-                    if behav['duration'] != "-":
-                        if category in categories[subject]:
-                            categories[subject][category]["duration"] += behav["duration"]
-                            categories[subject][category]["number"] += behav["number"]
-                        else:
-                            categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
+                        if behav['duration'] != "-":
+                            if category in categories[subject]:
+                                categories[subject][category]["duration"] += behav["duration"]
+                                categories[subject][category]["number"] += behav["number"]
+                            else:
+                                categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
 
-            #return out
-            return categories
+            return out, categories
+
 
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -4119,22 +4120,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if time_budget window must be used
         if (len(selectedObservations) > 1 and flagGroup) or (len(selectedObservations) == 1):
-            cursor = self.loadEventsInDB_by_category(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            categories = time_budget_analysis_by_category(cursor, plot_parameters)
+            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
-            '''
-            categories = {}
-            for behav in out:
-                category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior'] ][0]
-                if category in categories:
-                    categories[category].append( behav['duration'])
-                else:
-                    categories[category] = [behav['duration']]
+            if mode == "by_category":
+                out, categories = time_budget_analysis_by_category(cursor, plot_parameters, by_category=True)
+            else:
+                out, categories = time_budget_analysis_by_category(cursor, plot_parameters, by_category=False)
 
-            '''
-            print(categories)
-
-            return
+            print("out", out)
+            print("categories", categories)
 
         else:
 
@@ -4262,35 +4256,67 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
 
 
-        tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
-                     "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
-                     "inter-event intervals std dev", "% of total media length"]
-        self.tb.twTB.setColumnCount(len(tb_fields))
-        self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
-        fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
+        if mode == "by_behavior":
+            tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
+                         "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
+                         "inter-event intervals std dev", "% of total media length"]
 
-        for row in out:
-            self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
-            column = 0
-            for field in fields:
-                item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
-                # no modif allowed
-                item.setFlags(Qt.ItemIsEnabled)
-                self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
-                column += 1
+            fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
+            self.tb.twTB.setColumnCount(len(tb_fields))
+            self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
-            # % of total time
-            if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
-                if len(selectedObservations) > 1:
-                    item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
+            for row in out:
+                self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
+                column = 0
+                for field in fields:
+                    item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
+                    # no modif allowed
+                    item.setFlags(Qt.ItemIsEnabled)
+                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
+                    column += 1
+
+                # % of total time
+                if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                    if len(selectedObservations) > 1:
+                        item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
+                    else:
+                        item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
                 else:
-                    item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
-            else:
-                item = QTableWidgetItem("-")
+                    item = QTableWidgetItem("-")
 
-            item.setFlags(Qt.ItemIsEnabled)
-            self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                item.setFlags(Qt.ItemIsEnabled)
+                self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+
+
+        if mode == "by_category":
+            tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
+            fields = ["number", "duration"]
+            self.tb.twTB.setColumnCount(len(tb_fields))
+            self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
+
+            for subject in categories:
+                self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
+                for category in categories[subject]:
+                    column = 0
+                    item = QTableWidgetItem(subject)
+                    item.setFlags(Qt.ItemIsEnabled)
+                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
+
+                    column = 1
+                    item = QTableWidgetItem(category)
+                    item.setFlags(Qt.ItemIsEnabled)
+                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
+
+                    for field in fields:
+                        column += 1
+                        print(categories[subject][category][field])
+                        item = QTableWidgetItem(str(categories[subject][category][field]))
+                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setTextAlignment(Qt.AlignRight|Qt.AlignVCenter)
+                        self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
+
+
 
         self.tb.twTB.resizeColumnsToContents()
 
@@ -4623,7 +4649,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("totalMediaLength: {0}".format(totalMediaLength))
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, totalMediaLength)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, totalMediaLength)
 
         logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
 
@@ -5408,7 +5434,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, 0)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, 0)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -5503,7 +5529,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -5722,7 +5748,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -7531,7 +7557,7 @@ item []:
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -7790,7 +7816,7 @@ item []:
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav(selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
