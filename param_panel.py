@@ -75,6 +75,8 @@ class Param_panel(QDialog, Ui_Dialog):
     def behaviors_button_clicked(self, command):
         for idx in range(self.lwBehaviors.count()):
 
+            #print(self.lwBehaviors.item(idx).text(), self.lwBehaviors.item(idx).data(33), self.lwBehaviors.item(idx).data(34))
+
             if self.lwBehaviors.item(idx).data(33) != "category":
                 if command == "select all":
                     self.lwBehaviors.item(idx).setCheckState(Qt.Checked)
