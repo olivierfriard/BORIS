@@ -824,7 +824,7 @@
   </action>
   <action name="actionBehaviors_map">
    <property name="text">
-    <string>Behavioral pad</string>
+    <string>Coding pad</string>
    </property>
   </action>
   <action name="actionTime_budget_by_behaviors_category">

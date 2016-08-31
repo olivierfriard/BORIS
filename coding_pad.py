@@ -34,13 +34,13 @@ import sys
 from config import *
 
 
-class BehaviorsMap(QWidget):
+class CodingPad(QWidget):
 
     clickSignal = pyqtSignal(str)
     sendEventSignal = pyqtSignal(QEvent)
 
     def __init__(self, pj, parent = None):
-        super(BehaviorsMap, self).__init__(parent)
+        super(CodingPad, self).__init__(parent)
         self.pj = pj
 
         self.setWindowTitle("Coding pad")

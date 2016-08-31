@@ -114,7 +114,7 @@ from utilities import *
 import tablib
 import observations_list
 import plot_spectrogram
-import behaviors_map
+import coding_pad
 
 
 from config import *
@@ -564,7 +564,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionMapCreator.triggered.connect(self.map_creator)
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
-        self.actionBehaviors_map.triggered.connect(self.behaviors_map)
+        self.actionBehaviors_map.triggered.connect(self.coding_map)
 
         # menu Analyze
         #self.actionTime_budget.triggered.connect(self.time_budget)
@@ -662,9 +662,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def click_signal_from_behaviors_map(self, behaviorCode):
-        print(behaviorCode)
-        sendEventSignal = pyqtSignal(QEvent)
 
+        sendEventSignal = pyqtSignal(QEvent)
 
         sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
 
@@ -683,14 +682,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(event)
 
 
-    def behaviors_map(self):
+    def coding_map(self):
 
         try:
             self.bm.show()
         except:
 
             allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-            self.bm = behaviors_map.BehaviorsMap(self.pj)
+            self.bm = coding_pad.CodingPad(self.pj)
             self.bm.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.bm.sendEventSignal.connect(self.signal_from_behaviors_map)
             self.bm.clickSignal.connect(self.click_signal_from_behaviors_map)
@@ -3279,7 +3278,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def choose_obs_subj_behav_category(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True):
+    def choose_obs_subj_behav_category(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True, by_category=False):
         """
         show param window for:
         - selection of subjects
@@ -3300,6 +3299,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbIncludeModifiers.setVisible(False)
         if not flagShowExcludeBehaviorsWoEvents:
             paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+
+        if by_category:
+            paramPanelWindow.cbIncludeModifiers.setVisible(False)
+            paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+
         # hide max time
         if maxTime:
             if self.timeFormat == HHMMSS:
@@ -3383,6 +3387,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     paramPanelWindow.item = QListWidgetItem(category)
                     paramPanelWindow.item.setData(34, category)
 
+                font = QFont()
+                font.setBold(True)
+                #paramPanelWindow.item.setFont(QFont('', 8, QFont.Bold))
+                paramPanelWindow.item.setFont( font )
                 paramPanelWindow.item.setData(33, "category")
                 paramPanelWindow.item.setData(35, False)
 
@@ -4076,16 +4084,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 out += out_cat
                 if by_category:
                     for behav in out_cat:
-                        print("behav", behav)
-                        category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
-                        print("category", category)
 
-                        if behav['duration'] != "-":
-                            if category in categories[subject]:
+                        category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
+
+                        if category in categories[subject]:
+                            if behav["duration"] != "-":
                                 categories[subject][category]["duration"] += behav["duration"]
-                                categories[subject][category]["number"] += behav["number"]
                             else:
-                                categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
+                                categories[subject][category]["duration"] = "-"
+                            categories[subject][category]["number"] += behav["number"]
+                        else:
+                            categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
 
             return out, categories
 
@@ -4129,11 +4138,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if len(selectedObservations) > 1:
 
-            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0)
+            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
 
             flagGroup = dialog.MessageDialog(programName, "Group observations?", [YES, NO]) == YES
         else:
-            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength)
+            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=(mode == "by_category"))
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -4195,7 +4204,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for row in out:
                         values = []
                         for field in fields:
-                            values.append( str(row[field]).replace(" ()", "") )
+                            values.append(str(row[field]).replace(" ()", "") )
 
                         # % of total time
                         if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
@@ -4205,8 +4214,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 values.append(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1))
                         else:
                             values.append("-")
+                        data.append(values)
 
-                    data.append(values)
+                if mode == "by_category":
+                    fields = ["subject", "category",  "number", "duration"]
+                    data.headers = fields # + ["% of total media length"]
+                    for subject in categories:
+
+                        for category in categories[subject]:
+                            values = []
+                            values.append(subject)
+                            if category == "":
+                                values.append("No category")
+                            else:
+                                values.append(category)
+
+                            values.append(categories[subject][category]["number"])
+                            values.append(categories[subject][category]["duration"])
+
+                            data.append(values)
+
 
                 if flagWorkBook:
                     workbook.add_sheet(data)
