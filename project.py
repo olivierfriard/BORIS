@@ -213,7 +213,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         manage double-click on ethogram table:
         * category
-        * coding map
+        * modifiers coding map
         * modifiers
 
         """
@@ -528,8 +528,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if field == 'type':
 
                             comboBox = QComboBox()
-                            comboBox.addItems(observation_types)
-                            comboBox.setCurrentIndex(observation_types.index(project[ETHOGRAM][i][field]))
+                            comboBox.addItems(BEHAVIOR_TYPES)
+                            comboBox.setCurrentIndex(BEHAVIOR_TYPES.index(project[ETHOGRAM][i][field]))
 
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, fields[field], comboBox)
 
@@ -568,13 +568,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if self.twBehaviors.item(r, fields['code']):
 
-                if includePointEvents == YES or (includePointEvents == NO and 'State' in observation_types[combobox.currentIndex()]):
+                if includePointEvents == YES or (includePointEvents == NO and 'State' in BEHAVIOR_TYPES[combobox.currentIndex()]):
                     allBehaviors.append(self.twBehaviors.item(r, fields['code']).text())
 
                 excl[self.twBehaviors.item(r, fields['code']).text()] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
                 new_excl[self.twBehaviors.item(r, fields['code']).text()] = []
 
-                if 'State' in observation_types[combobox.currentIndex()]:
+                if 'State' in BEHAVIOR_TYPES[combobox.currentIndex()]:
                     stateBehaviors.append(self.twBehaviors.item(r, fields['code']).text())
 
         logging.debug('all behaviors: {}'.format(allBehaviors))
@@ -630,7 +630,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # update excluded field
             for r in range(0, self.twBehaviors.rowCount()):
-                if includePointEvents == YES or (includePointEvents == NO and 'State' in observation_types[self.twBehaviors.cellWidget(r, 0).currentIndex()]):
+                if includePointEvents == YES or (includePointEvents == NO and 'State' in BEHAVIOR_TYPES[self.twBehaviors.cellWidget(r, 0).currentIndex()]):
                     for e in excl:
                         if e == self.twBehaviors.item(r, fields['code']).text():
                             item = QTableWidgetItem(','.join(new_excl[e]))
@@ -712,7 +712,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if field_type == TYPE:
                             # add type combobox
                             comboBox = QComboBox()
-                            comboBox.addItems(observation_types)
+                            comboBox.addItems(BEHAVIOR_TYPES)
                             comboBox.setCurrentIndex(0)   # event type from jwatcher not known
                             signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
                             comboBox.currentIndexChanged['int'].connect(signalMapper.map)
@@ -808,7 +808,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if field_type == TYPE:
                             # add type combobox
                             comboBox = QComboBox()
-                            comboBox.addItems(observation_types)
+                            comboBox.addItems(BEHAVIOR_TYPES)
 
                             if POINT in type_.upper():
                                 comboBox.setCurrentIndex(0)
@@ -883,7 +883,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     index = combobox.currentIndex()
 
                     newComboBox = QComboBox()
-                    newComboBox.addItems(observation_types)
+                    newComboBox.addItems(BEHAVIOR_TYPES)
                     newComboBox.setCurrentIndex(index)
 
                     self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, 0, newComboBox)
@@ -925,7 +925,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def pbAddBehavior_clicked(self):
         """
-        add a behavior
+        add new behavior to ethogram
         """
 
         response = "Point event"
@@ -940,8 +940,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             if field_type == TYPE:
                 # add type combobox
                 comboBox = QComboBox()
-                comboBox.addItems(observation_types)
-                comboBox.setCurrentIndex(observation_types.index(response))
+                comboBox.addItems(BEHAVIOR_TYPES)
+                comboBox.setCurrentIndex(BEHAVIOR_TYPES.index(response))
 
                 signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
                 comboBox.currentIndexChanged['int'].connect(signalMapper.map)
@@ -962,7 +962,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         combobox = self.twBehaviors.cellWidget(row, fields["type"])
-        if "with coding map" in observation_types[combobox.currentIndex()]:
+        if "with coding map" in BEHAVIOR_TYPES[combobox.currentIndex()]:
             # let user select a coding maop
             fd = QFileDialog(self)
             if QT_VERSION_STR[0] == "4":
@@ -1187,7 +1187,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             for field in behavioursFields:
                 if field == "type":
                     combobox = self.twBehaviors.cellWidget(r, behavioursFields['type'])
-                    row[field] = observation_types[combobox.currentIndex()]
+                    row[field] = BEHAVIOR_TYPES[combobox.currentIndex()]
                 else:
                     if self.twBehaviors.item(r, behavioursFields[field]):
                         # check for | char in code

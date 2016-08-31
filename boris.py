@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.982"
-__version_date__ = "2016-08-26"
+__version_date__ = "2016-08-31"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -69,11 +69,13 @@ try:
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
     from PyQt5.QtWidgets import *
+    from boris_ui5 import *
 except:
     logging.info("PyQt5 not installed!\nTrying with PyQt4")
     try:
         from PyQt4.QtCore import *
         from PyQt4.QtGui import *
+        from boris_ui import *
 
     except:
         logging.critical("PyQt4 not installed!\nTry PyQt4")
@@ -98,10 +100,12 @@ import glob
 import statistics
 
 import dialog
+'''
 if QT_VERSION_STR[0] == "4":
     from boris_ui import *
 else:
     from boris_ui5 import *
+'''
 from edit_event import *
 from project import *
 import preferences
@@ -474,16 +478,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
         self.menuCreate_subtitles_2.setEnabled(flag)
 
-        self.actionJumpForward.setEnabled( self.playerType == VLC)
-        self.actionJumpBackward.setEnabled( self.playerType == VLC)
-        self.actionJumpTo.setEnabled( self.playerType == VLC)
-        self.actionPlay.setEnabled( self.playerType == VLC)
-        self.actionPause.setEnabled( self.playerType == VLC)
-        self.actionReset.setEnabled( self.playerType == VLC)
-        self.actionFaster.setEnabled( self.playerType == VLC)
-        self.actionSlower.setEnabled( self.playerType == VLC)
-        self.actionNormalSpeed.setEnabled( self.playerType == VLC)
-        self.actionPrevious.setEnabled( self.playerType == VLC)
+        self.actionJumpForward.setEnabled(self.playerType == VLC)
+        self.actionJumpBackward.setEnabled(self.playerType == VLC)
+        self.actionJumpTo.setEnabled(self.playerType == VLC)
+        self.actionPlay.setEnabled(self.playerType == VLC)
+        self.actionPause.setEnabled(self.playerType == VLC)
+        self.actionReset.setEnabled(self.playerType == VLC)
+        self.actionFaster.setEnabled(self.playerType == VLC)
+        self.actionSlower.setEnabled(self.playerType == VLC)
+        self.actionNormalSpeed.setEnabled(self.playerType == VLC)
+        self.actionPrevious.setEnabled(self.playerType == VLC)
         self.actionNext.setEnabled(self.playerType == VLC)
         self.actionSnapshot.setEnabled(self.playerType == VLC)
         self.actionFrame_by_frame.setEnabled(True)
@@ -492,13 +496,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
 
         # statusbar label
-        self.lbTime.setVisible( self.playerType == VLC )
-        self.lbSubject.setVisible( self.playerType == VLC )
-        self.lbTimeOffset.setVisible( self.playerType == VLC )
-        self.lbSpeed.setVisible( self.playerType == VLC )
+        self.lbTime.setVisible(self.playerType == VLC)
+        self.lbSubject.setVisible(self.playerType == VLC)
+        self.lbTimeOffset.setVisible(self.playerType == VLC)
+        self.lbSpeed.setVisible(self.playerType == VLC)
 
-        self.actionTime_budget.setEnabled( self.pj[OBSERVATIONS] != {} )
-        self.actionVisualize_data.setEnabled( self.pj[OBSERVATIONS] != {} )
+        self.actionTime_budget.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionTime_budget_by_behaviors_category.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionVisualize_data.setEnabled(self.pj[OBSERVATIONS] != {})
 
 
     def connections(self):
@@ -732,6 +737,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # behaviors  filtered
         filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
 
+        '''
         for behavior in allBehaviors:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
             paramPanelWindow.ch = QCheckBox()
@@ -739,6 +745,54 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if behavior in filtered_behaviors:
                 paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+        '''
+
+        if BEHAVIORAL_CATEGORIES in self.pj:
+            categories = self.pj[BEHAVIORAL_CATEGORIES][:]
+            # check if behavior not included in a category
+            if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]]:
+                categories += [""]
+        else:
+            categories = ["###no category###"]
+
+        for category in categories:
+
+            if category != "###no category###":
+
+                if category == "":
+                    paramPanelWindow.item = QListWidgetItem("No category")
+                    paramPanelWindow.item.setData(34, "No category")
+                else:
+                    paramPanelWindow.item = QListWidgetItem(category)
+                    paramPanelWindow.item.setData(34, category)
+
+                font = QFont()
+                font.setBold(True)
+                paramPanelWindow.item.setFont(font)
+                paramPanelWindow.item.setData(33, "category")
+                paramPanelWindow.item.setData(35, False)
+
+                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]]:
+
+                if (categories == ["###no category###"]) \
+                or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["category"] == category ]):
+
+                    paramPanelWindow.item = QListWidgetItem(behavior)
+                    if behavior in filtered_behaviors:
+                        paramPanelWindow.item.setCheckState(Qt.Checked)
+                    else:
+                        paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+                    if category != "###no category###":
+                        paramPanelWindow.item.setData(33, "behavior")
+                        if category == "":
+                            paramPanelWindow.item.setData(34, "No category")
+                        else:
+                            paramPanelWindow.item.setData(34, category)
+
+                    paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
         if paramPanelWindow.exec_():
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
@@ -1010,9 +1064,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow = map_creator.MapCreatorWindow()
         self.mapCreatorWindow.move(self.pos())
         self.mapCreatorWindow.resize(640, 640)
-        #self.mapCreatorWindow.closed.connect(self.show)
         self.mapCreatorWindow.show()
-        #self.hide()
 
 
     def open_observation(self):
@@ -1075,7 +1127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if number is odd
         """
 
-        out = ''
+        out = ""
         flagStateEvent = False
         subjects = [subject for _, subject, _, _, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
         for subject in sorted(set(subjects)):
@@ -3354,6 +3406,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 selectedSubjects.append(subject)
                 paramPanelWindow.ch.setChecked(True)
 
+
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
         logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
@@ -3364,14 +3417,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
         logging.debug('observed behaviors: {0}'.format(observedBehaviors))
 
-        print( "self.pj[BEHAVIORAL_CATEGORIES]", self.pj[BEHAVIORAL_CATEGORIES] )
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
-            print([self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]])
             if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]]:
                 categories += [""]
-            print("cat",categories)
 
         else:
             categories = ["###no category###"]
@@ -3390,7 +3440,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 font = QFont()
                 font.setBold(True)
                 #paramPanelWindow.item.setFont(QFont('', 8, QFont.Bold))
-                paramPanelWindow.item.setFont( font )
+                paramPanelWindow.item.setFont(font)
                 paramPanelWindow.item.setData(33, "category")
                 paramPanelWindow.item.setData(35, False)
 
@@ -5171,8 +5221,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             # add combobox with event type
                             newProjectWindow.comboBoxes.append(QComboBox())
-                            newProjectWindow.comboBoxes[-1].addItems(observation_types)
-                            newProjectWindow.comboBoxes[-1].setCurrentIndex(observation_types.index(self.pj[ETHOGRAM][i][field]))
+                            newProjectWindow.comboBoxes[-1].addItems(BEHAVIOR_TYPES)
+                            newProjectWindow.comboBoxes[-1].setCurrentIndex(BEHAVIOR_TYPES.index(self.pj[ETHOGRAM][i][field]))
 
                             newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
                             newProjectWindow.comboBoxes[-1].currentIndexChanged["int"].connect(newProjectWindow.signalMapper.map)

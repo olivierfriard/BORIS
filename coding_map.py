@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 This file is part of BORIS.
 
@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 """
 
-codeSeparator = ','
+codeSeparator = ","
 
 try:
     from PyQt5.QtGui import *
@@ -61,7 +61,7 @@ class codingMapWindowClass(QDialog):
         super(codingMapWindowClass, self).__init__()
 
         self.codingMap = codingMap
-        self.setWindowTitle( self.codingMap['name'] )
+        self.setWindowTitle(self.codingMap["name"])
         Vlayout = QVBoxLayout(self)
 
         self.view = self.View(self)
@@ -80,12 +80,12 @@ class codingMapWindowClass(QDialog):
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hBoxLayout.addItem(spacerItem)
 
-        self.pbCancel = QPushButton('Cancel')
+        self.pbCancel = QPushButton("Cancel")
         hBoxLayout.addWidget(self.pbCancel)
         self.pbCancel.clicked.connect(self.cancel_clicked)
 
 
-        self.btDone = QPushButton('Done', self)
+        self.btDone = QPushButton("Done", self)
         self.btDone.clicked.connect(self.done_clicked)
         self.btDone.setVisible(True)
 
@@ -101,9 +101,9 @@ class codingMapWindowClass(QDialog):
 
 
     def viewMousePressEvent(self, event):
-        '''
+        """
         insert clicked areas codes
-        '''
+        """
 
         test = self.view.mapToScene(event.pos()).toPoint()
 
@@ -111,8 +111,8 @@ class codingMapWindowClass(QDialog):
             if self.polygonsList2[ code ].contains( test ):
 
                 codes = self.leareaCode.text().split(codeSeparator)
-                if '' in codes:
-                    codes.remove('')
+                if "" in codes:
+                    codes.remove("")
 
                 # check if code already in codes list
                 if code in codes:
@@ -158,12 +158,19 @@ class codingMapWindowClass(QDialog):
                 newPolygon.append(QPoint(p[0], p[1]))
 
             clr = QColor( )
-            clr.setRgba( self.areasList['areas'][ area]['color'] )
+            clr.setRgba( self.areasList["areas"][ area]['color'] )
 
             # draw polygon
-            polygon = QGraphicsPolygonItem( None, None)
+            #polygon = QGraphicsPolygonItem( None, None)
+            #polygon.setPolygon(newPolygon)
 
-            polygon.setPolygon(newPolygon)
+            if QT_VERSION_STR[0] == "4":
+                polygon = QGraphicsPolygonItem(newPolygon, None, None)
+            else:
+                polygon = QGraphicsPolygonItem(newPolygon)
+
+
+
 
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
 
