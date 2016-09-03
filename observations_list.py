@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-#-*- coding:utf-8 -*-
 
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2016 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -40,7 +39,7 @@ class observationsList_widget(QDialog):
     def __init__(self, parent=None):
         super(observationsList_widget, self).__init__(parent)
 
-        self.setWindowTitle('Observations list - ' + config.programName)
+        self.setWindowTitle("Observations list - " + config.programName)
         self.label = QLabel(self)
 
         self.mode = config.SINGLE
@@ -58,21 +57,37 @@ class observationsList_widget(QDialog):
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
 
         hbox2 = QHBoxLayout(self)
+        
+        self.sort_label = QLabel( "Sort order")
 
+        hbox2.addWidget(self.sort_label)
+        
+        self.cbSort = QComboBox()
+        self.cbSort.addItems(["Observation id ascending", "Observation id descending",
+                              "Date ascending", "Date descending",
+                              "Subjects ascending", "Subjects descending",
+                              "Description ascending", "Description descending",
+                              "Media file ascending", "Media file descending",
+                              ]) 
+        self.cbSort.currentIndexChanged.connect(self.selectionchange)
+        hbox2.addWidget(self.cbSort)
+        
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
-        self.pbSelectAll = QPushButton('Select all')
+        
+
+
+        self.pbSelectAll = QPushButton("Select all")
         hbox2.addWidget(self.pbSelectAll)
 
-        self.pbUnSelectAll = QPushButton('Unselect all')
+        self.pbUnSelectAll = QPushButton("Unselect all")
         hbox2.addWidget(self.pbUnSelectAll)
 
-
-        self.pbCancel = QPushButton('Cancel')
+        self.pbCancel = QPushButton("Cancel")
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOpen = QPushButton('Open')
+        self.pbOpen = QPushButton("Open")
         hbox2.addWidget(self.pbOpen)
 
         self.pbEdit = QPushButton("Edit")
@@ -105,6 +120,22 @@ class observationsList_widget(QDialog):
         self.pbEdit.clicked.connect(self.pbEdit_clicked)
 
         self.view.doubleClicked.connect(self.view_doubleClicked)
+
+    def selectionchange(self, idx):
+        print(self.cbSort.itemText(idx))
+        sortOrder = ("descending" in self.cbSort.itemText(idx))
+        if "Observation id" in self.cbSort.itemText(idx):
+            columnToSort = 0
+        if "Date" in self.cbSort.itemText(idx):
+            columnToSort = 1
+        if "Description" in self.cbSort.itemText(idx):
+            columnToSort = 2
+        if "Subjects" in self.cbSort.itemText(idx):
+            columnToSort = 3
+        if "Media" in self.cbSort.itemText(idx):
+            columnToSort = 4
+            
+        self.proxy.sort (columnToSort, sortOrder)
 
 
     def view_doubleClicked(self, index):
@@ -149,8 +180,6 @@ class observationsList_widget(QDialog):
     def pbEdit_clicked(self):
         self.done(3)
 
-
-
     def on_view_horizontalHeader_sectionClicked(self, logicalIndex):
 
         self.logicalIndex = logicalIndex
@@ -161,7 +190,7 @@ class observationsList_widget(QDialog):
         self.comboBox.setCurrentIndex(self.logicalIndex)
         self.comboBox.blockSignals(True)
 
-        valuesUnique = [ self.model.item(row, self.logicalIndex).text() for row in range(self.model.rowCount()) ]
+        valuesUnique = [self.model.item(row, self.logicalIndex).text() for row in range(self.model.rowCount())]
 
         actionAll = QAction('All', self)
         actionAll.triggered.connect(self.on_actionAll_triggered)
@@ -186,7 +215,7 @@ class observationsList_widget(QDialog):
 
     def on_actionAll_triggered(self):
         filterColumn = self.logicalIndex
-        filterString = QRegExp(  "", Qt.CaseInsensitive, QRegExp.RegExp )
+        filterString = QRegExp("", Qt.CaseInsensitive, QRegExp.RegExp)
 
         self.proxy.setFilterRegExp(filterString)
         self.proxy.setFilterKeyColumn(filterColumn)
@@ -195,18 +224,22 @@ class observationsList_widget(QDialog):
     def on_signalMapper_mapped(self, i):
         stringAction = self.signalMapper.mapping(i).text()
         filterColumn = self.logicalIndex
-        filterString = QRegExp(  stringAction, Qt.CaseSensitive, QRegExp.FixedString )
+        filterString = QRegExp(stringAction, Qt.CaseSensitive, QRegExp.FixedString)
 
         self.proxy.setFilterRegExp(filterString)
         self.proxy.setFilterKeyColumn(filterColumn)
 
 
     def on_lineEdit_textChanged(self, text):
-        search = QRegExp(    text,  Qt.CaseInsensitive,  QRegExp.RegExp )
-        self.proxy.setFilterRegExp(search)
-        self.label.setText( '%d observation(s)' % self.proxy.rowCount())
+        '''
+        text edit changed
+        '''
+        self.proxy.setFilterRegExp(QRegExp(text, Qt.CaseInsensitive, QRegExp.RegExp ))
+        self.label.setText('{} observation{}'.format(self.proxy.rowCount(), "s" * (self.proxy.rowCount()>1)))
 
 
     def on_comboBox_currentIndexChanged(self, index):
-        '''combo box changed'''
+        '''
+        combo box changed
+        '''
         self.proxy.setFilterKeyColumn(index)

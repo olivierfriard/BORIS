@@ -2345,10 +2345,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def selectObservations(self, mode):
-        """
+        '''
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
-        """
+        '''
 
         obsList = observations_list.observationsList_widget()
 
@@ -2362,7 +2362,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == OPEN:
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbOpen.setVisible(True)
-            #obsList.pbEdit.setVisible(True)
 
         if mode == EDIT:
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
@@ -2383,19 +2382,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbSelect.setVisible(True)
 
-        obsListFields = ['id', 'date', 'description', 'subjects', 'media']
+        obsListFields = ["id", "date", "description", "subjects", "media"]
         indepVarHeader = []
 
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
-
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
 
         obsList.model.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
         obsList.comboBox.addItems(obsListFields + indepVarHeader)
 
-        for obs in sorted( list(self.pj[OBSERVATIONS].keys())):
-
+        for obs in sorted(list(self.pj[OBSERVATIONS].keys())):
             date = self.pj[OBSERVATIONS][obs]["date"].replace("T", " ")
             descr = self.pj[OBSERVATIONS][obs]["description"]
 
@@ -2403,9 +2400,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observedSubjects = self.extract_observed_subjects([obs])
 
             # remove when No focal subject
-            if '' in observedSubjects:
+            if "" in observedSubjects:
                 observedSubjects.remove("")
-            subjectsList = ', '.join(observedSubjects)
+            subjectsList = ", ".join(observedSubjects)
 
             mediaList = []
             if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
@@ -2414,7 +2411,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for media in self.pj[OBSERVATIONS][obs][FILE][player]:
                             mediaList.append("#{0}: {1}".format(player, media))
 
-                media = os.linesep.join( mediaList )
+                media = os.linesep.join(mediaList)
             elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                 media = LIVE
 
@@ -2422,16 +2419,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             indepVar = []
             if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obs]:
                 for var in indepVarHeader:
-                    if var in self.pj[OBSERVATIONS][obs][ INDEPENDENT_VARIABLES ]:
-                        indepVar.append( QStandardItem( self.pj[OBSERVATIONS][obs][ INDEPENDENT_VARIABLES ][var] ) )
+                    if var in self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
+                        indepVar.append(QStandardItem(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var]))
 
-            obsList.model.invisibleRootItem().appendRow( [ QStandardItem(obs), QStandardItem(date), QStandardItem(descr) , QStandardItem( subjectsList ), QStandardItem( media )]  +  indepVar )
+            obsList.model.invisibleRootItem().appendRow([QStandardItem(obs), QStandardItem(date), QStandardItem(descr), QStandardItem( subjectsList ), QStandardItem( media )]  +  indepVar )
 
         #obsList.view.horizontalHeader().setStretchLastSection(True)
         obsList.view.resizeColumnsToContents()
 
         obsList.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
-        obsList.label.setText( '%d observation(s)' % obsList.model.rowCount())
+        obsList.label.setText("{} observation{}".format(obsList.model.rowCount(), "s" * (obsList.model.rowCount()>1)))
 
         obsList.resize(900, 600)
 
@@ -2443,8 +2440,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if obsList.view.selectedIndexes():
                 for idx in obsList.view.selectedIndexes():
                     if idx.column() == 0:   # first column
-                        selectedObs.append( idx.data() )
-
+                        selectedObs.append(idx.data())
 
         if result == 0:  # cancel
             resultStr = ""
