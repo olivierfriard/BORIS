@@ -31,6 +31,7 @@ except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
+import os
 import dialog
 import config
 
@@ -69,7 +70,7 @@ class observationsList_widget(QDialog):
                               "Description ascending", "Description descending",
                               "Media file ascending", "Media file descending",
                               ]) 
-        self.cbSort.currentIndexChanged.connect(self.selectionchange)
+        self.cbSort.currentIndexChanged.connect(self.sort_order_changed)
         hbox2.addWidget(self.cbSort)
         
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -121,21 +122,20 @@ class observationsList_widget(QDialog):
 
         self.view.doubleClicked.connect(self.view_doubleClicked)
 
-    def selectionchange(self, idx):
-        print(self.cbSort.itemText(idx))
+    def sort_order_changed(self, idx):
         sortOrder = ("descending" in self.cbSort.itemText(idx))
-        if "Observation id" in self.cbSort.itemText(idx):
-            columnToSort = 0
-        if "Date" in self.cbSort.itemText(idx):
-            columnToSort = 1
-        if "Description" in self.cbSort.itemText(idx):
-            columnToSort = 2
-        if "Subjects" in self.cbSort.itemText(idx):
-            columnToSort = 3
-        if "Media" in self.cbSort.itemText(idx):
-            columnToSort = 4
+        for i, text in enumerate(["Observation id", "Date", "Description", "Subjects", "Media"]):
+            if text in self.cbSort.itemText(idx):
+                columnToSort = i
             
         self.proxy.sort (columnToSort, sortOrder)
+
+        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        try:
+            settings = QSettings(iniFilePath, QSettings.IniFormat)
+            settings.setValue("observations_list_order", self.cbSort.itemText(idx))
+        except:
+            pass
 
 
     def view_doubleClicked(self, index):

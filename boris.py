@@ -2382,6 +2382,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbSelect.setVisible(True)
 
+        # observations list order
+
+        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        settings = QSettings(iniFilePath, QSettings.IniFormat)
+        try: 
+            obsList.cbSort.setCurrentIndex([ obsList.cbSort.itemText(idx) for idx in range(obsList.cbSort.count())].index(settings.value("observations_list_order")))
+        except:
+            pass
         obsListFields = ["id", "date", "description", "subjects", "media"]
         indepVarHeader = []
 
@@ -2907,25 +2915,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if __version__ == 'DEV':
             iniFilePath = os.path.expanduser('~') + os.sep + '.boris_dev'
         else:
-            iniFilePath = os.path.expanduser('~') + os.sep + '.boris'
+            iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
 
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
 
-            size = settings.value('MainWindow/Size')
+            size = settings.value("MainWindow/Size")
             if size:
                 self.resize(size)
-                self.move(settings.value('MainWindow/Position'))
+                self.move(settings.value("MainWindow/Position"))
 
             self.timeFormat = HHMMSS
             try:
-                self.timeFormat = settings.value('Time/Format')
+                self.timeFormat = settings.value("Time/Format")
             except:
                 self.timeFormat = HHMMSS
 
             self.fast = 10
             try:
-                self.fast = int(settings.value('Time/fast_forward_speed'))
+                self.fast = int(settings.value("Time/fast_forward_speed"))
 
             except:
                 self.fast = 10
