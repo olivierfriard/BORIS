@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.99"
-__version_date__ = "2016-09-02"
+__version__ = "2.991"
+__version_date__ = "2016-09-05"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -2386,7 +2386,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
         settings = QSettings(iniFilePath, QSettings.IniFormat)
-        try: 
+        try:
             obsList.cbSort.setCurrentIndex([ obsList.cbSort.itemText(idx) for idx in range(obsList.cbSort.count())].index(settings.value("observations_list_order")))
         except:
             pass
