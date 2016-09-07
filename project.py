@@ -531,7 +531,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             comboBox.addItems(BEHAVIOR_TYPES)
                             comboBox.setCurrentIndex(BEHAVIOR_TYPES.index(project[ETHOGRAM][i][field]))
 
-                            self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, fields[field], comboBox)
+                            self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field], comboBox)
 
                         else:
                             item.setText(project[ETHOGRAM][i][field])
@@ -539,7 +539,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             if field in ['excluded', 'coding map']:
                                 item.setFlags(Qt.ItemIsEnabled)
 
-                            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field], item)
+                            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
                 self.twBehaviors.resizeColumnsToContents()
 
@@ -566,16 +566,16 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             combobox = self.twBehaviors.cellWidget(r, 0)
 
-            if self.twBehaviors.item(r, fields['code']):
+            if self.twBehaviors.item(r, behavioursFields['code']):
 
                 if includePointEvents == YES or (includePointEvents == NO and 'State' in BEHAVIOR_TYPES[combobox.currentIndex()]):
-                    allBehaviors.append(self.twBehaviors.item(r, fields['code']).text())
+                    allBehaviors.append(self.twBehaviors.item(r, behavioursFields['code']).text())
 
-                excl[self.twBehaviors.item(r, fields['code']).text()] = self.twBehaviors.item(r, fields['excluded']).text().split(',')
-                new_excl[self.twBehaviors.item(r, fields['code']).text()] = []
+                excl[self.twBehaviors.item(r, behavioursFields['code']).text()] = self.twBehaviors.item(r, behavioursFields['excluded']).text().split(',')
+                new_excl[self.twBehaviors.item(r, behavioursFields['code']).text()] = []
 
                 if 'State' in BEHAVIOR_TYPES[combobox.currentIndex()]:
-                    stateBehaviors.append(self.twBehaviors.item(r, fields['code']).text())
+                    stateBehaviors.append(self.twBehaviors.item(r, behavioursFields['code']).text())
 
         logging.debug('all behaviors: {}'.format(allBehaviors))
         logging.debug('stateBehaviors: {}'.format(stateBehaviors))
@@ -618,11 +618,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                             s1 = stateBehaviors[c]
                             s2 = allBehaviors[r]
-                            '''
-                            if not s2 in new_excl[s1]:
-                                new_excl[s1].append(s2)
 
-                            '''
                             if s1 not in new_excl[s2]:
                                 new_excl[s2].append(s1)
 
@@ -632,10 +628,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             for r in range(0, self.twBehaviors.rowCount()):
                 if includePointEvents == YES or (includePointEvents == NO and 'State' in BEHAVIOR_TYPES[self.twBehaviors.cellWidget(r, 0).currentIndex()]):
                     for e in excl:
-                        if e == self.twBehaviors.item(r, fields['code']).text():
+                        if e == self.twBehaviors.item(r, behavioursFields['code']).text():
                             item = QTableWidgetItem(','.join(new_excl[e]))
                             item.setFlags(Qt.ItemIsEnabled)
-                            self.twBehaviors.setItem(r, fields['excluded'], item)
+                            self.twBehaviors.setItem(r, behavioursFields['excluded'], item)
 
 
     def pbRemoveAllBehaviors_clicked(self):
@@ -836,25 +832,25 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(0, self.twBehaviors.rowCount()):
 
             # check key
-            if self.twBehaviors.item(r, fields["key"]):
+            if self.twBehaviors.item(r, behavioursFields["key"]):
                 # check key length
-                if self.twBehaviors.item(r, fields["key"]).text().upper() not in ['F' + str(i) for i in range(1, 13)] \
-                   and len(self.twBehaviors.item(r, fields["key"]).text()) > 1:
+                if self.twBehaviors.item(r, behavioursFields["key"]).text().upper() not in ['F' + str(i) for i in range(1, 13)] \
+                   and len(self.twBehaviors.item(r, behavioursFields["key"]).text()) > 1:
                     self.lbObservationsState.setText("""<font color="red">Key length &gt; 1</font>""")
                     return
 
-                keys.append(self.twBehaviors.item(r, fields["key"]).text())
+                keys.append(self.twBehaviors.item(r, behavioursFields["key"]).text())
 
                 # convert to upper text
-                self.twBehaviors.item(r, fields["key"]).setText(self.twBehaviors.item(r, fields["key"]).text().upper())
+                self.twBehaviors.item(r, behavioursFields["key"]).setText(self.twBehaviors.item(r, behavioursFields["key"]).text().upper())
 
             # check code
-            if self.twBehaviors.item(r, fields["code"]):
-                if self.twBehaviors.item(r, fields["code"]).text() in codes:
+            if self.twBehaviors.item(r, behavioursFields["code"]):
+                if self.twBehaviors.item(r, behavioursFields["code"]).text() in codes:
                     self.lbObservationsState.setText("""<font color="red">Code duplicated at line {} </font>""".format(r + 1))
                 else:
-                    if self.twBehaviors.item(r, fields["code"]).text():
-                        codes.append(self.twBehaviors.item(r, fields["code"]).text())
+                    if self.twBehaviors.item(r, behavioursFields["code"]).text():
+                        codes.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
 
         # check subjects for key duplication
         '''
@@ -875,7 +871,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
             row = self.twBehaviors.selectedIndexes()[0].row()
-            for field in fields:
+            for field in behavioursFields:
 
                 if field == "type":
                     item = QTableWidgetItem()
@@ -889,8 +885,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, 0, newComboBox)
 
                 else:
-                    item = QTableWidgetItem(self.twBehaviors.item(row, fields[field]))
-                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, fields[field], item)
+                    item = QTableWidgetItem(self.twBehaviors.item(row, behavioursFields[field]))
+                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
     def pbRemoveBehavior_clicked(self):
         """
@@ -961,7 +957,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         event type combobox changed
         """
 
-        combobox = self.twBehaviors.cellWidget(row, fields["type"])
+        combobox = self.twBehaviors.cellWidget(row, behavioursFields["type"])
         if "with coding map" in BEHAVIOR_TYPES[combobox.currentIndex()]:
             # let user select a coding maop
             fd = QFileDialog(self)
