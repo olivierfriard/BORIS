@@ -536,7 +536,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         else:
                             item.setText(project[ETHOGRAM][i][field])
 
-                            if field in ['excluded', 'coding map']:
+                            if field in ["excluded", "category", "coding map"]:
                                 item.setFlags(Qt.ItemIsEnabled)
 
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
@@ -715,7 +715,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
                         else:
                             item = QTableWidgetItem(behavior[field_type])
-                            if field_type in ["excluded", "coding map", "modifiers"]:
+                            if field_type in ["excluded", "category", "coding map", "modifiers"]:
                                 item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
