@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Aug 31 11:17:14 2016
+# Created: Thu Sep  8 12:00:01 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -323,6 +323,8 @@ class Ui_MainWindow(object):
         self.actionBehaviors_map.setObjectName("actionBehaviors_map")
         self.actionTime_budget_by_behaviors_category = QtWidgets.QAction(MainWindow)
         self.actionTime_budget_by_behaviors_category.setObjectName("actionTime_budget_by_behaviors_category")
+        self.actionExport_events_as_SDIS_file = QtWidgets.QAction(MainWindow)
+        self.actionExport_events_as_SDIS_file.setObjectName("actionExport_events_as_SDIS_file")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -360,6 +362,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
+        self.menuObservations.addAction(self.actionExport_events_as_SDIS_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionMedia_file_information)
@@ -521,4 +524,5 @@ class Ui_MainWindow(object):
         self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events"))
         self.actionBehaviors_map.setText(_translate("MainWindow", "Coding pad"))
         self.actionTime_budget_by_behaviors_category.setText(_translate("MainWindow", "Time budget by behaviors category"))
+        self.actionExport_events_as_SDIS_file.setText(_translate("MainWindow", "Export events as SDIS file"))
 

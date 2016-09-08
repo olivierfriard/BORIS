@@ -546,11 +546,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
-        '''
-        self.actionExportEventTabular_TSV.triggered.connect(lambda: self.export_tabular_events("tsv"))
-        self.actionExportEventTabular_ODS.triggered.connect(lambda: self.export_tabular_events("ods"))
-        self.actionExportEventTabular_XLS.triggered.connect(lambda: self.export_tabular_events("xls"))
-        '''
         self.actionExportEvents.triggered.connect(self.export_tabular_events)
 
 
@@ -559,6 +554,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
 
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
+        self.actionExport_events_as_SDIS_file.triggered.connect(self.export_events_as_sdis)
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
@@ -5654,6 +5650,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        "Microsoft Excel XLS (*.xls);;"
                        "Open Document Spreadsheet ODS (*.ods);;"
                        "HTML (*.html);;"
+                       "SDIS (*.sds);;"
                        "SQL dump file file (*.sql);;"
                        "All files (*)")
         while True:
@@ -5662,25 +5659,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", fileFormats)
 
-
-            '''dummy = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ("Tab separated values (*.tsv *.txt);;"
-                                                                                             "Comma separated values (*.csv);;"
-                                                                                             "Open Document Spreadsheet (*.ods);;"
-                                                                                             "Microsoft Excel (*.xls);;"
-                                                                                             "HTML (*.html *.htm);;"
-                                                                                             "SQL dump file file (*.sql);;"
-                                                                                             "All files (*)"))
-
-            if type(dummy) is tuple:
-                fileName, _ = dummy
-            else:
-                fileName = dummy
-            '''
             if not fileName:
                 return
 
             outputFormat = ""
-            availableFormats = ("tsv", "csv", "xls", "ods", "html", "sql")
+            availableFormats = ("tsv", "csv", "xls", "ods", "html", "sql", "sds")
             for fileExtension in availableFormats:
                 if fileExtension in filter_:
                     outputFormat = fileExtension
@@ -5821,6 +5804,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        elif outputFormat == "sds":
+
+            out = "Timed <seconds>;\n"
+
+            # observation id
+            out += "\n<{}>\n".format(selectedObservations[0])
+
+            # sort events by start time
+            dataList = list(data[1:])
+            for event in sorted(dataList, key=lambda x: x[9]):
+
+                out += "{}_{},{}-{} ".format(event[5].replace(" ", "_"), event[6].replace(" ", "_"), event[9], event[10] )
+            out += "/"
+            print(out)
+
+
         else:
             if outputFormat == "tsv":
                 with open(fileName, "w") as f:
@@ -5843,6 +5842,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.statusbar.showMessage("Aggregated events exported successfully", 0)
+
+
+    def export_events_as_sdis(self):
+        """
+        export events in SDIS format for analysis with GSEQ
+        """
+        import export_events_2_sdis
+        result, selectedObservations = self.selectObservations(SELECT1)
+
+        if not selectedObservations:
+            return
+
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+
+        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+            return
+
 
 
 
