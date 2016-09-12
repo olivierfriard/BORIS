@@ -151,7 +151,6 @@
     <addaction name="actionExport_aggregated_events"/>
     <addaction name="actionExportEventString"/>
     <addaction name="actionExport_events_as_Praat_TextGrid"/>
-    <addaction name="actionExport_events_as_SDIS_file"/>
     <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionMedia_file_information"/>

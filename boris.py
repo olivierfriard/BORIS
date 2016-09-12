@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.993"
-__version_date__ = "2016-09-09"
+__version_date__ = "2016-09-12"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -1200,7 +1200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         try:
             versionURL = "http://www.boris.unito.it/static/ver.dat"
-            lastVersion = Decimal(urllib.request.urlopen( versionURL ).read().strip().decode("utf-8"))
+            lastVersion = Decimal(urllib.request.urlopen(versionURL).read().strip().decode("utf-8"))
             self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
 
             if lastVersion > Decimal(__version__):
@@ -2993,7 +2993,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.checkForNewVersion = False
             try:
                 if settings.value('check_for_new_version') == None:
-                    self.checkForNewVersion = ( dialog.MessageDialog(programName, 'Allow BORIS to automatically check for new version?', [YES, NO ]) == YES )
+                    self.checkForNewVersion = (dialog.MessageDialog(programName, ("Allow BORIS to automatically check for new version?\n"
+                                                                          "(An internet connection is required)\n"
+                                                                          "You can change this option in the Preferences (File > Preferences)"), [YES, NO ]) == YES)
                 else:
                     self.checkForNewVersion = (settings.value('check_for_new_version') == 'true')
             except:
@@ -3019,6 +3021,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.ffmpeg_cache_dir_max_size = 0
 
+        else: # no .boris file found
+            # ask user for checking for new version
+            self.checkForNewVersion = (dialog.MessageDialog(programName, ("Allow BORIS to automatically check for new version?\n"
+                                                                          "(An internet connection is required)\n"
+                                                                          "You can change this option in the Preferences (File > Preferences)"), [NO, YES ]) == YES)
 
     def saveConfigFile(self, lastCheckForNewVersion=0):
         """
@@ -5688,7 +5695,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             data = tablib.Dataset()
             data.title = "Aggregated events"
-            data.append(["Observation id", "Observation date", "Media file", "Total media length", "FPS", "Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
+            data.append(["Observation id", "Observation date", "Media file", "Total media length", "FPS",
+                         "Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
 
 
         self.statusbar.showMessage("Exporting aggregated events in {} format".format(outputFormat.upper()), 0)
@@ -5806,7 +5814,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         elif outputFormat == "sds": # SDIS format
 
-            out = "% SDIS file created by BORIS at {}\nTimed <seconds>;\n".format(datetime.datetime.now().isoformat())
+            out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime.datetime.now().isoformat())
 
             for obsId in selectedObservations:
                 # observation id
@@ -5816,7 +5824,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dataList = list(data[1:])
                 for event in sorted(dataList, key=lambda x: x[9]):
                     if event[0] == obsId:
-                        out += "{}_{},{}-{} ".format(event[5].replace(" ", "_"), event[6].replace(" ", "_"), event[9], event[10] )
+
+                        behavior = event[6]
+                        for char in [" ", "-"]:
+                            behavior = behavior.replace(char, "_")
+
+                        event_start = "{0:.3f}".format(round(event[9], 3))
+                        # check if event is POINT or STATE    print("{0:.3f}".format(round(14.12789999999999,3)))
+                        if not event[10]:
+                            event_stop = "{0:.3f}".format(round(event[9] + 0.001, 3))
+                        else:
+                            event_stop = "{0:.3f}".format(round(event[10], 3))
+                        out += "{}_{},{}-{} ".format(event[5].replace(" ", "_"), behavior, event_start, event_stop)
 
                 out += "/\n\n"
 

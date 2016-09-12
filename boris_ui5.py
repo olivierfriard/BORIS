@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Sep  8 12:00:01 2016
+# Created: Mon Sep 12 12:01:19 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -362,7 +362,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
-        self.menuObservations.addAction(self.actionExport_events_as_SDIS_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionMedia_file_information)
