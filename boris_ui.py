@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Sep 12 12:01:17 2016
+# Created: Thu Sep 15 09:42:59 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -428,7 +428,7 @@ class Ui_MainWindow(object):
         self.menuHelp.setTitle(_translate("MainWindow", "Help", None))
         self.menuFile.setTitle(_translate("MainWindow", "File", None))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations", None))
-        self.menuAnalyze.setTitle(_translate("MainWindow", "Analyze", None))
+        self.menuAnalyze.setTitle(_translate("MainWindow", "Analysis", None))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback", None))
         self.menuTools.setTitle(_translate("MainWindow", "Tools", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
@@ -526,7 +526,7 @@ class Ui_MainWindow(object):
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)", None))
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid", None))
-        self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract events from media files", None))
+        self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract sequences from media files", None))
         self.actionDistance.setText(_translate("MainWindow", "Geometric measurement", None))
         self.actionFrame_forward.setText(_translate("MainWindow", "Frame forward", None))
         self.actionFrame_backward.setText(_translate("MainWindow", "frame backward", None))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Sep 12 12:01:19 2016
+# Created: Thu Sep 15 09:42:59 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -415,7 +415,7 @@ class Ui_MainWindow(object):
         self.menuHelp.setTitle(_translate("MainWindow", "Help"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations"))
-        self.menuAnalyze.setTitle(_translate("MainWindow", "Analyze"))
+        self.menuAnalyze.setTitle(_translate("MainWindow", "Analysis"))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback"))
         self.menuTools.setTitle(_translate("MainWindow", "Tools"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
@@ -513,7 +513,7 @@ class Ui_MainWindow(object):
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)"))
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram"))
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid"))
-        self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract events from media files"))
+        self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract sequences from media files"))
         self.actionDistance.setText(_translate("MainWindow", "Geometric measurement"))
         self.actionFrame_forward.setText(_translate("MainWindow", "Frame forward"))
         self.actionFrame_backward.setText(_translate("MainWindow", "frame backward"))

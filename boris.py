@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.993"
-__version_date__ = "2016-09-12"
+__version__ = "2.994"
+__version_date__ = "2016-09-16"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -4185,7 +4185,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO]) == YES:
                 maxTime = 0 # max length for all events all subjects
                 for obsId in selectedObservations:
-                    maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+                    if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                        maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 logging.debug("max time all events all subjects: {0}".format(maxTime))
                 selectedObsTotalMediaLength = maxTime
             else:

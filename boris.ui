@@ -158,7 +158,7 @@
    </widget>
    <widget class="QMenu" name="menuAnalyze">
     <property name="title">
-     <string>Analyze</string>
+     <string>Analysis</string>
     </property>
     <addaction name="actionTime_budget"/>
     <addaction name="actionTime_budget_by_behaviors_category"/>
@@ -786,7 +786,7 @@
   </action>
   <action name="actionExtract_events_from_media_files">
    <property name="text">
-    <string>Extract events from media files</string>
+    <string>Extract sequences from media files</string>
    </property>
   </action>
   <action name="actionDistance">
