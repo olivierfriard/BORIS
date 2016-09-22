@@ -6895,7 +6895,7 @@ item []:
             if code in stateEventsList:
 
                 # how many code before with same subject?
-                if len([x[pj_obs_fields['code']] for x in events if x[pj_obs_fields['code']] == code and x[ pj_obs_fields['time']] < time and x[pj_obs_fields['subject']] == subject]) % 2: # test if odd
+                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events if x[EVENT_BEHAVIOR_FIELD_IDX] == code and x[ EVENT_TIME_FIELD_IDX] < time and x[EVENT_SUBJECT_FIELD_IDX] == subject]) % 2: # test if odd
                     flag = STOP
                 else:
                     flag = START
@@ -7980,17 +7980,13 @@ item []:
                             subj_str = "{0}No focal subject:{0}".format(os.linesep)
                         outFile.write(subj_str)
 
-
                         for obsId in selectedObservations:
                             s = ""
-
                             currentStates = []
-
                             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
-                            print(eventsWithStatus)
 
                             for event in eventsWithStatus:
-
+                                
                                 if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
 
                                     if event[-1] == POINT:
@@ -7999,29 +7995,28 @@ item []:
                                         else:
                                             s += event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
 
-
                                         if plot_parameters["include modifiers"]:
-                                            s += "&" + event[3].replace("|", "+")
+                                            s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
 
                                         s += self.behaviouralStringsSeparator
 
-                                    if event[-1] == "START":
+                                    if event[-1] == START:
                                         currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
                                         s += "+".join(replace_spaces(currentStates))
 
                                         if plot_parameters["include modifiers"]:
-                                            s += "&" + event[3].replace("|", "+")
+                                            s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
                                         s += self.behaviouralStringsSeparator
 
-
-                                    if event[-1] == "STOP":
+                                    if event[-1] == STOP:
+                                        
                                         if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
                                             currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
                                         if currentStates:
                                             s += "+".join(replace_spaces(currentStates))
 
                                             if plot_parameters["include modifiers"]:
-                                                s += "&" + event[3].replace("|", "+")
+                                                s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
                                             s += self.behaviouralStringsSeparator
 
 
@@ -8137,8 +8132,6 @@ item []:
                     self.timer_spectro_out()
 
 
-
-
     def play_activated(self):
         """
         button 'play' activated
@@ -8163,9 +8156,9 @@ item []:
             else:
                 if self.media_list.count() == 1:
                     if self.mediaplayer.get_time() >= self.fast * 1000:
-                        self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000 )
+                        self.mediaplayer.set_time( self.mediaplayer.get_time() - self.fast * 1000)
                     else:
-                        self.mediaplayer.set_time( 0 )
+                        self.mediaplayer.set_time(0)
                     if self.simultaneousMedia:
                         self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
 
@@ -8177,8 +8170,8 @@ item []:
                     if newTime < self.fast * 1000:
                         newTime = 0
 
-                    logging.debug( 'newTime: {0}'.format(newTime))
-                    logging.debug( 'sum self.duration: {0}'.format(sum(self.duration)))
+                    logging.debug('newTime: {0}'.format(newTime))
+                    logging.debug('sum self.duration: {0}'.format(sum(self.duration)))
 
                     # remember if player paused (go previous will start playing)
                     flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
@@ -8225,7 +8218,7 @@ item []:
             if self.playMode == FFMPEG:
 
                 currentTime = self.FFmpegGlobalFrame / list(self.fps.values())[0]
-                self.FFmpegGlobalFrame =  int((currentTime + self.fast )  * list(self.fps.values())[0])
+                self.FFmpegGlobalFrame = int((currentTime + self.fast) * list(self.fps.values())[0])
                 self.FFmpegTimerOut()
 
             else:
@@ -8234,7 +8227,7 @@ item []:
                     if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
                         self.mediaplayer.set_time(self.mediaplayer.get_length())
                     else:
-                        self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000 )
+                        self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000)
 
                     if self.simultaneousMedia:
                         self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
