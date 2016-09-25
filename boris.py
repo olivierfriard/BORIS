@@ -566,6 +566,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_map.triggered.connect(self.coding_map)
+        self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
 
         # menu Analyze
         #self.actionTime_budget.triggered.connect(self.time_budget)
@@ -662,6 +663,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
+    def recode_resize_video(self):
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Select a media file to recode/resize", "", "Media files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Select a media file to recode/resize", "", "Media files (*)")
+
+        if fileName:
+            horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (pixels) Aspect ratio will be maintained", 1024, 640, 1920, 10)
+            ffmpeg_command = """{ffmpeg_bin} -i "{input}"  -vf scale={horiz_resol}:-1 -b 2000k "{input}.recoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
+                                    input=fileName, horiz_resol=horiz_resol)
+
+            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            out, error = p.communicate()
+
+
     def click_signal_from_behaviors_map(self, behaviorCode):
 
         sendEventSignal = pyqtSignal(QEvent)
@@ -672,8 +688,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
 
         self.keyPressEvent(q)
-
-
 
 
     def signal_from_behaviors_map(self, event):
@@ -1726,12 +1740,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.measurement_w.close()
         self.measurement_w = None
 
-
     def clear_measurements(self):
         if self.FFmpegGlobalFrame > 1:
             self.FFmpegGlobalFrame -= 1
             self.FFmpegTimerOut()
-
 
     def distance(self):
         """
@@ -7986,7 +7998,7 @@ item []:
                             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
 
                             for event in eventsWithStatus:
-                                
+
                                 if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
 
                                     if event[-1] == POINT:
@@ -8009,7 +8021,7 @@ item []:
                                         s += self.behaviouralStringsSeparator
 
                                     if event[-1] == STOP:
-                                        
+
                                         if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
                                             currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
                                         if currentStates:
@@ -8247,7 +8259,7 @@ item []:
 
                         tot = 0
                         for idx, d in enumerate(self.duration):
-                            if newTime >= tot and newTime < tot+d:
+                            if newTime >= tot and newTime < tot + d:
                                 self.mediaListPlayer.play_item_at_index(idx)
                                 app.processEvents()
 
@@ -8259,7 +8271,7 @@ item []:
                                 if flagPaused:
                                     self.mediaListPlayer.pause()
 
-                                self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
+                                self.mediaplayer.set_time( newTime - sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
 
                                 break
                             tot += d

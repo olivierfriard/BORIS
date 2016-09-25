@@ -76,7 +76,7 @@
              <x>0</x>
              <y>0</y>
              <width>522</width>
-             <height>402</height>
+             <height>412</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>22</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -185,6 +185,7 @@
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionDistance"/>
     <addaction name="actionBehaviors_map"/>
+    <addaction name="actionRecode_resize_video"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -835,6 +836,11 @@
   <action name="actionExport_events_as_SDIS_file">
    <property name="text">
     <string>Export events as SDIS file</string>
+   </property>
+  </action>
+  <action name="actionRecode_resize_video">
+   <property name="text">
+    <string>Recode/resize video</string>
    </property>
   </action>
  </widget>
