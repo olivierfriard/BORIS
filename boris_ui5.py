@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Sep 26 09:09:15 2016
+# Created: Mon Sep 26 17:33:22 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -44,7 +44,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtWidgets.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 522, 412))
+        self.page.setGeometry(QtCore.QRect(0, 0, 522, 402))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -52,7 +52,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 19))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -527,5 +527,5 @@ class Ui_MainWindow(object):
         self.actionBehaviors_map.setText(_translate("MainWindow", "Coding pad"))
         self.actionTime_budget_by_behaviors_category.setText(_translate("MainWindow", "Time budget by behaviors category"))
         self.actionExport_events_as_SDIS_file.setText(_translate("MainWindow", "Export events as SDIS file"))
-        self.actionRecode_resize_video.setText(_translate("MainWindow", "Recode/resize video"))
+        self.actionRecode_resize_video.setText(_translate("MainWindow", "Re-encode/resize video"))
 
