@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created: Mon Sep 26 09:09:14 2016
+#      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
 

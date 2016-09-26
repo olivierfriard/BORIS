@@ -76,7 +76,7 @@
              <x>0</x>
              <y>0</y>
              <width>522</width>
-             <height>412</height>
+             <height>402</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -840,7 +840,7 @@
   </action>
   <action name="actionRecode_resize_video">
    <property name="text">
-    <string>Recode/resize video</string>
+    <string>Re-encode/resize video</string>
    </property>
   </action>
  </widget>

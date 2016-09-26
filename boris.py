@@ -196,6 +196,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", SUBJECTS : {}, "behaviors_conf": {}, OBSERVATIONS: {} , "coding_map":{} }
     project = False
 
+    ffmpeg_recode_process = None
+
     observationId = ''   # current observation id
 
     timeOffset = 0.0
@@ -664,18 +666,60 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def recode_resize_video(self):
+        """
+        re-encode video with ffmpeg
+        """
+
+        timerFFmpegRecoding = QTimer()
+
+        def timerFFmpegRecoding_timeout():
+            if not self.ffmpeg_recode_process.is_alive():
+                timerFFmpegRecoding.stop()
+                self.w.hide()
+                del(self.w)
+                self.ffmpeg_recode_process = None
+
+
+        def ffmpeg_recode(video_paths, horiz_resol):
+
+            for video_path in video_paths:
+                ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
+                                                                                                                                      input=video_path,
+                                                                                                                                      horiz_resol=horiz_resol)
+                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                out, error = p.communicate()
+
+            return True
+
+        if self.ffmpeg_recode_process:
+            QMessageBox.warning(self, programName, "BORIS is already re-encoding a video...")
+            return
+
         if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Select a media file to recode/resize", "", "Media files (*)")
+            fileNames = QFileDialog(self).getOpenFileNames(self, "Select a media file to re-encode/resize", "", "Media files (*)")
         else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Select a media file to recode/resize", "", "Media files (*)")
+            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select a media file to re-encode/resize", "", "Media files (*)")
 
-        if fileName:
-            horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (pixels) Aspect ratio will be maintained", 1024, 640, 1920, 10)
-            ffmpeg_command = """{ffmpeg_bin} -i "{input}"  -vf scale={horiz_resol}:-1 -b 2000k "{input}.recoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
-                                    input=fileName, horiz_resol=horiz_resol)
 
-            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            out, error = p.communicate()
+        if fileNames:
+
+            import multiprocessing
+
+            horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (in pixels)\nThe aspect ratio will be maintained", 1024, 640, 1920, 10)
+
+            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol,))
+            self.ffmpeg_recode_process.start()
+
+            import recode_widget
+            self.w = recode_widget.VideoRecoding()
+            self.w.resize(350, 100)
+            self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.w.setWindowTitle('Re-encoding with FFmpeg')
+            self.w.label.setText("\n".join(fileNames))
+            self.w.show()
+
+            timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
+            timerFFmpegRecoding.start(30000)
 
 
     def click_signal_from_behaviors_map(self, behaviorCode):
@@ -6531,8 +6575,6 @@ item []:
     def actionAbout_activated(self):
         """ about dialog """
 
-        print(logging.getLogger().getEffectiveLevel())
-
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
         else:
@@ -8047,10 +8089,16 @@ item []:
         """
         check if current project is saved and close program
         """
-        if self.projectChanged:
-            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", ['Save', 'Discard', CANCEL])
 
-            if response == "Save":
+        # check if re-encoding
+        if self.ffmpeg_recode_process:
+            QMessageBox.warning(self, programName, "BORIS is re-encoding a video...")
+            event.ignore()
+
+        if self.projectChanged:
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
+
+            if response == SAVE:
                 if self.save_project_activated() == "not saved":
                     event.ignore()
 
