@@ -124,7 +124,7 @@ import coding_pad
 
 from config import *
 
-def ffmpeg_recode(video_paths, horiz_resol):
+def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
 
     for video_path in video_paths:
         ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
@@ -678,9 +678,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
-
-
-
     def recode_resize_video(self):
         """
         re-encode video with ffmpeg
@@ -713,7 +710,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (in pixels)\nThe aspect ratio will be maintained", 1024, 640, 1920, 10)
 
-            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol,))
+            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol, ffmpeg_bin, ))
             self.ffmpeg_recode_process.start()
 
             import recode_widget
