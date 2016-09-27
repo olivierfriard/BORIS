@@ -6078,7 +6078,7 @@ item []:
             if os.path.isfile(media_file_path):
                 out =  "<b>{}</b><br><br>".format(os.path.basename(media_file_path))
 
-                out += "File size: {} Mb<br>".format(round(os.stat(media_file_path).st_size/ 1024 /1024, 1))
+                out += "File size: {} Mb<br>".format(round(os.stat(media_file_path).st_size / 1024 / 1024, 1))
 
                 ffmpeg_output = subprocess.getoutput('"{}" -i "{}"'.format(ffmpeg_bin, media_file_path)).split("Stream #0")
                 if len(ffmpeg_output) > 1:
@@ -6100,15 +6100,15 @@ item []:
             logging.info("media.get_meta(0): {}".format(media.get_meta(0)))
             logging.info("Track: {}/{}".format(self.mediaplayer.video_get_track(), self.mediaplayer.video_get_track_count()))
             logging.info("number of media in media list: {}".format(self.media_list.count()))
-            logging.info(('get time: %s  duration: %s' % (self.mediaplayer.get_time(), media.get_duration())))
-            logging.info(('Position: %s %%' % self.mediaplayer.get_position()))
-            logging.info(('FPS: %s' % (self.mediaplayer.get_fps())))
-            logging.info(('Rate: %s' % self.mediaplayer.get_rate()))
-            logging.info(('Video size: %s' % str(self.mediaplayer.video_get_size(0))))  # num=0
-            logging.info(('Scale: %s' % self.mediaplayer.video_get_scale()))
-            logging.info(('Aspect ratio: {}'.format(self.mediaplayer.video_get_aspect_ratio())))
-            logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
-            logging.info('has_vout? {0}'.format(self.mediaplayer.has_vout()))
+            logging.info("get time: {}  duration: {}".format(self.mediaplayer.get_time(), media.get_duration()))
+            logging.info("Position: {} %".format(self.mediaplayer.get_position()))
+            logging.info("FPS: {}".format(self.mediaplayer.get_fps()))
+            logging.info("Rate: {}".format(self.mediaplayer.get_rate()))
+            logging.info("Video size: {}".format(self.mediaplayer.video_get_size(0)))
+            logging.info("Scale: {}".format(self.mediaplayer.video_get_scale()))
+            logging.info("Aspect ratio: {}".format(self.mediaplayer.video_get_aspect_ratio()))
+            logging.info("is seekable? {0}".format(self.mediaplayer.is_seekable()))
+            logging.info("has_vout? {0}".format(self.mediaplayer.has_vout()))
 
             out = ""
             for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
