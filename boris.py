@@ -6075,12 +6075,18 @@ item []:
         """
 
         def info_from_ffmpeg(media_file_path):
-            out =  "<b>{}</b><br><br>".format(os.path.basename(media_file_path))
-            ffmpeg_output = subprocess.getoutput('"{}" -i "{}"'.format(ffmpeg_bin, media_file_path)).split("Stream #0")
-            if len(ffmpeg_output) > 1:
-                out += "{}<br>".format(ffmpeg_output[1])
-            if len(ffmpeg_output) > 2:
-                out += "{}<br>".format(ffmpeg_output[2].replace("At least one output file must be specified", ""))
+            if os.path.isfile(media_file_path):
+                out =  "<b>{}</b><br><br>".format(os.path.basename(media_file_path))
+
+                out += "File size: {} Mb<br>".format(round(os.stat(media_file_path).st_size/ 1024 /1024, 1))
+
+                ffmpeg_output = subprocess.getoutput('"{}" -i "{}"'.format(ffmpeg_bin, media_file_path)).split("Stream #0")
+                if len(ffmpeg_output) > 1:
+                    out += "{}<br>".format(ffmpeg_output[1])
+                if len(ffmpeg_output) > 2:
+                    out += "{}<br>".format(ffmpeg_output[2].replace("At least one output file must be specified", ""))
+            else:
+                out = ""
             return out
 
 
