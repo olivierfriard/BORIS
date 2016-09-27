@@ -124,6 +124,19 @@ import coding_pad
 
 from config import *
 
+def ffmpeg_recode(video_paths, horiz_resol):
+
+    for video_path in video_paths:
+        ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
+                                                                                                                              input=video_path,
+                                                                                                                              horiz_resol=horiz_resol)
+        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        out, error = p.communicate()
+
+    return True
+
+
+
 def bytes_to_str(b):
     """
     Translate bytes to string.
@@ -665,16 +678,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
-    def ffmpeg_recode(self, video_paths, horiz_resol):
-
-        for video_path in video_paths:
-            ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
-                                                                                                                                  input=video_path,
-                                                                                                                                  horiz_resol=horiz_resol)
-            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-            out, error = p.communicate()
-
-        return True
 
 
 
@@ -710,7 +713,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (in pixels)\nThe aspect ratio will be maintained", 1024, 640, 1920, 10)
 
-            self.ffmpeg_recode_process = multiprocessing.Process(target=self.ffmpeg_recode, args=(fileNames, horiz_resol,))
+            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol,))
             self.ffmpeg_recode_process.start()
 
             import recode_widget
