@@ -186,6 +186,7 @@
     <addaction name="actionDistance"/>
     <addaction name="actionBehaviors_map"/>
     <addaction name="actionRecode_resize_video"/>
+    <addaction name="actionMedia_file_information_2"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -841,6 +842,11 @@
   <action name="actionRecode_resize_video">
    <property name="text">
     <string>Re-encode/resize video</string>
+   </property>
+  </action>
+  <action name="actionMedia_file_information_2">
+   <property name="text">
+    <string>Media file information</string>
    </property>
   </action>
  </widget>

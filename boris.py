@@ -532,7 +532,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project_as.triggered.connect(self.save_project_as_activated)
         self.actionClose_project.triggered.connect(self.close_project)
 
-        self.actionMedia_file_information.triggered.connect(self.media_file_info)
         self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
 
         self.actionPreferences.triggered.connect(self.preferences)
@@ -560,6 +559,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDelete_selected_observations.triggered.connect(self.delete_selected_events)
 
 
+        self.actionMedia_file_information.triggered.connect(self.media_file_info)
+
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
         self.actionExportEvents.triggered.connect(self.export_tabular_events)
@@ -582,6 +583,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_map.triggered.connect(self.coding_map)
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
+        self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
         # menu Analyze
         #self.actionTime_budget.triggered.connect(self.time_budget)
@@ -692,17 +694,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 del(self.w)
                 self.ffmpeg_recode_process = None
 
-
-
         if self.ffmpeg_recode_process:
             QMessageBox.warning(self, programName, "BORIS is already re-encoding a video...")
             return
 
         if QT_VERSION_STR[0] == "4":
-            fileNames = QFileDialog(self).getOpenFileNames(self, "Select a media file to re-encode/resize", "", "Media files (*)")
+            fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
         else:
-            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select a media file to re-encode/resize", "", "Media files (*)")
-
+            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
 
         if fileNames:
 
@@ -6074,6 +6073,18 @@ item []:
         """
         show info about current video
         """
+
+        def info_from_ffmpeg(media_file_path):
+            out =  "<b>{}</b><br><br>".format(os.path.basename(media_file_path))
+            ffmpeg_output = subprocess.getoutput('"{}" -i "{}"'.format(ffmpeg_bin, media_file_path)).split("Stream #0")
+            if len(ffmpeg_output) > 1:
+                out += "{}<br>".format(ffmpeg_output[1])
+            if len(ffmpeg_output) > 2:
+                out += "{}<br>".format(ffmpeg_output[2].replace("At least one output file must be specified", ""))
+            return out
+
+
+
         if self.observationId and self.playerType == VLC:
 
             media = self.mediaplayer.get_media()
@@ -6093,19 +6104,24 @@ item []:
             logging.info('is seekable? {0}'.format(self.mediaplayer.is_seekable()))
             logging.info('has_vout? {0}'.format(self.mediaplayer.has_vout()))
 
-            if platform.system() in ['Linux', 'Darwin']:
-                out = ""
-                for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
-                    for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
+            out = ""
+            for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
+                for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
+                    out += info_from_ffmpeg(file_)
 
-                        #r = os.system( 'file -b "{}"'.format(file_) )
-                        #if not r:
-                        out +=  "<b>{}</b><br>".format(os.path.basename(file_))
-                        out += subprocess.getoutput('file -b "{}"'.format(file_) ) + '<br>'
-            else:
-                out = "Current media file name: <b>{}</b><br>".format(url2path(media.get_mrl()))
 
             QMessageBox.about(self, programName + " - Media file information", "{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
+
+        else:
+
+            if QT_VERSION_STR[0] == "4":
+                fileName = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
+            else:
+                fileName, _ = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
+
+            if fileName:
+                QMessageBox.about(self, programName + " - Media file information", "{}<br>".format(info_from_ffmpeg(fileName)))
+
 
 
     def switch_playing_mode(self):

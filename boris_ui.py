@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Sep 26 17:33:22 2016
+# Created: Tue Sep 27 15:47:30 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -341,6 +341,8 @@ class Ui_MainWindow(object):
         self.actionExport_events_as_SDIS_file.setObjectName(_fromUtf8("actionExport_events_as_SDIS_file"))
         self.actionRecode_resize_video = QtGui.QAction(MainWindow)
         self.actionRecode_resize_video.setObjectName(_fromUtf8("actionRecode_resize_video"))
+        self.actionMedia_file_information_2 = QtGui.QAction(MainWindow)
+        self.actionMedia_file_information_2.setObjectName(_fromUtf8("actionMedia_file_information_2"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -398,6 +400,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionBehaviors_map)
         self.menuTools.addAction(self.actionRecode_resize_video)
+        self.menuTools.addAction(self.actionMedia_file_information_2)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
@@ -541,4 +544,5 @@ class Ui_MainWindow(object):
         self.actionTime_budget_by_behaviors_category.setText(_translate("MainWindow", "Time budget by behaviors category", None))
         self.actionExport_events_as_SDIS_file.setText(_translate("MainWindow", "Export events as SDIS file", None))
         self.actionRecode_resize_video.setText(_translate("MainWindow", "Re-encode/resize video", None))
+        self.actionMedia_file_information_2.setText(_translate("MainWindow", "Media file information", None))
 
