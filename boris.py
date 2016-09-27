@@ -719,7 +719,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.show()
 
             timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
-            timerFFmpegRecoding.start(30000)
+            timerFFmpegRecoding.start(15000)
 
 
     def click_signal_from_behaviors_map(self, behaviorCode):
