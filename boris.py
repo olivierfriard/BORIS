@@ -6765,6 +6765,8 @@ item []:
 
             totalGlobalTime = sum(self.duration)
 
+            mediaName = ""
+
             if self.mediaplayer.get_length():
 
                 self.mediaTotalLength = self.mediaplayer.get_length() / 1000
