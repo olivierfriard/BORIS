@@ -174,18 +174,22 @@ class Observation(QDialog, Ui_Form):
 
 
     def pbLaunch_clicked(self):
-        """Close window and start observation"""
+        """
+        Close window and start observation
+        """
 
         if self.check_parameters():
             self.done(2)
 
     def pbSave_clicked(self):
-        """Close window and save observation"""
+        """
+        Close window and save observation
+        """
         if self.check_parameters():
             self.accept()
 
 
-    def check_media(self, fileName, nPlayer):
+    def check_media(self, fileNames, nPlayer):
         """
         parameters:
 
@@ -193,16 +197,17 @@ class Observation(QDialog, Ui_Form):
         nPlayer -- player #
         """
 
-        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, fileName)
+        for fileName in fileNames:
+            nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, fileName)
 
-        if videoDuration:
-            self.mediaDurations[fileName] = videoDuration
-            self.mediaFPS[fileName] = fps
-            self.mediaHasVideo[fileName] = hasVideo
-            self.mediaHasAudio[fileName] = hasAudio
-            self.add_media_to_listview(nPlayer, fileName, '')
-        else:
-            QMessageBox.critical(self, programName, "This file does not seem to be a media file..." )
+            if videoDuration:
+                self.mediaDurations[fileName] = videoDuration
+                self.mediaFPS[fileName] = fps
+                self.mediaHasVideo[fileName] = hasVideo
+                self.mediaHasAudio[fileName] = hasAudio
+                self.add_media_to_listview(nPlayer, fileName, "")
+            else:
+                QMessageBox.critical(self, programName, "The <b>{}</b> file does not seem to be a media file.".format(fileName))
 
 
     def add_media(self, nPlayer):
@@ -216,9 +221,9 @@ class Observation(QDialog, Ui_Form):
 
         os.chdir(os.path.expanduser("~"))
         if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Add media file", "", "All files (*)")
+            fileName = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
         else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Add media file", "", "All files (*)")
+            fileName, _ = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
 
         if fileName:
             self.check_media(fileName, nPlayer)

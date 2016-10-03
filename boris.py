@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.994"
-__version_date__ = "2016-09-28"
+__version__ = "2.995"
+__version_date__ = "2016-10-03"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -707,7 +707,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             import multiprocessing
 
-            horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (in pixels)\nThe aspect ratio will be maintained", 1024, 640, 1920, 10)
+            horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (in pixels)\nThe aspect ratio will be maintained", 1024, 352, 1920, 10)
 
             self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol, ffmpeg_bin, ))
             self.ffmpeg_recode_process.start()
@@ -2647,6 +2647,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 observationWindow.mediaDurations = {}
                 observationWindow.mediaFPS = {}
 
+
+            try:
+                if "hasVideo" in self.pj[OBSERVATIONS][obsId]["media_info"]:
+                    observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"]
+                if "hasAudio" in self.pj[OBSERVATIONS][obsId]["media_info"]:
+                    observationWindow.mediaHasAudio = self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"]
+            except:
+                logging.info("No Video/Audio information")
+
             '''
             TODO: fix
             observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"]
@@ -2702,6 +2711,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             twVideo.setItem(twVideo.rowCount() - 1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
                         except:
                             pass
+                        try:
+                            twVideo.setItem(twVideo.rowCount() - 1, 3, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
+                            twVideo.setItem(twVideo.rowCount() - 1, 4, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"][mediaFile])))
+                        except:
+                            pass
 
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
@@ -2735,7 +2749,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == NEW:
                 self.observationId = new_obs_id
-                self.pj[OBSERVATIONS][self.observationId] = { FILE: [], TYPE: '' ,  'date': '', 'description': '','time offset': 0, 'events': [] }
+                self.pj[OBSERVATIONS][self.observationId] = {FILE: [], TYPE: "",  "date": "", "description": "", "time offset": 0, "events": []}
 
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
@@ -2746,9 +2760,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 del self.pj[OBSERVATIONS][obsId]
 
             # observation date
-            self.pj[OBSERVATIONS][new_obs_id]['date'] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
+            self.pj[OBSERVATIONS][new_obs_id]["date"] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
 
-            self.pj[OBSERVATIONS][new_obs_id]['description'] = observationWindow.teDescription.toPlainText()
+            self.pj[OBSERVATIONS][new_obs_id]["description"] = observationWindow.teDescription.toPlainText()
 
             # observation type: read project type from tab text
             self.pj[OBSERVATIONS][new_obs_id][TYPE] = observationWindow.tabProjectType.tabText( observationWindow.tabProjectType.currentIndex() ).upper()
@@ -2813,6 +2827,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
                                                                   "fps":  observationWindow.mediaFPS}
+
+                try:
+                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
+                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasAudio"] = observationWindow.mediaHasAudio
+                except:
+                    logging.info("error with media_info information")
+
 
                 logging.debug("media_info: {0}".format(  self.pj[OBSERVATIONS][new_obs_id]['media_info'] ))
 
@@ -4197,13 +4218,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             })
 
                 out += out_cat
-                if by_category:
+
+                print("categories[subject]", categories)
+
+                '''
+                flagCategories = False
+                for subject in categories:
+                    if categories[subject] != {}:
+                        flagCategories = True
+                        break
+                '''
+
+                if by_category: # and flagCategories:
+
                     for behav in out_cat:
 
-                        category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
+                        try:
+                            category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
+                        except:
+                            category = ""
 
                         if category in categories[subject]:
-                            if behav["duration"] != "-":
+                            if behav["duration"] != "-" and categories[subject][category]["duration"] != "-":
+
+                                print("""categories[subject][category]["duration"]""", categories[subject][category]["duration"])
+                                print("""behav["duration"]""", behav["duration"])
                                 categories[subject][category]["duration"] += behav["duration"]
                             else:
                                 categories[subject][category]["duration"] = "-"
@@ -5706,7 +5745,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         includeMediaInfo = None
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                #includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])
                 includeMediaInfo = YES
                 break
 
@@ -5751,7 +5789,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
 
         else:
-
             data = tablib.Dataset()
             data.title = "Aggregated events"
             data.append(["Observation id", "Observation date", "Media file", "Total media length", "FPS",
@@ -6071,7 +6108,7 @@ item []:
 
     def media_file_info(self):
         """
-        show info about current video
+        show info about media file (current media file if observation opened)
         """
 
         def info_from_ffmpeg(media_file_path):
@@ -6155,7 +6192,7 @@ item []:
             for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                 if globalCurrentTime < sum(self.duration[0:idx + 1]):
 
-                    self.mediaListPlayer.play_item_at_index( idx )
+                    self.mediaListPlayer.play_item_at_index(idx)
 
                     while True:
                         if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
@@ -6647,11 +6684,11 @@ item []:
             if self.playerType == VLC and self.playMode == VLC:
                 sliderPos = self.hsVideo.value() / (slider_maximum - 1)
                 videoPosition = sliderPos * self.mediaplayer.get_length()
-                self.mediaplayer.set_time( int(videoPosition) )
+                self.mediaplayer.set_time(int(videoPosition))
                 # second video together
                 if self.simultaneousMedia:
                     # synchronize 2nd player
-                    self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+                    self.mediaplayer2.set_time( int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
 
@@ -8037,8 +8074,6 @@ item []:
             fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
         else:
             fileName, _ = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
-
-        #cursor = self.loadEventsInDB(selectedSubjects, selectedObservations, selectedBehaviors)
 
         if fileName:
             try:
