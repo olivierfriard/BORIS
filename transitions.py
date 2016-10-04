@@ -12,7 +12,6 @@ except:
 
 
 import os
-import sys
 
 
 def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
@@ -49,8 +48,6 @@ def observed_transition_normalized_matrix(sequences, behaviours):
     """
     create the normalized matrix of observed transitions
     """
-
-    observed_matrix = numpy.zeros((len(behaviours), len(behaviours)))
 
     transitions = {}
     for behaviour in behaviours:
@@ -148,55 +145,3 @@ def create_diagram_from_gv(gv):
 
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-
-
-    rows = [r.strip() for r in open("1.txt").readlines()]
-
-    strings = {}
-    current_subject = ""
-
-    for row in rows:
-        if "#" in row and row[0] == "#":
-            continue
-
-        if row and current_subject and ":" not in row:
-            strings[current_subject].append(row)
-
-        if ":" in row:
-            current_subject = row.replace(":", "")
-            strings[current_subject] = []
-
-
-
-    for subject in strings:
-        print()
-        print(subject, strings[subject])
-
-        sequences, unique_behaviors = behavioral_strings_analysis(strings[subject])
-
-        print("sequences:\n",sequences)
-
-
-        observed_normalized_matrix = observed_transition_normalized_matrix(sequences, unique_behaviors)
-        print(observed_normalized_matrix)
-
-        '''
-        gv = create_transitions_gv(0, 0, transitions, events_number, starting_nodes, nodes_number, transitions_number, transitions_number_after_node, "", "percent_total")
-        print(gv)
-        '''
-
-
-        #gv = create_transitions_gv_from_matrix(observed_normalized_matrix, cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
-        gv = create_transitions_gv_from_matrix(observed_normalized_matrix, cutoff_all=0, cutoff_behavior=0, edge_label="fraction_node")
-        print(gv)
-
-        gv = gv.replace("\n", "")
-        gv_svg = create_diagram_from_gv(gv)
-        print(gv_svg, file=open(subject + ".svg", "w"))
-
-
-    #view.show()
-
-    app.exec_()
