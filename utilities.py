@@ -43,6 +43,10 @@ from decimal import *
 import math
 
 
+def replace_spaces(l):
+    return [x.replace(" ", "_") for x in l]
+
+
 def bestTimeUnit(t: int) -> str:
     """
     Return time in best format

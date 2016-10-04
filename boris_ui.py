@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Sep 27 15:47:30 2016
+# Created: Tue Oct  4 14:26:00 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -343,6 +343,10 @@ class Ui_MainWindow(object):
         self.actionRecode_resize_video.setObjectName(_fromUtf8("actionRecode_resize_video"))
         self.actionMedia_file_information_2 = QtGui.QAction(MainWindow)
         self.actionMedia_file_information_2.setObjectName(_fromUtf8("actionMedia_file_information_2"))
+        self.actionCreate_transitions_matrix = QtGui.QAction(MainWindow)
+        self.actionCreate_transitions_matrix.setObjectName(_fromUtf8("actionCreate_transitions_matrix"))
+        self.actionCreate_transitions_flow_diagram = QtGui.QAction(MainWindow)
+        self.actionCreate_transitions_flow_diagram.setObjectName(_fromUtf8("actionCreate_transitions_flow_diagram"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -384,6 +388,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionMedia_file_information)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
+        self.menuObservations.addAction(self.actionCreate_transitions_matrix)
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionTime_budget_by_behaviors_category)
         self.menuAnalyze.addAction(self.actionVisualize_data)
@@ -396,6 +401,7 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionPrevious)
         self.menuPlayback.addAction(self.actionNext)
         self.menuTools.addAction(self.actionMapCreator)
+        self.menuTools.addAction(self.actionCreate_transitions_flow_diagram)
         self.menuTools.addAction(self.actionShow_spectrogram)
         self.menuTools.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionBehaviors_map)
@@ -545,4 +551,6 @@ class Ui_MainWindow(object):
         self.actionExport_events_as_SDIS_file.setText(_translate("MainWindow", "Export events as SDIS file", None))
         self.actionRecode_resize_video.setText(_translate("MainWindow", "Re-encode/resize video", None))
         self.actionMedia_file_information_2.setText(_translate("MainWindow", "Media file information", None))
+        self.actionCreate_transitions_matrix.setText(_translate("MainWindow", "Create transitions matrix", None))
+        self.actionCreate_transitions_flow_diagram.setText(_translate("MainWindow", "Create transitions flow diagram", None))
 

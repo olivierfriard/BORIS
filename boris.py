@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.995"
-__version_date__ = "2016-10-03"
+__version__ = "2.996"
+__version_date__ = "2016-10-05"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -101,12 +101,6 @@ import statistics
 import datetime
 
 import dialog
-'''
-if QT_VERSION_STR[0] == "4":
-    from boris_ui import *
-else:
-    from boris_ui5 import *
-'''
 from edit_event import *
 from project import *
 import preferences
@@ -120,6 +114,7 @@ import tablib
 import observations_list
 import plot_spectrogram
 import coding_pad
+import transitions
 
 
 from config import *
@@ -462,6 +457,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_observation_2.setEnabled( self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled( self.pj[OBSERVATIONS] != {})
 
+
+
         # enabled if observation
         flagObs = self.observationId != ''
 
@@ -521,6 +518,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget_by_behaviors_category.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionVisualize_data.setEnabled(self.pj[OBSERVATIONS] != {})
 
+        self.actionCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
+
 
     def connections(self):
 
@@ -574,6 +573,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
+        self.actionCreate_transitions_matrix.triggered.connect(self.transitions_matrix)
+
+
         # menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
 
@@ -584,6 +586,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_map.triggered.connect(self.coding_map)
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
+
+        self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_flow_diagram)
 
         # menu Analyze
         #self.actionTime_budget.triggered.connect(self.time_budget)
@@ -8047,6 +8051,56 @@ item []:
         self.statusbar.showMessage("Events exported", 0)
 
 
+    def create_behavioral_strings(self, obsId, subj, plot_parameters):
+        """
+        return the behavioral string for subject in obsId
+        """
+
+        s = ""
+        currentStates = []
+        eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+
+        for event in eventsWithStatus:
+
+            if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
+
+                if event[-1] == POINT:
+                    if currentStates:
+                        s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+                    else:
+                        s += event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+
+                    if plot_parameters["include modifiers"]:
+                        s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+
+                    s += self.behaviouralStringsSeparator
+
+                if event[-1] == START:
+                    currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+                    s += "+".join(replace_spaces(currentStates))
+
+                    if plot_parameters["include modifiers"]:
+                        s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+                    s += self.behaviouralStringsSeparator
+
+                if event[-1] == STOP:
+
+                    if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
+                        currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
+                    if currentStates:
+                        s += "+".join(replace_spaces(currentStates))
+
+                        if plot_parameters["include modifiers"]:
+                            s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+                        s += self.behaviouralStringsSeparator
+
+
+        # remove last separator (if separator not empty)
+        if self.behaviouralStringsSeparator:
+            s = s[0 : -len(self.behaviouralStringsSeparator)]
+
+        return s
+
 
 
     def export_string_events(self):
@@ -8056,12 +8110,8 @@ item []:
         for use with BSA (see http://penelope.unito.it/bsa)
         """
 
-        def replace_spaces(l):
-            return [x.replace(" ", "_") for x in l]
-
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
-
         if not selectedObservations:
             return
 
@@ -8080,7 +8130,7 @@ item []:
                 with open(fileName, "w") as outFile:
                     for obsId in selectedObservations:
                         # observation id
-                        outFile.write("# observation id: {0}{1}".format(obsId, os.linesep) )
+                        outFile.write("# observation id: {0}{1}".format(obsId, os.linesep))
                         # observation descrition
                         outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, " "), os.linesep))
                         # media file name
@@ -8097,54 +8147,92 @@ item []:
                         outFile.write(subj_str)
 
                         for obsId in selectedObservations:
-                            s = ""
-                            currentStates = []
-                            eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
-
-                            for event in eventsWithStatus:
-
-                                if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
-
-                                    if event[-1] == POINT:
-                                        if currentStates:
-                                            s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
-                                        else:
-                                            s += event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
-
-                                        if plot_parameters["include modifiers"]:
-                                            s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
-
-                                        s += self.behaviouralStringsSeparator
-
-                                    if event[-1] == START:
-                                        currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-                                        s += "+".join(replace_spaces(currentStates))
-
-                                        if plot_parameters["include modifiers"]:
-                                            s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
-                                        s += self.behaviouralStringsSeparator
-
-                                    if event[-1] == STOP:
-
-                                        if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
-                                            currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
-                                        if currentStates:
-                                            s += "+".join(replace_spaces(currentStates))
-
-                                            if plot_parameters["include modifiers"]:
-                                                s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
-                                            s += self.behaviouralStringsSeparator
-
-
-                            # remove last separator (if separator not empty)
-                            if self.behaviouralStringsSeparator:
-                                s = s[0 : -len(self.behaviouralStringsSeparator)]
-                            if s:
-                                outFile.write(s + os.linesep)
+                            out = self.create_behavioral_strings(obsId, subj, plot_parameters)
+                            if out:
+                                outFile.write(out + os.linesep)
             except:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+
+    def transitions_matrix(self):
+        """
+        create transitions matrix with selected observations, subjects and behaviors
+        """
+        # ask user observations to analyze
+        result, selectedObservations = self.selectObservations(MULTIPLE)
+        if not selectedObservations:
+            return
+
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False)
+
+        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+            return
+
+        flagMulti = False
+        if len(plot_parameters["selected subjects"]) == 1:
+            if QT_VERSION_STR[0] == "4":
+                fileName = QFileDialog(self).getSaveFileName(self, "Create transitions matrix", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+            else:
+                fileName, _ = QFileDialog(self).getSaveFileName(self, "Create transitions matrix", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        else:
+            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
+            if not exportDir:
+                return
+            flagMulti = True
+
+
+
+        for subject in plot_parameters["selected subjects"]:
+            print(subject)
+            strings_list = []
+            for obsId in selectedObservations:
+                print(obsId)
+                strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
+            print(strings_list)
+            sequences, unique_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
+            #print(sequences)
+            #print(unique_behaviors)
+
+            observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, plot_parameters["selected behaviors"])
+            print(observed_normalized_matrix)
+
+            if flagMulti:
+                try:
+                    print(observed_normalized_matrix, file=open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "w"))
+                except:
+                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
+            else:
+                try:
+                    print(observed_normalized_matrix, file=open(fileName, "w"))
+                except:
+                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
+
+
+    def transitions_flow_diagram(self):
+        """
+        create flow diagram with graphviz from transitions matrix
+        """
+        if QT_VERSION_STR[0] == "4":
+            fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        else:
+            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+
+        out = ""
+        for fileName in fileNames:
+            with open(fileName, "r") as infile:
+                gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+                gv_svg = transitions.create_diagram_from_gv(gv)
+                try:
+                    print(gv_svg, file=open(fileName + ".svg", "w"))
+                    out += "{} created\n".format(fileName + ".svg")
+                except:
+                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName + ".svg"))
+        if out:
+            QMessageBox.information(self, programName, out)
+
+
 
 
     def closeEvent(self, event):
