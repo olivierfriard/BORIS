@@ -1,3 +1,4 @@
+import sys
 
 try:
     from PyQt5.QtCore import *

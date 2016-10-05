@@ -99,6 +99,15 @@ import tempfile
 import glob
 import statistics
 import datetime
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.transforms as mtransforms
+    from matplotlib import dates
+    import numpy as np
+    FLAG_MATPLOTLIB_INSTALLED = True
+except:
+    logging.warning("matplotlib plotting library not installed")
+    FLAG_MATPLOTLIB_INSTALLED = False
 
 import dialog
 from edit_event import *
@@ -482,10 +491,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_selected_events.setEnabled(flagObs)
         self.actionCheckStateEvents.setEnabled(flagObs)
 
-        self.actionShow_spectrogram.setEnabled(flagObs)
-        self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
-        self.actionBehaviors_map.setEnabled(flagObs)
-
 
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
@@ -508,17 +513,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
 
+        # Tools
+        if FLAG_MATPLOTLIB_INSTALLED:
+            self.actionShow_spectrogram.setEnabled(flagObs)
+        else:
+            self.actionShow_spectrogram.setEnabled(False)
+        # geometric measurements
+        self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
+        self.actionBehaviors_map.setEnabled(flagObs)
+
+        # Analysis
+        self.actionTime_budget.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionTime_budget_by_behaviors_category.setEnabled(self.pj[OBSERVATIONS] != {})
+
+        # plot events
+        if FLAG_MATPLOTLIB_INSTALLED:
+            self.actionVisualize_data.setEnabled(self.pj[OBSERVATIONS] != {})
+        else:
+            self.actionVisualize_data.setEnabled(False)
+
+        self.actionCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
+
         # statusbar label
         self.lbTime.setVisible(self.playerType == VLC)
         self.lbSubject.setVisible(self.playerType == VLC)
         self.lbTimeOffset.setVisible(self.playerType == VLC)
         self.lbSpeed.setVisible(self.playerType == VLC)
 
-        self.actionTime_budget.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.actionTime_budget_by_behaviors_category.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.actionVisualize_data.setEnabled(self.pj[OBSERVATIONS] != {})
-
-        self.actionCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
 
     def connections(self):
@@ -2579,7 +2600,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.chunk_length = self.chunk_length
         observationWindow.ffmpeg_cache_dir = self.ffmpeg_cache_dir
         observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
-
+        observationWindow.FLAG_MATPLOTLIB_INSTALLED = FLAG_MATPLOTLIB_INSTALLED
         observationWindow.ffmpeg_bin = self.ffmpeg_bin
 
         # add indepvariables
@@ -2660,12 +2681,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 logging.info("No Video/Audio information")
 
-            '''
-            TODO: fix
-            observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"]
-            observationWindow.mediaHasAudio = self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"]
-            '''
-
             # offset
             if self.timeFormat == S:
 
@@ -2741,7 +2756,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
 
-
+        # spectrogram
+        #observationWindow.cbVisualizeSpectrogram.setEnabled(FLAG_MATPLOTLIB_INSTALLED)
 
         rv = observationWindow.exec_()
 
@@ -4645,30 +4661,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot events with matplotlib
         """
 
-        try:
-            import matplotlib.pyplot as plt
-            import matplotlib.transforms as mtransforms
-            #import matplotlib.colors as matcolors
-            from matplotlib import dates
-            import numpy as np
-        except:
-            logging.warning("matplotlib plotting library not installed")
-            QMessageBox.warning(None, programName, """The "Plot events" function requires the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
-
         def plot_time_ranges(obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
             """
             create "hlines" matplotlib plot
             """
 
             LINE_WIDTH = line_width
-            #colors = list(matcolors.cnames.keys())
-            colors = ["blue","green","red","cyan","magenta","yellow","lime",
-                      "darksalmon", "purple", "orange", "maroon", "silver",
-                      "slateblue", "hotpink", "steelblue", "darkgoldenrod"]
             all_behaviors, observedBehaviors = [], []
             maxTime = 0  # max time in all events of all subjects
+
+            # all behaviors defined in project
+            all_project_behaviors = sorted([self.pj[ETHOGRAM][idx]["code"] for idx in self.pj[ETHOGRAM]])
 
             for subject in sorted(list(obs.keys())):
 
@@ -4777,15 +4780,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     x1.append(t1)
                                     x2.append(t2)
                                     y.append(count)
-                                    col.append( colors[ col_count % len(colors)])
+
+                                    #col.append( colors[ col_count % len(colors)])
+
+                                    col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(b) % len(BEHAVIORS_PLOT_COLORS)])
+
                                     ax.axhline(y=count ,linewidth=1, color="lightgray", zorder=-1)
                             count += 1
                         else:
                             x1.append(0)
                             x2.append(0)
                             y.append(count)
-                            col.append('white')
-                            ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
+                            col.append("white")
+                            ax.axhline(y=count ,linewidth=1, color="lightgray", zorder=-1)
                             count += 1
 
                     else:
@@ -4794,10 +4801,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             x2.append(0)
                             y.append(count)
                             col.append("white")
-                            ax.axhline(y=count ,linewidth=1, color='lightgray', zorder=-1)
+                            ax.axhline(y=count ,linewidth=1, color="lightgray", zorder=-1)
                             count += 1
 
                     col_count += 1
+
 
                 if self.timeFormat == HHMMSS:
                     ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x1]),
@@ -8521,7 +8529,6 @@ if __name__=="__main__":
     app = QApplication(sys.argv)
 
     # splashscreen
-
     if not options.nosplashscreen:
         start = time.time()
         splash = QSplashScreen(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
@@ -8530,7 +8537,6 @@ if __name__=="__main__":
         while time.time() - start < 1:
             time.sleep(0.001)
             app.processEvents()
-
 
     availablePlayers = []
 
@@ -8556,6 +8562,12 @@ if __name__=="__main__":
     ffmpeg_bin = check_ffmpeg_path()
     if not ffmpeg_bin:
         sys.exit(3)
+
+    # check matplotlib
+    if not FLAG_MATPLOTLIB_INSTALLED:
+        QMessageBox.warning(None, programName, """Some functions (plot events and spectrogram) require the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",
+                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)

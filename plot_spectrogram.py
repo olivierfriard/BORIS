@@ -42,9 +42,13 @@ except:
 import sys
 import os
 import wave
-import numpy as np
-import matplotlib
 import subprocess
+try:
+    import numpy as np
+    import matplotlib
+except:
+    pass
+
 
 
 class Spectrogram(QWidget):

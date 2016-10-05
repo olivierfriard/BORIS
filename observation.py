@@ -57,6 +57,7 @@ class Observation(QDialog, Ui_Form):
 
         super(Observation, self).__init__(parent)
         logging.basicConfig(level=log_level)
+
         self.setupUi(self)
 
         self.lbMediaAnalysis.setText("")
@@ -228,7 +229,8 @@ class Observation(QDialog, Ui_Form):
         if fileName:
             self.check_media(fileName, nPlayer)
 
-        self.cbVisualizeSpectrogram.setEnabled( self.twVideo1.rowCount() > 0)
+        if self.FLAG_MATPLOTLIB_INSTALLED:
+            self.cbVisualizeSpectrogram.setEnabled( self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 

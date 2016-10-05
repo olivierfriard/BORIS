@@ -43,6 +43,13 @@ from decimal import *
 import math
 
 
+def behavior2color(behavior, behaviors):
+    """
+    return color for behavior
+    """
+    return PLOT_BEHAVIORS_COLORS[behaviors.index(behavior)]
+
+
 def replace_spaces(l):
     return [x.replace(" ", "_") for x in l]
 
