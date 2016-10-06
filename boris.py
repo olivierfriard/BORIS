@@ -5736,7 +5736,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         subtitles[mediaIdx].sort()
                         with open( "{exportDir}{sep}{fileName}.srt".format(exportDir=exportDir, sep=os.sep, fileName=os.path.basename(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaIdx])), "w") as f:
                             for idx, sub in enumerate(subtitles[mediaIdx]):
-                                f.write("{0}{3}{1}{3}{2}{3}{3}".format(idx + 1, sub[0], sub[1], os.linesep))
+                                f.write("{0}{3}{1}{3}{2}{3}{3}".format(idx + 1, sub[0], sub[1], "\n"))
                 except:
                     errorMsg = sys.exc_info()[1]
                     logging.critical(errorMsg)
@@ -5804,9 +5804,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if outputFormat == "sql":
-            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, media_file TEXT, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + os.linesep
-            out += "BEGIN TRANSACTION;" + os.linesep
-            template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");""" + os.linesep
+            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, media_file TEXT, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + "\n"
+            out += "BEGIN TRANSACTION;\n"
+            template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");\n"""
 
         else:
             data = tablib.Dataset()
@@ -5919,7 +5919,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if outputFormat == "sql":
-            out += "END TRANSACTION;" + os.linesep
+            out += "END TRANSACTION;\n"
             try:
                 with open(fileName, "w") as f:
                     f.write(out)
@@ -8146,9 +8146,9 @@ item []:
                 with open(fileName, "w") as outFile:
                     for obsId in selectedObservations:
                         # observation id
-                        outFile.write("# observation id: {0}{1}".format(obsId, os.linesep))
+                        outFile.write("# observation id: {0}\n".format(obsId))
                         # observation descrition
-                        outFile.write("# observation description: {0}{1}".format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, " "), os.linesep))
+                        outFile.write("# observation description: {0}\n".format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, " ")))
                         # media file name
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
                             outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
@@ -8157,15 +8157,15 @@ item []:
 
                     for subj in plot_parameters["selected subjects"]:
                         if subj:
-                            subj_str = "{0}{1}:{0}".format(os.linesep, subj)
+                            subj_str = "\n{}:\n".format(subj)
                         else:
-                            subj_str = "{0}No focal subject:{0}".format(os.linesep)
+                            subj_str = "\nNo focal subject:\n"
                         outFile.write(subj_str)
 
                         for obsId in selectedObservations:
                             out = self.create_behavioral_strings(obsId, subj, plot_parameters)
                             if out:
-                                outFile.write(out + os.linesep)
+                                outFile.write(out + "\n")
             except:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)

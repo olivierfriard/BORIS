@@ -1,6 +1,7 @@
 import os
 import sys
 
+'''
 QTWEB = ""
 
 try:
@@ -30,7 +31,7 @@ except:
             print("PyQt4.QtWebKit not installed\nTransitions flow diagram will not be available")
     except:
         pass
-
+'''
 
 
 
@@ -141,7 +142,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         out += '}'
         return out
 
-
+'''
 def create_diagram_from_gv(gv):
     """
     create diagram from Graphviz language using viz.js
@@ -195,21 +196,16 @@ def create_diagram_from_gv(gv):
                         syspath = sys.path[0]
 
                     if os.path.isfile(syspath + "/viz.js"):
-                        self.page().runJavaScript(open("viz.js").read())
+                        self.page().runJavaScript(open(syspath + "/viz.js").read())
                         self.page().runJavaScript("""draw_gv('{}')""".format(self.gv))
+
+
                     self.page().toHtml(self._callable)
 
             result = Render(gv).html
             return result.replace("</body></html>","").replace("<html><head></head><body>","")
 
         return render(gv)
+'''
 
 
-if __name__ == "__main__":
-
-    import sys
-
-    app = QApplication(sys.argv)
-
-    print(create_diagram_from_gv("digraph G { Welcome -> To ; To -> Web; To -> GraphViz}"))
-    app.exec_()
