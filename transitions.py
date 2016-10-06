@@ -104,7 +104,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
         transitions = {}
 
-        for row in matrix.split(os.linesep)[1:]:
+        for row in matrix.split("\n")[1:]:
 
             if not row:
                 continue
