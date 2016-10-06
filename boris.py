@@ -99,15 +99,17 @@ import tempfile
 import glob
 import statistics
 import datetime
+
+
 try:
-    import matplotlib.pyplot as plt
-    import matplotlib.transforms as mtransforms
-    from matplotlib import dates
-    import numpy as np
+    import matplotlib
     FLAG_MATPLOTLIB_INSTALLED = True
 except:
     logging.warning("matplotlib plotting library not installed")
     FLAG_MATPLOTLIB_INSTALLED = False
+
+
+FLAG_MATPLOTLIB_INSTALLED = True
 
 import dialog
 from edit_event import *
@@ -4665,6 +4667,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
             create "hlines" matplotlib plot
             """
+
+            import matplotlib.pyplot as plt
+            import matplotlib.transforms as mtransforms
+            from matplotlib import dates
+            import numpy as np
+
 
             LINE_WIDTH = line_width
             all_behaviors, observedBehaviors = [], []

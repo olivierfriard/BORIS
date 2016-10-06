@@ -1,16 +1,32 @@
-import sys
+QTWEB = ""
 
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-    from PyQt5.QtWebKitWidgets import QWebView
+    try:
+        from PyQt5.QtWebKitWidgets import QWebView
+        print("PyQt5.QtWebKitWidgets found")
+        QTWEB = "webkit"
+    except:
+        print("PyQt5.QtWebKitWidgets not installed\nTrying PyQt5.QtWebEngineWidgets...")
+        try:
+            from PyQt5.QtCore import QEventLoop
+            from PyQt5.QtWebEngineWidgets import QWebEngineView
+            print("PyQt5.QtWebEngineWidgets found")
+            QTWEB = "webengine"
+        except:
+            print("PyQt5.QtWebEngineWidgets not installed\nTransitions flow diagram will not be available")
 except:
     try:
         from PyQt4.QtCore import *
-        from PyQt4.QtWebKit import QWebView
+        try:
+            from PyQt4.QtWebKit import QWebView
+            print("PyQt4.QtWebKit found")
+            QTWEB = "webkit"
+        except:
+            print("PyQt4.QtWebKit not installed\nTransitions flow diagram will not be available")
     except:
-        sys.exit()
-
+        pass
 
 import os
 
@@ -116,8 +132,6 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         return out
 
 
-
-
 def create_diagram_from_gv(gv):
     """
     create diagram from Graphviz language using viz.js
@@ -132,17 +146,55 @@ def create_diagram_from_gv(gv):
         def text(self, message):
             self.txt = message
 
-    html = """<script>function draw_gv(data) { var svg = Viz(data, "svg"); fromJS.text(svg) }</script>"""
-    view = QWebView()
-    frame = view.page().mainFrame()
-    view.setHtml(html)
-    fromJS = FromJS()
-    frame.addToJavaScriptWindowObject('fromJS', fromJS)
 
-    frame.evaluateJavaScript(open("viz.js").read())
-    frame.evaluateJavaScript("""draw_gv('{}')""".format(gv))
+    if QTWEB == "webkit": # PyQt4 or PyQt5 < 5.6
+        view = QWebView()
+        frame = view.page().mainFrame()
+        view.setHtml("""<script>function draw_gv(data) { var svg = Viz(data, "svg"); fromJS.text(svg) }</script>""")
+        fromJS = FromJS()
+        frame.addToJavaScriptWindowObject('fromJS', fromJS)
 
-    return fromJS.txt
+        frame.evaluateJavaScript(open("viz.js").read())
+        frame.evaluateJavaScript("""draw_gv('{}')""".format(gv))
+
+        return fromJS.txt
+
+    if QTWEB == "webengine": # PyQt5 >= 5.6
+
+        def render(source_html):
+
+            class Render(QWebEngineView):
+                def __init__(self, gv):
+                    self.gv = gv
+                    self.html = None
+                    QWebEngineView.__init__(self)
+                    self.loadFinished.connect(self._loadFinished)
+                    self.setHtml("""<script>function draw_gv(data) { var svg = Viz(data, "svg"); document.write(svg) }</script>""")
+
+                    while self.html is None:
+                        print("process")
+                        QApplication.processEvents( QEventLoop.ExcludeUserInputEvents | QEventLoop.ExcludeSocketNotifiers | QEventLoop.WaitForMoreEvents )
+
+                def _callable(self, data):
+                    self.html = data
+
+                def _loadFinished(self, result):
+                    print("finished")
+                    self.page().runJavaScript(open("viz.js").read())
+                    self.page().runJavaScript("""draw_gv('{}')""".format(self.gv))
+                    self.page().toHtml(self._callable)
+
+            result = Render(gv).html
+            return result.replace("</body></html>","").replace("<html><head></head><body>","")
+
+        return render(gv)
 
 
+if __name__ == "__main__":
 
+    import sys
+
+    app = QApplication(sys.argv)
+
+    print(create_diagram_from_gv("digraph G { Welcome -> To ; To -> Web; To -> GraphViz}"))
+    app.exec_()
