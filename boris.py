@@ -8216,12 +8216,12 @@ item []:
 
             if flagMulti:
                 try:
-                    print(observed_normalized_matrix, file=open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "wb"))
+                    print(observed_normalized_matrix, file=open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "w"))
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
             else:
                 try:
-                    print(observed_normalized_matrix, file=open(fileName, "wb"))
+                    print(observed_normalized_matrix, file=open(fileName, "w"))
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
