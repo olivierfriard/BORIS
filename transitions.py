@@ -98,7 +98,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         return string containing graphviz code
         """
 
-        behaviours = matrix.split(os.linesep)[0].strip().split("\t")
+        behaviours = matrix.split("\n")[0].strip().split("\t")
 
         print("behaviours", behaviours)
 
