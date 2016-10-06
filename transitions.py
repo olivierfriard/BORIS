@@ -113,6 +113,8 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             for idx, r in enumerate(row.split("\t")[1:]):
                 transitions[row.split("\t")[0]][ behaviours[idx] ] = float(r)
 
+        print("transitions", transitions)
+
         transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
         out = "digraph G { "
@@ -120,6 +122,9 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
         for behaviour1 in behaviours:
             for behaviour2 in behaviours:
+
+                print("behaviour1", behaviour1)
+                print("behaviour2", behaviour2)
 
                 if transitions[behaviour1][behaviour2]:
 
