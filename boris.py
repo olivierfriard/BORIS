@@ -8239,7 +8239,7 @@ item []:
 
         out = ""
         for fileName in fileNames:
-            with open(fileName, "rb") as infile:
+            with open(fileName, "r") as infile:
                 gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
                 gv_svg = transitions.create_diagram_from_gv(gv)
                 try:
