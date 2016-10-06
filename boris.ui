@@ -182,13 +182,20 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="actionMapCreator"/>
-    <addaction name="actionCreate_transitions_flow_diagram"/>
+    <widget class="QMenu" name="menuTransitions_flow_diagram">
+     <property name="title">
+      <string>Transitions flow diagram</string>
+     </property>
+     <addaction name="actionCreate_transitions_flow_diagram"/>
+    </widget>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionDistance"/>
     <addaction name="actionBehaviors_map"/>
+    <addaction name="separator"/>
+    <addaction name="actionMapCreator"/>
     <addaction name="actionRecode_resize_video"/>
     <addaction name="actionMedia_file_information_2"/>
+    <addaction name="menuTransitions_flow_diagram"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -858,7 +865,7 @@
   </action>
   <action name="actionCreate_transitions_flow_diagram">
    <property name="text">
-    <string>Create transitions flow diagram</string>
+    <string>Create transitions DOT script</string>
    </property>
   </action>
  </widget>

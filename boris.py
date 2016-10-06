@@ -8198,32 +8198,35 @@ item []:
                 return
             flagMulti = True
 
-
-
         for subject in plot_parameters["selected subjects"]:
-            print(subject)
+
+            logging.debug("subjects: {}".format(subject))
+
             strings_list = []
             for obsId in selectedObservations:
                 print(obsId)
                 strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
-            print(strings_list)
+
             sequences, unique_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
-            #print(sequences)
-            #print(unique_behaviors)
 
             observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, plot_parameters["selected behaviors"])
-            print(observed_normalized_matrix)
+            if not observed_normalized_matrix:
+                QMessageBox.warning(self, programName, "No transitions found")
+                return
+
+            logging.debug("observed_normalized_matrix:\n{}".format(observed_normalized_matrix))
 
             if flagMulti:
                 try:
-                    print(observed_normalized_matrix, file=open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "w"))
+                    with open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "w") as outfile:
+                        outfile.write(observed_normalized_matrix)
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
             else:
                 try:
                     with open(fileName, "w") as outfile:
                         outfile.write(observed_normalized_matrix)
-                    #print(observed_normalized_matrix, file=open(fileName, "w"))
+
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
@@ -8241,12 +8244,19 @@ item []:
         for fileName in fileNames:
             with open(fileName, "r") as infile:
                 gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+                print(gv, file=open(fileName + ".gv", "w"))
+                out += "{} created\n".format(fileName + ".gv")
+
+                '''
+                not working with PyQt 5.7 on Windows
                 gv_svg = transitions.create_diagram_from_gv(gv)
                 try:
                     print(gv_svg, file=open(fileName + ".svg", "w"))
                     out += "{} created\n".format(fileName + ".svg")
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName + ".svg"))
+                '''
+
         if out:
             QMessageBox.information(self, programName, out)
 

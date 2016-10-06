@@ -83,6 +83,9 @@ def observed_transition_normalized_matrix(sequences, behaviours):
 
     transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
+    if not transitions_total_number:
+        return False
+
     out = '\t' + '\t'.join( list(behaviours)) + "\n"
     for behaviour in behaviours:
         out += "{}\t".format(behaviour)

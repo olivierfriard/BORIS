@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue Oct  4 14:26:00 2016
+# Created: Thu Oct  6 15:15:00 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -80,6 +80,8 @@ class Ui_MainWindow(object):
         self.menuPlayback.setObjectName(_fromUtf8("menuPlayback"))
         self.menuTools = QtGui.QMenu(self.menubar)
         self.menuTools.setObjectName(_fromUtf8("menuTools"))
+        self.menuTransitions_flow_diagram = QtGui.QMenu(self.menuTools)
+        self.menuTransitions_flow_diagram.setObjectName(_fromUtf8("menuTransitions_flow_diagram"))
         MainWindow.setMenuBar(self.menubar)
         self.toolBar = QtGui.QToolBar(MainWindow)
         self.toolBar.setEnabled(True)
@@ -400,13 +402,15 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionPause)
         self.menuPlayback.addAction(self.actionPrevious)
         self.menuPlayback.addAction(self.actionNext)
-        self.menuTools.addAction(self.actionMapCreator)
-        self.menuTools.addAction(self.actionCreate_transitions_flow_diagram)
+        self.menuTransitions_flow_diagram.addAction(self.actionCreate_transitions_flow_diagram)
         self.menuTools.addAction(self.actionShow_spectrogram)
         self.menuTools.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionBehaviors_map)
+        self.menuTools.addSeparator()
+        self.menuTools.addAction(self.actionMapCreator)
         self.menuTools.addAction(self.actionRecode_resize_video)
         self.menuTools.addAction(self.actionMedia_file_information_2)
+        self.menuTools.addAction(self.menuTransitions_flow_diagram.menuAction())
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
@@ -443,6 +447,7 @@ class Ui_MainWindow(object):
         self.menuAnalyze.setTitle(_translate("MainWindow", "Analysis", None))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback", None))
         self.menuTools.setTitle(_translate("MainWindow", "Tools", None))
+        self.menuTransitions_flow_diagram.setTitle(_translate("MainWindow", "Transitions flow diagram", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
         self.dwEthogram.setWindowTitle(_translate("MainWindow", "Ethogram", None))
         item = self.twEthogram.horizontalHeaderItem(0)
@@ -552,5 +557,5 @@ class Ui_MainWindow(object):
         self.actionRecode_resize_video.setText(_translate("MainWindow", "Re-encode/resize video", None))
         self.actionMedia_file_information_2.setText(_translate("MainWindow", "Media file information", None))
         self.actionCreate_transitions_matrix.setText(_translate("MainWindow", "Create transitions matrix", None))
-        self.actionCreate_transitions_flow_diagram.setText(_translate("MainWindow", "Create transitions flow diagram", None))
+        self.actionCreate_transitions_flow_diagram.setText(_translate("MainWindow", "Create transitions DOT script", None))
 
