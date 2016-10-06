@@ -8216,12 +8216,12 @@ item []:
 
             if flagMulti:
                 try:
-                    print(observed_normalized_matrix, file=open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "w"))
+                    print(observed_normalized_matrix, file=open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "wb"))
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
             else:
                 try:
-                    print(observed_normalized_matrix, file=open(fileName, "w"))
+                    print(observed_normalized_matrix, file=open(fileName, "wb"))
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
@@ -8237,7 +8237,7 @@ item []:
 
         out = ""
         for fileName in fileNames:
-            with open(fileName, "r") as infile:
+            with open(fileName, "rb") as infile:
                 gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
                 gv_svg = transitions.create_diagram_from_gv(gv)
                 try:
