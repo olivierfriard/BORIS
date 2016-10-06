@@ -8245,7 +8245,7 @@ item []:
             with open(fileName, "r") as infile:
                 gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
                 print(gv, file=open(fileName + ".gv", "w"))
-                out += "{} created\n".format(fileName + ".gv")
+                out += "<b>{}</b> created<br>".format(fileName + ".gv")
 
                 '''
                 not working with PyQt 5.7 on Windows
@@ -8258,7 +8258,7 @@ item []:
                 '''
 
         if out:
-            QMessageBox.information(self, programName, out)
+            QMessageBox.information(self, programName, out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
 
 
 
