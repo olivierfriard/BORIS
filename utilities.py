@@ -272,7 +272,7 @@ def check_ffmpeg_path():
                 return ffmpeg_bin
 
         # check if ffmpeg in same directory than boris.py
-        if os.path.exists( syspath + "/ffmpeg"):
+        if os.path.exists(syspath + "/ffmpeg"):
             ffmpeg_bin = syspath + "/ffmpeg"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:

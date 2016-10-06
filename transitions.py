@@ -1,3 +1,6 @@
+import os
+import sys
+
 QTWEB = ""
 
 try:
@@ -28,7 +31,7 @@ except:
     except:
         pass
 
-import os
+
 
 
 def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
@@ -96,6 +99,8 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         """
 
         behaviours = matrix.split(os.linesep)[0].strip().split("\t")
+
+        print("behaviours", behaviours)
 
         transitions = {}
 
@@ -172,16 +177,21 @@ def create_diagram_from_gv(gv):
                     self.setHtml("""<script>function draw_gv(data) { var svg = Viz(data, "svg"); document.write(svg) }</script>""")
 
                     while self.html is None:
-                        print("process")
                         QApplication.processEvents( QEventLoop.ExcludeUserInputEvents | QEventLoop.ExcludeSocketNotifiers | QEventLoop.WaitForMoreEvents )
 
                 def _callable(self, data):
                     self.html = data
 
                 def _loadFinished(self, result):
-                    print("finished")
-                    self.page().runJavaScript(open("viz.js").read())
-                    self.page().runJavaScript("""draw_gv('{}')""".format(self.gv))
+
+                    if os.path.isfile(sys.path[0]):  # pyinstaller
+                        syspath = os.path.dirname(sys.path[0])
+                    else:
+                        syspath = sys.path[0]
+
+                    if os.path.isfile(syspath + "/viz.js"):
+                        self.page().runJavaScript(open("viz.js").read())
+                        self.page().runJavaScript("""draw_gv('{}')""".format(self.gv))
                     self.page().toHtml(self._callable)
 
             result = Render(gv).html
