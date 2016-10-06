@@ -82,12 +82,12 @@ def observed_transition_normalized_matrix(sequences, behaviours):
 
     transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
-    out = '\t' + '\t'.join( list(behaviours)) + os.linesep
+    out = '\t' + '\t'.join( list(behaviours)) + "X"
     for behaviour in behaviours:
         out += "{}\t".format(behaviour)
         for behaviour2 in behaviours:
             out += "{}\t".format(round(transitions[behaviour][behaviour2] / transitions_total_number, 3))
-        out = out[:-1] + os.linesep
+        out = out[:-1] + "X"
 
     return out
 
