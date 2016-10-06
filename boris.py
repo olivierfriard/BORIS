@@ -8221,7 +8221,9 @@ item []:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
             else:
                 try:
-                    print(observed_normalized_matrix, file=open(fileName, "w"))
+                    with open(fileName, "w") as outfile:
+                        outfile.write(observed_normalized_matrix)
+                    #print(observed_normalized_matrix, file=open(fileName, "w"))
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
