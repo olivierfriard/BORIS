@@ -104,7 +104,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
         behaviours = matrix.split("\n")[0].strip().split("\t")
 
-        print("behaviours", behaviours)
+        #print("behaviours", behaviours)
 
         transitions = {}
 
@@ -117,32 +117,32 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             for idx, r in enumerate(row.split("\t")[1:]):
                 transitions[row.split("\t")[0]][ behaviours[idx] ] = float(r)
 
-        print("transitions", transitions)
+        #print("transitions", transitions)
 
         transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
-        out = "digraph G { "
-        out += """graph [bgcolor="#ffffff00"] """
+        out = "digraph G { \n"
+        #out += """graph [bgcolor="#ffffff00"] """
 
         for behaviour1 in behaviours:
             for behaviour2 in behaviours:
 
-                print("behaviour1", behaviour1)
-                print("behaviour2", behaviour2)
+                #print("behaviour1", behaviour1)
+                #print("behaviour2", behaviour2)
 
                 if transitions[behaviour1][behaviour2]:
 
                     if edge_label == "percent_node":
                         if transitions[behaviour1][behaviour2] > cutoff_all:
-                            out += """"{}" -> "{}" [label="{}"];""".format(behaviour1, behaviour2, transitions[behaviour1][behaviour2])
+                            out += """"{}" -> "{}" [label="{}"];\n""".format(behaviour1, behaviour2, transitions[behaviour1][behaviour2])
 
                     if edge_label == "fraction_node":
 
                         transition_sum = sum(transitions[behaviour1].values())
                         if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
-                            out += """"{}" -> "{}" [label="{}%"];""".format(behaviour1, behaviour2, round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
+                            out += """"{}" -> "{}" [label="{}%"];\n""".format(behaviour1, behaviour2, round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
 
-        out += '}'
+        out += '\n}'
         return out
 
 '''

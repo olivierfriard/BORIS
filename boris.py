@@ -4411,7 +4411,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             data.append(values)
 
-
                 if flagWorkBook:
                     workbook.add_sheet(data)
                 else:
@@ -4419,20 +4418,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
 
                     if outputFormat == "tsv":
-                        with open(fileName, "w") as f:
-                            f.write(data.tsv)
+                        with open(fileName, "wb") as f:
+                            f.write(str.encode(data.tsv))
 
                     if outputFormat == "csv":
-                        with open(fileName,'w') as f:
-                            f.write(data.csv)
+                        with open(fileName, "wb") as f:
+                            f.write(str.encode(data.csv))
 
                     if outputFormat == "ods":
-                        with open(fileName,'wb') as f:
+                        with open(fileName, "wb") as f:
                             f.write(data.ods)
 
                     if outputFormat == "html":
-                        with open(fileName,'w') as f:
-                            f.write(data.html)
+                        with open(fileName, "wb") as f:
+                            f.write(str.encode(data.html))
 
                     if outputFormat == "xls":
 
@@ -4442,15 +4441,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                     "The limit on worksheet name length is 31 characters").format(obsId, data.title),
                                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-                        with open(fileName,"wb") as f:
+                        with open(fileName, "wb") as f:
                             f.write(data.xls)
 
             if flagWorkBook:
                 if outputFormat == "xls":
-                    with open(WBfileName, 'wb') as f:
+                    with open(WBfileName, "wb") as f:
                         f.write(workbook.xls)
                 if outputFormat == "ods":
-                    with open(WBfileName, 'wb') as f:
+                    with open(WBfileName, "wb") as f:
                         f.write(workbook.ods)
             return
 
@@ -5955,20 +5954,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 out += "/\n\n"
 
-            with open(fileName, "w") as f:
-                f.write(out)
-
+            with open(fileName, "wb") as f:
+                f.write(str.encode(out))
 
         else:
             if outputFormat == "tsv":
-                with open(fileName, "w") as f:
-                    f.write(data.tsv)
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.tsv))
             if outputFormat == "csv":
-                with open(fileName, "w") as f:
-                    f.write(data.csv)
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.csv))
             if outputFormat == "html":
-                with open(fileName, "w") as f:
-                    f.write(data.html)
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.html))
             if outputFormat == "ods":
                 with open(fileName, "wb") as f:
                     f.write(data.ods)
@@ -8034,11 +8032,11 @@ item []:
 
             try:
                 if outputFormat == "tsv":
-                    with open(fileName, "w") as f:
-                        f.write(data.tsv)
+                    with open(fileName, "wb") as f:
+                        f.write(str.encode(data.tsv))
                 if outputFormat == "csv":
-                    with open(fileName, "w") as f:
-                        f.write(data.csv)
+                    with open(fileName, "wb") as f:
+                        f.write(str.encode(data.csv))
                 if outputFormat == "ods":
                     with open(fileName, "wb") as f:
                         f.write(data.ods)
@@ -8046,8 +8044,8 @@ item []:
                     with open(fileName, "wb") as f:
                         f.write(data.xls)
                 if outputFormat == "html":
-                    with open(fileName, "w") as f:
-                        f.write(data.html)
+                    with open(fileName, "wb") as f:
+                        f.write(str.encode(data.html))
 
                 '''
                 if outputFormat == "xlsx":
@@ -8204,15 +8202,15 @@ item []:
 
             strings_list = []
             for obsId in selectedObservations:
-                print(obsId)
+                #print(obsId)
                 strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
 
             sequences, unique_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 
             observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, plot_parameters["selected behaviors"])
             if not observed_normalized_matrix:
-                QMessageBox.warning(self, programName, "No transitions found")
-                return
+                QMessageBox.warning(self, programName, "No transitions found for <b>{}</b>".format(subject))
+                continue
 
             logging.debug("observed_normalized_matrix:\n{}".format(observed_normalized_matrix))
 
