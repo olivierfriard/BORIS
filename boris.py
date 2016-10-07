@@ -8294,7 +8294,11 @@ item []:
             with open(fileName, "r") as infile:
                 gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
 
-                result = subprocess.getoutput("""echo '{0}' | dot -Tpng -o "{1}.png" """.format(gv.replace("\n", ""), fileName))
+                print(gv, file=open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w"))
+
+                #result = subprocess.getoutput("""echo '{0}' | dot -Tpng -o "{1}.png" """.format(gv.replace("\n", ""), fileName))
+                result = subprocess.getoutput("""dot -Tpng -o "{0}.png" "{1}" """.format(fileName, tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv"))
+
                 if not result:
                     out += "<b>{}</b> created<br>".format(fileName + ".png")
                 else:
