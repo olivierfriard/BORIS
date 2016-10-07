@@ -19,7 +19,6 @@ Copyright 2012-2016 Olivier Friard
   along with this program; if not, write to the Free Software
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
   MA 02110-1301, USA.
-
 """
 
 try:
@@ -28,7 +27,6 @@ try:
 except:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
-
 
 import math
 import re
@@ -205,7 +203,6 @@ def test_ffmpeg_path(FFmpegPath):
     """
 
     out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
-    #out, error = out.decode('utf-8'), error.decode('utf-8')
     logging.debug("test ffmpeg path output: {}".format(out))
     logging.debug("test ffmpeg path error: {}".format(error))
 

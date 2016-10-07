@@ -610,7 +610,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
-        self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_flow_diagram)
+        self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
+        self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
+
 
         # menu Analyze
         #self.actionTime_budget.triggered.connect(self.time_budget)
@@ -6653,7 +6655,9 @@ item []:
 
 
     def actionAbout_activated(self):
-        """ about dialog """
+        """
+        about dialog
+        """
 
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
@@ -8235,9 +8239,9 @@ item []:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
 
-    def transitions_flow_diagram(self):
+    def transitions_dot_script(self):
         """
-        create flow diagram with graphviz from transitions matrix
+        create dot script (graphviz language) from transitions matrix
         """
         if QT_VERSION_STR[0] == "4":
             fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
@@ -8266,6 +8270,39 @@ item []:
         if out:
             QMessageBox.information(self, programName, out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
 
+
+    def transitions_flow_diagram(self):
+        """
+        create flow diagram with graphviz (if installed) from transitions matrix
+        """
+
+        # check if dot present in path
+        result = subprocess.getoutput("dot -V")
+        if "graphviz" not in result:
+            QMessageBox.critical(self, programName, ("The GraphViz package is not installed.<br>"
+                                                     "The <b>dot</b> program was not found in the path.<br><br>"
+                                                     """Go to <a href="http://www.graphviz.org">http://www.graphviz.org</a> for information"""))
+            return
+
+        if QT_VERSION_STR[0] == "4":
+            fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        else:
+            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+
+        out = ""
+        for fileName in fileNames:
+            with open(fileName, "r") as infile:
+                gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+
+                result = subprocess.getoutput("""echo '{0}' | dot -Tpng -o "{1}.png" """.format(gv.replace("\n", ""), fileName))
+                if not result:
+                    out += "<b>{}</b> created<br>".format(fileName + ".png")
+                else:
+                    out += "Problem with <b>{}</b><br>".format(fileName)
+
+
+        if out:
+            QMessageBox.information(self, programName, out)
 
 
 

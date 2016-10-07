@@ -155,6 +155,7 @@
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionMedia_file_information"/>
     <addaction name="actionExtract_events_from_media_files"/>
+    <addaction name="separator"/>
     <addaction name="actionCreate_transitions_matrix"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">
@@ -187,6 +188,7 @@
       <string>Transitions flow diagram</string>
      </property>
      <addaction name="actionCreate_transitions_flow_diagram"/>
+     <addaction name="actionCreate_transitions_flow_diagram_2"/>
     </widget>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionDistance"/>
@@ -866,6 +868,11 @@
   <action name="actionCreate_transitions_flow_diagram">
    <property name="text">
     <string>Create transitions DOT script</string>
+   </property>
+  </action>
+  <action name="actionCreate_transitions_flow_diagram_2">
+   <property name="text">
+    <string>Create transitions flow diagram</string>
    </property>
   </action>
  </widget>

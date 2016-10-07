@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Oct  6 15:15:00 2016
+# Created: Fri Oct  7 13:50:21 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -349,6 +349,8 @@ class Ui_MainWindow(object):
         self.actionCreate_transitions_matrix.setObjectName(_fromUtf8("actionCreate_transitions_matrix"))
         self.actionCreate_transitions_flow_diagram = QtGui.QAction(MainWindow)
         self.actionCreate_transitions_flow_diagram.setObjectName(_fromUtf8("actionCreate_transitions_flow_diagram"))
+        self.actionCreate_transitions_flow_diagram_2 = QtGui.QAction(MainWindow)
+        self.actionCreate_transitions_flow_diagram_2.setObjectName(_fromUtf8("actionCreate_transitions_flow_diagram_2"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -390,6 +392,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionMedia_file_information)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
+        self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionCreate_transitions_matrix)
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionTime_budget_by_behaviors_category)
@@ -403,6 +406,7 @@ class Ui_MainWindow(object):
         self.menuPlayback.addAction(self.actionPrevious)
         self.menuPlayback.addAction(self.actionNext)
         self.menuTransitions_flow_diagram.addAction(self.actionCreate_transitions_flow_diagram)
+        self.menuTransitions_flow_diagram.addAction(self.actionCreate_transitions_flow_diagram_2)
         self.menuTools.addAction(self.actionShow_spectrogram)
         self.menuTools.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionBehaviors_map)
@@ -558,4 +562,5 @@ class Ui_MainWindow(object):
         self.actionMedia_file_information_2.setText(_translate("MainWindow", "Media file information", None))
         self.actionCreate_transitions_matrix.setText(_translate("MainWindow", "Create transitions matrix", None))
         self.actionCreate_transitions_flow_diagram.setText(_translate("MainWindow", "Create transitions DOT script", None))
+        self.actionCreate_transitions_flow_diagram_2.setText(_translate("MainWindow", "Create transitions flow diagram", None))
 
