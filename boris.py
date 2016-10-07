@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "2.996"
-__version_date__ = "2016-10-05"
+__version_date__ = "2016-10-07"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 

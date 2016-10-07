@@ -31,7 +31,6 @@ except:
     from PyQt4.QtCore import *
 
 import logging
-
 import os
 import tablib
 
@@ -101,22 +100,20 @@ class timeBudgetResults(QWidget):
 
         while True:
             if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;HTML (*.html);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
             else:
-                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;HTML (*.html);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
 
             if not fileName:
                 return
 
             outputFormat = ""
-            availableFormats = ("tsv", "csv", "xls", "ods")
+            availableFormats = ("tsv", "csv", "xls", "ods", "html")
             for fileExtension in availableFormats:
-
                 if fileExtension in filter_:
                     outputFormat = fileExtension
                     if not fileName.upper().endswith("." + fileExtension.upper()):
                         fileName += "." + fileExtension
-
 
                 '''
                 if fileExtension in filter_ and not fileName.upper().endswith("." + fileExtension.upper()):
@@ -181,7 +178,6 @@ class timeBudgetResults(QWidget):
 
                 rows.append(values)
 
-
             maxLen = max([len(r) for r in rows])
             data = tablib.Dataset()
             data.title = "Time budget"
@@ -190,21 +186,26 @@ class timeBudgetResults(QWidget):
                 data.append(complete(row, maxLen))
 
             if outputFormat == "tsv":
-                with open(fileName, "w") as f:
-                    f.write(data.tsv)
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.tsv))
                 return
 
             if outputFormat == "csv":
-                with open(fileName,'w') as f:
-                    f.write(data.csv)
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.csv))
+                return
+
+            if outputFormat == "html":
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.html))
                 return
 
             if outputFormat == "ods":
-                with open(fileName,'wb') as f:
+                with open(fileName, "wb") as f:
                     f.write(data.ods)
                 return
 
             if outputFormat == "xls":
-                with open(fileName,"wb") as f:
+                with open(fileName, "wb") as f:
                     f.write(data.xls)
                 return
