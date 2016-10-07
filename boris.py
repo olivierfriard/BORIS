@@ -8205,9 +8205,15 @@ item []:
                 #print(obsId)
                 strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
 
-            sequences, unique_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
+            sequences, observed_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 
-            observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, plot_parameters["selected behaviors"])
+            print("sequences", sequences)
+            print("observed_behaviors", observed_behaviors)
+
+            #observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, plot_parameters["selected behaviors"])
+            #observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, observed_behaviors)
+            observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, sorted(list(set(observed_behaviors + plot_parameters["selected behaviors"]))))
+
             if not observed_normalized_matrix:
                 QMessageBox.warning(self, programName, "No transitions found for <b>{}</b>".format(subject))
                 continue
@@ -8216,7 +8222,7 @@ item []:
 
             if flagMulti:
                 try:
-                    with open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv" , "w") as outfile:
+                    with open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv", "w") as outfile:
                         outfile.write(observed_normalized_matrix)
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
@@ -8242,7 +8248,9 @@ item []:
         for fileName in fileNames:
             with open(fileName, "r") as infile:
                 gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+
                 print(gv, file=open(fileName + ".gv", "w"))
+
                 out += "<b>{}</b> created<br>".format(fileName + ".gv")
 
                 '''

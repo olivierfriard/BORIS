@@ -80,6 +80,7 @@ def observed_transition_normalized_matrix(sequences, behaviours):
         for i in range(len(seq) - 1):
             if seq[i] in behaviours and seq[i + 1] in behaviours:
                 transitions[seq[i]][seq[i + 1]] += 1
+    print(transitions)
 
     transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
@@ -104,7 +105,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
         behaviours = matrix.split("\n")[0].strip().split("\t")
 
-        #print("behaviours", behaviours)
+        print("behaviours", behaviours)
 
         transitions = {}
 
@@ -117,7 +118,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
             for idx, r in enumerate(row.split("\t")[1:]):
                 transitions[row.split("\t")[0]][ behaviours[idx] ] = float(r)
 
-        #print("transitions", transitions)
+        print("transitions", transitions)
 
         transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
