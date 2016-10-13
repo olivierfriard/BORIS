@@ -49,6 +49,9 @@ def MessageDialog(title, text, buttons):
 
 
 class DuplicateBehaviorCode(QDialog):
+    """
+    let user show between behaviors that are coded by same key
+    """
 
     def __init__(self, text, codes_list):
 
@@ -106,6 +109,70 @@ class DuplicateBehaviorCode(QDialog):
 
     def pbOK_clicked(self):
         self.accept()
+
+
+class ChooseObservationsToImport(QDialog):
+    """
+
+    """
+
+    def __init__(self, text, observations_list):
+
+        super(ChooseObservationsToImport, self).__init__()
+
+        self.setWindowTitle(config.programName)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+        Vlayout = QVBoxLayout()
+        widget = QWidget(self)
+        widget.setLayout(Vlayout)
+
+        label = QLabel()
+        label.setText(text)
+        Vlayout.addWidget(label)
+
+        self.lw = QListWidget(widget)
+        self.lw.setObjectName("lw_observations")
+        self.lw.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        #TODO: to be enabled
+        #lw.installEventFilter(self)
+
+        '''
+        if QT_VERSION_STR[0] == "4":
+            lw.setItemSelected(item, True)
+        else:
+            item.setSelected(True)
+        '''
+
+        for code in observations_list:
+            item = QListWidgetItem(code)
+            self.lw.addItem(item)
+
+        Vlayout.addWidget(self.lw)
+
+        pbCancel = QPushButton("Cancel")
+        pbCancel.clicked.connect(self.reject)
+        Vlayout.addWidget(pbCancel)
+        pbOK = QPushButton("OK")
+        pbOK.setDefault(True)
+        pbOK.clicked.connect(self.pbOK_clicked)
+        Vlayout.addWidget(pbOK)
+
+        self.setLayout(Vlayout)
+
+        #self.installEventFilter(self)
+
+        self.setMaximumSize(1024 , 960)
+
+    def get_selected_observations(self):
+        """
+        get selected_observations
+        """
+        return [item.text() for item in self.lw.selectedItems()]
+
+    def pbOK_clicked(self):
+        self.accept()
+
 
 
 class JumpTo(QDialog):

@@ -39,6 +39,7 @@ from config import *
 
 from decimal import *
 import math
+import datetime
 
 
 def complete(l, max):
@@ -49,6 +50,8 @@ def complete(l, max):
         l.append("")
     return l
 
+def datetime_iso8601():
+    return datetime.datetime.now().isoformat().replace("T", "").split(".")[0]
 
 def behavior2color(behavior, behaviors):
     """

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri Oct  7 13:50:21 2016
+# Created: Thu Oct 13 14:27:12 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -371,6 +371,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionObservationsList)
         self.menuObservations.addAction(self.actionOpen_observation_2)
         self.menuObservations.addAction(self.actionEdit_observation)
+        self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionClose_observation)
         self.menuObservations.addSeparator()
@@ -382,7 +383,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionDelete_selected_observations)
         self.menuObservations.addAction(self.actionDelete_all_observations)
         self.menuObservations.addSeparator()
-        self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionExportEvents)
         self.menuObservations.addAction(self.actionExport_aggregated_events)
@@ -491,7 +491,7 @@ class Ui_MainWindow(object):
         self.actionDelete_selected_observations.setText(_translate("MainWindow", "Delete selected events", None))
         self.actionDelete_all_observations.setText(_translate("MainWindow", "Delete all events", None))
         self.actionSort_observations.setText(_translate("MainWindow", "Sort events", None))
-        self.actionLoad_observations_file.setText(_translate("MainWindow", "Import events", None))
+        self.actionLoad_observations_file.setText(_translate("MainWindow", "Import observations", None))
         self.actionSelect_observations.setText(_translate("MainWindow", "Select events from interval", None))
         self.actionConfigure_states_and_events.setText(_translate("MainWindow", "Configure states and events", None))
         self.actionEdit_event.setText(_translate("MainWindow", "Edit event", None))

@@ -235,7 +235,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     liveObservationStarted = False
 
-    projectFileName = ''
+    projectFileName = ""
     mediaTotalLength = None
 
     saveMediaFilePath = True
@@ -476,7 +476,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAdd_event.setEnabled(flagObs)
         self.actionClose_observation.setEnabled(flagObs)
         #self.actionLoad_observations_file.setEnabled(flagObs)
-        self.actionLoad_observations_file.setEnabled(False)  # not yet implemented
+        self.actionLoad_observations_file.setEnabled(True)
 
         '''self.menuExport_events.setEnabled(flag)'''
         self.actionExportEvents.setEnabled(flag)
@@ -4567,6 +4567,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_time_ranges(o, selectedObservations[0], plot_parameters["start time"], plot_parameters["end time"], plot_parameters["exclude behaviors"], line_width=10):
             QMessageBox.warning(self, programName, "Check events")
 
+    def convert_time_to_decimal(self, pj):
+        """
+        transform time to decimal
+        """
+
+        for obsId in pj[OBSERVATIONS]:
+            pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]) )
+
+            for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
+                pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
+
+        return pj
+
 
     def open_project_json(self, projectFileName):
         """
@@ -4590,11 +4603,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = False
 
         # transform time to decimal
+        self.pj = self.convert_time_to_decimal(self.pj)
+
+        ''' 2016-10-13 moved in function convert_time_to_decimal
         for obs in self.pj[OBSERVATIONS]:
             self.pj[OBSERVATIONS][obs]["time offset"] = Decimal(str(self.pj[OBSERVATIONS][obs]["time offset"]) )
 
             for idx,event in enumerate(self.pj[OBSERVATIONS][obs][EVENTS]):
                 self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]]))
+        '''
 
         # add coding_map key to old project files
         if not "coding_map" in self.pj:
@@ -5521,7 +5538,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         elif outputFormat == "sds": # SDIS format
 
-            out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime.datetime.now().isoformat())
+            out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
 
             for obsId in selectedObservations:
                 # observation id
@@ -7403,17 +7420,6 @@ item []:
         export events from selected observations in various formats: TSV, CSV, ODS, XLS
         """
 
-
-        '''
-        def complete(l, max):
-            """
-            complete list with empty string until len = max
-            """
-            while len(l) < max:
-                l.append("")
-            return l
-        '''
-
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
@@ -7936,14 +7942,85 @@ item []:
 
     def import_observations(self):
         """
-        import events from file
+        import observations from project file
         """
 
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+
+        if self.projectFileName and fileName == self.projectFileName:
+            QMessageBox.critical(None, programName, "This project is already open", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        if fileName:
+
+            try:
+                fromProject = json.loads(open(fileName, "r").read())
+            except:
+                QMessageBox.critical(self, programName, "This project file seems corrupted")
+                return
+
+            # transform time to decimal
+            fromProject = self.convert_time_to_decimal(fromProject)
+
+            dbc = dialog.ChooseObservationsToImport("Choose the observations to import:", sorted(list(fromProject[OBSERVATIONS].keys())))
+
+            if dbc.exec_():
+
+                selected_observations = dbc.get_selected_observations()
+                if selected_observations:
+                    flagImported = False
+
+                    # set of behaviors in current projet ethogram
+                    behav_set = set([self.pj[ETHOGRAM][idx]["code"] for idx in self.pj[ETHOGRAM]])
+
+                    # set of subjects in current projet
+                    subjects_set = set([self.pj[SUBJECTS][idx]["name"] for idx in self.pj[SUBJECTS]])
+                    print(subjects_set)
+
+
+                    for obsId in selected_observations:
+
+                        # check if behaviors are in current project ethogram
+                        new_behav_set = set([event[EVENT_BEHAVIOR_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
+                        if new_behav_set:
+                            if dialog.MessageDialog(programName, "Some coded behaviors are not in the ethogram:<br>{}".format(new_behav_set), ["Skip observation", "Import observation"]) == "Skip observation":
+                                continue
+
+                        # check if subjects are in current project
+                        new_subject_set = set([event[EVENT_SUBJECT_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
+                        if new_subject_set and new_subject_set != {''}:
+                            if dialog.MessageDialog(programName, "Some coded subjects are not defined in the project:<br>{}".format(new_subject_set), ["Skip observation", "Import observation"]) == "Skip observation":
+                                continue
+
+
+
+                        if obsId in self.pj[OBSERVATIONS].keys():
+                            r = dialog.MessageDialog(programName, "The observation <b>{}</b> already exists in the current project.<br>".format(obsId), ["Skip observation", "Rename observation"])
+                            if r == "Rename observation":
+                                self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId, datetime_iso8601())] = dict(fromProject[OBSERVATIONS][obsId])
+                                flagImported = True
+                        else:
+                            self.pj[OBSERVATIONS][obsId] = dict(fromProject[OBSERVATIONS][obsId])
+                            flagImported = True
+
+                    if flagImported:
+                        QMessageBox.information(self, programName, "Observations imported successfully")
+
+
+
+
+
+
+        '''
         logging.debug("""Function "import observation" not yet implemented""")
         QMessageBox.warning(None, programName, """Function "import observation" not yet implemented""",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
         self.statusbar.showMessage("Function not yet implemented", 5000)
+        '''
 
 
 
