@@ -41,6 +41,15 @@ from decimal import *
 import math
 
 
+def complete(l, max):
+    """
+    complete list with empty string until len = max
+    """
+    while len(l) < max:
+        l.append("")
+    return l
+
+
 def behavior2color(behavior, behaviors):
     """
     return color for behavior

@@ -134,9 +134,18 @@ class timeBudgetResults(QWidget):
             # observations list
             rows.append(["Observations:"])
             for idx in range(self.lw.count()):
+                rows.append([""])
                 rows.append([self.lw.item(idx).text()])
 
+                if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(idx).text()]:
+                    rows.append(["Independent variables:"])
+                    for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
+                        rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
+
+
+
             # check if only one observation was selected
+            ''' added indep variables for each observation
             if self.lw.count() == 1:
                 rows.append([""])
 
@@ -145,6 +154,7 @@ class timeBudgetResults(QWidget):
                     rows.append(["Independent variables:"])
                     for var in self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES]:
                         rows.append([var, self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES][var]])
+            '''
 
             rows.append([""])
             rows.append([""])
