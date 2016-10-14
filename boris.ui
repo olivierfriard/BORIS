@@ -134,9 +134,10 @@
     <addaction name="actionObservationsList"/>
     <addaction name="actionOpen_observation_2"/>
     <addaction name="actionEdit_observation"/>
-    <addaction name="actionLoad_observations_file"/>
     <addaction name="separator"/>
     <addaction name="actionClose_observation"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_observations_file"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_selected_events"/>

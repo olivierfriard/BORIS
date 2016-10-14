@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Oct 13 14:27:12 2016
+# Created: Thu Oct 13 16:10:54 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -371,9 +371,10 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionObservationsList)
         self.menuObservations.addAction(self.actionOpen_observation_2)
         self.menuObservations.addAction(self.actionEdit_observation)
-        self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionClose_observation)
+        self.menuObservations.addSeparator()
+        self.menuObservations.addAction(self.actionLoad_observations_file)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)

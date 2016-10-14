@@ -26,7 +26,7 @@ This file is part of BORIS.
 __version__ = "2.997"
 __version_date__ = "2016-10"
 __DEV__ = False
-BITMAP_EXT = "jpg"
+BITMAP_EXT = "png"
 
 
 import os
@@ -448,10 +448,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj["project_name"]:
                 pn = self.pj["project_name"]
             else:
-                pn = "Unnamed project"
+                if self.projectFileName:
+                    pn = "Unnamed project ({})".format(self.projectFileName)
+                else:
+                    pn = "Unnamed project"
 
         self.setWindowTitle("{}{}{}".format(self.observationId + " - "*(self.observationId != ""), pn+(" - "*(pn != "")), programName))
-
 
         # project menu
         self.actionEdit_project.setEnabled(flag)
@@ -468,15 +470,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_observation_2.setEnabled( self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled( self.pj[OBSERVATIONS] != {})
 
-
-
         # enabled if observation
-        flagObs = self.observationId != ''
+        flagObs = self.observationId != ""
 
         self.actionAdd_event.setEnabled(flagObs)
         self.actionClose_observation.setEnabled(flagObs)
-        #self.actionLoad_observations_file.setEnabled(flagObs)
-        self.actionLoad_observations_file.setEnabled(True)
+        self.actionLoad_observations_file.setEnabled(flag)
 
         '''self.menuExport_events.setEnabled(flag)'''
         self.actionExportEvents.setEnabled(flag)
@@ -717,6 +716,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timerFFmpegRecoding = QTimer()
 
         def timerFFmpegRecoding_timeout():
+            """
+            check if process finished
+            """
             if not self.ffmpeg_recode_process.is_alive():
                 timerFFmpegRecoding.stop()
                 self.w.hide()
@@ -745,7 +747,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w = recode_widget.VideoRecoding()
             self.w.resize(350, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.w.setWindowTitle('Re-encoding and resizing with FFmpeg')
+            self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
             self.w.label.setText("\n".join(fileNames))
             self.w.show()
 
@@ -1641,7 +1643,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return currentMedia, round(currentMediaTime/1000,3)
 
 
-
     def FFmpegTimerOut(self):
         """
         triggered when frame-by-frame mode is activated:
@@ -1675,35 +1676,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
             self.timer_spectro_out()
 
-
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
         #logging.debug('imagesList {0}'.format(self.imagesList))
         logging.debug('image {0}'.format( '%s-%d' % (md5FileName, int(frameCurrentMedia / fps))))
 
-        ffmpeg_command = '"{ffmpeg_bin}" -ss {pos} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS_{fileName}-{pos}_%d.{extension}"'.format(
-        ffmpeg_bin=self.ffmpeg_bin,
-        pos=int(frameCurrentMedia / fps),
-        currentMedia=currentMedia,
-        fps=str(round(fps) +1),
-        imageDir=self.imageDirectory,
-        sep=os.sep,
-        fileName=md5FileName,
-        extension=BITMAP_EXT)
+        if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
-        logging.debug("ffmpeg command: {0}".format(ffmpeg_command))
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT)
 
-        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-        out, error = p.communicate()
-        out, error = out.decode('utf-8'), error.decode('utf-8')
-
-        if error:
-            logging.debug('ffmpeg error: {0}'.format( error ))
-
-        self.imagesList.update( [ '%s-%d' % (md5FileName, int(frameCurrentMedia/ fps)) ] )
+            '''
+            ffmpeg_command = '"{ffmpeg_bin}" -ss {pos} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS@{fileName}-{pos}_%d.{extension}"'.format(
+                            ffmpeg_bin=self.ffmpeg_bin,
+                            pos=int(frameCurrentMedia / fps),
+                            currentMedia=currentMedia,
+                            fps=str(round(fps) +1),
+                            imageDir=self.imageDirectory,
+                            sep=os.sep,
+                            fileName=md5FileName,
+                            extension=BITMAP_EXT)
 
 
-        img = "{imageDir}{sep}BORIS_{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
+            logging.debug("ffmpeg command: {0}".format(ffmpeg_command))
+
+
+            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+            out, error = p.communicate()
+            out, error = out.decode('utf-8'), error.decode('utf-8')
+
+            if error:
+                logging.debug('ffmpeg error: {0}'.format( error ))
+            '''
+            self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
+
+        #self.imagesList.update([f.replace(self.imageDirectory + os.sep, "") for f in glob.glob(self.imageDirectory + os.sep + "BORIS_*")])
+
+        #self.imagesList.update(['%s-%d' % (md5FileName, int(frameCurrentMedia/ fps))])
+        #self.imagesList.update(["BORIS@{}_{}" % (md5FileName, int(frameCurrentMedia/ fps))])
+        print("images list\n", self.imagesList)
+
+
+
+        img = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                     sep=os.sep,
                                                                                     fileName=md5FileName,
                                                                                     second=int(frameCurrentMedia / fps),
@@ -1712,9 +1726,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not os.path.isfile(img):
             logging.warning("image not found: {0}".format(img))
-            return
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT)
+            if not os.path.isfile(img):
+                logging.warning("image still not found: {0}".format(img))
+                return
 
         self.pixmap = QPixmap(img)
+        # check if jpg filter available
         if self.pixmap.isNull():
             BITMAP_EXT = "png"
 
@@ -1723,9 +1741,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # redraw measurements from previous frames
         if self.measurement_w:
             if self.measurement_w.cbPersistentMeasurements.isChecked():
-                print(self.measurement_w.draw_mem)
                 for frame in self.measurement_w.draw_mem:
-                    print(frame)
 
                     if frame == self.FFmpegGlobalFrame + 1:
                         elementsColor = "lime"
@@ -5844,7 +5860,7 @@ item []:
                 self.cleaningThread.exiting = True
 
         #elif FFMPEG in self.availablePlayers:  # return to frame-by-frame
-        else:
+        else:  # go to fram by frame
 
             # second video together
             if self.simultaneousMedia:
@@ -5879,7 +5895,8 @@ item []:
 
             # load list of images in a set
             if not self.imagesList:
-                self.imagesList.update([f.replace( self.imageDirectory + os.sep, '').split('_')[0] for f in glob.glob(self.imageDirectory + os.sep + '*')])
+                #self.imagesList.update([f.replace(self.imageDirectory + os.sep, "") for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
+                self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
             logging.debug("frame-by-frame mode activated. Image directory {0}".format(self.imageDirectory))
 
@@ -6447,17 +6464,6 @@ item []:
                 # add current states for all subject and for "no focal subject"
 
                 self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes, self.pj[OBSERVATIONS][self.observationId][EVENTS], dict(self.pj[SUBJECTS], **{"": {"name": ""}}), currentTimeOffset)
-                '''
-                subjects_and_nofocal = dict(self.pj[SUBJECTS], **{"": {"name": ""}})  # add "" for NO FOCAL SUBJECT
-                for idx in subjects_and_nofocal:
-                    self.currentStates[idx] = []
-                    for sbc in StateBehaviorsCodes:
-                        if len([x[ pj_obs_fields["code"]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                                                               if x[ pj_obs_fields["subject"]] == subjects_and_nofocal[idx]["name"]
-                                                                  and x[ pj_obs_fields["code"]] == sbc
-                                                                  and x[ pj_obs_fields["time"]] <= currentTimeOffset  ] ) % 2: # test if odd
-                            self.currentStates[idx].append(sbc)
-                '''
 
                 # show current subject
                 cm = {}
@@ -7978,28 +7984,23 @@ item []:
 
                     # set of subjects in current projet
                     subjects_set = set([self.pj[SUBJECTS][idx]["name"] for idx in self.pj[SUBJECTS]])
-                    print(subjects_set)
-
 
                     for obsId in selected_observations:
 
                         # check if behaviors are in current project ethogram
                         new_behav_set = set([event[EVENT_BEHAVIOR_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
                         if new_behav_set:
-                            if dialog.MessageDialog(programName, "Some coded behaviors are not in the ethogram:<br>{}".format(new_behav_set), ["Skip observation", "Import observation"]) == "Skip observation":
+                            if dialog.MessageDialog(programName, "Some coded behaviors in <b>{}</b> are not in the ethogram:<br><b>{}</b>".format(obsId, ", ".join(new_behav_set)), ["Skip observation", "Import observation"]) == "Skip observation":
                                 continue
 
                         # check if subjects are in current project
                         new_subject_set = set([event[EVENT_SUBJECT_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
                         if new_subject_set and new_subject_set != {''}:
-                            if dialog.MessageDialog(programName, "Some coded subjects are not defined in the project:<br>{}".format(new_subject_set), ["Skip observation", "Import observation"]) == "Skip observation":
+                            if dialog.MessageDialog(programName, "Some coded subjects in <b>{}</b> are not defined in the project:<br><b>{}</b>".format(obsId, ", ".join(new_subject_set)), ["Skip observation", "Import observation"]) == "Skip observation":
                                 continue
 
-
-
                         if obsId in self.pj[OBSERVATIONS].keys():
-                            r = dialog.MessageDialog(programName, "The observation <b>{}</b> already exists in the current project.<br>".format(obsId), ["Skip observation", "Rename observation"])
-                            if r == "Rename observation":
+                            if dialog.MessageDialog(programName, "The observation <b>{}</b> already exists in the current project.<br>".format(obsId), ["Skip observation", "Rename observation"]) == "Rename observation":
                                 self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId, datetime_iso8601())] = dict(fromProject[OBSERVATIONS][obsId])
                                 flagImported = True
                         else:
@@ -8010,33 +8011,15 @@ item []:
                         QMessageBox.information(self, programName, "Observations imported successfully")
 
 
-
-
-
-
-        '''
-        logging.debug("""Function "import observation" not yet implemented""")
-        QMessageBox.warning(None, programName, """Function "import observation" not yet implemented""",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-        self.statusbar.showMessage("Function not yet implemented", 5000)
-        '''
-
-
-
     def play_video(self):
         """
         play video
         """
 
         if self.playerType == VLC:
-
             if self.playMode == FFMPEG:
-
                 self.FFmpegTimer.start()
-
             else:
-
                 self.mediaListPlayer.play()
 
                 # second video together

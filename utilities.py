@@ -36,10 +36,37 @@ import sys
 import os
 import logging
 from config import *
-
+import subprocess
 from decimal import *
 import math
 import datetime
+
+
+def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName, extension):
+    """
+    extract frames from media file
+    """
+
+
+    ffmpeg_command = '"{ffmpeg_bin}" -ss {second} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
+                    ffmpeg_bin=ffmpeg_bin,
+                    second=second,
+                    currentMedia=currentMedia,
+                    fps=fps,
+                    imageDir=imageDir,
+                    sep=os.sep,
+                    md5FileName=md5FileName,
+                    extension=extension)
+
+    logging.debug("ffmpeg command: {0}".format(ffmpeg_command))
+
+    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+    out, error = p.communicate()
+    out, error = out.decode('utf-8'), error.decode('utf-8')
+
+    if error:
+        logging.debug('ffmpeg error: {0}'.format( error ))
+
 
 
 def complete(l, max):
