@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Thu Feb 25 11:45:34 2016
+# Created: Mon Oct 17 14:08:44 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -150,11 +150,30 @@ class Ui_prefDialog(object):
         self.verticalLayout_3.addItem(spacerItem)
         self.verticalLayout_4.addLayout(self.verticalLayout_3)
         self.tabWidget.addTab(self.tab_2, _fromUtf8(""))
+        self.tab_3 = QtGui.QWidget()
+        self.tab_3.setObjectName(_fromUtf8("tab_3"))
+        self.verticalLayout_6 = QtGui.QVBoxLayout(self.tab_3)
+        self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
+        self.horizontalLayout_5 = QtGui.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
+        self.lbResize = QtGui.QLabel(self.tab_3)
+        self.lbResize.setWordWrap(True)
+        self.lbResize.setObjectName(_fromUtf8("lbResize"))
+        self.horizontalLayout_5.addWidget(self.lbResize)
+        self.sbFrameResize = QtGui.QSpinBox(self.tab_3)
+        self.sbFrameResize.setMaximum(1920)
+        self.sbFrameResize.setSingleStep(10)
+        self.sbFrameResize.setObjectName(_fromUtf8("sbFrameResize"))
+        self.horizontalLayout_5.addWidget(self.sbFrameResize)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_6.addItem(spacerItem1)
+        self.tabWidget.addTab(self.tab_3, _fromUtf8(""))
         self.verticalLayout_2.addWidget(self.tabWidget)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        spacerItem1 = QtGui.QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem1)
+        spacerItem2 = QtGui.QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem2)
         self.pbCancel = QtGui.QPushButton(prefDialog)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout_2.addWidget(self.pbCancel)
@@ -190,6 +209,8 @@ class Ui_prefDialog(object):
         self.pbBrowseFFmpegCacheDir.setText(_translate("prefDialog", "...", None))
         self.lbFFmpegCacheDirMaxSize.setText(_translate("prefDialog", "FFmpeg cache directory max size (Mb)", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("prefDialog", "FFmpeg framework", None))
+        self.lbResize.setText(_translate("prefDialog", "Resize frame (horizontal number of pixels). The aspect ratio will be maintained", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode", None))
         self.pbCancel.setText(_translate("prefDialog", "Cancel", None))
         self.pbOK.setText(_translate("prefDialog", "OK", None))
 

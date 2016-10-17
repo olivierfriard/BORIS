@@ -2,7 +2,8 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created: Mon Oct 17 14:08:42 2016
+#      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -22,7 +23,6 @@ class Ui_prefDialog(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.tab)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setObjectName("formLayout")
@@ -98,7 +98,6 @@ class Ui_prefDialog(object):
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.tab_2)
-        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -137,11 +136,30 @@ class Ui_prefDialog(object):
         self.verticalLayout_3.addItem(spacerItem)
         self.verticalLayout_4.addLayout(self.verticalLayout_3)
         self.tabWidget.addTab(self.tab_2, "")
+        self.tab_3 = QtWidgets.QWidget()
+        self.tab_3.setObjectName("tab_3")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tab_3)
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.lbResize = QtWidgets.QLabel(self.tab_3)
+        self.lbResize.setWordWrap(True)
+        self.lbResize.setObjectName("lbResize")
+        self.horizontalLayout_5.addWidget(self.lbResize)
+        self.sbFrameResize = QtWidgets.QSpinBox(self.tab_3)
+        self.sbFrameResize.setMaximum(1920)
+        self.sbFrameResize.setSingleStep(10)
+        self.sbFrameResize.setObjectName("sbFrameResize")
+        self.horizontalLayout_5.addWidget(self.sbFrameResize)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.verticalLayout_6.addItem(spacerItem1)
+        self.tabWidget.addTab(self.tab_3, "")
         self.verticalLayout_2.addWidget(self.tabWidget)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        spacerItem1 = QtWidgets.QSpacerItem(241, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem1)
+        spacerItem2 = QtWidgets.QSpacerItem(241, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem2)
         self.pbCancel = QtWidgets.QPushButton(prefDialog)
         self.pbCancel.setObjectName("pbCancel")
         self.horizontalLayout_2.addWidget(self.pbCancel)
@@ -178,6 +196,8 @@ class Ui_prefDialog(object):
         self.pbBrowseFFmpegCacheDir.setText(_translate("prefDialog", "..."))
         self.lbFFmpegCacheDirMaxSize.setText(_translate("prefDialog", "FFmpeg cache directory max size (Mb)"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("prefDialog", "FFmpeg framework"))
+        self.lbResize.setText(_translate("prefDialog", "Resize frame (horizontal number of pixels). The aspect ratio will be maintained"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode"))
         self.pbCancel.setText(_translate("prefDialog", "Cancel"))
         self.pbOK.setText(_translate("prefDialog", "OK"))
 

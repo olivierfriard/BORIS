@@ -42,13 +42,13 @@ import math
 import datetime
 
 
-def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName, extension):
+def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName, extension, frame_resize):
     """
     extract frames from media file
     """
 
 
-    ffmpeg_command = '"{ffmpeg_bin}" -ss {second} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
+    ffmpeg_command = '"{ffmpeg_bin}" -ss {second} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2  -vf scale={frame_resize}:-1 "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
                     ffmpeg_bin=ffmpeg_bin,
                     second=second,
                     currentMedia=currentMedia,
@@ -56,7 +56,9 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
                     imageDir=imageDir,
                     sep=os.sep,
                     md5FileName=md5FileName,
-                    extension=extension)
+                    extension=extension,
+                    frame_resize=frame_resize
+                    )
 
     logging.debug("ffmpeg command: {0}".format(ffmpeg_command))
 

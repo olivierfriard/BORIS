@@ -277,6 +277,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ffmpeg_bin = ''
     ffmpeg_cache_dir = ''
     ffmpeg_cache_dir_max_size = 0
+    frame_resize = 0
 
     # dictionary for FPS storing
     fps = {}
@@ -1537,21 +1538,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.cbCheckForNewVersion.setChecked( self.checkForNewVersion )
 
         # FFmpeg for frame by frame mode
-        '''
-        preferencesWindow.pbBrowseFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-        preferencesWindow.lbFFmpeg.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-        preferencesWindow.leFFmpegPath.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-
-        preferencesWindow.pbBrowseFFmpegCacheDir.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-        preferencesWindow.lbFFmpegCacheDir.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-        preferencesWindow.leFFmpegCacheDir.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-
-        preferencesWindow.lbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-        preferencesWindow.sbFFmpegCacheDirMaxSize.setEnabled( preferencesWindow.cbAllowFrameByFrameMode.isChecked() )
-        '''
         preferencesWindow.lbFFmpegPath.setText("FFmpeg path: {}".format(self.ffmpeg_bin))
         preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
         preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
+
+        # frame-by-frame mode
+        preferencesWindow.sbFrameResize.setValue(self.frame_resize)
+
 
         if preferencesWindow.exec_():
 
@@ -1591,6 +1584,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
+
+            # frame-by-frame
+            self.frame_resize = preferencesWindow.sbFrameResize.value()
 
             self.menu_options()
 
@@ -1683,7 +1679,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
-            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT)
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
 
             '''
             ffmpeg_command = '"{ffmpeg_bin}" -ss {pos} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS@{fileName}-{pos}_%d.{extension}"'.format(
@@ -1726,7 +1722,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not os.path.isfile(img):
             logging.warning("image not found: {0}".format(img))
-            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT)
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
             if not os.path.isfile(img):
                 logging.warning("image still not found: {0}".format(img))
                 return
@@ -3140,6 +3136,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.ffmpeg_cache_dir_max_size = 0
 
+            # frame-by-frame
+            try:
+                self.frame_resize = int(settings.value("frame_resize"))
+                if not self.frame_resize:
+                    self.frame_resize = 0
+            except:
+                self.frame_resize = 0
+
+
         else: # no .boris file found
             # ask user for checking for new version
             self.checkForNewVersion = (dialog.MessageDialog(programName, ("Allow BORIS to automatically check for new version?\n"
@@ -3176,8 +3181,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if lastCheckForNewVersion:
             settings.setValue("last_check_for_new_version", lastCheckForNewVersion)
 
+        # FFmpeg
         settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
         settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
+        # frame-by-frame
+        settings.setValue("frame_resize", self.frame_resize)
+
 
 
 
