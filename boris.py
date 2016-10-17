@@ -24,9 +24,9 @@ This file is part of BORIS.
 
 
 __version__ = "2.997"
-__version_date__ = "2016-10"
+__version_date__ = "2016-10-16"
 __DEV__ = False
-BITMAP_EXT = "png"
+BITMAP_EXT = "jpg"
 
 
 import os
@@ -162,7 +162,7 @@ import select_modifiers
 
 class TempDirCleanerThread(QThread):
     """
-    class for cleaning image cache directory with thread
+    class for cleaning image cache directory with qthread
     """
     def __init__(self, parent = None):
         QThread.__init__(self, parent)
@@ -172,15 +172,15 @@ class TempDirCleanerThread(QThread):
 
     def run(self):
         while self.exiting == False:
-            if sum(os.path.getsize(self.tempdir+f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
-                fl = sorted((os.path.getctime(self.tempdir + f),self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS_" in f and os.path.isfile(self.tempdir + f))
+            if sum(os.path.getsize(self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS@" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
+                fl = sorted((os.path.getctime(self.tempdir + f), self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS@" in f and os.path.isfile(self.tempdir + f))
                 for ts, f in fl[0:int(len(fl) / 10)]:
                     os.remove(f)
             time.sleep(30)
-
-
+            logging.debug("cleaning frame cache directory")
 
 ROW = -1
+
 
 class StyledItemDelegateTriangle(QStyledItemDelegate):
     """
@@ -1713,7 +1713,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #self.imagesList.update(['%s-%d' % (md5FileName, int(frameCurrentMedia/ fps))])
         #self.imagesList.update(["BORIS@{}_{}" % (md5FileName, int(frameCurrentMedia/ fps))])
-        print("images list\n", self.imagesList)
+        logging.debug("images list: {}".format(self.imagesList))
 
 
 
@@ -6399,7 +6399,10 @@ item []:
             currentTime = self.getLaps() * 1000
 
             # current media time
-            mediaTime = self.mediaplayer.get_time()
+            try:
+                mediaTime = self.mediaplayer.get_time()
+            except:
+                return
 
             # highlight current event in tw events and scroll event list
             self.get_events_current_row()
