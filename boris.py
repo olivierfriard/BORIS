@@ -1544,6 +1544,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # frame-by-frame mode
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
+        mem_frame_resize = self.frame_resize
 
 
         if preferencesWindow.exec_():
@@ -1587,6 +1588,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # frame-by-frame
             self.frame_resize = preferencesWindow.sbFrameResize.value()
+
+            # delete files in imageDirectory f frame_resize changed
+            if self.frame_resize != mem_frame_resize:
+                # check temp dir for images from ffmpeg
+                if not self.ffmpeg_cache_dir:
+                    self.imageDirectory = tempfile.gettempdir()
+                else:
+                    self.imageDirectory = self.ffmpeg_cache_dir
+
+                for f in [x for x in os.listdir(self.imageDirectory) if "BORIS@" in x and os.path.isfile(self.imageDirectory + os.sep + x)]:
+                    try:
+                        os.remove(self.imageDirectory + os.sep + f)
+                    except:
+                        print("error")
+                        pass
+
+            '''
+            if sum(os.path.getsize(self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS@" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
+                fl = sorted((os.path.getctime(self.tempdir + f), self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS@" in f and os.path.isfile(self.tempdir + f))
+                for ts, f in fl[0:int(len(fl) / 10)]:
+                    os.remove(f)
+            '''
+
 
             self.menu_options()
 
