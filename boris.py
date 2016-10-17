@@ -1604,14 +1604,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         print("error")
                         pass
 
-            '''
-            if sum(os.path.getsize(self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS@" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
-                fl = sorted((os.path.getctime(self.tempdir + f), self.tempdir + f) for f in os.listdir(self.tempdir) if "BORIS@" in f and os.path.isfile(self.tempdir + f))
-                for ts, f in fl[0:int(len(fl) / 10)]:
-                    os.remove(f)
-            '''
-
-
             self.menu_options()
 
             self.saveConfigFile()
