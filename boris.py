@@ -1601,7 +1601,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     try:
                         os.remove(self.imageDirectory + os.sep + f)
                     except:
-                        print("error")
                         pass
 
             self.menu_options()
@@ -1697,37 +1696,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
 
-            '''
-            ffmpeg_command = '"{ffmpeg_bin}" -ss {pos} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2 "{imageDir}{sep}BORIS@{fileName}-{pos}_%d.{extension}"'.format(
-                            ffmpeg_bin=self.ffmpeg_bin,
-                            pos=int(frameCurrentMedia / fps),
-                            currentMedia=currentMedia,
-                            fps=str(round(fps) +1),
-                            imageDir=self.imageDirectory,
-                            sep=os.sep,
-                            fileName=md5FileName,
-                            extension=BITMAP_EXT)
-
-
-            logging.debug("ffmpeg command: {0}".format(ffmpeg_command))
-
-
-            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
-            out, error = p.communicate()
-            out, error = out.decode('utf-8'), error.decode('utf-8')
-
-            if error:
-                logging.debug('ffmpeg error: {0}'.format( error ))
-            '''
             self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
-        #self.imagesList.update([f.replace(self.imageDirectory + os.sep, "") for f in glob.glob(self.imageDirectory + os.sep + "BORIS_*")])
-
-        #self.imagesList.update(['%s-%d' % (md5FileName, int(frameCurrentMedia/ fps))])
-        #self.imagesList.update(["BORIS@{}_{}" % (md5FileName, int(frameCurrentMedia/ fps))])
         logging.debug("images list: {}".format(self.imagesList))
-
-
 
         img = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                     sep=os.sep,
