@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.997"
-__version_date__ = "2016-10-16"
+__version__ = "2.998"
+__version_date__ = "2016-10-21"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -2300,7 +2300,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # for mac always embed player
                 if sys.platform == "darwin": # for MacOS
-                    self.mediaplayer2.set_nsobject(self.videoframe2.winId())
+                    self.mediaplayer2.set_nsobject(int(self.videoframe2.winId()))
 
                 # show first frame of video
                 app.processEvents()

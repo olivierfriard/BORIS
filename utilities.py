@@ -44,7 +44,7 @@ import datetime
 
 def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName, extension, frame_resize):
     """
-    extract frames from media file
+    extract frames from media file and save them in imageDir directory
     """
 
 
