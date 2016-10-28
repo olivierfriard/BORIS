@@ -128,6 +128,14 @@
     <property name="title">
      <string>Observations</string>
     </property>
+    <widget class="QMenu" name="menuCreate_transitions_matrix">
+     <property name="title">
+      <string>Create transitions matrix</string>
+     </property>
+     <addaction name="actionAll_transitions"/>
+     <addaction name="actionFrequencies_of_transitions_after_behaviors"/>
+     <addaction name="actionNumber_of_transitions"/>
+    </widget>
     <addaction name="actionNew_observation"/>
     <addaction name="actionOpen_observation"/>
     <addaction name="actionEdit_observation_2"/>
@@ -157,7 +165,7 @@
     <addaction name="actionMedia_file_information"/>
     <addaction name="actionExtract_events_from_media_files"/>
     <addaction name="separator"/>
-    <addaction name="actionCreate_transitions_matrix"/>
+    <addaction name="menuCreate_transitions_matrix"/>
    </widget>
    <widget class="QMenu" name="menuAnalyze">
     <property name="title">
@@ -861,11 +869,6 @@
     <string>Media file information</string>
    </property>
   </action>
-  <action name="actionCreate_transitions_matrix">
-   <property name="text">
-    <string>Create transitions matrix</string>
-   </property>
-  </action>
   <action name="actionCreate_transitions_flow_diagram">
    <property name="text">
     <string>Create transitions DOT script</string>
@@ -874,6 +877,21 @@
   <action name="actionCreate_transitions_flow_diagram_2">
    <property name="text">
     <string>Create transitions flow diagram</string>
+   </property>
+  </action>
+  <action name="actionAll_transitions">
+   <property name="text">
+    <string>Frequencies of transitions</string>
+   </property>
+  </action>
+  <action name="actionNumber_of_transitions">
+   <property name="text">
+    <string>Number of transitions</string>
+   </property>
+  </action>
+  <action name="actionFrequencies_of_transitions_after_behaviors">
+   <property name="text">
+    <string>Frequencies of transitions after behaviors</string>
    </property>
   </action>
  </widget>

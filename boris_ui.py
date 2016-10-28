@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu Oct 13 16:10:54 2016
+# Created: Fri Oct 28 14:57:09 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -74,6 +74,8 @@ class Ui_MainWindow(object):
         self.menuFile.setObjectName(_fromUtf8("menuFile"))
         self.menuObservations = QtGui.QMenu(self.menubar)
         self.menuObservations.setObjectName(_fromUtf8("menuObservations"))
+        self.menuCreate_transitions_matrix = QtGui.QMenu(self.menuObservations)
+        self.menuCreate_transitions_matrix.setObjectName(_fromUtf8("menuCreate_transitions_matrix"))
         self.menuAnalyze = QtGui.QMenu(self.menubar)
         self.menuAnalyze.setObjectName(_fromUtf8("menuAnalyze"))
         self.menuPlayback = QtGui.QMenu(self.menubar)
@@ -345,12 +347,16 @@ class Ui_MainWindow(object):
         self.actionRecode_resize_video.setObjectName(_fromUtf8("actionRecode_resize_video"))
         self.actionMedia_file_information_2 = QtGui.QAction(MainWindow)
         self.actionMedia_file_information_2.setObjectName(_fromUtf8("actionMedia_file_information_2"))
-        self.actionCreate_transitions_matrix = QtGui.QAction(MainWindow)
-        self.actionCreate_transitions_matrix.setObjectName(_fromUtf8("actionCreate_transitions_matrix"))
         self.actionCreate_transitions_flow_diagram = QtGui.QAction(MainWindow)
         self.actionCreate_transitions_flow_diagram.setObjectName(_fromUtf8("actionCreate_transitions_flow_diagram"))
         self.actionCreate_transitions_flow_diagram_2 = QtGui.QAction(MainWindow)
         self.actionCreate_transitions_flow_diagram_2.setObjectName(_fromUtf8("actionCreate_transitions_flow_diagram_2"))
+        self.actionAll_transitions = QtGui.QAction(MainWindow)
+        self.actionAll_transitions.setObjectName(_fromUtf8("actionAll_transitions"))
+        self.actionNumber_of_transitions = QtGui.QAction(MainWindow)
+        self.actionNumber_of_transitions.setObjectName(_fromUtf8("actionNumber_of_transitions"))
+        self.actionFrequencies_of_transitions_after_behaviors = QtGui.QAction(MainWindow)
+        self.actionFrequencies_of_transitions_after_behaviors.setObjectName(_fromUtf8("actionFrequencies_of_transitions_after_behaviors"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -365,6 +371,9 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionPreferences)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
+        self.menuCreate_transitions_matrix.addAction(self.actionAll_transitions)
+        self.menuCreate_transitions_matrix.addAction(self.actionFrequencies_of_transitions_after_behaviors)
+        self.menuCreate_transitions_matrix.addAction(self.actionNumber_of_transitions)
         self.menuObservations.addAction(self.actionNew_observation)
         self.menuObservations.addAction(self.actionOpen_observation)
         self.menuObservations.addAction(self.actionEdit_observation_2)
@@ -394,7 +403,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionMedia_file_information)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
         self.menuObservations.addSeparator()
-        self.menuObservations.addAction(self.actionCreate_transitions_matrix)
+        self.menuObservations.addAction(self.menuCreate_transitions_matrix.menuAction())
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionTime_budget_by_behaviors_category)
         self.menuAnalyze.addAction(self.actionVisualize_data)
@@ -449,6 +458,7 @@ class Ui_MainWindow(object):
         self.menuHelp.setTitle(_translate("MainWindow", "Help", None))
         self.menuFile.setTitle(_translate("MainWindow", "File", None))
         self.menuObservations.setTitle(_translate("MainWindow", "Observations", None))
+        self.menuCreate_transitions_matrix.setTitle(_translate("MainWindow", "Create transitions matrix", None))
         self.menuAnalyze.setTitle(_translate("MainWindow", "Analysis", None))
         self.menuPlayback.setTitle(_translate("MainWindow", "Playback", None))
         self.menuTools.setTitle(_translate("MainWindow", "Tools", None))
@@ -561,7 +571,9 @@ class Ui_MainWindow(object):
         self.actionExport_events_as_SDIS_file.setText(_translate("MainWindow", "Export events as SDIS file", None))
         self.actionRecode_resize_video.setText(_translate("MainWindow", "Re-encode/resize video", None))
         self.actionMedia_file_information_2.setText(_translate("MainWindow", "Media file information", None))
-        self.actionCreate_transitions_matrix.setText(_translate("MainWindow", "Create transitions matrix", None))
         self.actionCreate_transitions_flow_diagram.setText(_translate("MainWindow", "Create transitions DOT script", None))
         self.actionCreate_transitions_flow_diagram_2.setText(_translate("MainWindow", "Create transitions flow diagram", None))
+        self.actionAll_transitions.setText(_translate("MainWindow", "Frequencies of transitions", None))
+        self.actionNumber_of_transitions.setText(_translate("MainWindow", "Number of transitions", None))
+        self.actionFrequencies_of_transitions_after_behaviors.setText(_translate("MainWindow", "Frequencies of transitions after behaviors", None))
 

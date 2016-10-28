@@ -25,39 +25,6 @@ This file is part of BORIS.
 import os
 import sys
 
-'''
-QTWEB = ""
-
-try:
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    try:
-        from PyQt5.QtWebKitWidgets import QWebView
-        print("PyQt5.QtWebKitWidgets found")
-        QTWEB = "webkit"
-    except:
-        print("PyQt5.QtWebKitWidgets not installed\nTrying PyQt5.QtWebEngineWidgets...")
-        try:
-            from PyQt5.QtCore import QEventLoop
-            from PyQt5.QtWebEngineWidgets import QWebEngineView
-            print("PyQt5.QtWebEngineWidgets found")
-            QTWEB = "webengine"
-        except:
-            print("PyQt5.QtWebEngineWidgets not installed\nTransitions flow diagram will not be available")
-except:
-    try:
-        from PyQt4.QtCore import *
-        try:
-            from PyQt4.QtWebKit import QWebView
-            print("PyQt4.QtWebKit found")
-            QTWEB = "webkit"
-        except:
-            print("PyQt4.QtWebKit not installed\nTransitions flow diagram will not be available")
-    except:
-        pass
-'''
-
-
 
 def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
     """
@@ -65,11 +32,8 @@ def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
     """
 
     rows = strings[:]
-
     sequences = []
-
     for row in rows:
-
         if behaviouralStringsSeparator:
             r = row.strip().split(behaviouralStringsSeparator)
         else:
@@ -89,9 +53,13 @@ def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
     return sequences, unique_behaviors
 
 
-def observed_transition_normalized_matrix(sequences, behaviours):
+def observed_transitions_matrix(sequences, behaviours, mode = "frequency"):
     """
     create the normalized matrix of observed transitions
+    mode:
+    * frequency:
+    * number
+    * frequencies_after_behaviors
     """
 
     transitions = {}
@@ -104,33 +72,39 @@ def observed_transition_normalized_matrix(sequences, behaviours):
         for i in range(len(seq) - 1):
             if seq[i] in behaviours and seq[i + 1] in behaviours:
                 transitions[seq[i]][seq[i + 1]] += 1
-    print(transitions)
 
     transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
     if not transitions_total_number:
         return False
 
-    out = '\t' + '\t'.join( list(behaviours)) + "\n"
+    out = "\t" + "\t".join( list(behaviours)) + "\n"
     for behaviour in behaviours:
         out += "{}\t".format(behaviour)
         for behaviour2 in behaviours:
-            out += "{}\t".format(round(transitions[behaviour][behaviour2] / transitions_total_number, 3))
+            if mode == "frequency":
+                out += "{}\t".format(round(transitions[behaviour][behaviour2] / transitions_total_number, 3))
+            elif mode == "number":
+                out += "{}\t".format(transitions[behaviour][behaviour2])
+            elif mode== "frequencies_after_behaviors":
+                if sum(transitions[behaviour].values()):
+                    out += "{}\t".format(transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()))
+                else:
+                    out += "{}\t".format(transitions[behaviour][behaviour2])
         out = out[:-1] + "\n"
 
     return out
 
 
+
 def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, edge_label="percent_node"):
         """
         create code for GraphViz
+        matrix: matrix of frequency
         return string containing graphviz code
         """
 
         behaviours = matrix.split("\n")[0].strip().split("\t")
-
-        print("behaviours", behaviours)
-
         transitions = {}
 
         for row in matrix.split("\n")[1:]:
@@ -147,13 +121,9 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
         out = "digraph G { \n"
-        #out += """graph [bgcolor="#ffffff00"] """
 
         for behaviour1 in behaviours:
             for behaviour2 in behaviours:
-
-                #print("behaviour1", behaviour1)
-                #print("behaviour2", behaviour2)
 
                 if transitions[behaviour1][behaviour2]:
 
@@ -164,76 +134,12 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
                     if edge_label == "fraction_node":
 
                         transition_sum = sum(transitions[behaviour1].values())
+                        print(transition_sum)
                         if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
                             out += """"{}" -> "{}" [label="{}%"];\n""".format(behaviour1, behaviour2, round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
 
         out += '\n}'
         return out
 
-'''
-def create_diagram_from_gv(gv):
-    """
-    create diagram from Graphviz language using viz.js
-    https://github.com/mdaines/viz.js/
-    """
-
-    class FromJS(QObject):
-        def __init__(self, parent=None):
-            super(FromJS, self).__init__(parent)
-
-        @pyqtSlot(str)
-        def text(self, message):
-            self.txt = message
-
-
-    if QTWEB == "webkit": # PyQt4 or PyQt5 < 5.6
-        view = QWebView()
-        frame = view.page().mainFrame()
-        view.setHtml("""<script>function draw_gv(data) { var svg = Viz(data, "svg"); fromJS.text(svg) }</script>""")
-        fromJS = FromJS()
-        frame.addToJavaScriptWindowObject('fromJS', fromJS)
-
-        frame.evaluateJavaScript(open("viz.js").read())
-        frame.evaluateJavaScript("""draw_gv('{}')""".format(gv))
-
-        return fromJS.txt
-
-    if QTWEB == "webengine": # PyQt5 >= 5.6
-
-        def render(source_html):
-
-            class Render(QWebEngineView):
-                def __init__(self, gv):
-                    self.gv = gv
-                    self.html = None
-                    QWebEngineView.__init__(self)
-                    self.loadFinished.connect(self._loadFinished)
-                    self.setHtml("""<script>function draw_gv(data) { var svg = Viz(data, "svg"); document.write(svg) }</script>""")
-
-                    while self.html is None:
-                        QApplication.processEvents( QEventLoop.ExcludeUserInputEvents | QEventLoop.ExcludeSocketNotifiers | QEventLoop.WaitForMoreEvents )
-
-                def _callable(self, data):
-                    self.html = data
-
-                def _loadFinished(self, result):
-
-                    if os.path.isfile(sys.path[0]):  # pyinstaller
-                        syspath = os.path.dirname(sys.path[0])
-                    else:
-                        syspath = sys.path[0]
-
-                    if os.path.isfile(syspath + "/viz.js"):
-                        self.page().runJavaScript(open(syspath + "/viz.js").read())
-                        self.page().runJavaScript("""draw_gv('{}')""".format(self.gv))
-
-
-                    self.page().toHtml(self._callable)
-
-            result = Render(gv).html
-            return result.replace("</body></html>","").replace("<html><head></head><body>","")
-
-        return render(gv)
-'''
 
 

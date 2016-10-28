@@ -534,7 +534,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.actionVisualize_data.setEnabled(False)
 
-        self.actionCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # statusbar label
         self.lbTime.setVisible(self.playerType == VLC)
@@ -596,7 +596,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
-        self.actionCreate_transitions_matrix.triggered.connect(self.transitions_matrix)
+        self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
+        self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
+        self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(lambda: self.transitions_matrix("frequencies_after_behaviors"))
 
 
         # menu playback
@@ -7777,9 +7779,14 @@ item []:
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-    def transitions_matrix(self):
+
+    def transitions_matrix(self, mode):
         """
-        create transitions matrix with selected observations, subjects and behaviors
+        create transitions frequencies matrix with selected observations, subjects and behaviors
+        mode:
+        * frequency
+        * number
+        * frequencies_after_behaviors
         """
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -7794,9 +7801,9 @@ item []:
         flagMulti = False
         if len(plot_parameters["selected subjects"]) == 1:
             if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getSaveFileName(self, "Create transitions matrix", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+                fileName = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
             else:
-                fileName, _ = QFileDialog(self).getSaveFileName(self, "Create transitions matrix", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+                fileName, _ = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
         else:
             exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
             if not exportDir:
@@ -7809,34 +7816,28 @@ item []:
 
             strings_list = []
             for obsId in selectedObservations:
-                #print(obsId)
                 strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
 
             sequences, observed_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 
-            print("sequences", sequences)
-            print("observed_behaviors", observed_behaviors)
+            observed_matrix = transitions.observed_transitions_matrix(sequences, sorted(list(set(observed_behaviors + plot_parameters["selected behaviors"]))), mode=mode)
 
-            #observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, plot_parameters["selected behaviors"])
-            #observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, observed_behaviors)
-            observed_normalized_matrix = transitions.observed_transition_normalized_matrix(sequences, sorted(list(set(observed_behaviors + plot_parameters["selected behaviors"]))))
-
-            if not observed_normalized_matrix:
+            if not observed_matrix:
                 QMessageBox.warning(self, programName, "No transitions found for <b>{}</b>".format(subject))
                 continue
 
-            logging.debug("observed_normalized_matrix:\n{}".format(observed_normalized_matrix))
+            logging.debug("observed_matrix {}:\n{}".format(mode, observed_matrix))
 
             if flagMulti:
                 try:
-                    with open(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv", "w") as outfile:
-                        outfile.write(observed_normalized_matrix)
+                    with open(exportDir + os.sep + subject + "_transitions_{}_matrix.tsv".format(mode), "w") as outfile:
+                        outfile.write(observed_matrix)
                 except:
-                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_normalized_matrix.tsv"))
+                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_{}_matrix.tsv").format(mode))
             else:
                 try:
                     with open(fileName, "w") as outfile:
-                        outfile.write(observed_normalized_matrix)
+                        outfile.write(observed_matrix)
 
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
@@ -7844,7 +7845,7 @@ item []:
 
     def transitions_dot_script(self):
         """
-        create dot script (graphviz language) from transitions matrix
+        create dot script (graphviz language) from transitions frequencies matrix
         """
         if QT_VERSION_STR[0] == "4":
             fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
