@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.998"
-__version_date__ = "2016-10-21"
+__version__ = "2.999"
+__version_date__ = "2016-10-28"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
