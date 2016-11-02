@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "2.999"
-__version_date__ = "2016-10-28"
+__version__ = "3.0"
+__version_date__ = "2016-11-02"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -917,7 +917,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             timeOffset = float2decimal(text)
         except:
-            print("time offset not recognized!")
+            QMessageBox.warning(self, programName, "<b>{}</b> is not recognized as time offset".format(text))
             return
 
         flagUnpairedEventFound = False
@@ -1644,9 +1644,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         globalTimeMs = globalTime * 1000
 
-        print('globalTimeMs',globalTimeMs)
-        print( self.duration )
-
         for idx, media in enumerate(self.pj[OBSERVATIONS][obsId][FILE][player]):
             if globalTimeMs < sum(self.duration[0:idx + 1]):
                 currentMedia = media
@@ -2258,7 +2255,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.FFmpegTimerOut)
 
-        print( self.fps.values() )
         try:
             self.FFmpegTimerTick = int(1000 / list(self.fps.values())[0])
         except:
@@ -2342,8 +2338,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbSpeed.setText("x{:.3f}".format(self.play_rate))
 
+        '''
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
+        '''
+
+        app.focusWidget().installEventFilter(self)
 
         # spectrogram
 
@@ -2387,10 +2387,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.keyPressEvent(event)
 
+
     def eventFilter(self, source, event):
         """
-        send event from class (QScrollArea) to mainwindow
+        send event from widget to mainwindow
         """
+
         if event.type() == QtCore.QEvent.KeyPress:
             key = event.key()
             if key in [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right, Qt.Key_PageDown, Qt.Key_PageUp]:
@@ -3831,16 +3833,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 out += out_cat
 
-                print("categories[subject]", categories)
-
-                '''
-                flagCategories = False
-                for subject in categories:
-                    if categories[subject] != {}:
-                        flagCategories = True
-                        break
-                '''
-
                 if by_category: # and flagCategories:
 
                     for behav in out_cat:
@@ -3852,9 +3844,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if category in categories[subject]:
                             if behav["duration"] != "-" and categories[subject][category]["duration"] != "-":
-
-                                print("""categories[subject][category]["duration"]""", categories[subject][category]["duration"])
-                                print("""behav["duration"]""", behav["duration"])
                                 categories[subject][category]["duration"] += behav["duration"]
                             else:
                                 categories[subject][category]["duration"] = "-"
@@ -4313,8 +4302,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             lbl = lbl[:-1]  # remove last empty line
 
             #fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
-
-            print(int(len(lbl) * .8)  )
 
             #fig = plt.figure(figsize=(20, int(len(lbl) * .8)))
             fig = plt.figure(figsize=(20, 10))
@@ -5218,7 +5205,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twSubjects.item(int(idx), len(subjectsFields) ).setText(','.join(self.currentStates[idx]))
 
         # check scan sampling
-        #print(int(currentTime))
 
         if "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]:
             if self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
@@ -5322,8 +5308,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         for idx, row in enumerate(rows):
 
-                            print( row["occurence"] )
-
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
                             if mediaFileIdx not in subtitles:
                                 subtitles[mediaFileIdx] = []
@@ -5351,10 +5335,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     laps =  "{start} --> {stop}".format(start=start, stop=stop)
                                     subtitles[mediaFileIdx].append( [laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr) ] )
 
-                #print(subtitles)
+
                 try:
                     for mediaIdx in subtitles:
-                        #print(mediaIdx, mediaIdx)
                         subtitles[mediaIdx].sort()
                         with open( "{exportDir}{sep}{fileName}.srt".format(exportDir=exportDir, sep=os.sep, fileName=os.path.basename(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaIdx])), "w") as f:
                             for idx, sub in enumerate(subtitles[mediaIdx]):
@@ -6962,8 +6945,7 @@ item []:
 
     def keyPressEvent(self, event):
 
-        print("text #{}#".format(event.text()))
-        print(event.text == "\n")
+        logging.debug("text #{0}#  event key: {1} ".format(event.text(), event.key() ))
 
         '''
         if (event.modifiers() & Qt.ShiftModifier):   # SHIFT
@@ -8241,6 +8223,13 @@ item []:
                 self.timer_spectro_out()
 
 
+    def changedFocusSlot(self, old, now):
+        """
+        connect events filter when app gains focus
+        """
+        if app.focusWidget():
+            app.focusWidget().installEventFilter(self)
+
 
 if __name__=="__main__":
 
@@ -8297,6 +8286,10 @@ if __name__=="__main__":
 
     window.show()
     window.raise_()
+
+    # connect events filter when app focus changes
+    app.focusChanged.connect(window.changedFocusSlot)
+
     if not options.nosplashscreen:
         splash.finish(window)
 
