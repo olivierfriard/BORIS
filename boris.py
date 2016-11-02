@@ -2343,7 +2343,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             window.focusWidget().installEventFilter(self)
         '''
 
-        app.focusWidget().installEventFilter(self)
+        if app.focusWidget():
+            app.focusWidget().installEventFilter(self)
 
         # spectrogram
 
