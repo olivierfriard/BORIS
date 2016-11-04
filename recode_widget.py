@@ -30,13 +30,13 @@ except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
-class VideoRecoding(QWidget):
+class Info_widget(QWidget):
 
     def __init__(self, parent = None):
-        super(VideoRecoding, self).__init__(parent)
+        super(Info_widget, self).__init__(parent)
 
         self.setWindowTitle("BORIS")
         layout = QHBoxLayout()
-        self.label = QLabel("Encoding a video")
+        self.label = QLabel()
         layout.addWidget(self.label)
         self.setLayout(layout)

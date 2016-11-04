@@ -43,12 +43,13 @@ import sys
 import os
 import wave
 import subprocess
+import multiprocessing
 try:
     import numpy as np
     import matplotlib
 except:
     pass
-
+import recode_widget
 
 
 class Spectrogram(QWidget):
@@ -149,12 +150,10 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
         wav.close()
         return sound_info, frame_rate
 
-
     matplotlib.use("Agg")
     import pylab
 
-    fileName1stChunk = ''
-
+    fileName1stChunk = ""
     mediaBaseName = os.path.basename( mediaFile )
 
     wav_file = extract_wav(mediaFile, tmp_dir)
@@ -162,7 +161,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
         return None
 
     sound_info, frame_rate = get_wav_info(wav_file)
-
     wav_length = round(len(sound_info) / frame_rate, 3)
 
     i = 0
@@ -198,3 +196,13 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
     return fileName1stChunk
 
+
+def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
+    
+    process_timer = QTimer()
+    
+    
+    process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, ))
+    process.start()
+    
+    return process

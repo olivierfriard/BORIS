@@ -126,6 +126,7 @@ import observations_list
 import plot_spectrogram
 import coding_pad
 import transitions
+import recode_widget
 
 
 from config import *
@@ -746,8 +747,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol, ffmpeg_bin, ))
             self.ffmpeg_recode_process.start()
 
-            import recode_widget
-            self.w = recode_widget.VideoRecoding()
+            self.w = recode_widget.Info_widget()
             self.w.resize(350, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
@@ -780,15 +780,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def coding_map(self):
 
         try:
-            self.bm.show()
+            self.codingpad.show()
         except:
 
             allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-            self.bm = coding_pad.CodingPad(self.pj)
-            self.bm.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.bm.sendEventSignal.connect(self.signal_from_behaviors_map)
-            self.bm.clickSignal.connect(self.click_signal_from_behaviors_map)
-            self.bm.show()
+            self.codingpad = coding_pad.CodingPad(self.pj)
+            self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.codingpad.sendEventSignal.connect(self.signal_from_behaviors_map)
+            self.codingpad.clickSignal.connect(self.click_signal_from_behaviors_map)
+            self.codingpad.show()
 
 
     def show_all_behaviors(self):
@@ -1022,16 +1022,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         generate spectrogram of all media files loaded in player #1
         """
 
+
         # check temp dir for images from ffmpeg
         if not self.ffmpeg_cache_dir:
             tmp_dir = tempfile.gettempdir()
         else:
             tmp_dir = self.ffmpeg_cache_dir
 
-        import plot_spectrogram
+        w = recode_widget.Info_widget()
+        w.resize(350, 100)
+        w.setWindowFlags(Qt.WindowStaysOnTopHint)
+        w.setWindowTitle("BORIS")
+        w.label.setText("Generating spectrogram...")
+        w.show()
+
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
-                _ = plot_spectrogram.graph_spectrogram(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+                #_ = plot_spectrogram.graph_spectrogram(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+                process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)
+
+        while True:
+            app.processEvents()
+            if not process.is_alive():
+                w.hide()
+                return
+
 
 
     def show_spectrogram(self):
@@ -1051,7 +1066,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
             self.pause_video()
 
-
             if dialog.MessageDialog(programName, ("You chose to visualize the spectrogram during this observation.<br>"
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
@@ -1064,7 +1078,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     tmp_dir = self.ffmpeg_cache_dir
 
                 currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
-                logging.debug('currentMediaTmpPath', currentMediaTmpPath)
+
+                logging.debug("currentMediaTmpPath {}".format(currentMediaTmpPath))
 
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
 
@@ -1780,8 +1795,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add states for no focal subject
         self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
-            if len([x[ pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                       if x[pj_obs_fields['subject']] == '' and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime /1000]) % 2: # test if odd
+            if len([x[ pj_obs_fields["code"]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                       if x[pj_obs_fields["subject"]] == "" and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime /1000]) % 2: # test if odd
                 self.currentStates[''].append(sbc)
 
         # add states for all configured subjects
@@ -2906,6 +2921,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.menu_options()
 
 
+    def close_tool_windows(self):
+        """
+        close tool windows: spectrogram, measurements, coding pad
+        """
+        
+        try:
+            self.measurement_w.close()
+        except:
+            pass
+
+        try:
+            self.codingpad.close()
+            del self.codingpad
+        except:
+            pass
+
+        try:
+            self.spectro.close()
+        except:
+            pass
+
+
+
     def close_observation(self):
         """
         close current observation
@@ -2915,12 +2953,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.observationId = ""
 
-        try:
-            self.bm.close()
-            del self.bm
-        except:
-            pass
-
+        self.close_tool_windows()
 
         if self.playerType == LIVE:
 
@@ -3004,7 +3037,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeOffset.clear()
         self.lbSpeed.clear()
 
-        self.playerType = ''
+        self.playerType = ""
 
         self.menu_options()
 
@@ -3045,14 +3078,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.repositioningTimeOffset = 0
             try:
-                self.repositioningTimeOffset = int(settings.value('Time/Repositioning_time_offset'))
+                self.repositioningTimeOffset = int(settings.value("Time/Repositioning_time_offset"))
 
             except:
                 self.repositioningTimeOffset = 0
 
             self.play_rate_step = 0.1
             try:
-                self.play_rate_step = float(settings.value('Time/play_rate_step'))
+                self.play_rate_step = float(settings.value("Time/play_rate_step"))
 
             except:
                 self.play_rate_step = 0.1
@@ -3061,40 +3094,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.automaticBackup = 0
             try:
-                self.automaticBackup  = int(settings.value('Automatic_backup'))
+                self.automaticBackup  = int(settings.value("Automatic_backup"))
             except:
                 self.automaticBackup = 0
 
-            self.behaviouralStringsSeparator = '|'
+            self.behaviouralStringsSeparator = "|"
             try:
-                self.behaviouralStringsSeparator = settings.value('behavioural_strings_separator')
+                self.behaviouralStringsSeparator = settings.value("behavioural_strings_separator")
                 if not self.behaviouralStringsSeparator:
-                    self.behaviouralStringsSeparator = '|'
+                    self.behaviouralStringsSeparator = "|"
             except:
 
-                self.behaviouralStringsSeparator = '|'
+                self.behaviouralStringsSeparator = "|"
 
             self.confirmSound = False
             try:
-                self.confirmSound = (settings.value('confirm_sound') == 'true')
+                self.confirmSound = (settings.value("confirm_sound") == "true")
             except:
                 self.confirmSound = False
 
             self.embedPlayer = True
             try:
-                self.embedPlayer = ( settings.value('embed_player') == 'true' )
+                self.embedPlayer = ( settings.value("embed_player") == "true")
             except:
                 self.embedPlayer = True
 
             self.alertNoFocalSubject = False
             try:
-                self.alertNoFocalSubject = ( settings.value('alert_nosubject') == 'true' )
+                self.alertNoFocalSubject = ( settings.value('alert_nosubject') == "true")
             except:
                 self.alertNoFocalSubject = False
 
             self.trackingCursorAboveEvent = False
             try:
-                self.trackingCursorAboveEvent = (settings.value('tracking_cursor_above_event') == 'true')
+                self.trackingCursorAboveEvent = (settings.value('tracking_cursor_above_event') == "true")
             except:
                 self.trackingCursorAboveEvent = False
 
@@ -3114,13 +3147,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if settings.value("last_check_for_new_version") and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
 
-            self.ffmpeg_cache_dir = ''
+            self.ffmpeg_cache_dir = ""
             try:
                 self.ffmpeg_cache_dir = settings.value("ffmpeg_cache_dir")
                 if not self.ffmpeg_cache_dir:
-                    self.ffmpeg_cache_dir = ''
+                    self.ffmpeg_cache_dir = ""
             except:
-                self.ffmpeg_cache_dir = ''
+                self.ffmpeg_cache_dir = ""
 
             self.ffmpeg_cache_dir_max_size = 0
             try:
@@ -3183,7 +3216,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-
     def edit_project_activated(self):
         """
         edit project menu option triggered
@@ -3191,7 +3223,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.project:
             self.edit_project(EDIT)
         else:
-            QMessageBox.warning(self, programName, 'There is no project to edit')
+            QMessageBox.warning(self, programName, "There is no project to edit")
 
 
 
@@ -5826,7 +5858,6 @@ item []:
                             break
 
                     self.mediaListPlayer.pause()
-
                     currentMediaTime = int(globalCurrentTime - sum(self.duration[0:idx]))
                     break
 
@@ -5879,7 +5910,6 @@ item []:
 
             # load list of images in a set
             if not self.imagesList:
-                #self.imagesList.update([f.replace(self.imageDirectory + os.sep, "") for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
                 self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
             logging.debug("frame-by-frame mode activated. Image directory {0}".format(self.imageDirectory))
@@ -5915,7 +5945,7 @@ item []:
         self.actionFaster.setEnabled( self.playMode == VLC)
         self.actionSlower.setEnabled( self.playMode == VLC)
 
-        logging.info( 'new play mode: {0}'.format( self.playMode ))
+        logging.info("new play mode: {0}".format(self.playMode))
 
         self.menu_options()
 
@@ -5987,7 +6017,6 @@ item []:
             self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
 
             logging.info('play rate: {:.3f}'.format(self.play_rate))
-
 
 
     def video_faster_activated(self):
@@ -7902,15 +7931,17 @@ item []:
             QMessageBox.information(self, programName, out)
 
 
-
     def closeEvent(self, event):
         """
-        check if current project is saved and close program
+        check if current project is saved
+        close coding pad window if it exists
+        close spectrogram window if it exists
+         and close program
         """
 
         # check if re-encoding
         if self.ffmpeg_recode_process:
-            QMessageBox.warning(self, programName, "BORIS is re-encoding a video...")
+            QMessageBox.warning(self, programName, "BORIS is re-encoding/resizing a video. Please wait before closing.")
             event.ignore()
 
         if self.projectChanged:
@@ -7925,10 +7956,8 @@ item []:
 
         self.saveConfigFile()
 
-        try:
-            self.spectro.close()
-        except:
-            pass
+        self.close_tool_windows()
+
 
     def actionQuit_activated(self):
         self.close()
