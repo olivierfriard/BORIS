@@ -24,7 +24,7 @@ This file is part of BORIS.
 
 
 __version__ = "3.0"
-__version_date__ = "2016-11-02"
+__version_date__ = "2016-11-04"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -357,10 +357,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
 
-        self.lbFocalSubject.setText('')
-        self.lbCurrentStates.setText('')
+        self.lbFocalSubject.setText("")
+        self.lbCurrentStates.setText("")
 
-        self.lbFocalSubject.setText( NO_FOCAL_SUBJECT )
+        self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
 
         font = QFont()
         font.setPointSize(15)
@@ -1689,7 +1689,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
         #logging.debug('imagesList {0}'.format(self.imagesList))
-        logging.debug('image {0}'.format( '%s-%d' % (md5FileName, int(frameCurrentMedia / fps))))
+        logging.debug("image {0}".format("%s-%d" % (md5FileName, int(frameCurrentMedia / fps))))
 
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
@@ -1763,8 +1763,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentTime = self.getLaps() * 1000
 
+
         self.lbTime.setText("{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
-                             currentMediaName=currentMedia,
+                             currentMediaName=os.path.basename(currentMedia),
                              currentTime=self.convertTime(currentTime / 1000),
                              totalTime=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)),
                              currentFrame=round(self.FFmpegGlobalFrame)
@@ -1789,8 +1790,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # add subject index
             self.currentStates[ idx ] = []
             for sbc in StateBehaviorsCodes:
-                if len( [ x[ pj_obs_fields['code'] ] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS ]
-                           if x[ pj_obs_fields['subject'] ] == self.pj[SUBJECTS][idx]['name'] and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: # test if odd
+                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                           if x[pj_obs_fields['subject']] == self.pj[SUBJECTS][idx]['name'] and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: # test if odd
                     self.currentStates[idx].append(sbc)
 
         # show current states
@@ -2338,13 +2339,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbSpeed.setText("x{:.3f}".format(self.play_rate))
 
-        '''
+
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
-        '''
 
+        '''
         if app.focusWidget():
             app.focusWidget().installEventFilter(self)
+        '''
 
         # spectrogram
 
@@ -6495,7 +6497,7 @@ item []:
 
                 if msg:
                     # show time on status bar
-                    self.lbTime.setText( msg )
+                    self.lbTime.setText(msg)
 
                     # set video scroll bar
                     if scrollSlider:
@@ -6667,7 +6669,7 @@ item []:
         scroll to active event
         """
 
-        logging.debug("write event - event: {0}".format( event ))
+        logging.debug("write event - event: {0}  memtime: {1}".format(event, memTime))
 
         # add time offset
         memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
@@ -6788,7 +6790,7 @@ item []:
 
         # add event to pj
         if "row" in event:
-            self.pj[OBSERVATIONS][self.observationId][EVENTS][event['row']] =  [memTime, subject, event['code'], modifier_str, comment]
+            self.pj[OBSERVATIONS][self.observationId][EVENTS][event["row"]] =  [memTime, subject, event['code'], modifier_str, comment]
         else:
             self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime, subject, event['code'], modifier_str, comment] )
 
@@ -6799,9 +6801,9 @@ item []:
 
         self.loadEventsInTW(self.observationId)
 
-        item = self.twEvents.item([i for i,t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
+        item = self.twEvents.item([i for i, t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
 
-        self.twEvents.scrollToItem( item )
+        self.twEvents.scrollToItem(item)
 
         self.projectChanged = True
 
@@ -6960,7 +6962,8 @@ item []:
 
         '''print("focus", window.focusWidget() )'''
 
-        self.timer_out()
+        if self.playMode == VLC:
+            self.timer_out()
 
         if not self.observationId:
             return
@@ -7028,42 +7031,44 @@ item []:
         if self.playerType == VLC:
             #  jump backward
             if ek == Qt.Key_Down:
-                logging.debug('jump backward')
+                logging.debug("jump backward")
                 self.jumpBackward_activated()
                 return
 
             # jump forward
             if ek == Qt.Key_Up:
-                logging.debug('jump forward')
+                logging.debug("jump forward")
                 self.jumpForward_activated()
                 return
 
             # next media file (page up)
             if ek == Qt.Key_PageUp:
-                logging.debug('next media file')
+                logging.debug("next media file")
                 self.next_media_file()
 
             # previous media file (page down)
             if ek == Qt.Key_PageDown:
-                logging.debug('previous media file')
+                logging.debug("previous media file")
                 self.previous_media_file()
 
 
         if not self.pj[ETHOGRAM]:
-            QMessageBox.warning(self, programName, 'Behaviours are not configured')
+            QMessageBox.warning(self, programName, "The ethogram is not configured")
             return
 
         obs_key = None
 
         # check if key is function key
         if (ek in function_keys):
-            if function_keys[ek] in [self.pj[ETHOGRAM][x]['key'] for x in self.pj[ETHOGRAM]]:
+            if function_keys[ek] in [self.pj[ETHOGRAM][x]["key"] for x in self.pj[ETHOGRAM]]:
                 obs_key = function_keys[ek]
 
         # get video time
 
 
-        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE] and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
+        if (self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE] 
+           and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]
+           and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
             if self.timeFormat == HHMMSS:
                 memLaps = Decimal(int(time2seconds(self.lbTimeLive.text())))
             if self.timeFormat == S:
@@ -7148,7 +7153,8 @@ item []:
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
-                    response = dialog.MessageDialog(programName, "The focal subject is not defined. Do you want to continue?\nUse Preferences menu option to modify this behaviour.", [YES, NO])
+                    response = dialog.MessageDialog(programName, ("The focal subject is not defined. Do you want to continue?\n"
+                                                                  "Use Preferences menu option to modify this behaviour."), [YES, NO])
 
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA] and flagPlayerPlaying:
                         self.play_video()
@@ -7158,7 +7164,7 @@ item []:
 
                 event = self.full_event(obs_idx)
 
-                self.writeEvent( event, memLaps)
+                self.writeEvent(event, memLaps)
 
             elif count == 0:
 
@@ -8199,10 +8205,10 @@ item []:
 
 
     def reset_activated(self):
-        '''
+        """
         reset video to beginning
-        '''
-        logging.debug('Reset activated')
+        """
+        logging.debug("Reset activated")
 
         if self.playerType == VLC:
 
@@ -8228,8 +8234,15 @@ item []:
         """
         connect events filter when app gains focus
         """
+        logging.debug("focus changed")
+
+        if window.focusWidget():
+            window.focusWidget().installEventFilter(self)
+
+        '''
         if app.focusWidget():
             app.focusWidget().installEventFilter(self)
+        '''
 
 
 if __name__=="__main__":
