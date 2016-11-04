@@ -151,7 +151,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
         return sound_info, frame_rate
 
     matplotlib.use("Agg")
-    import pylab
+    import pylab # do not move. It is important that this line is after the previous one
 
     fileName1stChunk = ""
     mediaBaseName = os.path.basename( mediaFile )

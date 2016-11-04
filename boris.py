@@ -468,9 +468,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # enabled if project
         self.actionNew_observation.setEnabled(flag)
 
-        self.actionOpen_observation.setEnabled( self.pj[OBSERVATIONS] != {})
-        self.actionEdit_observation_2.setEnabled( self.pj[OBSERVATIONS] != {})
-        self.actionObservationsList.setEnabled( self.pj[OBSERVATIONS] != {})
+        self.actionOpen_observation.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionEdit_observation_2.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionObservationsList.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # enabled if observation
         flagObs = self.observationId != ""
@@ -666,12 +666,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Actions for twEvents context menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
-
-        #self.twEvents.addAction(self.actionEdit_event)
-
-        #separator1 = QAction(self)
-        #separator1.setSeparator(True)
-        #self.twEvents.addAction(separator1)
 
         self.twEvents.addAction(self.actionEdit_selected_events)
         separator2 = QAction(self)
@@ -7373,9 +7367,9 @@ item []:
             QMessageBox.warning(self, programName, "There are no events to select")
 
     def delete_all_events(self):
-        '''
+        """
         delete all events in current observation
-        '''
+        """
 
         if not self.observationId:
             self.no_observation()
@@ -7411,9 +7405,9 @@ item []:
 
 
     def edit_selected_events(self):
-        '''
+        """
         edit selected events for subject or comment
-        '''
+        """
         # list of rows to edit
         rowsToEdit = set([item.row() for item in self.twEvents.selectedIndexes()])
 
@@ -7421,7 +7415,7 @@ item []:
             QMessageBox.warning(self, programName, "No event selected!")
         elif len(rowsToEdit) == 1:  # 1 event selected
             self.edit_event()
-        else:
+        else:  # editing of more events
             dialogWindow = dialog.EditSelectedEvents()
             dialogWindow.all_behaviors = [self.pj[ETHOGRAM][k]["code"].upper() for k in self.pj[ETHOGRAM]]
             dialogWindow.all_subjects = [self.pj[SUBJECTS][k]["name"].upper() for k in self.pj[SUBJECTS]]
