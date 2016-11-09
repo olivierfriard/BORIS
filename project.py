@@ -400,7 +400,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     response = dialog.MessageDialog(programName, "There are independent variables already configured. Do you want to append independent variables or replace them?", ['Append', 'Replace', CANCEL])
 
-                    if response == 'Replace':
+                    if response == "Replace":
                         self.twVariables.setRowCount(0)
 
                     if response == CANCEL:
@@ -414,21 +414,23 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                         item = QTableWidgetItem()
 
-                        if field == 'type':
+                        if field == "type":
 
                             comboBox = QComboBox()
-                            comboBox.addItem(NUMERIC)
-                            comboBox.addItem(TEXT)
-                            if project[INDEPENDENT_VARIABLES][i][field] == NUMERIC:
-                                comboBox.setCurrentIndex(0)
-                            if project[INDEPENDENT_VARIABLES][i][field] == TEXT:
-                                comboBox.setCurrentIndex(1)
+                            comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
+                            #comboBox.setCurrentIndex(NUMERIC_idx)
+
+                            for idx2, var_type in [(NUMERIC_idx, NUMERIC), (TEXT_idx, TEXT), (SET_OF_VALUES_idx, SET_OF_VALUES)]:
+                                if project[INDEPENDENT_VARIABLES][i][field] == var_type:
+                                    comboBox.setCurrentIndex(idx2)
 
                             self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
 
                         else:
-                            item.setText(project[INDEPENDENT_VARIABLES][i][field])
-
+                            if field in project[INDEPENDENT_VARIABLES][i]:
+                                item.setText(project[INDEPENDENT_VARIABLES][i][field])
+                            else:
+                                item.setText("")
                             self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
                 self.twVariables.resizeColumnsToContents()

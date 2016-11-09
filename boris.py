@@ -2919,7 +2919,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         close tool windows: spectrogram, measurements, coding pad
         """
-        
+
         try:
             self.measurement_w.close()
         except:
@@ -6467,7 +6467,7 @@ item []:
                 # current state(s)
 
                 # extract State events
-                StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
+                StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
 
                 self.currentStates = {}
 
@@ -6530,10 +6530,10 @@ item []:
 
             if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive()):
 
-                if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] :
+                if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
 
-                    logging.debug('video changed')
-                    logging.debug('current states: {}'.format( self.currentStates))
+                    logging.debug("video changed")
+                    logging.debug("current states: {}".format( self.currentStates))
 
                     for subjIdx in self.currentStates:
 
@@ -6544,7 +6544,7 @@ item []:
 
                         for behav in self.currentStates[subjIdx]:
 
-                            cm = ''
+                            cm = ""
                             for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
                                 if ev[EVENT_TIME_FIELD_IDX] > currentTime / 1000:  # time
                                     break
@@ -7089,7 +7089,7 @@ item []:
         # get video time
 
 
-        if (self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE] 
+        if (self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE]
            and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]
            and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
             if self.timeFormat == HHMMSS:
@@ -7235,11 +7235,11 @@ item []:
 
                 if len(self.duration) == 1:
 
-                    self.mediaplayer.set_time( int(newTime) )
+                    self.mediaplayer.set_time(int(newTime))
 
                     if self.simultaneousMedia:
                         # synchronize 2nd player
-                        self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
                 else: # more media in player 1
 
@@ -7255,9 +7255,6 @@ item []:
                             while True:
                                 if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                                     break
-
-                            '''while self.mediaListPlayer.get_state() != vlc.State.Playing and self.mediaListPlayer.get_state() != vlc.State.Ended:
-                                pass'''
 
                             if flagPaused:
                                 self.mediaListPlayer.pause()
@@ -7612,8 +7609,23 @@ item []:
                     fields.append(intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
 
                     if includeMediaInfo == YES:
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])][-1]
-                        fields.append(intfloatstr(str( self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx] )))
+                        print("obsId",obsId)
+                        print("duration1", duration1)
+                        print("event", event)
+
+                        for idx1, x in enumerate(duration1):
+                            print("idx1", idx1)
+                            print("event[EVENT_TIME_FIELD_IDX]", event[EVENT_TIME_FIELD_IDX] )
+                            print( "sum(duration1[0:idx1])", sum(duration1[0:idx1]) )
+
+                        #print([idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])])
+
+                        time_ = event[EVENT_TIME_FIELD_IDX] - self.pj[OBSERVATIONS][obsId][TIME_OFFSET]
+                        if time_ < 0:
+                            time_ = 0
+
+                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
+                        fields.append(intfloatstr(str(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])))
                         # media total length
                         fields.append(str(sum([float(x) for x in duration1])))
                         # fps
@@ -7632,7 +7644,7 @@ item []:
                     # status
                     fields.append(event[-1])
 
-                    rows.append( fields )
+                    rows.append(fields)
 
             maxLen = max([len(r) for r in rows])
             data = tablib.Dataset()
