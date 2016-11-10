@@ -198,11 +198,11 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
 
 
 def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
-    
-    process_timer = QTimer()
-    
-    
+    """
+    create and start process in multiprocessing mode for creation of spectrogram
+    """
+
     process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, ))
     process.start()
-    
+
     return process

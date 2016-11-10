@@ -36,12 +36,15 @@ import os
 import time
 import hashlib
 import tempfile
+import glob
+import logging
+
+
 from config import *
 from utilities import *
 import dialog
 import plot_spectrogram
-import glob
-import logging
+import recode_widget
 
 if QT_VERSION_STR[0] == "4":
     from observation_ui import Ui_Form
@@ -100,28 +103,38 @@ class Observation(QDialog, Ui_Form):
 
 
     def generate_spectrogram(self):
+        """
+        generate spectrogram of all media files loaded in player #1
+        """
 
         if self.cbVisualizeSpectrogram.isChecked():
 
-            if dialog.MessageDialog(programName, ("You chose to visualize the spectrogram for the media in player #1.<br>"
+            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO]) == YES:
 
-                # check temp dir for images from ffmpeg
                 if not self.ffmpeg_cache_dir:
                     tmp_dir = tempfile.gettempdir()
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
-                self.lbMediaAnalysis.setText("<b>Spectrogram generation...</b>")
-                QApplication.processEvents()
+                w = recode_widget.Info_widget()
+                w.resize(350, 100)
+                w.setWindowFlags(Qt.WindowStaysOnTopHint)
+                w.setWindowTitle("BORIS")
+                w.label.setText("Generating spectrogram...")
+                w.show()
 
+                #for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
                 for row in range(self.twVideo1.rowCount()):
-                    _ = plot_spectrogram.graph_spectrogram(mediaFile=self.twVideo1.item(row, 0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
+                    if os.path.isfile(self.twVideo1.item(row, 0).text()):
+                        process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=self.twVideo1.item(row, 0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)
 
-                self.lbMediaAnalysis.setText("<b>Spectrogram was generated successfully</b>")
-                QApplication.processEvents()
-
+                while True:
+                    QApplication.processEvents()
+                    if not process.is_alive():
+                        w.hide()
+                        return
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
 

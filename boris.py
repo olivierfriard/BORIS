@@ -990,7 +990,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     #start = round(row["occurence"] - sum( duration1[0:mediaFileIdx]), 3)
                                     stop = round(rows[idx + 1]["occurence"] + timeOffset - sum( duration1[0:mediaFileIdx]))
 
-                                    ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """.format(ffmpeg_bin=ffmpeg_bin,
+                                    # check if start after length of media
+                                    if start >  self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
+                                        print("start after end", start, self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
+                                        continue
+
+                                    ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """.format(
+                                    ffmpeg_bin=ffmpeg_bin,
                                     input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                     start=start,
                                     stop=stop,
@@ -1015,7 +1021,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         generate spectrogram of all media files loaded in player #1
         """
-
 
         # check temp dir for images from ffmpeg
         if not self.ffmpeg_cache_dir:
@@ -1060,7 +1065,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
             self.pause_video()
 
-            if dialog.MessageDialog(programName, ("You chose to visualize the spectrogram during this observation.<br>"
+            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation.<br>"
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
 
@@ -7403,7 +7408,7 @@ item []:
 
     def edit_selected_events(self):
         """
-        edit selected events for subject or comment
+        edit one or more selected events for subject, behavior and/or comment
         """
         # list of rows to edit
         rowsToEdit = set([item.row() for item in self.twEvents.selectedIndexes()])
@@ -7609,16 +7614,6 @@ item []:
                     fields.append(intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
 
                     if includeMediaInfo == YES:
-                        print("obsId",obsId)
-                        print("duration1", duration1)
-                        print("event", event)
-
-                        for idx1, x in enumerate(duration1):
-                            print("idx1", idx1)
-                            print("event[EVENT_TIME_FIELD_IDX]", event[EVENT_TIME_FIELD_IDX] )
-                            print( "sum(duration1[0:idx1])", sum(duration1[0:idx1]) )
-
-                        #print([idx1 for idx1, x in enumerate(duration1) if event[EVENT_TIME_FIELD_IDX] >= sum(duration1[0:idx1])])
 
                         time_ = event[EVENT_TIME_FIELD_IDX] - self.pj[OBSERVATIONS][obsId][TIME_OFFSET]
                         if time_ < 0:
