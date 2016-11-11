@@ -222,25 +222,34 @@ class EditSelectedEvents(QDialog):
     def __init__(self):
         super(EditSelectedEvents, self).__init__()
 
+        self.setWindowTitle("Edit selected events")
+
         hbox = QVBoxLayout(self)
 
         self.rbSubject = QRadioButton("Subject")
         self.rbSubject.setChecked(False)
+        self.rbSubject.toggled.connect(self.rb_changed)
         hbox.addWidget(self.rbSubject)
 
         self.rbBehavior = QRadioButton("Behavior")
         self.rbBehavior.setChecked(False)
+        self.rbBehavior.toggled.connect(self.rb_changed)
         hbox.addWidget(self.rbBehavior)
+
+        self.lb = QLabel("New value")
+        self.newText = QListWidget(self)
+        hbox.addWidget(self.newText)
 
         self.rbComment = QRadioButton("Comment")
         self.rbComment.setChecked(False)
+        self.rbComment.toggled.connect(self.rb_changed)
         hbox.addWidget(self.rbComment)
 
-        self.label = QLabel("New text")
-        hbox.addWidget(self.label)
+        self.lbComment = QLabel("New comment")
+        hbox.addWidget(self.lbComment)
 
-        self.leText = QLineEdit()
-        hbox.addWidget(self.leText)
+        self.commentText = QLineEdit()
+        hbox.addWidget(self.commentText)
 
         hbox2 = QHBoxLayout(self)
         self.pbOK = QPushButton("OK")
@@ -253,19 +262,32 @@ class EditSelectedEvents(QDialog):
 
         self.setLayout(hbox)
 
-        self.setWindowTitle("Edit selected events")
+    def rb_changed(self):
+
+        self.newText.setEnabled(not self.rbComment.isChecked())
+        self.commentText.setEnabled(self.rbComment.isChecked())
+
+        if self.rbSubject.isChecked():
+            self.newText.clear()
+            self.newText.addItems(self.all_subjects)
+
+        if self.rbBehavior.isChecked():
+            self.newText.clear()
+            self.newText.addItems(self.all_behaviors)
+
+        if self.rbComment.isChecked():
+            self.newText.clear()
+
 
     def pbOK_clicked(self):
-        if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked()and not self.rbComment.isChecked():
+        if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
             QMessageBox.warning(None, config.programName, "You must select a field to be edited",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
-        if self.rbBehavior.isChecked() and self.leText.text().upper() not in self.all_behaviors:
-            QMessageBox.warning(None, config.programName, "This behavior is not in ethogram",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
-        if self.rbSubject.isChecked() and self.leText.text().upper() not in self.all_subjects:
-            QMessageBox.warning(None, config.programName, "This subject is not in subject's list",
+
+        print(self.newText.selectedItems())
+        if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
+            QMessageBox.warning(None, config.programName, "You must select a new value from the list",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 

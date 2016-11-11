@@ -185,9 +185,9 @@ def float2decimal(f):
 
 
 def time2seconds(time):
-    '''
+    """
     convert hh:mm:ss.s to number of seconds (decimal)
-    '''
+    """
     flagNeg = '-' in time
     time = time.replace("-", "")
 

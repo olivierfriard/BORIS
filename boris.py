@@ -667,7 +667,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Actions for twEvents context menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
+        self.twEvents.addAction(self.actionAdd_event)
         self.twEvents.addAction(self.actionEdit_selected_events)
+
+        separator2 = QAction(self)
+        separator2.setSeparator(True)
+        self.twEvents.addAction(separator2)
+
+        self.twEvents.addAction(self.actionCheckStateEvents)
+
         separator2 = QAction(self)
         separator2.setSeparator(True)
         self.twEvents.addAction(separator2)
@@ -1225,7 +1233,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if selectedObs:
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
-    def check_state_events(self):
+
+    def check_state_events_old(self):
         """
         check state events for each subject in current observation
         check if number is odd
@@ -1233,14 +1242,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         out = ""
         flagStateEvent = False
-        subjects = [subject for _, subject, _, _, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
+
+        subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
+
         for subject in sorted(set(subjects)):
-            behaviors = [behavior for _, subj, behavior, _, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS] if subj == subject ]
+
+            behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][self.observationId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+
             for behavior in sorted(set(behaviors)):
                 if "STATE" in self.eventType(behavior).upper():
                     flagStateEvent = True
+
                     behavior_modifiers = [behav + "@@@" + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS] if behav == behavior and subj == subject]
+
                     for behavior_modifier in set(behavior_modifiers):
+
                         if behavior_modifiers.count(behavior_modifier) % 2:
                             if subject:
                                 subject = " for subject <b>{}</b>".format(subject)
@@ -1257,6 +1273,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName + " - State events check", "No state events in current observation")
 
 
+    def check_state_events(self):
+        """
+        check state events for each subject in current observation
+        check if number is odd
+        """
+
+        out = ""
+        flagStateEvent = False
+        subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
+
+        for subject in sorted(set(subjects)):
+
+            behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][self.observationId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+
+            for behavior in sorted(set(behaviors)):
+                if "STATE" in self.eventType(behavior).upper():
+                    flagStateEvent = True
+                    lst, memTime = [], {}
+                    for event in [event for event in self.pj[OBSERVATIONS][self.observationId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject]:
+                        behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+                        if behav_modif in lst:
+                            lst.remove(behav_modif)
+                            del memTime[str(behav_modif)]
+                        else:
+                            lst.append(behav_modif)
+                            memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+
+                    for event in lst:
+                        out += """The behavior <b>{behavior}</b> {modifier}is not PAIRED for subject "<b>{subject}</b>" at <b>{time}</b><br>""".format(
+                               behavior=behavior,
+                               modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
+                               subject=subject if subject else NO_FOCAL_SUBJECT,
+                               time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
+
+        if flagStateEvent:
+            if not out:
+                out = "All state events are PAIRED"
+            else:
+                QMessageBox.warning(self, programName + " - State events check", out)
 
     def observations_list(self):
         """
@@ -2420,7 +2475,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def loadEventsInTW(self, obsId):
         """
-        load events in table widget
+        load events in table widget and update START/STOP
         """
 
         self.twEvents.setRowCount(len(self.pj[OBSERVATIONS][obsId][EVENTS]))
@@ -2432,7 +2487,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if field_type in pj_events_fields:
 
-                    field = event[ pj_obs_fields[field_type] ]
+                    field = event[pj_obs_fields[field_type]]
                     if field_type == "time":
                         field = str( self.convertTime( field) )
 
@@ -4602,9 +4657,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_time_ranges(o, selectedObservations[0], plot_parameters["start time"], plot_parameters["end time"], plot_parameters["exclude behaviors"], line_width=10):
             QMessageBox.warning(self, programName, "Check events")
 
+
     def convert_time_to_decimal(self, pj):
         """
-        transform time to decimal
+        convert time from float to decimal
         """
 
         for obsId in pj[OBSERVATIONS]:
@@ -4621,7 +4677,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         open project json
         """
         logging.info("open project: {0}".format(projectFileName))
-
 
         if not os.path.isfile(projectFileName):
             QMessageBox.warning(self, programName, "File not found")
@@ -4674,7 +4729,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # check if old version  v. 0 *.obs
-        if 'project_format_version' not in self.pj:
+        if "project_format_version" not in self.pj:
 
             # convert VIDEO, AUDIO -> MEDIA
             self.pj['project_format_version'] = project_format_version
@@ -4683,7 +4738,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for obs in [x for x in self.pj[OBSERVATIONS]]:
 
                 # remove 'replace audio' key
-                if 'replace audio' in self.pj[OBSERVATIONS][obs]:
+                if "replace audio" in self.pj[OBSERVATIONS][obs]:
                     del self.pj[OBSERVATIONS][obs]['replace audio']
 
                 if self.pj[OBSERVATIONS][obs][TYPE] in ['VIDEO','AUDIO']:
@@ -4747,19 +4802,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check program version
         memProjectChanged = self.projectChanged
-
         self.initialize_new_project()
-
         self.projectChanged = memProjectChanged
-
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-
         self.load_subjects_in_twSubjects()
-
         self.projectFileName = projectFileName
-
         self.project = True
-
         self.menu_options()
 
 
@@ -5335,7 +5383,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         cursor.execute( "SELECT occurence, modifiers FROM events where observation = ? AND subject = ? AND  code = ? ORDER BY code, occurence", (obsId, subject, behavior) )
                         rows = list(cursor.fetchall() )
-                        if STATE in self.eventType(behavior).upper() and len( rows ) % 2:
+                        if STATE in self.eventType(behavior).upper() and len(rows) % 2:
                             #continue
                             flagUnpairedEventFound = True
                             continue
@@ -6175,33 +6223,33 @@ item []:
 
             editWindow.cobSubject.addItems(sortedSubjects)
 
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][SUBJECT_EVENT_FIELD] in sortedSubjects:
-                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ SUBJECT_EVENT_FIELD ] ) )
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
+                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
             else:
-                QMessageBox.warning(self, programName, "The subject <b>{}</b> do not exists more in the subject's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['subject']]))
+                QMessageBox.warning(self, programName, "The subject <b>{}</b> do not exists more in the subject's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
                 editWindow.cobSubject.setCurrentIndex(0)
 
-            sortedCodes = sorted( [ self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+            sortedCodes = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
 
-            editWindow.cobCode.addItems( sortedCodes )
+            editWindow.cobCode.addItems(sortedCodes)
 
             # check if selected code is in code's list (no modification of codes)
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] in sortedCodes:
-                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
+                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] ) )
             else:
-                logging.warning("The behaviour <b>{0}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"] ] ) )
-                QMessageBox.warning(self, programName, "The behaviour <b>%s</b> do not exists more in the ethogram" % self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields["code"]])
+                logging.warning("The behaviour <b>{0}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] ) )
+                QMessageBox.warning(self, programName, "The behaviour <b>{}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
                 editWindow.cobCode.setCurrentIndex(0)
 
 
-            logging.debug("original modifiers: {}".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]))
+            logging.debug("original modifiers: {}".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]))
             # pass current modifier(s) to window
             """
             editWindow.currentModifier = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
             """
 
             # comment
-            editWindow.leComment.setPlainText( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['comment'] ])
+            editWindow.leComment.setPlainText( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
 
             # load modifiers
             """
@@ -6221,7 +6269,7 @@ item []:
                     newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
 
                 if self.timeFormat == S:
-                    newTime = Decimal(editWindow.dsbTime.value())
+                    newTime = Decimal(str(editWindow.dsbTime.value()))
 
                 for obs_idx in self.pj[ETHOGRAM]:
 
@@ -6265,11 +6313,11 @@ item []:
 
                 code = self.twEthogram.item(ethogramRow, 1).text()
 
-                event = self.full_event( str(ethogramRow) )
+                event = self.full_event(str(ethogramRow))
 
-                logging.debug('event: {0}'.format( event ))
+                logging.debug('event: {0}'.format(event))
 
-                self.writeEvent( event , self.getLaps())
+                self.writeEvent(event, self.getLaps())
 
         else:
             self.no_observation()
@@ -6295,6 +6343,8 @@ item []:
         about dialog
         """
 
+        print(self.pj[OBSERVATIONS]["05"][EVENTS])
+
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
         else:
@@ -6306,7 +6356,7 @@ item []:
         players.append("FFmpeg path: {}".format(self.ffmpeg_bin))
 
 
-        QMessageBox.about(self, "About " + programName,"""<b>{prog_name}</b> {ver} - {date}
+        QMessageBox.about(self, "About " + programName, """<b>{prog_name}</b> {ver} - {date}
         <p>Copyright &copy; 2012-2016 Olivier Friard - Marco Gamba<br>
         Department of Life Sciences and Systems Biology<br>
         University of Torino - Italy<br>
@@ -6617,29 +6667,36 @@ item []:
     def update_events_start_stop(self):
         """
         update status start/stop of events in Events table
-        take consideration of subject
+        take consideration of subject and modifiers
 
         do not return value
         """
 
-        stateEventsList = [self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
+        stateEventsList = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
 
         for row in range(0, self.twEvents.rowCount()):
 
-            t = self.twEvents.item(row, tw_obs_fields['time'] ).text()
+            t = self.twEvents.item(row, tw_obs_fields["time"]).text()
 
             if ":" in t:
                 time = time2seconds(t)
             else:
                 time = Decimal(t)
 
-            code = self.twEvents.item(row, tw_obs_fields['code'] ).text()
-            subject = self.twEvents.item(row, tw_obs_fields['subject'] ).text()
+            subject = self.twEvents.item(row, tw_obs_fields["subject"]).text()
+            code = self.twEvents.item(row, tw_obs_fields["code"]).text()
+            modifier = self.twEvents.item(row, tw_obs_fields["modifier"]).text()
 
             # check if code is state
             if code in stateEventsList:
                 # how many code before with same subject?
-                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS] if x[pj_obs_fields["code"]] == code and x[pj_obs_fields["time"]] < time and x[pj_obs_fields["subject"]] == subject]) % 2: # test if odd
+                nbEvents = len([event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                                                                  if event[EVENT_BEHAVIOR_FIELD_IDX] == code
+                                                                     and event[EVENT_TIME_FIELD_IDX] < time
+                                                                     and event[EVENT_SUBJECT_FIELD_IDX] == subject
+                                                                     and event[EVENT_MODIFIER_FIELD_IDX] == modifier])
+
+                if nbEvents and (nbEvents % 2): # test >0 and  odd
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(STOP)
                 else:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
@@ -6649,25 +6706,23 @@ item []:
         """
         returns events with status (START/STOP or POINT)
         take consideration of subject
-
         """
 
-        stateEventsList = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
-
+        stateEventsList = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
         eventsFlagged = []
         for event in events:
-
-            time, subject, code = event[0:3]
-
+            time, subject, code, modifier = event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]
             # check if code is state
             if code in stateEventsList:
-
                 # how many code before with same subject?
-                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events if x[EVENT_BEHAVIOR_FIELD_IDX] == code and x[ EVENT_TIME_FIELD_IDX] < time and x[EVENT_SUBJECT_FIELD_IDX] == subject]) % 2: # test if odd
+                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+                                                     if x[EVENT_BEHAVIOR_FIELD_IDX] == code
+                                                        and x[EVENT_TIME_FIELD_IDX] < time
+                                                        and x[EVENT_SUBJECT_FIELD_IDX] == subject
+                                                        and x[EVENT_MODIFIER_FIELD_IDX] == modifier]) % 2: # test if odd
                     flag = STOP
                 else:
                     flag = START
-
             else:
                 flag = POINT
 
@@ -6680,20 +6735,15 @@ item []:
         """
         check if a same event is already in events list (time, subject, code)
         """
-        return [ time, subject, code ] in [[x[0],x[1],x[2]] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
-
+        return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
 
     def writeEvent(self, event, memTime):
         """
         add event from pressed key to observation
-
         offset is added to event time
-
         ask for modifiers if configured
-
         load events in tableview
-
         scroll to active event
         """
 
@@ -6789,7 +6839,7 @@ item []:
             # current modifiers
             cm = {}
             for cs in csj :
-                for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS ]:
+                for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
                     if ev[0] > memTime:  # time
                         break
 
@@ -7419,18 +7469,21 @@ item []:
             self.edit_event()
         else:  # editing of more events
             dialogWindow = dialog.EditSelectedEvents()
-            dialogWindow.all_behaviors = [self.pj[ETHOGRAM][k]["code"].upper() for k in self.pj[ETHOGRAM]]
-            dialogWindow.all_subjects = [self.pj[SUBJECTS][k]["name"].upper() for k in self.pj[SUBJECTS]]
+            dialogWindow.all_behaviors = [self.pj[ETHOGRAM][str(k)]["code"] for k in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]
+            dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)]["name"] for k in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]
 
             if dialogWindow.exec_():
                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
                     if idx in rowsToEdit:
                         if dialogWindow.rbSubject.isChecked():
-                            event[SUBJECT_EVENT_FIELD] = dialogWindow.leText.text()
+                            event[EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
                         if dialogWindow.rbBehavior.isChecked():
-                            event[BEHAVIOR_EVENT_FIELD] = dialogWindow.leText.text()
+                            event[EVENT_BEHAVIOR_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
                         if dialogWindow.rbComment.isChecked():
-                            event[COMMENT_EVENT_FIELD] = dialogWindow.leText.text()
+                            event[EVENT_COMMENT_FIELD_IDX] = dialogWindow.commentText.text()
+
+                        print("new event", event)
+
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][idx] = event
                         self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
@@ -7559,7 +7612,7 @@ item []:
 
             # date
             if "date" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(["Observation date", self.pj[OBSERVATIONS][obsId]["date"].replace('T', ' ')])
+                rows.append(["Observation date", self.pj[OBSERVATIONS][obsId]["date"].replace("T", " ")])
             rows.append([""])
 
             # description
@@ -7635,7 +7688,7 @@ item []:
 
                     for m in modifiers:
                         fields.append(m)
-                    fields.append(event[COMMENT_EVENT_FIELD_IDX].replace(os.linesep, " "))
+                    fields.append(event[EVENT_COMMENT_FIELD_IDX].replace(os.linesep, " "))
                     # status
                     fields.append(event[-1])
 

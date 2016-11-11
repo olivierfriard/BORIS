@@ -64,6 +64,8 @@ NO_FOCAL_SUBJECT = 'No focal subject'
 TYPE = "type"
 FILE = "file"
 
+BEHAVIOR_CODE = "code"
+
 # fields for event configuration
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 
@@ -104,8 +106,7 @@ EVENT_BEHAVIOR_FIELD_IDX = 2
 
 EVENT_MODIFIER_FIELD_IDX = 3
 
-COMMENT_EVENT_FIELD = 4
-COMMENT_EVENT_FIELD_IDX = 4
+EVENT_COMMENT_FIELD_IDX = 4
 
 LIVE = 'LIVE'
 MEDIA = 'MEDIA'
