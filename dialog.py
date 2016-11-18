@@ -237,6 +237,7 @@ class EditSelectedEvents(QDialog):
         hbox.addWidget(self.rbBehavior)
 
         self.lb = QLabel("New value")
+        hbox.addWidget(self.lb)
         self.newText = QListWidget(self)
         hbox.addWidget(self.newText)
 
@@ -285,7 +286,6 @@ class EditSelectedEvents(QDialog):
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        print(self.newText.selectedItems())
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
             QMessageBox.warning(None, config.programName, "You must select a new value from the list",
             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -296,6 +296,87 @@ class EditSelectedEvents(QDialog):
     def pbCancel_clicked(self):
         self.reject()
 
+
+class FindReplaceEvents(QDialog):
+    """
+    "find replace events" dialog box
+    """
+
+    def __init__(self):
+        super(FindReplaceEvents, self).__init__()
+
+        self.setWindowTitle("Find/Replace events")
+
+        hbox = QVBoxLayout(self)
+
+        """
+        self.rbSubject = QRadioButton("Subject")
+        self.rbSubject.setChecked(False)
+        self.rbSubject.toggled.connect(self.rb_changed)
+        hbox.addWidget(self.rbSubject)
+
+        self.rbBehavior = QRadioButton("Behavior")
+        self.rbBehavior.setChecked(False)
+        self.rbBehavior.toggled.connect(self.rb_changed)
+        hbox.addWidget(self.rbBehavior)
+
+        self.lb = QLabel("New value")
+        self.newText = QListWidget(self)
+        hbox.addWidget(self.newText)
+
+        self.rbComment = QRadioButton("Comment")
+        self.rbComment.setChecked(False)
+        self.rbComment.toggled.connect(self.rb_changed)
+        hbox.addWidget(self.rbComment)
+        """
+
+        self.lbFind = QLabel("Find")
+        hbox.addWidget(self.lbFind)
+
+        self.findText = QLineEdit()
+        hbox.addWidget(self.findText)
+
+        self.lbReplace = QLabel("Replace")
+        hbox.addWidget(self.lbReplace)
+
+        self.replaceText = QLineEdit()
+        hbox.addWidget(self.replaceText)
+
+
+        hbox2 = QHBoxLayout(self)
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.pbOK_clicked)
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.pbCancel_clicked)
+        hbox2.addWidget(self.pbCancel)
+        hbox2.addWidget(self.pbOK)
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
+
+    """
+    def rb_changed(self):
+
+        self.newText.setEnabled(not self.rbComment.isChecked())
+        self.commentText.setEnabled(self.rbComment.isChecked())
+
+        if self.rbSubject.isChecked():
+            self.newText.clear()
+            self.newText.addItems(self.all_subjects)
+
+        if self.rbBehavior.isChecked():
+            self.newText.clear()
+            self.newText.addItems(self.all_behaviors)
+
+        if self.rbComment.isChecked():
+            self.newText.clear()
+    """
+
+    def pbOK_clicked(self):
+        self.accept()
+
+    def pbCancel_clicked(self):
+        self.reject()
 
 
 

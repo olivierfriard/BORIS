@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri Oct 28 14:57:09 2016
+# Created: Fri Nov 18 14:04:49 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -343,6 +343,8 @@ class Ui_MainWindow(object):
         self.actionNumber_of_transitions.setObjectName("actionNumber_of_transitions")
         self.actionFrequencies_of_transitions_after_behaviors = QtWidgets.QAction(MainWindow)
         self.actionFrequencies_of_transitions_after_behaviors.setObjectName("actionFrequencies_of_transitions_after_behaviors")
+        self.actionFind_replace_events = QtWidgets.QAction(MainWindow)
+        self.actionFind_replace_events.setObjectName("actionFind_replace_events")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -373,6 +375,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)
+        self.menuObservations.addAction(self.actionFind_replace_events)
         self.menuObservations.addAction(self.actionCheckStateEvents)
         self.menuObservations.addAction(self.actionSelect_observations)
         self.menuObservations.addSeparator()
@@ -563,4 +566,5 @@ class Ui_MainWindow(object):
         self.actionAll_transitions.setText(_translate("MainWindow", "Frequencies of transitions"))
         self.actionNumber_of_transitions.setText(_translate("MainWindow", "Number of transitions"))
         self.actionFrequencies_of_transitions_after_behaviors.setText(_translate("MainWindow", "Frequencies of transitions after behaviors"))
+        self.actionFind_replace_events.setText(_translate("MainWindow", "Find/replace"))
 

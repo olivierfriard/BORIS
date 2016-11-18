@@ -492,6 +492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
         self.actionEdit_selected_events.setEnabled(flagObs)
+        self.actionFind_replace_events.setEnabled(flagObs)
         self.actionCheckStateEvents.setEnabled(flagObs)
 
 
@@ -578,6 +579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
         self.actionEdit_selected_events.triggered.connect(self.edit_selected_events)
+        self.actionFind_replace_events.triggered.connect(self.find_replace_events)
         self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
         self.actionDelete_selected_observations.triggered.connect(self.delete_selected_events)
 
@@ -669,6 +671,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.twEvents.addAction(self.actionAdd_event)
         self.twEvents.addAction(self.actionEdit_selected_events)
+        self.twEvents.addAction(self.actionFind_replace_events)
 
         separator2 = QAction(self)
         separator2.setSeparator(True)
@@ -6400,6 +6403,7 @@ item []:
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
 
+
     def get_events_current_row(self):
         """
         get events current row corresponding to video/frame-by-frame position
@@ -6424,7 +6428,7 @@ item []:
                     ROW = -1
 
             self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
-            self.twEvents.scrollToItem( self.twEvents.item(ROW, 0) )
+            self.twEvents.scrollToItem(self.twEvents.item(ROW, 0))
 
     def get_current_states_by_subject(self, stateBehaviorsCodes, events, subjects, time):
         """
@@ -7482,11 +7486,28 @@ item []:
                         if dialogWindow.rbComment.isChecked():
                             event[EVENT_COMMENT_FIELD_IDX] = dialogWindow.commentText.text()
 
-                        print("new event", event)
-
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][idx] = event
                         self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
+
+    def find_replace_events(self):
+        """
+        find and replace in events
+        """
+        dialogWindow = dialog.FindReplaceEvents()
+        if dialogWindow.exec_():
+            for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+                for idx in [EVENT_SUBJECT_FIELD_IDX, EVENT_BEHAVIOR_FIELD_IDX, EVENT_MODIFIER_FIELD_IDX, EVENT_COMMENT_FIELD_IDX]:
+
+                    if dialogWindow.findText.text() in event[idx]:
+                        event[idx] = event[idx].replace(dialogWindow.findText.text(), dialogWindow.replaceText.text())
+
+                self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
+                self.projectChanged = True
+
+
+            self.loadEventsInTW(self.observationId)
+
 
 
     def export_tabular_events(self):
