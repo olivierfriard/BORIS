@@ -297,6 +297,79 @@ class EditSelectedEvents(QDialog):
         self.reject()
 
 
+class FindInEvents(QWidget):
+    """
+    "find in events" dialog box
+    """
+
+    clickSignal = pyqtSignal(str)
+    sendEventSignal = pyqtSignal(QEvent)
+
+    currentIdx = -1
+
+    def __init__(self):
+        super(FindInEvents, self).__init__()
+
+        self.setWindowTitle("Find in events")
+
+        hbox = QVBoxLayout()
+
+        self.cbSubject = QCheckBox("Subject")
+        self.cbSubject.setChecked(False)
+        hbox.addWidget(self.cbSubject)
+
+        self.cbBehavior = QCheckBox("Behavior")
+        self.cbBehavior.setChecked(False)
+        hbox.addWidget(self.cbBehavior)
+
+        self.cbModifier = QCheckBox("Modifiers")
+        self.cbModifier.setChecked(False)
+        hbox.addWidget(self.cbModifier)
+
+        self.cbComment = QCheckBox("Comment")
+        self.cbComment.setChecked(False)
+        hbox.addWidget(self.cbComment)
+
+        self.lbFind = QLabel("Find")
+        hbox.addWidget(self.lbFind)
+
+        self.findText = QLineEdit()
+        hbox.addWidget(self.findText)
+
+
+        self.cbFindInSelectedEvents = QCheckBox("Find in selected events")
+        self.cbFindInSelectedEvents.setChecked(False)
+        hbox.addWidget(self.cbFindInSelectedEvents)
+
+        hbox2 = QHBoxLayout()
+        self.pbOK = QPushButton("Find")
+        self.pbOK.clicked.connect(lambda: self.click("FIND"))
+        self.pbCancel = QPushButton("Close")
+        self.pbCancel.clicked.connect(lambda: self.click("CLOSE"))
+        hbox2.addWidget(self.pbCancel)
+        hbox2.addWidget(self.pbOK)
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
+
+
+    def click(self, msg):
+        self.clickSignal.emit(msg)
+
+    '''
+    def eventFilter(self, receiver, event):
+        """
+        send event (if keypress) to main window
+        """
+        if(event.type() == QEvent.KeyPress):
+            self.sendEventSignal.emit(event)
+            return True
+        else:
+            return False
+    '''
+
+
+
 class FindReplaceEvents(QDialog):
     """
     "find replace events" dialog box
@@ -307,28 +380,24 @@ class FindReplaceEvents(QDialog):
 
         self.setWindowTitle("Find/Replace events")
 
-        hbox = QVBoxLayout(self)
+        hbox = QVBoxLayout()
 
-        """
-        self.rbSubject = QRadioButton("Subject")
-        self.rbSubject.setChecked(False)
-        self.rbSubject.toggled.connect(self.rb_changed)
-        hbox.addWidget(self.rbSubject)
+        self.cbSubject = QCheckBox("Subject")
+        self.cbSubject.setChecked(False)
+        hbox.addWidget(self.cbSubject)
 
-        self.rbBehavior = QRadioButton("Behavior")
-        self.rbBehavior.setChecked(False)
-        self.rbBehavior.toggled.connect(self.rb_changed)
-        hbox.addWidget(self.rbBehavior)
 
-        self.lb = QLabel("New value")
-        self.newText = QListWidget(self)
-        hbox.addWidget(self.newText)
+        self.cbBehavior = QCheckBox("Behavior")
+        self.cbBehavior.setChecked(False)
+        hbox.addWidget(self.cbBehavior)
 
-        self.rbComment = QRadioButton("Comment")
-        self.rbComment.setChecked(False)
-        self.rbComment.toggled.connect(self.rb_changed)
-        hbox.addWidget(self.rbComment)
-        """
+        self.cbModifier = QCheckBox("Modifiers")
+        self.cbModifier.setChecked(False)
+        hbox.addWidget(self.cbModifier)
+
+        self.cbComment = QCheckBox("Comment")
+        self.cbComment.setChecked(False)
+        hbox.addWidget(self.cbComment)
 
         self.lbFind = QLabel("Find")
         hbox.addWidget(self.lbFind)
@@ -342,42 +411,28 @@ class FindReplaceEvents(QDialog):
         self.replaceText = QLineEdit()
         hbox.addWidget(self.replaceText)
 
+        self.cbFindInSelectedEvents = QCheckBox("Find/Replace in selected events")
+        self.cbFindInSelectedEvents.setChecked(False)
+        hbox.addWidget(self.cbFindInSelectedEvents)
 
-        hbox2 = QHBoxLayout(self)
+        hbox2 = QHBoxLayout()
         self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.pbOK_clicked)
+        self.pbOK.clicked.connect(self.accept)
         self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
+        self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
         hbox2.addWidget(self.pbOK)
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
 
-    """
-    def rb_changed(self):
-
-        self.newText.setEnabled(not self.rbComment.isChecked())
-        self.commentText.setEnabled(self.rbComment.isChecked())
-
-        if self.rbSubject.isChecked():
-            self.newText.clear()
-            self.newText.addItems(self.all_subjects)
-
-        if self.rbBehavior.isChecked():
-            self.newText.clear()
-            self.newText.addItems(self.all_behaviors)
-
-        if self.rbComment.isChecked():
-            self.newText.clear()
-    """
-
+    '''
     def pbOK_clicked(self):
         self.accept()
 
     def pbCancel_clicked(self):
         self.reject()
-
+    '''
 
 
 """

@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "3.0"
-__version_date__ = "2016-11-04"
+__version__ = "3.1"
+__version_date__ = "2016-11-21"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -492,6 +492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
         self.actionEdit_selected_events.setEnabled(flagObs)
+        self.actionFind_events.setEnabled(flagObs)
         self.actionFind_replace_events.setEnabled(flagObs)
         self.actionCheckStateEvents.setEnabled(flagObs)
 
@@ -579,6 +580,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
         self.actionEdit_selected_events.triggered.connect(self.edit_selected_events)
+        self.actionFind_events.triggered.connect(self.find_events)
         self.actionFind_replace_events.triggered.connect(self.find_replace_events)
         self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
         self.actionDelete_selected_observations.triggered.connect(self.delete_selected_events)
@@ -671,6 +673,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.twEvents.addAction(self.actionAdd_event)
         self.twEvents.addAction(self.actionEdit_selected_events)
+        self.twEvents.addAction(self.actionFind_events)
         self.twEvents.addAction(self.actionFind_replace_events)
 
         separator2 = QAction(self)
@@ -7490,23 +7493,107 @@ item []:
                         self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
 
+
+    def click_signal_find_in_events(self, msg):
+        """
+        find in events when "Find" button of find dialog box is pressed
+        """
+
+        if msg == "CLOSE":
+            self.find_dialog.close()
+            return
+        if not self.find_dialog.findText.text():
+            #QMessageBox.warning(self, programName, "Nothing to find", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        fields_list = []
+        if self.find_dialog.cbSubject.isChecked():
+            fields_list.append(EVENT_SUBJECT_FIELD_IDX)
+        if self.find_dialog.cbBehavior.isChecked():
+            fields_list.append(EVENT_BEHAVIOR_FIELD_IDX)
+        if self.find_dialog.cbModifier.isChecked():
+            fields_list.append(EVENT_MODIFIER_FIELD_IDX)
+        if self.find_dialog.cbComment.isChecked():
+            fields_list.append(EVENT_COMMENT_FIELD_IDX)
+
+        for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+            if event_idx <= self.find_dialog.currentIdx:
+                continue
+            if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in rowsToFind):
+                for idx in fields_list:
+                    if self.find_dialog.findText.text() in event[idx]:
+                        self.find_dialog.currentIdx = event_idx
+                        self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+                        self.twEvents.selectRow(event_idx)
+                        return
+
+        if dialog.MessageDialog(programName, "<b>{}</b> not found! Search from beginning?".format(self.find_dialog.findText.text()), [YES, NO]) == YES:
+            self.find_dialog.currentIdx = -1
+            self.click_signal_find_in_events("FIND")
+        else:
+            self.find_dialog.close()
+
+
+
+
+    def find_events(self):
+        """
+        find  in events
+        """
+        # list of rows to find
+        rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
+
+        self.find_dialog = dialog.FindInEvents()
+        self.find_dialog.currentIdx = -1
+        self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
+        self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.find_dialog.show()
+
+
     def find_replace_events(self):
         """
         find and replace in events
         """
-        dialogWindow = dialog.FindReplaceEvents()
-        if dialogWindow.exec_():
+
+        # list of rows to find/replace
+        rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
+
+        find_replace_dialog = dialog.FindReplaceEvents()
+        if find_replace_dialog.exec_():
+
+            if not find_replace_dialog.findText.text():
+                QMessageBox.warning(self, programName, "Nothing to find", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
+
+            if find_replace_dialog.cbFindInSelectedEvents.isChecked() and not len(rowsToFind):
+                QMessageBox.warning(self, programName, "There are no selected events", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
+
+            fields_list = []
+            if find_replace_dialog.cbSubject.isChecked():
+                fields_list.append(EVENT_SUBJECT_FIELD_IDX)
+            if find_replace_dialog.cbBehavior.isChecked():
+                fields_list.append(EVENT_BEHAVIOR_FIELD_IDX)
+            if find_replace_dialog.cbModifier.isChecked():
+                fields_list.append(EVENT_MODIFIER_FIELD_IDX)
+            if find_replace_dialog.cbComment.isChecked():
+                fields_list.append(EVENT_COMMENT_FIELD_IDX)
+
+            replacement_count = 0
+
             for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                for idx in [EVENT_SUBJECT_FIELD_IDX, EVENT_BEHAVIOR_FIELD_IDX, EVENT_MODIFIER_FIELD_IDX, EVENT_COMMENT_FIELD_IDX]:
+                if (not find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in rowsToFind):
+                    for idx in fields_list:
+                        if find_replace_dialog.findText.text() in event[idx]:
+                            replacement_count += 1
+                            event[idx] = event[idx].replace(find_replace_dialog.findText.text(), find_replace_dialog.replaceText.text())
 
-                    if dialogWindow.findText.text() in event[idx]:
-                        event[idx] = event[idx].replace(dialogWindow.findText.text(), dialogWindow.replaceText.text())
-
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
-                self.projectChanged = True
-
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
+                    self.projectChanged = True
 
             self.loadEventsInTW(self.observationId)
+
+            QMessageBox.information(self, programName, "{} substition{} made".format(replacement_count, "s"*(replacement_count>1)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
 
@@ -7529,7 +7616,6 @@ item []:
         includeMediaInfo = None
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                '''includeMediaInfo = dialog.MessageDialog(programName, "Include media info?", [YES, NO])'''
                 includeMediaInfo = YES
                 break
 

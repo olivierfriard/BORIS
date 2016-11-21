@@ -900,6 +900,14 @@
     <string>Find/replace</string>
    </property>
   </action>
+  <action name="actionFind_events">
+   <property name="text">
+    <string>Find</string>
+   </property>
+   <property name="toolTip">
+    <string>Find</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

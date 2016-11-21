@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri Nov 18 14:04:49 2016
+# Created: Mon Nov 21 13:58:00 2016
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -359,6 +359,8 @@ class Ui_MainWindow(object):
         self.actionFrequencies_of_transitions_after_behaviors.setObjectName(_fromUtf8("actionFrequencies_of_transitions_after_behaviors"))
         self.actionFind_replace_events = QtGui.QAction(MainWindow)
         self.actionFind_replace_events.setObjectName(_fromUtf8("actionFind_replace_events"))
+        self.actionFind_events = QtGui.QAction(MainWindow)
+        self.actionFind_events.setObjectName(_fromUtf8("actionFind_events"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -580,4 +582,6 @@ class Ui_MainWindow(object):
         self.actionNumber_of_transitions.setText(_translate("MainWindow", "Number of transitions", None))
         self.actionFrequencies_of_transitions_after_behaviors.setText(_translate("MainWindow", "Frequencies of transitions after behaviors", None))
         self.actionFind_replace_events.setText(_translate("MainWindow", "Find/replace", None))
+        self.actionFind_events.setText(_translate("MainWindow", "Find", None))
+        self.actionFind_events.setToolTip(_translate("MainWindow", "Find", None))
 

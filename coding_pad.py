@@ -83,8 +83,10 @@ class CodingPad(QWidget):
             widget.pushButton.setStyleSheet("background-color: {}; border-radius: 0px; min-width: 50px;max-width: 200px; min-height:50px; max-height:200px; font-weight: bold;".format(color))
             widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
 
+
     def click(self, behaviorCode):
         self.clickSignal.emit(behaviorCode)
+
 
     def eventFilter(self, receiver, event):
         """
