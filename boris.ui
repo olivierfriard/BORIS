@@ -149,6 +149,7 @@
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_selected_events"/>
+    <addaction name="actionFind_events"/>
     <addaction name="actionFind_replace_events"/>
     <addaction name="actionCheckStateEvents"/>
     <addaction name="actionSelect_observations"/>
@@ -897,12 +898,12 @@
   </action>
   <action name="actionFind_replace_events">
    <property name="text">
-    <string>Find/replace</string>
+    <string>Find/replace in events</string>
    </property>
   </action>
   <action name="actionFind_events">
    <property name="text">
-    <string>Find</string>
+    <string>Find in events</string>
    </property>
    <property name="toolTip">
     <string>Find</string>

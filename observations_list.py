@@ -57,27 +57,24 @@ class observationsList_widget(QDialog):
         self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
 
-        hbox2 = QHBoxLayout(self)
-        
+        hbox2 = QHBoxLayout()
+
         self.sort_label = QLabel( "Sort order")
 
         hbox2.addWidget(self.sort_label)
-        
+
         self.cbSort = QComboBox()
         self.cbSort.addItems(["Observation id ascending", "Observation id descending",
                               "Date ascending", "Date descending",
                               "Subjects ascending", "Subjects descending",
                               "Description ascending", "Description descending",
                               "Media file ascending", "Media file descending",
-                              ]) 
+                              ])
         self.cbSort.currentIndexChanged.connect(self.sort_order_changed)
         hbox2.addWidget(self.cbSort)
-        
+
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
-
-        
-
 
         self.pbSelectAll = QPushButton("Select all")
         hbox2.addWidget(self.pbSelectAll)
@@ -127,7 +124,7 @@ class observationsList_widget(QDialog):
         for i, text in enumerate(["Observation id", "Date", "Description", "Subjects", "Media"]):
             if text in self.cbSort.itemText(idx):
                 columnToSort = i
-            
+
         self.proxy.sort (columnToSort, sortOrder)
 
         iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
@@ -152,7 +149,7 @@ class observationsList_widget(QDialog):
             return
 
 
-        response = dialog.MessageDialog(config.programName, 'What do you want to do with this observation?', ['Open', 'Edit', 'Cancel'])
+        response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?", ["Open", "Edit", config.CANCEL])
         if response == 'Open':
             self.done(2)
         if response == 'Edit':
@@ -235,7 +232,7 @@ class observationsList_widget(QDialog):
         text edit changed
         '''
         self.proxy.setFilterRegExp(QRegExp(text, Qt.CaseInsensitive, QRegExp.RegExp ))
-        self.label.setText('{} observation{}'.format(self.proxy.rowCount(), "s" * (self.proxy.rowCount()>1)))
+        self.label.setText('{} observation{}'.format(self.proxy.rowCount(), "s" * (self.proxy.rowCount() > 1)))
 
 
     def on_comboBox_currentIndexChanged(self, index):

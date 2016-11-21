@@ -7519,7 +7519,7 @@ item []:
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
-            if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in rowsToFind):
+            if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind):
                 for idx in fields_list:
                     if self.find_dialog.findText.text() in event[idx]:
                         self.find_dialog.currentIdx = event_idx
@@ -7535,65 +7535,75 @@ item []:
 
 
 
-
     def find_events(self):
         """
         find  in events
         """
-        # list of rows to find
-        rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
 
         self.find_dialog = dialog.FindInEvents()
+        # list of rows to find
+        self.find_dialog.rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
         self.find_dialog.currentIdx = -1
         self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
         self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.find_dialog.show()
+
+    def click_signal_find_replace_in_events(self, msg):
+        """
+        find/replace in events when "Find" button of find dialog box is pressed
+        """
+
+        if msg == "CANCEL":
+            self.find_replace_dialog.close()
+            return
+        if not self.find_replace_dialog.findText.text():
+            dialog.MessageDialog(programName, "There is nothing to find.", ["OK"])
+            return
+
+        if self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and not len(self.find_replace_dialog.rowsToFind):
+            dialog.MessageDialog(programName, "There are no selected events", ["OK"])
+            return
+
+        fields_list = []
+        if self.find_replace_dialog.cbSubject.isChecked():
+            fields_list.append(EVENT_SUBJECT_FIELD_IDX)
+        if self.find_replace_dialog.cbBehavior.isChecked():
+            fields_list.append(EVENT_BEHAVIOR_FIELD_IDX)
+        if self.find_replace_dialog.cbModifier.isChecked():
+            fields_list.append(EVENT_MODIFIER_FIELD_IDX)
+        if self.find_replace_dialog.cbComment.isChecked():
+            fields_list.append(EVENT_COMMENT_FIELD_IDX)
+
+        for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+            #if event_idx <= self.find_replace_dialog.currentIdx:
+            #    continue
+            if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind):
+                for idx in fields_list:
+                    if self.find_replace_dialog.findText.text() in event[idx]:
+                        self.find_replace_dialog.currentIdx = event_idx
+                        event[idx] = event[idx].replace(self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text())
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
+                        self.loadEventsInTW(self.observationId)
+                        self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
+                        self.twEvents.selectRow(event_idx)
+                        self.projectChanged = True
+                        return
+
+
+        dialog.MessageDialog(programName, "{} not found.".format(self.find_replace_dialog.findText.text()), ["OK"])
 
 
     def find_replace_events(self):
         """
         find and replace in events
         """
-
+        self.find_replace_dialog = dialog.FindReplaceEvents()
+        self.find_replace_dialog.currentIdx = -1
         # list of rows to find/replace
-        rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
-
-        find_replace_dialog = dialog.FindReplaceEvents()
-        if find_replace_dialog.exec_():
-
-            if not find_replace_dialog.findText.text():
-                QMessageBox.warning(self, programName, "Nothing to find", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return
-
-            if find_replace_dialog.cbFindInSelectedEvents.isChecked() and not len(rowsToFind):
-                QMessageBox.warning(self, programName, "There are no selected events", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return
-
-            fields_list = []
-            if find_replace_dialog.cbSubject.isChecked():
-                fields_list.append(EVENT_SUBJECT_FIELD_IDX)
-            if find_replace_dialog.cbBehavior.isChecked():
-                fields_list.append(EVENT_BEHAVIOR_FIELD_IDX)
-            if find_replace_dialog.cbModifier.isChecked():
-                fields_list.append(EVENT_MODIFIER_FIELD_IDX)
-            if find_replace_dialog.cbComment.isChecked():
-                fields_list.append(EVENT_COMMENT_FIELD_IDX)
-
-            replacement_count = 0
-
-            for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                if (not find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in rowsToFind):
-                    for idx in fields_list:
-                        if find_replace_dialog.findText.text() in event[idx]:
-                            replacement_count += 1
-                            event[idx] = event[idx].replace(find_replace_dialog.findText.text(), find_replace_dialog.replaceText.text())
-
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
-                    self.projectChanged = True
-
-            self.loadEventsInTW(self.observationId)
-
-            QMessageBox.information(self, programName, "{} substition{} made".format(replacement_count, "s"*(replacement_count>1)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        self.find_replace_dialog.rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
+        self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
+        self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.find_replace_dialog.show()
 
 
 

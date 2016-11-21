@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Nov 21 13:58:00 2016
+# Created: Mon Nov 21 15:50:39 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -377,6 +377,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)
+        self.menuObservations.addAction(self.actionFind_events)
         self.menuObservations.addAction(self.actionFind_replace_events)
         self.menuObservations.addAction(self.actionCheckStateEvents)
         self.menuObservations.addAction(self.actionSelect_observations)
@@ -568,7 +569,7 @@ class Ui_MainWindow(object):
         self.actionAll_transitions.setText(_translate("MainWindow", "Frequencies of transitions"))
         self.actionNumber_of_transitions.setText(_translate("MainWindow", "Number of transitions"))
         self.actionFrequencies_of_transitions_after_behaviors.setText(_translate("MainWindow", "Frequencies of transitions after behaviors"))
-        self.actionFind_replace_events.setText(_translate("MainWindow", "Find/replace"))
-        self.actionFind_events.setText(_translate("MainWindow", "Find"))
+        self.actionFind_replace_events.setText(_translate("MainWindow", "Find/replace in events"))
+        self.actionFind_events.setText(_translate("MainWindow", "Find in events"))
         self.actionFind_events.setToolTip(_translate("MainWindow", "Find"))
 

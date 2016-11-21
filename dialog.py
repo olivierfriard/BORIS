@@ -356,24 +356,14 @@ class FindInEvents(QWidget):
     def click(self, msg):
         self.clickSignal.emit(msg)
 
-    '''
-    def eventFilter(self, receiver, event):
-        """
-        send event (if keypress) to main window
-        """
-        if(event.type() == QEvent.KeyPress):
-            self.sendEventSignal.emit(event)
-            return True
-        else:
-            return False
-    '''
 
-
-
-class FindReplaceEvents(QDialog):
+class FindReplaceEvents(QWidget):
     """
     "find replace events" dialog box
     """
+
+    clickSignal = pyqtSignal(str)
+    sendEventSignal = pyqtSignal(QEvent)
 
     def __init__(self):
         super(FindReplaceEvents, self).__init__()
@@ -416,23 +406,19 @@ class FindReplaceEvents(QDialog):
         hbox.addWidget(self.cbFindInSelectedEvents)
 
         hbox2 = QHBoxLayout()
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
+        self.pbOK = QPushButton("Find and replace")
+        self.pbOK.clicked.connect(lambda: self.click("FIND"))
         self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
+        self.pbCancel.clicked.connect(lambda: self.click("CANCEL"))
         hbox2.addWidget(self.pbCancel)
         hbox2.addWidget(self.pbOK)
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
 
-    '''
-    def pbOK_clicked(self):
-        self.accept()
+    def click(self, msg):
+        self.clickSignal.emit(msg)
 
-    def pbCancel_clicked(self):
-        self.reject()
-    '''
 
 
 """
