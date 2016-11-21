@@ -6349,8 +6349,6 @@ item []:
         about dialog
         """
 
-        print(self.pj[OBSERVATIONS]["05"][EVENTS])
-
         if __version__ == 'DEV':
             ver = 'DEVELOPMENT VERSION'
         else:
