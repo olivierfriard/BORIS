@@ -406,14 +406,20 @@ class FindReplaceEvents(QWidget):
         hbox.addWidget(self.cbFindInSelectedEvents)
 
         hbox2 = QHBoxLayout()
-        self.pbOK = QPushButton("Find and replace")
-        self.pbOK.clicked.connect(lambda: self.click("FIND"))
+
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(lambda: self.click("CANCEL"))
         hbox2.addWidget(self.pbCancel)
-        hbox2.addWidget(self.pbOK)
-        hbox.addLayout(hbox2)
 
+        self.pbOK = QPushButton("Find and replace")
+        self.pbOK.clicked.connect(lambda: self.click("FIND_REPLACE"))
+        hbox2.addWidget(self.pbOK)
+
+        self.pbFindReplaceAll = QPushButton("Find and replace all")
+        self.pbFindReplaceAll.clicked.connect(lambda: self.click("FIND_REPLACE_ALL"))
+        hbox2.addWidget(self.pbFindReplaceAll)
+
+        hbox.addLayout(hbox2)
         self.setLayout(hbox)
 
     def click(self, msg):

@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "3.1"
-__version_date__ = "2016-11-21"
+__version__ = "3.11"
+__version_date__ = "2016-11-23"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -138,7 +138,7 @@ def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
                                                                                                                               input=video_path,
                                                                                                                               horiz_resol=horiz_resol)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        out, error = p.communicate()
+        p.communicate()
 
     return True
 
@@ -2588,13 +2588,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 media = LIVE
 
             # independent variable
-            indepVar = []
+            indepvar = []
             if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obs]:
                 for var in indepVarHeader:
                     if var in self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
-                        indepVar.append(QStandardItem(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var]))
+                        indepvar.append(QStandardItem(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var]))
 
-            obsList.model.invisibleRootItem().appendRow([QStandardItem(obs), QStandardItem(date), QStandardItem(descr), QStandardItem( subjectsList ), QStandardItem( media )]  +  indepVar )
+            obsList.model.invisibleRootItem().appendRow([QStandardItem(obs), QStandardItem(date), QStandardItem(descr), QStandardItem( subjectsList ), QStandardItem( media )]  +  indepvar )
 
         #obsList.view.horizontalHeader().setStretchLastSection(True)
         obsList.view.resizeColumnsToContents()
