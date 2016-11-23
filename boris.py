@@ -7546,6 +7546,7 @@ item []:
         self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.find_dialog.show()
 
+
     def click_signal_find_replace_in_events(self, msg):
         """
         find/replace in events when "Find" button of find dialog box is pressed
@@ -7572,23 +7573,40 @@ item []:
         if self.find_replace_dialog.cbComment.isChecked():
             fields_list.append(EVENT_COMMENT_FIELD_IDX)
 
+        number_replacement = 0
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-            #if event_idx <= self.find_replace_dialog.currentIdx:
-            #    continue
+
+            if event_idx < self.find_replace_dialog.currentIdx:
+                continue
+
             if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind):
-                for idx in fields_list:
-                    if self.find_replace_dialog.findText.text() in event[idx]:
+                for idx1 in fields_list:
+                    if idx1 <= self.find_replace_dialog.currentIdx_idx:
+                        continue
+                    if self.find_replace_dialog.findText.text() in event[idx1]:
+                        number_replacement += 1
                         self.find_replace_dialog.currentIdx = event_idx
-                        event[idx] = event[idx].replace(self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text())
+                        self.find_replace_dialog.currentIdx_idx = idx1
+                        event[idx1] = event[idx1].replace(self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text())
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
                         self.loadEventsInTW(self.observationId)
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
                         self.projectChanged = True
-                        return
 
+                        if msg == "FIND_REPLACE":
+                            return
 
-        dialog.MessageDialog(programName, "{} not found.".format(self.find_replace_dialog.findText.text()), ["OK"])
+                self.find_replace_dialog.currentIdx_idx = -1
+
+        if msg == "FIND_REPLACE":
+            if dialog.MessageDialog(programName, "{} not found.\nRestart find/replace from the beginning?".format(self.find_replace_dialog.findText.text()), [YES, NO]) == YES:
+                self.find_replace_dialog.currentIdx = -1
+            else:
+                self.find_replace_dialog.close()
+        if msg == "FIND_REPLACE_ALL":
+            dialog.MessageDialog(programName, "{} substitution(s).".format(number_replacement), [OK])
+            self.find_replace_dialog.close()
 
 
     def find_replace_events(self):
@@ -7597,6 +7615,7 @@ item []:
         """
         self.find_replace_dialog = dialog.FindReplaceEvents()
         self.find_replace_dialog.currentIdx = -1
+        self.find_replace_dialog.currentIdx_idx = -1
         # list of rows to find/replace
         self.find_replace_dialog.rowsToFind = set([item.row() for item in self.twEvents.selectedIndexes()])
         self.find_replace_dialog.clickSignal.connect(self.click_signal_find_replace_in_events)
