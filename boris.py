@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "3.11"
-__version_date__ = "2016-11-23"
+__version__ = "3.12"
+__version_date__ = "2016-11-24"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -4362,47 +4362,59 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             from matplotlib import dates
             import numpy as np
 
-
             LINE_WIDTH = line_width
             all_behaviors, observedBehaviors = [], []
             maxTime = 0  # max time in all events of all subjects
 
-            # all behaviors defined in project
+            # all behaviors defined in project without modifiers
             all_project_behaviors = sorted([self.pj[ETHOGRAM][idx]["code"] for idx in self.pj[ETHOGRAM]])
 
             for subject in sorted(list(obs.keys())):
 
-                for behavior in sorted(list(obs[subject].keys())):
+                for behavior_modifiers_json in sorted(list(obs[subject].keys())):
+
+                    behavior_modifiers = json.loads(behavior_modifiers_json)
 
                     if not excludeBehaviorsWithoutEvents:
-                        observedBehaviors.append(behavior)
+                        observedBehaviors.append(behavior_modifiers_json)
                     else:
-                        if obs[subject][behavior]:
-                            observedBehaviors.append(behavior)
+                        if obs[subject][behavior_modifiers_json]:
+                            observedBehaviors.append(behavior_modifiers_json)
 
-                    if not behavior in all_behaviors:
-                        all_behaviors.append(behavior)
-                    for t1, t2 in obs[subject][behavior]:
+                    if not behavior_modifiers_json in all_behaviors:
+                        all_behaviors.append(behavior_modifiers_json)
+
+                    for t1, t2 in obs[subject][behavior_modifiers_json]:
                         maxTime = max(maxTime, t1, t2)
+
                 observedBehaviors.append("")
 
             all_behaviors = sorted(all_behaviors)
 
+            lbl = []
             if excludeBehaviorsWithoutEvents:
-                lbl = observedBehaviors[:]
+                for behav_modif_json in observedBehaviors:
+                    behav_modif = json.loads(behav_modif_json)
+                    if len(behav_modif) == 2:
+                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+                    else:
+                        lbl.append(behav_modif[0])
+
             else:
-                all_behaviors.append("")
-                lbl = all_behaviors[:] * len(obs)
+                all_behaviors.append('[""]') # empty json list element
+                for behav_modif_json in all_behaviors:
+                    behav_modif = json.loads(behav_modif_json)
+                    if len(behav_modif) == 2:
+                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+                    else:
+                        lbl.append(behav_modif[0])
+                lbl = lbl[:] * len(obs)
+
 
             lbl = lbl[:-1]  # remove last empty line
 
-            #fig = plt.figure(figsize=(20, int(len( lbl )/18*10)))
-
-            #fig = plt.figure(figsize=(20, int(len(lbl) * .8)))
             fig = plt.figure(figsize=(20, 10))
-
             fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
-
             ax = fig.add_subplot(111)
             labels = ax.set_yticklabels(lbl)
 
@@ -4426,7 +4438,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 t0 = round(minTime)
                 t1 = round(videoLength)
-            subjectPosition = t0 + (t1-t0) * 0.05
+            subjectPosition = t0 + (t1 - t0) * 0.05
 
             if self.timeFormat == HHMMSS:
                 t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600)/60), int(t0 % 60), round(round(t0 % 1,3)*1000000))
@@ -4434,18 +4446,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 subjectPositiond = datetime.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600)/60), int(subjectPosition % 60), round(round(subjectPosition % 1,3)*1000000))
 
             if self.timeFormat == S:
-                t0d = t0
-                t1d = t1
+                t0d, t1d = t0, t1
                 subjectPositiond = subjectPosition
 
             plt.xlim(t0d, t1d)
-
             plt.yticks(range(len(lbl) + 1), np.array(lbl))
 
             count = 0
             flagFirstSubject = True
 
-            for subject in sorted( list(obs.keys())):
+            for subject in sorted(list(obs.keys())):
 
                 if not flagFirstSubject:
                     if excludeBehaviorsWithoutEvents:
@@ -4455,18 +4465,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     flagFirstSubject = False
 
-                ax.text( subjectPositiond, count - 0.5, subject)
+                ax.text(subjectPositiond, count - 0.5, subject)
 
                 behaviors = obs[subject]
 
                 x1, x2, y, col, pointsx, pointsy, guide = [], [], [], [], [], [], []
                 col_count = 0
 
-                for b in all_behaviors:
-
-                    if b in obs[subject]:
-                        if obs[subject][ b ]:
-                            for t1, t2 in obs[subject][ b ]:
+                for bm_json in all_behaviors:
+                    if bm_json in obs[subject]:
+                        if obs[subject][bm_json]:
+                            for t1, t2 in obs[subject][bm_json]:
                                 if t1 == t2:
                                     pointsx.append(t1)
                                     pointsy.append(count)
@@ -4476,11 +4485,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     x2.append(t2)
                                     y.append(count)
 
-                                    #col.append( colors[ col_count % len(colors)])
+                                    col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(json.loads(bm_json)[0]) % len(BEHAVIORS_PLOT_COLORS)])
 
-                                    col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(b) % len(BEHAVIORS_PLOT_COLORS)])
-
-                                    ax.axhline(y=count ,linewidth=1, color="lightgray", zorder=-1)
+                                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
                             count += 1
                         else:
                             x1.append(0)
@@ -4501,7 +4508,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     col_count += 1
 
-
                 if self.timeFormat == HHMMSS:
                     ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x1]),
                     np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in x2]),
@@ -4514,7 +4520,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p/3600), int((p-int(p/3600)*3600)/60), int(p%60), round(round(p%1,3)*1e6)) for p in pointsx]), pointsy, "r^")
 
                 if self.timeFormat == S:
-                    ax.plot(pointsx,pointsy, "r^" )
+                    ax.plot(pointsx, pointsy, "r^")
 
                 #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
@@ -4533,8 +4539,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     fig.canvas.draw()
                 return False
 
-            fig.canvas.mpl_connect('draw_event', on_draw)
-
+            fig.canvas.mpl_connect("draw_event", on_draw)
             plt.show()
 
             return True
@@ -4595,21 +4600,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = cursor.fetchall()
 
                         if modifier[0]:
-                            behaviorOut = "{0} ({1})".format(behavior, modifier[0].replace("|", ","))
-                        else:
-                            behaviorOut = "{0}".format(behavior)
+                            #behaviorOut = "{0} ({1})".format(behavior, modifier[0].replace("|", ","))
+                            behaviorOut = [behavior, modifier[0].replace("|", ",")]
 
-                        if not behaviorOut in o[subject]:
-                            o[subject][behaviorOut] = []
+                        else:
+                            #behaviorOut = "{0}".format(behavior)
+                            behaviorOut = [behavior]
+
+                        behaviorOut_json = json.dumps(behaviorOut)
+
+                        if not behaviorOut_json in o[subject]:
+                            o[subject][behaviorOut_json] = []
 
                         for idx, row in enumerate(rows):
                             if POINT in self.eventType(behavior).upper():
-                                o[subject][behaviorOut].append([row[0], row[0]])  # for point event start = end
+                                o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
 
                             if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
                                     try:
-                                        o[subject][behaviorOut].append([row[0], rows[idx + 1][0]])
+                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
                                     except:
                                         if NO_FOCAL_SUBJECT in subject:
                                             sbj = ""
@@ -4618,7 +4628,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         QMessageBox.critical(self, programName, "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj) )
                 else:
                     cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ?  ORDER BY observation, occurence",
-                                  (subject, behavior ))
+                                  (subject, behavior))
                     rows = list(cursor.fetchall())
 
                     if not len(rows) and plot_parameters["exclude behaviors"]:
@@ -4627,34 +4637,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if STATE in self.eventType(behavior).upper() and len(rows) % 2:
                         continue
 
-                    behaviorOut = "{0}".format(behavior)
+                    behaviorOut = [behavior]
+                    behaviorOut_json = json.dumps(behaviorOut)
 
-                    if not behaviorOut in o[subject]:
-                        o[subject][behaviorOut] = []
+                    if not behaviorOut_json in o[subject]:
+                        o[subject][behaviorOut_json] = []
 
                     for idx, row in enumerate(rows):
                         if POINT in self.eventType(behavior).upper():
-                            o[subject][behaviorOut].append([row[0], row[0]])   # for point event start = end
+                            o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                o[subject][behaviorOut].append([row[0], rows[idx + 1][0]])
-
-                '''
-                new_o = []
-                for idx, interval in enumerate(o[subject][behaviorOut]):
-
-                    new_init, new_end = interval
-                    if interval[0] < plot_parameters["start time"]:
-                        new_init = float(plot_parameters["start time"])
-
-                    if interval[1] > plot_parameters["end time"]:
-                        new_end = float(plot_parameters["end time"])
-
-                    if  plot_parameters["start time"] <= new_init <= plot_parameters["end time"]  and plot_parameters["start time"] <= new_end <= plot_parameters["end time"]:
-                        new_o.append( [new_init, new_end])
-
-                o[subject][behaviorOut] = list(new_o)
-                '''
+                                o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
 
         logging.debug("intervals: {}".format(o))
         logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))

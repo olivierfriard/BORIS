@@ -110,15 +110,13 @@ class MapCreatorWindow(QMainWindow):
         def mousePressEvent(self, event):
             self.mousePress.emit( event )
 
-        _start=0
-        elList = []
-        points = []
+        _start = 0
+        elList, points = [], []
 
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
-            self.setBackgroundBrush( QColor( 128, 128, 128 ) )
+            self.setBackgroundBrush(QColor(128, 128, 128))
             self.setScene(QGraphicsScene(self))
-
             self.scene().update()
 
     bitmapFileName = ''
@@ -150,7 +148,6 @@ class MapCreatorWindow(QMainWindow):
         self.openMapAction.setStatusTip('Open a map')
         self.openMapAction.triggered.connect(self.openMap)
 
-
         self.saveMapAction = QAction(QIcon(), '&Save map', self)
         self.saveMapAction.setShortcut('Ctrl+S')
         self.saveMapAction.setStatusTip('Save map')
@@ -174,7 +171,6 @@ class MapCreatorWindow(QMainWindow):
         self.exitAction.setStatusTip('Close map creator')
         self.exitAction.triggered.connect(self.close)
 
-
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&Map creator')
         fileMenu.addAction(self.newMapAction)
@@ -187,7 +183,6 @@ class MapCreatorWindow(QMainWindow):
 
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
-
 
         self.btLoad = QPushButton('Load bitmap', self)
         self.btLoad.clicked.connect(self.loadBitmap)
@@ -235,7 +230,7 @@ class MapCreatorWindow(QMainWindow):
         self.btCancelMap.clicked.connect(self.cancelMap)
         self.btCancelMap.setVisible(False)
 
-        layout = QVBoxLayout(self)
+        layout = QVBoxLayout()
         layout.addWidget(self.view)
         layout.addWidget(self.btLoad)
         layout.addWidget(self.btNewArea)
@@ -243,7 +238,6 @@ class MapCreatorWindow(QMainWindow):
         layout.addWidget(self.btSaveArea)
         layout.addWidget(self.btCancelArea)
         layout.addWidget(self.btCancelMap)
-
 
         main_widget = QWidget(self)
         main_widget.setLayout(layout)
@@ -253,9 +247,9 @@ class MapCreatorWindow(QMainWindow):
 
 
     def slAlpha_changed(self, val):
-        '''
+        """
         opacity slider value changed
-        '''
+        """
 
         self.btColor.setText( 'Opacity: %d %%' % val)
         self.areaColor.setAlpha( int(val/100*255) )
@@ -269,9 +263,9 @@ class MapCreatorWindow(QMainWindow):
 
 
     def chooseColor(self):
-        '''
+        """
         area color button clocked
-        '''
+        """
         cd = QColorDialog()
 
         cd.setOptions(QColorDialog.ShowAlphaChannel)
@@ -368,7 +362,6 @@ class MapCreatorWindow(QMainWindow):
                 self.slAlpha.setVisible(False)
             return
 
-
         # delete last line item
         if (event.buttons() & Qt.RightButton) and not self.closedPolygon:
 
@@ -385,7 +378,6 @@ class MapCreatorWindow(QMainWindow):
                 self.view.scene().removeItem( self.view.elList[-1] )
                 self.view.elList = self.view.elList[0:-1]
 
-
         # add line item
         if event.buttons() == Qt.LeftButton and not self.closedPolygon:
 
@@ -394,12 +386,12 @@ class MapCreatorWindow(QMainWindow):
                 end = test
 
                 # test is polygon is crossed
-                if len( self.view.points ) >= 3:
+                if len(self.view.points) >= 3:
 
                     for idx, point in enumerate(self.view.points[:-2]):
 
                         if intersection(  self.view.points[ idx ], self.view.points[ idx + 1 ], self.view.points[ -1 ], (  int(end.x()), int(end.y()))  ) :
-                            QMessageBox.critical(self, '' , 'The polygon edges can not be intersected')
+                            QMessageBox.critical(self, '', 'The polygon edges can not be intersected')
                             return
 
                 # test if polygon closed (dist min 10 px)
@@ -442,7 +434,6 @@ class MapCreatorWindow(QMainWindow):
                 self.view.scene().addItem( line )
                 self.view.elList.append(line)
 
-                #self.view._start = self.view.mapToScene(event.pos()).toPoint()
                 self.view._start = test
 
             else:   # first point
@@ -464,18 +455,18 @@ class MapCreatorWindow(QMainWindow):
 
 
     def mapName_clicked(self):
-        '''
+        """
         change map name
-        '''
+        """
         text, ok = QInputDialog.getText(self, 'Map name', 'Enter a name for the map', QLineEdit.Normal, self.mapName )
         if ok:
             self.mapName = text
             self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
 
     def newMap(self):
-        '''
+        """
         create a new map
-        '''
+        """
 
         if self.flagMapChanged:
 
@@ -516,11 +507,10 @@ class MapCreatorWindow(QMainWindow):
 
 
     def openMap(self):
-        '''
+        """
         load bitmap from data
         show it in view scene
-        '''
-
+        """
         if self.flagMapChanged:
 
             response = dialog.MessageDialog(programName + ' - Map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
@@ -642,10 +632,12 @@ class MapCreatorWindow(QMainWindow):
 
 
     def saveAsMap_clicked(self):
+
+        filters = 'BORIS MAP (*.boris_map);;All files (*)'
         if QT_VERSION_STR[0] == "4":
-            self.fileName = QFileDialog(self).getSaveFileName(self, 'Save coding map as', '' , 'BORIS MAP (*.boris_map);;All files (*)')
+            self.fileName = QFileDialog(self).getSaveFileName(self, "Save coding map as", "", filters)
         else:
-            self.fileName, _ = fd.getSaveFileName(self, 'Save coding map as', '' , 'BORIS MAP (*.boris_map);;All files (*)')
+            self.fileName, _ = QFileDialog(self).getSaveFileName(self, "Save coding map as", "", filters)
 
         if self.fileName:
             if os.path.splitext(self.fileName)[1] != '.boris_map':
@@ -694,7 +686,6 @@ class MapCreatorWindow(QMainWindow):
 
         self.statusBar().showMessage('Select the vertices of the new area with the mouse (right click will cancel the last point)')
 
-
     def saveArea(self):
 
         if not self.closedPolygon:
@@ -715,7 +706,6 @@ class MapCreatorWindow(QMainWindow):
                 QMessageBox.critical(self, programName , 'The area code contains a character that is not allowed |, !' )
                 return
 
-
         # check if area code already used
 
         if self.leAreaCode.text() in self.areasList:
@@ -729,13 +719,11 @@ class MapCreatorWindow(QMainWindow):
 
         self.areasList[ self.leAreaCode.text() ] = {'geometry': self.view.points, 'color': self.areaColor.rgba() }
 
-
         # remove all lines
         for l in self.view.elList:
             self.view.scene().removeItem( l )
 
         # draw polygon
-
         self.closedPolygon.setBrush( QBrush( self.areaColor, Qt.SolidPattern ) )
         self.polygonsList2[ self.leAreaCode.text()  ] = self.closedPolygon
         self.closedPolygon = None
@@ -760,9 +748,9 @@ class MapCreatorWindow(QMainWindow):
 
 
     def cancelArea(self):
-        '''
+        """
         remove selected area from map
-        '''
+        """
 
         if self.selectedPolygon:
             self.view.scene().removeItem(self.selectedPolygon)
@@ -793,13 +781,10 @@ class MapCreatorWindow(QMainWindow):
         self.btNewArea.setVisible(True)
         self.leAreaCode.setText('')
 
-
-
-
     def cancelMap(self):
-        '''
+        """
         remove current map
-        '''
+        """
         self.flagNewArea = False
         self.areasList = {}
         self.polygonsList2 = {}
@@ -837,12 +822,12 @@ class MapCreatorWindow(QMainWindow):
                 QMessageBox.information(self, programName , 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' % ( self.pixmap.size().width(), self.pixmap.size().height() ) )
 
             # scale image
-            #pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
+            # pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)
 
             self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
-            pixItem = QGraphicsPixmapItem(self.pixmap)
-            pixItem.setPos(0,0)
-            self.view.scene().addItem(pixItem)
+            pixitem = QGraphicsPixmapItem(self.pixmap)
+            pixitem.setPos(0,0)
+            self.view.scene().addItem(pixitem)
 
             self.btNewArea.setVisible(True)
 
@@ -851,10 +836,9 @@ class MapCreatorWindow(QMainWindow):
             self.saveAsMapAction.setEnabled(True)
             self.mapNameAction.setEnabled(True)
 
-            self.statusBar().showMessage('Click "New area" to create a new area')
+            self.statusBar().showMessage("""Click "New area" to create a new area""")
 
             self.flagMapChanged = True
-
 
 if __name__ == '__main__':
 
