@@ -7653,9 +7653,7 @@ item []:
                 return
 
         for obsId in selectedObservations:
-
             if len(selectedObservations) == 1:
-
                 fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
                                "Comma Separated Values (*.txt *.csv);;"
                                "Microsoft Excel XLS (*.xls);;"
@@ -7667,20 +7665,6 @@ item []:
                         fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export events", "", fileFormats)
                     else:
                         fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export events", "", fileFormats)
-
-
-                    '''
-                    dummy = QFileDialog(self).getSaveFileName(self, "Export events", obsId, ("Tab separated values (*.tsv *.txt);;"
-                                                                                                                  "Comma separated values (*.txt *.csv);;"
-                                                                                                                  "Open Document Spreadsheet (*.ods);;"
-                                                                                                                  "Microsoft Excel (*.xls);;"
-                                                                                                                  "HTML (*.html);;"
-                                                                                                                  "All files (*)"))
-                    if type(dummy) is tuple:
-                        fileName, _ = dummy
-                    else:
-                        fileName = dummy
-                    '''
 
                     if not fileName:
                         return
@@ -7753,7 +7737,7 @@ item []:
                 rows.append(["Time offset (s)", self.pj[OBSERVATIONS][obsId]["time offset"]])
             rows.append([""])
 
-            # independant variables
+            # independent variables
             if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
                 rows.append(["independent variables"])
 
@@ -7920,7 +7904,7 @@ item []:
 
         # remove last separator (if separator not empty)
         if self.behaviouralStringsSeparator:
-            s = s[0 : -len(self.behaviouralStringsSeparator)]
+            s = s[0: -len(self.behaviouralStringsSeparator)]
 
         return s
 
@@ -7962,6 +7946,16 @@ item []:
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
                             outFile.write("# Live observation{0}{0}".format(os.linesep))
 
+                        # independent variables
+                        if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
+                            outFile.write("Independent variables\n")
+
+                            # rows.append(["variable", "value"])
+                            for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
+                                outFile.write("{0}: {1}\n".format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
+                        outFile.write("\n")
+
+                    # selected subjects
                     for subj in plot_parameters["selected subjects"]:
                         if subj:
                             subj_str = "\n{}:\n".format(subj)
