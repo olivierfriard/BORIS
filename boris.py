@@ -1789,7 +1789,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         self.pixmap = QPixmap(img)
-        # check if jpg filter available
+        # check if jpg filter available if not use png
         if self.pixmap.isNull():
             BITMAP_EXT = "png"
 
@@ -1811,7 +1811,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.draw_line(x1, y1, x2, y2, elementsColor)
                             self.draw_point(x1, y1, elementsColor)
                             self.draw_point(x2, y2, elementsColor)
-
                         if element[0] == "angle":
                             x1, y1 = element[1][0]
                             x2, y2 = element[1][1]
@@ -1837,7 +1836,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.FFmpegGlobalFrame = requiredFrame
 
         currentTime = self.getLaps() * 1000
-
 
         self.lbTime.setText("{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
                              currentMediaName=os.path.basename(currentMedia),
@@ -4345,7 +4343,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             totalMediaLength = max( totalMediaLength1, totalMediaLength2 )
 
         return totalMediaLength
-
 
     def plot_events(self):
         """
