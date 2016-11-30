@@ -224,6 +224,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     confirmSound = False               # if True each keypress will be confirmed by a beep
     embedPlayer = True                 # if True the VLC player will be embedded in the main window
+    detachFrameViewer = False          # if True frame are displayed in a separate window (frameViewer class in dialog)
     alertNoFocalSubject = False        # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
     checkForNewVersion = False         # if True BORIS will check for new version every 15 days
@@ -283,7 +284,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # dictionary for FPS storing
     fps = {}
 
-    playerType = ""   # player type can be VLC for video mode LIVE for live observation
+    playerType = ""   # VLC, LIVE, VIEWER
     playMode = VLC    # player mode can be VLC of FMPEG (for frame-by-frame mode)
 
     # spectrogram
@@ -795,10 +796,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "The coding pad is not available in <b>VIEW</b> mode")
             return
 
-        try:
+        if hasattr(self, "codingpad"):
             self.codingpad.show()
-        except:
-
+        else:
             allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
             self.codingpad = coding_pad.CodingPad(self.pj)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -1084,9 +1084,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "The spectrogram visualization is not available in <b>VIEW</b> mode")
             return
 
-        try:
+        if hasattr(self, "spectro"):
             self.spectro.show()
-        except:
+        else:
             logging.debug("spectro show not OK")
 
             # remember if player paused
@@ -1641,23 +1641,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == HHMMSS:
             preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
-        preferencesWindow.sbffSpeed.setValue( self.fast )
+        preferencesWindow.sbffSpeed.setValue(self.fast)
         preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
         preferencesWindow.sbSpeedStep.setValue( self.play_rate_step)
         # automatic backup
-        preferencesWindow.sbAutomaticBackup.setValue( self.automaticBackup )
+        preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
         # separator for behavioural strings
-        preferencesWindow.leSeparator.setText( self.behaviouralStringsSeparator )
+        preferencesWindow.leSeparator.setText(self.behaviouralStringsSeparator)
         # confirm sound
-        preferencesWindow.cbConfirmSound.setChecked( self.confirmSound )
+        preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
         # embed player
-        preferencesWindow.cbEmbedPlayer.setChecked( self.embedPlayer )
+        preferencesWindow.cbEmbedPlayer.setChecked(self.embedPlayer)
         # alert no focal subject
-        preferencesWindow.cbAlertNoFocalSubject.setChecked( self.alertNoFocalSubject )
+        preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
         # tracking cursor above event
-        preferencesWindow.cbTrackingCursorAboveEvent.setChecked( self.trackingCursorAboveEvent )
+        preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
         # check for new version
-        preferencesWindow.cbCheckForNewVersion.setChecked( self.checkForNewVersion )
+        preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
 
         # FFmpeg for frame by frame mode
         preferencesWindow.lbFFmpegPath.setText("FFmpeg path: {}".format(self.ffmpeg_bin))
@@ -1667,6 +1667,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # frame-by-frame mode
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
         mem_frame_resize = self.frame_resize
+        preferencesWindow.cbDetachFrameViewer.setChecked(self.detachFrameViewer)
 
 
         if preferencesWindow.exec_():
@@ -1724,6 +1725,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         os.remove(self.imageDirectory + os.sep + f)
                     except:
                         pass
+            # detach frame viewer
+            self.detachFrameViewer = preferencesWindow.cbDetachFrameViewer.isChecked()
+
+            if not self.detachFrameViewer:
+                if hasattr(self, "frame_viewer1"):
+                   del self.frame_viewer1
+            else:
+                if hasattr(self, "lbFFmpeg"):
+                    self.lbFFmpeg.clear()
+                if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
+                    self.frame_viewer1 = dialog.FrameViewer()
+                    #self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    self.frame_viewer1.show()
 
             self.menu_options()
 
@@ -1838,7 +1852,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pixmap.isNull():
             BITMAP_EXT = "png"
 
-        self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+        if self.detachFrameViewer:
+            if not hasattr(self, "frame_viewer1"):
+                self.frame_viewer1 = dialog.FrameViewer()
+                #self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.frame_viewer1.show()
+            self.frame_viewer1.lbFrame.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+        else:
+            self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
 
         # redraw measurements from previous frames
         if self.measurement_w:
@@ -3034,17 +3055,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except:
             pass
 
-        try:
-            self.codingpad.close()
+        if hasattr(self, "codingpad"):
             del self.codingpad
-        except:
-            pass
 
-        try:
-            self.spectro.close()
-        except:
-            pass
+        if hasattr(self, "spectro"):
+            del self.spectro
 
+        if hasattr(self, "frame_viewer1"):
+            del self.frame_viewer1
 
 
     def close_observation(self):
@@ -3218,13 +3236,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.embedPlayer = True
             try:
-                self.embedPlayer = ( settings.value("embed_player") == "true")
+                self.embedPlayer = (settings.value("embed_player") == "true")
             except:
                 self.embedPlayer = True
 
             self.alertNoFocalSubject = False
             try:
-                self.alertNoFocalSubject = ( settings.value('alert_nosubject') == "true")
+                self.alertNoFocalSubject = (settings.value('alert_nosubject') == "true")
             except:
                 self.alertNoFocalSubject = False
 
@@ -3274,6 +3292,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.frame_resize = 0
 
+            try:
+                self.detachFrameViewer = (settings.value("detach_frame_viewer") == "true")
+            except:
+                self.detachFrameViewer = False
+
 
         else: # no .boris file found
             # ask user for checking for new version
@@ -3316,6 +3339,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
         # frame-by-frame
         settings.setValue("frame_resize", self.frame_resize)
+        settings.setValue("detach_frame_viewer", self.detachFrameViewer)
 
 
 

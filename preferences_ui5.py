@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Mon Oct 17 14:08:42 2016
+# Created: Wed Nov 30 17:00:36 2016
 #      by: PyQt5 UI code generator 5.3.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -138,7 +138,9 @@ class Ui_prefDialog(object):
         self.tabWidget.addTab(self.tab_2, "")
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tab_3)
+        self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.tab_3)
+        self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -152,8 +154,12 @@ class Ui_prefDialog(object):
         self.sbFrameResize.setObjectName("sbFrameResize")
         self.horizontalLayout_5.addWidget(self.sbFrameResize)
         self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        self.cbDetachFrameViewer = QtWidgets.QCheckBox(self.tab_3)
+        self.cbDetachFrameViewer.setObjectName("cbDetachFrameViewer")
+        self.verticalLayout_6.addWidget(self.cbDetachFrameViewer)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_6.addItem(spacerItem1)
+        self.verticalLayout_7.addLayout(self.verticalLayout_6)
         self.tabWidget.addTab(self.tab_3, "")
         self.verticalLayout_2.addWidget(self.tabWidget)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -170,7 +176,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -197,6 +203,7 @@ class Ui_prefDialog(object):
         self.lbFFmpegCacheDirMaxSize.setText(_translate("prefDialog", "FFmpeg cache directory max size (Mb)"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("prefDialog", "FFmpeg framework"))
         self.lbResize.setText(_translate("prefDialog", "Resize frame (horizontal number of pixels). The aspect ratio will be maintained"))
+        self.cbDetachFrameViewer.setText(_translate("prefDialog", "Detach frame viewer"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode"))
         self.pbCancel.setText(_translate("prefDialog", "Cancel"))
         self.pbOK.setText(_translate("prefDialog", "OK"))

@@ -427,6 +427,9 @@ class FindReplaceEvents(QWidget):
 
 
 class ResultsWidget(QWidget):
+    """
+    widget for visualizing text output
+    """
     def __init__(self):
         super(ResultsWidget, self).__init__()
 
@@ -443,11 +446,7 @@ class ResultsWidget(QWidget):
         hbox2 = QHBoxLayout()
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.pbOK_clicked)
-        '''
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-        hbox2.addWidget(self.pbCancel)
-        '''
+
         hbox2.addWidget(self.pbOK)
         hbox.addLayout(hbox2)
 
@@ -456,57 +455,31 @@ class ResultsWidget(QWidget):
     def pbOK_clicked(self):
         self.close()
 
-    '''
-    def pbCancel_clicked(self):
-        self.reject()
-    '''
 
+class FrameViewer(QWidget):
+    """
+    widget for visualizing frame
+    """
+    def __init__(self):
+        super(FrameViewer, self).__init__()
 
-"""
-class EventType(QDialog):
-    '''
-    dialog for selecting the type of new event and if there is an associed coding map
-    '''
+        self.setWindowTitle("")
 
-    def __init__(self, parent=None):
-        super(EventType, self).__init__(parent)
+        hbox = QVBoxLayout()
 
-        self.setWindowTitle(config.programName)
-        group = QButtonGroup()
-        HLayout = QHBoxLayout()
+        self.lbFrame = QLabel("")
+        hbox.addWidget(self.lbFrame)
 
-        self.rbStateEvent = QRadioButton('State event')
-        group.addButton(self.rbStateEvent)
-        HLayout.addWidget(self.rbStateEvent)
-
-        self.rbPointEvent = QRadioButton('Point event')
-        group.addButton(self.rbPointEvent)
-        HLayout.addWidget(self.rbPointEvent)
-
-        self.cbCodingMap = QCheckBox('Coding map')
-
-        layout = QVBoxLayout()
-
-        layout.addLayout(HLayout)
-
-        layout.addWidget(self.cbCodingMap)
-
-        HButtonLayout = QHBoxLayout()
-        self.pbCancel = QPushButton('Cancel')
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-        HButtonLayout.addWidget(self.pbCancel)
-        self.pbOK = QPushButton('OK')
+        '''
+        hbox2 = QHBoxLayout()
+        self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.pbOK_clicked)
-        HButtonLayout.addWidget(self.pbOK)
 
-        layout.addLayout(HButtonLayout)
+        hbox2.addWidget(self.pbOK)
+        hbox.addLayout(hbox2)
+        '''
 
-        self.setLayout(layout)
-
+        self.setLayout(hbox)
 
     def pbOK_clicked(self):
-        self.accept()
-
-    def pbCancel_clicked(self):
-        self.reject()
-"""
+        self.close()
