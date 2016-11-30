@@ -788,6 +788,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def coding_map(self):
+        """
+        show coding pad window
+        """
+        if self.playerType == VIEWER:
+            QMessageBox.warning(self, programName, "The coding pad is not available in <b>VIEW</b> mode")
+            return
 
         try:
             self.codingpad.show()
@@ -1049,18 +1055,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.setWindowFlags(Qt.WindowStaysOnTopHint)
         w.setWindowTitle("BORIS")
         w.label.setText("Generating spectrogram...")
-        w.show()
+
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
-                #_ = plot_spectrogram.graph_spectrogram(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)  # return first chunk PNG file (not used)
                 process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)
+                w.show()
+                while True:
+                    app.processEvents()
+                    if not process.is_alive():
+                        w.hide()
+            else:
+                QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media))
 
-        while True:
-            app.processEvents()
-            if not process.is_alive():
-                w.hide()
-                return
 
 
 
@@ -1073,12 +1080,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "The spectrogram visualization is not available for live observations")
             return
 
+        if self.playerType == VIEWER:
+            QMessageBox.warning(self, programName, "The spectrogram visualization is not available in <b>VIEW</b> mode")
+            return
+
         try:
             self.spectro.show()
         except:
             logging.debug("spectro show not OK")
+
             # remember if player paused
-            flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
+            if self.playerType == VLC and self.playMode == VLC:
+                flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
+
             self.pause_video()
 
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation.<br>"
@@ -1105,7 +1119,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.show()
                 self.timer_spectro.start()
 
-            if not flagPaused:
+            if (self.playerType == VLC and self.playMode == VLC and not flagPaused) :
                 self.play_video()
 
 
@@ -2225,7 +2239,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.playerType = VIEWER
-                    self.playMode = ''
+                    self.playMode = ""
                     self.dwObservations.setVisible(True)
                     return True
 

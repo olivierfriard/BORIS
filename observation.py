@@ -123,18 +123,18 @@ class Observation(QDialog, Ui_Form):
                 w.setWindowFlags(Qt.WindowStaysOnTopHint)
                 w.setWindowTitle("BORIS")
                 w.label.setText("Generating spectrogram...")
-                w.show()
 
                 #for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
                 for row in range(self.twVideo1.rowCount()):
                     if os.path.isfile(self.twVideo1.item(row, 0).text()):
                         process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=self.twVideo1.item(row, 0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)
-
-                while True:
-                    QApplication.processEvents()
-                    if not process.is_alive():
-                        w.hide()
-                        return
+                        w.show()
+                        while True:
+                            QApplication.processEvents()
+                            if not process.is_alive():
+                                w.hide()
+                    else:
+                        QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(self.twVideo1.item(row, 0).text()))
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
 
