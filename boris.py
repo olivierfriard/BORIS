@@ -23,8 +23,8 @@ This file is part of BORIS.
 """
 
 
-__version__ = "3.12"
-__version_date__ = "2016-11-24"
+__version__ = "3.13"
+__version_date__ = "2016-11-28"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -494,7 +494,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_selected_events.setEnabled(flagObs)
         self.actionFind_events.setEnabled(flagObs)
         self.actionFind_replace_events.setEnabled(flagObs)
-        self.actionCheckStateEvents.setEnabled(flagObs)
+
+
+        self.actionCheckStateEvents.setEnabled(flag)
 
 
         self.actionMedia_file_information.setEnabled(flagObs)
@@ -1240,6 +1242,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
 
+    '''
+    todo: to be deleted
+
     def check_state_events_old(self):
         """
         check state events for each subject in current observation
@@ -1277,47 +1282,73 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName + " - State events check", out)
         else:
             QMessageBox.warning(self, programName + " - State events check", "No state events in current observation")
+    '''
 
 
     def check_state_events(self):
         """
         check state events for each subject in current observation
+        if no current observation check all observations
         check if number is odd
         """
 
-        out = ""
-        flagStateEvent = False
-        subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
+        def check_state_events_obs(obsId):
+            out = ""
+            flagStateEvent = False
+            subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in  self.pj[OBSERVATIONS][obsId][EVENTS]]
 
-        for subject in sorted(set(subjects)):
+            for subject in sorted(set(subjects)):
 
-            behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][self.observationId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+                behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
 
-            for behavior in sorted(set(behaviors)):
-                if "STATE" in self.eventType(behavior).upper():
-                    flagStateEvent = True
-                    lst, memTime = [], {}
-                    for event in [event for event in self.pj[OBSERVATIONS][self.observationId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject]:
-                        behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
-                        if behav_modif in lst:
-                            lst.remove(behav_modif)
-                            del memTime[str(behav_modif)]
-                        else:
-                            lst.append(behav_modif)
-                            memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+                for behavior in sorted(set(behaviors)):
+                    if "STATE" in self.eventType(behavior).upper():
+                        flagStateEvent = True
+                        lst, memTime = [], {}
+                        for event in [event for event in self.pj[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject]:
+                            behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+                            if behav_modif in lst:
+                                lst.remove(behav_modif)
+                                del memTime[str(behav_modif)]
+                            else:
+                                lst.append(behav_modif)
+                                memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
 
-                    for event in lst:
-                        out += """The behavior <b>{behavior}</b> {modifier}is not PAIRED for subject "<b>{subject}</b>" at <b>{time}</b><br>""".format(
-                               behavior=behavior,
-                               modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
-                               subject=subject if subject else NO_FOCAL_SUBJECT,
-                               time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
+                        for event in lst:
+                            out += """The behavior <b>{behavior}</b> {modifier}is not PAIRED for subject "<b>{subject}</b>" at <b>{time}</b><br>""".format(
+                                   behavior=behavior,
+                                   modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
+                                   subject=subject if subject else NO_FOCAL_SUBJECT,
+                                   time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
 
-        if flagStateEvent:
-            if not out:
-                out = "All state events are PAIRED"
-            else:
-                QMessageBox.warning(self, programName + " - State events check", out)
+            return out
+
+        if self.observationId:
+            r = check_state_events_obs(self.observationId)
+            if not r:
+                r = "All state events are PAIRED"
+            tot_out = "<strong>{0}</strong><br>{1}<br>".format(self.observationId, r)
+        else: # no current observation
+
+             # ask user observations to analyze
+            _, selectedObservations = self.selectObservations(MULTIPLE)
+            if not selectedObservations:
+                return
+
+            tot_out = ""
+            for obsId in sorted(selectedObservations):
+                r = check_state_events_obs(obsId)
+                if not r:
+                    r = "All state events are PAIRED"
+                tot_out += "<strong>{0}</strong><br>{1}<br>".format(obsId, r)
+
+
+        self.results = dialog.ResultsWidget()
+        self.results.setWindowTitle("Check state events")
+        self.results.ptText.clear()
+        self.results.ptText.appendHtml(tot_out)
+        self.results.show()
+
 
     def observations_list(self):
         """
@@ -1568,17 +1599,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def deselectSubject(self):
-        '''
+        """
         deselect the current subject
-        '''
+        """
         self.currentSubject = ""
         self.lbSubject.setText( "<b>{}</b>".format(NO_FOCAL_SUBJECT))
         self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
 
     def selectSubject(self, subject):
-        '''
+        """
         deselect the current subject
-        '''
+        """
         self.currentSubject = subject
         self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))
         self.lbFocalSubject.setText(" Focal subject: <b>{}</b>".format(self.currentSubject))
@@ -7934,7 +7965,7 @@ item []:
                 with open(fileName, "w") as outFile:
                     for obsId in selectedObservations:
                         # observation id
-                        outFile.write("# observation id: {0}\n".format(obsId))
+                        outFile.write("\n# observation id: {0}\n".format(obsId))
                         # observation descrition
                         outFile.write("# observation description: {0}\n".format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, " ")))
                         # media file name
@@ -7952,18 +7983,18 @@ item []:
                                 outFile.write("{0}: {1}\n".format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
                         outFile.write("\n")
 
-                    # selected subjects
-                    for subj in plot_parameters["selected subjects"]:
-                        if subj:
-                            subj_str = "\n{}:\n".format(subj)
-                        else:
-                            subj_str = "\nNo focal subject:\n"
-                        outFile.write(subj_str)
+                        # selected subjects
+                        for subj in plot_parameters["selected subjects"]:
+                            if subj:
+                                subj_str = "\n{}:\n".format(subj)
+                            else:
+                                subj_str = "\nNo focal subject:\n"
+                            outFile.write(subj_str)
 
-                        for obsId in selectedObservations:
-                            out = self.create_behavioral_strings(obsId, subj, plot_parameters)
-                            if out:
-                                outFile.write(out + "\n")
+                            for obsId in selectedObservations:
+                                out = self.create_behavioral_strings(obsId, subj, plot_parameters)
+                                if out:
+                                    outFile.write(out + "\n")
             except:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)

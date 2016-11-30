@@ -426,6 +426,41 @@ class FindReplaceEvents(QWidget):
         self.clickSignal.emit(msg)
 
 
+class ResultsWidget(QWidget):
+    def __init__(self):
+        super(ResultsWidget, self).__init__()
+
+        self.setWindowTitle("")
+
+        hbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        hbox.addWidget(self.lb)
+
+        self.ptText = QPlainTextEdit()
+        hbox.addWidget(self.ptText)
+
+        hbox2 = QHBoxLayout()
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.pbOK_clicked)
+        '''
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.pbCancel_clicked)
+        hbox2.addWidget(self.pbCancel)
+        '''
+        hbox2.addWidget(self.pbOK)
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
+
+    def pbOK_clicked(self):
+        self.close()
+
+    '''
+    def pbCancel_clicked(self):
+        self.reject()
+    '''
+
 
 """
 class EventType(QDialog):
