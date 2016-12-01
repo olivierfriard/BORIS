@@ -1731,13 +1731,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not self.detachFrameViewer:
                 if hasattr(self, "frame_viewer1"):
                    del self.frame_viewer1
+                if self.second_player():
+                    if hasattr(self, "frame_viewer2"):
+                        del self.frame_viewer2
             else:
                 if hasattr(self, "lbFFmpeg"):
                     self.lbFFmpeg.clear()
                 if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
                     self.frame_viewer1 = dialog.FrameViewer()
-                    #self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    #self.frame_viewer1.setWindowFlags(Qt.WindowStaysOnTopHint)
                     self.frame_viewer1.show()
+                    if self.second_player():
+                        self.frame_viewer2 = dialog.FrameViewer()
+                        # self.frame_viewer2.setWindowFlags(Qt.WindowStaysOnTopHint)
+                        self.frame_viewer2.show()
+                    self.FFmpegGlobalFrame =- 1
+                    self.FFmpegTimerOut()
 
             self.menu_options()
 
@@ -1757,7 +1766,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         currentMedia, frameCurrentMedia = '', 0
         frameMs = 1000 / fps
         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][player]):
-            if requiredFrame * frameMs < sum(self.duration[0:idx + 1 ]):
+            if requiredFrame * frameMs < sum(self.duration[0:idx + 1]):
                 currentMedia = media
                 frameCurrentMedia = requiredFrame - sum(self.duration[0:idx]) / frameMs
                 break
@@ -1785,6 +1794,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
 
         return currentMedia, round(currentMediaTime/1000,3)
+
+    def second_player(self):
+        """
+
+        :return: True if second player else False
+        """
+        if not self.observationId:
+            return False
+        if (PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
+            return True
+        else:
+            return True
 
 
     def FFmpegTimerOut(self):
@@ -1821,15 +1843,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.timer_spectro_out()
 
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
-
-        #logging.debug('imagesList {0}'.format(self.imagesList))
+        # logging.debug('imagesList {0}'.format(self.imagesList))
         logging.debug("image {0}".format("%s-%d" % (md5FileName, int(frameCurrentMedia / fps))))
 
-        if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,second=int(frameCurrentMedia / fps)) not in self.imagesList:
+        if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName, second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
             extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
 
             self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
+
 
         logging.debug("images list: {}".format(self.imagesList))
 
@@ -1852,13 +1874,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pixmap.isNull():
             BITMAP_EXT = "png"
 
-        if self.detachFrameViewer:
+        if self.second_player():
+            requiredFrame2 = self.FFmpegGlobalFrame + 1
+            currentMedia2, frameCurrentMedia2 = self.getCurrentMediaByFrame(PLAYER2, requiredFrame2, fps)
+            md5FileName2 = hashlib.md5(currentMedia2.encode("utf-8")).hexdigest()
+            if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName2,
+                                                     second=int(frameCurrentMedia2 / fps)) not in self.imagesList:
+                extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) + 1),
+                               self.imageDirectory, md5FileName2, BITMAP_EXT, self.frame_resize)
+
+                self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
+                                        glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
+            img2 = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
+                                                                                        sep=os.sep,
+                                                                                        fileName=md5FileName2,
+                                                                                        second=int(frameCurrentMedia2 / fps),
+                                                                                        frame=int((frameCurrentMedia2 - int(frameCurrentMedia2 / fps) * fps) + 1),
+                                                                                        extension=BITMAP_EXT)
+            if not os.path.isfile(img2):
+                logging.warning("image not found: {0}".format(img2))
+                extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) +1), self.imageDirectory, md5FileName2, BITMAP_EXT, self.frame_resize)
+                if not os.path.isfile(img2):
+                    logging.warning("image still not found: {0}".format(img2))
+                    return
+            self.pixmap2 = QPixmap(img2)
+
+
+        if self.detachFrameViewer or self.second_player():   # frame viewer detached or 2 players
             if not hasattr(self, "frame_viewer1"):
                 self.frame_viewer1 = dialog.FrameViewer()
-                #self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+                # self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+            if self.second_player():
+                if not hasattr(self, "frame_viewer2"):
+                    self.frame_viewer2 = dialog.FrameViewer()
+                    # self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+
             self.frame_viewer1.show()
+            if self.second_player():
+                self.frame_viewer2.show()
+
             self.frame_viewer1.lbFrame.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
-        else:
+            if self.second_player():
+                self.frame_viewer2.lbFrame.setPixmap(self.pixmap2.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+
+        elif not self.detachFrameViewer:
             self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
 
         # redraw measurements from previous frames
@@ -1900,6 +1960,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.measurement_w.draw_mem = []
 
         self.FFmpegGlobalFrame = requiredFrame
+        if self.second_player():
+            self.FFmpegGlobalFrame2 = requiredFrame2
 
         currentTime = self.getLaps() * 1000
 
@@ -2252,7 +2314,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.check_if_media_in_project_directory():
 
                 useMediaFromProjectDirectory = dialog.MessageDialog(programName, """Media file was/were not found in its/their original path(s) but in project directory.<br>
-                Do you want to convert media file paths?""", [YES, NO ])
+                Do you want to convert media file paths?""", [YES, NO])
 
                 if useMediaFromProjectDirectory == NO:
                     QMessageBox.warning(self, programName, """The observation will be opened in VIEW mode.<br>
@@ -2275,18 +2337,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return True
 
         # check if media list player 1 contains more than 1 media
-        if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1 \
-            and \
-           PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
-
+        if (len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1
+            and PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE]
+            and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
                QMessageBox.warning(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
                return False
 
         self.playerType = VLC
         self.playMode = VLC
-
         self.fps = {}
-
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(True)
         self.toolBox.setVisible(True)
@@ -2301,7 +2360,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if useMediaFromProjectDirectory == YES:
             for idx, mediaFile in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
-                self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][idx] = os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile)
+                self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][idx] = os.path.dirname(self.projectFileName) + os.sep + os.path.basename(mediaFile)
                 self.projectChanged = True
 
         for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
@@ -2403,7 +2462,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
 
         # check for second media to be played together
-        if PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
+        if PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
 
                 if useMediaFromProjectDirectory == YES:
                     for idx, mediaFile in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
@@ -3063,6 +3122,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if hasattr(self, "frame_viewer1"):
             del self.frame_viewer1
+
+        if hasattr(self, "frame_viewer2"):
+            del self.frame_viewer2
 
 
     def close_observation(self):
@@ -5952,7 +6014,7 @@ item []:
 
             self.playMode = VLC
 
-            globalCurrentTime = int( self.FFmpegGlobalFrame  * (1000 / list(self.fps.values())[0]))
+            globalCurrentTime = int(self.FFmpegGlobalFrame  * (1000 / list(self.fps.values())[0]))
 
             logging.debug("switch_playing_mode new global current time: {} {}".format( globalCurrentTime, type(globalCurrentTime) ))
 
@@ -5991,12 +6053,15 @@ item []:
         else:  # go to fram by frame
 
             # second video together
-            if self.simultaneousMedia:
+            # if self.simultaneousMedia:
+            '''
+            if self.second_player():
                 logging.warning("Frame-by-frame mode is not available in multi-player mode")
                 app.beep()
                 self.actionFrame_by_frame.setChecked(False)
                 self.statusbar.showMessage("Frame-by-frame mode is not available in multi-player mode", 5000)
                 return
+            '''
 
             if list(self.fps.values())[0] == 0:
                 logging.warning("The frame per second value is not available. Frame-by-frame mode will not be available")
@@ -6005,7 +6070,7 @@ item []:
                 self.actionFrame_by_frame.setChecked(False)
                 return
 
-            if len(set( self.fps.values() )) != 1:
+            if len(set(self.fps.values())) != 1:
                 logging.warning("The frame-by-frame mode will not be available because the video files have different frame rates")
                 QMessageBox.warning(self, programName, "The frame-by-frame mode will not be available because the video files have different frame rates (%s)." % (', '.join([str(i) for i in list(self.fps.values())])),\
                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -7973,7 +8038,6 @@ item []:
             s = s[0: -len(self.behaviouralStringsSeparator)]
 
         return s
-
 
 
     def export_string_events(self):

@@ -78,7 +78,7 @@ def observed_transitions_matrix(sequences, behaviours, mode = "frequency"):
     if not transitions_total_number:
         return False
 
-    out = "\t" + "\t".join( list(behaviours)) + "\n"
+    out = "\t" + "\t".join(list(behaviours)) + "\n"
     for behaviour in behaviours:
         out += "{}\t".format(behaviour)
         for behaviour2 in behaviours:
