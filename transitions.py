@@ -88,7 +88,7 @@ def observed_transitions_matrix(sequences, behaviours, mode = "frequency"):
                 out += "{}\t".format(transitions[behaviour][behaviour2])
             elif mode== "frequencies_after_behaviors":
                 if sum(transitions[behaviour].values()):
-                    out += "{}\t".format(transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()))
+                    out += "{}\t".format( round(transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()), 3))
                 else:
                     out += "{}\t".format(transitions[behaviour][behaviour2])
         out = out[:-1] + "\n"
