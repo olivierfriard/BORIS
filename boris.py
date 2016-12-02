@@ -237,6 +237,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     liveObservationStarted = False
 
+    frame_viewer1_mem_geometry = None
+    frame_viewer2_mem_geometry = None
+
     projectFileName = ""
     mediaTotalLength = None
 
@@ -1730,21 +1733,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if not self.detachFrameViewer:
                 if hasattr(self, "frame_viewer1"):
-                   del self.frame_viewer1
+                    self.frame_viewer1_mem_geometry = self.frame_viewer1.geometry()
+                    del self.frame_viewer1
                 if self.second_player():
                     if hasattr(self, "frame_viewer2"):
+                        self.frame_viewer2_mem_geometry = self.frame_viewer2.geometry()
                         del self.frame_viewer2
             else:
                 if hasattr(self, "lbFFmpeg"):
                     self.lbFFmpeg.clear()
                 if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
+
+                    self.create_frame_viewer()
+                    '''
                     self.frame_viewer1 = dialog.FrameViewer()
-                    #self.frame_viewer1.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    self.frame_viewer1.setWindowTitle("Frame viewer #1")
+                    self.frame_viewer1.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    self.frame_viewer1.setGeometry(100, 100, 256, 256)
                     self.frame_viewer1.show()
                     if self.second_player():
                         self.frame_viewer2 = dialog.FrameViewer()
-                        # self.frame_viewer2.setWindowFlags(Qt.WindowStaysOnTopHint)
+                        self.frame_viewer2.setWindowTitle("Frame viewer #2")
+                        self.frame_viewer2.setWindowFlags(Qt.WindowStaysOnTopHint)
+                        self.frame_viewer2.setGeometry(150, 150, 256, 256)
                         self.frame_viewer2.show()
+                    '''
                     self.FFmpegGlobalFrame =- 1
                     self.FFmpegTimerOut()
 
@@ -1807,6 +1820,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return True
         else:
             return True
+
+    def create_frame_viewer(self):
+        """
+        create frame viewer
+        if 2nd player 2nd frame viewer is created
+        """
+        if not hasattr(self, "frame_viewer1"):
+            self.frame_viewer1 = dialog.FrameViewer()
+            self.frame_viewer1.setWindowTitle("Frame viewer #1")
+            self.frame_viewer1.setWindowFlags(Qt.WindowStaysOnTopHint)
+            if self.frame_viewer1_mem_geometry:
+                self.frame_viewer1.setGeometry(self.frame_viewer1_mem_geometry)
+            else:
+                self.frame_viewer1.setGeometry(100, 100, 256, 256)
+
+        if self.second_player():
+            if not hasattr(self, "frame_viewer2"):
+                self.frame_viewer2 = dialog.FrameViewer()
+                self.frame_viewer2.setWindowTitle("Frame viewer #2")
+                self.frame_viewer2.setWindowFlags(Qt.WindowStaysOnTopHint)
+                if self.frame_viewer2_mem_geometry:
+                    self.frame_viewer2.setGeometry(self.frame_viewer2_mem_geometry)
+                else:
+                    self.frame_viewer2.setGeometry(150, 150, 256, 256)
+
 
 
     def FFmpegTimerOut(self):
@@ -1901,22 +1939,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if self.detachFrameViewer or self.second_player():   # frame viewer detached or 2 players
-            if not hasattr(self, "frame_viewer1"):
-                self.frame_viewer1 = dialog.FrameViewer()
-                # self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-            if self.second_player():
-                if not hasattr(self, "frame_viewer2"):
-                    self.frame_viewer2 = dialog.FrameViewer()
-                    # self.frame_viewer.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.create_frame_viewer()
 
             self.frame_viewer1.show()
             if self.second_player():
                 self.frame_viewer2.show()
 
-            self.frame_viewer1.lbFrame.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+            self.frame_viewer1.lbFrame.setPixmap(self.pixmap.scaled(self.frame_viewer1.lbFrame.size(), Qt.KeepAspectRatio))
             if self.second_player():
-                self.frame_viewer2.lbFrame.setPixmap(self.pixmap2.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
+                self.frame_viewer2.lbFrame.setPixmap(self.pixmap2.scaled(self.frame_viewer2.lbFrame.size(), Qt.KeepAspectRatio))
 
         elif not self.detachFrameViewer:
             self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
@@ -6014,9 +6045,17 @@ item []:
 
             self.playMode = VLC
 
-            globalCurrentTime = int(self.FFmpegGlobalFrame  * (1000 / list(self.fps.values())[0]))
+            if hasattr(self, "frame_viewer1"):
+                self.frame_viewer1_mem_geometry = self.frame_viewer1.geometry()
+                del self.frame_viewer1
+            if self.second_player():
+                if hasattr(self, "frame_viewer2"):
+                    self.frame_viewer2_mem_geometry = self.frame_viewer2.geometry()
+                    del self.frame_viewer2
 
-            logging.debug("switch_playing_mode new global current time: {} {}".format( globalCurrentTime, type(globalCurrentTime) ))
+            globalCurrentTime = int(self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]))
+
+            logging.debug("switch_playing_mode new global current time: {} {}".format( globalCurrentTime, type(globalCurrentTime)))
 
             # seek VLC on current time from FFmpeg mode
 
