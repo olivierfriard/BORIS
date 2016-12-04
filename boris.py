@@ -2110,7 +2110,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # distance
             if self.measurement_w.rbDistance.isChecked():
                 if event.button() == 1:   # left
-                    self.draw_point(x ,y, "lime")
+                    self.draw_point(x, y, "lime")
                     self.memx, self.memy = x, y
 
                 if event.button() == 2 and self.memx != -1 and self.memy != -1:
@@ -2122,12 +2122,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [["line", self.memx, self.memy, x, y]]
 
-
                     d = ((x - self.memx) ** 2 + (y - self.memy) ** 2) ** 0.5
                     try:
                         d = d / float(self.measurement_w.lePx.text()) * float(self.measurement_w.leRef.text())
                     except:
-                        QMessageBox.critical(self, programName, "Check reference and pixel values! Values must be numeric.", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                        QMessageBox.critical(self, programName,
+                                             "Check reference and pixel values! Values must be numeric.",
+                                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.measurement_w.pte.appendPlainText("Time: {}\tFrame: {}\tDistance: {}".format(self.getLaps(),
                                                                                                          self.FFmpegGlobalFrame,
@@ -2204,7 +2205,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.media_list = self.instance.media_list_new()
 
         # video will be drawn in this widget
-        if sys.platform == "darwin": # for MacOS
+        if sys.platform == "darwin":  # for MacOS
             self.videoframe = QMacCocoaViewContainer(0)
         else:
             self.videoframe = QFrame()
@@ -2272,7 +2273,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         app.processEvents()
 
-        if sys.platform == "darwin": # for MacOS
+        if sys.platform == "darwin":  # for MacOS
             self.videoframe2 = QMacCocoaViewContainer(0)
         else:
             self.videoframe2 = QFrame()
@@ -2300,7 +2301,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if every media available for observationId
         """
 
-        if not PLAYER1 in self.pj[OBSERVATIONS][self.observationId][FILE]:
+        if PLAYER1 not in self.pj[OBSERVATIONS][self.observationId][FILE]:
             return False
 
         if type(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) != type([]):
@@ -2375,7 +2376,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if media list player 1 contains more than 1 media
         if (len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1
             and PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE]
-            and  self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
+            and self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
                QMessageBox.warning(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
                return False
 
@@ -6666,16 +6667,17 @@ item []:
             # check if second video
             if self.simultaneousMedia:
 
+                # sync 2nd player on 1st player when no offset
                 if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
                     t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
                     if abs(t1 - t2) >= 300:
-                        self.mediaplayer2.set_time( t1 )
+                        self.mediaplayer2.set_time(t1)
 
                 if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
 
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
 
-                        if mediaTime < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000:
+                        if mediaTime < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000:
 
                             if self.mediaListPlayer2.get_state() == vlc.State.Playing:
                                 self.mediaplayer2.set_time(0)
@@ -6683,8 +6685,8 @@ item []:
                         else:
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
                                 t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                                if abs((t1-t2) - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
-                                    self.mediaplayer2.set_time( int(t1 - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+                                if abs((t1 - t2) - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300:  # synchr if diff >= 300 ms
+                                    self.mediaplayer2.set_time(int(t1 - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                                 self.mediaListPlayer2.play()
 
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
@@ -6701,7 +6703,6 @@ item []:
                                 if abs((t2-t1) + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
                                     self.mediaplayer.set_time( int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
                                 self.mediaListPlayer.play()
-
 
             currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
