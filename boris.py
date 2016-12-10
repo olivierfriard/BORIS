@@ -1459,7 +1459,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.FFmpegGlobalFrame -= 1
                         if self.FFmpegGlobalFrame2 > 0:
                             self.FFmpegGlobalFrame2 -= 1
-                    self.FFmpegTimerOut()
+                    self.ffmpegTimerOut()
 
                 else: # play mode VLC
 
@@ -1518,7 +1518,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.FFmpegGlobalFrame = self.duration[idx - 1]
                         break
                 self.FFmpegGlobalFrame -= 1
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
 
             else:
 
@@ -1561,7 +1561,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.FFmpegGlobalFrame = self.duration[idx + 1]
                         break
                 self.FFmpegGlobalFrame -= 1
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
 
             else:
 
@@ -1765,7 +1765,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.frame_viewer2.show()
                     '''
                     self.FFmpegGlobalFrame =- 1
-                    self.FFmpegTimerOut()
+                    self.ffmpegTimerOut()
 
             self.menu_options()
 
@@ -1853,7 +1853,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def FFmpegTimerOut(self):
+    def ffmpegTimerOut(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
@@ -1918,7 +1918,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             BITMAP_EXT = "png"
 
         if self.second_player():
+
             requiredFrame2 = self.FFmpegGlobalFrame2 + 1
+
+            if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
+
+                print(requiredFrame)
+                print(requiredFrame2)
+                print("offset 2nd player", self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] )
+                print("offset 2nd player * fps", self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps )
+
+                # sync 2nd player on 1st player when no offset
+                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
+                    self.FFmpegGlobalFrame2  = self.FFmpegGlobalFrame
+                    requiredFrame2 = requiredFrame
+
+                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
+
+                    if requiredFrame < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps:
+                        requiredFrame2 = 1
+                    else:
+                        requiredFrame2 = int(requiredFrame - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps)
+
+                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
+
+                    if requiredFrame2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps):
+                        requiredFrame = 1
+                        '''
+                        if self.mediaListPlayer.get_state() == vlc.State.Playing:
+                            self.mediaplayer.set_time(0)
+                           self.mediaListPlayer.pause()
+                        '''
+                    else:
+                        requiredFrame = int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps)
+                        '''
+                        if self.mediaListPlayer2.get_state() == vlc.State.Playing:
+                            t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
+                            if abs((t2-t1) + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
+                                self.mediaplayer.set_time( int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+                            self.mediaListPlayer.play()
+                        '''
+
             currentMedia2, frameCurrentMedia2 = self.getCurrentMediaByFrame(PLAYER2, requiredFrame2, fps)
             md5FileName2 = hashlib.md5(currentMedia2.encode("utf-8")).hexdigest()
             if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName2,
@@ -2054,7 +2094,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def clear_measurements(self):
         if self.FFmpegGlobalFrame > 1:
             self.FFmpegGlobalFrame -= 1
-            self.FFmpegTimerOut()
+            self.ffmpegTimerOut()
 
     def distance(self):
         """
@@ -2483,7 +2523,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.mediaplayer.video_set_spu(0)
 
         self.FFmpegTimer = QTimer(self)
-        self.FFmpegTimer.timeout.connect(self.FFmpegTimerOut)
+        self.FFmpegTimer.timeout.connect(self.ffmpegTimerOut)
         try:
             self.FFmpegTimerTick = int(1000 / list(self.fps.values())[0])
         except:
@@ -6173,7 +6213,7 @@ item []:
                 if self.FFmpegGlobalFrame2 > 0:
                     self.FFmpegGlobalFrame2 -= 1
 
-            self.FFmpegTimerOut()
+            self.ffmpegTimerOut()
 
             # set thread for cleaning temp directory
             if self.ffmpeg_cache_dir_max_size:
@@ -6667,13 +6707,13 @@ item []:
             # check if second video
             if self.simultaneousMedia:
 
-                # sync 2nd player on 1st player when no offset
-                if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
-                    t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                    if abs(t1 - t2) >= 300:
-                        self.mediaplayer2.set_time(t1)
-
                 if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
+
+                    # sync 2nd player on 1st player when no offset
+                    if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
+                        t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
+                        if abs(t1 - t2) >= 300:
+                            self.mediaplayer2.set_time(t1)
 
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
 
@@ -7208,7 +7248,7 @@ item []:
             if self.FFmpegGlobalFrame > 1:
                 self.FFmpegGlobalFrame -= 2
                 #newTime = 1000 * self.FFmpegGlobalFrame / list(self.fps.values())[0]
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
                 logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
 
     def frame_forward(self):
@@ -7216,7 +7256,7 @@ item []:
         go one frame forward
         """
         if self.playMode == FFMPEG:
-            self.FFmpegTimerOut()
+            self.ffmpegTimerOut()
 
 
     def keyPressEvent(self, event):
@@ -7289,14 +7329,14 @@ item []:
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
                     newTime = 1000 * self.FFmpegGlobalFrame / list(self.fps.values())[0]
-                    self.FFmpegTimerOut()
+                    self.ffmpegTimerOut()
                     logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
 
                 logging.debug("(next) current frame {0}".format( self.FFmpegGlobalFrame))
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
                 logging.debug("(next) new frame {0}".format( self.FFmpegGlobalFrame))
                 return
 
@@ -7529,7 +7569,7 @@ item []:
                 if self.FFmpegGlobalFrame > 0:
                     self.FFmpegGlobalFrame -= 1
 
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
 
 
 
@@ -8483,7 +8523,7 @@ item []:
                         self.FFmpegGlobalFrame2 = int((currentTime2 - self.fast) * list(self.fps2.values())[0])
                     else:
                         self.FFmpegGlobalFrame2 = 0   # position to init
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
             else:
                 if self.media_list.count() == 1:
                     if self.mediaplayer.get_time() >= self.fast * 1000:
@@ -8551,7 +8591,7 @@ item []:
                     currentTime2 = self.FFmpegGlobalFrame2 / list(self.fps2.values())[0]
                     self.FFmpegGlobalFrame2 = int((currentTime2 + self.fast) * list(self.fps2.values())[0])
                     
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
 
             else:
                 if self.media_list.count() == 1:
@@ -8616,7 +8656,7 @@ item []:
             if self.playMode == FFMPEG:
 
                 self.FFmpegGlobalFrame = 0   # position to init
-                self.FFmpegTimerOut()
+                self.ffmpegTimerOut()
 
             else: #playmode VLC
 
