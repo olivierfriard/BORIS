@@ -1550,13 +1550,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 #self.mediaplayer.video_set_spu(0)
 
     def next_media_file(self):
-        '''
+        """
         go to next media file (if any)
-        '''
+        """
+        if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) == 1:
+            return
+        
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
-                for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
+                for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                     if self.FFmpegGlobalFrame < self.duration[idx + 1]:
                         self.FFmpegGlobalFrame = self.duration[idx + 1]
                         break
@@ -1878,12 +1881,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.duration):
-            logging.debug("end of last media 1")
+            logging.debug("end of last media 1 frame: {}".format(requiredFrame))
             return
 
         currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, requiredFrame, fps)
         logging.debug("frame current media 1: {}".format(frameCurrentMedia))
-        logging.debug("int(frameCurrentMedia1 / fps): {}".format(int(frameCurrentMedia / fps)))
+        #logging.debug("int(frameCurrentMedia1 / fps): {}".format(int(frameCurrentMedia / fps)))
 
         if "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
             self.timer_spectro_out()
@@ -1900,9 +1903,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("images 1 list: {}".format(self.imagesList))
         
-        second1 = int(frameCurrentMedia / fps) - (frameCurrentMedia % fps == 0)
-        frame1 = round((frameCurrentMedia - int(frameCurrentMedia / fps) * fps) )
-        logging.debug("image 1 {}".format("{}-{} {}".format(md5FileName, int(frameCurrentMedia / fps), frame1)))
+        second1 = int((frameCurrentMedia -1 )/ fps)
+        frame1 = round((frameCurrentMedia - int((frameCurrentMedia -1)/ fps) * fps))
+        if frame1 == 0:
+            frame1 += 1
+        logging.debug("second1: {}  frame1: {}".format(second1,frame1))
+        #logging.debug("image 1 {}".format("{}-{} {}".format(md5FileName, int(frameCurrentMedia / fps), frame1)))
 
         img = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                     sep=os.sep,
@@ -1911,6 +1917,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                     frame=frame1,
                                                                                     extension=BITMAP_EXT)
 
+        logging.debug("image1: {}".format(img))
         if not os.path.isfile(img):
             logging.warning("image 1 not found: {0}".format(img))
             extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) + 1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
@@ -1957,8 +1964,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
                                         glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
-            second2 = int(frameCurrentMedia2 / fps) - (frameCurrentMedia2 % fps == 0)
-            frame2 = round((frameCurrentMedia2 - int(frameCurrentMedia2 / fps) * fps))
+
+            second2 = int((frameCurrentMedia2 -1 )/ fps)
+            frame2 = round((frameCurrentMedia2 - int((frameCurrentMedia2 -1)/ fps) * fps))
+            if frame2 == 0:
+                frame2 += 1
+
             img2 = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                         sep=os.sep,
                                                                                         fileName=md5FileName2,
