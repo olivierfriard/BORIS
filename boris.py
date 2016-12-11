@@ -1825,7 +1825,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
             return True
         else:
-            return True
+            return False
 
     def create_frame_viewer(self):
         """
@@ -1873,21 +1873,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
-        logging.debug("required frame: {0}".format(requiredFrame))
-        logging.debug("sum self.duration {0}".format(sum(self.duration)))
+        logging.debug("required frame 1: {0}".format(requiredFrame))
+        logging.debug("sum self.duration1 {0}".format(sum(self.duration)))
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.duration):
-            logging.debug("end of last media")
+            logging.debug("end of last media 1")
             return
 
         currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, requiredFrame, fps)
+        logging.debug("frame current media 1: {}".format(frameCurrentMedia))
+        logging.debug("int(frameCurrentMedia1 / fps): {}".format(int(frameCurrentMedia / fps)))
 
         if "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
             self.timer_spectro_out()
 
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
-        logging.debug("image {0}".format("%s-%d" % (md5FileName, int(frameCurrentMedia / fps))))
+        
 
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName, second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
@@ -1896,20 +1898,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
 
-        logging.debug("images list: {}".format(self.imagesList))
+        logging.debug("images 1 list: {}".format(self.imagesList))
+        
+        second1 = int(frameCurrentMedia / fps) - (frameCurrentMedia % fps == 0)
+        frame1 = round((frameCurrentMedia - int(frameCurrentMedia / fps) * fps) )
+        logging.debug("image 1 {}".format("{}-{} {}".format(md5FileName, int(frameCurrentMedia / fps), frame1)))
 
         img = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                     sep=os.sep,
                                                                                     fileName=md5FileName,
-                                                                                    second=int(frameCurrentMedia / fps),
-                                                                                    frame=int((frameCurrentMedia - int(frameCurrentMedia / fps) * fps) + 1),
+                                                                                    second=second1,
+                                                                                    frame=frame1,
                                                                                     extension=BITMAP_EXT)
 
         if not os.path.isfile(img):
-            logging.warning("image not found: {0}".format(img))
-            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
+            logging.warning("image 1 not found: {0}".format(img))
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) + 1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
             if not os.path.isfile(img):
-                logging.warning("image still not found: {0}".format(img))
+                logging.warning("image 1 still not found: {0}".format(img))
                 return
 
         self.pixmap = QPixmap(img)
@@ -1922,11 +1928,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             requiredFrame2 = self.FFmpegGlobalFrame2 + 1
 
             if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
-
-                print(requiredFrame)
-                print(requiredFrame2)
-                print("offset 2nd player", self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] )
-                print("offset 2nd player * fps", self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps )
 
                 # sync 2nd player on 1st player when no offset
                 if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
@@ -1944,20 +1945,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if requiredFrame2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps):
                         requiredFrame = 1
-                        '''
-                        if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                            self.mediaplayer.set_time(0)
-                           self.mediaListPlayer.pause()
-                        '''
                     else:
-                        requiredFrame = int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps)
-                        '''
-                        if self.mediaListPlayer2.get_state() == vlc.State.Playing:
-                            t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                            if abs((t2-t1) + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300 :  # synchr if diff >= 300 ms
-                                self.mediaplayer.set_time( int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
-                            self.mediaListPlayer.play()
-                        '''
+                        requiredFrame = int(requiredFrame2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps)
 
             currentMedia2, frameCurrentMedia2 = self.getCurrentMediaByFrame(PLAYER2, requiredFrame2, fps)
             md5FileName2 = hashlib.md5(currentMedia2.encode("utf-8")).hexdigest()
@@ -1968,20 +1957,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
                                         glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
+            second2 = int(frameCurrentMedia2 / fps) - (frameCurrentMedia2 % fps == 0)
+            frame2 = round((frameCurrentMedia2 - int(frameCurrentMedia2 / fps) * fps))
             img2 = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
                                                                                         sep=os.sep,
                                                                                         fileName=md5FileName2,
-                                                                                        second=int(frameCurrentMedia2 / fps),
-                                                                                        frame=int((frameCurrentMedia2 - int(frameCurrentMedia2 / fps) * fps) + 1),
+                                                                                        second=second2,
+                                                                                        frame=frame2,
                                                                                         extension=BITMAP_EXT)
             if not os.path.isfile(img2):
-                logging.warning("image not found: {0}".format(img2))
+                logging.warning("image 2 not found: {0}".format(img2))
                 extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) +1), self.imageDirectory, md5FileName2, BITMAP_EXT, self.frame_resize)
                 if not os.path.isfile(img2):
-                    logging.warning("image still not found: {0}".format(img2))
+                    logging.warning("image 2 still not found: {0}".format(img2))
                     return
             self.pixmap2 = QPixmap(img2)
-
 
         if self.detachFrameViewer or self.second_player():   # frame viewer detached or 2 players
             self.create_frame_viewer()
@@ -2545,7 +2535,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # add media file
                 for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
-
                     media = self.instance.media_new(mediaFile)
                     media.parse()
 
@@ -2604,10 +2593,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 app.processEvents()
 
                 self.mediaplayer2.set_time(0)
+                '''
                 if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId] \
                     and self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER]:
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
                         self.mediaplayer2.set_time( int( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000) )
+                '''
 
                 # no subtitles
                 #self.mediaplayer2.video_set_spu(0)
@@ -2628,7 +2619,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbSpeed.setText("x{:.3f}".format(self.play_rate))
 
-
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
 
@@ -2638,7 +2628,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         # spectrogram
-
         if "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
 
             #self.memChunk = ''
@@ -6114,6 +6103,10 @@ item []:
                     del self.frame_viewer2
 
             globalCurrentTime = int(self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]))
+
+            # set on media player end
+            currentMediaTime = int(sum(self.duration))
+
             for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                 if globalCurrentTime < sum(self.duration[0:idx + 1]):
                     self.mediaListPlayer.play_item_at_index(idx)
@@ -6127,6 +6120,9 @@ item []:
             self.mediaplayer.set_time(currentMediaTime)
 
             if self.second_player():
+                
+                # set on media player2 end
+                currentMediaTime2 = int(sum(self.duration2))
                 globalCurrentTime2 = int(self.FFmpegGlobalFrame2 * (1000 / list(self.fps2.values())[0]))
                 for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
                     if globalCurrentTime2 < sum(self.duration2[0:idx + 1]):
@@ -6210,6 +6206,7 @@ item []:
 
             if self.FFmpegGlobalFrame > 0:
                 self.FFmpegGlobalFrame -= 1
+            if self.second_player():
                 if self.FFmpegGlobalFrame2 > 0:
                     self.FFmpegGlobalFrame2 -= 1
 
@@ -6732,9 +6729,10 @@ item []:
                     if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
                         mediaTime2 = self.mediaplayer2.get_time()
 
-                        if mediaTime2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] *1000):
+                        if mediaTime2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000):
 
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
+                                print("p1 paused")
                                 self.mediaplayer.set_time(0)
                                 self.mediaListPlayer.pause()
                         else:
@@ -6796,7 +6794,7 @@ item []:
                 mediaName = self.mediaplayer.get_media().get_meta(0)
 
                 # update status bar
-                msg = ''
+                msg = ""
                 if self.mediaListPlayer.get_state() == vlc.State.Playing or self.mediaListPlayer.get_state() == vlc.State.Paused:
                     msg = "{media_name}: <b>{time} / {total_time}</b>".format(media_name=mediaName,
                                                                               time=self.convertTime(Decimal(mediaTime / 1000)),
@@ -8478,23 +8476,24 @@ item []:
                     self.mediaListPlayer.pause()
                     # wait for pause
 
-                    logging.debug("pause_video: player #1 state: {0}".format(self.mediaListPlayer.get_state()))
-                    # second video together
-                    if self.simultaneousMedia:
-                        self.mediaListPlayer2.pause()
-                        logging.debug('pause_video: player #2 state {0}'.format(self.mediaListPlayer2.get_state()))
-
                     # wait until video is paused or ended
                     while True:
                         if self.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                             break
 
-                    '''while self.mediaListPlayer.get_state() != vlc.State.Paused and self.mediaListPlayer.get_state() != vlc.State.Ended:
-                        pass'''
+                # second video together
+                if self.simultaneousMedia:
+                    if self.mediaListPlayer2.get_state() != vlc.State.Paused:
+                        self.mediaListPlayer2.pause()
 
-                    time.sleep(1)
-                    self.timer_out()
-                    self.timer_spectro_out()
+                logging.debug("pause_video: player #1 state: {}".format(self.mediaListPlayer.get_state()))
+                if self.simultaneousMedia:
+                    logging.debug('pause_video: player #2 state {}'.format(self.mediaListPlayer2.get_state()))
+                    pass
+
+                time.sleep(1)
+                self.timer_out()
+                self.timer_spectro_out()
 
 
     def play_activated(self):
@@ -8585,12 +8584,38 @@ item []:
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
+                '''
                 currentTime = self.FFmpegGlobalFrame / list(self.fps.values())[0]
                 self.FFmpegGlobalFrame = int((currentTime + self.fast) * list(self.fps.values())[0])
+                '''
+
+                self.FFmpegGlobalFrame += self.fast * list(self.fps.values())[0]
+
+                
+                if self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]) >= sum(self.duration):
+                    logging.debug("end of last media")
+                    self.FFmpegGlobalFrame = int(sum(self.duration) * list(self.fps.values())[0] / 1000)-1
+                    logging.debug("FFmpegGlobalFrame {}  sum duration {}".format(self.FFmpegGlobalFrame, sum(self.duration)))
+
+                if self.FFmpegGlobalFrame > 0:
+                    self.FFmpegGlobalFrame -= 1
+
                 if self.second_player():
+                    '''
                     currentTime2 = self.FFmpegGlobalFrame2 / list(self.fps2.values())[0]
                     self.FFmpegGlobalFrame2 = int((currentTime2 + self.fast) * list(self.fps2.values())[0])
+                    '''
                     
+                    self.FFmpegGlobalFrame2 += self.fast * list(self.fps2.values())[0]
+                    if self.FFmpegGlobalFrame2 * (1000 / list(self.fps2.values())[0]) >= sum(self.duration2):
+                        logging.debug("end of last media")
+                        self.FFmpegGlobalFrame2 = int(sum(self.duration2) * list(self.fps2.values())[0] / 1000)-1
+                        logging.debug("FFmpegGlobalFrame2 {}  sum duration2 {}".format(self.FFmpegGlobalFrame2, sum(self.duration2)))
+                    
+                    
+                    if self.FFmpegGlobalFrame2 > 0:
+                        self.FFmpegGlobalFrame2 -= 1
+
                 self.ffmpegTimerOut()
 
             else:
@@ -8598,16 +8623,15 @@ item []:
                     if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
                         self.mediaplayer.set_time(self.mediaplayer.get_length())
                     else:
-                        self.mediaplayer.set_time( self.mediaplayer.get_time() + self.fast * 1000)
+                        self.mediaplayer.set_time(self.mediaplayer.get_time() + self.fast * 1000)
 
                     if self.simultaneousMedia:
-                        self.mediaplayer2.set_time( int(self.mediaplayer.get_time()  - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) )
+                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
                 elif self.media_list.count() > 1:
 
                     newTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]) + self.mediaplayer.get_time()) + self.fast * 1000
                     if newTime < sum(self.duration):
-
                         # remember if player paused (go previous will start playing)
                         flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
 
@@ -8616,7 +8640,6 @@ item []:
                             if newTime >= tot and newTime < tot + d:
                                 self.mediaListPlayer.play_item_at_index(idx)
                                 app.processEvents()
-
                                 # wait until media is played
                                 while True:
                                     if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
@@ -8656,6 +8679,9 @@ item []:
             if self.playMode == FFMPEG:
 
                 self.FFmpegGlobalFrame = 0   # position to init
+                if self.simultaneousMedia:
+                    self.FFmpegGlobalFrame2 = 0   # position to init
+
                 self.ffmpegTimerOut()
 
             else: #playmode VLC
