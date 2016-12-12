@@ -34,7 +34,7 @@ import sys
 import platform
 if sys.platform == "darwin": # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
-
+import logging
 
 # check if argument
 from optparse import OptionParser
@@ -53,13 +53,10 @@ if options.version:
 
 
 # set logging parameters
-import logging
 if options.debug:
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.INFO)
-
-
 
 if platform.python_version() < "3.4":
     logging.critical("BORIS requires Python 3.4+! You are using v. {}")
@@ -128,7 +125,6 @@ import coding_pad
 import transitions
 import recode_widget
 
-
 from config import *
 
 def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
@@ -151,9 +147,9 @@ def bytes_to_str(b):
     if isinstance(b, bytes):
         fileSystemEncoding = sys.getfilesystemencoding()
         # hack for PyInstaller
-        if fileSystemEncoding == None:
+        if fileSystemEncoding is None:
             fileSystemEncoding = "UTF-8"
-        return b.decode( fileSystemEncoding )
+        return b.decode(fileSystemEncoding)
     else:
         return b
 
@@ -1236,6 +1232,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.observationId = ""
                     self.twEvents.setRowCount(0)
                     self.menu_options()
+                    return
 
             self.menu_options()
             # title of dock widget  “  ”
@@ -1454,7 +1451,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.second_player():
                         currentFrame2 = round(newTime / frameDuration)
                         self.FFmpegGlobalFrame2 = currentFrame2
-                        
+
                     if self.FFmpegGlobalFrame > 0:
                         self.FFmpegGlobalFrame -= 1
                         if self.FFmpegGlobalFrame2 > 0:
@@ -1555,7 +1552,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) == 1:
             return
-        
+
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
@@ -1740,34 +1737,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # detach frame viewer
             self.detachFrameViewer = preferencesWindow.cbDetachFrameViewer.isChecked()
 
-            if not self.detachFrameViewer:
-                if hasattr(self, "frame_viewer1"):
-                    self.frame_viewer1_mem_geometry = self.frame_viewer1.geometry()
-                    del self.frame_viewer1
-                if self.second_player():
-                    if hasattr(self, "frame_viewer2"):
-                        self.frame_viewer2_mem_geometry = self.frame_viewer2.geometry()
-                        del self.frame_viewer2
-            else:
-                if hasattr(self, "lbFFmpeg"):
-                    self.lbFFmpeg.clear()
-                if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
+            if self.playMode == FFMPEG:
+                if self.detachFrameViewer:
+                    if hasattr(self, "lbFFmpeg"):
+                        self.lbFFmpeg.clear()
+                    if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
+                        self.create_frame_viewer()
+                        self.FFmpegGlobalFrame -= 1
+                        self.ffmpegTimerOut()
+                else:
+                    if hasattr(self, "frame_viewer1"):
+                        self.frame_viewer1_mem_geometry = self.frame_viewer1.geometry()
+                        del self.frame_viewer1
+                    self.FFmpegGlobalFrame -= 1
 
-                    self.create_frame_viewer()
-                    '''
-                    self.frame_viewer1 = dialog.FrameViewer()
-                    self.frame_viewer1.setWindowTitle("Frame viewer #1")
-                    self.frame_viewer1.setWindowFlags(Qt.WindowStaysOnTopHint)
-                    self.frame_viewer1.setGeometry(100, 100, 256, 256)
-                    self.frame_viewer1.show()
                     if self.second_player():
-                        self.frame_viewer2 = dialog.FrameViewer()
-                        self.frame_viewer2.setWindowTitle("Frame viewer #2")
-                        self.frame_viewer2.setWindowFlags(Qt.WindowStaysOnTopHint)
-                        self.frame_viewer2.setGeometry(150, 150, 256, 256)
-                        self.frame_viewer2.show()
-                    '''
-                    self.FFmpegGlobalFrame =- 1
+                        if hasattr(self, "frame_viewer2"):
+                            self.frame_viewer2_mem_geometry = self.frame_viewer2.geometry()
+                            del self.frame_viewer2
+                        self.FFmpegGlobalFrame2 -= 1
+
                     self.ffmpegTimerOut()
 
             self.menu_options()
@@ -1785,7 +1774,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         currentMedia
         frameCurrentMedia
         """
-        currentMedia, frameCurrentMedia = '', 0
+        currentMedia, frameCurrentMedia = "", 0
         frameMs = 1000 / fps
         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][player]):
             if requiredFrame * frameMs < sum(self.duration[0:idx + 1]):
@@ -1892,7 +1881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.timer_spectro_out()
 
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
-        
+
 
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName, second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
@@ -1902,7 +1891,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         logging.debug("images 1 list: {}".format(self.imagesList))
-        
+
         second1 = int((frameCurrentMedia -1 )/ fps)
         frame1 = round((frameCurrentMedia - int((frameCurrentMedia -1)/ fps) * fps))
         if frame1 == 0:
@@ -2352,7 +2341,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
 
         for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-            if not os.path.isfile( mediaFile ):
+            if not os.path.isfile(mediaFile):
                 return False
 
         if PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE]:
@@ -2414,6 +2403,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dwObservations.setVisible(True)
                 return True
 
+        print("1")
         # check if media list player 1 contains more than 1 media
         if (len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1
             and PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -2435,7 +2425,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.duration2.clear()
         self.fps.clear()
         self.fps2.clear()
-        
+
+        print("2")
+
         # add all media files to media list
         self.simultaneousMedia = False
 
@@ -2480,20 +2472,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.fps[mediaFile] = mediaFPS
             self.media_list.add_media(media)
 
+        print("3")
         # add media list to media player list
         self.mediaListPlayer.set_media_list(self.media_list)
 
         # display media player in videoframe
         if self.embedPlayer:
 
-            if sys.platform.startswith("linux"): # for Linux using the X Server
+            if sys.platform.startswith("linux"):  # for Linux using the X Server
                 self.mediaplayer.set_xwindow(self.videoframe.winId())
 
-            elif sys.platform.startswith("win"): # for Windows
-                self.mediaplayer.set_hwnd( int(self.videoframe.winId()) )
+            elif sys.platform.startswith("win"):  # for Windows
+                self.mediaplayer.set_hwnd(int(self.videoframe.winId()))
 
         # for mac always embed player
-        if sys.platform == "darwin": # for MacOS
+        if sys.platform == "darwin":  # for MacOS
             self.mediaplayer.set_nsobject(int(self.videoframe.winId()))
 
         # check if fps changes between media
@@ -2509,7 +2502,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("playing media #{0}".format(0))
 
         self.mediaListPlayer.play_item_at_index(0)
-        app.processEvents()
+        #app.processEvents()
 
         # play mediaListPlayer for a while to obtain media information
         while True:
@@ -2517,7 +2510,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
 
         self.mediaListPlayer.pause()
-        app.processEvents()
+        while True:
+            if self.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                break
+        #app.processEvents()
         self.mediaplayer.set_time(0)
 
         # no subtitles
@@ -2562,10 +2558,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"] = {}
                             if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
                                 self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
-        
+
                         self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = videoDuration
                         self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = fps
-        
+
                         mediaLength = videoDuration * 1000
                         mediaFPS = fps
                         self.projectChanged = True
@@ -4423,7 +4419,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item.setFlags(Qt.ItemIsEnabled)
                 self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
 
-
         if mode == "by_category":
             tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
             fields = ["number", "duration"]
@@ -5291,9 +5286,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             comboBox = QComboBox()
                             comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
                             comboBox.setCurrentIndex(NUMERIC_idx)
-                            if self.pj[ INDEPENDENT_VARIABLES ][i][field] == TEXT:
+                            if self.pj[INDEPENDENT_VARIABLES][i][field] == TEXT:
                                 comboBox.setCurrentIndex(TEXT_idx)
-                            if self.pj[ INDEPENDENT_VARIABLES ][i][field] == SET_OF_VALUES:
+                            if self.pj[INDEPENDENT_VARIABLES][i][field] == SET_OF_VALUES:
                                 comboBox.setCurrentIndex(SET_OF_VALUES_idx)
                             newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, comboBox)
                             signalMapper.setMapping(comboBox, newProjectWindow.twVariables.rowCount() - 1)
@@ -5309,28 +5304,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
 
-
                 newProjectWindow.twVariables.resizeColumnsToContents()
-
 
         newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
 
         if mode == NEW:
 
             self.pj = {"time_format": HHMMSS,
-            "project_date": "",
-            "project_name": "",
-            "project_description": "",
-            SUBJECTS : {},
-            ETHOGRAM: {},
-            OBSERVATIONS: {},
-            BEHAVIORAL_CATEGORIES : [],
-            "coding_map": {} }
+                       "project_date": "",
+                       "project_name": "",
+                       "project_description": "",
+                       SUBJECTS : {},
+                       ETHOGRAM: {},
+                       OBSERVATIONS: {},
+                       BEHAVIORAL_CATEGORIES : [],
+                       "coding_map": {}}
 
         # pass copy of self.pj
         newProjectWindow.pj = dict(self.pj)
 
-        if newProjectWindow.exec_():  #button OK
+        if newProjectWindow.exec_():  # button OK
 
             # retrieve project dict from window
             self.pj = dict(newProjectWindow.pj)
@@ -6131,7 +6124,7 @@ item []:
             self.mediaplayer.set_time(currentMediaTime)
 
             if self.second_player():
-                
+
                 # set on media player2 end
                 currentMediaTime2 = int(sum(self.duration2))
                 globalCurrentTime2 = int(self.FFmpegGlobalFrame2 * (1000 / list(self.fps2.values())[0]))
@@ -6157,7 +6150,7 @@ item []:
                 self.cleaningThread.exiting = True
 
         # go to frame by frame mode
-        else:  
+        else:
 
             if list(self.fps.values())[0] == 0:
                 logging.warning("The frame per second value is not available. Frame-by-frame mode will not be available")
@@ -8602,7 +8595,7 @@ item []:
 
                 self.FFmpegGlobalFrame += self.fast * list(self.fps.values())[0]
 
-                
+
                 if self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]) >= sum(self.duration):
                     logging.debug("end of last media")
                     self.FFmpegGlobalFrame = int(sum(self.duration) * list(self.fps.values())[0] / 1000)-1
@@ -8616,14 +8609,14 @@ item []:
                     currentTime2 = self.FFmpegGlobalFrame2 / list(self.fps2.values())[0]
                     self.FFmpegGlobalFrame2 = int((currentTime2 + self.fast) * list(self.fps2.values())[0])
                     '''
-                    
+
                     self.FFmpegGlobalFrame2 += self.fast * list(self.fps2.values())[0]
                     if self.FFmpegGlobalFrame2 * (1000 / list(self.fps2.values())[0]) >= sum(self.duration2):
                         logging.debug("end of last media")
                         self.FFmpegGlobalFrame2 = int(sum(self.duration2) * list(self.fps2.values())[0] / 1000)-1
                         logging.debug("FFmpegGlobalFrame2 {}  sum duration2 {}".format(self.FFmpegGlobalFrame2, sum(self.duration2)))
-                    
-                    
+
+
                     if self.FFmpegGlobalFrame2 > 0:
                         self.FFmpegGlobalFrame2 -= 1
 
