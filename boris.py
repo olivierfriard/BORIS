@@ -138,8 +138,6 @@ def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
 
     return True
 
-
-
 def bytes_to_str(b):
     """
     Translate bytes to string.
@@ -753,9 +751,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             import multiprocessing
 
-            horiz_resol, ok = QInputDialog.getInt(self, "", "Horizontal resolution (in pixels)\nThe aspect ratio will be maintained", 1024, 352, 1920, 10)
+            horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
+                                                             "The aspect ratio will be maintained"), 1024, 352, 1920, 10)
 
-            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode, args=(fileNames, horiz_resol, ffmpeg_bin, ))
+            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode,
+                                                                 args=(fileNames, horiz_resol, ffmpeg_bin, ))
             self.ffmpeg_recode_process.start()
 
             self.w = recode_widget.Info_widget()
@@ -1053,9 +1053,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w = recode_widget.Info_widget()
         w.resize(350, 100)
         w.setWindowFlags(Qt.WindowStaysOnTopHint)
-        w.setWindowTitle("BORIS")
-        w.label.setText("Generating spectrogram...")
-
+        w.setWindowTitle(programName)
+        w.label.setText("Generating spectrogram. Please wait..")
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
@@ -1065,11 +1064,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     app.processEvents()
                     if not process.is_alive():
                         w.hide()
+                        break
             else:
                 QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media))
-
-
-
 
     def show_spectrogram(self):
         """
@@ -1119,7 +1116,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.show()
                 self.timer_spectro.start()
 
-            if (self.playerType == VLC and self.playMode == VLC and not flagPaused) :
+            if self.playerType == VLC and self.playMode == VLC and not flagPaused:
                 self.play_video()
 
 
@@ -3055,6 +3052,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #observationWindow.cbVisualizeSpectrogram.setEnabled(FLAG_MATPLOTLIB_INSTALLED)
 
         rv = observationWindow.exec_()
+
+        print("rv", rv)
 
         if rv:
 
