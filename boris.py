@@ -22,35 +22,47 @@ This file is part of BORIS.
 
 """
 
-
-__version__ = "3.13"
-__version_date__ = "2016-12-04"
-__DEV__ = False
-BITMAP_EXT = "jpg"
-
-
 import os
 import sys
 import platform
-if sys.platform == "darwin": # for MacOS
-    os.environ["LC_ALL"] = "en_US.UTF-8"
 import logging
+from optparse import OptionParser
+import time
+import json
+from decimal import *
+import re
+import hashlib
+import subprocess
+import sqlite3
+import urllib.parse
+import urllib.request
+import urllib.error
+import tempfile
+import glob
+import statistics
+import datetime
+
+__version__ = "3.2"
+__version_date__ = "2016-12-16"
+__DEV__ = False
+BITMAP_EXT = "jpg"
+
+if sys.platform == "darwin":  # for MacOS
+    os.environ["LC_ALL"] = "en_US.UTF-8"
 
 # check if argument
-from optparse import OptionParser
 usage = "usage: %prog [options]"
 parser = OptionParser(usage=usage)
 
-parser.add_option("-d", "--debug", action = "store_true", default = False, dest = "debug", help = "Verbose mode for debugging")
-parser.add_option("-v", "--version", action = "store_true", default = False, dest = "version", help = "Print version")
-parser.add_option("-n", "--nosplashscreen", action = "store_true", default = False, help = "No splash screen")
+parser.add_option("-d", "--debug", action="store_true", default=False, dest="debug", help="Verbose mode for debugging")
+parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
+parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 
 (options, args) = parser.parse_args()
 
 if options.version:
     print("version {0} release date: {1}".format(__version__, __version_date__))
     sys.exit(0)
-
 
 # set logging parameters
 if options.debug:
@@ -81,21 +93,6 @@ except:
 import qrc_boris
 
 video, live = 0, 1
-
-import time
-import json
-from decimal import *
-import re
-import hashlib
-import subprocess
-import sqlite3
-import urllib.parse
-import urllib.request
-import urllib.error
-import tempfile
-import glob
-import statistics
-import datetime
 
 
 try:
@@ -226,7 +223,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     repositioningTimeOffset = 0
     automaticBackup = 0                # automatic backup interval (0 no backup)
 
-    #ObservationsChanged = False
     projectChanged = False
 
     liveObservationStarted = False
@@ -240,14 +236,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     saveMediaFilePath = True
 
     measurement_w = None
-    memPoints = []   # memory of clicke points for measurement tool
+    memPoints = []   # memory of clicked points for measurement tool
 
-    behaviouralStringsSeparator = '|'
+    behaviouralStringsSeparator = "|"
 
     duration = []
     duration2 = []
 
-    simultaneousMedia = False # if second player was created
+    simultaneousMedia = False  # if second player was created
 
     # time laps
     fast = 10
@@ -957,7 +953,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     for behavior in plot_parameters["selected behaviors"]:
 
-                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subject, behavior))
+                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                                       (obsId, subject, behavior))
                         rows = [{"occurence":float2decimal(r["occurence"])}  for r in cursor.fetchall()]
 
                         if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
@@ -1502,12 +1499,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         go to previous media file (if any)
         """
+        if len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) == 1:
+            return
+
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
 
                 currentMedia = ""
-                for idx,media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
+                for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                     if self.FFmpegGlobalFrame < self.duration[idx + 1]:
                         self.FFmpegGlobalFrame = self.duration[idx - 1]
                         break
@@ -2305,7 +2305,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.videoframe2 = QFrame()
         self.palette2 = self.videoframe2.palette()
-        self.palette2.setColor (QPalette.Window, QColor(0,0,0))
+        self.palette2.setColor(QPalette.Window, QColor(0, 0, 0))
         self.videoframe2.setPalette(self.palette2)
         self.videoframe2.setAutoFillBackground(True)
 
@@ -2348,7 +2348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
                 for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
-                    if not os.path.isfile( mediaFile ):
+                    if not os.path.isfile(mediaFile):
                         return False
         return True
 
@@ -2357,7 +2357,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             for player in [PLAYER1, PLAYER2]:
                 for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][player]:
-                    if not os.path.isfile( os.path.dirname(self.projectFileName) +os.sep+ os.path.basename(mediaFile) ):
+                    if not os.path.isfile(os.path.dirname(self.projectFileName) + os.sep + os.path.basename(mediaFile)):
                         return False
         except:
             return False
@@ -2571,11 +2571,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.mediaListPlayer2.set_media_list(self.media_list2)
 
                 if self.embedPlayer:
-                    if sys.platform.startswith("linux"): # for Linux using the X Server
+                    if sys.platform.startswith("linux"):  # for Linux using the X Server
                         self.mediaplayer2.set_xwindow(self.videoframe2.winId())
 
-                    elif sys.platform.startswith("win32"): # for Windows
-                        self.mediaplayer2.set_hwnd( int(self.videoframe2.winId()) )
+                    elif sys.platform.startswith("win32"):  # for Windows
+                        self.mediaplayer2.set_hwnd(int(self.videoframe2.winId()) )
 
                         # self.mediaplayer.set_hwnd(self.videoframe.winId())
 
@@ -4283,7 +4283,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for row in out:
                         values = []
                         for field in fields:
-                            values.append(str(row[field]).replace(" ()", "") )
+                            values.append(str(row[field]).replace(" ()", ""))
 
                         # % of total time
                         if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
@@ -5282,22 +5282,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     signalMapper = QSignalMapper(self)
                     for idx, field in enumerate(tw_indVarFields):
                         if field == "type":
-                            comboBox = QComboBox()
-                            comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
-                            comboBox.setCurrentIndex(NUMERIC_idx)
+                            combobox = QComboBox()
+                            combobox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
+                            combobox.setCurrentIndex(NUMERIC_idx)
                             if self.pj[INDEPENDENT_VARIABLES][i][field] == TEXT:
-                                comboBox.setCurrentIndex(TEXT_idx)
+                                combobox.setCurrentIndex(TEXT_idx)
                             if self.pj[INDEPENDENT_VARIABLES][i][field] == SET_OF_VALUES:
-                                comboBox.setCurrentIndex(SET_OF_VALUES_idx)
-                            newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, comboBox)
-                            signalMapper.setMapping(comboBox, newProjectWindow.twVariables.rowCount() - 1)
-                            comboBox.currentIndexChanged["int"].connect(signalMapper.map)
+                                combobox.setCurrentIndex(SET_OF_VALUES_idx)
+                            newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2,
+                                                                       combobox)
+                            signalMapper.setMapping(combobox, newProjectWindow.twVariables.rowCount() - 1)
+                            combobox.currentIndexChanged["int"].connect(signalMapper.map)
                             signalMapper.mapped["int"].connect(newProjectWindow.variableTypeChanged)
 
                         else:
                             item = QTableWidgetItem("")
                             if field in self.pj[INDEPENDENT_VARIABLES][i]:
-                                item.setText( self.pj[INDEPENDENT_VARIABLES][i][field])
+                                item.setText(self.pj[INDEPENDENT_VARIABLES][i][field])
                             if field == "possible values":
                                 item.setFlags(Qt.ItemIsEnabled)
 
@@ -5438,7 +5439,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return "not saved"
 
             # add .boris if filter = 'Projects file (*.boris)'
-            if  filtr == 'Projects file (*.boris)' and os.path.splitext(self.projectFileName)[1] != '.boris':
+            if filtr == 'Projects file (*.boris)' and os.path.splitext(self.projectFileName)[1] != '.boris':
                 self.projectFileName += '.boris'
 
             self.save_project_json(self.projectFileName)
@@ -6194,7 +6195,8 @@ item []:
             # show frame-by_frame tab
             self.toolBox.setCurrentIndex(1)
 
-            globalTime = (sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media())]) + self.mediaplayer.get_time())
+            print("self.mediaplayer.get_time()", self.mediaplayer.get_time())
+            globalTime = (sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) + self.mediaplayer.get_time())
 
             fps = list(self.fps.values())[0]
 
@@ -6224,9 +6226,9 @@ item []:
 
 
         # enable/disable speed button
-        self.actionNormalSpeed.setEnabled( self.playMode == VLC)
-        self.actionFaster.setEnabled( self.playMode == VLC)
-        self.actionSlower.setEnabled( self.playMode == VLC)
+        self.actionNormalSpeed.setEnabled(self.playMode == VLC)
+        self.actionFaster.setEnabled(self.playMode == VLC)
+        self.actionSlower.setEnabled(self.playMode == VLC)
 
         logging.info("new play mode: {0}".format(self.playMode))
 
@@ -6247,14 +6249,23 @@ item []:
 
                     for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                         if self.FFmpegGlobalFrame < sum(self.duration[0:idx + 1]):
-
                             dirName, fileName = os.path.split(media)
-
                             snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame) + ".png"
-
-                            self.lbFFmpeg.pixmap().save(snapshotFilePath)
-                            self.statusbar.showMessage("Snapshot saved in {}".format(snapshotFilePath), 0)
+                            if self.detachFrameViewer or self.second_player():
+                                self.frame_viewer1.lbFrame.pixmap().save(snapshotFilePath)
+                            elif not self.detachFrameViewer:
+                                self.lbFFmpeg.pixmap().save(snapshotFilePath)
+                            self.statusbar.showMessage("Snapshot player #1 saved in {}".format(snapshotFilePath), 0)
                             break
+
+                    if self.second_player():
+                        for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
+                            if self.FFmpegGlobalFrame2 < sum(self.duration2[0:idx + 1]):
+                                dirName, fileName = os.path.split(media)
+                                snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame2) + ".png"
+                                self.frame_viewer2.lbFrame.pixmap().save(snapshotFilePath)
+                                self.statusbar.showMessage("Snapshot player #2 saved in {}".format(snapshotFilePath), 0)
+                                break
 
                 else:  # VLC
 
@@ -6265,7 +6276,7 @@ item []:
                                                               sep=os.sep,
                                                               fileNameWOExt=os.path.splitext(fileName)[0],
                                                               time=self.mediaplayer.get_time())
-                                                        ,0,0)
+                                                         , 0, 0)
 
                     # check if multi mode
                     # second video together
@@ -6278,7 +6289,8 @@ item []:
                                                               dirName=dirName,
                                                               sep=os.sep,
                                                               fileNameWOExt=os.path.splitext(fileName)[0],
-                                                              time=self.mediaplayer2.get_time()) ,0,0)
+                                                              time=self.mediaplayer2.get_time())
+                                                              , 0, 0)
 
 
     def video_normalspeed_activated(self):
@@ -6287,18 +6299,12 @@ item []:
         """
 
         if self.playerType == VLC and self.playMode == VLC:
-
             self.play_rate = 1
-
             self.mediaplayer.set_rate(self.play_rate)
-
             # second video together
             if self.simultaneousMedia:
-
                 self.mediaplayer2.set_rate(self.play_rate)
-
             self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
-
             logging.info('play rate: {:.3f}'.format(self.play_rate))
 
 
@@ -6315,13 +6321,10 @@ item []:
 
                 # second video together
                 if self.simultaneousMedia:
-
                     self.mediaplayer2.set_rate(self.play_rate)
-
                 self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
 
             logging.info('play rate: {:.3f}'.format(self.play_rate))
-
 
     def video_slower_activated(self):
         """
@@ -8756,9 +8759,10 @@ if __name__=="__main__":
 
     # check matplotlib
     if not FLAG_MATPLOTLIB_INSTALLED:
-        QMessageBox.warning(None, programName, """Some functions (plot events and spectrogram) require the Matplotlib module.<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>""",
+        QMessageBox.warning(None, programName,
+                            ("""Some functions (plot events and spectrogram) require the Matplotlib module."""
+                             """<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>"""),
                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
 
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)
