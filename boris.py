@@ -5710,9 +5710,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             data = tablib.Dataset()
             data.title = "Aggregated events"
-            data.append(["Observation id", "Observation date", "Media file", "Total media length", "FPS",
-                         "Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
+            header = ["Observation id", "Observation date", "Media file", "Total media length", "FPS"]
 
+            # independent variables
+            if "independent_variables" in self.pj:
+                for idx in sorted(self.pj["independent_variables"].keys()):
+                    header.append(self.pj["independent_variables"][idx]["label"])
+
+            header.extend(["Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
+
+            data.append(header)
 
         self.statusbar.showMessage("Exporting aggregated events in {} format".format(outputFormat.upper()), 0)
         flagUnpairedEventFound = False
@@ -5767,12 +5774,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     comment_start=row["comment"],
                                                     comment_stop="")
                             else:
-                                data.append([obsId,
+                                row_data = []
+                                row_data.extend([obsId,
                                             self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                             mediaFileString,
                                             sum(duration1),
-                                            fpsString,
-                                            subject,
+                                            fpsString])
+
+                                # independent variables
+                                if "independent_variables" in self.pj:
+                                    for idx_var in sorted(self.pj["independent_variables"].keys()):
+                                        if self.pj["independent_variables"][idx_var]["label"] in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
+                                           row_data.append(self.pj[OBSERVATIONS][obsId]["independent_variables"][self.pj["independent_variables"][idx_var]["label"]])
+                                        else:
+                                            row_data.append("")
+
+                                row_data.extend([subject,
                                             behavior,
                                             row["modifiers"].strip(),
                                             POINT,
@@ -5781,6 +5798,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             row["comment"],
                                             ""
                                             ])
+                                data.append(row_data)
 
 
                         if STATE in self.eventType(behavior).upper():
@@ -5801,12 +5819,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         comment_stop=rows[idx + 1]["comment"])
 
                                 else:
-                                    data.append([obsId,
+                                    row_data = []
+                                    
+                                    row_data.extend([obsId,
                                             self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                             mediaFileString,
                                             sum(duration1),
-                                            fpsString,
-                                            subject,
+                                            fpsString])
+
+                                    # independent variables
+                                    if "independent_variables" in self.pj:
+                                        for idx_var in sorted(self.pj["independent_variables"].keys()):
+                                            if self.pj["independent_variables"][idx_var]["label"] in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
+                                               row_data.append(self.pj[OBSERVATIONS][obsId]["independent_variables"][self.pj["independent_variables"][idx_var]["label"]])
+                                            else:
+                                                row_data.append("")
+
+                                    row_data.extend([subject,
                                             behavior,
                                             row["modifiers"].strip(),
                                             STATE,
@@ -5815,6 +5844,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             row["comment"],
                                             rows[idx + 1]["comment"]
                                             ])
+
+                                    data.append(row_data)
 
 
         if outputFormat == "sql":
