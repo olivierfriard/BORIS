@@ -6612,7 +6612,6 @@ item []:
         """
         display dialog with how to cite BORIS
         """
-        #QMessageBox.about(self, "How to cite BORIS", ("Friard, O. and Gamba, M. (2016), " "BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations. Methods Ecol Evol, 7: 1325–1330. doi:10.1111/2041-210X.12584"))
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle("How to cite BORIS")
         self.results.ptText.clear()
