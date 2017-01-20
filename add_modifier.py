@@ -188,15 +188,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
             self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
 
+
     def addModifier(self):
         """
         add a modifier to set
         """
 
+        print("add modifier")
+
         txt = self.leModifier.text()
-        for c in "(|)":
+        for c in "(|),":
             if c in txt:
-                QMessageBox.critical(self, programName, "The modifier contain a character that is not allowed (|)!")
+                QMessageBox.critical(self, programName, "The modifier contains a character that is not allowed.<br>Check the following characters: <b>,(|)</b>")
                 self.leModifier.setFocus()
                 return
 

@@ -34,7 +34,7 @@ except:
 import json
 
 from config import *
-from add_modifier import *
+import add_modifier
 import dialog
 
 if QT_VERSION_STR[0] == "4":
@@ -241,7 +241,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(row, behavioursFields["coding map"]).text():
                 QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
             else:
-                addModifierWindow = addModifierDialog(self.twBehaviors.item(row, column).text())
+                addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text())
                 addModifierWindow.setWindowTitle("""Set modifiers for "{}" behavior""".format(self.twBehaviors.item(row, 2).text()))
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
