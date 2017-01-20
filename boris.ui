@@ -107,6 +107,7 @@
     <addaction name="actionUser_guide"/>
     <addaction name="actionCheckUpdate"/>
     <addaction name="separator"/>
+    <addaction name="actionHow_to_cite_BORIS"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuFile">
@@ -907,6 +908,11 @@
    </property>
    <property name="toolTip">
     <string>Find</string>
+   </property>
+  </action>
+  <action name="actionHow_to_cite_BORIS">
+   <property name="text">
+    <string>How to cite BORIS</string>
    </property>
   </action>
  </widget>

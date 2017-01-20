@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Nov 21 15:50:38 2016
+# Created: Fri Jan 20 14:46:43 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -361,9 +361,12 @@ class Ui_MainWindow(object):
         self.actionFind_replace_events.setObjectName(_fromUtf8("actionFind_replace_events"))
         self.actionFind_events = QtGui.QAction(MainWindow)
         self.actionFind_events.setObjectName(_fromUtf8("actionFind_events"))
+        self.actionHow_to_cite_BORIS = QtGui.QAction(MainWindow)
+        self.actionHow_to_cite_BORIS.setObjectName(_fromUtf8("actionHow_to_cite_BORIS"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
+        self.menuHelp.addAction(self.actionHow_to_cite_BORIS)
         self.menuHelp.addAction(self.actionAbout)
         self.menuFile.addAction(self.actionNew_project)
         self.menuFile.addAction(self.actionOpen_project)
@@ -585,4 +588,5 @@ class Ui_MainWindow(object):
         self.actionFind_replace_events.setText(_translate("MainWindow", "Find/replace in events", None))
         self.actionFind_events.setText(_translate("MainWindow", "Find in events", None))
         self.actionFind_events.setToolTip(_translate("MainWindow", "Find", None))
+        self.actionHow_to_cite_BORIS.setText(_translate("MainWindow", "How to cite BORIS", None))
 

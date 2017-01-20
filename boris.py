@@ -627,6 +627,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
+        self.actionHow_to_cite_BORIS.triggered.connect(self.actionHow_to_cite_BORIS_activated)
         self.actionAbout.triggered.connect(self.actionAbout_activated)
         self.actionCheckUpdate.triggered.connect(self.actionCheckUpdate_activated)
 
@@ -5820,7 +5821,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 else:
                                     row_data = []
-                                    
+
                                     row_data.extend([obsId,
                                             self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
                                             mediaFileString,
@@ -6607,6 +6608,17 @@ item []:
         else:
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
+    def actionHow_to_cite_BORIS_activated(self):
+        """
+        display dialog with how to cite BORIS
+        """
+        #QMessageBox.about(self, "How to cite BORIS", ("Friard, O. and Gamba, M. (2016), " "BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations. Methods Ecol Evol, 7: 1325–1330. doi:10.1111/2041-210X.12584"))
+        self.results = dialog.ResultsWidget()
+        self.results.setWindowTitle("How to cite BORIS")
+        self.results.ptText.clear()
+        self.results.ptText.appendHtml(("Friard, O. and Gamba, M. (2016), " "BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations. Methods Ecol Evol, 7: 1325–1330. doi:10.1111/2041-210X.12584"))
+        self.results.show()
+
 
     def actionAbout_activated(self):
         """
@@ -7073,7 +7085,10 @@ item []:
                     else:
                         modifier_str = "|".join( modifiers )
                 else:
-                    modifier_str = currentModifiers
+                    if currentModifiers: # editing
+                        modifier_str = currentModifiers
+                    else:
+                        return
 
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:

@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Mon Nov 21 15:50:39 2016
-#      by: PyQt5 UI code generator 5.3.2
+# Created by: PyQt5 UI code generator 5.7.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -83,6 +82,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_3 = QtWidgets.QWidget()
         self.dockWidgetContents_3.setObjectName("dockWidgetContents_3")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.dockWidgetContents_3)
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -123,6 +123,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_2 = QtWidgets.QWidget()
         self.dockWidgetContents_2.setObjectName("dockWidgetContents_2")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.dockWidgetContents_2)
+        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -150,6 +151,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents = QtWidgets.QWidget()
         self.dockWidgetContents.setObjectName("dockWidgetContents")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.dockWidgetContents)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.twSubjects = QtWidgets.QTableWidget(self.dockWidgetContents)
         self.twSubjects.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -347,9 +349,12 @@ class Ui_MainWindow(object):
         self.actionFind_replace_events.setObjectName("actionFind_replace_events")
         self.actionFind_events = QtWidgets.QAction(MainWindow)
         self.actionFind_events.setObjectName("actionFind_events")
+        self.actionHow_to_cite_BORIS = QtWidgets.QAction(MainWindow)
+        self.actionHow_to_cite_BORIS.setObjectName("actionHow_to_cite_BORIS")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
+        self.menuHelp.addAction(self.actionHow_to_cite_BORIS)
         self.menuHelp.addAction(self.actionAbout)
         self.menuFile.addAction(self.actionNew_project)
         self.menuFile.addAction(self.actionOpen_project)
@@ -572,4 +577,5 @@ class Ui_MainWindow(object):
         self.actionFind_replace_events.setText(_translate("MainWindow", "Find/replace in events"))
         self.actionFind_events.setText(_translate("MainWindow", "Find in events"))
         self.actionFind_events.setToolTip(_translate("MainWindow", "Find"))
+        self.actionHow_to_cite_BORIS.setText(_translate("MainWindow", "How to cite BORIS"))
 
