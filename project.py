@@ -234,7 +234,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check if double click on coding map
         if column == behavioursFields["coding map"]:
-            self.comboBoxChanged(row)
+            self.behaviorTypeChanged(row)
 
         if column == behavioursFields["modifiers"]:
             # check if behavior has coding map
@@ -721,7 +721,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
-                    signalMapper.mapped['int'].connect(self.comboBoxChanged)
+                    signalMapper.mapped['int'].connect(self.behaviorTypeChanged)
 
     def check_text_file_type(self, rows):
         """
@@ -822,7 +822,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
-                    signalMapper.mapped['int'].connect(self.comboBoxChanged)
+                    signalMapper.mapped['int'].connect(self.behaviorTypeChanged)
 
 
 
@@ -951,10 +951,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
-        signalMapper.mapped['int'].connect(self.comboBoxChanged)
+        signalMapper.mapped['int'].connect(self.behaviorTypeChanged)
 
 
-    def comboBoxChanged(self, row):
+    def behaviorTypeChanged(self, row):
         """
         event type combobox changed
         """
@@ -964,9 +964,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             # let user select a coding maop
             fd = QFileDialog(self)
             if QT_VERSION_STR[0] == "4":
-                fileName = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
+                fileName = fd.getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()), "", 'BORIS map files (*.boris_map);;All files (*)')
             else:
-                fileName, _ = fd.getOpenFileName(self, 'Select a coding map for %s behavior' % self.twBehaviors.item(row, behavioursFields['code']).text(), '', 'BORIS map files (*.boris_map);;All files (*)')
+                fileName, _ = fd.getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()), "", 'BORIS map files (*.boris_map);;All files (*)')
 
             if fileName:
                 import json
@@ -980,12 +980,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             else:
                 # if coding map already exists do not reset the behavior type if no filename selected
-                if not self.twBehaviors.item(row, behavioursFields['coding map']).text():
-                    QMessageBox.critical(self, programName, 'No coding map was selected.\nEvent type will be reset to "Point event"')
-                    self.twBehaviors.cellWidget(row, behavioursFields['type']).setCurrentIndex(0)
+                if not self.twBehaviors.item(row, behavioursFields["coding map"]).text():
+                    QMessageBox.critical(self, programName, """No coding map was selected.\nEvent type will be reset to "Point event" """)
+                    self.twBehaviors.cellWidget(row, behavioursFields["type"]).setCurrentIndex(0)
         else:
-            self.twBehaviors.item(row, behavioursFields['modifiers']).setText('')
-            self.twBehaviors.item(row, behavioursFields['coding map']).setText('')
+            #self.twBehaviors.item(row, behavioursFields['modifiers']).setText("")
+            self.twBehaviors.item(row, behavioursFields["coding map"]).setText("")
 
     def pbAddSubject_clicked(self):
         """

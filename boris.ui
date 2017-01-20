@@ -182,9 +182,32 @@
     <property name="title">
      <string>Playback</string>
     </property>
+    <widget class="QMenu" name="menuZoom1">
+     <property name="title">
+      <string>Zoom player #1</string>
+     </property>
+     <addaction name="actionZoom1_fitwindow"/>
+     <addaction name="actionZoom1_1_4"/>
+     <addaction name="actionZoom1_1_2"/>
+     <addaction name="actionZoom1_1_1"/>
+     <addaction name="actionZoom1_2_1"/>
+    </widget>
+    <widget class="QMenu" name="menuZoom2">
+     <property name="title">
+      <string>Zoom player #2</string>
+     </property>
+     <addaction name="actionZoom2_fitwindow"/>
+     <addaction name="actionZoom2_1_4"/>
+     <addaction name="actionZoom2_1_2"/>
+     <addaction name="actionZoom2_1_1"/>
+     <addaction name="actionZoom2_2_1"/>
+    </widget>
     <addaction name="actionJumpForward"/>
     <addaction name="actionJumpBackward"/>
     <addaction name="actionJumpTo"/>
+    <addaction name="separator"/>
+    <addaction name="menuZoom1"/>
+    <addaction name="menuZoom2"/>
     <addaction name="separator"/>
     <addaction name="actionPlay"/>
     <addaction name="actionPause"/>
@@ -913,6 +936,86 @@
   <action name="actionHow_to_cite_BORIS">
    <property name="text">
     <string>How to cite BORIS</string>
+   </property>
+  </action>
+  <action name="actionZoom1_1_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:1 Original</string>
+   </property>
+  </action>
+  <action name="actionZoom1_2_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>2:1 Double</string>
+   </property>
+  </action>
+  <action name="actionZoom1_1_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:2 Half</string>
+   </property>
+  </action>
+  <action name="actionZoom1_1_4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:4 Quarter</string>
+   </property>
+  </action>
+  <action name="actionZoom1_fitwindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fit to window</string>
+   </property>
+  </action>
+  <action name="actionZoom2_fitwindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fit to window</string>
+   </property>
+  </action>
+  <action name="actionZoom2_1_4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:4 Quarter</string>
+   </property>
+  </action>
+  <action name="actionZoom2_1_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:2 Half</string>
+   </property>
+  </action>
+  <action name="actionZoom2_1_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:1 Original</string>
+   </property>
+  </action>
+  <action name="actionZoom2_2_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>2:1 Double</string>
    </property>
   </action>
  </widget>

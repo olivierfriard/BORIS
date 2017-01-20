@@ -501,6 +501,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpForward.setEnabled(self.playerType == VLC)
         self.actionJumpBackward.setEnabled(self.playerType == VLC)
         self.actionJumpTo.setEnabled(self.playerType == VLC)
+
+        self.menuZoom1.setEnabled(self.playerType == VLC)
+        self.menuZoom2.setEnabled(False)
+        try:
+            zv = self.mediaplayer.video_get_scale()
+            self.actionZoom1_fitwindow.setChecked(zv == 0)
+            self.actionZoom1_1_1.setChecked(zv == 1)
+            self.actionZoom1_1_2.setChecked(zv == 0.5)
+            self.actionZoom1_1_4.setChecked(zv == 0.25)
+            self.actionZoom1_2_1.setChecked(zv == 2)
+        except:
+            pass
+
+        if self.simultaneousMedia:
+            self.menuZoom2.setEnabled(self.playerType == VLC)
+            try:
+                zv = self.mediaplayer2.video_get_scale()
+                self.actionZoom2_fitwindow.setChecked(zv == 0)
+                self.actionZoom2_1_1.setChecked(zv == 1)
+                self.actionZoom2_1_2.setChecked(zv == 0.5)
+                self.actionZoom2_1_4.setChecked(zv == 0.25)
+                self.actionZoom2_2_1.setChecked(zv == 2)
+            except:
+                pass
+
+
         self.actionPlay.setEnabled(self.playerType == VLC)
         self.actionPause.setEnabled(self.playerType == VLC)
         self.actionReset.setEnabled(self.playerType == VLC)
@@ -638,6 +664,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionReset.triggered.connect(self.reset_activated)
         self.actionJumpBackward.triggered.connect(self.jumpBackward_activated)
         self.actionJumpForward.triggered.connect(self.jumpForward_activated)
+
+        #self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
+
+        self.actionZoom1_fitwindow.triggered.connect(lambda: self.video_zoom(1, 0))
+        self.actionZoom1_1_1.triggered.connect(lambda: self.video_zoom(1, 1))
+        self.actionZoom1_1_2.triggered.connect(lambda: self.video_zoom(1, 0.5))
+        self.actionZoom1_1_4.triggered.connect(lambda: self.video_zoom(1, 0.25))
+        self.actionZoom1_2_1.triggered.connect(lambda: self.video_zoom(1, 2))
+
+        self.actionZoom2_fitwindow.triggered.connect(lambda: self.video_zoom(2, 0))
+        self.actionZoom2_1_1.triggered.connect(lambda: self.video_zoom(2, 1))
+        self.actionZoom2_1_2.triggered.connect(lambda: self.video_zoom(2, 0.5))
+        self.actionZoom2_1_4.triggered.connect(lambda: self.video_zoom(2, 0.25))
+        self.actionZoom2_2_1.triggered.connect(lambda: self.video_zoom(2, 2))
+
 
         self.actionFaster.triggered.connect(self.video_faster_activated)
         self.actionSlower.triggered.connect(self.video_slower_activated)
@@ -5269,7 +5310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
-                newProjectWindow.signalMapper.mapped["int"].connect(newProjectWindow.comboBoxChanged)
+                newProjectWindow.signalMapper.mapped["int"].connect(newProjectWindow.behaviorTypeChanged)
 
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
 
@@ -6325,6 +6366,40 @@ item []:
                                                               , 0, 0)
 
 
+    def video_zoom(self, player, zoom_value):
+        """
+        change video zoom
+        """
+        try:
+            if player == 1:
+                self.mediaplayer.video_set_scale(zoom_value)
+            if player == 2 and self.simultaneousMedia:
+                self.mediaplayer2.video_set_scale(zoom_value)
+        except:
+            pass
+
+        try:
+            if player == 1:
+                zv = self.mediaplayer.video_get_scale()
+                self.actionZoom1_fitwindow.setChecked(zv == 0)
+                self.actionZoom1_1_1.setChecked(zv == 1)
+                self.actionZoom1_1_2.setChecked(zv == 0.5)
+                self.actionZoom1_1_4.setChecked(zv == 0.25)
+                self.actionZoom1_2_1.setChecked(zv == 2)
+            if player == 2 and self.simultaneousMedia:
+                zv = self.mediaplayer2.video_get_scale()
+                self.actionZoom2_fitwindow.setChecked(zv == 0)
+                self.actionZoom2_1_1.setChecked(zv == 1)
+                self.actionZoom2_1_2.setChecked(zv == 0.5)
+                self.actionZoom2_1_4.setChecked(zv == 0.25)
+                self.actionZoom2_2_1.setChecked(zv == 2)
+
+        except:
+            pass
+
+
+
+
     def video_normalspeed_activated(self):
         """
         set playing speed at normal speed
@@ -6624,10 +6699,10 @@ item []:
         about dialog
         """
 
-        if __version__ == 'DEV':
-            ver = 'DEVELOPMENT VERSION'
-        else:
-            ver = 'v. {0}'.format(__version__)
+        #print( self.mediaplayer.video_get_scale() )
+        #self.mediaplayer.video_set_scale(2)
+
+        ver = 'v. {0}'.format(__version__)
 
         players = []
         players.append("VLC media player v. {}".format(bytes_to_str(vlc.libvlc_get_version())))
