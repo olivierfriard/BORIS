@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2016 Olivier Friard
+Copyright 2012-2017 Olivier Friard
 
 This file is part of BORIS.
 
@@ -6699,9 +6699,6 @@ item []:
         about dialog
         """
 
-        #print( self.mediaplayer.video_get_scale() )
-        #self.mediaplayer.video_set_scale(2)
-
         ver = 'v. {0}'.format(__version__)
 
         players = []
@@ -6711,7 +6708,7 @@ item []:
 
 
         QMessageBox.about(self, "About " + programName, """<b>{prog_name}</b> {ver} - {date}
-        <p>Copyright &copy; 2012-2016 Olivier Friard - Marco Gamba<br>
+        <p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>
         Department of Life Sciences and Systems Biology<br>
         University of Torino - Italy<br>
         <br>
