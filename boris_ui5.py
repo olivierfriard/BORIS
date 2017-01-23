@@ -588,7 +588,7 @@ class Ui_MainWindow(object):
         self.actionExportEventString.setText(_translate("MainWindow", "Export events as behavioural strings"))
         self.actionClose_project.setText(_translate("MainWindow", "Close project"))
         self.actionObservationsList.setText(_translate("MainWindow", "Observations list"))
-        self.actionMapCreator.setText(_translate("MainWindow", "Map creator"))
+        self.actionMapCreator.setText(_translate("MainWindow", "Modifiers coding map creator"))
         self.actionNormalSpeed.setText(_translate("MainWindow", "Normal speed"))
         self.actionSnapshot.setText(_translate("MainWindow", "Snapshot"))
         self.actionFrame_by_frame.setText(_translate("MainWindow", "Frame by frame"))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri Jan 20 17:06:51 2017
+# Created: Mon Jan 23 11:03:21 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -599,7 +599,7 @@ class Ui_MainWindow(object):
         self.actionExportEventString.setText(_translate("MainWindow", "Export events as behavioural strings", None))
         self.actionClose_project.setText(_translate("MainWindow", "Close project", None))
         self.actionObservationsList.setText(_translate("MainWindow", "Observations list", None))
-        self.actionMapCreator.setText(_translate("MainWindow", "Map creator", None))
+        self.actionMapCreator.setText(_translate("MainWindow", "Modifiers coding map creator", None))
         self.actionNormalSpeed.setText(_translate("MainWindow", "Normal speed", None))
         self.actionSnapshot.setText(_translate("MainWindow", "Snapshot", None))
         self.actionFrame_by_frame.setText(_translate("MainWindow", "Frame by frame", None))

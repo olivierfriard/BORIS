@@ -746,7 +746,7 @@
   </action>
   <action name="actionMapCreator">
    <property name="text">
-    <string>Map creator</string>
+    <string>Modifiers coding map creator</string>
    </property>
   </action>
   <action name="actionNormalSpeed">

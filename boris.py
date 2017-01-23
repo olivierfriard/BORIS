@@ -636,7 +636,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionMapCreator.triggered.connect(self.map_creator)
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
-        self.actionBehaviors_map.triggered.connect(self.coding_map)
+        self.actionBehaviors_map.triggered.connect(self.show_coding_pad)
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
@@ -826,7 +826,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(event)
 
 
-    def coding_map(self):
+    def show_coding_pad(self):
         """
         show coding pad window
         """
@@ -1993,7 +1993,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
                                         glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
-            second2 = int((frameCurrentMedia2 -1 )/ fps)
+            second2 = int((frameCurrentMedia2 - 1) / fps)
             frame2 = round((frameCurrentMedia2 - int((frameCurrentMedia2 -1)/ fps) * fps))
             if frame2 == 0:
                 frame2 += 1
@@ -2087,8 +2087,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
             if len([x[ pj_obs_fields["code"]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                       if x[pj_obs_fields["subject"]] == "" and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime /1000]) % 2: # test if odd
-                self.currentStates[''].append(sbc)
+                       if x[pj_obs_fields["subject"]] == "" and x[pj_obs_fields["code"]] == sbc and x[pj_obs_fields["time"]] <= currentTime /1000]) % 2: # test if odd
+                self.currentStates[""].append(sbc)
 
         # add states for all configured subjects
         for idx in self.pj[SUBJECTS]:
@@ -2096,8 +2096,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # add subject index
             self.currentStates[ idx ] = []
             for sbc in StateBehaviorsCodes:
-                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                           if x[pj_obs_fields['subject']] == self.pj[SUBJECTS][idx]['name'] and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time'] ] <= currentTime / 1000 ] ) % 2: # test if odd
+                if len([x[pj_obs_fields["code"]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                           if x[pj_obs_fields["subject"]] == self.pj[SUBJECTS][idx]["name"] and x[pj_obs_fields["code"]] == sbc and x[pj_obs_fields["time"]] <= currentTime / 1000 ]) % 2: # test if odd
                     self.currentStates[idx].append(sbc)
 
         # show current states
@@ -2139,7 +2139,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.measurement_w.show()
 
 
-
     def draw_point(self, x, y, color):
         """
         draw point on frame-by-frame image
@@ -2155,6 +2154,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         painter.end()
         self.lbFFmpeg.update()
 
+
     def draw_line(self, x1, y1, x2, y2, color):
         """
         draw line on frame-by-frame image
@@ -2165,7 +2165,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         painter.drawLine(x1, y1, x2, y2)
         painter.end()
         self.lbFFmpeg.update()
-
 
 
     def getPoslbFFmpeg(self, event):
