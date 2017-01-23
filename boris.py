@@ -502,7 +502,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpBackward.setEnabled(self.playerType == VLC)
         self.actionJumpTo.setEnabled(self.playerType == VLC)
 
-        self.menuZoom1.setEnabled(self.playerType == VLC)
+        self.menuZoom1.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
         self.menuZoom2.setEnabled(False)
         try:
             zv = self.mediaplayer.video_get_scale()
@@ -515,7 +515,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pass
 
         if self.simultaneousMedia:
-            self.menuZoom2.setEnabled(self.playerType == VLC)
+            self.menuZoom2.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
             try:
                 zv = self.mediaplayer2.video_get_scale()
                 self.actionZoom2_fitwindow.setChecked(zv == 0)
