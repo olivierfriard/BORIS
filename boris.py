@@ -3254,6 +3254,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if hasattr(self, "frame_viewer2"):
             del self.frame_viewer2
 
+        if hasattr(self, "results"):
+            del self.results
+
 
     def close_observation(self):
         """
@@ -6690,7 +6693,9 @@ item []:
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle("How to cite BORIS")
         self.results.ptText.clear()
-        self.results.ptText.appendHtml(("Friard, O. and Gamba, M. (2016), " "BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations. Methods Ecol Evol, 7: 1325–1330. doi:10.1111/2041-210X.12584"))
+        self.results.ptText.appendHtml(("Friard, O. and Gamba, M. (2016), "
+                                        "BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations."
+                                        " Methods Ecol Evol, 7: 1325–1330. doi:10.1111/2041-210X.12584"))
         self.results.show()
 
 
