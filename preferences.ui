@@ -372,33 +372,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="cbSpectrogramColorMap">
-               <item>
-                <property name="text">
-                 <string>viridis</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>inferno</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>plasma</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>magma</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>gray</string>
-                </property>
-               </item>
-              </widget>
+              <widget class="QComboBox" name="cbSpectrogramColorMap"/>
              </item>
             </layout>
            </item>

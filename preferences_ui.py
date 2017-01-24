@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Tue Jan 24 15:34:55 2017
+# Created: Tue Jan 24 17:39:18 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -201,11 +201,6 @@ class Ui_prefDialog(object):
         self.horizontalLayout_7.addWidget(self.label_7)
         self.cbSpectrogramColorMap = QtGui.QComboBox(self.tab_4)
         self.cbSpectrogramColorMap.setObjectName(_fromUtf8("cbSpectrogramColorMap"))
-        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
-        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
-        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
-        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
-        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
         self.horizontalLayout_7.addWidget(self.cbSpectrogramColorMap)
         self.verticalLayout_8.addLayout(self.horizontalLayout_7)
         spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
@@ -257,11 +252,6 @@ class Ui_prefDialog(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode", None))
         self.lbspectrogram.setText(_translate("prefDialog", "Spectrogram height", None))
         self.label_7.setText(_translate("prefDialog", "Color map", None))
-        self.cbSpectrogramColorMap.setItemText(0, _translate("prefDialog", "viridis", None))
-        self.cbSpectrogramColorMap.setItemText(1, _translate("prefDialog", "inferno", None))
-        self.cbSpectrogramColorMap.setItemText(2, _translate("prefDialog", "plasma", None))
-        self.cbSpectrogramColorMap.setItemText(3, _translate("prefDialog", "magma", None))
-        self.cbSpectrogramColorMap.setItemText(4, _translate("prefDialog", "gray", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("prefDialog", "Spectrogram", None))
         self.pbCancel.setText(_translate("prefDialog", "Cancel", None))
         self.pbOK.setText(_translate("prefDialog", "OK", None))
