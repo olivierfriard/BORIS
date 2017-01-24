@@ -42,11 +42,9 @@ import dialog
 designColor = QColor(255,0,0,128)
 penWidth = 0
 penStyle = Qt.NoPen
-
 selectedBrush = QBrush()
 selectedBrush.setStyle(Qt.SolidPattern)
 selectedBrush.setColor(QColor(255, 255, 0, 255))
-
 
 
 def intersection(A, B, C, D):
@@ -77,9 +75,7 @@ def intersection(A, B, C, D):
         intersept = ya - slope * xa
         xm = xc
         ym = slope * xm + intersept
-
     else:
-
         # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
         xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
         ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
@@ -87,7 +83,6 @@ def intersection(A, B, C, D):
 
     xmin1, xmax1 = min(xa, xb), max(xa, xb)
     xmin2, xmax2 = min(xc, xd), max(xc, xd)
-
     ymin1, ymax1 = min(ya, yb), max(ya, yb)
     ymin2, ymax2 = min(yc, yd), max(yc, yd)
 
@@ -119,14 +114,14 @@ class MapCreatorWindow(QMainWindow):
             self.setScene(QGraphicsScene(self))
             self.scene().update()
 
-    bitmapFileName = ''
-    mapName = ''
-    fileName = ''
+    bitmapFileName = ""
+    mapName = ""
+    fileName = ""
     flagNewArea = False
     flagMapChanged = False
     areasList = {}
     polygonsList2 = {}
-    areaColor = QColor('lime')
+    areaColor = QColor("lime")
 
     def __init__(self):
 
@@ -136,43 +131,43 @@ class MapCreatorWindow(QMainWindow):
         self.closedPolygon = None
         self.selectedPolygon = None
 
-        self.setWindowTitle('BORIS - Map creator tool' )
+        self.setWindowTitle("BORIS - Modifiers map creator")
 
-        self.newMapAction = QAction(QIcon(), '&New map', self)
-        self.newMapAction.setShortcut('Ctrl+N')
-        self.newMapAction.setStatusTip('Create a new map')
+        self.newMapAction = QAction(QIcon(), "&New map", self)
+        self.newMapAction.setShortcut("Ctrl+N")
+        self.newMapAction.setStatusTip("Create a new map")
         self.newMapAction.triggered.connect(self.newMap)
 
-        self.openMapAction = QAction(QIcon(), '&Open map', self)
-        self.openMapAction.setShortcut('Ctrl+O')
-        self.openMapAction.setStatusTip('Open a map')
+        self.openMapAction = QAction(QIcon(), "&Open map", self)
+        self.openMapAction.setShortcut("Ctrl+O")
+        self.openMapAction.setStatusTip("Open a map")
         self.openMapAction.triggered.connect(self.openMap)
 
-        self.saveMapAction = QAction(QIcon(), '&Save map', self)
-        self.saveMapAction.setShortcut('Ctrl+S')
-        self.saveMapAction.setStatusTip('Save map')
+        self.saveMapAction = QAction(QIcon(), "&Save map", self)
+        self.saveMapAction.setShortcut("Ctrl+S")
+        self.saveMapAction.setStatusTip("Save map")
         self.saveMapAction.setEnabled(False)
         self.saveMapAction.triggered.connect(self.saveMap_clicked)
 
-        self.mapNameAction = QAction(QIcon(), '&Map name', self)
-        self.mapNameAction.setShortcut('Ctrl+M')
-        self.mapNameAction.setStatusTip('Change map name')
+        self.mapNameAction = QAction(QIcon(), "&Map name", self)
+        self.mapNameAction.setShortcut("Ctrl+M")
+        self.mapNameAction.setStatusTip("Change map name")
         self.mapNameAction.setEnabled(False)
         self.mapNameAction.triggered.connect(self.mapName_clicked)
 
 
-        self.saveAsMapAction = QAction(QIcon(), 'Save map as', self)
-        self.saveAsMapAction.setStatusTip('Save map as')
+        self.saveAsMapAction = QAction(QIcon(), "Save map as", self)
+        self.saveAsMapAction.setStatusTip("Save map as")
         self.saveAsMapAction.setEnabled(False)
         self.saveAsMapAction.triggered.connect(self.saveAsMap_clicked)
 
 
-        self.exitAction = QAction(QIcon(), '&Close', self)
-        self.exitAction.setStatusTip('Close map creator')
+        self.exitAction = QAction(QIcon(), "&Close", self)
+        self.exitAction.setStatusTip("Close map creator")
         self.exitAction.triggered.connect(self.close)
 
         menubar = self.menuBar()
-        fileMenu = menubar.addMenu('&Map creator')
+        fileMenu = menubar.addMenu("&Map creator")
         fileMenu.addAction(self.newMapAction)
         fileMenu.addAction(self.openMapAction)
         fileMenu.addAction(self.mapNameAction)
@@ -251,15 +246,15 @@ class MapCreatorWindow(QMainWindow):
         opacity slider value changed
         """
 
-        self.btColor.setText( 'Opacity: %d %%' % val)
+        self.btColor.setText("Opacity: {} %".format(val))
         self.areaColor.setAlpha( int(val/100*255) )
 
         if self.selectedPolygon:
-            self.selectedPolygon.setBrush( self.areaColor )
-            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba()
+            self.selectedPolygon.setBrush(self.areaColor)
+            self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
 
         if self.closedPolygon:
-            self.closedPolygon.setBrush( self.areaColor )
+            self.closedPolygon.setBrush(self.areaColor)
 
 
     def chooseColor(self):
@@ -276,18 +271,18 @@ class MapCreatorWindow(QMainWindow):
             self.areaColor = col
 
         if self.selectedPolygon:
-            self.selectedPolygon.setBrush( self.areaColor )
-            self.areasList[ self.leAreaCode.text() ]['color'] = self.areaColor.rgba()
+            self.selectedPolygon.setBrush(self.areaColor)
+            self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
 
         if self.closedPolygon:
-            self.closedPolygon.setBrush( self.areaColor )
+            self.closedPolygon.setBrush(self.areaColor)
 
 
     def closeEvent(self, event):
 
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog('BORIS - Map creator', 'What to do about the current unsaved coding map?', ['Save', 'Discard', 'Cancel'])
+            response = dialog.MessageDialog("BORIS - Modifiers map creator", "What to do about the current unsaved coding map?", ["Save", "Discard", "Cancel"])
 
             if response == 'Save':
                 if not self.saveMap_clicked():
@@ -348,13 +343,9 @@ class MapCreatorWindow(QMainWindow):
                     break
 
             if txt:
-                if ',' in txt:
-                    plus = 's'
-                else:
-                    plus = ''
-                self.statusBar().showMessage('Area%s: %s' % (plus, txt))
+                self.statusBar().showMessage("Area{}: {}".format("s" if "," in txt else "", txt))
             else:
-                self.statusBar().showMessage('')
+                self.statusBar().showMessage("")
 
             if not self.selectedPolygon:
                 self.leAreaCode.setVisible(False)
@@ -369,13 +360,13 @@ class MapCreatorWindow(QMainWindow):
                 self.view.points = self.view.points[0:-1]
 
             if self.view.points:
-                self.view._start = QPoint( self.view.points[-1][0], self.view.points[-1][1] )
+                self.view._start = QPoint( self.view.points[-1][0], self.view.points[-1][1])
             else:
                 self.view._start = None
 
             # remove graphical elements
             if self.view.elList:
-                self.view.scene().removeItem( self.view.elList[-1] )
+                self.view.scene().removeItem(self.view.elList[-1])
                 self.view.elList = self.view.elList[0:-1]
 
         # add line item
@@ -390,8 +381,8 @@ class MapCreatorWindow(QMainWindow):
 
                     for idx, point in enumerate(self.view.points[:-2]):
 
-                        if intersection(  self.view.points[ idx ], self.view.points[ idx + 1 ], self.view.points[ -1 ], (  int(end.x()), int(end.y()))  ) :
-                            QMessageBox.critical(self, '', 'The polygon edges can not be intersected')
+                        if intersection(self.view.points[idx], self.view.points[idx + 1], self.view.points[-1], (int(end.x()), int(end.y()))) :
+                            QMessageBox.critical(self, "", "The polygon edges can not be intersected")
                             return
 
                 # test if polygon closed (dist min 10 px)

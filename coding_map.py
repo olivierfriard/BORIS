@@ -56,7 +56,6 @@ class codingMapWindowClass(QDialog):
     areasList = {}
     polygonsList2 = {}
 
-
     def __init__(self, codingMap):
         super(codingMapWindowClass, self).__init__()
 
@@ -70,10 +69,8 @@ class codingMapWindowClass(QDialog):
         self.leareaCode = QLineEdit(self)
         self.leareaCode.setVisible(True)
 
-
         Vlayout.addWidget(self.view)
         Vlayout.addWidget(self.leareaCode)
-
 
         hBoxLayout = QHBoxLayout(self)
 
@@ -82,15 +79,13 @@ class codingMapWindowClass(QDialog):
 
         self.pbCancel = QPushButton("Cancel")
         hBoxLayout.addWidget(self.pbCancel)
-        self.pbCancel.clicked.connect(self.cancel_clicked)
-
+        self.pbCancel.clicked.connect(self.reject())
 
         self.btDone = QPushButton("Done", self)
-        self.btDone.clicked.connect(self.done_clicked)
+        self.btDone.clicked.connect(self.accept())
         self.btDone.setVisible(True)
 
         hBoxLayout.addWidget(self.btDone)
-
 
         #Vlayout.addWidget(self.btDone)
         Vlayout.addLayout(hBoxLayout)
@@ -108,7 +103,7 @@ class codingMapWindowClass(QDialog):
         test = self.view.mapToScene(event.pos()).toPoint()
 
         for code in self.polygonsList2:
-            if self.polygonsList2[ code ].contains( test ):
+            if self.polygonsList2[ code ].contains(test):
 
                 codes = self.leareaCode.text().split(codeSeparator)
                 if "" in codes:
@@ -118,29 +113,23 @@ class codingMapWindowClass(QDialog):
                 if code in codes:
                     codes.remove(code)
                 else:
-                    codes.append( code )
+                    codes.append(code)
 
-                self.leareaCode.setText( codeSeparator.join(sorted(codes)) )
-
-    def cancel_clicked(self):
-        self.reject()
-
-    def done_clicked(self):
-        self.accept()
+                self.leareaCode.setText(codeSeparator.join(sorted(codes)))
 
     def getCodes(self):
         return self.leareaCode.text()
 
 
     def loadMap(self):
-        '''
+        """
         load bitmap from data
         show it in view scene
-        '''
+        """
 
         self.areasList = self.codingMap
 
-        bitmapContent = binascii.a2b_base64( self.areasList['bitmap'] )
+        bitmapContent = binascii.a2b_base64(self.areasList['bitmap'])
 
         pixmap = QPixmap()
         pixmap.loadFromData(bitmapContent)
@@ -150,8 +139,8 @@ class codingMapWindowClass(QDialog):
         pixItem.setPos(0,0)
         self.view.scene().addItem(pixItem)
 
-        for area in self.areasList['areas']:
-            points = self.areasList['areas'][ area]['geometry']
+        for area in self.areasList["areas"]:
+            points = self.areasList["areas"][area]["geometry"]
 
             newPolygon = QPolygonF()
             for p in points:
@@ -187,9 +176,8 @@ if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
 
-    if len(sys.argv)>1:
-        cm = json.loads( open( sys.argv[1] , 'r').read() )
-
+    if len(sys.argv) > 1:
+        cm = json.loads(open( sys.argv[1] , "r").read())
         codingMapWindow = codingMapWindowClass(cm)
         codingMapWindow.resize(640, 640)
         codingMapWindow.show()

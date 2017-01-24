@@ -112,7 +112,7 @@ class Spectrogram(QWidget):
             return False
 
 
-def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
+def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map):
 
     def extract_wav(mediaFile, tmp_dir):
         """
@@ -166,24 +166,31 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
     i = 0
     while True:
 
-        chunkFileName = "{}.{}-{}.spectrogram.png".format(wav_file, i, i + chunk_size)
+        chunkFileName = "{}.{}-{}.{}.{}.spectrogram.png".format(wav_file, i, i + chunk_size, spectrogram_color_map, spectrogramHeight)
         if not os.path.isfile(chunkFileName):
 
             sound_info_slice = sound_info[i * frame_rate: (i + chunk_size) * frame_rate]
 
             # complete bitmat spectrogram chunk if shorter than chunk length
             if len(sound_info_slice) / frame_rate < chunk_size:
-                concat = np.zeros((chunk_size - len(sound_info_slice) / frame_rate )* frame_rate)
+                '''
+                print(frame_rate, type(frame_rate))
+                print("chunk_size  ",chunk_size)
+                print("len(sound_info_slice)  ", len(sound_info_slice))
+                print("chunk_size - len(sound_info_slice) / frame_rate", chunk_size - len(sound_info_slice) / frame_rate)
+                '''
+                #concat = np.zeros((chunk_size - len(sound_info_slice) / frame_rate) * frame_rate)
+                concat = np.zeros(  int( (chunk_size - len(sound_info_slice) / frame_rate) + 1 ) * frame_rate)
                 sound_info_slice = np.concatenate((sound_info_slice, concat))
 
-            pylab.figure(num=None, dpi=100, figsize=(int( len(sound_info_slice)/frame_rate), 1))
+            '''print("round(spectrogramHeight / 80)",round(spectrogramHeight / 80))'''
+            pylab.figure(num=None, dpi=100, figsize=(int(len(sound_info_slice)/frame_rate), round(spectrogramHeight / 80)))
             pylab.gca().set_axis_off()
             pylab.margins(0, 0)
             pylab.gca().xaxis.set_major_locator(pylab.NullLocator())
             pylab.gca().yaxis.set_major_locator(pylab.NullLocator())
-            #pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap('Greys'),scale_by_freq=False)
-            pylab.specgram(sound_info_slice, Fs=frame_rate, scale_by_freq=False)
-            pylab.savefig(chunkFileName, bbox_inches='tight', pad_inches=0)
+            pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap(spectrogram_color_map), scale_by_freq=False)
+            pylab.savefig(chunkFileName, bbox_inches="tight", pad_inches=0)
             pylab.clf()
             pylab.close()
 
@@ -197,12 +204,12 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
     return fileName1stChunk
 
 
-def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin):
+def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map):
     """
     create and start process in multiprocessing mode for creation of spectrogram
     """
 
-    process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, ))
+    process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
     process.start()
 
     return process

@@ -216,6 +216,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     confirmSound = False               # if True each keypress will be confirmed by a beep
     embedPlayer = True                 # if True the VLC player will be embedded in the main window
     detachFrameViewer = False          # if True frame are displayed in a separate window (frameViewer class in dialog)
+
+    spectrogramHeight = 80
+    spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
+
     alertNoFocalSubject = False        # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
     checkForNewVersion = False         # if True BORIS will check for new version every 15 days
@@ -594,7 +598,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionClose_observation.triggered.connect(self.close_observation)
 
-
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
 
@@ -607,7 +610,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFind_replace_events.triggered.connect(self.find_replace_events)
         self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
         self.actionDelete_selected_observations.triggered.connect(self.delete_selected_events)
-
 
         self.actionMedia_file_information.triggered.connect(self.media_file_info)
 
@@ -1097,7 +1099,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
-                process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media, tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)
+                process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media,
+                                                                              tmp_dir=tmp_dir,
+                                                                              chunk_size=self.chunk_length,
+                                                                              ffmpeg_bin=self.ffmpeg_bin,
+                                                                              spectrogramHeight=self.spectrogramHeight,
+                                                                              spectrogram_color_map=self.spectrogram_color_map)
                 w.show()
                 while True:
                     app.processEvents()
@@ -1164,6 +1171,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for spectrogram visualization
         """
 
+        if not hasattr(self, "spectro"):
+            return
+
         if not "visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] or not self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]:
             return
 
@@ -1178,8 +1188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playMode == FFMPEG:
                 # get time in current media
-                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame, list(self.fps.values())[0] )
-
+                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame, list(self.fps.values())[0])
                 currentMediaTime = frameCurrentMedia / list(self.fps.values())[0] * 1000
 
         currentChunk = int(currentMediaTime / 1000 / self.chunk_length)
@@ -1198,7 +1207,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
 
-            currentChunkFileName = "{}.wav.{}-{}.spectrogram.png".format(currentMediaTmpPath, currentChunk * self.chunk_length, (currentChunk + 1) * self.chunk_length)
+            currentChunkFileName = "{}.wav.{}-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
+                                                                         currentChunk * self.chunk_length,
+                                                                         (currentChunk + 1) * self.chunk_length,
+                                                                         self.spectrogram_color_map,
+                                                                         self.spectrogramHeight
+                                                                         )
+
+
 
             if not os.path.isfile(currentChunkFileName):
                 self.timer_spectro.stop()
@@ -1222,7 +1238,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         get_time = (currentMediaTime % (self.chunk_length * 1000) / (self.chunk_length*1000))
 
-        self.spectro.item.setPos(-int(get_time * self.spectro.w), 0 )
+        self.spectro.item.setPos(-int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
 
@@ -1682,6 +1698,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         preferencesWindow = preferences.Preferences()
+        preferencesWindow.tabWidget.setCurrentIndex(0)
 
         if self.timeFormat == S:
             preferencesWindow.cbTimeFormat.setCurrentIndex(0)
@@ -1717,6 +1734,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mem_frame_resize = self.frame_resize
         preferencesWindow.cbDetachFrameViewer.setChecked(self.detachFrameViewer)
 
+        # spectrogram
+        preferencesWindow.sbSpectrogramHeight.setValue(self.spectrogramHeight)
+
+        preferencesWindow.cbSpectrogramColorMap.clear()
+        preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
+
+        print(self.spectrogram_color_map)
+
+        try:
+            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+        except:
+            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+
 
         if preferencesWindow.exec_():
 
@@ -1734,7 +1764,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
             if self.automaticBackup:
-                self.automaticBackupTimer.start( self.automaticBackup * 60000 )
+                self.automaticBackupTimer.start(self.automaticBackup * 60000)
             else:
                 self.automaticBackupTimer.stop()
 
@@ -1752,7 +1782,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.observationId:
                 self.loadEventsInTW( self.observationId )
-                self.display_timeoffset_statubar( self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET] )
+                self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
@@ -1775,6 +1805,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         pass
             # detach frame viewer
             self.detachFrameViewer = preferencesWindow.cbDetachFrameViewer.isChecked()
+            # spectrogram
+            self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
 
             if self.playMode == FFMPEG:
                 if self.detachFrameViewer:
@@ -2935,6 +2967,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
         observationWindow.FLAG_MATPLOTLIB_INSTALLED = FLAG_MATPLOTLIB_INSTALLED
         observationWindow.ffmpeg_bin = self.ffmpeg_bin
+        observationWindow.spectrogramHeight = self.spectrogramHeight
+        observationWindow.spectrogram_color_map = self.spectrogram_color_map
 
         # add indepvariables
         if INDEPENDENT_VARIABLES in self.pj:
@@ -3489,6 +3523,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.detachFrameViewer = False
 
+            # spectrogram
+            self.spectrogramHeight = 80
+            try:
+                self.spectrogramHeight = int(settings.value("spectrogram_height"))
+                if not self.spectrogramHeight:
+                    self.spectrogramHeight = 80
+            except:
+                self.spectrogramHeight = 80
+
+            try:
+                self.spectrogram_color_map = settings.value("spectrogram_color_map")
+                if self.spectrogram_color_map is None:
+                    self.spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
+            except:
+                self.spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
+
 
         else: # no .boris file found
             # ask user for checking for new version
@@ -3503,21 +3553,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("save config file")
 
-        if __version__ == "DEV":
-            iniFilePath = os.path.expanduser("~") + os.sep + ".boris_dev"
-        else:
-            iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
 
         settings = QSettings(iniFilePath, QSettings.IniFormat)
         settings.setValue("MainWindow/Size", self.size())
         settings.setValue("MainWindow/Position", self.pos())
-        settings.setValue("Time/Format", self.timeFormat )
-        settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset )
-        settings.setValue("Time/fast_forward_speed", self.fast )
+        settings.setValue("Time/Format", self.timeFormat)
+        settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
+        settings.setValue("Time/fast_forward_speed", self.fast)
         settings.setValue("Time/play_rate_step", self.play_rate_step)
-        settings.setValue("Save_media_file_path", self.saveMediaFilePath )
-        settings.setValue("Automatic_backup", self.automaticBackup )
-        settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator )
+        settings.setValue("Save_media_file_path", self.saveMediaFilePath)
+        settings.setValue("Automatic_backup", self.automaticBackup)
+        settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator)
         settings.setValue("confirm_sound", self.confirmSound)
         settings.setValue("embed_player", self.embedPlayer)
         settings.setValue("alert_nosubject", self.alertNoFocalSubject)
@@ -3532,6 +3579,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # frame-by-frame
         settings.setValue("frame_resize", self.frame_resize)
         settings.setValue("detach_frame_viewer", self.detachFrameViewer)
+        # spectrogram
+        settings.setValue("spectrogram_height", self.spectrogramHeight)
+        settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
 
 
 
@@ -3552,7 +3602,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if timeOffset:
-            self.lbTimeOffset.setText("Time offset: <b>{}</b>".format( timeOffset if self.timeFormat == S else  seconds2time(timeOffset)  ))
+            self.lbTimeOffset.setText("Time offset: <b>{}</b>".format(timeOffset if self.timeFormat == S else seconds2time(timeOffset)))
         else:
             self.lbTimeOffset.clear()
 
@@ -3566,7 +3616,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[ETHOGRAM][idx]['code'] == code:
                 return self.pj[ETHOGRAM][idx][TYPE]
         return None
-
 
 
     def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
@@ -3589,14 +3638,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if event[2] in selectedBehaviors:
 
                         # extract time, code, modifier and comment ( time:0, subject:1, code:2, modifier:3, comment:4 )
-                        if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == '') \
+                        if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == "") \
                             or ( event[1] == subject_to_analyze ):
 
                             subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else  event[1]
 
                             eventType = STATE if STATE in self.eventType(event[2]).upper() else POINT
 
-                            r = cursor.execute("""INSERT INTO events (observation, subject, code, type, modifiers, occurence, comment) VALUES (?,?,?,?,?,?,?)""", \
+                            r = cursor.execute("""INSERT INTO events (observation, subject, code, type, modifiers, occurence, comment) VALUES (?,?,?,?,?,?,?)""",
                             (obsId, subjectStr, event[2], eventType, event[3], str(event[0]), event[4]))
 
         db.commit()
@@ -7341,11 +7390,11 @@ item []:
                     if memState == vlc.State.Playing:
                         self.pause_video()
 
-            self.codingMapWindow = coding_map.codingMapWindowClass( self.pj["coding_map"][ self.pj[ETHOGRAM][obs_idx]["coding map"] ] )
+            self.codingMapWindow = coding_map.codingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][obs_idx]["coding map"]])
 
             self.codingMapWindow.resize(640, 640)
             if self.codingMapWindowGeometry:
-                 self.codingMapWindow.restoreGeometry( self.codingMapWindowGeometry )
+                 self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
 
             if not self.codingMapWindow.exec_():
                 return

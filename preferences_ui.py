@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Wed Nov 30 16:52:35 2016
+# Created: Tue Jan 24 15:34:55 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -175,11 +175,48 @@ class Ui_prefDialog(object):
         self.verticalLayout_6.addItem(spacerItem1)
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
         self.tabWidget.addTab(self.tab_3, _fromUtf8(""))
+        self.tab_4 = QtGui.QWidget()
+        self.tab_4.setObjectName(_fromUtf8("tab_4"))
+        self.verticalLayout_9 = QtGui.QVBoxLayout(self.tab_4)
+        self.verticalLayout_9.setObjectName(_fromUtf8("verticalLayout_9"))
+        self.verticalLayout_8 = QtGui.QVBoxLayout()
+        self.verticalLayout_8.setObjectName(_fromUtf8("verticalLayout_8"))
+        self.horizontalLayout_6 = QtGui.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName(_fromUtf8("horizontalLayout_6"))
+        self.lbspectrogram = QtGui.QLabel(self.tab_4)
+        self.lbspectrogram.setWordWrap(True)
+        self.lbspectrogram.setObjectName(_fromUtf8("lbspectrogram"))
+        self.horizontalLayout_6.addWidget(self.lbspectrogram)
+        self.sbSpectrogramHeight = QtGui.QSpinBox(self.tab_4)
+        self.sbSpectrogramHeight.setMinimum(80)
+        self.sbSpectrogramHeight.setMaximum(400)
+        self.sbSpectrogramHeight.setSingleStep(80)
+        self.sbSpectrogramHeight.setObjectName(_fromUtf8("sbSpectrogramHeight"))
+        self.horizontalLayout_6.addWidget(self.sbSpectrogramHeight)
+        self.verticalLayout_8.addLayout(self.horizontalLayout_6)
+        self.horizontalLayout_7 = QtGui.QHBoxLayout()
+        self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
+        self.label_7 = QtGui.QLabel(self.tab_4)
+        self.label_7.setObjectName(_fromUtf8("label_7"))
+        self.horizontalLayout_7.addWidget(self.label_7)
+        self.cbSpectrogramColorMap = QtGui.QComboBox(self.tab_4)
+        self.cbSpectrogramColorMap.setObjectName(_fromUtf8("cbSpectrogramColorMap"))
+        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
+        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
+        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
+        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
+        self.cbSpectrogramColorMap.addItem(_fromUtf8(""))
+        self.horizontalLayout_7.addWidget(self.cbSpectrogramColorMap)
+        self.verticalLayout_8.addLayout(self.horizontalLayout_7)
+        spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_8.addItem(spacerItem2)
+        self.verticalLayout_9.addLayout(self.verticalLayout_8)
+        self.tabWidget.addTab(self.tab_4, _fromUtf8(""))
         self.verticalLayout_2.addWidget(self.tabWidget)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        spacerItem2 = QtGui.QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem2)
+        spacerItem3 = QtGui.QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem3)
         self.pbCancel = QtGui.QPushButton(prefDialog)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout_2.addWidget(self.pbCancel)
@@ -190,7 +227,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -218,6 +255,14 @@ class Ui_prefDialog(object):
         self.lbResize.setText(_translate("prefDialog", "Resize frame (horizontal number of pixels). The aspect ratio will be maintained", None))
         self.cbDetachFrameViewer.setText(_translate("prefDialog", "Detach frame viewer", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode", None))
+        self.lbspectrogram.setText(_translate("prefDialog", "Spectrogram height", None))
+        self.label_7.setText(_translate("prefDialog", "Color map", None))
+        self.cbSpectrogramColorMap.setItemText(0, _translate("prefDialog", "viridis", None))
+        self.cbSpectrogramColorMap.setItemText(1, _translate("prefDialog", "inferno", None))
+        self.cbSpectrogramColorMap.setItemText(2, _translate("prefDialog", "plasma", None))
+        self.cbSpectrogramColorMap.setItemText(3, _translate("prefDialog", "magma", None))
+        self.cbSpectrogramColorMap.setItemText(4, _translate("prefDialog", "gray", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("prefDialog", "Spectrogram", None))
         self.pbCancel.setText(_translate("prefDialog", "Cancel", None))
         self.pbOK.setText(_translate("prefDialog", "OK", None))
 

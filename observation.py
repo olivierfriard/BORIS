@@ -39,7 +39,6 @@ import tempfile
 import glob
 import logging
 
-
 from config import *
 from utilities import *
 import dialog
@@ -127,7 +126,12 @@ class Observation(QDialog, Ui_Form):
                 #for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
                 for row in range(self.twVideo1.rowCount()):
                     if os.path.isfile(self.twVideo1.item(row, 0).text()):
-                        process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=self.twVideo1.item(row, 0).text(), tmp_dir=tmp_dir, chunk_size=self.chunk_length, ffmpeg_bin=self.ffmpeg_bin)
+                        process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=self.twVideo1.item(row, 0).text(),
+                                                                                      tmp_dir=tmp_dir,
+                                                                                      chunk_size=self.chunk_length,
+                                                                                      ffmpeg_bin=self.ffmpeg_bin,
+                                                                                      spectrogramHeight=self.spectrogramHeight,
+                                                                                      spectrogram_color_map=self.spectrogram_color_map)
                         w.show()
                         while True:
                             QApplication.processEvents()

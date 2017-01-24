@@ -167,6 +167,9 @@ slider_maximum = 1000
 subtitlesColors = ['cyan','red','blue','yellow','fuchsia','orange', 'lime', 'green']
 CATEGORY_COLORS_LIST = ["#FF96CC", "#96FF9C","#CCFFFE", "#EEFF70", "#FF4F64", "#F8BF15", "#3DC7AD"]
 
+SPECTROGRAM_COLOR_MAPS = ['viridis','inferno','plasma', 'magma', "gray", "YlOrRd"]
+SPECTROGRAM_DEFAULT_COLOR_MAP = 'viridis'
+
 # see matplotlib.colors.cnames.keys()
 BEHAVIORS_PLOT_COLORS = ["blue", "green", "red", "cyan", "magenta","yellow", "lime",
                          "darksalmon", "purple", "orange", "maroon", "silver",

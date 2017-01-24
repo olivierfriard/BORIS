@@ -34,7 +34,7 @@ import sys
 from config import *
 
 
-class BehaviorsMap(QWidget):
+ class BehaviorsMap(QWidget):
 
     clickSignal = pyqtSignal(str)
     sendEventSignal = pyqtSignal(QEvent)
