@@ -53,11 +53,14 @@ import recode_widget
 
 
 class Spectrogram(QWidget):
+    """
+    Spectrogram viewer
+    """
 
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
-    memChunk = ''
+    memChunk = ""
 
     def __init__(self, fileName1stChunk, parent = None):
 
@@ -67,29 +70,61 @@ class Spectrogram(QWidget):
 
         self.pixmap.load(fileName1stChunk)
         self.w, self.h = self.pixmap.width(), self.pixmap.height()
+        print(self.pixmap.width(), self.pixmap.height())
 
         #self.setGeometry(300, 300, 1000, self.h + 50)
 
+        '''
         self.resize(1000, self.h + 50)
-
         self.setMinimumHeight(self.h + 50)
         self.setMaximumHeight(self.h + 50)
+
+        self.resize(1000, self.h)
+        self.setMinimumHeight(self.h)
+        self.setMaximumHeight(self.h)
+        '''
+
+        #self.resize(600, 120)
+        self.resize(1000, self.h + 20)
 
         self.scene = QGraphicsScene(self)
         self.scene.setBackgroundBrush(QColor(0, 0, 0, 255))
 
-        self.scene.setSceneRect(0, 0, 100, 100)
+        #self.scene.setSceneRect(0, 0, 500, 100)
+        #self.scene.setSceneRect(0, 0, 500, self.h)
+        self.scene.setSceneRect(0, 0, int(self.width() * .95), self.h)
 
+        print("self.scene width",self.scene.width())
+
+
+        '''
         if QT_VERSION_STR[0] == "4":
             self.line = QGraphicsLineItem(0, 0, 0, self.h, scen =self.scene)
         else:
             self.line = QGraphicsLineItem(0, 0, 0, self.h)
+        '''
 
-        self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+
+        if QT_VERSION_STR[0] == "4":
+            self.line = QGraphicsLineItem(0, 0, 0, self.h, scen =self.scene)
+        else:
+            #self.line = QGraphicsLineItem(250, 0, 250, self.h)
+            self.line = QGraphicsLineItem(int(self.width() * .95) //2, 0, int(self.width() * .95) //2, self.h)
+
+
+        self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)) # blue
         self.line.setZValue(100.0)
         self.scene.addItem(self.line)
 
         self.view = QGraphicsView(self.scene)
+
+        #self.view.setFixedSize(500, 100)
+        #self.view.setFixedSize(500, self.h)
+        self.view.setFixedSize(int(self.width() * .95), self.h)
+
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
         #self.view.showMaximized()
 
         hbox = QHBoxLayout(self)
@@ -102,9 +137,9 @@ class Spectrogram(QWidget):
 
 
     def eventFilter(self, receiver, event):
-        '''
+        """
         send event (if keypress) to main window
-        '''
+        """
         if(event.type() == QEvent.KeyPress):
             self.sendEvent.emit(event)
             return True
@@ -154,7 +189,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     import pylab # do not move. It is important that this line is after the previous one
 
     fileName1stChunk = ""
-    mediaBaseName = os.path.basename( mediaFile )
+    mediaBaseName = os.path.basename(mediaFile)
 
     wav_file = extract_wav(mediaFile, tmp_dir)
     if not wav_file:
@@ -183,7 +218,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
                 concat = np.zeros(  int( (chunk_size - len(sound_info_slice) / frame_rate) + 1 ) * frame_rate)
                 sound_info_slice = np.concatenate((sound_info_slice, concat))
 
-            '''print("round(spectrogramHeight / 80)",round(spectrogramHeight / 80))'''
+            print("round(spectrogramHeight / 80)",round(spectrogramHeight / 80))
             pylab.figure(num=None, dpi=100, figsize=(int(len(sound_info_slice)/frame_rate), round(spectrogramHeight / 80)))
             pylab.gca().set_axis_off()
             pylab.margins(0, 0)

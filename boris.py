@@ -1155,7 +1155,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
 
-                self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
+                self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
+                                                                                                       self.chunk_length,
+                                                                                                       self.spectrogram_color_map,
+                                                                                                       self.spectrogramHeight))
+
                 # connect signal from spectrogram class to testsignal function to receive keypress events
                 self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.spectro.sendEvent.connect(self.signal_from_spectrogram)
@@ -1204,7 +1208,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 tmp_dir = self.ffmpeg_cache_dir
 
-
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))
 
             currentChunkFileName = "{}.wav.{}-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
@@ -1213,8 +1216,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                          self.spectrogram_color_map,
                                                                          self.spectrogramHeight
                                                                          )
-
-
 
             if not os.path.isfile(currentChunkFileName):
                 self.timer_spectro.stop()
@@ -1229,16 +1230,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             self.spectro.pixmap.load(currentChunkFileName)
+
+            self.spectro.setWindowTitle("Spectrogram - {}".format(os.path.basename(url2path(self.mediaplayer.get_media().get_mrl()))))
+
             self.spectro.w, self.spectro.h = self.spectro.pixmap.width(), self.spectro.pixmap.height()
 
             self.spectro.item = QGraphicsPixmapItem(self.spectro.pixmap)
 
             self.spectro.scene.addItem(self.spectro.item)
-            self.spectro.item.setPos(0, 0)
+            self.spectro.item.setPos(self.spectro.scene.width()//2, 0)
 
         get_time = (currentMediaTime % (self.chunk_length * 1000) / (self.chunk_length*1000))
 
-        self.spectro.item.setPos(-int(get_time * self.spectro.w), 0)
+        self.spectro.item.setPos(self.spectro.scene.width()//2 -int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
 
@@ -1601,6 +1605,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
 
+            if hasattr(self, "spectro"):
+                self.spectro.memChunk = -1
+
+
     def next_media_file(self):
         """
         go to next media file (if any)
@@ -1649,6 +1657,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timer_spectro_out()
                 # no subtitles
                 #self.mediaplayer.video_set_spu(0)
+
+            if hasattr(self, "spectro"):
+                self.spectro.memChunk = -1
 
 
     def setVolume(self):
@@ -1740,8 +1751,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.cbSpectrogramColorMap.clear()
         preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
 
-        print(self.spectrogram_color_map)
-
         try:
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
         except:
@@ -1805,8 +1814,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         pass
             # detach frame viewer
             self.detachFrameViewer = preferencesWindow.cbDetachFrameViewer.isChecked()
+
             # spectrogram
             self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
+            self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
 
             if self.playMode == FFMPEG:
                 if self.detachFrameViewer:
@@ -1833,6 +1844,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.menu_options()
 
             self.saveConfigFile()
+
 
     def getCurrentMediaByFrame(self, player, requiredFrame, fps):
         """
@@ -2715,7 +2727,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
 
-            if not os.path.isfile("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length)):
+            if not os.path.isfile("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length, self.spectrogram_color_map, self.spectrogramHeight)):
                 if dialog.MessageDialog(programName, ("Spectrogram file not found.\n"
                                                       "Do you want to generate it now?\n"
                                                       "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
@@ -2725,7 +2737,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = False
                     return True
 
-            self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length))
+            self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length, self.spectrogram_color_map, self.spectrogramHeight))
             # connect signal from spectrogram class to testsignal function to receive keypress events
             self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.spectro.sendEvent.connect(self.signal_from_spectrogram)
