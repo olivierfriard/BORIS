@@ -43,7 +43,7 @@ import statistics
 import datetime
 
 __version__ = "3.4"
-__version_date__ = "2017-01-25"
+__version_date__ = "2017-01-26"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 

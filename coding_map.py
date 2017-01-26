@@ -129,7 +129,7 @@ class codingMapWindowClass(QDialog):
 
         self.areasList = self.codingMap
 
-        bitmapContent = binascii.a2b_base64(self.areasList['bitmap'])
+        bitmapContent = binascii.a2b_base64(self.areasList["bitmap"])
 
         pixmap = QPixmap()
         pixmap.loadFromData(bitmapContent)
@@ -158,9 +158,6 @@ class codingMapWindowClass(QDialog):
             else:
                 polygon = QGraphicsPolygonItem(newPolygon)
 
-
-
-
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
 
             polygon.setBrush( QBrush(clr, Qt.SolidPattern))
@@ -169,15 +166,13 @@ class codingMapWindowClass(QDialog):
             self.polygonsList2[ area ] = polygon
 
 
-
-
 if __name__ == '__main__':
 
     import sys
     app = QApplication(sys.argv)
 
     if len(sys.argv) > 1:
-        cm = json.loads(open( sys.argv[1] , "r").read())
+        cm = json.loads(open( sys.argv[1], "r").read())
         codingMapWindow = codingMapWindowClass(cm)
         codingMapWindow.resize(640, 640)
         codingMapWindow.show()
