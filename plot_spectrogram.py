@@ -190,6 +190,9 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
         wav.close()
         return sound_info, frame_rate
 
+
+    print("init graph spectrogram", file=open(r'c:\users\user\testfile.txt', 'a'))
+
     matplotlib.use("Agg")
     import pylab # do not move. It is important that this line is after the previous one
 
@@ -262,7 +265,7 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
     print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
     process.start()
-
+    print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
 
     QMessageBox.warning(QWidget(), "", "{} 1".format(process))
 
