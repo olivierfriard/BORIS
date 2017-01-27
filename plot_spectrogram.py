@@ -62,7 +62,7 @@ class Spectrogram(QWidget):
 
     memChunk = ""
 
-    def __init__(self, fileName1stChunk, parent = None):
+    def __init__(self, fileName1stChunk, parent=None):
 
         super(Spectrogram, self).__init__(parent)
 
@@ -70,7 +70,12 @@ class Spectrogram(QWidget):
 
         self.pixmap.load(fileName1stChunk)
         self.w, self.h = self.pixmap.width(), self.pixmap.height()
-        print(self.pixmap.width(), self.pixmap.height())
+
+
+
+
+
+        #print(self.pixmap.width(), self.pixmap.height())
 
         #self.setGeometry(300, 300, 1000, self.h + 50)
 
@@ -94,7 +99,7 @@ class Spectrogram(QWidget):
         #self.scene.setSceneRect(0, 0, 500, self.h)
         self.scene.setSceneRect(0, 0, int(self.width() * .95), self.h)
 
-        print("self.scene width",self.scene.width())
+        #print("self.scene width",self.scene.width())
 
 
         '''
@@ -192,6 +197,9 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     mediaBaseName = os.path.basename(mediaFile)
 
     wav_file = extract_wav(mediaFile, tmp_dir)
+
+    QMessageBox.warning(self, programName , "wav file: {}".format(wav_file))
+
     if not wav_file:
         return None
 

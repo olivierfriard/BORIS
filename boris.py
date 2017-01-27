@@ -1101,7 +1101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.resize(350, 100)
         w.setWindowFlags(Qt.WindowStaysOnTopHint)
         w.setWindowTitle(programName)
-        w.label.setText("Generating spectrogram. Please wait..")
+        w.label.setText("Generating spectrogram. Please wait...")
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
@@ -1117,6 +1117,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if not process.is_alive():
                         w.hide()
                         break
+
+                QMessageBox.warning(self, programName , "generate spectrogram finished")
+
             else:
                 QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media))
 
