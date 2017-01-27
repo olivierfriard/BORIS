@@ -257,9 +257,12 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     """
 
     QMessageBox.warning(QWidget(), "" , "init create_spectrogram_multiprocessing")
+    print("init create_spectrogram_multiprocessing", file=open(r'c:\users\user\testfile.txt', 'a'))
 
     process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
+    print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
     process.start()
+
 
     QMessageBox.warning(QWidget(), "", "{} 1".format(process))
 
