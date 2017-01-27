@@ -196,11 +196,13 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     fileName1stChunk = ""
     mediaBaseName = os.path.basename(mediaFile)
 
-    QMessageBox.warning(self, programName , "extract wav file")
+    #QMessageBox.warning(QWidget(), "" , "extract wav file")
+    print("extract wav file\n", file=open('testfile.txt', 'a'))
 
     wav_file = extract_wav(mediaFile, tmp_dir)
 
-    QMessageBox.warning(self, programName , "wav file: {}".format(wav_file))
+    #QMessageBox.warning(QWidget(), "" , "wav file: {}".format(wav_file))
+    print("wav file: {}".format(wav_file), file=open('testfile.txt', 'a'))
 
     if not wav_file:
         return None
@@ -254,11 +256,11 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     create and start process in multiprocessing mode for creation of spectrogram
     """
 
-    QMessageBox.warning(self, programName , "init create_spectrogram_multiprocessing")
+    QMessageBox.warning(QWidget(), "" , "init create_spectrogram_multiprocessing")
 
     process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
     process.start()
 
-    QMessageBox.warning(self, programName , "{} 1".format(process))
+    QMessageBox.warning(QWidget(), "", "{} 1".format(process))
 
     return process
