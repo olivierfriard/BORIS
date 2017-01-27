@@ -197,12 +197,12 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     mediaBaseName = os.path.basename(mediaFile)
 
     #QMessageBox.warning(QWidget(), "" , "extract wav file")
-    print("extract wav file\n", file=open('testfile.txt', 'a'))
+    print("extract wav file\n", file=open(r'c:\users\user\testfile.txt', 'a'))
 
     wav_file = extract_wav(mediaFile, tmp_dir)
 
     #QMessageBox.warning(QWidget(), "" , "wav file: {}".format(wav_file))
-    print("wav file: {}".format(wav_file), file=open('testfile.txt', 'a'))
+    print("wav file: {}".format(wav_file), file=open(r'c:\users\user\testfile.txt', 'a'))
 
     if not wav_file:
         return None
