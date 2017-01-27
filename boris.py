@@ -1161,6 +1161,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
 
+
+                QMessageBox.warning(self, programName, "{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
+                                                                                                       self.chunk_length,
+                                                                                                       self.spectrogram_color_map,
+                                                                                                       self.spectrogramHeight) )
+
+
                 self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
                                                                                                        self.chunk_length,
                                                                                                        self.spectrogram_color_map,
