@@ -111,7 +111,7 @@ from project import *
 import preferences
 import param_panel
 import observation
-import coding_map
+import modifiers_coding_map
 import map_creator
 import select_modifiers
 from utilities import *
@@ -125,6 +125,12 @@ import recode_widget
 from config import *
 
 def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
+    """
+    recode one or more video with ffmpeg
+    video_paths: list of video paths
+    horiz_resol: horizontal resolution (in pixels)
+    ffmpeg_bin: path of ffmpeg program
+    """
 
     for video_path in video_paths:
         ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
@@ -2485,7 +2491,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dwObservations.setVisible(True)
                 return True
 
-        print("1")
         # check if media list player 1 contains more than 1 media
         if (len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1
             and PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -2507,8 +2512,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.duration2.clear()
         self.fps.clear()
         self.fps2.clear()
-
-        print("2")
 
         # add all media files to media list
         self.simultaneousMedia = False
@@ -2554,7 +2557,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.fps[mediaFile] = mediaFPS
             self.media_list.add_media(media)
 
-        print("3")
         # add media list to media player list
         self.mediaListPlayer.set_media_list(self.media_list)
 
@@ -7402,7 +7404,7 @@ item []:
                     if memState == vlc.State.Playing:
                         self.pause_video()
 
-            self.codingMapWindow = coding_map.codingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][obs_idx]["coding map"]])
+            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][obs_idx]["coding map"]])
 
             self.codingMapWindow.resize(640, 640)
             if self.codingMapWindowGeometry:
