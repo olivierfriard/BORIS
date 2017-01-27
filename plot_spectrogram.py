@@ -233,7 +233,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
                 concat = np.zeros(  int( (chunk_size - len(sound_info_slice) / frame_rate) + 1 ) * frame_rate)
                 sound_info_slice = np.concatenate((sound_info_slice, concat))
 
-            print("round(spectrogramHeight / 80)",round(spectrogramHeight / 80))
             pylab.figure(num=None, dpi=100, figsize=(int(len(sound_info_slice)/frame_rate), round(spectrogramHeight / 80)))
             pylab.gca().set_axis_off()
             pylab.margins(0, 0)
@@ -259,15 +258,19 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     create and start process in multiprocessing mode for creation of spectrogram
     """
 
-    QMessageBox.warning(QWidget(), "" , "init create_spectrogram_multiprocessing")
     print("init create_spectrogram_multiprocessing", file=open(r'c:\users\user\testfile.txt', 'a'))
 
-    process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
-    print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
-    print("process {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
-    print("process.start() {}".format(process.start()), file=open(r'c:\users\user\testfile.txt', 'a'))
-    print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
 
-    QMessageBox.warning(QWidget(), "", "{} 1".format(process))
+    #process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
+    #process.start()
+    #print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
+    #print("process {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
+    #print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
+    #return process
 
-    return process
+    graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
+
+    print("spectrogram finiesd", file=open(r'c:\users\user\testfile.txt', 'a'))
+    return None
+
+

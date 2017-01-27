@@ -1116,6 +1116,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 QMessageBox.warning(self, programName , "{} 2".format(process))
 
+                '''
                 w.show()
                 while True:
                     app.processEvents()
@@ -1126,6 +1127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                         break
+                '''
 
                 QMessageBox.warning(self, programName , "generate spectrogram finished")
 
