@@ -196,6 +196,8 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     fileName1stChunk = ""
     mediaBaseName = os.path.basename(mediaFile)
 
+    QMessageBox.warning(self, programName , "extract wav file")
+
     wav_file = extract_wav(mediaFile, tmp_dir)
 
     QMessageBox.warning(self, programName , "wav file: {}".format(wav_file))

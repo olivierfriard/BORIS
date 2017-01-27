@@ -1105,6 +1105,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
+                QMessageBox.warning(self, programName , "create apectro: {}".format(media))
                 process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media,
                                                                               tmp_dir=tmp_dir,
                                                                               chunk_size=self.chunk_length,
