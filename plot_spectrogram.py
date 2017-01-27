@@ -254,7 +254,11 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     create and start process in multiprocessing mode for creation of spectrogram
     """
 
+    QMessageBox.warning(self, programName , "init create_spectrogram_multiprocessing")
+
     process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
     process.start()
+
+    QMessageBox.warning(self, programName , "{} 1".format(process))
 
     return process

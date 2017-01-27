@@ -1112,11 +1112,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                               ffmpeg_bin=self.ffmpeg_bin,
                                                                               spectrogramHeight=self.spectrogramHeight,
                                                                               spectrogram_color_map=self.spectrogram_color_map)
+
+
+                QMessageBox.warning(self, programName , "{} 2".format(process))
+
                 w.show()
                 while True:
                     app.processEvents()
                     if not process.is_alive():
                         w.hide()
+
+                        QMessageBox.warning(self, programName , "process not alive")
+
+
                         break
 
                 QMessageBox.warning(self, programName , "generate spectrogram finished")
