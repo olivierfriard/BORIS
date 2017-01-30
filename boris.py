@@ -796,14 +796,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if fileNames:
 
-            import multiprocessing
-
             horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
                                                              "The aspect ratio will be maintained"), 1024, 352, 1920, 10)
 
-            self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode,
-                                                                 args=(fileNames, horiz_resol, ffmpeg_bin, ))
-            self.ffmpeg_recode_process.start()
 
             self.w = recode_widget.Info_widget()
             self.w.resize(350, 100)
@@ -812,8 +807,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.label.setText("\n".join(fileNames))
             self.w.show()
 
-            timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
-            timerFFmpegRecoding.start(15000)
+            if sys.platform.startswith("win"):
+                app.processEvents()
+                ffmpeg_recode(fileNames, horiz_resol, ffmpeg_bin)
+                self.w.hide()
+            else:
+
+                self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode,
+                                                                     args=(fileNames, horiz_resol, ffmpeg_bin, ))
+                self.ffmpeg_recode_process.start()
+
+
+                timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
+                timerFFmpegRecoding.start(15000)
 
 
     def click_signal_from_behaviors_map(self, behaviorCode):
@@ -1117,15 +1123,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 #QMessageBox.warning(self, programName , "{} 2".format(process))
 
-
-                w.show()
-                while True:
-                    app.processEvents()
-                    if not process.is_alive():
-                        w.hide()
-                        #QMessageBox.warning(self, programName , "process not alive")
-                        break
-
+                if process:
+                    w.show()
+                    while True:
+                        app.processEvents()
+                        if not process.is_alive():
+                            w.hide()
+                            #QMessageBox.warning(self, programName , "process not alive")
+                            break
 
                 #QMessageBox.warning(self, programName , "generate spectrogram finished")
 
@@ -8923,7 +8928,7 @@ item []:
 
 
 if __name__=="__main__":
-    multiprocessing.freeze_support()
+    #multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
 

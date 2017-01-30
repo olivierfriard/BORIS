@@ -260,17 +260,18 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
 
     #print("init create_spectrogram_multiprocessing", file=open(r'c:\users\user\testfile.txt', 'a'))
 
+    if sys.platform.startswith('win'):
+        graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
 
-    process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
-    process.start()
-    #print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
-    #print("process {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
-    #print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
-    return process
+        #print("spectrogram finiesd", file=open(r'c:\users\user\testfile.txt', 'a'))
+        return None
+    else:
+        process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
+        process.start()
+        #print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
+        #print("process {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
+        #print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
+        return process
 
-    #graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
-
-    #print("spectrogram finiesd", file=open(r'c:\users\user\testfile.txt', 'a'))
-    #return None
 
 
