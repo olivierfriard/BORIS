@@ -41,9 +41,10 @@ import tempfile
 import glob
 import statistics
 import datetime
+import multiprocessing
 
 __version__ = "3.4"
-__version_date__ = "2017-01-26"
+__version_date__ = "2017-01-30"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -1105,7 +1106,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
-                QMessageBox.warning(self, programName , "create apectro: {}".format(media))
+                #QMessageBox.warning(self, programName , "create apectro: {}".format(media))
                 process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media,
                                                                               tmp_dir=tmp_dir,
                                                                               chunk_size=self.chunk_length,
@@ -1114,22 +1115,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                               spectrogram_color_map=self.spectrogram_color_map)
 
 
-                QMessageBox.warning(self, programName , "{} 2".format(process))
+                #QMessageBox.warning(self, programName , "{} 2".format(process))
 
-                '''
+
                 w.show()
                 while True:
                     app.processEvents()
                     if not process.is_alive():
                         w.hide()
-
-                        QMessageBox.warning(self, programName , "process not alive")
-
-
+                        #QMessageBox.warning(self, programName , "process not alive")
                         break
-                '''
 
-                QMessageBox.warning(self, programName , "generate spectrogram finished")
+
+                #QMessageBox.warning(self, programName , "generate spectrogram finished")
 
             else:
                 QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media))
@@ -1176,10 +1174,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = True
 
 
+                '''
                 QMessageBox.warning(self, programName, "{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
                                                                                                        self.chunk_length,
                                                                                                        self.spectrogram_color_map,
                                                                                                        self.spectrogramHeight) )
+                '''
 
 
                 self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
@@ -8923,7 +8923,7 @@ item []:
 
 
 if __name__=="__main__":
-
+    multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
 

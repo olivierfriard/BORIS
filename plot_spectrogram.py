@@ -191,7 +191,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
         return sound_info, frame_rate
 
 
-    print("init graph spectrogram", file=open(r'c:\users\user\testfile.txt', 'a'))
+    #print("init graph spectrogram", file=open(r'c:\users\user\testfile.txt', 'a'))
 
     matplotlib.use("Agg")
     import pylab # do not move. It is important that this line is after the previous one
@@ -200,12 +200,12 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     mediaBaseName = os.path.basename(mediaFile)
 
     #QMessageBox.warning(QWidget(), "" , "extract wav file")
-    print("extract wav file\n", file=open(r'c:\users\user\testfile.txt', 'a'))
+    #print("extract wav file\n", file=open(r'c:\users\user\testfile.txt', 'a'))
 
     wav_file = extract_wav(mediaFile, tmp_dir)
 
     #QMessageBox.warning(QWidget(), "" , "wav file: {}".format(wav_file))
-    print("wav file: {}".format(wav_file), file=open(r'c:\users\user\testfile.txt', 'a'))
+    #print("wav file: {}".format(wav_file), file=open(r'c:\users\user\testfile.txt', 'a'))
 
     if not wav_file:
         return None
@@ -258,19 +258,19 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     create and start process in multiprocessing mode for creation of spectrogram
     """
 
-    print("init create_spectrogram_multiprocessing", file=open(r'c:\users\user\testfile.txt', 'a'))
+    #print("init create_spectrogram_multiprocessing", file=open(r'c:\users\user\testfile.txt', 'a'))
 
 
-    #process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
-    #process.start()
+    process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
+    process.start()
     #print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
     #print("process {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
     #print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
-    #return process
+    return process
 
-    graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
+    #graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
 
-    print("spectrogram finiesd", file=open(r'c:\users\user\testfile.txt', 'a'))
-    return None
+    #print("spectrogram finiesd", file=open(r'c:\users\user\testfile.txt', 'a'))
+    #return None
 
 
