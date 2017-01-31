@@ -134,9 +134,9 @@ def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
     """
 
     for video_path in video_paths:
-        ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.avi" """.format(ffmpeg_bin=ffmpeg_bin,
-                                                                                                                              input=video_path,
-                                                                                                                              horiz_resol=horiz_resol)
+        ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.{horiz_resol}px.avi" """.format(ffmpeg_bin=ffmpeg_bin,
+                                                                                                                                 input=video_path,
+                                                                                                                                 horiz_resol=horiz_resol)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         p.communicate()
 
@@ -799,12 +799,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
                                                              "The aspect ratio will be maintained"), 1024, 352, 1920, 10)
 
+            # check if recoded files already exist
+            files_list = []
+            for file_name in fileNames:
+                if os.path.isfile("{input}.re-encoded.{horiz_resol}px.avi".format(input=file_name, horiz_resol=horiz_resol)):
+                    files_list.append("{input}.re-encoded.{horiz_resol}px.avi".format(input=file_name, horiz_resol=horiz_resol))
+            if files_list:
+                response = dialog.MessageDialog(programName, "Some file(s) already exist.\n\n" + "\n".join(files_list),
+                     ["Overwrite all", CANCEL])
+                if response == CANCEL:
+                    return
 
             self.w = recode_widget.Info_widget()
             self.w.resize(350, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
-            self.w.label.setText("\n".join(fileNames))
+            self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
             self.w.show()
 
             if sys.platform.startswith("win"):
