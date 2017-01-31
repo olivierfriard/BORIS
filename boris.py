@@ -1293,7 +1293,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show map creator window and hide program main window
         """
-        self.mapCreatorWindow = map_creator.MapCreatorWindow()
+        self.mapCreatorWindow = map_creator.ModifiersMapCreatorWindow()
         self.mapCreatorWindow.move(self.pos())
         self.mapCreatorWindow.resize(640, 640)
         self.mapCreatorWindow.show()
