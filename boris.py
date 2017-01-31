@@ -817,7 +817,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
             self.w.show()
 
-            if sys.platform.startswith("win"):
+            if sys.platform.startswith("win") and getattr(sys, "frozen", False):
                 app.processEvents()
                 ffmpeg_recode(fileNames, horiz_resol, ffmpeg_bin)
                 self.w.hide()
@@ -826,7 +826,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode,
                                                                      args=(fileNames, horiz_resol, ffmpeg_bin, ))
                 self.ffmpeg_recode_process.start()
-
 
                 timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
                 timerFFmpegRecoding.start(15000)
@@ -1122,7 +1121,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             if os.path.isfile(media):
-                #QMessageBox.warning(self, programName , "create apectro: {}".format(media))
                 process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media,
                                                                               tmp_dir=tmp_dir,
                                                                               chunk_size=self.chunk_length,
@@ -1131,18 +1129,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                               spectrogram_color_map=self.spectrogram_color_map)
 
 
-                #QMessageBox.warning(self, programName , "{} 2".format(process))
-
                 if process:
                     w.show()
                     while True:
                         app.processEvents()
                         if not process.is_alive():
                             w.hide()
-                            #QMessageBox.warning(self, programName , "process not alive")
                             break
-
-                #QMessageBox.warning(self, programName , "generate spectrogram finished")
 
             else:
                 QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media))
@@ -8397,7 +8390,7 @@ item []:
 
         if fileName:
             try:
-                with open(fileName, "w") as outFile:
+                with open(fileName, "w", encoding="utf-8") as outFile:
                     for obsId in selectedObservations:
                         # observation id
                         outFile.write("\n# observation id: {0}\n".format(obsId))

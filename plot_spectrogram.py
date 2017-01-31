@@ -72,9 +72,6 @@ class Spectrogram(QWidget):
         self.w, self.h = self.pixmap.width(), self.pixmap.height()
 
 
-
-
-
         #print(self.pixmap.width(), self.pixmap.height())
 
         #self.setGeometry(300, 300, 1000, self.h + 50)
@@ -111,9 +108,8 @@ class Spectrogram(QWidget):
 
 
         if QT_VERSION_STR[0] == "4":
-            self.line = QGraphicsLineItem(0, 0, 0, self.h, scen =self.scene)
+            self.line = QGraphicsLineItem(int(self.width() * .95) //2, 0, int(self.width() * .95) //2, self.h, scen =self.scene)
         else:
-            #self.line = QGraphicsLineItem(250, 0, 250, self.h)
             self.line = QGraphicsLineItem(int(self.width() * .95) //2, 0, int(self.width() * .95) //2, self.h)
 
 
@@ -258,19 +254,12 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
     create and start process in multiprocessing mode for creation of spectrogram
     """
 
-    #print("init create_spectrogram_multiprocessing", file=open(r'c:\users\user\testfile.txt', 'a'))
-
-    if sys.platform.startswith('win'):
+    if sys.platform.startswith("win") and getattr(sys, "frozen", False):
         graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
-
-        #print("spectrogram finiesd", file=open(r'c:\users\user\testfile.txt', 'a'))
         return None
     else:
         process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
         process.start()
-        #print("start", file=open(r'c:\users\user\testfile.txt', 'a'))
-        #print("process {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
-        #print("process after start {}".format(process), file=open(r'c:\users\user\testfile.txt', 'a'))
         return process
 
 
