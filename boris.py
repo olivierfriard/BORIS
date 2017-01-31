@@ -2839,10 +2839,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def selectObservations(self, mode):
-        '''
+        """
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
-        '''
+        """
 
         obsList = observations_list.observationsList_widget()
 
@@ -2881,7 +2881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
         settings = QSettings(iniFilePath, QSettings.IniFormat)
         try:
-            obsList.cbSort.setCurrentIndex([ obsList.cbSort.itemText(idx) for idx in range(obsList.cbSort.count())].index(settings.value("observations_list_order")))
+            obsList.cbSort.setCurrentIndex([obsList.cbSort.itemText(idx) for idx in range(obsList.cbSort.count())].index(settings.value("observations_list_order")))
         except:
             pass
         obsListFields = ["id", "date", "description", "subjects", "media"]
@@ -4079,7 +4079,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def time_budget_by_category(self, mode):
         """
-        time budget by_category (or not)
+        time budget (by behavior or category)
         """
 
         def time_budget_analysis_by_category(cursor, plot_parameters, by_category=False):
@@ -7205,12 +7205,16 @@ item []:
 
         logging.debug("write event - event: {0}  memtime: {1}".format(event, memTime))
 
+        if event is None:
+            return
+
         # add time offset
         memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
 
         # check if a same event is already in events list (time, subject, code)
         # "row" present in case of event editing
-        if not "row" in event and self.checkSameEvent( self.observationId, memTime, self.currentSubject, event["code"] ):
+
+        if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
 
             _ = dialog.MessageDialog(programName, "The same event already exists (same time, code and subject).", ["OK"])
 
@@ -8414,18 +8418,18 @@ item []:
                                 outFile.write("{0}: {1}\n".format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
                         outFile.write("\n")
 
-                        # selected subjects
-                        for subj in plot_parameters["selected subjects"]:
-                            if subj:
-                                subj_str = "\n{}:\n".format(subj)
-                            else:
-                                subj_str = "\nNo focal subject:\n"
-                            outFile.write(subj_str)
+                    # selected subjects
+                    for subj in plot_parameters["selected subjects"]:
+                        if subj:
+                            subj_str = "\n{}:\n".format(subj)
+                        else:
+                            subj_str = "\nNo focal subject:\n"
+                        outFile.write(subj_str)
 
-                            for obsId in selectedObservations:
-                                out = self.create_behavioral_strings(obsId, subj, plot_parameters)
-                                if out:
-                                    outFile.write(out + "\n")
+                        for obsId in selectedObservations:
+                            out = self.create_behavioral_strings(obsId, subj, plot_parameters)
+                            if out:
+                                outFile.write(out + "\n")
             except:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)

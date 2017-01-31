@@ -48,6 +48,7 @@ class observationsList_widget(QDialog):
         self.lineEdit = QLineEdit(self)
         self.view = QTableView(self)
         self.view.setSelectionBehavior(QAbstractItemView.SelectRows)
+        #self.view.resizeRowToContents(0)
         self.comboBox = QComboBox(self)
         self.label = QLabel(self)
 
@@ -119,13 +120,14 @@ class observationsList_widget(QDialog):
 
         self.view.doubleClicked.connect(self.view_doubleClicked)
 
+
     def sort_order_changed(self, idx):
         sortOrder = ("descending" in self.cbSort.itemText(idx))
         for i, text in enumerate(["Observation id", "Date", "Description", "Subjects", "Media"]):
             if text in self.cbSort.itemText(idx):
                 columnToSort = i
 
-        self.proxy.sort (columnToSort, sortOrder)
+        self.proxy.sort(columnToSort, sortOrder)
 
         iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
         try:
@@ -150,9 +152,9 @@ class observationsList_widget(QDialog):
 
 
         response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?", ["Open", "Edit", config.CANCEL])
-        if response == 'Open':
+        if response == "Open":
             self.done(2)
-        if response == 'Edit':
+        if response == "Edit":
             self.done(3)
 
 
