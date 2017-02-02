@@ -1,3 +1,4 @@
+# -*- coding: windows-1252 -*-
 
 from . import Formatting
 from .BIFFRecords import *

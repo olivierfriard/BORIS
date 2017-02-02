@@ -1,3 +1,4 @@
+# -*- coding: windows-1252 -*-
 
 from .BIFFRecords import ColInfoRecord
 
@@ -28,3 +29,6 @@ class Column(object):
         options |= (self.collapse & 0x01) << 12
 
         return ColInfoRecord(self._index, self._index, self.width, self._xf_index, options).get()
+
+
+

@@ -1,3 +1,4 @@
+# -*- coding: windows-1252 -*-
 
 from . import BIFFRecords
 from . import Style
@@ -247,3 +248,6 @@ class Row(object):
             raise Exception("Unexpected data type %r" % type(label))
 
     write_blanks = set_cell_mulblanks
+
+
+

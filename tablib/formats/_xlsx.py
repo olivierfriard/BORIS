@@ -33,21 +33,21 @@ def detect(stream):
     except openpyxl.shared.exc.InvalidFileException:
         pass
 
-def export_set(dataset):
+def export_set(dataset, freeze_panes=True):
     """Returns XLSX representation of Dataset."""
 
     wb = Workbook()
     ws = wb.worksheets[0]
     ws.title = dataset.title if dataset.title else 'Tablib Dataset'
 
-    dset_sheet(dataset, ws)
+    dset_sheet(dataset, ws, freeze_panes=freeze_panes)
 
     stream = BytesIO()
     wb.save(stream)
     return stream.getvalue()
 
 
-def export_book(databook):
+def export_book(databook, freeze_panes=True):
     """Returns XLSX representation of DataBook."""
 
     wb = Workbook()
@@ -56,7 +56,7 @@ def export_book(databook):
         ws = wb.create_sheet()
         ws.title = dset.title if dset.title else 'Sheet%s' % (i)
 
-        dset_sheet(dset, ws)
+        dset_sheet(dset, ws, freeze_panes=freeze_panes)
 
 
     stream = BytesIO()
@@ -69,7 +69,7 @@ def import_set(dset, in_stream, headers=True):
 
     dset.wipe()
 
-    xls_book = openpyxl.reader.excel.load_workbook(in_stream)
+    xls_book = openpyxl.reader.excel.load_workbook(BytesIO(in_stream))
     sheet = xls_book.get_active_sheet()
 
     dset.title = sheet.title
@@ -87,7 +87,7 @@ def import_book(dbook, in_stream, headers=True):
 
     dbook.wipe()
 
-    xls_book = openpyxl.reader.excel.load_workbook(in_stream)
+    xls_book = openpyxl.reader.excel.load_workbook(BytesIO(in_stream))
 
     for sheet in xls_book.worksheets:
         data = tablib.Dataset()
@@ -103,7 +103,7 @@ def import_book(dbook, in_stream, headers=True):
         dbook.add_sheet(data)
 
 
-def dset_sheet(dataset, ws):
+def dset_sheet(dataset, ws, freeze_panes=True):
     """Completes given worksheet from given Dataset."""
     _package = dataset._package(dicts=False)
 
@@ -115,8 +115,6 @@ def dset_sheet(dataset, ws):
         row_number = i + 1
         for j, col in enumerate(row):
             col_idx = get_column_letter(j + 1)
-            # We want to freeze the column after the last column
-            frzn_col_idx = get_column_letter(j + 2)
 
             # bold headers
             if (row_number == 1) and dataset.headers:
@@ -125,9 +123,11 @@ def dset_sheet(dataset, ws):
                 ws.cell('%s%s'%(col_idx, row_number)).value = unicode(col)
                 style = ws.get_style('%s%s' % (col_idx, row_number))
                 style.font.bold = True
-                ws.freeze_panes = '%s%s' % (frzn_col_idx, row_number)
-
-
+                if freeze_panes:
+                    # As already done in #53, but after Merge lost:
+                    #  Export Freeze only after first Line
+                    ws.freeze_panes = 'A2'
+                    
             # bold separators
             elif len(row) < dataset.width:
                 ws.cell('%s%s'%(col_idx, row_number)).value = unicode(
