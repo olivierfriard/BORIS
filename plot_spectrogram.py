@@ -162,7 +162,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
         if os.path.isfile(wavTmpPath):
             return wavTmpPath
         else:
-            p = subprocess.Popen('{ffmpeg_bin} -i "{mediaFile}" -y -ac 1 -vn "{wavTmpPath}"'.format(ffmpeg_bin=ffmpeg_bin,
+            p = subprocess.Popen('"{ffmpeg_bin}" -i "{mediaFile}" -y -ac 1 -vn "{wavTmpPath}"'.format(ffmpeg_bin=ffmpeg_bin,
                                                                                                       mediaFile=mediaFile,
                                                                                                       wavTmpPath=wavTmpPath),
                                                                                                       stdout=subprocess.PIPE,

@@ -134,7 +134,7 @@ def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
     """
 
     for video_path in video_paths:
-        ffmpeg_command = """{ffmpeg_bin} -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.{horiz_resol}px.avi" """.format(ffmpeg_bin=ffmpeg_bin,
+        ffmpeg_command = '"{ffmpeg_bin}" -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.{horiz_resol}px.avi" '.format(ffmpeg_bin=ffmpeg_bin,
                                                                                                                                  input=video_path,
                                                                                                                                  horiz_resol=horiz_resol)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -1046,8 +1046,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 #    start = Decimal("0.000")
                                 stop = round(row["occurence"] + timeOffset - sum(duration1[0:mediaFileIdx]))
 
-                                ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """\
-                                .format(ffmpeg_bin=ffmpeg_bin,
+                                ffmpeg_command = '"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" '.format(
+                                        ffmpeg_bin=ffmpeg_bin,
                                         input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                         start=start,
                                         stop=stop,
@@ -1080,7 +1080,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         print("start after end", start, self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
                                         continue
 
-                                    ffmpeg_command = """{ffmpeg_bin} -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" """.format(
+                                    ffmpeg_command = '"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" '.format(
                                     ffmpeg_bin=ffmpeg_bin,
                                     input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                     start=start,
