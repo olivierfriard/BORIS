@@ -5013,7 +5013,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         for obsId in pj[OBSERVATIONS]:
-            pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]) )
+            if "time offset" in pj[OBSERVATIONS][obsId]:
+                pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]) )
 
             for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
                 pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
