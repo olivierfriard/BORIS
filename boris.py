@@ -44,7 +44,7 @@ import datetime
 import multiprocessing
 
 __version__ = "3.41"
-__version_date__ = "2017-02-02"
+__version_date__ = "2017-02-06"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
