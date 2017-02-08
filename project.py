@@ -198,6 +198,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbCancel.clicked.connect(self.reject)
 
     def pbBehaviorsCategories_clicked(self):
+        """
+        
+        """
 
         if BEHAVIORAL_CATEGORIES in self.pj:
             bc = BehavioralCategories(self.pj[BEHAVIORAL_CATEGORIES])
@@ -480,42 +483,50 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if sbjField in project[SUBJECTS][idx]:
                             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(project[SUBJECTS][idx][sbjField]))
                         else:
-                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(''))
+                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
 
                 self.twSubjects.resizeColumnsToContents()
             else:
-                QMessageBox.warning(self, programName, 'No subjects configuration found in project')
+                QMessageBox.warning(self, programName, "No subjects configuration found in project")
+
 
     def pbImportBehaviorsFromProject_clicked(self):
         """
         import behaviors from another project
         """
 
+        fn =  QFileDialog(self).getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
+
+        '''
         if QT_VERSION_STR[0] == "4":
+            
             fileName = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
         else:
             fileName, _ = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
+        '''
+
         if fileName:
-
-            with open(fileName, 'r') as infile:
+            with open(fileName, "r") as infile:
                 s = infile.read()
-
             try:
                 project = json.loads(s)
             except:
-                QMessageBox.warning(None, programName, 'Error while reading behaviors from selected file', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                QMessageBox.warning(None, programName, "Error while reading behaviors from selected file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
+
+            # import behavioral_categories
+            if BEHAVIORAL_CATEGORIES in project:
+                self.pj[BEHAVIORAL_CATEGORIES] = project[BEHAVIORAL_CATEGORIES]
 
             # configuration of behaviours
             if project[ETHOGRAM]:
 
                 if self.twBehaviors.rowCount():
-
-                    response = dialog.MessageDialog(programName, 'There are behaviors already configured. Do you want to append behaviors or replace them?', ['Append', 'Replace', CANCEL])
-
-                    if response == 'Replace':
+                    response = dialog.MessageDialog(programName, "There are behaviors already configured. Do you want to append behaviors or replace them?",
+                                                    ["Append", "Replace", CANCEL])
+                    if response == "Replace":
                         self.twBehaviors.setRowCount(0)
-
                     if response == CANCEL:
                         return
 
@@ -527,8 +538,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                         item = QTableWidgetItem()
 
-                        if field == 'type':
-
+                        if field == "type":
                             comboBox = QComboBox()
                             comboBox.addItems(BEHAVIOR_TYPES)
                             comboBox.setCurrentIndex(BEHAVIOR_TYPES.index(project[ETHOGRAM][i][field]))
@@ -546,7 +556,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehaviors.resizeColumnsToContents()
 
             else:
-                QMessageBox.warning(self, programName, 'No behaviors configuration found in project')
+                QMessageBox.warning(self, programName, "No behaviors configuration found in project")
 
 
     def pbExclusionMatrix_clicked(self):
@@ -568,19 +578,19 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             combobox = self.twBehaviors.cellWidget(r, 0)
 
-            if self.twBehaviors.item(r, behavioursFields['code']):
+            if self.twBehaviors.item(r, behavioursFields["code"]):
 
                 if includePointEvents == YES or (includePointEvents == NO and 'State' in BEHAVIOR_TYPES[combobox.currentIndex()]):
-                    allBehaviors.append(self.twBehaviors.item(r, behavioursFields['code']).text())
+                    allBehaviors.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
 
-                excl[self.twBehaviors.item(r, behavioursFields['code']).text()] = self.twBehaviors.item(r, behavioursFields['excluded']).text().split(',')
-                new_excl[self.twBehaviors.item(r, behavioursFields['code']).text()] = []
+                excl[self.twBehaviors.item(r, behavioursFields["code"]).text()] = self.twBehaviors.item(r, behavioursFields['excluded']).text().split(',')
+                new_excl[self.twBehaviors.item(r, behavioursFields["code"]).text()] = []
 
                 if 'State' in BEHAVIOR_TYPES[combobox.currentIndex()]:
-                    stateBehaviors.append(self.twBehaviors.item(r, behavioursFields['code']).text())
+                    stateBehaviors.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
 
-        logging.debug('all behaviors: {}'.format(allBehaviors))
-        logging.debug('stateBehaviors: {}'.format(stateBehaviors))
+        logging.debug("all behaviors: {}".format(allBehaviors))
+        logging.debug("stateBehaviors: {}".format(stateBehaviors))
 
         if not stateBehaviors:
             QMessageBox.warning(None, programName, 'State events not found in behaviors list!', QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -600,13 +610,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             for c in range(0, len(stateBehaviors)):
 
                 if stateBehaviors[c] != allBehaviors[r]:
-
                     checkBox = QCheckBox()
-
                     if stateBehaviors[c] in excl[allBehaviors[r]]:  # or headers[ r ] in excl[ headers[c] ]:
-
                         checkBox.setChecked(True)
-
                     ex.twExclusions.setCellWidget(r, c, checkBox)
 
         if ex.exec_():
@@ -654,7 +660,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 # extract all codes used in observations
                 codesInObs = []
-                for obs in self.pj['observations']:
+                for obs in self.pj["observations"]:
                     events = self.pj['observations'][obs]['events']
                     for event in events:
                         codesInObs.append(event[2])
@@ -662,11 +668,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 for codeToDelete in codesToDelete:
                     # if code to delete used in obs ask confirmation
                     if codeToDelete in codesInObs:
-                        response = dialog.MessageDialog(programName, 'The code <b>{}</b> is used in observations!'.format(codeToDelete), ['Remove', CANCEL])
-                        if response == 'Remove':
+                        response = dialog.MessageDialog(programName, "The code <b>{}</b> is used in observations!".format(codeToDelete), ['Remove', CANCEL])
+                        if response == "Remove":
                             self.twBehaviors.removeRow(row_mem[codeToDelete])
                     else:   # remove without asking
                         self.twBehaviors.removeRow(row_mem[codeToDelete])
+
 
     def pbImportFromJWatcher_clicked(self):
         """
@@ -683,14 +690,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             fileName, _ = QFileDialog(self).getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
         if fileName:
 
-            if self.twBehaviors.rowCount() and response == 'Replace':
+            if self.twBehaviors.rowCount() and response == "Replace":
                 self.twBehaviors.setRowCount(0)
 
-            with open(fileName, 'r') as f:
+            with open(fileName, "r") as f:
                 rows = f.readlines()
 
             for idx, row in enumerate(rows):
-                if row and row[0] == '#':
+                if row and row[0] == "#":
                     continue
 
                 if "Behavior.name." in row and "=" in row:
@@ -713,7 +720,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             comboBox.addItems(BEHAVIOR_TYPES)
                             comboBox.setCurrentIndex(0)   # event type from jwatcher not known
                             signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
-                            comboBox.currentIndexChanged['int'].connect(signalMapper.map)
+                            comboBox.currentIndexChanged["int"].connect(signalMapper.map)
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
                         else:
                             item = QTableWidgetItem(behavior[field_type])
@@ -721,7 +728,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 item.setFlags(Qt.ItemIsEnabled)
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
-                    signalMapper.mapped['int'].connect(self.behaviorTypeChanged)
+                    signalMapper.mapped["int"].connect(self.behaviorTypeChanged)
 
     def check_text_file_type(self, rows):
         """
@@ -752,14 +759,18 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == CANCEL:
                 return
 
+        fn = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
+        '''
         if QT_VERSION_STR[0] == "4":
             fileName = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
         else:
             fileName, _ = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
+        '''
 
         if fileName:
 
-            if self.twBehaviors.rowCount() and response == 'Replace':
+            if self.twBehaviors.rowCount() and response == "Replace":
                 self.twBehaviors.setRowCount(0)
 
             with open(fileName, mode="rb") as f:
