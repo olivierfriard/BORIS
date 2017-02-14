@@ -53,7 +53,7 @@ def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
     return sequences, unique_behaviors
 
 
-def observed_transitions_matrix(sequences, behaviours, mode = "frequency"):
+def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
     """
     create the normalized matrix of observed transitions
     mode:
@@ -62,14 +62,20 @@ def observed_transitions_matrix(sequences, behaviours, mode = "frequency"):
     * frequencies_after_behaviors
     """
 
+    behaviours.remove("")
+
     transitions = {}
     for behaviour in behaviours:
+        if not behaviour:
+            continue
         transitions[behaviour] = {}
         for behaviour2 in behaviours:
             transitions[behaviour][behaviour2] = 0
 
     for seq in sequences:
         for i in range(len(seq) - 1):
+            if not seq[i]:
+                continue
             if seq[i] in behaviours and seq[i + 1] in behaviours:
                 transitions[seq[i]][seq[i + 1]] += 1
 
@@ -83,12 +89,14 @@ def observed_transitions_matrix(sequences, behaviours, mode = "frequency"):
         out += "{}\t".format(behaviour)
         for behaviour2 in behaviours:
             if mode == "frequency":
-                out += "{}\t".format(round(transitions[behaviour][behaviour2] / transitions_total_number, 3))
+                #out += "{}\t".format(round(transitions[behaviour][behaviour2] / transitions_total_number, 3))
+                out += "{}\t".format(transitions[behaviour][behaviour2] / transitions_total_number)
             elif mode == "number":
                 out += "{}\t".format(transitions[behaviour][behaviour2])
             elif mode== "frequencies_after_behaviors":
                 if sum(transitions[behaviour].values()):
-                    out += "{}\t".format( round(transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()), 3))
+                    #out += "{}\t".format( round(transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()), 3))
+                    out += "{}\t".format( transitions[behaviour][behaviour2] / sum(transitions[behaviour].values()))
                 else:
                     out += "{}\t".format(transitions[behaviour][behaviour2])
         out = out[:-1] + "\n"
@@ -101,6 +109,7 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         """
         create code for GraphViz
         matrix: matrix of frequency
+        edge_label: (percent_node, fraction_node)
         return string containing graphviz code
         """
 
@@ -108,15 +117,15 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
         transitions = {}
 
         for row in matrix.split("\n")[1:]:
-
             if not row:
                 continue
 
             transitions[row.split("\t")[0]] = {}
             for idx, r in enumerate(row.split("\t")[1:]):
-                transitions[row.split("\t")[0]][ behaviours[idx] ] = float(r)
-
-        print("transitions", transitions)
+                if '.' in r:
+                    transitions[row.split("\t")[0]][behaviours[idx]] = float(r)
+                else:
+                    transitions[row.split("\t")[0]][behaviours[idx]] = int(r)
 
         transitions_total_number = sum([sum(transitions[x].values()) for x in transitions])
 
@@ -129,14 +138,13 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
                     if edge_label == "percent_node":
                         if transitions[behaviour1][behaviour2] > cutoff_all:
-                            out += """"{}" -> "{}" [label="{}"];\n""".format(behaviour1, behaviour2, transitions[behaviour1][behaviour2])
+                            out += """"{behaviour1}" -> "{behaviour2}" [label="{label:0.3f}"];\n""".format(behaviour1=behaviour1, behaviour2=behaviour2, label=transitions[behaviour1][behaviour2])
 
                     if edge_label == "fraction_node":
-
                         transition_sum = sum(transitions[behaviour1].values())
                         print(transition_sum)
                         if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
-                            out += """"{}" -> "{}" [label="{}%"];\n""".format(behaviour1, behaviour2, round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
+                            out += """"{behaviour1}" -> "{behaviour2}" [label="{label}%"];\n""".format(behaviour1=behaviour1, behaviour2=behaviour2, label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))
 
         out += '\n}'
         return out
