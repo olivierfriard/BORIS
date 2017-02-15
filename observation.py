@@ -308,9 +308,14 @@ class Observation(QDialog, Ui_Form):
                 self.twVideo1.removeRow(self.twVideo1.selectedIndexes()[0].row())
 
                 if mediaPath not in [self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
-                    del self.mediaDurations[mediaPath]
-                    del self.mediaFPS[mediaPath]
-
+                    try:
+                        del self.mediaDurations[mediaPath]
+                    except:
+                        pass
+                    try:
+                        del self.mediaFPS[mediaPath]
+                    except:
+                        pass
 
         if nPlayer == PLAYER2:
             if self.twVideo2.selectedIndexes():
@@ -318,8 +323,14 @@ class Observation(QDialog, Ui_Form):
                 self.twVideo2.removeRow(self.twVideo2.selectedIndexes()[0].row())
 
                 if mediaPath not in [ self.twVideo1.item(idx, 0).text() for idx in range(self.twVideo1.rowCount())]:
-                    del self.mediaDurations[mediaPath]
-                    del self.mediaFPS[mediaPath]
+                    try:
+                        del self.mediaDurations[mediaPath]
+                    except:
+                        pass
+                    try:
+                        del self.mediaFPS[mediaPath]
+                    except:
+                        pass
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled( self.twVideo1.rowCount() > 0)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
