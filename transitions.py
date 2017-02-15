@@ -62,7 +62,10 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
     * frequencies_after_behaviors
     """
 
-    behaviours.remove("")
+    print("behaviours", behaviours)
+
+    if "" in behaviours:
+        behaviours.remove("")
 
     transitions = {}
     for behaviour in behaviours:

@@ -199,7 +199,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def pbBehaviorsCategories_clicked(self):
         """
-        
+
         """
 
         if BEHAVIORAL_CATEGORIES in self.pj:
@@ -210,7 +210,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if bc.exec_():
             self.pj[BEHAVIORAL_CATEGORIES] = []
             for index in range(bc.lw.count()):
-                self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text())
+                self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
 
     def twBehaviors_cellDoubleClicked(self, row, column):
         """
@@ -500,7 +500,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         '''
         if QT_VERSION_STR[0] == "4":
-            
+
             fileName = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
         else:
             fileName, _ = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
@@ -1155,6 +1155,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         # store subjects
         self.subjects_conf = {}
 
+        subjects_name_with_trailing_spaces = ""
+
         for row in range(0, self.twSubjects.rowCount()):
 
             # check key
@@ -1165,7 +1167,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # check subject name
             if self.twSubjects.item(row, 1):
-                subjectName = self.twSubjects.item(row, 1).text()
+                if self.twSubjects.item(row, 1).text() != self.twSubjects.item(row, 1).text().strip():
+                    subjects_name_with_trailing_spaces += self.twSubjects.item(row, 1).text().strip() + " "
+                subjectName = self.twSubjects.item(row, 1).text().strip()
                 if "|" in subjectName:
                     QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in subject name <b>{}</b>".format(subjectName))
                     return
@@ -1176,11 +1180,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # description
             if self.twSubjects.item(row, 2):
-                subjectDescription = self.twSubjects.item(row, 2).text()
+                subjectDescription = self.twSubjects.item(row, 2).text().strip()
             else:
                 subjectDescription = ""
 
             self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
+
+        if subjects_name_with_trailing_spaces:
+            QMessageBox.warning(self, programName, "Some trailing spaces were removed from subject(s) name: {}".format(subjects_name_with_trailing_spaces))
 
         # store behaviors
         missing_data = []
@@ -1188,14 +1195,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.obs = {}
 
         # coding maps in ethogram
+        code_with_trailing_spaces = ""
         codingMapsList = []
-
         for r in range(0, self.twBehaviors.rowCount()):
 
             row = {}
             for field in behavioursFields:
                 if field == "type":
-                    combobox = self.twBehaviors.cellWidget(r, behavioursFields['type'])
+                    combobox = self.twBehaviors.cellWidget(r, behavioursFields["type"])
                     row[field] = BEHAVIOR_TYPES[combobox.currentIndex()]
                 else:
                     if self.twBehaviors.item(r, behavioursFields[field]):
@@ -1204,7 +1211,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                             QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in code <b>{}</b> !".format(self.twBehaviors.item(r, behavioursFields[field]).text()))
                             return
 
-                        row[field] = self.twBehaviors.item(r, behavioursFields[field]).text()
+                        if field == "code" and self.twBehaviors.item(r, behavioursFields[field]).text() != self.twBehaviors.item(r, behavioursFields[field]).text().strip():
+                            code_with_trailing_spaces += self.twBehaviors.item(r, behavioursFields[field]).text().strip() + " "
+
+                        row[field] = self.twBehaviors.item(r, behavioursFields[field]).text().strip()
                     else:
                         row[field] = ""
 
@@ -1216,14 +1226,17 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(r, behavioursFields["coding map"]).text():
                 codingMapsList.append(self.twBehaviors.item(r, behavioursFields["coding map"]).text())
 
+        if code_with_trailing_spaces:
+            QMessageBox.warning(self, programName, "Some trailing spaces were removed from code(s): {}".format(code_with_trailing_spaces))
+
         # remove coding map from project if not in ethogram
         cmToDelete = []
-        for cm in self.pj['coding_map']:
+        for cm in self.pj["coding_map"]:
             if cm not in codingMapsList:
                 cmToDelete.append(cm)
 
         for cm in cmToDelete:
-            del self.pj['coding_map'][cm]
+            del self.pj["coding_map"][cm]
 
         if missing_data:
             QMessageBox.warning(self, programName, "Missing data in ethogram at row{} !".format(",".join(missing_data)))

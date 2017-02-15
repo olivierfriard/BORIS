@@ -5525,6 +5525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             f = open(projectFileName, "w")
+            #f.write(json.dumps(self.pj, indent=None, separators=(',', ':'), default=decimal_default))
             f.write(json.dumps(self.pj, indent=1, default=decimal_default))
             f.close()
         except:
@@ -8326,14 +8327,14 @@ item []:
         eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
 
         for event in eventsWithStatus:
-
             if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
 
                 if event[-1] == POINT:
                     if currentStates:
-                        s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+                        #s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]   #.replace(" ", "_")
+                        s += "+".join(currentStates) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
                     else:
-                        s += event[EVENT_BEHAVIOR_FIELD_IDX].replace(" ", "_")
+                        s += event[EVENT_BEHAVIOR_FIELD_IDX]    #.replace(" ", "_")
 
                     if plot_parameters["include modifiers"]:
                         s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
@@ -8342,7 +8343,8 @@ item []:
 
                 if event[-1] == START:
                     currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-                    s += "+".join(replace_spaces(currentStates))
+                    #s += "+".join(replace_spaces(currentStates))
+                    s += "+".join(currentStates)
 
                     if plot_parameters["include modifiers"]:
                         s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
@@ -8351,14 +8353,15 @@ item []:
                 if event[-1] == STOP:
 
                     if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
-                        currentStates.remove( event[EVENT_BEHAVIOR_FIELD_IDX])
+                        currentStates.remove(event[EVENT_BEHAVIOR_FIELD_IDX])
+
                     if currentStates:
-                        s += "+".join(replace_spaces(currentStates))
+                        #s += "+".join(replace_spaces(currentStates))
+                        s += "+".join(currentStates)
 
                         if plot_parameters["include modifiers"]:
                             s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
                         s += self.behaviouralStringsSeparator
-
 
         # remove last separator (if separator not empty)
         if self.behaviouralStringsSeparator:
@@ -8469,7 +8472,11 @@ item []:
             for obsId in selectedObservations:
                 strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
 
+
+            print("strings_list", strings_list)
             sequences, observed_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
+
+            print("observed behaviors", observed_behaviors)
 
             observed_matrix = transitions.observed_transitions_matrix(sequences, sorted(list(set(observed_behaviors + plot_parameters["selected behaviors"]))), mode=mode)
 
@@ -8481,10 +8488,20 @@ item []:
 
             if flagMulti:
                 try:
-                    with open(exportDir + os.sep + subject + "_transitions_{}_matrix.tsv".format(mode), "w") as outfile:
+
+                    nf = "{exportDir}{sep}{subject}_transitions_{mode}_matrix.tsv".format(exportDir=exportDir,
+                                                                                          sep=os.sep,
+                                                                                          subject=subject,
+                                                                                          mode=mode)
+
+                    if os.path.isfile(nf):
+                        if dialog.MessageDialog(programName, "A file with same name already exists.<br><b>{}</b>".format(nf), ["Overwrite", CANCEL]) == CANCEL:
+                            continue
+
+                    with open(nf, "w") as outfile:
                         outfile.write(observed_matrix)
                 except:
-                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(exportDir + os.sep + subject + "_transitions_{}_matrix.tsv").format(mode))
+                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(nf))
             else:
                 try:
                     with open(fileName, "w") as outfile:
