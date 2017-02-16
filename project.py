@@ -1155,10 +1155,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         # store subjects
         self.subjects_conf = {}
 
-        subjects_name_with_trailing_spaces = ""
+        # check for leading/trailing spaces in subjects names
+        subjects_name_with_leading_trailing_spaces = ""
+        for row in range(0, self.twSubjects.rowCount()):
+            if self.twSubjects.item(row, 1):
+                if self.twSubjects.item(row, 1).text() != self.twSubjects.item(row, 1).text().strip():
+                    subjects_name_with_leading_trailing_spaces += '"{}" '.format(self.twSubjects.item(row, 1).text())
+
+        remove_leading_trailing_spaces = NO
+        if subjects_name_with_leading_trailing_spaces:
+            remove_leading_trailing_spaces = dialog.MessageDialog(programName,
+                                            ("Attention! Some leading and/or trailing spaces are present in the following <b>subject name(s)</b>:<br>"
+                                            "<b>{}</b><br><br>"
+                                            "Do you want to remove the leading and trailing spaces?<br><br>"
+                                            """<font color="red"><b>Be careful with this option if you have already done observations!</b></font>""").format(subjects_name_with_leading_trailing_spaces),
+                                            [YES, NO])
 
         for row in range(0, self.twSubjects.rowCount()):
-
             # check key
             if self.twSubjects.item(row, 0):
                 key = self.twSubjects.item(row, 0).text()
@@ -1167,13 +1180,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # check subject name
             if self.twSubjects.item(row, 1):
-                if self.twSubjects.item(row, 1).text() != self.twSubjects.item(row, 1).text().strip():
-                    subjects_name_with_trailing_spaces += self.twSubjects.item(row, 1).text().strip() + " "
-                subjectName = self.twSubjects.item(row, 1).text().strip()
+                if remove_leading_trailing_spaces == YES:
+                    subjectName = self.twSubjects.item(row, 1).text().strip()
+                else:
+                    subjectName = self.twSubjects.item(row, 1).text()
+
                 if "|" in subjectName:
                     QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in subject name <b>{}</b>".format(subjectName))
                     return
-
             else:
                 QMessageBox.warning(self, programName, "Missing subject name in subjects configuration at row {}".format(row))
                 return
@@ -1186,16 +1200,26 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
 
-        if subjects_name_with_trailing_spaces:
-            QMessageBox.warning(self, programName, "Some trailing spaces were removed from subject(s) name: {}".format(subjects_name_with_trailing_spaces))
-
         # store behaviors
         missing_data = []
 
         self.obs = {}
 
         # coding maps in ethogram
-        code_with_trailing_spaces = ""
+        code_with_leading_trailing_spaces = ""
+        for r in range(0, self.twBehaviors.rowCount()):
+            if self.twBehaviors.item(r, behavioursFields["code"]).text() != self.twBehaviors.item(r, behavioursFields["code"]).text().strip():
+                code_with_leading_trailing_spaces += '"{}" '.format(self.twBehaviors.item(r, behavioursFields["code"]).text())
+
+        remove_leading_trailing_spaces = NO
+        if code_with_leading_trailing_spaces:
+            remove_leading_trailing_spaces = dialog.MessageDialog(programName,
+                                            ("Attention! Some leading and/or trailing spaces are present in the following <b>behaviors code(s)</b>:<br>"
+                                            "<b>{}</b><br><br>"
+                                            "Do you want to remove the leading and trailing spaces?<br><br>"
+                                            """<font color="red"><b>Be careful with this option if you have already done observations!</b></font>""").format(code_with_leading_trailing_spaces),
+                                            [YES, NO])
+
         codingMapsList = []
         for r in range(0, self.twBehaviors.rowCount()):
 
@@ -1211,10 +1235,15 @@ class projectDialog(QDialog, Ui_dlgProject):
                             QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in code <b>{}</b> !".format(self.twBehaviors.item(r, behavioursFields[field]).text()))
                             return
 
+                        '''
                         if field == "code" and self.twBehaviors.item(r, behavioursFields[field]).text() != self.twBehaviors.item(r, behavioursFields[field]).text().strip():
                             code_with_trailing_spaces += self.twBehaviors.item(r, behavioursFields[field]).text().strip() + " "
+                        '''
 
-                        row[field] = self.twBehaviors.item(r, behavioursFields[field]).text().strip()
+                        if remove_leading_trailing_spaces == YES:
+                            row[field] = self.twBehaviors.item(r, behavioursFields[field]).text().strip()
+                        else:
+                            row[field] = self.twBehaviors.item(r, behavioursFields[field]).text()
                     else:
                         row[field] = ""
 
@@ -1226,8 +1255,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(r, behavioursFields["coding map"]).text():
                 codingMapsList.append(self.twBehaviors.item(r, behavioursFields["coding map"]).text())
 
-        if code_with_trailing_spaces:
-            QMessageBox.warning(self, programName, "Some trailing spaces were removed from code(s): {}".format(code_with_trailing_spaces))
 
         # remove coding map from project if not in ethogram
         cmToDelete = []
