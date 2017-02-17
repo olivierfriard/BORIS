@@ -3992,8 +3992,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
-            if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]]:
-                categories += [""]
+            try:
+                if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]]:
+                    categories += [""]
+            except:
+                categories = ["###no category###"]
 
         else:
             categories = ["###no category###"]
@@ -4001,7 +4004,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for category in categories:
 
             if category != "###no category###":
-
                 if category == "":
                     paramPanelWindow.item = QListWidgetItem("No category")
                     paramPanelWindow.item.setData(34, "No category")
