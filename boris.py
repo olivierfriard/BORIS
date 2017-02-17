@@ -43,7 +43,7 @@ import statistics
 import datetime
 import multiprocessing
 
-__version__ = "3.45"
+__version__ = "3.46"
 __version_date__ = "2017-02-17"
 __DEV__ = False
 BITMAP_EXT = "jpg"
