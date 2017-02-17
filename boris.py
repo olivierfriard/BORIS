@@ -6006,21 +6006,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # observation id
                 out += "\n<{}>\n".format(obsId)
 
-                # sort events by start time
                 dataList = list(data[1:])
-                for event in sorted(dataList, key=lambda x: x[9]):
+                for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
+
+                    print(event)
                     if event[0] == obsId:
 
                         behavior = event[6]
                         for char in [" ", "-"]:
                             behavior = behavior.replace(char, "_")
 
-                        event_start = "{0:.3f}".format(round(event[9], 3))
-                        # check if event is POINT or STATE    print("{0:.3f}".format(round(14.12789999999999,3)))
-                        if not event[10]:
-                            event_stop = "{0:.3f}".format(round(event[9] + 0.001, 3))
+                        event_start = "{0:.3f}".format(round(event[-4], 3))  # start event (from end for independent variables)
+
+                        if not event[-3]:  # stop event (from end)
+                            event_stop = "{0:.3f}".format(round(event[-4] + 0.001, 3))
                         else:
-                            event_stop = "{0:.3f}".format(round(event[10], 3))
+                            event_stop = "{0:.3f}".format(round(event[-3], 3))
                         out += "{}_{},{}-{} ".format(event[5].replace(" ", "_"), behavior, event_start, event_stop)
 
                 out += "/\n\n"
