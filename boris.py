@@ -43,8 +43,8 @@ import statistics
 import datetime
 import multiprocessing
 
-__version__ = "3.46"
-__version_date__ = "2017-02-17"
+__version__ = "3.47"
+__version_date__ = "2017-02-20"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -6009,12 +6009,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dataList = list(data[1:])
                 for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
 
-                    print(event)
+                    #print(event)
                     if event[0] == obsId:
 
-                        behavior = event[6]
-                        for char in [" ", "-"]:
+                        behavior = event[-7]
+                        # replace various char by _
+                        for char in [" ", "-", "/"]:
                             behavior = behavior.replace(char, "_")
+
+                        subject = event[-8]
+                        # replace various char by _
+                        for char in [" ", "-", "/"]:
+                            subject = subject.replace(char, "_")
+
 
                         event_start = "{0:.3f}".format(round(event[-4], 3))  # start event (from end for independent variables)
 
@@ -6022,7 +6029,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             event_stop = "{0:.3f}".format(round(event[-4] + 0.001, 3))
                         else:
                             event_stop = "{0:.3f}".format(round(event[-3], 3))
-                        out += "{}_{},{}-{} ".format(event[5].replace(" ", "_"), behavior, event_start, event_stop)
+                        out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject, behavior=behavior, start=event_start, stop=event_stop)
 
                 out += "/\n\n"
 
