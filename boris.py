@@ -95,14 +95,12 @@ import qrc_boris
 
 video, live = 0, 1
 
-
 try:
     import matplotlib
     FLAG_MATPLOTLIB_INSTALLED = True
 except:
     logging.warning("matplotlib plotting library not installed")
     FLAG_MATPLOTLIB_INSTALLED = False
-
 
 FLAG_MATPLOTLIB_INSTALLED = True
 
@@ -134,9 +132,11 @@ def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
     """
 
     for video_path in video_paths:
-        ffmpeg_command = '"{ffmpeg_bin}" -y -i "{input}" -vf scale={horiz_resol}:-1 -b 2000k "{input}.re-encoded.{horiz_resol}px.avi" '.format(ffmpeg_bin=ffmpeg_bin,
-                                                                                                                                 input=video_path,
-                                                                                                                                 horiz_resol=horiz_resol)
+        ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                          '-vf scale={horiz_resol}:-1 -b 2000k '
+                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                              input_=video_path,
+                                                                              horiz_resol=horiz_resol)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         p.communicate()
 
@@ -178,7 +178,7 @@ class TempDirCleanerThread(QThread):
             time.sleep(30)
             logging.debug("cleaning frame cache directory")
 
-ROW = -1
+ROW = -1 # red triangle
 
 
 class StyledItemDelegateTriangle(QStyledItemDelegate):
@@ -211,7 +211,14 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    pj = {"time_format": HHMMSS, "project_date": "", "project_name": "", "project_description": "", SUBJECTS : {}, "behaviors_conf": {}, OBSERVATIONS: {} , "coding_map":{} }
+    pj = {"time_format": HHMMSS,
+          "project_date": "",
+          "project_name": "",
+          "project_description": "",
+          SUBJECTS : {}, 
+          ETHOGRAM: {}, 
+          OBSERVATIONS: {} , 
+          "coding_map":{} }
     project = False
 
     ffmpeg_recode_process = None
@@ -245,6 +252,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     mediaTotalLength = None
 
     saveMediaFilePath = True
+    
+    beep_every = 0
 
     measurement_w = None
     memPoints = []   # memory of clicked points for measurement tool
@@ -1761,6 +1770,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.leSeparator.setText(self.behaviouralStringsSeparator)
         # confirm sound
         preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
+        # beep every
+        preferencesWindow.sbBeepEvery.setValue(self.beep_every)
         # embed player
         preferencesWindow.cbEmbedPlayer.setChecked(self.embedPlayer)
         # alert no focal subject
@@ -1815,6 +1826,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.behaviouralStringsSeparator = preferencesWindow.leSeparator.text()
 
             self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
+
+            self.beep_every = preferencesWindow.sbBeepEvery.value()
 
             self.embedPlayer = preferencesWindow.cbEmbedPlayer.isChecked()
 
@@ -3515,6 +3528,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.alertNoFocalSubject = False
 
+            try:
+                self.beep_every = int(settings.value("beep_every"))
+            except:
+                self.beep_every = 0
+
             self.trackingCursorAboveEvent = False
             try:
                 self.trackingCursorAboveEvent = (settings.value('tracking_cursor_above_event') == "true")
@@ -3609,6 +3627,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("Automatic_backup", self.automaticBackup)
         settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator)
         settings.setValue("confirm_sound", self.confirmSound)
+        settings.setValue("beep_every", self.beep_every)
         settings.setValue("embed_player", self.embedPlayer)
         settings.setValue("alert_nosubject", self.alertNoFocalSubject)
         settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
@@ -6919,6 +6938,10 @@ item []:
 
             # cumulative time
             currentTime = self.getLaps() * 1000
+            
+            if self.beep_every:
+                if currentTime % (self.beep_every*1000) <= 300:
+                    self.beep(" -f 555 -l 460")
 
             # current media time
             try:
@@ -7491,6 +7514,15 @@ item []:
         if self.playMode == FFMPEG:
             self.ffmpegTimerOut()
 
+    def beep(self, parameters):
+        """
+        emit beep on various platform
+        """
+        if sys.platform.startswith("linux"):
+            os.system("beep {}".format(parameters))
+        else:
+            app.beep()
+        
 
     def keyPressEvent(self, event):
 
@@ -7516,7 +7548,7 @@ item []:
 
         # beep
         if self.confirmSound:
-            app.beep()
+            self.beep("")
 
         if self.playerType == VLC and self.mediaListPlayer.get_state() != vlc.State.Paused:
             flagPlayerPlaying = True
