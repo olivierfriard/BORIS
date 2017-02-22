@@ -43,8 +43,8 @@ import statistics
 import datetime
 import multiprocessing
 
-__version__ = "3.47"
-__version_date__ = "2017-02-20"
+__version__ = "3.48"
+__version_date__ = "2017-02-22"
 __DEV__ = False
 BITMAP_EXT = "jpg"
 
@@ -215,9 +215,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
           "project_date": "",
           "project_name": "",
           "project_description": "",
-          SUBJECTS : {}, 
-          ETHOGRAM: {}, 
-          OBSERVATIONS: {} , 
+          SUBJECTS : {},
+          ETHOGRAM: {},
+          OBSERVATIONS: {} ,
           "coding_map":{} }
     project = False
 
@@ -252,7 +252,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     mediaTotalLength = None
 
     saveMediaFilePath = True
-    
+
     beep_every = 0
 
     measurement_w = None
@@ -870,7 +870,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if hasattr(self, "codingpad"):
             self.codingpad.show()
         else:
-            allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
             self.codingpad = coding_pad.CodingPad(self.pj)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.codingpad.sendEventSignal.connect(self.signal_from_behaviors_map)
@@ -909,25 +908,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.teEndTime.setVisible(False)
         paramPanelWindow.dsbEndTime.setVisible(False)
 
-        allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-
         # behaviors  filtered
         filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
-
-        '''
-        for behavior in allBehaviors:
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText(behavior)
-            if behavior in filtered_behaviors:
-                paramPanelWindow.ch.setChecked(True)
-            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-        '''
 
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
-            if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]]:
+            if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][idx]]:
                 categories += [""]
         else:
             categories = ["###no category###"]
@@ -951,10 +938,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]]:
+            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted(self.pj[ETHOGRAM].keys())]:
 
-                if (categories == ["###no category###"]) \
-                or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["category"] == category ]):
+                if ((categories == ["###no category###"])
+                or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in filtered_behaviors:
@@ -3714,47 +3701,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return cursor
 
 
-    '''
-    def loadEventsInDB_by_category(self, selectedSubjects, selectedObservations, selectedBehaviors):
-        """
-        populate the db databse with events from selectedObservations, selectedSubjects and selectedBehaviors
-        """
-        db = sqlite3.connect(":memory:")
-        #db = sqlite3.connect("/tmp/1.sqlite")
-        db.row_factory = sqlite3.Row
-
-        cursor = db.cursor()
-
-        cursor.execute("CREATE TABLE events (observation TEXT, subject TEXT, code TEXT, category TEXT, type TEXT, modifiers TEXT, occurence FLOAT, comment TEXT);")
-
-        for subject_to_analyze in selectedSubjects:
-
-            for obsId in selectedObservations:
-
-                for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
-
-                    if event[2] in selectedBehaviors:
-
-                        # extract time, code, modifier and comment ( time:0, subject:1, code:2, modifier:3, comment:4 )
-                        if (subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == "") \
-                            or ( event[1] == subject_to_analyze ):
-
-                            subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else  event[1]
-
-                            eventType = STATE if STATE in self.eventType(event[2]).upper() else POINT
-
-                            category = [ self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == event[2]][0]
-                            print("category", category)
-
-                            r = cursor.execute("""INSERT INTO events (observation, subject, code, category, type, modifiers, occurence, comment) VALUES (?,?,?,?,?,?,?,?)""", \
-                            (obsId, subjectStr, event[2], category, eventType, event[3], str(event[0]), event[4]))
-
-        db.commit()
-        return cursor
-    '''
-
-
-
     def extract_observed_subjects(self, selected_observations):
         """
         extract unique subjects from obs_id observation
@@ -3775,160 +3721,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def extract_observed_behaviors(self, selected_observations, selectedSubjects):
-        '''
-        extract unique behaviors from obs_id observation
-        '''
+        """
+        extract unique behaviors codes from obs_id observation
+        """
 
         observed_behaviors = []
 
         # extract events from selected observations
-        all_events =   [ self.pj[OBSERVATIONS][x][EVENTS] for x in self.pj[OBSERVATIONS] if x in selected_observations]
+        all_events = [self.pj[OBSERVATIONS][x][EVENTS] for x in self.pj[OBSERVATIONS] if x in selected_observations]
 
         for events in all_events:
             for event in events:
-                if event[1] in selectedSubjects or ( not event[1] and NO_FOCAL_SUBJECT in selectedSubjects):
-                    observed_behaviors.append( event[pj_obs_fields["code"]] )
-
+                if event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selectedSubjects):
+                    observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
         # remove duplicate
-        observed_behaviors = list( set( observed_behaviors ) )
+        observed_behaviors = list(set(observed_behaviors))
 
         return observed_behaviors
-
-    '''
-    def choose_obs_subj_behav(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True):
-        """
-        show param window for:
-        - selection of subjects
-        - selection of behaviors
-        - selection of time interval
-        - inclusion of modifiers
-        - exclusion of behaviors without events
-
-        """
-
-        paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.setWindowTitle("Select subjects and behaviors")
-        paramPanelWindow.selectedObservations = selectedObservations
-        paramPanelWindow.pj = self.pj
-        paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
-
-        if not flagShowIncludeModifiers:
-            paramPanelWindow.cbIncludeModifiers.setVisible(False)
-        if not flagShowExcludeBehaviorsWoEvents:
-            paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-        # hide max time
-        if maxTime:
-            if self.timeFormat == HHMMSS:
-                paramPanelWindow.teStartTime.setTime(QtCore.QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
-                paramPanelWindow.teEndTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
-                paramPanelWindow.dsbStartTime.setVisible(False)
-                paramPanelWindow.dsbEndTime.setVisible(False)
-
-            if self.timeFormat == S:
-                paramPanelWindow.dsbStartTime.setValue(0.0)
-                paramPanelWindow.dsbEndTime.setValue(maxTime)
-                paramPanelWindow.teStartTime.setVisible(False)
-                paramPanelWindow.teEndTime.setVisible(False)
-
-        else:
-            paramPanelWindow.lbStartTime.setVisible(False)
-            paramPanelWindow.lbEndTime.setVisible(False)
-
-            paramPanelWindow.teStartTime.setVisible(False)
-            paramPanelWindow.teEndTime.setVisible(False)
-
-            paramPanelWindow.dsbStartTime.setVisible(False)
-            paramPanelWindow.dsbEndTime.setVisible(False)
-
-
-        # extract subjects present in observations
-        observedSubjects = self.extract_observed_subjects(selectedObservations)
-        selectedSubjects = []
-
-        # add 'No focal subject'
-        if "" in observedSubjects:
-            selectedSubjects.append(NO_FOCAL_SUBJECT)
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText(NO_FOCAL_SUBJECT)
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            paramPanelWindow.ch.setChecked(True)
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        all_subjects = sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-
-        for subject in all_subjects:
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText( subject )
-            paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
-            if subject in observedSubjects:
-                selectedSubjects.append(subject)
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
-
-        allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-        logging.debug('allBehaviors: {0}'.format(allBehaviors))
-
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
-        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
-
-        for behavior in allBehaviors:
-
-            paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwBehaviors)
-            paramPanelWindow.ch = QCheckBox()
-            paramPanelWindow.ch.setText(behavior)
-
-            if behavior in observedBehaviors:
-                paramPanelWindow.ch.setChecked(True)
-
-            paramPanelWindow.lwBehaviors.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
-
-        if not paramPanelWindow.exec_():
-            return {"selected subjects": [],
-                    "selected behaviors": []}
-
-        selectedSubjects = paramPanelWindow.selectedSubjects
-        selectedBehaviors = paramPanelWindow.selectedBehaviors
-
-        logging.debug("selected subjects: {}".format(selectedSubjects))
-        logging.debug("selected behaviors: {}".format(selectedBehaviors))
-
-        if self.timeFormat == HHMMSS:
-            startTime = time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
-            endTime = time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
-        if self.timeFormat == S:
-            startTime = Decimal(paramPanelWindow.dsbStartTime.value())
-            endTime = Decimal(paramPanelWindow.dsbEndTime.value())
-        if startTime > endTime:
-            QMessageBox.warning(None, programName, "The start time is after the end time", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return {"selected subjects": [], "selected behaviors": []}
-
-
-        return {"selected subjects": selectedSubjects,
-                "selected behaviors": selectedBehaviors,
-                "include modifiers": paramPanelWindow.cbIncludeModifiers.isChecked(),
-                "exclude behaviors": paramPanelWindow.cbExcludeBehaviors.isChecked(),
-                "start time": startTime,
-                "end time": endTime
-                }
-    '''
-
-
 
 
     def choose_obs_subj_behav_category(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True, by_category=False):
         """
-        show param window for:
+        show window for:
         - selection of subjects
-        - selection of behaviors
+        - selection of behaviors (based on selected subjects)
         - selection of time interval
         - inclusion of modifiers
-        - exclusion of behaviors without events
+        - exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
 
         """
 
@@ -3986,7 +3806,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-        all_subjects = sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+        all_subjects = [self.pj[SUBJECTS][x]["name"] for x in sorted(self.pj[SUBJECTS].keys())]
 
         for subject in all_subjects:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -3997,22 +3817,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 selectedSubjects.append(subject)
                 paramPanelWindow.ch.setChecked(True)
 
-
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
         logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
 
-        allBehaviors = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-        logging.debug('allBehaviors: {0}'.format(allBehaviors))
+        observedBehaviors = self.extract_observed_behaviors(selectedObservations, selectedSubjects) # not sorted
 
-        observedBehaviors = self.extract_observed_behaviors( selectedObservations, selectedSubjects )
         logging.debug('observed behaviors: {0}'.format(observedBehaviors))
 
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
             try:
-                if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]]:
+                if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][idx]]:
                     categories += [""]
             except:
                 categories = ["###no category###"]
@@ -4039,10 +3856,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]]:
+            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted(self.pj[ETHOGRAM].keys())]:
 
-                if (categories == ["###no category###"]) \
-                or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["category"] == category ]):
+                if ((categories == ["###no category###"])
+                or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in observedBehaviors:
@@ -4305,7 +4122,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for behav in out_cat:
 
                         try:
-                            category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
+                            category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
                         except:
                             category = ""
 
@@ -4359,7 +4176,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
 
         if len(selectedObservations) > 1:
-
             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
             flagGroup = dialog.MessageDialog(programName, "Group observations?", [YES, NO]) == YES
         else:
@@ -6938,7 +6754,7 @@ item []:
 
             # cumulative time
             currentTime = self.getLaps() * 1000
-            
+
             if self.beep_every:
                 if currentTime % (self.beep_every*1000) <= 300:
                     self.beep(" -f 555 -l 460")
@@ -7522,7 +7338,7 @@ item []:
             os.system("beep {}".format(parameters))
         else:
             app.beep()
-        
+
 
     def keyPressEvent(self, event):
 

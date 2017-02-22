@@ -49,14 +49,13 @@ class CodingPad(QWidget):
 
         self.colors_dict = {}
         if BEHAVIORAL_CATEGORIES in self.pj:
-            for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM]])):
+            for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x]])):
                 self.colors_dict[category] = CATEGORY_COLORS_LIST[idx % len(CATEGORY_COLORS_LIST)]
 
-
         if self.colors_dict:
-            behaviorsList = sorted([[pj[ETHOGRAM][x]["category"], pj[ETHOGRAM][x]["code"]] for x in pj[ETHOGRAM]])
+            behaviorsList = [[pj[ETHOGRAM][x]["category"], pj[ETHOGRAM][x]["code"]] for x in sorted(pj[ETHOGRAM].keys()) if "category" in pj[ETHOGRAM][x]]
         else:
-            behaviorsList = sorted([["", pj[ETHOGRAM][x]["code"]] for x in pj[ETHOGRAM]])
+            behaviorsList = [["", pj[ETHOGRAM][x]["code"]] for x in sorted(pj[ETHOGRAM].keys())]
         dim = int(len(behaviorsList)**0.5 + 0.999)
 
         c = 0
