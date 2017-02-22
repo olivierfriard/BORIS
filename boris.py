@@ -725,6 +725,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)
         self.twEthogram.addAction(self.actionShowAllBehaviors)
 
+        # Actions for twSubjects context menu
+        self.twSubjects.setContextMenuPolicy(Qt.ActionsContextMenu)
+        self.actionFilterSubjects.triggered.connect(self.filter_subjects)
+        self.twSubjects.addAction(self.actionFilterSubjects)
+
+        self.actionShowAllSubjects.triggered.connect(self.show_all_subjects)
+        self.twSubjects.addAction(self.actionShowAllSubjects)
+
+
         # Actions for twEvents context menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
@@ -877,11 +886,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.show()
 
 
+
     def show_all_behaviors(self):
         """
         show all behaviors in ethogram
         """
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+
+
+    def show_all_subjects(self):
+        """
+        show all subjects in subjects list
+        """
+        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
 
 
@@ -938,7 +955,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted(self.pj[ETHOGRAM].keys())]:
+            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted_keys(self.pj[ETHOGRAM])]:
 
                 if ((categories == ["###no category###"])
                 or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
@@ -962,6 +979,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
                 self.projectChanged = True
             self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
+
+
+    def filter_subjects(self):
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
+        paramPanelWindow.lwSubjects.setVisible(False)
+
+        paramPanelWindow.pbSelectAllSubjects.setVisible(False)
+        paramPanelWindow.pbUnselectAllSubjects.setVisible(False)
+        paramPanelWindow.pbReverseSubjectsSelection.setVisible(False)
+
+        paramPanelWindow.lbSubjects.setVisible(False)
+        paramPanelWindow.cbIncludeModifiers.setVisible(False)
+        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+        paramPanelWindow.lbStartTime.setVisible(False)
+        paramPanelWindow.teStartTime.setVisible(False)
+        paramPanelWindow.dsbStartTime.setVisible(False)
+        paramPanelWindow.lbEndTime.setVisible(False)
+        paramPanelWindow.teEndTime.setVisible(False)
+        paramPanelWindow.dsbEndTime.setVisible(False)
+
+        # behaviors  filtered
+        filtered_subjects = [self.twSubjects.item(i, 1).text() for i in range(self.twSubjects.rowCount())]
+
+        for subject in [self.pj[SUBJECTS][x]["name"] for x in  sorted_keys(self.pj[SUBJECTS])]:
+
+            paramPanelWindow.item = QListWidgetItem(subject)
+            if subject in filtered_subjects:
+                paramPanelWindow.item.setCheckState(Qt.Checked)
+            else:
+                paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        if paramPanelWindow.exec_():
+            if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_subjects):
+                self.projectChanged = True
+            self.load_subjects_in_twSubjects(paramPanelWindow.selectedBehaviors)
 
 
 
@@ -2188,7 +2243,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
 
         # show selected subjects
-        for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
+        for idx in sorted_keys(self.pj[SUBJECTS]):  #    [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
             self.twSubjects.item(int(idx), len( subjectsFields ) ).setText(",".join(self.currentStates[idx]) )
 
         # show tracking cursor
@@ -3806,7 +3861,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-        all_subjects = [self.pj[SUBJECTS][x]["name"] for x in sorted(self.pj[SUBJECTS].keys())]
+        all_subjects = [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]
 
         for subject in all_subjects:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -3856,7 +3911,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted(self.pj[ETHOGRAM].keys())]:
+            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted_keys(self.pj[ETHOGRAM])]:
 
                 if ((categories == ["###no category###"])
                 or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
@@ -4992,7 +5047,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.initialize_new_project()
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-        self.load_subjects_in_twSubjects()
+        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
         self.projectFileName = projectFileName
         self.project = True
         self.menu_options()
@@ -5165,7 +5220,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # load subjects in editor
             if self.pj[SUBJECTS]:
-                for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
+                for idx in sorted_keys(self.pj[SUBJECTS]):   #   [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
                     for i, field in enumerate(subjectsFields):
                         item = QTableWidgetItem(self.pj[SUBJECTS][idx][field])
@@ -5211,7 +5266,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.signalMapper = QSignalMapper(self)
                 newProjectWindow.comboBoxes = []
 
-                for i in [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+                for i in sorted(self.pj[ETHOGRAM]):  #  [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
 
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
@@ -5329,7 +5384,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
                 self.pj[SUBJECTS] =  newProjectWindow.subjects_conf
 
-                self.load_subjects_in_twSubjects()
+                self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
                 # load variables
                 self.pj[INDEPENDENT_VARIABLES] =  newProjectWindow.indVar
@@ -6922,6 +6977,8 @@ item []:
                 self.timer.stop()
 
 
+
+
     def load_behaviors_in_twEthogram(self, behaviorsToShow):
         """
         fill ethogram table with ethogram from pj
@@ -6929,7 +6986,7 @@ item []:
 
         self.twEthogram.setRowCount(0)
         if self.pj[ETHOGRAM]:
-            for idx in [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+            for idx in sorted_keys(self.pj[ETHOGRAM]):   #    [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
                 if self.pj[ETHOGRAM][idx]["code"] in behaviorsToShow:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
                     for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
@@ -6944,23 +7001,23 @@ item []:
             self.dwEthogram.setWindowTitle("Ethogram")
 
 
-    def load_subjects_in_twSubjects(self):
+    def load_subjects_in_twSubjects(self, subjects_to_show):
         """
-        fill subjects table widget with subjects from self.subjects_conf
+        fill subjects table widget with subjects from subjects_to_show
         """
 
         self.twSubjects.setRowCount(0)
+        if self.pj[SUBJECTS]:
+            for idx in sorted_keys(self.pj[SUBJECTS]):
+                if self.pj[SUBJECTS][idx]["name"] in subjects_to_show:
 
+                    self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
-        for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
+                    for idx2, field in enumerate(subjectsFields):
+                        self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(self.pj[SUBJECTS][idx][field]))
 
-            self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
-
-            for idx2, field in enumerate( subjectsFields ):
-                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2 , QTableWidgetItem( self.pj[SUBJECTS][ idx ][field] ))
-
-            # add cell for current state(s) after last subject field
-            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields) , QTableWidgetItem(""))
+                    # add cell for current state(s) after last subject field
+                    self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields) , QTableWidgetItem(""))
 
 
 

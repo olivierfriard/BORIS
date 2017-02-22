@@ -59,7 +59,7 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
                     extension=extension,
                     frame_resize=frame_resize
                     )
-    
+
     '''
 
 
@@ -110,6 +110,14 @@ def behavior2color(behavior, behaviors):
 
 def replace_spaces(l):
     return [x.replace(" ", "_") for x in l]
+
+
+def sorted_keys(d):
+    """
+    return list of sorted keys of provided dictionary
+    """
+    return [str(x) for x in sorted([int(x) for x in d.keys()])]
+
 
 
 def bestTimeUnit(t: int) -> str:

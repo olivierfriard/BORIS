@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>522</width>
-             <height>402</height>
+             <width>532</width>
+             <height>390</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -1016,6 +1016,22 @@
    </property>
    <property name="text">
     <string>2:1 Double</string>
+   </property>
+  </action>
+  <action name="actionFilterSubjects">
+   <property name="text">
+    <string>Filter subjects</string>
+   </property>
+   <property name="toolTip">
+    <string>Filter subjects</string>
+   </property>
+  </action>
+  <action name="actionShowAllSubjects">
+   <property name="text">
+    <string>Show all subjects</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all subjects</string>
    </property>
   </action>
  </widget>
