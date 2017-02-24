@@ -3972,11 +3972,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             categories = {}
             out = []
+
             for subject in plot_parameters["selected subjects"]:
                 out_cat = []
 
                 categories[subject] = {}
 
+                print(plot_parameters["selected behaviors"]) 
                 for behavior in plot_parameters["selected behaviors"]:
 
                     if plot_parameters["include modifiers"]:
@@ -4142,9 +4144,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if idx % 2 == 0:
                                         new_init, new_end = float(row[0]), float(rows[idx + 1][0])
                                         if len(selectedObservations) == 1:
-                                            if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
-                                               or \
-                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
+                                            if ((new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) 
+                                               or 
+                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"])):
                                                 continue
 
                                             if new_init < plot_parameters["start time"]:
@@ -4190,6 +4192,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
 
+            print(out)
+            out = sorted(out, key=lambda k: k['behavior']) 
+            ### http://stackoverflow.com/questions/673867/python-arbitrary-order-by
             return out, categories
 
 
@@ -4608,11 +4613,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             maxTime = 0  # max time in all events of all subjects
 
             # all behaviors defined in project without modifiers
-            all_project_behaviors = sorted([self.pj[ETHOGRAM][idx]["code"] for idx in self.pj[ETHOGRAM]])
+            all_project_behaviors = [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])]
+            all_project_subjects = [NO_FOCAL_SUBJECT] + [self.pj[SUBJECTS][idx]["name"] for idx in sorted_keys(self.pj[SUBJECTS])]
 
-            for subject in sorted(list(obs.keys())):
+            for subject in obs.keys():
 
-                for behavior_modifiers_json in sorted(list(obs[subject].keys())):
+                for behavior_modifiers_json in obs[subject].keys():
 
                     behavior_modifiers = json.loads(behavior_modifiers_json)
 
@@ -4630,7 +4636,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 observedBehaviors.append("")
 
-            all_behaviors = sorted(all_behaviors)
+            all_behaviors2 = [json.loads(x)[0] for x in all_behaviors]
+            all_behaviors = ['["{}"]'.format(x) for x in all_project_behaviors if x in all_behaviors2]
 
             lbl = []
             if excludeBehaviorsWithoutEvents:
@@ -4696,7 +4703,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             count = 0
             flagFirstSubject = True
 
-            for subject in sorted(list(obs.keys())):
+            for subject in all_project_subjects:
+                if subject not in obs.keys():
+                    continue
 
                 if not flagFirstSubject:
                     if excludeBehaviorsWithoutEvents:
@@ -4841,11 +4850,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows = cursor.fetchall()
 
                         if modifier[0]:
-                            #behaviorOut = "{0} ({1})".format(behavior, modifier[0].replace("|", ","))
                             behaviorOut = [behavior, modifier[0].replace("|", ",")]
 
                         else:
-                            #behaviorOut = "{0}".format(behavior)
                             behaviorOut = [behavior]
 
                         behaviorOut_json = json.dumps(behaviorOut)
@@ -4866,7 +4873,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             sbj = ""
                                         else:
                                             sbj = "for subject <b>{0}</b>".format(subject)
-                                        QMessageBox.critical(self, programName, "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj) )
+                                        QMessageBox.critical(self, programName,
+                                            "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
                 else:
                     cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ?  ORDER BY observation, occurence",
                                   (subject, behavior))
@@ -4895,7 +4903,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
         logging.debug("excludeBehaviorsWithoutEvents: {}".format(plot_parameters["exclude behaviors"]))
 
-        if not plot_time_ranges(o, selectedObservations[0], plot_parameters["start time"], plot_parameters["end time"], plot_parameters["exclude behaviors"], line_width=10):
+        if not plot_time_ranges(o,
+                                selectedObservations[0],
+                                plot_parameters["start time"],
+                                plot_parameters["end time"],
+                                plot_parameters["exclude behaviors"],
+                                line_width=10):
             QMessageBox.warning(self, programName, "Check events")
 
 
