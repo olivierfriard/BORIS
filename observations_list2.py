@@ -23,6 +23,8 @@ Copyright 2012-2017 Olivier Friard
 
 """
 
+N = 2000
+
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -47,20 +49,21 @@ def randomword(length):
 
 class observationsList_widget(QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, data, parent=None):
         super(observationsList_widget, self).__init__(parent)
 
+        self.data = data
+
         self.setWindowTitle("Observations list - " + config.programName)
-        self.label = QLabel(self)
+        self.label = QLabel("")
 
         self.mode = config.SINGLE
 
         self.lineEdit = QLineEdit(self)
-        #self.lineEdit.textChanged.connect(self.on_lineEdit_textChanged)
+        self.lineEdit.textChanged.connect(self.view_filter)
         self.view = QTableWidget(self)
         self.view.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.view.setSortingEnabled(True)
-
 
         self.comboBox = QComboBox(self)
 
@@ -70,18 +73,28 @@ class observationsList_widget(QDialog):
                               "Description",
                               "Media file",
                               ])
-        #self.comboBox.currentIndexChanged.connect(self.on_comboBox_currentIndexChanged)
+        self.comboBox.currentIndexChanged.connect(self.view_filter)
+
+        '''self.cbLogic = QComboBox(self)
+
+        self.cbLogic.addItems(["=",
+                              "<>",
+                              ])
+        self.cbLogic.currentIndexChanged.connect(self.view_filter)'''
+
 
         self.label = QLabel(self)
 
-        self.pbSearch = QPushButton("Search")
-        self.pbSearch.clicked.connect(self.on_lineEdit_textChanged)
+        '''self.pbSearch = QPushButton("Search")
+        self.pbSearch.clicked.connect(self.view_filter)'''
 
         self.gridLayout = QGridLayout(self)
-        self.gridLayout.addWidget(self.label, 0, 1, 1, 3)
+        self.gridLayout.addWidget(self.label,    0, 1, 1, 3)
         self.gridLayout.addWidget(self.comboBox, 1, 1, 1, 1)
+        #self.gridLayout.addWidget(self.cbLogic, 1, 2, 1, 1)
         self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
-        self.gridLayout.addWidget(self.pbSearch, 1, 3, 1, 1)
+        '''self.gridLayout.addWidget(self.pbSearch, 1, 3, 1, 1)'''
+
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
 
         hbox2 = QHBoxLayout()
@@ -109,15 +122,6 @@ class observationsList_widget(QDialog):
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)
 
-
-        '''
-        self.lineEdit.textChanged.connect(self.on_lineEdit_textChanged)
-        self.comboBox.currentIndexChanged.connect(self.on_comboBox_currentIndexChanged)
-
-        self.horizontalHeader = self.view.horizontalHeader()
-        self.horizontalHeader.sectionClicked.connect(self.on_view_horizontalHeader_sectionClicked)
-        '''
-
         self.pbSelectAll.clicked.connect(self.pbSelectAll_clicked)
         self.pbUnSelectAll.clicked.connect(self.pbUnSelectAll_clicked)
 
@@ -127,6 +131,13 @@ class observationsList_widget(QDialog):
         self.pbEdit.clicked.connect(self.pbEdit_clicked)
 
         self.view.doubleClicked.connect(self.view_doubleClicked)
+
+        self.view.setRowCount(len(self.data))
+        self.view.setColumnCount(len(self.data[0]))
+
+        for r in range(len(self.data)):
+            for c in range(len(self.data[0])):
+                self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
 
 
 
@@ -154,9 +165,16 @@ class observationsList_widget(QDialog):
 
     def pbSelectAll_clicked(self):
 
+        '''
+        for r in range(self.view.rowCount()):
+            for c in range(self.view.columnCount()):
+                self.view.item(r, c).setSelected(True)
+        '''
+
         for idx in range(self.view.rowCount()):
             table_item = self.view.item(idx, 0)
             table_item.setSelected(True)
+
 
     def pbUnSelectAll_clicked(self):
         for idx in range(self.view.rowCount()):
@@ -176,97 +194,48 @@ class observationsList_widget(QDialog):
     def pbEdit_clicked(self):
         self.done(3)
 
-    '''
-    def on_view_horizontalHeader_sectionClicked(self, logicalIndex):
 
-        self.logicalIndex = logicalIndex
-        self.menuValues = QMenu(self)
-        self.signalMapper = QSignalMapper(self)
-
-        self.comboBox.blockSignals(True)
-        self.comboBox.setCurrentIndex(self.logicalIndex)
-        self.comboBox.blockSignals(True)
-
-        valuesUnique = [self.model.item(row, self.logicalIndex).text() for row in range(self.model.rowCount())]
-
-        actionAll = QAction('All', self)
-        actionAll.triggered.connect(self.on_actionAll_triggered)
-        self.menuValues.addAction(actionAll)
-        self.menuValues.addSeparator()
-
-        for actionNumber, actionName in enumerate(sorted(list(set(valuesUnique)))):
-            action = QAction(actionName, self)
-            self.signalMapper.setMapping(action, actionNumber)
-            action.triggered.connect(self.signalMapper.map)
-            self.menuValues.addAction(action)
-
-        self.signalMapper.mapped.connect(self.on_signalMapper_mapped)
-
-        headerPos = self.view.mapToGlobal(self.horizontalHeader.pos())
-
-        posY = headerPos.y() + self.horizontalHeader.height()
-        posX = headerPos.x() + self.horizontalHeader.sectionPosition(self.logicalIndex)
-
-        self.menuValues.exec_(QPoint(posX, posY))
-    '''
-
-
-    def on_actionAll_triggered(self):
-        filterColumn = self.logicalIndex
-        filterString = QRegExp("", Qt.CaseInsensitive, QRegExp.RegExp)
-
-        self.proxy.setFilterRegExp(filterString)
-        self.proxy.setFilterKeyColumn(filterColumn)
-
-    def query_changed(self):
-        print("changed")
-
-
-    def on_signalMapper_mapped(self, i):
-        stringAction = self.signalMapper.mapping(i).text()
-        filterColumn = self.logicalIndex
-        filterString = QRegExp(stringAction, Qt.CaseSensitive, QRegExp.FixedString)
-
-        self.proxy.setFilterRegExp(filterString)
-        self.proxy.setFilterKeyColumn(filterColumn)
-
-
-    def on_lineEdit_textChanged(self):
+    def view_filter(self):
         '''
-        text edit changed
+        filter
         '''
         if len(self.lineEdit.text()) < 3:
+            self.view.setRowCount(len(self.data))
+            self.view.setColumnCount(len(self.data[0]))
+
+            for r in range(len(self.data)):
+                for c in range(len(self.data[0])):
+                    self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+
+            self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
             return
 
+        columns = {"Observation id": 0, "Date": 1, "Description": 2, "Subjects": 3, "Media file": 4}
+        print(self.comboBox.currentText())
+
         self.view.setRowCount(0)
+        search = self.lineEdit.text().upper()
+        for r in self.data:
+            if search in r[columns[self.comboBox.currentText()]].upper():
+                self.view.setRowCount(self.view.rowCount() + 1)
+                for idx,c in enumerate(r):
+                    self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(r[idx]))
 
-
-
-        '''
-        self.proxy.setFilterRegExp(QRegExp(text, Qt.CaseInsensitive, QRegExp.RegExp ))
-        '''
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
 
-
-    def on_comboBox_currentIndexChanged(self, index):
-        '''
-        combo box changed
-        '''
-        self.proxy.setFilterKeyColumn(index)
 
 
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
-    t = observationsList_widget()
 
-    N=2000
-    t.view.setRowCount(2000)
-    t.view.setColumnCount(8)
-
-    for r in range(2000):
+    data = []
+    for r in range(N):
+        row = []
         for c in range(8):
-            t.view.setItem(r, c, QTableWidgetItem(randomword(20)))
+            row.append(randomword(20))
+        data.append(row)
 
+    t = observationsList_widget(data)
     t.show()
     sys.exit(app.exec_())
