@@ -2892,27 +2892,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         """
 
-
-        # observations list order
-        '''
-        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
-        settings = QSettings(iniFilePath, QSettings.IniFormat)
-        try:
-            obsList.cbSort.setCurrentIndex([obsList.cbSort.itemText(idx) for idx in range(obsList.cbSort.count())].index(settings.value("observations_list_order")))
-        except:
-            pass
-
         obsListFields = ["id", "date", "description", "subjects", "media"]
+
         indepVarHeader = []
 
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
 
-        obsList.comboBox.addItems(obsListFields + indepVarHeader)
-        '''
 
-        obsListFields = ["id", "date", "description", "subjects", "media"]
         data = []
         for obs in sorted(list(self.pj[OBSERVATIONS].keys())):
             date = self.pj[OBSERVATIONS][obs]["date"].replace("T", " ")
@@ -2937,17 +2925,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                 media = LIVE
 
-            # independent variable
-            '''
+            # independent variables
             indepvar = []
             if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obs]:
                 for var in indepVarHeader:
                     if var in self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
-                        indepvar.append(QStandardItem(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var]))
-            '''
+                        indepvar.append(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var])
 
-            #obsList.model.invisibleRootItem().appendRow([QStandardItem(obs), QStandardItem(date), QStandardItem(descr), QStandardItem( subjectsList ), QStandardItem( media )]  +  indepvar)
-            data.append([obs, date, descr, subjectsList, media])
+            data.append([obs, date, descr, subjectsList, media] + indepvar)
 
         obsList = observations_list2.observationsList_widget(data)
 
@@ -2981,8 +2966,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbOk.setVisible(True)
 
+        obsList.comboBox.addItems(obsListFields + indepVarHeader)
+
         #obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
-        obsList.view.setHorizontalHeaderLabels(obsListFields)
+        obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
 
 
         #obsList.view.horizontalHeader().setStretchLastSection(True)
@@ -2992,6 +2979,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         obsList.label.setText("{} observation{}".format(obsList.view.rowCount(), "s" * (obsList.view.rowCount()>1)))
 
         obsList.resize(900, 600)
+
+        # sort memory
+        '''
+        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        settings = QSettings(iniFilePath, QSettings.IniFormat)
+        try:
+            obsList.view.sortItems(settings.value("observations_list_order"), )
+        except:
+            print("Error:", sys.exc_info()[0])
+        '''
+
+        obsList.view.sortItems(0, Qt.AscendingOrder)
 
         selectedObs = []
 

@@ -36,6 +36,7 @@ except:
 import os
 import dialog
 import config
+from utilities import *
 
 
 import random, string
@@ -67,32 +68,40 @@ class observationsList_widget(QDialog):
 
         self.comboBox = QComboBox(self)
 
+        '''
         self.comboBox.addItems(["Observation id",
                               "Date",
                               "Subjects",
                               "Description",
                               "Media file",
                               ])
+        '''
         self.comboBox.currentIndexChanged.connect(self.view_filter)
 
-        '''self.cbLogic = QComboBox(self)
+        self.cbLogic = QComboBox(self)
 
-        self.cbLogic.addItems(["=",
-                              "<>",
+        self.cbLogic.addItems(["in",
+                               "not in",
+                               "=",
+                               "!=",
+                               ">",
+                               "<",
+                               ">=",
+                               "<="
                               ])
-        self.cbLogic.currentIndexChanged.connect(self.view_filter)'''
+        self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
 
         self.label = QLabel(self)
 
-        '''self.pbSearch = QPushButton("Search")
-        self.pbSearch.clicked.connect(self.view_filter)'''
+        self.pbSearch = QPushButton("Search")
+        self.pbSearch.clicked.connect(self.view_filter)
 
         self.gridLayout = QGridLayout(self)
         self.gridLayout.addWidget(self.label,    0, 1, 1, 3)
         self.gridLayout.addWidget(self.comboBox, 1, 1, 1, 1)
-        #self.gridLayout.addWidget(self.cbLogic, 1, 2, 1, 1)
-        self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
+        self.gridLayout.addWidget(self.cbLogic, 1, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit, 1, 3, 1, 1)
         '''self.gridLayout.addWidget(self.pbSearch, 1, 3, 1, 1)'''
 
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
@@ -196,10 +205,74 @@ class observationsList_widget(QDialog):
 
 
     def view_filter(self):
-        '''
+        """
         filter
-        '''
-        if len(self.lineEdit.text()) < 3:
+        """
+        
+        def str2float(s):
+            """
+            convert str in int or float or return str
+            """
+            try:
+                return float(s)
+            except:
+                return s
+
+        
+        def in_(s, l):
+            return s in l
+
+        def not_in(s, l):
+            return s not in l
+
+            
+        def equal(s, l):
+            l_num, s_num = str2float(l), str2float(s)
+            if type(l_num) == type(s_num):
+                return l_num == s_num
+            else:
+                return l == s
+
+        def not_equal(s, l):
+            l_num, s_num = str2float(l), str2float(s)
+            if type(l_num) == type(s_num):
+                return l_num != s_num
+            else:
+                return l != s
+
+
+        def gt(s, l):
+            l_num, s_num = str2float(l), str2float(s)
+            if type(l_num) == type(s_num):
+                return l_num > s_num
+            else:
+                return l > s
+
+        def lt(s, l):
+            l_num, s_num = str2float(l), str2float(s)
+            if type(l_num) == type(s_num):
+                return l_num < s_num
+            else:
+                return l < s
+
+        def gt_or_equal(s, l):
+            l_num, s_num = str2float(l), str2float(s)
+            if type(l_num) == type(s_num):
+                return l_num >= s_num
+            else:
+                return l >= s
+
+
+        def lt_or_equal(s, l):
+            l_num, s_num = str2float(l), str2float(s)
+            if type(l_num) == type(s_num):
+                return l_num <= s_num
+            else:
+                return l <= s
+
+
+        
+        if self.comboBox.currentIndex() <= 4 and len(self.lineEdit.text()) < 3:
             self.view.setRowCount(len(self.data))
             self.view.setColumnCount(len(self.data[0]))
 
@@ -207,19 +280,45 @@ class observationsList_widget(QDialog):
                 for c in range(len(self.data[0])):
                     self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
 
-            self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
-            return
+        else:
 
-        columns = {"Observation id": 0, "Date": 1, "Description": 2, "Subjects": 3, "Media file": 4}
-        print(self.comboBox.currentText())
+            '''
+            [self.comboBox.itemText(i) for i in range(self.comboBox.count())]
+            
+            columns = {"Observation id": 0, "Date": 1, "Description": 2, "Subjects": 3, "Media file": 4}
+            '''
 
-        self.view.setRowCount(0)
-        search = self.lineEdit.text().upper()
-        for r in self.data:
-            if search in r[columns[self.comboBox.currentText()]].upper():
-                self.view.setRowCount(self.view.rowCount() + 1)
-                for idx,c in enumerate(r):
-                    self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(r[idx]))
+            if self.cbLogic.currentText() == "in":
+                logic = in_
+            if self.cbLogic.currentText() == "not in":
+                logic = not_in
+
+            if self.cbLogic.currentText() == "=":
+                logic = equal
+            if self.cbLogic.currentText() == "!=":
+                logic = not_equal
+            if self.cbLogic.currentText() == ">":
+                logic = gt
+            if self.cbLogic.currentText() == "<":
+                logic = lt
+            if self.cbLogic.currentText() == ">=":
+                logic = gt_or_equal
+            if self.cbLogic.currentText() == "<=":
+                logic = lt_or_equal
+
+
+            self.view.setRowCount(0)
+            search = self.lineEdit.text().upper()
+
+            
+            
+            for r in self.data:
+                #print(search, r[self.comboBox.currentIndex()])
+                #print(logic(search, r[self.comboBox.currentIndex()].upper()))
+                if logic(search, r[self.comboBox.currentIndex()].upper()):
+                    self.view.setRowCount(self.view.rowCount() + 1)
+                    for idx,c in enumerate(r):
+                        self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(r[idx]))
 
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
 
