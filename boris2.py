@@ -2971,7 +2971,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
         obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
 
-
         #obsList.view.horizontalHeader().setStretchLastSection(True)
         obsList.view.resizeColumnsToContents()
 

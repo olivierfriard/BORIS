@@ -87,7 +87,8 @@ class observationsList_widget(QDialog):
                                ">",
                                "<",
                                ">=",
-                               "<="
+                               "<=",
+                               "between"
                               ])
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
@@ -98,10 +99,10 @@ class observationsList_widget(QDialog):
         self.pbSearch.clicked.connect(self.view_filter)
 
         self.gridLayout = QGridLayout(self)
-        self.gridLayout.addWidget(self.label,    0, 1, 1, 3)
-        self.gridLayout.addWidget(self.comboBox, 1, 1, 1, 1)
-        self.gridLayout.addWidget(self.cbLogic, 1, 2, 1, 1)
-        self.gridLayout.addWidget(self.lineEdit, 1, 3, 1, 1)
+        self.gridLayout.addWidget(self.label,    0, 0, 1, 3)
+        self.gridLayout.addWidget(self.comboBox, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.cbLogic,  1, 1, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
         '''self.gridLayout.addWidget(self.pbSearch, 1, 3, 1, 1)'''
 
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
@@ -270,6 +271,19 @@ class observationsList_widget(QDialog):
             else:
                 return l <= s
 
+        def between(s, l):
+            print(s)
+            if len(s.split(" AND ")) != 2:
+                return None
+            s1, s2 = s.split(" AND ")
+            s1_num, s2_num = str2float(s1), str2float(s2)
+            if type(s1_num) != type(s2_num):
+                return None
+            l_num = str2float(l)
+            if type(s1_num) == type(l_num):
+                return l_num >= s1_num and l_num <= s2_num
+            else:
+                return l >= s1 and l <= s2
 
         
         if self.comboBox.currentIndex() <= 4 and len(self.lineEdit.text()) < 3:
@@ -305,16 +319,13 @@ class observationsList_widget(QDialog):
                 logic = gt_or_equal
             if self.cbLogic.currentText() == "<=":
                 logic = lt_or_equal
-
+            if self.cbLogic.currentText() == "between":
+                logic = between
 
             self.view.setRowCount(0)
             search = self.lineEdit.text().upper()
 
-            
-            
             for r in self.data:
-                #print(search, r[self.comboBox.currentIndex()])
-                #print(logic(search, r[self.comboBox.currentIndex()].upper()))
                 if logic(search, r[self.comboBox.currentIndex()].upper()):
                     self.view.setRowCount(self.view.rowCount() + 1)
                     for idx,c in enumerate(r):
@@ -336,5 +347,11 @@ if __name__ == '__main__':
         data.append(row)
 
     t = observationsList_widget(data)
+    
+    t.view.setHorizontalHeaderLabels(["a","b","c","d","e","f","g","h"])
+    t.comboBox.addItems(["a","b","c","d","e","f","g","h"])
+
+    t.label.setText("{} observation{}".format(t.view.rowCount(), "s" * (t.view.rowCount()>1)))
+
     t.show()
     sys.exit(app.exec_())
