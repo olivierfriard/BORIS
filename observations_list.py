@@ -24,7 +24,6 @@ Copyright 2012-2017 Olivier Friard
 """
 
 
-
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -37,15 +36,6 @@ import os
 import dialog
 import config
 from utilities import *
-
-
-import random, string
-
-def randomword(length):
-   return ''.join(random.choice("abcdefghijklmnopqrstuvwxyz ") for i in range(length))
-
-
-
 
 
 class observationsList_widget(QDialog):
@@ -67,21 +57,11 @@ class observationsList_widget(QDialog):
         self.view.setSortingEnabled(True)
 
         self.comboBox = QComboBox(self)
-
-        '''
-        self.comboBox.addItems(["Observation id",
-                              "Date",
-                              "Subjects",
-                              "Description",
-                              "Media file",
-                              ])
-        '''
         self.comboBox.currentIndexChanged.connect(self.view_filter)
 
         self.cbLogic = QComboBox(self)
-
-        self.cbLogic.addItems(["in",
-                               "not in",
+        self.cbLogic.addItems(["contains",
+                               "does not contain",
                                "=",
                                "!=",
                                ">",
@@ -92,11 +72,12 @@ class observationsList_widget(QDialog):
                               ])
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
-
         self.label = QLabel(self)
 
+        '''
         self.pbSearch = QPushButton("Search")
         self.pbSearch.clicked.connect(self.view_filter)
+        '''
 
         self.gridLayout = QGridLayout(self)
         self.gridLayout.addWidget(self.label,    0, 0, 1, 3)
@@ -113,9 +94,11 @@ class observationsList_widget(QDialog):
         hbox2.addItem(spacerItem)
 
         self.pbSelectAll = QPushButton("Select all")
+        self.pbSelectAll.clicked.connect(lambda: self.pbSelection_clicked("select"))
         hbox2.addWidget(self.pbSelectAll)
 
         self.pbUnSelectAll = QPushButton("Unselect all")
+        self.pbUnSelectAll.clicked.connect(lambda: self.pbSelection_clicked("unselect"))
         hbox2.addWidget(self.pbUnSelectAll)
 
         self.pbCancel = QPushButton("Cancel")
@@ -132,8 +115,6 @@ class observationsList_widget(QDialog):
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)
 
-        self.pbSelectAll.clicked.connect(self.pbSelectAll_clicked)
-        self.pbUnSelectAll.clicked.connect(self.pbUnSelectAll_clicked)
 
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
         self.pbOk.clicked.connect(self.pbOk_clicked)
@@ -164,7 +145,6 @@ class observationsList_widget(QDialog):
             self.done(2)
             return
 
-
         response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?", ["Open", "Edit", config.CANCEL])
         if response == "Open":
             self.done(2)
@@ -173,23 +153,21 @@ class observationsList_widget(QDialog):
 
 
 
-    def pbSelectAll_clicked(self):
+    def pbSelection_clicked(self, mode):
+        """
+        select or unselect all filtered observations
+        """
 
         '''
         for r in range(self.view.rowCount()):
             for c in range(self.view.columnCount()):
                 self.view.item(r, c).setSelected(True)
+
         '''
 
         for idx in range(self.view.rowCount()):
             table_item = self.view.item(idx, 0)
-            table_item.setSelected(True)
-
-
-    def pbUnSelectAll_clicked(self):
-        for idx in range(self.view.rowCount()):
-            table_item = self.view.item(idx, 0)
-            table_item.setSelected(False)
+            table_item.setSelected(mode == "select")
 
 
     def pbCancel_clicked(self):
@@ -209,24 +187,22 @@ class observationsList_widget(QDialog):
         """
         filter
         """
-        
+
         def str2float(s):
             """
-            convert str in int or float or return str
+            convert str in float or return str
             """
             try:
                 return float(s)
             except:
                 return s
 
-        
         def in_(s, l):
             return s in l
 
         def not_in(s, l):
             return s not in l
 
-            
         def equal(s, l):
             l_num, s_num = str2float(l), str2float(s)
             if type(l_num) == type(s_num):
@@ -240,7 +216,6 @@ class observationsList_widget(QDialog):
                 return l_num != s_num
             else:
                 return l != s
-
 
         def gt(s, l):
             l_num, s_num = str2float(l), str2float(s)
@@ -263,7 +238,6 @@ class observationsList_widget(QDialog):
             else:
                 return l >= s
 
-
         def lt_or_equal(s, l):
             l_num, s_num = str2float(l), str2float(s)
             if type(l_num) == type(s_num):
@@ -285,7 +259,7 @@ class observationsList_widget(QDialog):
             else:
                 return l >= s1 and l <= s2
 
-        
+
         if self.comboBox.currentIndex() <= 4 and len(self.lineEdit.text()) < 3:
             self.view.setRowCount(len(self.data))
             self.view.setColumnCount(len(self.data[0]))
@@ -296,15 +270,9 @@ class observationsList_widget(QDialog):
 
         else:
 
-            '''
-            [self.comboBox.itemText(i) for i in range(self.comboBox.count())]
-            
-            columns = {"Observation id": 0, "Date": 1, "Description": 2, "Subjects": 3, "Media file": 4}
-            '''
-
-            if self.cbLogic.currentText() == "in":
+            if self.cbLogic.currentText() == "contains":
                 logic = in_
-            if self.cbLogic.currentText() == "not in":
+            if self.cbLogic.currentText() == "does not contain":
                 logic = not_in
 
             if self.cbLogic.currentText() == "=":
@@ -319,7 +287,7 @@ class observationsList_widget(QDialog):
                 logic = gt_or_equal
             if self.cbLogic.currentText() == "<=":
                 logic = lt_or_equal
-            if self.cbLogic.currentText() == "between":
+            if self.cbLogic.currentText() == "between (use and to separate terms)":
                 logic = between
 
             self.view.setRowCount(0)
@@ -333,26 +301,3 @@ class observationsList_widget(QDialog):
 
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
 
-
-
-if __name__ == '__main__':
-    import sys
-    app = QApplication(sys.argv)
-
-    data = []
-    N = 2000
-    for r in range(N):
-        row = []
-        for c in range(8):
-            row.append(randomword(20))
-        data.append(row)
-
-    t = observationsList_widget(data)
-    
-    t.view.setHorizontalHeaderLabels(["a","b","c","d","e","f","g","h"])
-    t.comboBox.addItems(["a","b","c","d","e","f","g","h"])
-
-    t.label.setText("{} observation{}".format(t.view.rowCount(), "s" * (t.view.rowCount()>1)))
-
-    t.show()
-    sys.exit(app.exec_())
