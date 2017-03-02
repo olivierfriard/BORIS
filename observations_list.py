@@ -68,7 +68,7 @@ class observationsList_widget(QDialog):
                                "<",
                                ">=",
                                "<=",
-                               "between"
+                               "between (use and to separate terms)"
                               ])
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
@@ -246,7 +246,6 @@ class observationsList_widget(QDialog):
                 return l <= s
 
         def between(s, l):
-            print(s)
             if len(s.split(" AND ")) != 2:
                 return None
             s1, s2 = s.split(" AND ")
@@ -274,7 +273,6 @@ class observationsList_widget(QDialog):
                 logic = in_
             if self.cbLogic.currentText() == "does not contain":
                 logic = not_in
-
             if self.cbLogic.currentText() == "=":
                 logic = equal
             if self.cbLogic.currentText() == "!=":
@@ -287,17 +285,18 @@ class observationsList_widget(QDialog):
                 logic = gt_or_equal
             if self.cbLogic.currentText() == "<=":
                 logic = lt_or_equal
-            if self.cbLogic.currentText() == "between (use and to separate terms)":
+            if "between" in self.cbLogic.currentText():
                 logic = between
 
             self.view.setRowCount(0)
             search = self.lineEdit.text().upper()
-
-            for r in self.data:
-                if logic(search, r[self.comboBox.currentIndex()].upper()):
-                    self.view.setRowCount(self.view.rowCount() + 1)
-                    for idx,c in enumerate(r):
-                        self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(r[idx]))
-
+            try:
+                for r in self.data:
+                    if logic(search, r[self.comboBox.currentIndex()].upper()):
+                        self.view.setRowCount(self.view.rowCount() + 1)
+                        for idx,c in enumerate(r):
+                            self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(r[idx]))
+            except:
+                pass
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
 
