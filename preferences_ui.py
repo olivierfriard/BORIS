@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Tue Feb 21 11:41:53 2017
+# Created: Wed Mar  8 16:58:34 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -174,6 +174,17 @@ class Ui_prefDialog(object):
         self.sbFrameResize.setObjectName(_fromUtf8("sbFrameResize"))
         self.horizontalLayout_5.addWidget(self.sbFrameResize)
         self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        self.horizontalLayout_8 = QtGui.QHBoxLayout()
+        self.horizontalLayout_8.setObjectName(_fromUtf8("horizontalLayout_8"))
+        self.label_9 = QtGui.QLabel(self.tab_3)
+        self.label_9.setObjectName(_fromUtf8("label_9"))
+        self.horizontalLayout_8.addWidget(self.label_9)
+        self.cbFrameBitmapFormat = QtGui.QComboBox(self.tab_3)
+        self.cbFrameBitmapFormat.setObjectName(_fromUtf8("cbFrameBitmapFormat"))
+        self.cbFrameBitmapFormat.addItem(_fromUtf8(""))
+        self.cbFrameBitmapFormat.addItem(_fromUtf8(""))
+        self.horizontalLayout_8.addWidget(self.cbFrameBitmapFormat)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_8)
         self.cbDetachFrameViewer = QtGui.QCheckBox(self.tab_3)
         self.cbDetachFrameViewer.setObjectName(_fromUtf8("cbDetachFrameViewer"))
         self.verticalLayout_6.addWidget(self.cbDetachFrameViewer)
@@ -228,7 +239,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -255,6 +266,9 @@ class Ui_prefDialog(object):
         self.lbFFmpegCacheDirMaxSize.setText(_translate("prefDialog", "FFmpeg cache directory max size (Mb)", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("prefDialog", "FFmpeg framework", None))
         self.lbResize.setText(_translate("prefDialog", "Resize frame (horizontal number of pixels). The aspect ratio will be maintained", None))
+        self.label_9.setText(_translate("prefDialog", "Frame bitmap format (JPG: Low quality  PNG: High quality)", None))
+        self.cbFrameBitmapFormat.setItemText(0, _translate("prefDialog", "JPG", None))
+        self.cbFrameBitmapFormat.setItemText(1, _translate("prefDialog", "PNG", None))
         self.cbDetachFrameViewer.setText(_translate("prefDialog", "Detach frame viewer", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode", None))
         self.lbspectrogram.setText(_translate("prefDialog", "Spectrogram height", None))

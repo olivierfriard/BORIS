@@ -43,10 +43,11 @@ import statistics
 import datetime
 import multiprocessing
 
-__version__ = "3.48"
-__version_date__ = "2017-03-01"
+__version__ = "3.49"
+__version_date__ = "2017-03-08"
 __DEV__ = False
-BITMAP_EXT = "jpg"
+
+#BITMAP_EXT = "jpg"
 
 if sys.platform == "darwin":  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
@@ -233,6 +234,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     spectrogramHeight = 80
     spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
+
+    frame_bitmap_format = FRAME_DEFAULT_BITMAT_FORMAT
 
     alertNoFocalSubject = False        # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
@@ -1831,6 +1834,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # frame-by-frame mode
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
         mem_frame_resize = self.frame_resize
+
+        preferencesWindow.cbFrameBitmapFormat.clear()
+        preferencesWindow.cbFrameBitmapFormat.addItems(FRAME_BITMAP_FORMAT_LIST)
+
+        try:
+            preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(self.frame_bitmap_format))
+        except:
+            preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(FRAME_DEFAULT_BITMAT_FORMAT))
+
+
         preferencesWindow.cbDetachFrameViewer.setChecked(self.detachFrameViewer)
 
         # spectrogram
@@ -1902,6 +1915,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         os.remove(self.imageDirectory + os.sep + f)
                     except:
                         pass
+
+            self.frame_bitmap_format = preferencesWindow.cbFrameBitmapFormat.currentText()
+
             # detach frame viewer
             self.detachFrameViewer = preferencesWindow.cbDetachFrameViewer.isChecked()
 
@@ -2026,7 +2042,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("FFmpegTimerOut function")
 
-        global BITMAP_EXT
+        #global BITMAP_EXT
 
         fps = list(self.fps.values())[0]
 
@@ -2058,7 +2074,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName, second=int(frameCurrentMedia / fps)) not in self.imagesList:
 
-            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) +1), self.imageDirectory, md5FileName, self.frame_bitmap_format.lower(), self.frame_resize)
 
             self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
@@ -2077,12 +2093,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                     fileName=md5FileName,
                                                                                     second=second1,
                                                                                     frame=frame1,
-                                                                                    extension=BITMAP_EXT)
+                                                                                    extension=self.frame_bitmap_format.lower())
 
         logging.debug("image1: {}".format(img))
         if not os.path.isfile(img):
             logging.warning("image 1 not found: {0}".format(img))
-            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) + 1), self.imageDirectory, md5FileName, BITMAP_EXT, self.frame_resize)
+            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps), currentMedia, str(round(fps) + 1), self.imageDirectory, md5FileName, self.frame_bitmap_format.lower(), self.frame_resize)
             if not os.path.isfile(img):
                 logging.warning("image 1 still not found: {0}".format(img))
                 return
@@ -2090,7 +2106,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pixmap = QPixmap(img)
         # check if jpg filter available if not use png
         if self.pixmap.isNull():
-            BITMAP_EXT = "png"
+            self.frame_bitmap_format = "PNG"
 
         if self.second_player():
 
@@ -2122,7 +2138,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName2,
                                                      second=int(frameCurrentMedia2 / fps)) not in self.imagesList:
                 extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) + 1),
-                               self.imageDirectory, md5FileName2, BITMAP_EXT, self.frame_resize)
+                               self.imageDirectory, md5FileName2, self.frame_bitmap_format.lower(), self.frame_resize)
 
                 self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
                                         glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
@@ -2137,10 +2153,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                         fileName=md5FileName2,
                                                                                         second=second2,
                                                                                         frame=frame2,
-                                                                                        extension=BITMAP_EXT)
+                                                                                        extension=self.frame_bitmap_format.lower())
             if not os.path.isfile(img2):
                 logging.warning("image 2 not found: {0}".format(img2))
-                extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) +1), self.imageDirectory, md5FileName2, BITMAP_EXT, self.frame_resize)
+                extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) +1), self.imageDirectory, md5FileName2, self.frame_bitmap_format.lower(), self.frame_resize)
                 if not os.path.isfile(img2):
                     logging.warning("image 2 still not found: {0}".format(img2))
                     return
@@ -3631,6 +3647,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.frame_resize = 0
 
             try:
+                self.frame_bitmap_format = settings.value("frame_bitmap_format")
+                if not self.frame_bitmap_format:
+                    self.frame_bitmap_format = FRAME_DEFAULT_BITMAT_FORMAT
+            except:
+                self.frame_bitmap_format = FRAME_DEFAULT_BITMAT_FORMAT
+
+
+            try:
                 self.detachFrameViewer = (settings.value("detach_frame_viewer") == "true")
             except:
                 self.detachFrameViewer = False
@@ -3691,6 +3715,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
         # frame-by-frame
         settings.setValue("frame_resize", self.frame_resize)
+
+        settings.setValue("frame_bitmap_format",self.frame_bitmap_format)
         settings.setValue("detach_frame_viewer", self.detachFrameViewer)
         # spectrogram
         settings.setValue("spectrogram_height", self.spectrogramHeight)
@@ -8317,7 +8343,7 @@ item []:
 
     def export_string_events(self):
         """
-        export events from selected observations by subject in string format to plain text file
+        export events from selected observations by subject as behavioral strings (plain text file)
         behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
         for use with BSA (see http://penelope.unito.it/bsa)
         """
@@ -8338,6 +8364,9 @@ item []:
             fileName, _ = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
 
         if fileName:
+
+            response = dialog.MessageDialog(programName, "Include observation(s) information?", [YES, NO])
+
             try:
                 with open(fileName, "w", encoding="utf-8") as outFile:
                     for obsId in selectedObservations:
@@ -8353,25 +8382,25 @@ item []:
 
                         # independent variables
                         if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
-                            outFile.write("Independent variables\n")
+                            outFile.write("# Independent variables\n")
 
                             # rows.append(["variable", "value"])
                             for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
-                                outFile.write("{0}: {1}\n".format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
+                                outFile.write("# {0}: {1}\n".format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
                         outFile.write("\n")
 
-                    # selected subjects
-                    for subj in plot_parameters["selected subjects"]:
-                        if subj:
-                            subj_str = "\n{}:\n".format(subj)
-                        else:
-                            subj_str = "\nNo focal subject:\n"
-                        outFile.write(subj_str)
+                        # selected subjects
+                        for subj in plot_parameters["selected subjects"]:
+                            if subj:
+                                subj_str = "\n# {}:\n".format(subj)
+                            else:
+                                subj_str = "\n# No focal subject:\n"
+                            outFile.write(subj_str)
 
-                        for obsId in selectedObservations:
                             out = self.create_behavioral_strings(obsId, subj, plot_parameters)
                             if out:
                                 outFile.write(out + "\n")
+
             except:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)

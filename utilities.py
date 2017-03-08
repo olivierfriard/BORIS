@@ -63,7 +63,7 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
     '''
 
 
-    ffmpeg_command = '"{ffmpeg_bin}" -ss {second_minus1} -loglevel quiet -i "{currentMedia}" -ss 1 -frames:v {fps} "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
+    ffmpeg_command = '"{ffmpeg_bin}" -ss {second_minus1} -loglevel quiet -i "{currentMedia}" -ss 1 -frames:v {fps} -vf scale={frame_resize}:-1 "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
                     ffmpeg_bin=ffmpeg_bin,
                     second_minus1=second - 1,
                     second=second,

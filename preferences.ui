@@ -22,7 +22,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -310,6 +310,31 @@
                <property name="singleStep">
                 <number>10</number>
                </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QLabel" name="label_9">
+               <property name="text">
+                <string>Frame bitmap format (JPG: Low quality  PNG: High quality)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="cbFrameBitmapFormat">
+               <item>
+                <property name="text">
+                 <string>JPG</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>PNG</string>
+                </property>
+               </item>
               </widget>
              </item>
             </layout>
