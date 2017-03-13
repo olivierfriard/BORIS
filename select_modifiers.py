@@ -110,8 +110,14 @@ class ModifiersList(QDialog):
         if(event.type() == QEvent.KeyPress):
             ek = event.key()
             # close dialog if enter pressed
-            if ek == 16777220:   # Key_Enter
-            #if ek == Qt.Key_Enter:
+
+            #if ek == 16777220:   # Key_Enter
+
+            if ek == Qt.Key_Escape: # close
+                self.reject()
+                return False
+
+            if ek == Qt.Key_Enter or ek == Qt.Key_Return: # enter or enter from numeric pad
                 self.accept()
                 return True
 

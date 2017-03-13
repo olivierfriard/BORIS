@@ -309,6 +309,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     memMedia = ""
 
+    close_the_same_current_event = True
+
     cleaningThread = TempDirCleanerThread()
 
 
@@ -7171,7 +7173,7 @@ item []:
 
         if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
 
-            _ = dialog.MessageDialog(programName, "The same event already exists (same time, code and subject).", ["OK"])
+            _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
 
             return
 
@@ -7185,21 +7187,18 @@ item []:
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                     if self.playerType == VLC:
-
                         if self.playMode == FFMPEG:
                             memState = self.FFmpegTimer.isActive()
                             if memState:
                                 self.pause_video()
                         else:
-
                             memState = self.mediaListPlayer.get_state()
                             if memState == vlc.State.Playing:
                                 self.pause_video()
 
                 modifiersList = []
                 if "|" in event["modifiers"]:
-                    modifiersStringsList = event["modifiers"].split("|")
-                    for modifiersString in modifiersStringsList:
+                    for modifiersString in event["modifiers"].split("|"):
                         modifiersList.append([s.strip() for s in modifiersString.split(",")])
                 else:
                     modifiersList.append([s.strip() for s in event["modifiers"].split(",")])
@@ -7216,7 +7215,7 @@ item []:
                         if modifier_str == "None":
                             modifier_str = ""
                     else:
-                        modifier_str = "|".join( modifiers )
+                        modifier_str = "|".join(modifiers)
                 else:
                     if currentModifiers: # editing
                         modifier_str = currentModifiers
@@ -7240,7 +7239,7 @@ item []:
             modifier_str = event["from map"]
 
         # update current state
-        if not "row" in event:
+        if not "row" in event: # no editing
             if self.currentSubject:
                 csj = []
                 for idx in self.currentStates:
@@ -7254,19 +7253,32 @@ item []:
                 except:
                     csj = []
 
-            # current modifiers
-            cm = {}
-            for cs in csj :
+
+            cm = {} # modifiers for current behaviors
+            for cs in csj:
                 for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                    if ev[0] > memTime:  # time
+                    if ev[EVENT_TIME_FIELD_IDX] > memTime:
                         break
 
-                    if ev[1] == self.currentSubject:  # current subject name
-                        if ev[2] == cs:   # code
-                            cm[cs] = ev[3]
+                    if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
+                        if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
+                            cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
 
-            for cs in csj :
-                if (event['excluded'] and cs in event['excluded'].split(',')) or ( event['code'] == cs and cm[cs] != modifier_str):
+            print("csj",csj)
+            print("cm",cm)
+            print("modifier_str", modifier_str)
+            print("modifier_str", modifier_str.replace("None", "").replace("|", ""))
+
+            for cs in csj:
+                print("cs", cs)
+
+                # close state if same state without modifier
+
+                if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
+                    modifier_str = cm[cs]
+                    continue
+
+                if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and cm[cs] != modifier_str):
                     # add excluded state event to observations (= STOP them)
                     self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""])
 
@@ -7286,9 +7298,9 @@ item []:
 
         # add event to pj
         if "row" in event:
-            self.pj[OBSERVATIONS][self.observationId][EVENTS][event["row"]] =  [memTime, subject, event['code'], modifier_str, comment]
+            self.pj[OBSERVATIONS][self.observationId][EVENTS][event["row"]] = [memTime, subject, event["code"], modifier_str, comment]
         else:
-            self.pj[OBSERVATIONS][self.observationId][EVENTS].append( [memTime, subject, event['code'], modifier_str, comment] )
+            self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime, subject, event["code"], modifier_str, comment])
 
         # sort events in pj
         self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
