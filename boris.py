@@ -2912,11 +2912,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         obsListFields = ["id", "date", "description", "subjects", "media"]
 
-        indepVarHeader = []
+        indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
+
+        '''
+        NUMERIC = "numeric"
+        NUMERIC_idx = 0
+        TEXT = "text"
+        TEXT_idx = 1
+        SET_OF_VALUES = "value from set"
+        SET_OF_VALUES_idx = 2
+        '''
+
 
         if INDEPENDENT_VARIABLES in self.pj:
-            for idx in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys() ])]:
+            for idx in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+                column_type.append(self.pj[INDEPENDENT_VARIABLES][idx]["type"])
 
 
         data = []
@@ -2952,7 +2963,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             data.append([obs, date, descr, subjectsList, media] + indepvar)
 
-        obsList = observations_list.observationsList_widget(data)
+        obsList = observations_list.observationsList_widget(data, header=obsListFields + indepVarHeader, column_type=column_type)
 
         obsList.pbOpen.setVisible(False)
         obsList.pbEdit.setVisible(False)
@@ -2984,16 +2995,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbOk.setVisible(True)
 
-        obsList.comboBox.addItems(obsListFields + indepVarHeader)
+        #obsList.comboBox.addItems(obsListFields + indepVarHeader)
 
         #obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
-        obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
+        #obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
 
         #obsList.view.horizontalHeader().setStretchLastSection(True)
-        obsList.view.resizeColumnsToContents()
+        #obsList.view.resizeColumnsToContents()
 
-        obsList.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
-        obsList.label.setText("{} observation{}".format(obsList.view.rowCount(), "s" * (obsList.view.rowCount()>1)))
+        #obsList.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
+        #obsList.label.setText("{} observation{}".format(obsList.view.rowCount(), "s" * (obsList.view.rowCount()>1)))
 
         obsList.resize(900, 600)
 

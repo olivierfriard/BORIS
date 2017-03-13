@@ -38,12 +38,23 @@ import config
 from utilities import *
 
 
+class MyTableWidgetItem(QTableWidgetItem):
+    def __init__(self, text, sortKey):
+            QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
+            self.sortKey = sortKey
+
+    #Qt uses a simple < check for sorting items, override this to use the sortKey
+    def __lt__(self, other):
+            return self.sortKey < other.sortKey
+
+
 class observationsList_widget(QDialog):
 
-    def __init__(self, data, parent=None):
+    def __init__(self, data, header, column_type, parent=None):
         super(observationsList_widget, self).__init__(parent)
 
         self.data = data
+        self.column_type = column_type
 
         self.setWindowTitle("Observations list - " + config.programName)
         self.label = QLabel("")
@@ -115,7 +126,6 @@ class observationsList_widget(QDialog):
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)
 
-
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
         self.pbOk.clicked.connect(self.pbOk_clicked)
         self.pbOpen.clicked.connect(self.pbOpen_clicked)
@@ -126,9 +136,34 @@ class observationsList_widget(QDialog):
         self.view.setRowCount(len(self.data))
         self.view.setColumnCount(len(self.data[0]))
 
+        self.view.setHorizontalHeaderLabels(header)
+
         for r in range(len(self.data)):
             for c in range(len(self.data[0])):
-                self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+                #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+
+                '''
+                if column_type[c] == config.NUMERIC:
+                    print(column_type)
+                    print(self.data[r][c])
+                    try:
+                        print( float(self.data[r][c]) )
+                        item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
+                    except:
+                        print("error")
+                        item = MyTableWidgetItem(self.data[r][c], 0)
+                else:
+                    item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
+                #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+                '''
+                self.view.setItem(r, c, self.set_item(r, c))
+
+        self.view.resizeColumnsToContents()
+
+        self.comboBox.addItems(header)
+
+        self.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
+        self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount()>1)))
 
 
 
@@ -181,6 +216,25 @@ class observationsList_widget(QDialog):
 
     def pbEdit_clicked(self):
         self.done(3)
+
+    def set_item(self, r, c):
+        if self.column_type[c] == config.NUMERIC:
+            print(self.column_type)
+            print(self.data[r][c])
+            try:
+                print( float(self.data[r][c]) )
+                item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
+            except:
+                print("error")
+                item = MyTableWidgetItem(self.data[r][c], 0)
+        else:
+            item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
+        #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+        return item
+
+
+        #self.view.setItem(r, c, item)
+
 
 
     def view_filter(self):
@@ -265,7 +319,9 @@ class observationsList_widget(QDialog):
 
             for r in range(len(self.data)):
                 for c in range(len(self.data[0])):
-                    self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+                    #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
+                    self.view.setItem(r, c, self.set_item(r, c))
+
 
         else:
 
@@ -291,11 +347,12 @@ class observationsList_widget(QDialog):
             self.view.setRowCount(0)
             search = self.lineEdit.text().upper()
             try:
-                for r in self.data:
-                    if logic(search, r[self.comboBox.currentIndex()].upper()):
+                for r, row in enumerate(self.data):
+                    if logic(search, row[self.comboBox.currentIndex()].upper()):
                         self.view.setRowCount(self.view.rowCount() + 1)
-                        for idx,c in enumerate(r):
-                            self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(r[idx]))
+                        for c, _ in enumerate(row):
+                            #self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(row[idx]))
+                            self.view.setItem(self.view.rowCount()-1, c, self.set_item(r, c))
             except:
                 pass
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
