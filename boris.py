@@ -309,7 +309,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     memMedia = ""
 
-    close_the_same_current_event = True
+    close_the_same_current_event = False
 
     cleaningThread = TempDirCleanerThread()
 
@@ -4406,6 +4406,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     data.append(complete(row, max([len(r) for r in rows])))
 
                 if flagWorkBook:
+                    # check data title for worksheet name
+                    if len(data.title) > 31:
+                        data.title = data.title[:31]
+                    for forbidden_char in r"\/*[]:?":
+                        data.title = data.title.replace(forbidden_char, " ")
+
                     workbook.add_sheet(data)
                 else:
 
@@ -4429,12 +4435,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if outputFormat == "xls":
 
-                        if len(obsId) > 31:
-                            data.title = obsId[0:31]
+                        if len(data.title) > 31:
+                            data.title = data.title[:31]
                             QMessageBox.warning(None, programName, ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
                                                                     "The limit on worksheet name length is 31 characters").format(obsId, data.title),
                                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
+                        for forbidden_char in r"\/*[]:?":
+                            data.title = data.title.replace(forbidden_char, " ")
                         with open(fileName, "wb") as f:
                             f.write(data.xls)
 

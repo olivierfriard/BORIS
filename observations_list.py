@@ -319,9 +319,7 @@ class observationsList_widget(QDialog):
 
             for r in range(len(self.data)):
                 for c in range(len(self.data[0])):
-                    #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
                     self.view.setItem(r, c, self.set_item(r, c))
-
 
         else:
 
@@ -351,7 +349,6 @@ class observationsList_widget(QDialog):
                     if logic(search, row[self.comboBox.currentIndex()].upper()):
                         self.view.setRowCount(self.view.rowCount() + 1)
                         for c, _ in enumerate(row):
-                            #self.view.setItem(self.view.rowCount()-1, idx, QTableWidgetItem(row[idx]))
                             self.view.setItem(self.view.rowCount()-1, c, self.set_item(r, c))
             except:
                 pass
