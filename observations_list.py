@@ -136,11 +136,12 @@ class observationsList_widget(QDialog):
         self.view.setRowCount(len(self.data))
         self.view.setColumnCount(len(self.data[0]))
 
+        print(header)
+
         self.view.setHorizontalHeaderLabels(header)
 
         for r in range(len(self.data)):
             for c in range(len(self.data[0])):
-                #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
                 self.view.setItem(r, c, self.set_item(r, c))
 
         self.view.resizeColumnsToContents()
@@ -204,7 +205,10 @@ class observationsList_widget(QDialog):
 
     def set_item(self, r, c):
         #print(self.column_type)
-        #print(self.data[r][c])
+
+        #print(self.data)
+
+        print(self.data[r])
 
         if self.column_type[c] == config.NUMERIC:
             try:

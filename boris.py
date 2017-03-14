@@ -2957,9 +2957,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # independent variables
             indepvar = []
             if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obs]:
-                for var in indepVarHeader:
-                    if var in self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
-                        indepvar.append(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var])
+                for var_label in indepVarHeader:
+                    if var_label in self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
+                        indepvar.append(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var_label])
+                    else:
+                        indepvar.append("")
+
+
 
             data.append([obs, date, descr, subjectsList, media] + indepvar)
 
