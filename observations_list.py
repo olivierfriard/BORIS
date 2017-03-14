@@ -141,21 +141,6 @@ class observationsList_widget(QDialog):
         for r in range(len(self.data)):
             for c in range(len(self.data[0])):
                 #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
-
-                '''
-                if column_type[c] == config.NUMERIC:
-                    print(column_type)
-                    print(self.data[r][c])
-                    try:
-                        print( float(self.data[r][c]) )
-                        item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
-                    except:
-                        print("error")
-                        item = MyTableWidgetItem(self.data[r][c], 0)
-                else:
-                    item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
-                #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
-                '''
                 self.view.setItem(r, c, self.set_item(r, c))
 
         self.view.resizeColumnsToContents()
@@ -218,14 +203,14 @@ class observationsList_widget(QDialog):
         self.done(3)
 
     def set_item(self, r, c):
+        #print(self.column_type)
+        #print(self.data[r][c])
+
         if self.column_type[c] == config.NUMERIC:
-            print(self.column_type)
-            print(self.data[r][c])
             try:
-                print( float(self.data[r][c]) )
                 item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
             except:
-                print("error")
+                #print("error")
                 item = MyTableWidgetItem(self.data[r][c], 0)
         else:
             item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
@@ -313,9 +298,10 @@ class observationsList_widget(QDialog):
                 return l >= s1 and l <= s2
 
 
-        if self.comboBox.currentIndex() <= 4 and len(self.lineEdit.text()) < 3:
+        #if self.comboBox.currentIndex() <= 4 and len(self.lineEdit.text()) < 3:
+        if not self.lineEdit.text():
             self.view.setRowCount(len(self.data))
-            self.view.setColumnCount(len(self.data[0]))
+            #self.view.setColumnCount(len(self.data[0]))
 
             for r in range(len(self.data)):
                 for c in range(len(self.data[0])):
@@ -349,7 +335,7 @@ class observationsList_widget(QDialog):
                     if logic(search, row[self.comboBox.currentIndex()].upper()):
                         self.view.setRowCount(self.view.rowCount() + 1)
                         for c, _ in enumerate(row):
-                            self.view.setItem(self.view.rowCount()-1, c, self.set_item(r, c))
+                            self.view.setItem(self.view.rowCount() - 1, c, self.set_item(r, c))
             except:
                 pass
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
