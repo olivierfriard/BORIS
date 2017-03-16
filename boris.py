@@ -43,8 +43,8 @@ import statistics
 import datetime
 import multiprocessing
 
-__version__ = "3.50"
-__version_date__ = "2017-03-14"
+__version__ = "3.51"
+__version_date__ = "2017-03-16"
 __DEV__ = False
 
 #BITMAP_EXT = "jpg"
@@ -5078,7 +5078,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in [x for x in self.pj[SUBJECTS]]:
                 key, name = self.pj[SUBJECTS][idx]
                 self.pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
-            QMessageBox.information(self, programName, "The project file was converted to the new format (v. %s) in use with your version of BORIS.<br>Choose a new file name for saving it." % project_format_version)
+            QMessageBox.information(self, programName, ("The project file was converted to the new format (v. {}) in use with your version of BORIS.<br>"
+                                                        "Choose a new file name for saving it.").format(project_format_version))
             projectFileName = ''
 
         '''
@@ -5099,27 +5100,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][obs]["time offset second player"] = Decimal("0.0")
                 self.projectChanged = True
 
+
         # if one file is present in player #1 -> set "media_info" key with value of media_file_info
-        '''
+
+        project_updated = False
+
+
         for obs in self.pj[OBSERVATIONS]:
+            if (not "media_info" in self.pj[OBSERVATIONS][obs]):
+                self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
+                for player in [PLAYER1, PLAYER2]:
+                    for media_file_path in self.pj[OBSERVATIONS][obs]["file"][player]:
+                        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_file_path)
+                        print(media_file_path, nframe, videoTime, videoDuration, fps, hasVideo, hasAudio)
+                        if videoDuration:
+                            self.pj[OBSERVATIONS][obs]['media_info']["length"][media_file_path] = videoDuration
+                            self.pj[OBSERVATIONS][obs]['media_info']["fps"][media_file_path] = fps
+                            self.pj[OBSERVATIONS][obs]['media_info']["hasVideo"][media_file_path] = hasVideo
+                            self.pj[OBSERVATIONS][obs]['media_info']["hasAudio"][media_file_path] = hasAudio
+                            project_updated, self.projectChanged = True, True
+                        else:  # file path not found
+                            if (len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
+                                and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
+                                and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
+                                    media_md5_key = list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]
+                                    # duration
+                                    self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {media_file_path:
+                                             self.pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['video_length']/1000}}
+                                    project_updated, self.projectChanged = True, True
+
+                                    # FPS
+                                    if "nframe" in self.pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
+                                        self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path:
+                                             self.pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['nframe']
+                                             / (self.pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['video_length']/1000)}
+                                    else:
+                                        self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path: 0}
+
+
+        '''
             try:
-                if not 'media_info' in self.pj[OBSERVATIONS][obs] \
-                    and len(self.pj[OBSERVATIONS][obs]['media_file_info']) == 1 \
-                    and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER1]) == 1 \
-                    and len(self.pj[OBSERVATIONS][obs]['file'][PLAYER2]) == 0:
-                        self.pj[OBSERVATIONS][obs]['media_info'] = \
-                            {'length': {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
-                               self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000} }
+                if (not "media_info" in self.pj[OBSERVATIONS][obs]
+                    and len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
+                    and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
+                    and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
+                        self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
+                               self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000}}
                         # FPS
-                        if 'nframe' in self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]:
-                            self.pj[OBSERVATIONS][obs]['media_info']['fps'] = { self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
-                                self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['nframe'] / ( self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000 )
+                        if "nframe" in self.pj[OBSERVATIONS][obs]["media_file_info"][list(self.pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]]:
+                            self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
+                                self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['nframe'] / ( self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000)
                                  }
+                        else:
+                            self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]: 0}
                         self.projectChanged = True
+
 
             except:
                 pass
         '''
+        if project_updated:
+            QMessageBox.information(self, programName, "The media files information was updated to the new project format.")
+
 
         # check program version
         memProjectChanged = self.projectChanged
@@ -5839,8 +5881,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 try:
                     for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                        duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+                        if "media_info" in self.pj[OBSERVATIONS][obsId]:
+                            duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+                        else:
+                            #if "media_file_info" in
+                            print("no media_info tag")
                 except:
+                    print("error")
                     pass
 
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
@@ -5859,6 +5906,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for idx, row in enumerate(rows):
 
                         if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+
+                            print("duration1", duration1)
+                            print([idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])])
+
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
                             mediaFileString = self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]
                             fpsString = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]]

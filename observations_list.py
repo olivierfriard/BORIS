@@ -136,8 +136,6 @@ class observationsList_widget(QDialog):
         self.view.setRowCount(len(self.data))
         self.view.setColumnCount(len(self.data[0]))
 
-        print(header)
-
         self.view.setHorizontalHeaderLabels(header)
 
         for r in range(len(self.data)):
@@ -204,17 +202,11 @@ class observationsList_widget(QDialog):
         self.done(3)
 
     def set_item(self, r, c):
-        #print(self.column_type)
-
-        #print(self.data)
-
-        print(self.data[r])
 
         if self.column_type[c] == config.NUMERIC:
             try:
                 item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
             except:
-                #print("error")
                 item = MyTableWidgetItem(self.data[r][c], 0)
         else:
             item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
