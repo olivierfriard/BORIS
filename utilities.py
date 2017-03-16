@@ -89,6 +89,11 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
         logging.debug('ffmpeg error: {0}'.format( error ))
 
 
+def decimal_default(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError
+
 
 def complete(l, max):
     """

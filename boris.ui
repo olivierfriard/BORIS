@@ -76,7 +76,7 @@
              <x>0</x>
              <y>0</y>
              <width>532</width>
-             <height>390</height>
+             <height>385</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -120,6 +120,8 @@
     <addaction name="actionSave_project"/>
     <addaction name="actionSave_project_as"/>
     <addaction name="actionClose_project"/>
+    <addaction name="separator"/>
+    <addaction name="actionSend_project"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
     <addaction name="separator"/>
@@ -1032,6 +1034,11 @@
    </property>
    <property name="toolTip">
     <string>Show all subjects</string>
+   </property>
+  </action>
+  <action name="actionSend_project">
+   <property name="text">
+    <string>Send project</string>
    </property>
   </action>
  </widget>

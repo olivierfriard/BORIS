@@ -42,6 +42,7 @@ import glob
 import statistics
 import datetime
 import multiprocessing
+import socket
 
 __version__ = "3.51"
 __version_date__ = "2017-03-16"
@@ -605,6 +606,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project_as.triggered.connect(self.save_project_as_activated)
         self.actionClose_project.triggered.connect(self.close_project)
 
+        self.actionSend_project.triggered.connect(self.send_project_via_socket)
+        
         self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
 
         self.actionPreferences.triggered.connect(self.preferences)
@@ -789,6 +792,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+    def send_project_via_socket(self):
+
+        TCP_IP, ok = QInputDialog.getText(self, "Send project", "IP:", QLineEdit.Normal, "192.168.1.")
+
+        print(TCP_IP)
+
+        TCP_PORT = 5006
+        BUFFER_SIZE = 1024
+
+        MESSAGE = str.encode(str(json.dumps(self.pj, indent=None, separators=(',', ':'), default=decimal_default)))
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(60)
+        try:
+            try:
+                s.connect((TCP_IP, TCP_PORT))
+                while MESSAGE:
+                    s.send(MESSAGE[0:BUFFER_SIZE])
+                    MESSAGE = MESSAGE[BUFFER_SIZE:]
+            finally:
+                print("close")
+                s.close()
+        except:
+            QMessageBox.critical(self, programName, "Error during sending")
+            print("error")
+        else:
+            QMessageBox.information(self, programName, "Project sent to device {}".format(TCP_IP))
 
 
     def recode_resize_video(self):
@@ -5526,11 +5557,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def save_project_json(self, projectFileName):
         """
         save project to JSON file
+        
+        convert Decimal type in float
         """
-        def decimal_default(obj):
-            if isinstance(obj, Decimal):
-                return float(obj)
-            raise TypeError
 
         logging.debug("save project json {0}:".format(projectFileName))
 
