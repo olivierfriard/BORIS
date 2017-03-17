@@ -484,6 +484,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project_as.setEnabled(flag)
         self.actionClose_project.setEnabled(flag)
 
+        self.actionSend_project.setEnabled(flag)
         # observations
 
         # enabled if project
@@ -607,7 +608,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionClose_project.triggered.connect(self.close_project)
 
         self.actionSend_project.triggered.connect(self.send_project_via_socket)
-        
+
         self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
 
         self.actionPreferences.triggered.connect(self.preferences)
@@ -794,15 +795,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
     def send_project_via_socket(self):
+        """
+        send project to a device via socket
+        """
 
         TCP_IP, ok = QInputDialog.getText(self, "Send project", "IP:", QLineEdit.Normal, "192.168.1.")
+        try:
+            socket.inet_aton(TCP_IP)
+        except socket.error:
+            QMessageBox.critical(self, programName, "IP {} not valid".format(TCP_IP))
+            return
 
-        print(TCP_IP)
+
+        #print(TCP_IP)
+        include_obs = dialog.MessageDialog(programName, "Include observations?", [YES, NO, CANCEL])
+        if include_obs == CANCEL:
+            return
 
         TCP_PORT = 5006
         BUFFER_SIZE = 1024
 
-        MESSAGE = str.encode(str(json.dumps(self.pj, indent=None, separators=(',', ':'), default=decimal_default)))
+        cp_project = dict(self.pj)
+
+        if include_obs == NO:
+            cp_project[OBSERVATIONS] = {}
+
+        MESSAGE = str.encode(str(json.dumps(cp_project, indent=None, separators=(',', ':'), default=decimal_default)))
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(60)
@@ -5138,7 +5156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         for obs in self.pj[OBSERVATIONS]:
-            if (not "media_info" in self.pj[OBSERVATIONS][obs]):
+            if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and "media_info" not in self.pj[OBSERVATIONS][obs]:
                 self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
                 for player in [PLAYER1, PLAYER2]:
                     for media_file_path in self.pj[OBSERVATIONS][obs]["file"][player]:
@@ -5557,7 +5575,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def save_project_json(self, projectFileName):
         """
         save project to JSON file
-        
+
         convert Decimal type in float
         """
 
@@ -5843,7 +5861,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         includeMediaInfo = None
         for obsId in selectedObservations:
-            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
+            if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
                 includeMediaInfo = YES
                 break
 
