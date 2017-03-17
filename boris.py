@@ -799,7 +799,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         send project to a device via socket
         """
 
-        TCP_IP, ok = QInputDialog.getText(self, "Send project", "IP:", QLineEdit.Normal, "192.168.1.")
+        TCP_IP, ok = QInputDialog.getText(self, "Send project", "IP:", QLineEdit.Normal, "")
         try:
             socket.inet_aton(TCP_IP)
         except socket.error:
