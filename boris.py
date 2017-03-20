@@ -160,6 +160,56 @@ def bytes_to_str(b):
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 
+class YourThreadName(QThread):
+
+    def __init__(self, message, host):
+        QThread.__init__(self)
+        self.message = message
+        self.host = host
+
+    def __del__(self):
+        self.wait()
+
+    def run(self):
+
+        TCP_PORT = 5006
+        BUFFER_SIZE = 1024
+
+        s = socket.socket()         # Create a socket object
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.settimeout(60)
+
+        #host = socket.gethostname() # Get local machine name
+
+
+
+        port = 5007              # Reserve a port for your service.
+
+        print( self.host, port)
+
+        s.bind((self.host, port))        # Bind to the port
+
+        s.listen(5)                 # Now wait for client connection.
+        while True:
+            c, addr = s.accept()     # Establish connection with client.
+            print( 'Got connection from', addr)
+
+            rq = c.recv(BUFFER_SIZE)
+            print("request", rq)
+            if rq == b"get":
+                while self.message:
+                    c.send(self.message[0:BUFFER_SIZE])
+                    self.message = self.message[BUFFER_SIZE:]
+                c.close()
+                break
+
+            if rq == b"stop":
+                print("server will stop")
+                c.close()
+                break
+
+        s.close()
+
 
 class TempDirCleanerThread(QThread):
     """
@@ -794,34 +844,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
+
+
     def send_project_via_socket(self):
         """
         send project to a device via socket
         """
 
+        def get_ip_address():
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+
+
+        '''
         TCP_IP, ok = QInputDialog.getText(self, "Send project", "IP:", QLineEdit.Normal, "")
         try:
             socket.inet_aton(TCP_IP)
         except socket.error:
             QMessageBox.critical(self, programName, "IP {} not valid".format(TCP_IP))
             return
-
+        '''
 
         #print(TCP_IP)
         include_obs = dialog.MessageDialog(programName, "Include observations?", [YES, NO, CANCEL])
         if include_obs == CANCEL:
             return
 
-        TCP_PORT = 5006
-        BUFFER_SIZE = 1024
+        host = get_ip_address()
+
+        self.w = recode_widget.Info_widget()
+        self.w.resize(350, 100)
+        self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.w.setWindowTitle("Serving current project to mobile device")
+        self.w.label.setText("IP: {}".format(host))
+        self.w.show()
+        app.processEvents()
+
 
         cp_project = dict(self.pj)
-
         if include_obs == NO:
             cp_project[OBSERVATIONS] = {}
 
-        MESSAGE = str.encode(str(json.dumps(cp_project, indent=None, separators=(',', ':'), default=decimal_default)))
 
+        #MESSAGE = str.encode(str(json.dumps(cp_project, indent=None, separators=(',', ':'), default=decimal_default)))
+
+
+
+        self.myThread = YourThreadName(str.encode(str(json.dumps(cp_project, indent=None, separators=(',', ':'), default=decimal_default))), host)
+        self.myThread.start()
+
+
+        '''
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(60)
         try:
@@ -838,6 +912,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             print("error")
         else:
             QMessageBox.information(self, programName, "Project sent to device {}".format(TCP_IP))
+        '''
 
 
     def recode_resize_video(self):
