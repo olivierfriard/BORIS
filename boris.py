@@ -169,11 +169,9 @@ class ProjectServerThread(QThread):
 
     signal = pyqtSignal(str)
 
-    def __init__(self, message, host, port):
+    def __init__(self, message):
         QThread.__init__(self)
         self.message = message
-        self.host = host
-        self.port = port
 
     def __del__(self):
         print("wait for thread")
@@ -188,8 +186,8 @@ class ProjectServerThread(QThread):
         s.settimeout(60)
 
         #s.bind((self.host, self.port))
-        s.bind((self.host, 0))
-        print(s.getsockname())
+        s.bind((get_ip_address(), 0))
+        #print(s.getsockname())
         self.signal.emit("PORT#{}:{}".format(s.getsockname()[0], s.getsockname()[1]))
 
         s.listen(5)
@@ -373,6 +371,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     memMedia = ""
 
     close_the_same_current_event = False
+    
+    tcp_port = 0
 
     cleaningThread = TempDirCleanerThread()
 
@@ -857,42 +857,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
-
     def send_project_via_socket(self):
         """
         send project to a device via socket
         """
 
-        def customEvent(self, event):
-            if event.type() == 10000:
-              s = event.data()
-              print("data event: {}".format(s))
-
-
         def done(msg):
             if "PORT#" in msg:
+                self.tcp_port = int(msg.split(":")[-1])
+                print(self.tcp_port)
                 self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 60 seconds".format(msg.split("#")[1]))
             else:
                 del self.w
                 self.actionSend_project.setText("Project server")
                 QMessageBox.information(self, "Project server", msg)
 
-
-
-
-        def get_ip_address():
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(("8.8.8.8", 80))
-            return s.getsockname()[0]
-
-
         if "server" in self.actionSend_project.text():
 
             include_obs = dialog.MessageDialog(programName, "Include observations?", [YES, NO, CANCEL])
             if include_obs == CANCEL:
                 return
-
-            host = get_ip_address()
 
             self.w = recode_widget.Info_widget()
             self.w.resize(450, 100)
@@ -906,10 +890,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if include_obs == NO:
                 cp_project[OBSERVATIONS] = {}
 
-            self.server_thread = ProjectServerThread(message=str.encode(str(json.dumps(cp_project, indent=None, separators=(',', ':'), default=decimal_default))),
-                                                    host = host,
-                                                    port = TCP_PORT)
-
+            self.server_thread = ProjectServerThread(message=str.encode(str(json.dumps(cp_project,
+                                                                            indent=None,
+                                                                            separators=(',', ':'),
+                                                                            default=decimal_default))))
             self.server_thread.signal.connect(done)
 
             self.server_thread.start()
@@ -921,7 +905,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             BUFFER_SIZE = 20
             s = socket.socket()
-            s.connect((get_ip_address(), TCP_PORT))
+            print(self.tcp_port)
+            s.connect((get_ip_address(), self.tcp_port))
             s.send(str.encode("stop"))
             received = ""
             while 1:
