@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>532</width>
-             <height>385</height>
+             <width>522</width>
+             <height>402</height>
             </rect>
            </property>
            <attribute name="label">
@@ -1038,7 +1038,7 @@
   </action>
   <action name="actionSend_project">
    <property name="text">
-    <string>Send project</string>
+    <string>Project server</string>
    </property>
   </action>
  </widget>

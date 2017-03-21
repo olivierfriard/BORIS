@@ -43,7 +43,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtWidgets.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 532, 385))
+        self.page.setGeometry(QtCore.QRect(0, 0, 522, 402))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -649,5 +649,5 @@ class Ui_MainWindow(object):
         self.actionFilterSubjects.setToolTip(_translate("MainWindow", "Filter subjects"))
         self.actionShowAllSubjects.setText(_translate("MainWindow", "Show all subjects"))
         self.actionShowAllSubjects.setToolTip(_translate("MainWindow", "Show all subjects"))
-        self.actionSend_project.setText(_translate("MainWindow", "Send project"))
+        self.actionSend_project.setText(_translate("MainWindow", "Project server"))
 

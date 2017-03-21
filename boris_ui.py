@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Feb 22 16:08:26 2017
+# Created: Tue Mar 21 11:54:57 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 532, 390))
+        self.page.setGeometry(QtCore.QRect(0, 0, 522, 402))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -401,6 +401,8 @@ class Ui_MainWindow(object):
         self.actionFilterSubjects.setObjectName(_fromUtf8("actionFilterSubjects"))
         self.actionShowAllSubjects = QtGui.QAction(MainWindow)
         self.actionShowAllSubjects.setObjectName(_fromUtf8("actionShowAllSubjects"))
+        self.actionSend_project = QtGui.QAction(MainWindow)
+        self.actionSend_project.setObjectName(_fromUtf8("actionSend_project"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -412,6 +414,8 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionSave_project)
         self.menuFile.addAction(self.actionSave_project_as)
         self.menuFile.addAction(self.actionClose_project)
+        self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionSend_project)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionPreferences)
         self.menuFile.addSeparator()
@@ -656,4 +660,5 @@ class Ui_MainWindow(object):
         self.actionFilterSubjects.setToolTip(_translate("MainWindow", "Filter subjects", None))
         self.actionShowAllSubjects.setText(_translate("MainWindow", "Show all subjects", None))
         self.actionShowAllSubjects.setToolTip(_translate("MainWindow", "Show all subjects", None))
+        self.actionSend_project.setText(_translate("MainWindow", "Project server", None))
 
