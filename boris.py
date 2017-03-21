@@ -903,14 +903,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # send stop msg to project server
         elif "serving" in self.actionSend_project.text():
 
-            BUFFER_SIZE = 20
             s = socket.socket()
-            print(self.tcp_port)
             s.connect((get_ip_address(), self.tcp_port))
             s.send(str.encode("stop"))
             received = ""
             while 1:
-                data = s.recv(BUFFER_SIZE)
+                data = s.recv(20) # BUFFER_SIZE = 20
                 if not data:
                     break
                 received += data
