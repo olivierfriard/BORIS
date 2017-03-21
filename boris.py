@@ -48,6 +48,8 @@ __version__ = "3.51"
 __version_date__ = "2017-03-16"
 __DEV__ = False
 
+TCP_PORT = 5007
+
 #BITMAP_EXT = "jpg"
 
 if sys.platform == "darwin":  # for MacOS
@@ -185,7 +187,10 @@ class ProjectServerThread(QThread):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.settimeout(60)
 
-        s.bind((self.host, self.port))
+        #s.bind((self.host, self.port))
+        s.bind((self.host, 0))
+        print(s.getsockname())
+        self.signal.emit("PORT#{}:{}".format(s.getsockname()[0], s.getsockname()[1]))
 
         s.listen(5)
         while True:
@@ -858,18 +863,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         send project to a device via socket
         """
 
-        TCP_PORT = 5007
-
         def customEvent(self, event):
             if event.type() == 10000:
               s = event.data()
               print("data event: {}".format(s))
 
 
-        def done(event):
-            del self.w
-            self.actionSend_project.setText("Project server")
-            QMessageBox.information(self, "Project server", event)
+        def done(msg):
+            if "PORT#" in msg:
+                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 60 seconds".format(msg.split("#")[1]))
+            else:
+                del self.w
+                self.actionSend_project.setText("Project server")
+                QMessageBox.information(self, "Project server", msg)
 
 
 
@@ -892,7 +898,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.resize(450, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.w.setWindowTitle("Serving current project to BORIS Mobile App")
-            self.w.label.setText("Project server IP: {}\nTime out: 60 seconds".format(host))
+            self.w.label.setText("")
             self.w.show()
             app.processEvents()
 
@@ -910,22 +916,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.actionSend_project.setText("Stop serving project")
 
+        # send stop msg to project server
         elif "serving" in self.actionSend_project.text():
 
             BUFFER_SIZE = 20
             s = socket.socket()
             s.connect((get_ip_address(), TCP_PORT))
             s.send(str.encode("stop"))
-
             received = ""
             while 1:
                 data = s.recv(BUFFER_SIZE)
                 if not data:
                     break
                 received += data
-
-            print( "received:\n" + received)
-
             s.close
 
 
