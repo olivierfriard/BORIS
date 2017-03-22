@@ -6835,25 +6835,10 @@ item []:
                 QMessageBox.warning(self, programName, "The behaviour <b>{}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
                 editWindow.cobCode.setCurrentIndex(0)
 
-
             logging.debug("original modifiers: {}".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]))
-            # pass current modifier(s) to window
-            """
-            editWindow.currentModifier = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
-            """
 
             # comment
             editWindow.leComment.setPlainText( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
-
-            # load modifiers
-            """
-            editWindow.codeChanged()
-            """
-
-            # activate signal
-            """
-            editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
-            """
 
             if editWindow.exec_():  #button OK
 
@@ -6865,14 +6850,14 @@ item []:
                 if self.timeFormat == S:
                     newTime = Decimal(str(editWindow.dsbTime.value()))
 
-                for obs_idx in self.pj[ETHOGRAM]:
-
-                    if self.pj[ETHOGRAM][obs_idx]["code"] == editWindow.cobCode.currentText():
-                        event = self.full_event(obs_idx)
+                for key in self.pj[ETHOGRAM]:
+                    if self.pj[ETHOGRAM][key]["code"] == editWindow.cobCode.currentText():
+                        event = self.full_event(key)
                         event["subject"] = editWindow.cobSubject.currentText()
                         event["comment"] = editWindow.leComment.toPlainText()
                         event["row"] = row
-                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ pj_obs_fields['modifier'] ]
+                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields['modifier']]
+                        print("edited",event)
 
                         self.writeEvent(event, newTime)
                         break
@@ -7361,16 +7346,15 @@ item []:
         if event is None:
             return
 
-        # add time offset
-        memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
+        # add time offset if not from editing
+        if "row" not in event:
+            memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
 
         # check if a same event is already in events list (time, subject, code)
         # "row" present in case of event editing
 
         if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
-
             _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
-
             return
 
         if not "from map" in event:   # modifiers only for behaviors without coding map
@@ -7435,7 +7419,7 @@ item []:
             modifier_str = event["from map"]
 
         # update current state
-        if not "row" in event: # no editing
+        if "row" not in event: # no editing
             if self.currentSubject:
                 csj = []
                 for idx in self.currentStates:
@@ -7449,7 +7433,6 @@ item []:
                 except:
                     csj = []
 
-
             cm = {} # modifiers for current behaviors
             for cs in csj:
                 for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
@@ -7460,16 +7443,17 @@ item []:
                         if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
                             cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
 
+            '''
             print("csj",csj)
             print("cm",cm)
             print("modifier_str", modifier_str)
             print("modifier_str", modifier_str.replace("None", "").replace("|", ""))
+            '''
 
             for cs in csj:
-                print("cs", cs)
+                '''print("cs", cs)'''
 
                 # close state if same state without modifier
-
                 if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
                     modifier_str = cm[cs]
                     continue
@@ -7502,7 +7486,6 @@ item []:
         self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
 
         # reload all events in tw
-
         self.loadEventsInTW(self.observationId)
 
         item = self.twEvents.item([i for i, t in enumerate( self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
