@@ -45,10 +45,9 @@ import multiprocessing
 import socket
 
 __version__ = "3.51"
-__version_date__ = "2017-03-16"
+__version_date__ = "2017-03-22"
 __DEV__ = False
 
-TCP_PORT = 5007
 
 #BITMAP_EXT = "jpg"
 
@@ -371,7 +370,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     memMedia = ""
 
     close_the_same_current_event = False
-    
+
     tcp_port = 0
 
     cleaningThread = TempDirCleanerThread()
