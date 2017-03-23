@@ -219,6 +219,34 @@ class ProjectServerThread(QThread):
                 return
 
 
+            # receive an observation
+            if rq == b"put":
+
+                print("put")
+                c.send(b"SEND")
+                print("sent SEND")
+                c.close()
+
+                print("listening")
+
+                c2, addr = s.accept()
+                print("accepted")
+
+                rq2 = b""
+                while 1:
+                    d = c2.recv(BUFFER_SIZE)
+                    if d:
+                        rq2 += d
+                        if rq2.endswith(b"#####"):
+                            break
+                    else:
+                        break
+                print("received", rq2)
+                c2.close()
+                self.signal.emit("RECEIVED#{}".format(rq2.decode("utf-8")))
+                return
+
+
 
 class TempDirCleanerThread(QThread):
     """
@@ -862,10 +890,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         def done(msg):
-            if "PORT#" in msg:
+
+            if msg.startswith("RECEIVED#"):
+                try:
+                    decoded = json.loads(msg[9:-5]) # cut RECEIVED# and final #####
+                except:
+                    print("error")
+                print("decoded", decoded)
+
+            if msg.startswith("PORT#"):
                 self.tcp_port = int(msg.split(":")[-1])
                 print(self.tcp_port)
                 self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 60 seconds".format(msg.split("#")[1]))
+
             else:
                 del self.w
                 self.actionSend_project.setText("Project server")
