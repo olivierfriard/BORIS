@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Wed Mar  8 16:58:34 2017
+# Created: Fri Mar 24 18:04:15 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -94,25 +94,28 @@ class Ui_prefDialog(object):
         self.formLayout.setWidget(5, QtGui.QFormLayout.FieldRole, self.leSeparator)
         self.cbConfirmSound = QtGui.QCheckBox(self.tab)
         self.cbConfirmSound.setObjectName(_fromUtf8("cbConfirmSound"))
-        self.formLayout.setWidget(6, QtGui.QFormLayout.LabelRole, self.cbConfirmSound)
+        self.formLayout.setWidget(7, QtGui.QFormLayout.LabelRole, self.cbConfirmSound)
         self.label_8 = QtGui.QLabel(self.tab)
         self.label_8.setObjectName(_fromUtf8("label_8"))
-        self.formLayout.setWidget(7, QtGui.QFormLayout.LabelRole, self.label_8)
+        self.formLayout.setWidget(8, QtGui.QFormLayout.LabelRole, self.label_8)
         self.sbBeepEvery = QtGui.QSpinBox(self.tab)
         self.sbBeepEvery.setObjectName(_fromUtf8("sbBeepEvery"))
-        self.formLayout.setWidget(7, QtGui.QFormLayout.FieldRole, self.sbBeepEvery)
+        self.formLayout.setWidget(8, QtGui.QFormLayout.FieldRole, self.sbBeepEvery)
         self.cbEmbedPlayer = QtGui.QCheckBox(self.tab)
         self.cbEmbedPlayer.setObjectName(_fromUtf8("cbEmbedPlayer"))
-        self.formLayout.setWidget(8, QtGui.QFormLayout.SpanningRole, self.cbEmbedPlayer)
+        self.formLayout.setWidget(9, QtGui.QFormLayout.SpanningRole, self.cbEmbedPlayer)
         self.cbAlertNoFocalSubject = QtGui.QCheckBox(self.tab)
         self.cbAlertNoFocalSubject.setObjectName(_fromUtf8("cbAlertNoFocalSubject"))
-        self.formLayout.setWidget(9, QtGui.QFormLayout.LabelRole, self.cbAlertNoFocalSubject)
+        self.formLayout.setWidget(10, QtGui.QFormLayout.LabelRole, self.cbAlertNoFocalSubject)
         self.cbTrackingCursorAboveEvent = QtGui.QCheckBox(self.tab)
         self.cbTrackingCursorAboveEvent.setObjectName(_fromUtf8("cbTrackingCursorAboveEvent"))
-        self.formLayout.setWidget(10, QtGui.QFormLayout.LabelRole, self.cbTrackingCursorAboveEvent)
+        self.formLayout.setWidget(11, QtGui.QFormLayout.LabelRole, self.cbTrackingCursorAboveEvent)
         self.cbCheckForNewVersion = QtGui.QCheckBox(self.tab)
         self.cbCheckForNewVersion.setObjectName(_fromUtf8("cbCheckForNewVersion"))
-        self.formLayout.setWidget(11, QtGui.QFormLayout.LabelRole, self.cbCheckForNewVersion)
+        self.formLayout.setWidget(12, QtGui.QFormLayout.LabelRole, self.cbCheckForNewVersion)
+        self.cbCloseSameEvent = QtGui.QCheckBox(self.tab)
+        self.cbCloseSameEvent.setObjectName(_fromUtf8("cbCloseSameEvent"))
+        self.formLayout.setWidget(6, QtGui.QFormLayout.LabelRole, self.cbCloseSameEvent)
         self.verticalLayout.addLayout(self.formLayout)
         self.tabWidget.addTab(self.tab, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
@@ -239,7 +242,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -259,6 +262,7 @@ class Ui_prefDialog(object):
         self.cbAlertNoFocalSubject.setText(_translate("prefDialog", "Alert if focal subject is not set", None))
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
         self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version", None))
+        self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
         self.lbFFmpegPath.setText(_translate("prefDialog", "FFmpeg path:", None))
         self.lbFFmpegCacheDir.setText(_translate("prefDialog", "FFmpeg cache directory", None))

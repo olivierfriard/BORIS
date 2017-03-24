@@ -44,8 +44,8 @@ import datetime
 import multiprocessing
 import socket
 
-__version__ = "3.52"
-__version_date__ = "2017-03-23"
+__version__ = "3.60"
+__version_date__ = "2017-03-24"
 __DEV__ = False
 
 
@@ -166,14 +166,13 @@ class ProjectServerThread(QThread):
     thread for serving project to BORIS mobile app
     """
 
-    signal = pyqtSignal(str)
+    signal = pyqtSignal(dict)
 
     def __init__(self, message):
         QThread.__init__(self)
         self.message = message
 
     def __del__(self):
-        print("wait for thread")
         self.wait()
 
     def run(self):
@@ -184,10 +183,8 @@ class ProjectServerThread(QThread):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.settimeout(60)
 
-        #s.bind((self.host, self.port))
         s.bind((get_ip_address(), 0))
-        #print(s.getsockname())
-        self.signal.emit("PORT#{}:{}".format(s.getsockname()[0], s.getsockname()[1]))
+        self.signal.emit({"URL": "{}:{}".format(s.getsockname()[0], s.getsockname()[1])})
 
         s.listen(5)
         while True:
@@ -197,7 +194,7 @@ class ProjectServerThread(QThread):
             except socket.timeout:
                 s.close()
                 logging.info("Time out")
-                self.signal.emit("Server time out")
+                self.signal.emit({"MESSAGE": "Server time out"})
                 return
 
             rq = c.recv(BUFFER_SIZE)
@@ -209,19 +206,17 @@ class ProjectServerThread(QThread):
                     self.message = self.message[BUFFER_SIZE:]
                 c.close()
                 logging.info("Project sent")
-                self.signal.emit("Project sent to {}".format(addr[0]))
+                self.signal.emit({"MESSAGE": "Project sent to {}".format(addr[0])})
                 return
 
             if rq == b"stop":
                 c.close()
                 logging.info("server stopped")
-                self.signal.emit("The server is now stopped")
+                self.signal.emit({"MESSAGE": "The server is now stopped"})
                 return
-
 
             # receive an observation
             if rq == b"put":
-
                 print("put")
                 c.send(b"SEND")
                 print("sent SEND")
@@ -243,7 +238,7 @@ class ProjectServerThread(QThread):
                         break
                 print("received", rq2)
                 c2.close()
-                self.signal.emit("RECEIVED#{}".format(rq2.decode("utf-8")))
+                self.signal.emit({"RECEIVED": "{}".format(rq2.decode("utf-8")), "SENDER": addr})
                 return
 
 
@@ -889,24 +884,59 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         send project to a device via socket
         """
 
-        def done(msg):
+        def receive_signal(msg_dict):
 
-            if msg.startswith("RECEIVED#"):
+            print(msg_dict)
+
+            if "RECEIVED" in msg_dict:
                 try:
-                    decoded = json.loads(msg[9:-5]) # cut RECEIVED# and final #####
+                    sent_obs = json.loads(msg_dict["RECEIVED"][:-5]) # cut final #####
                 except:
                     print("error")
-                print("decoded", decoded)
+                    del self.w
+                    self.actionSend_project.setText("Project server")
+                    return
 
-            if msg.startswith("PORT#"):
-                self.tcp_port = int(msg.split(":")[-1])
-                print(self.tcp_port)
-                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 60 seconds".format(msg.split("#")[1]))
+                print("decoded", type(sent_obs), len(sent_obs))
+                del self.w
+                self.actionSend_project.setText("Project server")
+
+                flag_msg = False
+                mem_obsid = ""
+                for obsId in sent_obs:
+                    if obsId in self.pj[OBSERVATIONS]:
+                        flag_msg = True
+                        response = dialog.MessageDialog(programName, "The observation <b>{}</b> received from <b>{}</b><br>already exists in the current project.".format(obsId, msg_dict["SENDER"][0]),
+                                                        ["Overwrite it", "Rename received observation", CANCEL])
+                        if response == CANCEL:
+                            return
+                        if response == "Overwrite it":
+                            self.pj[OBSERVATIONS][obsId] = dict(sent_obs[obsId])
+                        if response == "Rename received observation":
+
+                            new_id = obsId
+                            while new_id in self.pj[OBSERVATIONS]:
+                                new_id, ok = QInputDialog.getText(self, "Rename observation received from {}".format(msg_dict["SENDER"][0]),
+                                                                    "New observation id:", QLineEdit.Normal, new_id)
+
+                            self.pj[OBSERVATIONS][new_id] = dict(sent_obs[obsId])
+                    else:
+                        self.pj[OBSERVATIONS][obsId] = dict(sent_obs[obsId])
+                        mem_obsid = obsId
+
+                if not flag_msg:
+                    QMessageBox.information(self, "Project server", "Observation {} received".format(mem_obsId))
+
+
+            elif "URL" in msg_dict:
+                self.tcp_port = int(msg_dict["URL"].split(":")[-1])
+                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 60 seconds".format(msg_dict["URL"]))
 
             else:
                 del self.w
                 self.actionSend_project.setText("Project server")
-                QMessageBox.information(self, "Project server", msg)
+                QMessageBox.information(self, "Project server", msg_dict["MESSAGE"])
+
 
         if "server" in self.actionSend_project.text():
 
@@ -917,7 +947,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w = recode_widget.Info_widget()
             self.w.resize(450, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.w.setWindowTitle("Serving current project to BORIS Mobile App")
+            self.w.setWindowTitle("Project server")
             self.w.label.setText("")
             self.w.show()
             app.processEvents()
@@ -928,9 +958,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.server_thread = ProjectServerThread(message=str.encode(str(json.dumps(cp_project,
                                                                             indent=None,
-                                                                            separators=(',', ':'),
+                                                                            separators=(",", ":"),
                                                                             default=decimal_default))))
-            self.server_thread.signal.connect(done)
+            self.server_thread.signal.connect(receive_signal)
 
             self.server_thread.start()
 
@@ -1975,6 +2005,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
         # separator for behavioural strings
         preferencesWindow.leSeparator.setText(self.behaviouralStringsSeparator)
+        # close same event indep of modifiers
+        preferencesWindow.cbCloseSameEvent.setChecked(self.close_the_same_current_event)
         # confirm sound
         preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
         # beep every
@@ -2041,6 +2073,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.automaticBackupTimer.stop()
 
             self.behaviouralStringsSeparator = preferencesWindow.leSeparator.text()
+
+            self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
 
             self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
 
@@ -3751,8 +3785,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not self.behaviouralStringsSeparator:
                     self.behaviouralStringsSeparator = "|"
             except:
-
                 self.behaviouralStringsSeparator = "|"
+
+            self.close_the_same_current_event = False
+            try:
+                self.close_the_same_current_event = (settings.value("close_the_same_current_event") == "true")
+            except:
+                self.close_the_same_current_event = False
 
             self.confirmSound = False
             try:
@@ -3878,6 +3917,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("Save_media_file_path", self.saveMediaFilePath)
         settings.setValue("Automatic_backup", self.automaticBackup)
         settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator)
+        settings.setValue("close_the_same_current_event", self.close_the_same_current_event)
         settings.setValue("confirm_sound", self.confirmSound)
         settings.setValue("beep_every", self.beep_every)
         settings.setValue("embed_player", self.embedPlayer)
