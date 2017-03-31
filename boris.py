@@ -48,7 +48,6 @@ __version__ = "3.61"
 __version_date__ = "2017-03-31"
 __DEV__ = False
 
-
 #BITMAP_EXT = "jpg"
 
 if sys.platform == "darwin":  # for MacOS
