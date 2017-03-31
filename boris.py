@@ -7451,31 +7451,43 @@ item []:
                             if memState == vlc.State.Playing:
                                 self.pause_video()
 
-                modifiersList = []
+                modifiersList = []  # modifiers type 1 "classic"
+                modifiers_from_set = [] # modifier from set
                 if "|" in event["modifiers"]:
                     for modifiersString in event["modifiers"].split("|"):
-                        modifiersList.append([s.strip() for s in modifiersString.split(",")])
+                        if modifiersString.count("~") == 2:
+                            modifiers_from_set.append(modifiersString)
+                        else:
+                            modifiersList.append([s.strip() for s in modifiersString.split(",")])
                 else:
-                    modifiersList.append([s.strip() for s in event["modifiers"].split(",")])
+                    if event["modifiers"].count("~") == 2:
+                        modifiers_from_set.append(event["modifiers"])
+                    else:
+                        modifiersList.append([s.strip() for s in event["modifiers"].split(",")])
 
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                modifierSelector = select_modifiers.ModifiersList(event["code"], modifiersList, currentModifiers)
+                # choose modifier from set
+                if modifiers_from_set:
+                    print("choose modif from set")
 
-                if modifierSelector.exec_():
-                    modifiers = modifierSelector.getModifiers()
-                    if len(modifiers) == 1:
-                        modifier_str = modifiers[0]
-                        if modifier_str == "None":
-                            modifier_str = ""
+                # modifiers type 1
+                if modifiersList:
+                    modifierSelector = select_modifiers.ModifiersList(event["code"], modifiersList, currentModifiers)
+                    if modifierSelector.exec_():
+                        modifiers = modifierSelector.getModifiers()
+                        if len(modifiers) == 1:
+                            modifier_str = modifiers[0]
+                            if modifier_str == "None":
+                                modifier_str = ""
+                        else:
+                            modifier_str = "|".join(modifiers)
                     else:
-                        modifier_str = "|".join(modifiers)
-                else:
-                    if currentModifiers: # editing
-                        modifier_str = currentModifiers
-                    else:
-                        return
+                        if currentModifiers: # editing
+                            modifier_str = currentModifiers
+                        else:
+                            return
 
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
