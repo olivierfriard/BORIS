@@ -197,9 +197,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
         print("add modifier")
 
         txt = self.leModifier.text()
-        for c in "(|),":
+        for c in "(|),`~":
             if c in txt:
-                QMessageBox.critical(self, programName, "The modifier contains a character that is not allowed.<br>Check the following characters: <b>,(|)</b>")
+                QMessageBox.critical(self, programName, "The modifier contains a character that is not allowed.<br>Check the following characters: <b>,(|)`~</b>")
                 self.leModifier.setFocus()
                 return
 
@@ -211,9 +211,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
                     return
 
             if self.leCode.text():
-                for c in "(|)":
+                for c in "(|),`~":
                     if c in self.leCode.text():
-                        QMessageBox.critical(self, programName, "The modifier key code is not allowed (|)!")
+                        QMessageBox.critical(self, programName, "The modifier key code is not allowed (|),`~!")
                         self.leCode.setFocus()
                         return
 

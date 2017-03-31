@@ -44,8 +44,8 @@ import datetime
 import multiprocessing
 import socket
 
-__version__ = "3.60"
-__version_date__ = "2017-03-24"
+__version__ = "3.61"
+__version_date__ = "2017-03-31"
 __DEV__ = False
 
 
