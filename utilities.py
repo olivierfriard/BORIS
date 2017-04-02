@@ -47,6 +47,19 @@ def get_ip_address():
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
 
+'''
+def get_set_of_modifiers(text):
+    """
+    return set of modifiers
+    """
+
+    pattern = '~(.*)~'
+    match = re.search(pattern, text)
+    if match is None:
+        return []
+
+    return text[match.start()+1:match.end()-1].split("`")
+'''
 
 
 def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName, extension, frame_resize):

@@ -35,35 +35,40 @@ import config
 
 class ModifiersList(QDialog):
 
-    def __init__(self, code, modifiers_list, currentModifier):
+    def __init__(self, code, modifiers_dict, currentModifier):
 
         super(ModifiersList, self).__init__()
+
+        self.modifiers_dict = modifiers_dict
 
         self.setWindowTitle(config.programName)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         currentModifierList = currentModifier.split("|")
+        print("currentModifierList",currentModifierList)
 
         Vlayout = QVBoxLayout()
         widget = QWidget(self)
         widget.setLayout(Vlayout)
 
         label = QLabel()
-        label.setText("Choose the modifier{0} for <b>{1}</b> event".format("s" * (len(modifiers_list) > 1), code))
+        label.setText("Choose the modifier{0} for <b>{1}</b> behavior".format("s" * (len(modifiers_dict) > 1), code))
         Vlayout.addWidget(label)
 
         self.modifiersSetNumber = 0
 
-        for idx, modifiers in enumerate(modifiers_list):
+        for idx in sorted(modifiers_dict.keys()):
 
             self.modifiersSetNumber += 1
-            if len(modifiers_list) > 1:
+            if len(modifiers_dict) > 1:
                 lb = QLabel()
-                lb.setText("Modifiers #{}".format(self.modifiersSetNumber))
+                lb.setText("Modifiers <b>{}</b>".format(modifiers_dict[idx]["name"]))
                 Vlayout.addWidget(lb)
 
             lw = QListWidget(widget)
+            self.modifiers_dict[idx]["widget"] = lw
             lw.setObjectName("lw_modifiers")
+                
             lw.installEventFilter(self)
 
             item = QListWidgetItem("None")
@@ -73,14 +78,22 @@ class ModifiersList(QDialog):
             else:
                 item.setSelected(True)
 
-            for modifier in modifiers:
+            lw.setFixedHeight(len(modifiers_dict[idx]["elements"])*20)
+            for modifier in modifiers_dict[idx]["elements"]:
 
                 item = QListWidgetItem(modifier)
+
+                if modifiers_dict[idx]["type"] == "from_set":
+                    item.setCheckState(Qt.Unchecked)
+
+                    # previously selected
+                    if currentModifierList != [""] and modifier in currentModifierList[idx].split(","):
+                        item.setCheckState(Qt.Checked)
+
                 lw.addItem(item)
 
-                if currentModifierList != [""]:
-                    if re.sub(" \(.\)", "", modifier) == currentModifierList[idx]:
-
+                if modifiers_dict[idx]["type"] == "classic":
+                    if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[idx]:
                         if QT_VERSION_STR[0] == "4":
                             lw.setItemSelected(item, True)
                         else:
@@ -159,11 +172,34 @@ class ModifiersList(QDialog):
         returns list of selected modifiers
         """
         modifiers = []
+        for idx in sorted(self.modifiers_dict.keys()):
+            
+            self.modifiers_dict[idx]["selected"] = []
+            if self.modifiers_dict[idx]["type"] == "from_set":
+
+                for j in range(self.modifiers_dict[idx]["widget"].count()):
+                    
+                    if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
+                        #modifiers.append()
+                        self.modifiers_dict[idx]["selected"].append(self.modifiers_dict[idx]["widget"].item(j).text())
+
+            if self.modifiers_dict[idx]["type"] == "classic":
+                for item in self.modifiers_dict[idx]["widget"].selectedItems():
+                    #modifiers.append(re.sub(" \(.*\)", "", item.text()))
+                    self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
+            
+        '''
         for widget in self.children():
-            if widget.objectName() == "lw_modifiers":
+            if widget.objectName() == "lw_modifiers_classic":
                 for item in widget.selectedItems():
                     modifiers.append(re.sub(" \(.*\)", "", item.text()))
-        return modifiers
+            if widget.objectName() == "lw_modifiers_from_set":
+                for idx in range(widget.count()):
+                    if widget.item(idx).checkState() == Qt.Checked:
+                        modifiers.append(widget.item(idx).text())
+        '''
+
+        return self.modifiers_dict
 
     def pbOK_clicked(self):
         self.accept()

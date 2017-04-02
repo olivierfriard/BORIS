@@ -23,11 +23,11 @@ This file is part of BORIS.
 """
 
 
-programName = 'BORIS'
+programName = "BORIS"
 
-project_format_version = '1.6'
+project_format_version = "4"
 
-VLC_MIN_VERSION = '2'
+VLC_MIN_VERSION = "2"
 
 CHECK_NEW_VERSION_DELAY = 15*24*60*60
 

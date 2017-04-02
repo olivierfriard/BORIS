@@ -1178,6 +1178,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def filter_subjects(self):
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
+        paramPanelWindow.lbBehaviors.setText("Subjects")
         paramPanelWindow.lwSubjects.setVisible(False)
 
         paramPanelWindow.pbSelectAllSubjects.setVisible(False)
@@ -5215,21 +5216,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # transform time to decimal
         self.pj = self.convert_time_to_decimal(self.pj)
 
-        ''' 2016-10-13 moved in function convert_time_to_decimal
-        for obs in self.pj[OBSERVATIONS]:
-            self.pj[OBSERVATIONS][obs]["time offset"] = Decimal(str(self.pj[OBSERVATIONS][obs]["time offset"]) )
-
-            for idx,event in enumerate(self.pj[OBSERVATIONS][obs][EVENTS]):
-                self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(self.pj[OBSERVATIONS][obs][EVENTS][idx][pj_obs_fields["time"]]))
-        '''
-
         # add coding_map key to old project files
         if not "coding_map" in self.pj:
             self.pj["coding_map"] = {}
             self.projectChanged = True
 
         # add subject description
-        if 'project_format_version' in self.pj:
+        if "project_format_version" in self.pj:
             for idx in [x for x in self.pj[SUBJECTS]]:
                 if not 'description' in self.pj[SUBJECTS][ idx ] :
                     self.pj[SUBJECTS][ idx ]['description'] = ""
@@ -5237,7 +5230,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if project file version is newer than current BORIS project file version
         if 'project_format_version' in self.pj and Decimal(self.pj['project_format_version']) > Decimal(project_format_version):
-            QMessageBox.critical(self, programName, "This project file was created with a more recent version of BORIS.\nUpdate your version of BORIS to load it")
+            QMessageBox.critical(self, programName, ("This project file was created with a more recent version of BORIS.\n"
+                                                     "You must update BORIS to open it"))
             self.pj = {"time_format": "hh:mm:ss",
             "project_date": "",
             "project_name": "",
@@ -5392,10 +5386,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
+        '''
         if QT_VERSION_STR[0] == "4":
             fileName = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
         else:
             fileName, _ = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        '''
+
+        fn =  QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
             self.open_project_json(fileName)
@@ -6471,10 +6470,15 @@ item []:
 
         else:
 
+            '''
             if QT_VERSION_STR[0] == "4":
                 fileName = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
             else:
                 fileName, _ = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
+            '''
+
+            fn = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
+            fileName = fn[0] if type(fn) is tuple else fn
 
             if fileName:
                 QMessageBox.about(self, programName + " - Media file information", "{}<br>".format(info_from_ffmpeg(fileName)))
@@ -7407,6 +7411,47 @@ item []:
         return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
 
+    def select_modifiers_from_set(self, modifier_name, set_of_modifiers):
+        """
+        selection of elements from a set
+        """
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setWindowTitle("Modifier")
+        paramPanelWindow.lbBehaviors.setText("Select the element(s) for modifier <b>{}</b>".format(modifier_name))
+        paramPanelWindow.lwSubjects.setVisible(False)
+
+        paramPanelWindow.pbSelectAllSubjects.setVisible(False)
+        paramPanelWindow.pbUnselectAllSubjects.setVisible(False)
+        paramPanelWindow.pbReverseSubjectsSelection.setVisible(False)
+
+        paramPanelWindow.lbSubjects.setVisible(False)
+        paramPanelWindow.cbIncludeModifiers.setVisible(False)
+        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+        paramPanelWindow.lbStartTime.setVisible(False)
+        paramPanelWindow.teStartTime.setVisible(False)
+        paramPanelWindow.dsbStartTime.setVisible(False)
+        paramPanelWindow.lbEndTime.setVisible(False)
+        paramPanelWindow.teEndTime.setVisible(False)
+        paramPanelWindow.dsbEndTime.setVisible(False)
+
+        for modifier in set_of_modifiers:
+            paramPanelWindow.item = QListWidgetItem(modifier)
+            '''
+            if subject in filtered_subjects:
+                paramPanelWindow.item.setCheckState(Qt.Checked)
+            else:
+                paramPanelWindow.item.setCheckState(Qt.Unchecked)
+            '''
+            paramPanelWindow.item.setCheckState(Qt.Unchecked)
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        if paramPanelWindow.exec_():
+            return paramPanelWindow.selectedBehaviors
+        else:
+            return []
+
+
+
     def writeEvent(self, event, memTime):
         """
         add event from pressed key to observation
@@ -7451,16 +7496,49 @@ item []:
                             if memState == vlc.State.Playing:
                                 self.pause_video()
 
+                # check if more sets
+                modifiersList = []
+                if "|" not in event["modifiers"]:
+                    modifiersList = [event["modifiers"]]
+                else:
+                    modifiersList = event["modifiers"].split("|")
+                
+                m = {}
+                for modifier_string in modifiersList:
+                    if "~" not in modifier_string:
+                        m[len(m)] = {"type": "classic", "name": "#"+str(len(m)+1)  ,"elements": [s.strip() for s in modifier_string.split(",")]}
+                    else:
+                        modifier_name, modifier_elements = modifier_string.split("~")
+                        m[len(m)] = {"type": "from_set", "name": modifier_name, "elements": modifier_elements.split("`")}
+
+                # check if editing (original_modifiers key)
+                currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
+                modifierSelector = select_modifiers.ModifiersList(event["code"], m, currentModifiers)
+                if modifierSelector.exec_():
+                    selected_modifiers = modifierSelector.getModifiers()
+                    modifier_str = ""
+                    for idx in sorted(selected_modifiers.keys()):
+                        if modifier_str:
+                            modifier_str += "|"
+                        if selected_modifiers[idx]["selected"] == ["None"]:
+                            modifier_str += "#@#"
+                        else:
+                            modifier_str += ",".join(selected_modifiers[idx]["selected"])
+                else:
+                    modifier_str = currentModifiers
+                
+                modifier_str = modifier_str.replace("#@#", "")
+                '''
                 modifiersList = []  # modifiers type 1 "classic"
                 modifiers_from_set = [] # modifier from set
                 if "|" in event["modifiers"]:
                     for modifiersString in event["modifiers"].split("|"):
-                        if modifiersString.count("~") == 2:
+                        if "~" in modifiersString:
                             modifiers_from_set.append(modifiersString)
                         else:
                             modifiersList.append([s.strip() for s in modifiersString.split(",")])
                 else:
-                    if event["modifiers"].count("~") == 2:
+                    if "~" in event["modifiers"]:
                         modifiers_from_set.append(event["modifiers"])
                     else:
                         modifiersList.append([s.strip() for s in event["modifiers"].split(",")])
@@ -7469,12 +7547,21 @@ item []:
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
                 # choose modifier from set
+                
                 if modifiers_from_set:
-                    print("choose modif from set")
+                    for modifier_set in modifiers_from_set:
+                        modifier_name, modifier_elements = modifier_set.split("~")
+                        print("choose for modifier {} from set {}".format(modifier_name, modifier_elements))
+                        selected_elements = self.select_modifiers_from_set(modifier_name, modifier_elements.split("`"))
+                        print(selected_elements)
+                        if modifier_str:
+                            modifier_str += "|"
+                        modifier_str += "~".join(selected_elements)
 
                 # modifiers type 1
                 if modifiersList:
                     modifierSelector = select_modifiers.ModifiersList(event["code"], modifiersList, currentModifiers)
+
                     if modifierSelector.exec_():
                         modifiers = modifierSelector.getModifiers()
                         if len(modifiers) == 1:
@@ -7488,6 +7575,7 @@ item []:
                             modifier_str = currentModifiers
                         else:
                             return
+                '''
 
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -8636,10 +8724,15 @@ item []:
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
+        '''
         if QT_VERSION_STR[0] == "4":
             fileName = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
         else:
             fileName, _ = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        '''
+
+        fn =  QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
 
@@ -8706,10 +8799,16 @@ item []:
 
         flagMulti = False
         if len(plot_parameters["selected subjects"]) == 1:
+            '''
             if QT_VERSION_STR[0] == "4":
                 fileName = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
             else:
                 fileName, _ = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+            '''
+
+            fn =  QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+            fileName = fn[0] if type(fn) is tuple else fn
+
         else:
             exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
             if not exportDir:
@@ -8871,10 +8970,16 @@ item []:
         import observations from project file
         """
 
+        '''
         if QT_VERSION_STR[0] == "4":
             fileName = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
         else:
             fileName, _ = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        '''
+
+        fn =  QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
+
 
         if self.projectFileName and fileName == self.projectFileName:
             QMessageBox.critical(None, programName, "This project is already open", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
