@@ -5224,21 +5224,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # add subject description
         if "project_format_version" in self.pj:
             for idx in [x for x in self.pj[SUBJECTS]]:
-                if not 'description' in self.pj[SUBJECTS][ idx ] :
-                    self.pj[SUBJECTS][ idx ]['description'] = ""
+                if not "description" in self.pj[SUBJECTS][idx] :
+                    self.pj[SUBJECTS][idx]["description"] = ""
                     self.projectChanged = True
 
         # check if project file version is newer than current BORIS project file version
-        if 'project_format_version' in self.pj and Decimal(self.pj['project_format_version']) > Decimal(project_format_version):
+        if "project_format_version" in self.pj and Decimal(self.pj["project_format_version"]) > Decimal(project_format_version):
             QMessageBox.critical(self, programName, ("This project file was created with a more recent version of BORIS.\n"
                                                      "You must update BORIS to open it"))
+            '''
             self.pj = {"time_format": "hh:mm:ss",
             "project_date": "",
             "project_name": "",
             "project_description": "",
             "subjects_conf" : {},
             "behaviors_conf": {},
-            "observations": {}}
+            "observations": {},
+            }
+            '''
             return
 
 
@@ -5293,11 +5296,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][obs]["time offset second player"] = Decimal("0.0")
                 self.projectChanged = True
 
+        # update modifiers to JSON format
+        '''
+        if "project_format_version" in self.pj and Decimal(self.pj["project_format_version"]) < 4:
+            for idx in self.pj[ETHOGRAM]:
+                if self.pj[ETHOGRAM][idx]["modifiers"]:
+                    if "{" in self.pj[ETHOGRAM][idx]["modifiers"]:
+                        pass
+        '''
+
 
         # if one file is present in player #1 -> set "media_info" key with value of media_file_info
-
         project_updated = False
-
 
         for obs in self.pj[OBSERVATIONS]:
             if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and "media_info" not in self.pj[OBSERVATIONS][obs]:
@@ -5305,7 +5315,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for player in [PLAYER1, PLAYER2]:
                     for media_file_path in self.pj[OBSERVATIONS][obs]["file"][player]:
                         nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_file_path)
-                        print(media_file_path, nframe, videoTime, videoDuration, fps, hasVideo, hasAudio)
+                        #print(media_file_path, nframe, videoTime, videoDuration, fps, hasVideo, hasAudio)
                         if videoDuration:
                             self.pj[OBSERVATIONS][obs]['media_info']["length"][media_file_path] = videoDuration
                             self.pj[OBSERVATIONS][obs]['media_info']["fps"][media_file_path] = fps
@@ -5354,6 +5364,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         if project_updated:
             QMessageBox.information(self, programName, "The media files information was updated to the new project format.")
+
+
 
 
         # check program version
@@ -7502,32 +7514,46 @@ item []:
                     modifiersList = [event["modifiers"]]
                 else:
                     modifiersList = event["modifiers"].split("|")
-                
+
+                d = json.loads(event["modifiers"])
+                m = dict([[int(i), d[i]] for i in d])
+
+                '''
                 m = {}
                 for modifier_string in modifiersList:
-                    if "~" not in modifier_string:
-                        m[len(m)] = {"type": "classic", "name": "#"+str(len(m)+1)  ,"elements": [s.strip() for s in modifier_string.split(",")]}
-                    else:
+
+                    if "," in modifier_string:
+                        if "~" in modifier_string:
+                            modifier_name, modifier_elements = modifier_string.split("~")
+                        else:
+                            modifier_name, modifier_elements = "#" + str(len(m)+1), modifier_string
+                        m[len(m)] = {"type": SINGLE_SELECTION, "name": modifier_name,"elements": [s.strip() for s in modifier_elements.split(",")]}
+
+                    if "`" in modifier_string:
                         modifier_name, modifier_elements = modifier_string.split("~")
-                        m[len(m)] = {"type": "from_set", "name": modifier_name, "elements": modifier_elements.split("`")}
+                        m[len(m)] = {"type": MULTI_SELECTION, "name": modifier_name, "elements": modifier_elements.split("`")}
+                '''
+
 
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
+
                 modifierSelector = select_modifiers.ModifiersList(event["code"], m, currentModifiers)
+
                 if modifierSelector.exec_():
                     selected_modifiers = modifierSelector.getModifiers()
                     modifier_str = ""
                     for idx in sorted(selected_modifiers.keys()):
                         if modifier_str:
                             modifier_str += "|"
-                        if selected_modifiers[idx]["selected"] == ["None"]:
-                            modifier_str += "#@#"
-                        else:
-                            modifier_str += ",".join(selected_modifiers[idx]["selected"])
+                        modifier_str += ",".join(selected_modifiers[idx]["selected"])
                 else:
                     modifier_str = currentModifiers
-                
-                modifier_str = modifier_str.replace("#@#", "")
+
+                #modifier_str = modifier_str.replace("#@#", "")
+
+
+
                 '''
                 modifiersList = []  # modifiers type 1 "classic"
                 modifiers_from_set = [] # modifier from set
@@ -7547,7 +7573,7 @@ item []:
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
                 # choose modifier from set
-                
+
                 if modifiers_from_set:
                     for modifier_set in modifiers_from_set:
                         modifier_name, modifier_elements = modifier_set.split("~")

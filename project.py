@@ -247,6 +247,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text())
                 addModifierWindow.setWindowTitle("""Set modifiers for "{}" behavior""".format(self.twBehaviors.item(row, 2).text()))
                 if addModifierWindow.exec_():
+
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
 
 
@@ -421,7 +422,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                             comboBox = QComboBox()
                             comboBox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
-                            #comboBox.setCurrentIndex(NUMERIC_idx)
 
                             for idx2, var_type in [(NUMERIC_idx, NUMERIC), (TEXT_idx, TEXT), (SET_OF_VALUES_idx, SET_OF_VALUES)]:
                                 if project[INDEPENDENT_VARIABLES][i][field] == var_type:
@@ -440,6 +440,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             else:
                 QMessageBox.warning(self, programName, "No independent variables found in project")
+
 
     def pbImportSubjectsFromProject_clicked(self):
         """
@@ -497,14 +498,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         fn =  QFileDialog(self).getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
-
-        '''
-        if QT_VERSION_STR[0] == "4":
-
-            fileName = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
-        else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, 'Import behaviors from project file', '', 'Project files (*.boris);;All files (*)')
-        '''
 
         if fileName:
             with open(fileName, "r") as infile:
@@ -1244,6 +1237,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                             row[field] = self.twBehaviors.item(r, behavioursFields[field]).text().strip()
                         else:
                             row[field] = self.twBehaviors.item(r, behavioursFields[field]).text()
+
+                        if field == "modifiers" and row["modifiers"]:
+                            row["modifiers"] = eval(row["modifiers"])
+
                     else:
                         row[field] = ""
 

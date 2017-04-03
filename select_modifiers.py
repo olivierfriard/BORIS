@@ -68,7 +68,7 @@ class ModifiersList(QDialog):
             lw = QListWidget(widget)
             self.modifiers_dict[idx]["widget"] = lw
             lw.setObjectName("lw_modifiers")
-                
+
             lw.installEventFilter(self)
 
             item = QListWidgetItem("None")
@@ -78,12 +78,12 @@ class ModifiersList(QDialog):
             else:
                 item.setSelected(True)
 
-            lw.setFixedHeight(len(modifiers_dict[idx]["elements"])*20)
-            for modifier in modifiers_dict[idx]["elements"]:
+            lw.setFixedHeight(len(modifiers_dict[idx]["values"])*20)
+            for modifier in modifiers_dict[idx]["values"]:
 
                 item = QListWidgetItem(modifier)
 
-                if modifiers_dict[idx]["type"] == "from_set":
+                if modifiers_dict[idx]["type"] == config.MULTI_SELECTION:
                     item.setCheckState(Qt.Unchecked)
 
                     # previously selected
@@ -92,7 +92,7 @@ class ModifiersList(QDialog):
 
                 lw.addItem(item)
 
-                if modifiers_dict[idx]["type"] == "classic":
+                if modifiers_dict[idx]["type"] == config.SINGLE_SELECTION:
                     if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[idx]:
                         if QT_VERSION_STR[0] == "4":
                             lw.setItemSelected(item, True)
@@ -101,10 +101,10 @@ class ModifiersList(QDialog):
 
             Vlayout.addWidget(lw)
 
-        pbCancel = QPushButton("Cancel")
+        pbCancel = QPushButton(config.CANCEL)
         pbCancel.clicked.connect(self.reject)
         Vlayout.addWidget(pbCancel)
-        pbOK = QPushButton("OK")
+        pbOK = QPushButton(config.OK)
         pbOK.setDefault(True)
         pbOK.clicked.connect(self.pbOK_clicked)
         Vlayout.addWidget(pbOK)
@@ -173,21 +173,21 @@ class ModifiersList(QDialog):
         """
         modifiers = []
         for idx in sorted(self.modifiers_dict.keys()):
-            
+
             self.modifiers_dict[idx]["selected"] = []
-            if self.modifiers_dict[idx]["type"] == "from_set":
+            if self.modifiers_dict[idx]["type"] == config.MULTI_SELECTION:
 
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
-                    
+
                     if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
                         #modifiers.append()
                         self.modifiers_dict[idx]["selected"].append(self.modifiers_dict[idx]["widget"].item(j).text())
 
-            if self.modifiers_dict[idx]["type"] == "classic":
+            if self.modifiers_dict[idx]["type"] == config.SINGLE_SELECTION:
                 for item in self.modifiers_dict[idx]["widget"].selectedItems():
                     #modifiers.append(re.sub(" \(.*\)", "", item.text()))
                     self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "", item.text()))
-            
+
         '''
         for widget in self.children():
             if widget.objectName() == "lw_modifiers_classic":

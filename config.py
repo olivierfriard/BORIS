@@ -164,6 +164,11 @@ slider_maximum = 1000
 FRAME_BITMAP_FORMAT_LIST = ["JPG", "PNG"]
 FRAME_DEFAULT_BITMAT_FORMAT = "JPG"
 
+# modifiers
+SINGLE_SELECTION = 0
+MULTI_SELECTION = 1
+
+
 #colors
 subtitlesColors = ['cyan','red','blue','yellow','fuchsia','orange', 'lime', 'green']
 CATEGORY_COLORS_LIST = ["#FF96CC", "#96FF9C","#CCFFFE", "#EEFF70", "#FF4F64", "#F8BF15", "#3DC7AD"]

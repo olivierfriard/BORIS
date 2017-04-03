@@ -129,6 +129,44 @@
           </widget>
          </item>
          <item>
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Set name</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="leSetName"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Modifier type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="cbType">
+           <item>
+            <property name="text">
+             <string>Single selection</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Multiple selection</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>Values</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QListWidget" name="lwModifiers"/>
          </item>
          <item>

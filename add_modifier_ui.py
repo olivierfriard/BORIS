@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'add_modifier.ui'
 #
-# Created: Mon Mar 21 16:40:46 2016
+# Created: Mon Apr  3 12:23:25 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -80,6 +80,23 @@ class Ui_Dialog(object):
         self.set1.setObjectName(_fromUtf8("set1"))
         self.tabWidgetModifiersSets.addTab(self.set1, _fromUtf8(""))
         self.verticalLayout.addWidget(self.tabWidgetModifiersSets)
+        self.label_3 = QtGui.QLabel(Dialog)
+        self.label_3.setObjectName(_fromUtf8("label_3"))
+        self.verticalLayout.addWidget(self.label_3)
+        self.leSetName = QtGui.QLineEdit(Dialog)
+        self.leSetName.setObjectName(_fromUtf8("leSetName"))
+        self.verticalLayout.addWidget(self.leSetName)
+        self.label_4 = QtGui.QLabel(Dialog)
+        self.label_4.setObjectName(_fromUtf8("label_4"))
+        self.verticalLayout.addWidget(self.label_4)
+        self.cbType = QtGui.QComboBox(Dialog)
+        self.cbType.setObjectName(_fromUtf8("cbType"))
+        self.cbType.addItem(_fromUtf8(""))
+        self.cbType.addItem(_fromUtf8(""))
+        self.verticalLayout.addWidget(self.cbType)
+        self.label_2 = QtGui.QLabel(Dialog)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.verticalLayout.addWidget(self.label_2)
         self.lwModifiers = QtGui.QListWidget(Dialog)
         self.lwModifiers.setObjectName(_fromUtf8("lwModifiers"))
         self.verticalLayout.addWidget(self.lwModifiers)
@@ -140,6 +157,11 @@ class Ui_Dialog(object):
         self.lbCode.setText(_translate("Dialog", "Key code", None))
         self.label.setText(_translate("Dialog", "Key code is case insensitive. Type one character or a function key (F1, F2... F12)", None))
         self.tabWidgetModifiersSets.setTabText(self.tabWidgetModifiersSets.indexOf(self.set1), _translate("Dialog", "Set #1", None))
+        self.label_3.setText(_translate("Dialog", "Set name", None))
+        self.label_4.setText(_translate("Dialog", "Modifier type", None))
+        self.cbType.setItemText(0, _translate("Dialog", "Single selection", None))
+        self.cbType.setItemText(1, _translate("Dialog", "Multiple selection", None))
+        self.label_2.setText(_translate("Dialog", "Values", None))
         self.pbMoveUp.setText(_translate("Dialog", "Move modifier up", None))
         self.pbMoveDown.setText(_translate("Dialog", "Move modifier down", None))
         self.pbRemoveModifier.setText(_translate("Dialog", "Remove modifier", None))
