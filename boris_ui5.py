@@ -398,7 +398,6 @@ class Ui_MainWindow(object):
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
-        self.menuHelp.addAction(self.actionHow_to_cite_BORIS)
         self.menuHelp.addAction(self.actionAbout)
         self.menuFile.addAction(self.actionNew_project)
         self.menuFile.addAction(self.actionOpen_project)

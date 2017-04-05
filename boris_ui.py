@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Apr  5 13:42:08 2017
+# Created: Wed Apr  5 16:08:37 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -410,7 +410,6 @@ class Ui_MainWindow(object):
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
-        self.menuHelp.addAction(self.actionHow_to_cite_BORIS)
         self.menuHelp.addAction(self.actionAbout)
         self.menuFile.addAction(self.actionNew_project)
         self.menuFile.addAction(self.actionOpen_project)

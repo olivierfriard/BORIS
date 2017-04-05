@@ -763,7 +763,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
-        self.actionHow_to_cite_BORIS.triggered.connect(self.actionHow_to_cite_BORIS_activated)
         self.actionAbout.triggered.connect(self.actionAbout_activated)
         self.actionCheckUpdate.triggered.connect(self.actionCheckUpdate_activated)
 
@@ -7052,18 +7051,6 @@ item []:
         else:
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
-    def actionHow_to_cite_BORIS_activated(self):
-        """
-        display dialog with how to cite BORIS
-        """
-        self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle("How to cite BORIS")
-        self.results.ptText.clear()
-        self.results.ptText.appendHtml(("Friard, O. and Gamba, M. (2016), "
-                                        "BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations."
-                                        " Methods Ecol Evol, 7: 1325–1330. doi:10.1111/2041-210X.12584"))
-        self.results.show()
-
 
     def actionAbout_activated(self):
         """
@@ -7084,10 +7071,15 @@ item []:
         University of Torino - Italy<br>
         <br>
         BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>
-        <br>
-        The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.<br>
-        <br>
         See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>
+        <br>
+        The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.
+        <hr>
+        How to cite BORIS:<br>
+        Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>
+        DOI:10.1111/2041-210X.12584
+        <hr>
+
         <p>Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br>
         CPU type: {cpu_info}<br>
         <br>

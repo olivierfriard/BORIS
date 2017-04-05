@@ -107,7 +107,6 @@
     <addaction name="actionUser_guide"/>
     <addaction name="actionCheckUpdate"/>
     <addaction name="separator"/>
-    <addaction name="actionHow_to_cite_BORIS"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="menuFile">
