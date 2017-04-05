@@ -8947,21 +8947,14 @@ item []:
         out = ""
         for fileName in fileNames:
             with open(fileName, "r") as infile:
-                gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
-
-                print(gv, file=open(fileName + ".gv", "w"))
-
-                out += "<b>{}</b> created<br>".format(fileName + ".gv")
-
-                '''
-                not working with PyQt 5.7 on Windows
-                gv_svg = transitions.create_diagram_from_gv(gv)
                 try:
-                    print(gv_svg, file=open(fileName + ".svg", "w"))
-                    out += "{} created\n".format(fileName + ".svg")
+                    gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+                    with open(fileName + ".gv", "w") as f:
+                        f.write(gv)
+                    #print(gv, file=open(fileName + ".gv", "w"))
+                    out += "<b>{}</b> created<br>".format(fileName + ".gv")
                 except:
-                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName + ".svg"))
-                '''
+                    QMessageBox.information(self, programName, "Error during dot script creation.\n{}".format(str(sys.exc_info()[0])))
 
         if out:
             QMessageBox.information(self, programName, out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
@@ -8988,18 +8981,18 @@ item []:
         out = ""
         for fileName in fileNames:
             with open(fileName, "r") as infile:
-                gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
-
-                print(gv, file=open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w"))
-
-                #result = subprocess.getoutput("""echo '{0}' | dot -Tpng -o "{1}.png" """.format(gv.replace("\n", ""), fileName))
-                result = subprocess.getoutput("""dot -Tpng -o "{0}.png" "{1}" """.format(fileName, tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv"))
-
-                if not result:
-                    out += "<b>{}</b> created<br>".format(fileName + ".png")
-                else:
-                    out += "Problem with <b>{}</b><br>".format(fileName)
-
+                try:
+                    gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+                    with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
+                        f.write(gv)
+                    #print(gv, file=open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w"))
+                    result = subprocess.getoutput("""dot -Tpng -o "{0}.png" "{1}" """.format(fileName, tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv"))
+                    if not result:
+                        out += "<b>{}</b> created<br>".format(fileName + ".png")
+                    else:
+                        out += "Problem with <b>{}</b><br>".format(fileName)
+                except:
+                    QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[0])))
 
         if out:
             QMessageBox.information(self, programName, out)
