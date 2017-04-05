@@ -44,7 +44,7 @@ import datetime
 import multiprocessing
 import socket
 
-__version__ = "3.61"
+__version__ = "4.0.0"
 __version_date__ = "2017-03-31"
 __DEV__ = False
 
@@ -811,6 +811,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Actions for twEthogram context menu
         self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
+
+        self.actionViewBehavior.triggered.connect(self.view_behavior)
+        self.twEthogram.addAction(self.actionViewBehavior)
+
+
         self.actionFilterBehaviors.triggered.connect(self.filter_behaviors)
         self.twEthogram.addAction(self.actionFilterBehaviors)
 
@@ -876,6 +881,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+    def view_behavior(self):
+        """
+        show details of selected behavior
+        """
+        if self.project:
+            print(self.twEthogram.selectedIndexes())
+            if self.twEthogram.selectedIndexes():
+                ethogramRow = self.twEthogram.selectedIndexes()[0].row()
+                behav = dict(self.pj[ETHOGRAM][str(self.twEthogram.selectedIndexes()[0].row())])
+                if behav["modifiers"]:
+                    modifiers = ""
+                    for idx in sorted_keys(behav["modifiers"]):
+                        if behav["modifiers"][idx]["name"]:
+                           modifiers += "   Name: {}:\n".format(behav["modifiers"][idx]["name"])
+                        for m in behav["modifiers"][idx]["values"]:
+                            modifiers += m +", "
+                        modifiers = modifiers[:-1] + "\n"
+                else:
+                    modifiers = ""
+                QMessageBox.information(self, "Behavior view", "Code: {}\nType: {}\nKey: {}\nDescription: {}\nCategory: {}\nModifiers: {}\nExclude: {}".format(behav["code"],
+                                                                                                                            behav["type"],
+                                                                                                                            behav["key"],
+                                                                                                                            behav["description"],
+                                                                                                                            behav["category"],
+                                                                                                                            modifiers,
+                                                                                                                            behav["excluded"],
+                                                                                                                            ))
+
 
 
     def send_project_via_socket(self):
@@ -1752,10 +1786,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         try:
             versionURL = "http://www.boris.unito.it/static/ver.dat"
-            lastVersion = Decimal(urllib.request.urlopen(versionURL).read().strip().decode("utf-8"))
+            lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
             self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
 
-            if lastVersion > Decimal(__version__):
+            if versiontuple(lastVersion) > versiontuple(__version__):
                 msg = """A new version is available: v. <b>{}</b><br>Go to <a href="http://www.boris.unito.it">http://www.boris.unito.it</a> to install it.""".format(lastVersion)
             else:
                 msg = "The version you are using is the last one: <b>{}</b>".format(__version__)
@@ -5297,13 +5331,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectChanged = True
 
         # update modifiers to JSON format
-        '''
-        if "project_format_version" in self.pj and Decimal(self.pj["project_format_version"]) < 4:
+
+        project_lowerthan4 = False
+        if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0.0"):
+            self.pj["project_format_version"] = project_format_version
             for idx in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][idx]["modifiers"]:
-                    if "{" in self.pj[ETHOGRAM][idx]["modifiers"]:
-                        pass
-        '''
+                    if isinstance(self.pj[ETHOGRAM][idx]["modifiers"], str):
+                        project_lowerthan4 = True
+                        modif_set_list = self.pj[ETHOGRAM][idx]["modifiers"].split("|")
+                        modif_set_dict = {}
+                        for modif_set in modif_set_list:
+                            modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": modif_set.split(",")}
+                        self.pj[ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
+                        self.projectChanged = True
+                else:
+                    self.pj[ETHOGRAM][idx]["modifiers"] = {}
+
+        if project_lowerthan4:
+
+            from shutil import copyfile
+            copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
+
+            QMessageBox.information(self, programName, "The project was updated to the current project version (from v.{} to v.{}).\n\n".format(self.pj["project_format_version"], project_format_version) + \
+                                                        "The old file project  was saved as {}".format(projectFileName.replace(".boris", "_old_version.boris")))
+
 
 
         # if one file is present in player #1 -> set "media_info" key with value of media_file_info
@@ -5619,7 +5671,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         else:
                             if field in self.pj[ETHOGRAM][i]:
-                                item.setText(self.pj[ETHOGRAM][i][field])
+                                item.setText(str(self.pj[ETHOGRAM][i][field]))  # str for modifiers dict
                             else:
                                 item.setText("")
 
@@ -5746,15 +5798,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             f = open(projectFileName, "w")
-            #f.write(json.dumps(self.pj, indent=None, separators=(',', ':'), default=decimal_default))
-            f.write(json.dumps(self.pj, indent=1, default=decimal_default))
+            f.write(json.dumps(self.pj, indent=1, separators=(',', ':'), default=decimal_default))
             f.close()
-        except:
-            logging.critical("The project file can not be saved")
-            QMessageBox.critical(self, programName, "The project file can not be saved!")
-            return
 
-        self.projectChanged = False
+            self.projectChanged = False
+            return ""
+
+        except:
+            logging.critical("The project file can not be saved.\nError: {}".format(sys.exc_info()[0]))
+            QMessageBox.critical(self, programName, "The project file can not be saved! {}".format(sys.exc_info()[0]))
+            return "not saved"
 
 
     def save_project_as_activated(self):
@@ -5801,10 +5854,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if filtr == 'Projects file (*.boris)' and os.path.splitext(self.projectFileName)[1] != '.boris':
                 self.projectFileName += '.boris'
 
-            self.save_project_json(self.projectFileName)
+            return self.save_project_json(self.projectFileName)
 
         else:
-            self.save_project_json(self.projectFileName)
+            return self.save_project_json(self.projectFileName)
 
         return ""
 
@@ -6970,28 +7023,20 @@ item []:
 
 
     def twEthogram_doubleClicked(self):
-        '''
+        """
         add event by double-clicking in ethogram list
-        '''
+        """
         if self.observationId:
             if self.twEthogram.selectedIndexes():
-
                 ethogramRow = self.twEthogram.selectedIndexes()[0].row()
-
                 logging.debug('ethogram row: {0}'.format(ethogramRow  ))
                 logging.debug(self.pj[ETHOGRAM][str(ethogramRow)])
-
                 code = self.twEthogram.item(ethogramRow, 1).text()
-
                 event = self.full_event(str(ethogramRow))
-
                 logging.debug('event: {0}'.format(event))
-
                 self.writeEvent(event, self.getLaps())
-
         else:
             self.no_observation()
-
 
 
     def actionUser_guide_triggered(self):
@@ -7314,12 +7359,20 @@ item []:
 
         self.twEthogram.setRowCount(0)
         if self.pj[ETHOGRAM]:
-            for idx in sorted_keys(self.pj[ETHOGRAM]):   #    [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+            for idx in sorted_keys(self.pj[ETHOGRAM]):
                 if self.pj[ETHOGRAM][idx]["code"] in behaviorsToShow:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
-                    for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
-                        self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(self.pj[ETHOGRAM][idx][field]))
+                    #for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
+                    for col in sorted(behav_fields_in_mainwindow.keys()):
+                        field = behav_fields_in_mainwindow[col]
+                        self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
 
+                        '''
+                        if field == "modifiers":
+                            self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
+                        else:
+                            self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(self.pj[ETHOGRAM][idx][field]))
+                        '''
         if self.twEthogram.rowCount() < len(self.pj[ETHOGRAM].keys()):
             self.dwEthogram.setWindowTitle("Ethogram (filtered {0}/{1})".format(self.twEthogram.rowCount(), len(self.pj[ETHOGRAM].keys())))
 
@@ -7509,14 +7562,16 @@ item []:
                                 self.pause_video()
 
                 # check if more sets
+                '''
                 modifiersList = []
                 if "|" not in event["modifiers"]:
                     modifiersList = [event["modifiers"]]
                 else:
                     modifiersList = event["modifiers"].split("|")
+                '''
 
-                d = json.loads(event["modifiers"])
-                m = dict([[int(i), d[i]] for i in d])
+                d = event["modifiers"]
+                #m = dict([[int(i), d[i]] for i in d])
 
                 '''
                 m = {}
@@ -7538,12 +7593,12 @@ item []:
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                modifierSelector = select_modifiers.ModifiersList(event["code"], m, currentModifiers)
+                modifierSelector = select_modifiers.ModifiersList(event["code"], event["modifiers"], currentModifiers)
 
                 if modifierSelector.exec_():
                     selected_modifiers = modifierSelector.getModifiers()
                     modifier_str = ""
-                    for idx in sorted(selected_modifiers.keys()):
+                    for idx in sorted_keys(selected_modifiers):
                         if modifier_str:
                             modifier_str += "|"
                         modifier_str += ",".join(selected_modifiers[idx]["selected"])
@@ -7777,7 +7832,7 @@ item []:
 
     def full_event(self, obs_idx):
         """
-        ask modifiers from coding if configured and add them under 'from map' key
+        ask modifiers from coding map if configured and add them under 'from map' key
         """
 
         event = dict(self.pj[ETHOGRAM][obs_idx])

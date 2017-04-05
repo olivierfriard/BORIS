@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri Mar 24 18:00:05 2017
+# Created: Wed Apr  5 13:42:08 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -111,7 +111,7 @@ class Ui_MainWindow(object):
         self.twEthogram.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
         self.twEthogram.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.twEthogram.setObjectName(_fromUtf8("twEthogram"))
-        self.twEthogram.setColumnCount(6)
+        self.twEthogram.setColumnCount(7)
         self.twEthogram.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.twEthogram.setHorizontalHeaderItem(0, item)
@@ -125,6 +125,8 @@ class Ui_MainWindow(object):
         self.twEthogram.setHorizontalHeaderItem(4, item)
         item = QtGui.QTableWidgetItem()
         self.twEthogram.setHorizontalHeaderItem(5, item)
+        item = QtGui.QTableWidgetItem()
+        self.twEthogram.setHorizontalHeaderItem(6, item)
         self.verticalLayout_4.addWidget(self.twEthogram)
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
         self.dwEthogram.setWidget(self.dockWidgetContents_3)
@@ -403,6 +405,8 @@ class Ui_MainWindow(object):
         self.actionShowAllSubjects.setObjectName(_fromUtf8("actionShowAllSubjects"))
         self.actionSend_project = QtGui.QAction(MainWindow)
         self.actionSend_project.setObjectName(_fromUtf8("actionSend_project"))
+        self.actionViewBehavior = QtGui.QAction(MainWindow)
+        self.actionViewBehavior.setObjectName(_fromUtf8("actionViewBehavior"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -540,8 +544,10 @@ class Ui_MainWindow(object):
         item = self.twEthogram.horizontalHeaderItem(3)
         item.setText(_translate("MainWindow", "Description", None))
         item = self.twEthogram.horizontalHeaderItem(4)
-        item.setText(_translate("MainWindow", "Modifiers", None))
+        item.setText(_translate("MainWindow", "Category", None))
         item = self.twEthogram.horizontalHeaderItem(5)
+        item.setText(_translate("MainWindow", "Modifiers", None))
+        item = self.twEthogram.horizontalHeaderItem(6)
         item.setText(_translate("MainWindow", "Excluded", None))
         self.dwObservations.setWindowTitle(_translate("MainWindow", "Events", None))
         self.dwSubjects.setWindowTitle(_translate("MainWindow", "Subjects", None))
@@ -661,4 +667,6 @@ class Ui_MainWindow(object):
         self.actionShowAllSubjects.setText(_translate("MainWindow", "Show all subjects", None))
         self.actionShowAllSubjects.setToolTip(_translate("MainWindow", "Show all subjects", None))
         self.actionSend_project.setText(_translate("MainWindow", "Project server", None))
+        self.actionViewBehavior.setText(_translate("MainWindow", "View behavior", None))
+        self.actionViewBehavior.setToolTip(_translate("MainWindow", "View behavior", None))
 

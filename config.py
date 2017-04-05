@@ -70,6 +70,8 @@ BEHAVIOR_CODE = "code"
 # fields for event configuration
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 
+behav_fields_in_mainwindow = {0: "key", 1: "code", 2: "type", 3: "description", 4:"category", 5:"modifiers", 6:"excluded"}
+
 # fields in ethogram table from project window
 # behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'category': 4, 'modifiers': 5, 'excluded': 6, 'coding map': 7}

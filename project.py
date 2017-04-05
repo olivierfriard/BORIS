@@ -32,6 +32,7 @@ except:
     from PyQt4.QtCore import *
 
 import json
+from utilities import sorted_keys
 
 from config import *
 import add_modifier
@@ -523,7 +524,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if response == CANCEL:
                         return
 
-                for i in sorted(project[ETHOGRAM].keys()):
+                for i in sorted_keys(project[ETHOGRAM]):
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -535,13 +536,20 @@ class projectDialog(QDialog, Ui_dlgProject):
                             comboBox = QComboBox()
                             comboBox.addItems(BEHAVIOR_TYPES)
                             comboBox.setCurrentIndex(BEHAVIOR_TYPES.index(project[ETHOGRAM][i][field]))
-
                             self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field], comboBox)
 
                         else:
-                            item.setText(project[ETHOGRAM][i][field])
+                            if field == "modifiers" and isinstance(project[ETHOGRAM][i][field], str):
+                                modif_set_dict = {}
+                                if project[ETHOGRAM][i][field]:
+                                    modif_set_list = project[ETHOGRAM][i][field].split("|")
+                                    for modif_set in modif_set_list:
+                                        modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": modif_set.split(",")}
+                                project[ETHOGRAM][i][field] = dict(modif_set_dict)
 
-                            if field in ["excluded", "category", "coding map"]:
+                            item.setText(str(project[ETHOGRAM][i][field]))
+
+                            if field in ["modifiers", "excluded", "category", "coding map"]:
                                 item.setFlags(Qt.ItemIsEnabled)
 
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)

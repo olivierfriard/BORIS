@@ -330,6 +330,11 @@
          </column>
          <column>
           <property name="text">
+           <string>Category</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
            <string>Modifiers</string>
           </property>
          </column>
@@ -1039,6 +1044,14 @@
   <action name="actionSend_project">
    <property name="text">
     <string>Project server</string>
+   </property>
+  </action>
+  <action name="actionViewBehavior">
+   <property name="text">
+    <string>View behavior</string>
+   </property>
+   <property name="toolTip">
+    <string>View behavior</string>
    </property>
   </action>
  </widget>

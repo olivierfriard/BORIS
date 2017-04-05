@@ -36,9 +36,9 @@ if QT_VERSION_STR[0] == "4":
 else:
     from add_modifier_ui5 import Ui_Dialog
 
-import json
 import dialog
 from config import *
+from utilities import sorted_keys
 
 class addModifierDialog(QDialog, Ui_Dialog):
 
@@ -78,61 +78,35 @@ class addModifierDialog(QDialog, Ui_Dialog):
         # store modifiers in list
 
         self.modifiers_sets_dict = eval(modifiers_str)
-        #d = json.loads(modifiers_str)
-
-        # convert keys from str to int (str is due to JSON format)
-        # self.modifiers_sets_dict = dict([[int(i), d[i]] for i in d])
-
-        '''
-        except:
-
-            self.modifiers_sets_dict = {}
-
-            if modifiers_str:
-                for modifiersSet in modifiers_str.split("|"):
-                    if "~" in modifiersSet:
-                        modif_name, modif_values = modifiersSet.split("~")
-                    else:
-                        modif_name, modif_values = "", modifiersSet
-                    if "," in modif_values:
-                        modif_type = SINGLE_SELECTION
-                    if "`" in modif_values:
-                        modif_type = MULTI_SELECTION
-
-                    self.modifiers_sets_dict[len(self.modifiers_sets_dict)] = {"name": modif_name, "type": modif_type, "values": modif_values.split(",")}
-            else:
-                self.modifiers_sets_dict[0]= {"name": "", "type": SINGLE_SELECTION, "values": []}
-        '''
-
-
-
-
-
-        print("self.modifiers_sets_dict", self.modifiers_sets_dict)
-
 
         # create tab
-        for idx in sorted(self.modifiers_sets_dict.keys()):
-            if idx:
+        for idx in sorted_keys(self.modifiers_sets_dict):
+            if idx != "0":
                 self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
 
         # set first tab as active
-        self.leSetName.setText(self.modifiers_sets_dict[0]["name"])
-        self.cbType.setCurrentIndex(self.modifiers_sets_dict[0]["type"])
-        self.lwModifiers.addItems(self.modifiers_sets_dict[0]["values"])
+        if self.modifiers_sets_dict:
+            self.leSetName.setText(self.modifiers_sets_dict["0"]["name"])
+            self.cbType.setCurrentIndex(self.modifiers_sets_dict["0"]["type"])
+            self.lwModifiers.addItems(self.modifiers_sets_dict["0"]["values"])
         self.tabMem = 0
+
 
     def set_name_changed(self):
         """
         set name changed
         """
-        self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]["name"] = self.leSetName.text()
+        if not self.modifiers_sets_dict:
+            self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["name"] = self.leSetName.text()
 
     def type_changed(self):
         """
         type changed
         """
-        self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]["type"] = self.cbType.currentIndex()
+        if not self.modifiers_sets_dict:
+            self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
 
 
     def moveSetLeft(self):
@@ -141,10 +115,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
 
         if self.tabWidgetModifiersSets.currentIndex():
-            #self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex() - 1], self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex()] =  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ], self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() - 1]
-
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex() - 1], self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()] = self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()], self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()-1]
-
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() - 1)], self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] = dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]), dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex()-1)])
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() - 1 )
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
@@ -154,8 +125,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
 
         if self.tabWidgetModifiersSets.currentIndex() < self.tabWidgetModifiersSets.count() - 1:
-            #self.modifiersSets_list[self.tabWidgetModifiersSets.currentIndex() + 1],  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ] =  self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() ], self.modifiersSets_list[ self.tabWidgetModifiersSets.currentIndex() + 1]
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex() + 1],  self.modifiers_sets_dict[ self.tabWidgetModifiersSets.currentIndex() ] =  self.modifiers_sets_dict[ self.tabWidgetModifiersSets.currentIndex() ], self.modifiers_sets_dict[ self.tabWidgetModifiersSets.currentIndex() + 1]
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)],  self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] =  dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]), dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)])
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() + 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
@@ -170,7 +140,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
             currentItem = self.lwModifiers.takeItem(currentRow)
             self.lwModifiers.insertItem(currentRow - 1, currentItem)
             self.lwModifiers.setCurrentItem(currentItem)
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
 
 
     def moveModifierDown(self):
@@ -182,15 +152,15 @@ class addModifierDialog(QDialog, Ui_Dialog):
             currentItem = self.lwModifiers.takeItem(currentRow)
             self.lwModifiers.insertItem(currentRow + 1, currentItem)
             self.lwModifiers.setCurrentItem(currentItem)
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
 
     def addSet(self):
         """
         Add a set of modifiers
         """
-        if len(self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]):
+        if len(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex()) ] ):
             self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(len(self.modifiers_sets_dict) + 1))
-            self.modifiers_sets_dict[len(self.modifiers_sets_dict)] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+            self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": []}
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
@@ -203,7 +173,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         if len(self.modifiersSets_list) > 1:
             if dialog.MessageDialog(programName, "Are you sure to remove this set of modifiers?", [YES, NO]) == YES:
-                del self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]
+                del self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]
                 self.tabWidgetModifiersSets.removeTab(self.tabWidgetModifiersSets.currentIndex())
         else:
             QMessageBox.information(self, programName, "It is not possible to remove the last modifiers' set.")
@@ -223,7 +193,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.leModifier.setText(txt.split("(")[0].strip())
             self.leCode.setText(code)
 
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]["values"].remove(self.lwModifiers.currentItem().text())
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"].remove(self.lwModifiers.currentItem().text())
             self.itemPositionMem = self.lwModifiers.currentRow()
             self.lwModifiers.takeItem(self.lwModifiers.currentRow())
         else:
@@ -237,7 +207,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         if self.lwModifiers.currentIndex().row() >= 0:
             self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
 
 
     def addModifier(self):
@@ -280,7 +250,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
             else:
                 self.lwModifiers.addItem(txt)
 
-            self.modifiers_sets_dict[self.tabWidgetModifiersSets.currentIndex()]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+            if not self.modifiers_sets_dict:
+                self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
             self.leModifier.setText("")
             self.leCode.setText("")
 
@@ -308,35 +280,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
             self.tabMem = tabIndex
 
-            self.leSetName.setText(self.modifiers_sets_dict[tabIndex]["name"])
-
-            self.cbType.setCurrentIndex(self.modifiers_sets_dict[tabIndex]["type"])
-
-            self.lwModifiers.addItems(self.modifiers_sets_dict[tabIndex]["values"])
+            self.leSetName.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
+            self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
+            self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
 
     def getModifiers(self):
+        keys_to_delete = []
+        for idx in self.modifiers_sets_dict:
+            if not self.modifiers_sets_dict[idx]["values"]:
+                keys_to_delete.append(idx)
 
+        for idx in keys_to_delete:
+            del self.modifiers_sets_dict[idx]
 
-        txt = ""
-        '''
-        for idx in sorted(self.modifiers_sets_dict.keys()):
-            modifiersSet = self.modifiers_sets_dict[idx]["values"]
-            if modifiersSet:
-                txt += ",".join(modifiersSet) + "|"
-        txt = txt[:-1]
-        '''
-
-        '''
-        for idx in sorted(self.modifiers_sets_dict.keys()):
-            if txt:
-                txt += "|"
-            txt += self.modifiers_sets_dict[idx]["name"] + "~"
-            if self.modifiers_sets_dict[idx]["type"] == SINGLE_SELECTION:
-                txt += ",".join(self.modifiers_sets_dict[idx]["values"])
-            if self.modifiers_sets_dict[idx]["type"] == MULTI_SELECTION:
-                txt += "`".join(self.modifiers_sets_dict[idx]["values"])
-        '''
         return str(self.modifiers_sets_dict)
-        #return json.dumps(self.modifiers_sets_dict, separators=(',', ':'))
-        #return txt

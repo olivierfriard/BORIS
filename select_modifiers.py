@@ -32,6 +32,7 @@ except:
 
 import re
 import config
+from utilities import sorted_keys
 
 class ModifiersList(QDialog):
 
@@ -57,7 +58,7 @@ class ModifiersList(QDialog):
 
         self.modifiersSetNumber = 0
 
-        for idx in sorted(modifiers_dict.keys()):
+        for idx in sorted_keys(modifiers_dict):
 
             self.modifiersSetNumber += 1
             if len(modifiers_dict) > 1:
@@ -87,13 +88,13 @@ class ModifiersList(QDialog):
                     item.setCheckState(Qt.Unchecked)
 
                     # previously selected
-                    if currentModifierList != [""] and modifier in currentModifierList[idx].split(","):
+                    if currentModifierList != [""] and modifier in currentModifierList[int(idx)]:
                         item.setCheckState(Qt.Checked)
 
                 lw.addItem(item)
 
                 if modifiers_dict[idx]["type"] == config.SINGLE_SELECTION:
-                    if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[idx]:
+                    if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
                         if QT_VERSION_STR[0] == "4":
                             lw.setItemSelected(item, True)
                         else:
@@ -172,7 +173,7 @@ class ModifiersList(QDialog):
         returns list of selected modifiers
         """
         modifiers = []
-        for idx in sorted(self.modifiers_dict.keys()):
+        for idx in sorted_keys(self.modifiers_dict):
 
             self.modifiers_dict[idx]["selected"] = []
             if self.modifiers_dict[idx]["type"] == config.MULTI_SELECTION:
