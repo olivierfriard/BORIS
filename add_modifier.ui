@@ -41,7 +41,7 @@
           <widget class="QLineEdit" name="leCode"/>
          </item>
          <item>
-          <widget class="QLabel" name="label">
+          <widget class="QLabel" name="lbCodeHelp">
            <property name="text">
             <string>Key code is case insensitive. Type one character or a function key (F1, F2... F12)</string>
            </property>
@@ -157,10 +157,15 @@
              <string>Multiple selection</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Numeric</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="lbValues">
            <property name="text">
             <string>Values</string>
            </property>

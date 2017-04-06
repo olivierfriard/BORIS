@@ -40,6 +40,7 @@ import dialog
 from config import *
 from utilities import sorted_keys
 
+
 class addModifierDialog(QDialog, Ui_Dialog):
 
     tabMem = -1
@@ -49,8 +50,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         super(addModifierDialog, self).__init__(parent)
         self.setupUi(self)
-
-        #self.modifierStr = modifiersStr
 
         self.pbAddModifier.clicked.connect(self.addModifier)
         self.pbAddModifier.setIcon(QIcon(":/frame_forward"))
@@ -74,8 +73,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.leSetName.textChanged.connect(self.set_name_changed)
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
-
-        # store modifiers in list
 
         self.modifiers_sets_dict = eval(modifiers_str)
 
@@ -107,23 +104,23 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if not self.modifiers_sets_dict:
             self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
-
+        # disable if modifier numeric
+        for obj in [self.lbValues, self.lwModifiers, self.leModifier, self.leCode, self.lbModifier, self.lbCode, self.lbCodeHelp, self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier]:
+            obj.setEnabled(self.cbType.currentIndex() != NUMERIC_MODIFIER)
 
     def moveSetLeft(self):
         """
         move selected modifiers set left
         """
-
         if self.tabWidgetModifiersSets.currentIndex():
             self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() - 1)], self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] = dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]), dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex()-1)])
-            self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() - 1 )
+            self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() - 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
     def moveSetRight(self):
         """
         move selected modifiers set right
         """
-
         if self.tabWidgetModifiersSets.currentIndex() < self.tabWidgetModifiersSets.count() - 1:
             self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)],  self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] =  dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]), dict(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex() + 1)])
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.currentIndex() + 1)
@@ -134,7 +131,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         move up the selected modifier
         """
-
         if self.lwModifiers.currentRow() >= 0:
             currentRow = self.lwModifiers.currentRow()
             currentItem = self.lwModifiers.takeItem(currentRow)
@@ -153,6 +149,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.lwModifiers.insertItem(currentRow + 1, currentItem)
             self.lwModifiers.setCurrentItem(currentItem)
             self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
+
 
     def addSet(self):
         """
@@ -204,7 +201,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         remove modifier from set
         """
-
         if self.lwModifiers.currentIndex().row() >= 0:
             self.lwModifiers.takeItem(self.lwModifiers.currentIndex().row())
             self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]
@@ -288,7 +284,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
     def getModifiers(self):
         keys_to_delete = []
         for idx in self.modifiers_sets_dict:
-            if not self.modifiers_sets_dict[idx]["values"]:
+            if self.modifiers_sets_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION] and not self.modifiers_sets_dict[idx]["values"]:
                 keys_to_delete.append(idx)
 
         for idx in keys_to_delete:

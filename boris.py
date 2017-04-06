@@ -909,8 +909,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                                                             behav["excluded"],
                                                                                                                             ))
 
-
-
     def send_project_via_socket(self):
         """
         send project to a device via socket
@@ -1570,26 +1568,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.resize(640, 640)
         self.mapCreatorWindow.show()
 
-
-    def open_observation(self):
+    def load_observation(self, obsId):
         """
-        open an observation
+        load observation obsId
         """
+        print(obsId)
+        if obsId in self.pj[OBSERVATIONS]:
 
-        # check if current observation must be closed to open a new one
-        if self.observationId:
-            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
-            if response == NO:
-                return
-            else:
-                self.close_observation()
-
-        result, selectedObs = self.selectObservations(OPEN)
-
-        if selectedObs:
-            self.observationId = selectedObs[0]
-
-            # load events in table widget
+            self.observationId = obsId
             self.loadEventsInTW(self.observationId)
 
             if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
@@ -1602,11 +1588,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.observationId = ""
                     self.twEvents.setRowCount(0)
                     self.menu_options()
-                    return
+                    return "Error: loading observation problem"
 
             self.menu_options()
             # title of dock widget  “  ”
             self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
+            return ""
+
+        else:
+            return "Error: Observation not found"
+
+
+    def open_observation(self):
+        """
+        open an observation
+        """
+
+        # check if current observation must be closed to open a new one
+        if self.observationId:
+            response = dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO])
+            if response == NO:
+                return ""
+            else:
+                self.close_observation()
+
+        result, selectedObs = self.selectObservations(OPEN)
+
+        if selectedObs:
+            return self.load_observation(selectedObs[0])
+        else:
+            return ""
 
 
     def edit_observation(self):
@@ -3152,7 +3163,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if INDEPENDENT_VARIABLES in self.pj:
-            for idx in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
                 column_type.append(self.pj[INDEPENDENT_VARIABLES][idx]["type"])
 
@@ -3341,7 +3352,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if INDEPENDENT_VARIABLES in self.pj:
 
             observationWindow.twIndepVariables.setRowCount(0)
-            for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+            for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
 
                 observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
@@ -3375,6 +3386,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if txt in self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(","):
                         comboBox.setCurrentIndex(self.pj[INDEPENDENT_VARIABLES][i]["possible values"].split(",").index(txt))
                     observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1, 2, comboBox)
+
+                elif self.pj[INDEPENDENT_VARIABLES][i]["type"] == TIMESTAMP:
+                    cal = QDateTimeEdit()
+                    cal.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+                    cal.setCalendarPopup(True)
+                    if txt:
+                        cal.setDateTime(QDateTime.fromString(txt, "yyyy-MM-ddThh:mm:ss"))
+                    observationWindow.twIndepVariables.setCellWidget(observationWindow.twIndepVariables.rowCount() - 1, 2, cal)
                 else:
                     item.setText(txt)
                     observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2, item)
@@ -3495,8 +3514,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         rv = observationWindow.exec_()
 
-        print("rv", rv)
-
         if rv:
 
             self.projectChanged = True
@@ -3530,6 +3547,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # set dictionary as label (col 0) => value (col 2)
                 if observationWindow.twIndepVariables.item(r, 1).text() == SET_OF_VALUES:
                     self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = observationWindow.twIndepVariables.cellWidget(r, 2).currentText()
+                elif observationWindow.twIndepVariables.item(r, 1).text() == TIMESTAMP:
+                    self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = observationWindow.twIndepVariables.cellWidget(r, 2).dateTime().toString(Qt.ISODate)
                 else:
                     self.pj[OBSERVATIONS][new_obs_id][INDEPENDENT_VARIABLES][observationWindow.twIndepVariables.item(r, 0).text()] = observationWindow.twIndepVariables.item(r, 2).text()
 
@@ -5545,7 +5564,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if mode == NEW:
-
             if self.projectChanged:
                 response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
 
@@ -5560,11 +5578,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twSubjects.setRowCount(0)
             self.twEvents.setRowCount(0)
 
-
         newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
 
         if self.projectWindowGeometry:
-            newProjectWindow.restoreGeometry( self.projectWindowGeometry)
+            newProjectWindow.restoreGeometry(self.projectWindowGeometry)
 
         newProjectWindow.setWindowTitle(mode + " project")
         newProjectWindow.tabProject.setCurrentIndex(0)   # project information
@@ -5579,7 +5596,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             newProjectWindow.rbHMS.setChecked(True)
 
         if mode == NEW:
-
             newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
             newProjectWindow.lbProjectFilePath.setText("")
 
@@ -5598,7 +5614,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.dteDate.setDateTime(q)
             else:
                 newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
-
 
             # load subjects in editor
             if self.pj[SUBJECTS]:
@@ -5683,25 +5698,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
 
-
-
             # load independent variables
             if INDEPENDENT_VARIABLES in self.pj:
-                for i in [str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+                for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
                     signalMapper = QSignalMapper(self)
                     for idx, field in enumerate(tw_indVarFields):
                         if field == "type":
                             combobox = QComboBox()
-                            combobox.addItems([NUMERIC, TEXT, SET_OF_VALUES])
-                            combobox.setCurrentIndex(NUMERIC_idx)
-                            if self.pj[INDEPENDENT_VARIABLES][i][field] == TEXT:
-                                combobox.setCurrentIndex(TEXT_idx)
-                            if self.pj[INDEPENDENT_VARIABLES][i][field] == SET_OF_VALUES:
-                                combobox.setCurrentIndex(SET_OF_VALUES_idx)
-                            newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2,
-                                                                       combobox)
+                            combobox.addItems(AVAILABLE_INDEP_VAR_TYPES)
+                            combobox.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.pj[INDEPENDENT_VARIABLES][i][field]))
+
+                            newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, combobox)
                             signalMapper.setMapping(combobox, newProjectWindow.twVariables.rowCount() - 1)
                             combobox.currentIndexChanged["int"].connect(signalMapper.map)
                             signalMapper.mapped["int"].connect(newProjectWindow.variableTypeChanged)
@@ -5710,6 +5719,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             item = QTableWidgetItem("")
                             if field in self.pj[INDEPENDENT_VARIABLES][i]:
                                 item.setText(self.pj[INDEPENDENT_VARIABLES][i][field])
+                            #else:
+                            #    item.setText("NA")
                             if field == "possible values":
                                 item.setFlags(Qt.ItemIsEnabled)
 
@@ -5906,7 +5917,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbCurrentStates.setText('%s' % (', '.join(self.currentStates[ '' ])))
 
         # show selected subjects
-        for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
+        for idx in sorted_keys(self.pj[SUBJECTS]):  #[str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
             self.twSubjects.item(int(idx), len(subjectsFields) ).setText(','.join(self.currentStates[idx]))
 
         # check scan sampling
@@ -7275,7 +7286,7 @@ item []:
                 self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
 
                 # show current states in subjects table
-                for idx in [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
+                for idx in sorted_keys(self.pj[SUBJECTS]):  #[str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
                     self.twSubjects.item(int(idx), len(subjectsFields)).setText(",".join(self.currentStates[idx]))
 
                 mediaName = self.mediaplayer.get_media().get_meta(0)
@@ -7358,13 +7369,6 @@ item []:
                     for col in sorted(behav_fields_in_mainwindow.keys()):
                         field = behav_fields_in_mainwindow[col]
                         self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
-
-                        '''
-                        if field == "modifiers":
-                            self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
-                        else:
-                            self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(self.pj[ETHOGRAM][idx][field]))
-                        '''
         if self.twEthogram.rowCount() < len(self.pj[ETHOGRAM].keys()):
             self.dwEthogram.setWindowTitle("Ethogram (filtered {0}/{1})".format(self.twEthogram.rowCount(), len(self.pj[ETHOGRAM].keys())))
 
@@ -7468,47 +7472,6 @@ item []:
         return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
 
-    def select_modifiers_from_set(self, modifier_name, set_of_modifiers):
-        """
-        selection of elements from a set
-        """
-        paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.setWindowTitle("Modifier")
-        paramPanelWindow.lbBehaviors.setText("Select the element(s) for modifier <b>{}</b>".format(modifier_name))
-        paramPanelWindow.lwSubjects.setVisible(False)
-
-        paramPanelWindow.pbSelectAllSubjects.setVisible(False)
-        paramPanelWindow.pbUnselectAllSubjects.setVisible(False)
-        paramPanelWindow.pbReverseSubjectsSelection.setVisible(False)
-
-        paramPanelWindow.lbSubjects.setVisible(False)
-        paramPanelWindow.cbIncludeModifiers.setVisible(False)
-        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-        paramPanelWindow.lbStartTime.setVisible(False)
-        paramPanelWindow.teStartTime.setVisible(False)
-        paramPanelWindow.dsbStartTime.setVisible(False)
-        paramPanelWindow.lbEndTime.setVisible(False)
-        paramPanelWindow.teEndTime.setVisible(False)
-        paramPanelWindow.dsbEndTime.setVisible(False)
-
-        for modifier in set_of_modifiers:
-            paramPanelWindow.item = QListWidgetItem(modifier)
-            '''
-            if subject in filtered_subjects:
-                paramPanelWindow.item.setCheckState(Qt.Checked)
-            else:
-                paramPanelWindow.item.setCheckState(Qt.Unchecked)
-            '''
-            paramPanelWindow.item.setCheckState(Qt.Unchecked)
-            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
-
-        if paramPanelWindow.exec_():
-            return paramPanelWindow.selectedBehaviors
-        else:
-            return []
-
-
-
     def writeEvent(self, event, memTime):
         """
         add event from pressed key to observation
@@ -7553,102 +7516,24 @@ item []:
                             if memState == vlc.State.Playing:
                                 self.pause_video()
 
-                # check if more sets
-                '''
-                modifiersList = []
-                if "|" not in event["modifiers"]:
-                    modifiersList = [event["modifiers"]]
-                else:
-                    modifiersList = event["modifiers"].split("|")
-                '''
-
-                d = event["modifiers"]
-                #m = dict([[int(i), d[i]] for i in d])
-
-                '''
-                m = {}
-                for modifier_string in modifiersList:
-
-                    if "," in modifier_string:
-                        if "~" in modifier_string:
-                            modifier_name, modifier_elements = modifier_string.split("~")
-                        else:
-                            modifier_name, modifier_elements = "#" + str(len(m)+1), modifier_string
-                        m[len(m)] = {"type": SINGLE_SELECTION, "name": modifier_name,"elements": [s.strip() for s in modifier_elements.split(",")]}
-
-                    if "`" in modifier_string:
-                        modifier_name, modifier_elements = modifier_string.split("~")
-                        m[len(m)] = {"type": MULTI_SELECTION, "name": modifier_name, "elements": modifier_elements.split("`")}
-                '''
-
-
                 # check if editing (original_modifiers key)
                 currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                modifierSelector = select_modifiers.ModifiersList(event["code"], event["modifiers"], currentModifiers)
+                modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
 
                 if modifierSelector.exec_():
                     selected_modifiers = modifierSelector.getModifiers()
+
                     modifier_str = ""
                     for idx in sorted_keys(selected_modifiers):
                         if modifier_str:
                             modifier_str += "|"
-                        modifier_str += ",".join(selected_modifiers[idx]["selected"])
+                        if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
+                            modifier_str += ",".join(selected_modifiers[idx]["selected"])
+                        if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
+                            modifier_str += selected_modifiers[idx]["selected"]
                 else:
                     modifier_str = currentModifiers
-
-                #modifier_str = modifier_str.replace("#@#", "")
-
-
-
-                '''
-                modifiersList = []  # modifiers type 1 "classic"
-                modifiers_from_set = [] # modifier from set
-                if "|" in event["modifiers"]:
-                    for modifiersString in event["modifiers"].split("|"):
-                        if "~" in modifiersString:
-                            modifiers_from_set.append(modifiersString)
-                        else:
-                            modifiersList.append([s.strip() for s in modifiersString.split(",")])
-                else:
-                    if "~" in event["modifiers"]:
-                        modifiers_from_set.append(event["modifiers"])
-                    else:
-                        modifiersList.append([s.strip() for s in event["modifiers"].split(",")])
-
-                # check if editing (original_modifiers key)
-                currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
-
-                # choose modifier from set
-
-                if modifiers_from_set:
-                    for modifier_set in modifiers_from_set:
-                        modifier_name, modifier_elements = modifier_set.split("~")
-                        print("choose for modifier {} from set {}".format(modifier_name, modifier_elements))
-                        selected_elements = self.select_modifiers_from_set(modifier_name, modifier_elements.split("`"))
-                        print(selected_elements)
-                        if modifier_str:
-                            modifier_str += "|"
-                        modifier_str += "~".join(selected_elements)
-
-                # modifiers type 1
-                if modifiersList:
-                    modifierSelector = select_modifiers.ModifiersList(event["code"], modifiersList, currentModifiers)
-
-                    if modifierSelector.exec_():
-                        modifiers = modifierSelector.getModifiers()
-                        if len(modifiers) == 1:
-                            modifier_str = modifiers[0]
-                            if modifier_str == "None":
-                                modifier_str = ""
-                        else:
-                            modifier_str = "|".join(modifiers)
-                    else:
-                        if currentModifiers: # editing
-                            modifier_str = currentModifiers
-                        else:
-                            return
-                '''
 
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -9425,9 +9310,15 @@ if __name__=="__main__":
     app.setApplicationName(programName)
     window = MainWindow(availablePlayers, ffmpeg_bin)
 
+    # open project/start observation on command line
     if args:
-        logging.debug("args[0]: " + os.path.abspath(args[0]))
-        window.open_project_json(os.path.abspath(args[0]))
+        logging.debug("args: {}".format(args))
+        if len(args) > 0:
+            window.open_project_json(os.path.abspath(args[0]))
+            if len(args) > 1:
+                r = window.load_observation(args[1])
+                if r:
+                    QMessageBox.warning(None, programName, "Error opening observation: <b>{}</b><br>{}".format(args[1], r.split(":")[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     window.show()
     window.raise_()

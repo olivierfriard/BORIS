@@ -131,12 +131,19 @@ SELECT1 = 'select1'
 
 FILTERED_BEHAVIORS = "filtered behaviors"
 
+
+# indep variables
 NUMERIC = "numeric"
 NUMERIC_idx = 0
 TEXT = "text"
 TEXT_idx = 1
 SET_OF_VALUES = "value from set"
 SET_OF_VALUES_idx = 2
+TIMESTAMP = "timestamp"
+TIMESTAMP_idx = 3
+
+AVAILABLE_INDEP_VAR_TYPES = [NUMERIC, TEXT, SET_OF_VALUES, TIMESTAMP]
+
 
 INDEPENDENT_VARIABLES = 'independent_variables'
 OBSERVATIONS = 'observations'
@@ -169,6 +176,7 @@ FRAME_DEFAULT_BITMAT_FORMAT = "JPG"
 # modifiers
 SINGLE_SELECTION = 0
 MULTI_SELECTION = 1
+NUMERIC_MODIFIER = 2
 
 
 #colors
