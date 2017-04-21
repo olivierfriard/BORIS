@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Fri Apr 21 13:19:36 2017
+# Created: Fri Apr 21 15:17:23 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -264,6 +264,11 @@ class Ui_dlgProject(object):
         self.dte_default_date = QtGui.QDateTimeEdit(self.tabIndependentVariables)
         self.dte_default_date.setObjectName(_fromUtf8("dte_default_date"))
         self.gridLayout.addWidget(self.dte_default_date, 4, 2, 1, 1)
+        self.label_9 = QtGui.QLabel(self.tabIndependentVariables)
+        self.label_9.setObjectName(_fromUtf8("label_9"))
+        self.gridLayout.addWidget(self.label_9, 4, 0, 1, 1)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem2, 7, 0, 1, 1)
         self.verticalLayout_2.addLayout(self.gridLayout)
         self.horizontalLayout_3.addLayout(self.verticalLayout_2)
         self.verticalLayout_12 = QtGui.QVBoxLayout()
@@ -277,8 +282,8 @@ class Ui_dlgProject(object):
         self.pbImportVarFromProject = QtGui.QPushButton(self.tabIndependentVariables)
         self.pbImportVarFromProject.setObjectName(_fromUtf8("pbImportVarFromProject"))
         self.verticalLayout_12.addWidget(self.pbImportVarFromProject)
-        spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout_12.addItem(spacerItem2)
+        spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_12.addItem(spacerItem3)
         self.horizontalLayout_3.addLayout(self.verticalLayout_12)
         self.horizontalLayout_5.addLayout(self.horizontalLayout_3)
         self.tabProject.addTab(self.tabIndependentVariables, _fromUtf8(""))
@@ -310,16 +315,16 @@ class Ui_dlgProject(object):
         self.pbRemoveObservation = QtGui.QPushButton(self.tabObservations)
         self.pbRemoveObservation.setObjectName(_fromUtf8("pbRemoveObservation"))
         self.verticalLayout.addWidget(self.pbRemoveObservation)
-        spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem3)
+        spacerItem4 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout.addItem(spacerItem4)
         self.horizontalLayout.addLayout(self.verticalLayout)
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         self.tabProject.addTab(self.tabObservations, _fromUtf8(""))
         self.verticalLayout_6.addWidget(self.tabProject)
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem4)
+        spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(spacerItem5)
         self.pbCancel = QtGui.QPushButton(dlgProject)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout_4.addWidget(self.pbCancel)
@@ -404,6 +409,7 @@ class Ui_dlgProject(object):
         self.label_5.setText(_translate("dlgProject", "Set of values (separated by comma)", None))
         self.pbCancelVar.setText(_translate("dlgProject", "Cancel", None))
         self.pbSaveVariable.setText(_translate("dlgProject", "Save", None))
+        self.label_9.setText(_translate("dlgProject", "Predefined date", None))
         self.pbAddVariable.setText(_translate("dlgProject", "Add variable", None))
         self.pbRemoveVariable.setText(_translate("dlgProject", "Remove variable", None))
         self.pbImportVarFromProject.setText(_translate("dlgProject", "Import variables\n"

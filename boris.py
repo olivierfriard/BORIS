@@ -5765,9 +5765,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.project = True
 
-            self.pj['project_name'] = newProjectWindow.leProjectName.text()
-            self.pj['project_date'] = newProjectWindow.dteDate.dateTime().toString(Qt.ISODate)
-            self.pj['project_description'] = newProjectWindow.teDescription.toPlainText()
+            self.pj["project_name"] = newProjectWindow.leProjectName.text()
+            self.pj["project_date"] = newProjectWindow.dteDate.dateTime().toString(Qt.ISODate)
+            self.pj["project_description"] = newProjectWindow.teDescription.toPlainText()
 
             # time format
             if newProjectWindow.rbSeconds.isChecked():
@@ -5776,7 +5776,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if newProjectWindow.rbHMS.isChecked():
                 self.timeFormat = HHMMSS
 
-            self.pj['time_format'] = self.timeFormat
+            self.pj["time_format"] = self.timeFormat
 
             # configuration
             if newProjectWindow.lbObservationsState.text() != "":

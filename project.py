@@ -334,16 +334,37 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     self.twVariables.item(row, tw_indVarFields.index("label")).text()))
 
 
+    def check_indep_var_config(self):
+        # check if default type is compatible with var type
+        self.lePredefined.setStyleSheet("color: rgb(0, 0, 0);")
+        if self.cbType.currentText() != TIMESTAMP and not self.check_variable_default_value(self.lePredefined.text(), self.cbType.currentText()):
+            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
+            return False, "The default value is not compatible with the variable type"
+
+        # check if default value in set of values
+        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() == "":
+            return False, "No values were defined in set"
+
+        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() and self.lePredefined.text() not in self.leSetValues.text().split(","):
+            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
+            return False
+
+        return True, "OK"
+
+
+
     def cbtype_changed(self):
 
-        print(self.cbType.currentText())
-        newType = self.cbType.currentText()
+        self.leSetValues.setVisible(self.cbType.currentText() == SET_OF_VALUES)
+        self.label_5.setVisible(self.cbType.currentText() == SET_OF_VALUES)
 
-        self.leSetValues.setVisible(newType == SET_OF_VALUES)
-        self.label_5.setVisible(newType == SET_OF_VALUES)
+        self.dte_default_date.setVisible(self.cbType.currentText() == TIMESTAMP)
+        self.label_9.setVisible(self.cbType.currentText() == TIMESTAMP)
+        self.lePredefined.setVisible(self.cbType.currentText() != TIMESTAMP)
+        self.label_4.setVisible(self.cbType.currentText() != TIMESTAMP)
 
-        self.dte_default_date.setVisible(newType == TIMESTAMP)
-        self.lePredefined.setVisible(not newType == TIMESTAMP)
+        self.check_indep_var_config()
+
 
 
     def pbSaveVariable_clicked(self):
@@ -355,13 +376,20 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twVariables.item(row, 0).text().upper() == self.leLabel.text().upper():
         '''
 
+        r, msg = self.check_indep_var_config()
+        if not r:
+            QMessageBox.warning(self, programName + " - Independent variables error", msg)
+            return
+
         self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
         self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
         self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
         self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
 
         # remove spaces after and before comma
-        self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")])     )
+        self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
+
+
 
 
 
@@ -391,27 +419,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.cbType.setCurrentIndex(NUMERIC_idx)
 
 
-        '''
-        signalMapper = QSignalMapper(self)
-        for idx, field in enumerate(tw_indVarFields):
-
-            if field == "type":
-                # add type combobox
-                comboBox = QComboBox()
-                comboBox.addItems(AVAILABLE_INDEP_VAR_TYPES)
-                comboBox.setCurrentIndex(NUMERIC_idx)
-                self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
-                signalMapper.setMapping(comboBox, self.twVariables.rowCount() - 1)
-                comboBox.currentIndexChanged["int"].connect(signalMapper.map)
-                signalMapper.mapped["int"].connect(self.variableTypeChanged)
-            else:
-                if field == "possible values":
-                    item = QTableWidgetItem("NA")
-                    item.setFlags(Qt.ItemIsEnabled)
-                else:
-                    item = QTableWidgetItem("")
-                self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
-        '''
 
     '''
     def twVariables_cellDoubleClicked(self, row, column):
@@ -1189,33 +1196,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.cbType.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
 
-        flagOK = True
-        '''
-        for r in range(self.twVariables.rowCount()):
-            try:
-                if not self.check_variable_default_value(self.twVariables.item(r, tw_indVarFields.index("default value")).text(),
-                       self.twVariables.cellWidget(r, tw_indVarFields.index("type")).currentIndex()):
-                    QMessageBox.warning(self, programName + " - Independent variables error", "The default value ({0}) of variable <b>{1}</b> is not compatible with variable type".format(self.twVariables.item(r, tw_indVarFields.index('default value')).text(), self.twVariables.item(r, tw_indVarFields.index('label')).text()))
-                    flagOK = False
-                    break
-            except:
-                pass
-
-            try:
-                if (self.twVariables.item(r, tw_indVarFields.index("default value")).text()
-                and self.twVariables.item(r, tw_indVarFields.index("possible values")).text()
-                and self.twVariables.item(r, tw_indVarFields.index("possible values")).text() not in ["NA", "Double-click to add values"]):
-                    if self.twVariables.item(r, tw_indVarFields.index("default value")).text() not in self.twVariables.item(r, tw_indVarFields.index("possible values")).text().split(","):
-                        QMessageBox.warning(self, programName + " - Independent variables error", "The default value (<b>{0}</b>) of variable <b>{1}</b> is not in the set of accepted values".format(
-                                            self.twVariables.item(r, tw_indVarFields.index("default value")).text(),
-                                            self.twVariables.item(r, tw_indVarFields.index("label")).text()))
-                        flagOK = False
-                        break
-            except:
-                pass
-
-        '''
-        return flagOK
+        self.check_indep_var_config()
 
 
     def pbRemoveObservation_clicked(self):
@@ -1388,6 +1369,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             row = {}
             for idx, field in enumerate(tw_indVarFields):
 
+                '''
                 if field == "type":
                     combobox = self.twVariables.cellWidget(r, idx)
                     row[field] = AVAILABLE_INDEP_VAR_TYPES[combobox.currentIndex()]
@@ -1398,14 +1380,15 @@ class projectDialog(QDialog, Ui_dlgProject):
                             return
 
                 else:
-                    if self.twVariables.item(r, idx):
-                        if field == "possible values":
-                            if self.twVariables.cellWidget(r, tw_indVarFields.index("type")).currentIndex() == SET_OF_VALUES_idx:
-                                row[field] = self.twVariables.item(r, idx).text()
-                        else:
+                '''
+                if self.twVariables.item(r, idx):
+                    if field == "possible values":
+                        if self.twVariables.cellWidget(r, tw_indVarFields.index("type")).currentIndex() == SET_OF_VALUES_idx:
                             row[field] = self.twVariables.item(r, idx).text()
                     else:
-                        row[field] = ""
+                        row[field] = self.twVariables.item(r, idx).text()
+                else:
+                    row[field] = ""
 
             self.indVar[str(len(self.indVar))] = row
 
