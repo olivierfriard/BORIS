@@ -188,8 +188,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         # independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
-        self.twVariables.cellChanged[int, int].connect(self.twVariables_cellChanged)
-        self.twVariables.cellDoubleClicked[int, int].connect(self.twVariables_cellDoubleClicked)
+
+        #self.twVariables.cellChanged[int, int].connect(self.twVariables_cellChanged)
+
+        #self.twVariables.cellDoubleClicked[int, int].connect(self.twVariables_cellDoubleClicked)
+        self.twVariables.cellClicked[int, int].connect(self.twVariables_cellClicked)
+
+        self.cbType.currentIndexChanged.connect(self.cbtype_changed)
+        self.pbSaveVariable.clicked.connect(self.pbSaveVariable_clicked)
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
@@ -328,6 +334,36 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     self.twVariables.item(row, tw_indVarFields.index("label")).text()))
 
 
+    def cbtype_changed(self):
+
+        print(self.cbType.currentText())
+        newType = self.cbType.currentText()
+
+        self.leSetValues.setVisible(newType == SET_OF_VALUES)
+        self.label_5.setVisible(newType == SET_OF_VALUES)
+
+        self.dte_default_date.setVisible(newType == TIMESTAMP)
+        self.lePredefined.setVisible(not newType == TIMESTAMP)
+
+
+    def pbSaveVariable_clicked(self):
+        """
+        save variable to table
+        """
+        '''
+        for row in range(self.twVariables.rowCount()):
+            if self.twVariables.item(row, 0).text().upper() == self.leLabel.text().upper():
+        '''
+
+        self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
+        self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
+        self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
+        self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
+
+        # remove spaces after and before comma
+        self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")])     )
+
+
 
 
     def pbAddVariable_clicked(self):
@@ -337,6 +373,25 @@ class projectDialog(QDialog, Ui_dlgProject):
         logging.debug("add an independent variable")
 
         self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
+        self.selected_twvariables_row = self.twVariables.rowCount() - 1
+
+        for idx, field in enumerate(tw_indVarFields):
+            item = QTableWidgetItem("")
+            #item.setFlags(Qt.ItemIsEnabled)
+            self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
+
+        self.twVariables.setCurrentCell(self.twVariables.rowCount() - 1, 0)
+
+
+
+        for w in [self.leLabel, self.leDescription, self.lePredefined, self.leSetValues, self.cbType]:
+            w.clear()
+
+        self.cbType.addItems(AVAILABLE_INDEP_VAR_TYPES)
+        self.cbType.setCurrentIndex(NUMERIC_idx)
+
+
+        '''
         signalMapper = QSignalMapper(self)
         for idx, field in enumerate(tw_indVarFields):
 
@@ -356,8 +411,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 else:
                     item = QTableWidgetItem("")
                 self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
+        '''
 
-
+    '''
     def twVariables_cellDoubleClicked(self, row, column):
 
         # check if double click on coding map
@@ -382,7 +438,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 print("cal")
                 self.cal = calendar.Calendar()
                 self.cal.exec_()
-
+    '''
 
     def pbRemoveVariable_clicked(self):
         """
@@ -395,6 +451,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         else:
             if dialog.MessageDialog(programName, "Remove the selected variable?", [YES, CANCEL]) == YES:
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
+
+        if self.twVariables.selectedIndexes():
+            self.selected_twvariables_row = self.twVariables.selectedIndexes()[0].row()
+
+        self.twVariables_cellClicked(self.selected_twvariables_row, 0)
+
 
 
     def pbImportVarFromProject_clicked(self):
@@ -436,24 +498,25 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                         item = QTableWidgetItem()
 
+                        '''
                         if field == "type":
 
                             comboBox = QComboBox()
                             comboBox.addItems(AVAILABLE_INDEP_VAR_TYPES)
 
                             for idx2, var_type in enumerate(AVAILABLE_INDEP_VAR_TYPES):
-                            #for idx2, var_type in [(NUMERIC_idx, NUMERIC), (TEXT_idx, TEXT), (SET_OF_VALUES_idx, SET_OF_VALUES)]:
                                 if project[INDEPENDENT_VARIABLES][i][field] == var_type:
                                     comboBox.setCurrentIndex(idx2)
 
                             self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
 
                         else:
-                            if field in project[INDEPENDENT_VARIABLES][i]:
-                                item.setText(project[INDEPENDENT_VARIABLES][i][field])
-                            else:
-                                item.setText("")
-                            self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
+                        '''
+                        if field in project[INDEPENDENT_VARIABLES][i]:
+                            item.setText(project[INDEPENDENT_VARIABLES][i][field])
+                        else:
+                            item.setText("")
+                        self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
                 self.twVariables.resizeColumnsToContents()
 
@@ -1108,11 +1171,26 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
 
-    def twVariables_cellChanged(self, row, column):
+    def twVariables_cellClicked(self, row, column):
         """
         check if variable default values are compatible with variable type
         """
+
+        self.selected_twvariables_row = row
+
+        self.leLabel.setText(self.twVariables.item(row, 0).text())
+        self.leDescription.setText(self.twVariables.item(row, 1).text())
+        self.lePredefined.setText(self.twVariables.item(row, 3).text())
+        self.leSetValues.setText(self.twVariables.item(row, 4).text())
+
+        self.cbType.clear()
+        self.cbType.addItems(AVAILABLE_INDEP_VAR_TYPES)
+        self.cbType.setCurrentIndex(NUMERIC_idx)
+
+        self.cbType.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
+
         flagOK = True
+        '''
         for r in range(self.twVariables.rowCount()):
             try:
                 if not self.check_variable_default_value(self.twVariables.item(r, tw_indVarFields.index("default value")).text(),
@@ -1136,7 +1214,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             except:
                 pass
 
+        '''
         return flagOK
+
 
     def pbRemoveObservation_clicked(self):
         """

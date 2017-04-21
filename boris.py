@@ -5560,7 +5560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.observationId:
-            QMessageBox.warning(self, programName , "Close the running observation before creating/modifying the project.")
+            QMessageBox.warning(self, programName , "You must close the current observation before creating a new project or modifying the current project.")
             return
 
         if mode == NEW:
@@ -5606,18 +5606,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName )
 
-            if self.pj['project_description']:
+            if self.pj["project_description"]:
                 newProjectWindow.teDescription.setPlainText(self.pj["project_description"])
 
-            if self.pj['project_date']:
-                q = QDateTime.fromString(self.pj["project_date"], "yyyy-MM-ddThh:mm:ss")
-                newProjectWindow.dteDate.setDateTime(q)
+            if self.pj["project_date"]:
+                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(self.pj["project_date"], "yyyy-MM-ddThh:mm:ss"))
             else:
                 newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
             # load subjects in editor
             if self.pj[SUBJECTS]:
-                for idx in sorted_keys(self.pj[SUBJECTS]):   #   [str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys() ])]:
+                for idx in sorted_keys(self.pj[SUBJECTS]):
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
                     for i, field in enumerate(subjectsFields):
                         item = QTableWidgetItem(self.pj[SUBJECTS][idx][field])
@@ -5703,8 +5702,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
-                    signalMapper = QSignalMapper(self)
+                    '''signalMapper = QSignalMapper(self)'''
                     for idx, field in enumerate(tw_indVarFields):
+                        '''
                         if field == "type":
                             combobox = QComboBox()
                             combobox.addItems(AVAILABLE_INDEP_VAR_TYPES)
@@ -5715,16 +5715,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             combobox.currentIndexChanged["int"].connect(signalMapper.map)
                             signalMapper.mapped["int"].connect(newProjectWindow.variableTypeChanged)
 
-                        else:
-                            item = QTableWidgetItem("")
-                            if field in self.pj[INDEPENDENT_VARIABLES][i]:
-                                item.setText(self.pj[INDEPENDENT_VARIABLES][i][field])
-                            #else:
-                            #    item.setText("NA")
-                            if field == "possible values":
-                                item.setFlags(Qt.ItemIsEnabled)
 
-                            newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
+                        else:
+                        '''
+                        item = QTableWidgetItem("")
+                        #item.setFlags(Qt.ItemIsEnabled)
+                        if field in self.pj[INDEPENDENT_VARIABLES][i]:
+                            item.setText(self.pj[INDEPENDENT_VARIABLES][i][field])
+                        #else:
+                        #    item.setText("NA")
+                        '''
+                        if field == "possible values":
+                            item.setFlags(Qt.ItemIsEnabled)
+                            if self.pj[INDEPENDENT_VARIABLES][i]["type"] == SET_OF_VALUES:
+                                if self.pj[INDEPENDENT_VARIABLES][i]["possible values"] == "":
+                                    item.setText("Double-click to add values")
+                            else:
+                                item.setText("NA")
+                        '''
+
+                        newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
 
