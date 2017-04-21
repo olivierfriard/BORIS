@@ -509,7 +509,11 @@ from a BORIS project</string>
                 </widget>
                </item>
                <item row="4" column="2">
-                <widget class="QDateTimeEdit" name="dte_default_date"/>
+                <widget class="QDateTimeEdit" name="dte_default_date">
+                 <property name="displayFormat">
+                  <string>yyyy-MM-dd hh:mm</string>
+                 </property>
+                </widget>
                </item>
                <item row="4" column="0">
                 <widget class="QLabel" name="label_9">

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Fri Apr 21 15:17:23 2017
+# Created: Fri Apr 21 15:43:45 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -409,6 +409,7 @@ class Ui_dlgProject(object):
         self.label_5.setText(_translate("dlgProject", "Set of values (separated by comma)", None))
         self.pbCancelVar.setText(_translate("dlgProject", "Cancel", None))
         self.pbSaveVariable.setText(_translate("dlgProject", "Save", None))
+        self.dte_default_date.setDisplayFormat(_translate("dlgProject", "yyyy-MM-dd hh:mm", None))
         self.label_9.setText(_translate("dlgProject", "Predefined date", None))
         self.pbAddVariable.setText(_translate("dlgProject", "Add variable", None))
         self.pbRemoveVariable.setText(_translate("dlgProject", "Remove variable", None))

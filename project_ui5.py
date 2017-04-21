@@ -400,6 +400,7 @@ class Ui_dlgProject(object):
         self.label_5.setText(_translate("dlgProject", "Set of values (separated by comma)"))
         self.pbCancelVar.setText(_translate("dlgProject", "Cancel"))
         self.pbSaveVariable.setText(_translate("dlgProject", "Save"))
+        self.dte_default_date.setDisplayFormat(_translate("dlgProject", "yyyy-MM-dd hh:mm"))
         self.label_9.setText(_translate("dlgProject", "Predefined date"))
         self.pbAddVariable.setText(_translate("dlgProject", "Add variable"))
         self.pbRemoveVariable.setText(_translate("dlgProject", "Remove variable"))

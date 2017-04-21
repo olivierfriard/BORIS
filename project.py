@@ -384,10 +384,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
         self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
         self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
-        self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
+
+
+        if self.cbType.currentText() == TIMESTAMP:
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+        else:
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
 
         # remove spaces after and before comma
-        self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
+        if self.cbType.currentText() == SET_OF_VALUES:
+            self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
 
 
 
