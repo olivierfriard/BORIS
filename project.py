@@ -189,13 +189,21 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
         self.pbRemoveVariable.clicked.connect(self.pbRemoveVariable_clicked)
 
+        self.leLabel.textChanged.connect(self.leLabel_changed)
+        self.leDescription.textChanged.connect(self.leDescription_changed)
+        self.lePredefined.textChanged.connect(self.lePredefined_changed)
+        self.leSetValues.textChanged.connect(self.leSetValues_changed)
+        self.dte_default_date.dateTimeChanged.connect(self.dte_default_date_changed)
+
         #self.twVariables.cellChanged[int, int].connect(self.twVariables_cellChanged)
 
         #self.twVariables.cellDoubleClicked[int, int].connect(self.twVariables_cellDoubleClicked)
         self.twVariables.cellClicked[int, int].connect(self.twVariables_cellClicked)
 
         self.cbType.currentIndexChanged.connect(self.cbtype_changed)
+        '''
         self.pbSaveVariable.clicked.connect(self.pbSaveVariable_clicked)
+        '''
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
@@ -204,6 +212,26 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.reject)
+
+
+    def leLabel_changed(self):
+        self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
+
+    def leDescription_changed(self):
+        self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
+
+    def lePredefined_changed(self):
+        self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
+        r, msg = self.check_indep_var_config()
+        if not r:
+            QMessageBox.warning(self, programName + " - Independent variables error", msg)
+
+    def leSetValues_changed(self):
+        self.twVariables.item(self.selected_twvariables_row, 4).setText(self.leSetValues.text())
+
+    def dte_default_date_changed(self):
+        self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+
 
     def pbBehaviorsCategories_clicked(self):
         """
@@ -295,8 +323,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             except:
                 return False
 
-
-
         return True
 
 
@@ -334,8 +360,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     self.twVariables.item(row, tw_indVarFields.index("label")).text()))
 
 
-    def check_indep_var_config(self):
-        # check if default type is compatible with var type
+    def check_indep_var_config_old(self):
+        """
+        check if default type is compatible with var type
+        """
+
         self.lePredefined.setStyleSheet("color: rgb(0, 0, 0);")
         if self.cbType.currentText() != TIMESTAMP and not self.check_variable_default_value(self.lePredefined.text(), self.cbType.currentText()):
             self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
@@ -352,6 +381,42 @@ class projectDialog(QDialog, Ui_dlgProject):
         return True, "OK"
 
 
+    def check_indep_var_config(self):
+        """
+        check if default type is compatible with var type
+        """
+
+        for r in range(self.twVariables.rowCount()):
+            # check default value
+            if self.twVariables.item(r, 2).text() != TIMESTAMP and not self.check_variable_default_value(self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text()):
+                return False, "Row: {} - The default value ({}) is not compatible with the variable type ({})".format(r + 1, self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text())
+
+            # check if default value in set of values
+            if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
+                return False, "No values were defined in set"
+
+        if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(","):
+            return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
+
+
+        '''
+        self.lePredefined.setStyleSheet("color: rgb(0, 0, 0);")
+        if self.cbType.currentText() != TIMESTAMP and not self.check_variable_default_value(self.lePredefined.text(), self.cbType.currentText()):
+            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
+            return False, "The default value is not compatible with the variable type"
+
+        # check if default value in set of values
+        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() == "":
+            return False, "No values were defined in set"
+
+        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() and self.lePredefined.text() not in self.leSetValues.text().split(","):
+            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
+            return False
+        '''
+
+        return True, "OK"
+
+
 
     def cbtype_changed(self):
 
@@ -363,18 +428,33 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.lePredefined.setVisible(self.cbType.currentText() != TIMESTAMP)
         self.label_4.setVisible(self.cbType.currentText() != TIMESTAMP)
 
-        self.check_indep_var_config()
+
+        if self.cbType.hasFocus():
+            if self.cbType.currentText() == TIMESTAMP:
+                self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+                self.twVariables.item(self.selected_twvariables_row, 4).setText("")
+            else:
+                self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
+                self.twVariables.item(self.selected_twvariables_row, 4).setText("")
+
+            # remove spaces after and before comma
+            if self.cbType.currentText() == SET_OF_VALUES:
+                self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
+
+            self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
+
+            r, msg = self.check_indep_var_config()
+
+            if not r:
+                QMessageBox.warning(self, programName + " - Independent variables error", msg)
 
 
 
+    '''
     def pbSaveVariable_clicked(self):
         """
         save variable to table
         """
-        '''
-        for row in range(self.twVariables.rowCount()):
-            if self.twVariables.item(row, 0).text().upper() == self.leLabel.text().upper():
-        '''
 
         r, msg = self.check_indep_var_config()
         if not r:
@@ -385,7 +465,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
         self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
 
-
         if self.cbType.currentText() == TIMESTAMP:
             self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
         else:
@@ -394,8 +473,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         # remove spaces after and before comma
         if self.cbType.currentText() == SET_OF_VALUES:
             self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
-
-
+    '''
 
 
 
@@ -468,7 +546,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         if self.twVariables.selectedIndexes():
             self.selected_twvariables_row = self.twVariables.selectedIndexes()[0].row()
 
+        '''
         self.twVariables_cellClicked(self.selected_twvariables_row, 0)
+        '''
 
 
 
@@ -1202,7 +1282,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.cbType.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
 
-        self.check_indep_var_config()
+        #self.check_indep_var_config()
 
 
     def pbRemoveObservation_clicked(self):
@@ -1366,33 +1446,17 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # independent variables
 
-        # check if type compatible with predefined value
-        if not self.twVariables_cellChanged(0, 0):
+        r, msg = self.check_indep_var_config()
+        if not r:
+            QMessageBox.warning(self, programName + " - Independent variables error", msg)
             return
 
         self.indVar = {}
         for r in range(self.twVariables.rowCount()):
             row = {}
             for idx, field in enumerate(tw_indVarFields):
-
-                '''
-                if field == "type":
-                    combobox = self.twVariables.cellWidget(r, idx)
-                    row[field] = AVAILABLE_INDEP_VAR_TYPES[combobox.currentIndex()]
-                    if combobox.currentIndex() == SET_OF_VALUES_idx:
-                        if (not self.twVariables.item(r, tw_indVarFields.index("possible values")).text()
-                             or self.twVariables.item(r, tw_indVarFields.index("possible values")).text() == "Double-click to add values"):
-                            QMessageBox.warning(self, programName, "The set of values is not defined for variable <b>{}</b>!".format(self.twVariables.item(r, tw_indVarFields.index("label")).text()))
-                            return
-
-                else:
-                '''
                 if self.twVariables.item(r, idx):
-                    if field == "possible values":
-                        if self.twVariables.cellWidget(r, tw_indVarFields.index("type")).currentIndex() == SET_OF_VALUES_idx:
-                            row[field] = self.twVariables.item(r, idx).text()
-                    else:
-                        row[field] = self.twVariables.item(r, idx).text()
+                    row[field] = self.twVariables.item(r, idx).text()
                 else:
                     row[field] = ""
 
