@@ -488,19 +488,25 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.selected_twvariables_row = self.twVariables.rowCount() - 1
 
         for idx, field in enumerate(tw_indVarFields):
-            item = QTableWidgetItem("")
+            if field == "type":
+                item = QTableWidgetItem("numeric")
+            else:
+                item = QTableWidgetItem("")
             #item.setFlags(Qt.ItemIsEnabled)
             self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
         self.twVariables.setCurrentCell(self.twVariables.rowCount() - 1, 0)
 
+        self.twVariables_cellClicked(self.twVariables.rowCount() - 1, 0)
 
+        '''
 
         for w in [self.leLabel, self.leDescription, self.lePredefined, self.leSetValues, self.cbType]:
             w.clear()
 
         self.cbType.addItems(AVAILABLE_INDEP_VAR_TYPES)
         self.cbType.setCurrentIndex(NUMERIC_idx)
+        '''
 
 
 
@@ -545,10 +551,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if self.twVariables.selectedIndexes():
             self.selected_twvariables_row = self.twVariables.selectedIndexes()[0].row()
-
-        '''
-        self.twVariables_cellClicked(self.selected_twvariables_row, 0)
-        '''
+            self.twVariables_cellClicked(self.selected_twvariables_row, 0)
 
 
 
