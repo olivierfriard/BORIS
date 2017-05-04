@@ -522,6 +522,9 @@
    <property name="text">
     <string>Jump forward</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
   </action>
   <action name="actionLoad_configuration">
    <property name="text">
@@ -712,6 +715,9 @@
    </property>
    <property name="toolTip">
     <string>Jump backward</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
    </property>
   </action>
   <action name="actionEdit_observation">

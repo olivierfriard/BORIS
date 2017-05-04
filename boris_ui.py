@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu May  4 10:55:30 2017
+# Created: Thu May  4 13:54:40 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -569,6 +569,7 @@ class Ui_MainWindow(object):
         self.actionFaster.setText(_translate("MainWindow", "Faster", None))
         self.actionSlower.setText(_translate("MainWindow", "Slower", None))
         self.actionJumpForward.setText(_translate("MainWindow", "Jump forward", None))
+        self.actionJumpForward.setShortcut(_translate("MainWindow", "Ctrl+F", None))
         self.actionLoad_configuration.setText(_translate("MainWindow", "Load configuration", None))
         self.actionDelete_selected_observations.setText(_translate("MainWindow", "Delete selected events", None))
         self.actionDelete_all_observations.setText(_translate("MainWindow", "Delete all events", None))
@@ -606,6 +607,7 @@ class Ui_MainWindow(object):
         self.actionJumpTo.setText(_translate("MainWindow", "Jump to specific time", None))
         self.actionJumpBackward.setText(_translate("MainWindow", "Jump backward", None))
         self.actionJumpBackward.setToolTip(_translate("MainWindow", "Jump backward", None))
+        self.actionJumpBackward.setShortcut(_translate("MainWindow", "Ctrl+B", None))
         self.actionEdit_observation.setText(_translate("MainWindow", "Edit observation", None))
         self.actionCheckUpdate.setText(_translate("MainWindow", "Check for updates", None))
         self.actionExportEvents.setText(_translate("MainWindow", "Export events", None))
