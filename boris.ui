@@ -585,9 +585,6 @@
    <property name="text">
     <string>New project</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
   </action>
   <action name="actionTime_budget">
    <property name="text">
@@ -605,9 +602,6 @@
   <action name="actionOpen_project">
    <property name="text">
     <string>Open project</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionSet_offset">
@@ -639,6 +633,9 @@
    <property name="text">
     <string>New observation</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
   </action>
   <action name="actionSave_observation">
    <property name="text">
@@ -648,6 +645,9 @@
   <action name="actionClose_observation">
    <property name="text">
     <string>Close observation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
   <action name="actionEdit_current_observation">
@@ -749,6 +749,9 @@
    <property name="text">
     <string>Observations list</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
   </action>
   <action name="actionMapCreator">
    <property name="text">
@@ -787,6 +790,9 @@
    <property name="text">
     <string>Open observation</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="actionExportEventTabular_ODS">
    <property name="text">
@@ -816,6 +822,9 @@
   <action name="actionEdit_observation_2">
    <property name="text">
     <string>Edit observation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionCheckStateEvents">

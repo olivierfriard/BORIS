@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Wed Apr  5 16:08:37 2017
+# Created: Thu May  4 10:55:30 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -581,20 +581,20 @@ class Ui_MainWindow(object):
         self.actionMedia_file_information.setText(_translate("MainWindow", "Media file information", None))
         self.actionStart_live_observation.setText(_translate("MainWindow", "Start observation without media file", None))
         self.actionNew_project.setText(_translate("MainWindow", "New project", None))
-        self.actionNew_project.setShortcut(_translate("MainWindow", "Ctrl+N", None))
         self.actionTime_budget.setText(_translate("MainWindow", "Time budget", None))
         self.actionSave_project.setText(_translate("MainWindow", "Save project", None))
         self.actionSave_project.setShortcut(_translate("MainWindow", "Ctrl+S", None))
         self.actionOpen_project.setText(_translate("MainWindow", "Open project", None))
-        self.actionOpen_project.setShortcut(_translate("MainWindow", "Ctrl+O", None))
         self.actionSet_offset.setText(_translate("MainWindow", "Set time offset", None))
         self.actionEdit_project.setText(_translate("MainWindow", "Edit project", None))
         self.actionSave_project_as.setText(_translate("MainWindow", "Save project as ...", None))
         self.actionVisualize_data.setText(_translate("MainWindow", "Plot events", None))
         self.actionPreferences.setText(_translate("MainWindow", "Preferences", None))
         self.actionNew_observation.setText(_translate("MainWindow", "New observation", None))
+        self.actionNew_observation.setShortcut(_translate("MainWindow", "Ctrl+N", None))
         self.actionSave_observation.setText(_translate("MainWindow", "Save current observation", None))
         self.actionClose_observation.setText(_translate("MainWindow", "Close observation", None))
+        self.actionClose_observation.setShortcut(_translate("MainWindow", "Ctrl+Q", None))
         self.actionEdit_current_observation.setText(_translate("MainWindow", "Edit current observation", None))
         self.actionOpen_observation_2.setText(_translate("MainWindow", "Open observation", None))
         self.actionAdd_event.setText(_translate("MainWindow", "Add event", None))
@@ -612,6 +612,7 @@ class Ui_MainWindow(object):
         self.actionExportEventString.setText(_translate("MainWindow", "Export events as behavioural strings", None))
         self.actionClose_project.setText(_translate("MainWindow", "Close project", None))
         self.actionObservationsList.setText(_translate("MainWindow", "Observations list", None))
+        self.actionObservationsList.setShortcut(_translate("MainWindow", "Ctrl+L", None))
         self.actionMapCreator.setText(_translate("MainWindow", "Modifiers coding map creator", None))
         self.actionNormalSpeed.setText(_translate("MainWindow", "Normal speed", None))
         self.actionSnapshot.setText(_translate("MainWindow", "Snapshot", None))
@@ -619,12 +620,14 @@ class Ui_MainWindow(object):
         self.actionExportEventsSQL.setText(_translate("MainWindow", "Structured Query Language (SQL)", None))
         self.actionAggregatedEventsTabularFormat.setText(_translate("MainWindow", "Tab Separated Values (tsv)", None))
         self.actionOpen_observation.setText(_translate("MainWindow", "Open observation", None))
+        self.actionOpen_observation.setShortcut(_translate("MainWindow", "Ctrl+O", None))
         self.actionExportEventTabular_ODS.setText(_translate("MainWindow", "Open Document Spreadsheet (ods)", None))
         self.actionAaaa.setText(_translate("MainWindow", "aaaa", None))
         self.menuCreate_subtitles_2.setText(_translate("MainWindow", "Create subtitles", None))
         self.actionExportEventTabular_XLS.setText(_translate("MainWindow", "Microsoft Excel format (xls)", None))
         self.actionUser_guide.setText(_translate("MainWindow", "User guide", None))
         self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
+        self.actionEdit_observation_2.setShortcut(_translate("MainWindow", "Ctrl+E", None))
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)", None))
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
