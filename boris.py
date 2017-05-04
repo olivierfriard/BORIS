@@ -5441,6 +5441,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check program version
         memProjectChanged = self.projectChanged
         self.initialize_new_project()
+        self.projectChanged = True
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
@@ -5484,7 +5485,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def initialize_new_project(self):
         """
-        initialize interface and variables for a new project
+        initialize interface and variables for a new or edited project
         """
         logging.info("initialize new project...")
 
@@ -5493,8 +5494,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.dwEthogram.setVisible(True)
         self.dwSubjects.setVisible(True)
-
-        self.projectChanged = True
 
 
     def close_project(self):
@@ -5558,6 +5557,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         project management
         mode: new/edit
         """
+
+        print("self.projectChanged", self.projectChanged)
 
         if self.observationId:
             QMessageBox.warning(self, programName , "You must close the current observation before creating a new project or modifying the current project.")
@@ -5757,17 +5758,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if newProjectWindow.exec_():  # button OK
 
+            if mode == NEW:
+                self.projectFileName = ""
+                self.projectChanged = True
+
+            if mode == EDIT:
+
+                print("dict(self.pj)",  dict(self.pj))
+                print()
+                print("dict(newProjectWindow.pj)", dict(newProjectWindow.pj))
+                print()
+
+                self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
+                print("project changed", self.projectChanged )
+
             # retrieve project dict from window
             self.pj = dict(newProjectWindow.pj)
 
-            if mode == NEW:
-                self.projectFileName = ""
-
             self.project = True
 
+            '''
             self.pj["project_name"] = newProjectWindow.leProjectName.text()
             self.pj["project_date"] = newProjectWindow.dteDate.dateTime().toString(Qt.ISODate)
             self.pj["project_description"] = newProjectWindow.teDescription.toPlainText()
+            '''
 
             # time format
             if newProjectWindow.rbSeconds.isChecked():
@@ -5776,23 +5790,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if newProjectWindow.rbHMS.isChecked():
                 self.timeFormat = HHMMSS
 
-            self.pj["time_format"] = self.timeFormat
+            '''self.pj["time_format"] = self.timeFormat'''
 
             # configuration
             if newProjectWindow.lbObservationsState.text() != "":
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
-                self.twEthogram.setRowCount(0)
-                self.pj[ETHOGRAM] =  newProjectWindow.obs
-                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-                self.pj[SUBJECTS] =  newProjectWindow.subjects_conf
+                # ethogram
 
+                ######################
+                '''self.pj[ETHOGRAM] =  newProjectWindow.obs'''
+                self.twEthogram.setRowCount(0)
+                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+
+                # subjects
+                '''self.pj[SUBJECTS] =  newProjectWindow.subjects_conf'''
                 self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
-                # load variables
-                self.pj[INDEPENDENT_VARIABLES] =  newProjectWindow.indVar
+                # indep variables
+                '''self.pj[INDEPENDENT_VARIABLES] = newProjectWindow.indVar'''
 
             self.initialize_new_project()
+
             self.menu_options()
 
         self.projectWindowGeometry = newProjectWindow.saveGeometry()

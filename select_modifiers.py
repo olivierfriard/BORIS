@@ -58,10 +58,11 @@ class ModifiersList(QDialog):
             V2layout = QVBoxLayout()
 
             self.modifiersSetNumber += 1
-            if len(modifiers_dict) > 1:
-                lb = QLabel()
-                lb.setText("Modifiers <b>{}</b>".format(self.modifiers_dict[idx]["name"]))
-                V2layout.addWidget(lb)
+            '''if len(modifiers_dict) > 1:'''
+
+            lb = QLabel()
+            lb.setText("Modifier <b>{}</b>".format(self.modifiers_dict[idx]["name"]))
+            V2layout.addWidget(lb)
 
             if self.modifiers_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
                 lw = QListWidget()
@@ -102,6 +103,10 @@ class ModifiersList(QDialog):
                     le.setText(currentModifierList[int(idx)])
 
                 V2layout.addWidget(le)
+
+                # vertical spacer
+                spacerItem = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+                V2layout.addItem(spacerItem)
 
             Hlayout.addLayout(V2layout)
 

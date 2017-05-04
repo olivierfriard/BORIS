@@ -266,11 +266,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         if column == behavioursFields["coding map"]:
             QMessageBox.information(self, programName, "Change the behavior type on first column to select a coding map")
 
-
         # check if double click on category
         if column == behavioursFields["category"]:
             self.category_doubleclicked(row)
-
 
         # check if double click on coding map
         if column == behavioursFields["coding map"]:
@@ -284,7 +282,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text())
                 addModifierWindow.setWindowTitle("""Set modifiers for "{}" behavior""".format(self.twBehaviors.item(row, 2).text()))
                 if addModifierWindow.exec_():
-
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
 
 
@@ -395,8 +392,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
                 return False, "No values were defined in set"
 
-        if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(","):
-            return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
+            if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(","):
+                return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
 
 
         '''
@@ -838,8 +835,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 # extract all codes used in observations
                 codesInObs = []
-                for obs in self.pj["observations"]:
-                    events = self.pj['observations'][obs]['events']
+                for obs in self.pj[OBSERVATIONS]:
+                    events = self.pj[OBSERVATIONS][obs]['events']
                     for event in events:
                         codesInObs.append(event[2])
 
@@ -1201,8 +1198,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     subjectToDelete = self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1).text()  # 1: subject name
 
                     subjectsInObs = []
-                    for obs in self.pj['observations']:
-                        events = self.pj['observations'][obs]['events']
+                    for obs in self.pj[OBSERVATIONS]:
+                        events = self.pj[OBSERVATIONS][obs]['events']
                         for event in events:
                             subjectsInObs.append(event[1])  # 1: subject name
                     if subjectToDelete in subjectsInObs:
@@ -1320,6 +1317,20 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, self.lbSubjectsState.text())
             return
 
+
+
+        self.pj["project_name"] = self.leProjectName.text()
+        self.pj["project_date"] = self.dteDate.dateTime().toString(Qt.ISODate)
+        self.pj["project_description"] = self.teDescription.toPlainText()
+
+        # time format
+        if self.rbSeconds.isChecked():
+            self.pj["time_format"] = S
+        if self.rbHMS.isChecked():
+            self.pj["time_format"] = HHMMSS
+
+
+
         # store subjects
         self.subjects_conf = {}
 
@@ -1367,6 +1378,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 subjectDescription = ""
 
             self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
+
+        self.pj[SUBJECTS] =  dict(self.subjects_conf)
+
 
         # store behaviors
         missing_data = []
@@ -1447,8 +1461,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             del self.pj['coding_map'][ loadedCodingMap ]
         '''
 
-        # independent variables
+        self.pj[ETHOGRAM] = dict(self.obs)
 
+
+        # independent variables
         r, msg = self.check_indep_var_config()
         if not r:
             QMessageBox.warning(self, programName + " - Independent variables error", msg)
@@ -1464,6 +1480,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     row[field] = ""
 
             self.indVar[str(len(self.indVar))] = row
+
+        self.pj[INDEPENDENT_VARIABLES] = dict(self.indVar)
 
         self.accept()
 
