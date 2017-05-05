@@ -1317,8 +1317,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, self.lbSubjectsState.text())
             return
 
-
-
         self.pj["project_name"] = self.leProjectName.text()
         self.pj["project_date"] = self.dteDate.dateTime().toString(Qt.ISODate)
         self.pj["project_description"] = self.teDescription.toPlainText()
@@ -1328,8 +1326,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.pj["time_format"] = S
         if self.rbHMS.isChecked():
             self.pj["time_format"] = HHMMSS
-
-
 
         # store subjects
         self.subjects_conf = {}
@@ -1380,7 +1376,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
 
         self.pj[SUBJECTS] =  dict(self.subjects_conf)
-
 
         # store behaviors
         missing_data = []
@@ -1462,7 +1457,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
         self.pj[ETHOGRAM] = dict(self.obs)
-
 
         # independent variables
         r, msg = self.check_indep_var_config()

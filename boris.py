@@ -518,9 +518,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.liveLayout = QGridLayout()
         self.textButton = QPushButton("Start live observation")
+        self.textButton.setMinimumHeight(60)
         self.textButton.clicked.connect(self.start_live_observation)
         self.liveLayout.addWidget(self.textButton)
-
         self.lbTimeLive = QLabel()
         self.lbTimeLive.setAlignment(Qt.AlignCenter)
 
@@ -533,11 +533,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbTimeLive.setText("0.000")
 
         self.liveLayout.addWidget(self.lbTimeLive)
-
         self.liveTab = QWidget()
         self.liveTab.setLayout(self.liveLayout)
-
-        self.toolBox.insertItem(2, self.liveTab, 'Live')
+        self.toolBox.insertItem(2, self.liveTab, "Live")
 
 
     def menu_options(self):
@@ -566,7 +564,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project.setEnabled(flag)
         self.actionSave_project_as.setEnabled(flag)
         self.actionClose_project.setEnabled(flag)
-
         self.actionSend_project.setEnabled(flag)
         # observations
 
@@ -584,7 +581,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionClose_observation.setEnabled(flagObs)
         self.actionLoad_observations_file.setEnabled(flag)
 
-        '''self.menuExport_events.setEnabled(flag)'''
         self.actionExportEvents.setEnabled(flag)
         self.actionExport_aggregated_events.setEnabled(flag)
 
@@ -600,9 +596,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFind_events.setEnabled(flagObs)
         self.actionFind_replace_events.setEnabled(flagObs)
 
-
         self.actionCheckStateEvents.setEnabled(flag)
-
 
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
@@ -679,7 +673,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbSpeed.setVisible(self.playerType == VLC)
 
 
-
     def connections(self):
 
         # menu file
@@ -738,7 +731,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
         self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(lambda: self.transitions_matrix("frequencies_after_behaviors"))
 
-
         # menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
 
@@ -752,7 +744,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
         self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
-
 
         # menu Analyze
         #self.actionTime_budget.triggered.connect(self.time_budget)
@@ -773,8 +764,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionReset.triggered.connect(self.reset_activated)
         self.actionJumpBackward.triggered.connect(self.jumpBackward_activated)
         self.actionJumpForward.triggered.connect(self.jumpForward_activated)
-
-        #self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
 
         self.actionZoom1_fitwindow.triggered.connect(lambda: self.video_zoom(1, 0))
         self.actionZoom1_1_1.triggered.connect(lambda: self.video_zoom(1, 1))
@@ -1032,11 +1021,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "BORIS is already re-encoding a video...")
             return
 
+        '''
         if QT_VERSION_STR[0] == "4":
             fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
         else:
             fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
+        '''
 
+        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
+        fileNames = fn[0] if type(fn) is tuple else fn
         if fileNames:
 
             horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
@@ -5476,7 +5469,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             fileName, _ = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
         '''
 
-        fn =  QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        fn = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
@@ -5637,22 +5630,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     item = QTableWidgetItem(obs)
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 0, item)
 
-                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]['date'].replace('T',' ') )
+                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]["date"].replace("T"," "))
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 1, item)
 
-                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]['description'] )
+                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]["description"])
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 2, item)
 
                     mediaList = []
                     if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
                         for idx in self.pj[OBSERVATIONS][obs][FILE]:
                             for media in self.pj[OBSERVATIONS][obs][FILE][idx]:
-                                mediaList.append('#%s: %s' % (idx , media))
+                                mediaList.append("#{}: {}".format(idx , media))
 
                     elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                         mediaList = [LIVE]
 
-                    item = QTableWidgetItem('\n'.join( mediaList ))
+                    item = QTableWidgetItem("\n".join(mediaList))
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 3, item)
 
                 newProjectWindow.twObservations.resizeColumnsToContents()
@@ -5763,14 +5756,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectChanged = True
 
             if mode == EDIT:
-
-                print("dict(self.pj)",  dict(self.pj))
-                print()
-                print("dict(newProjectWindow.pj)", dict(newProjectWindow.pj))
-                print()
-
                 self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
-                print("project changed", self.projectChanged )
 
             # retrieve project dict from window
             self.pj = dict(newProjectWindow.pj)
@@ -5797,8 +5783,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
                 # ethogram
-
-                ######################
                 '''self.pj[ETHOGRAM] =  newProjectWindow.obs'''
                 self.twEthogram.setRowCount(0)
                 self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
@@ -6165,7 +6149,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # independent variables
             if "independent_variables" in self.pj:
-                for idx in sorted(self.pj["independent_variables"].keys()):
+                for idx in sorted_keys(self.pj["independent_variables"]):
                     header.append(self.pj["independent_variables"][idx]["label"])
 
             header.extend(["Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
@@ -6243,7 +6227,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 # independent variables
                                 if "independent_variables" in self.pj:
-                                    for idx_var in sorted(self.pj["independent_variables"].keys()):
+                                    for idx_var in sorted_keys(self.pj["independent_variables"]):
                                         if self.pj["independent_variables"][idx_var]["label"] in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
                                            row_data.append(self.pj[OBSERVATIONS][obsId]["independent_variables"][self.pj["independent_variables"][idx_var]["label"]])
                                         else:
@@ -6289,7 +6273,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                     # independent variables
                                     if "independent_variables" in self.pj:
-                                        for idx_var in sorted(self.pj["independent_variables"].keys()):
+                                        for idx_var in sorted_keys(self.pj["independent_variables"]):
                                             if self.pj["independent_variables"][idx_var]["label"] in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
                                                row_data.append(self.pj[OBSERVATIONS][obsId]["independent_variables"][self.pj["independent_variables"][idx_var]["label"]])
                                             else:
@@ -8853,10 +8837,15 @@ item []:
         """
         create dot script (graphviz language) from transitions frequencies matrix
         """
+        '''
         if QT_VERSION_STR[0] == "4":
             fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
         else:
             fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        '''
+
+        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""
         for fileName in fileNames:
@@ -8887,10 +8876,15 @@ item []:
                                                      """Go to <a href="http://www.graphviz.org">http://www.graphviz.org</a> for information"""))
             return
 
+        '''
         if QT_VERSION_STR[0] == "4":
             fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
         else:
             fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        '''
+
+        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""
         for fileName in fileNames:
