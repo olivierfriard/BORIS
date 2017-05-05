@@ -5630,7 +5630,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS]:
 
-                for obs in sorted( self.pj[OBSERVATIONS].keys() ):
+                for obs in sorted(self.pj[OBSERVATIONS].keys()):
 
                     newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
 
@@ -5663,7 +5663,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.signalMapper = QSignalMapper(self)
                 newProjectWindow.comboBoxes = []
 
-                for i in sorted(self.pj[ETHOGRAM]):  #  [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+                for i in sorted_keys(self.pj[ETHOGRAM]):  #  [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
 
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
