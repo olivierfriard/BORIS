@@ -213,24 +213,35 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbOK.clicked.connect(self.pbOK_clicked)
         self.pbCancel.clicked.connect(self.reject)
 
+        self.selected_twvariables_row = -1
+
+        # disable widget for indep var setting
+        for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
+            widget.setEnabled(False)
+
 
     def leLabel_changed(self):
-        self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
+        if self.selected_twvariables_row != -1:
+            self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
 
     def leDescription_changed(self):
-        self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
+        if self.selected_twvariables_row != -1:
+            self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
 
     def lePredefined_changed(self):
-        self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
-        r, msg = self.check_indep_var_config()
-        if not r:
-            QMessageBox.warning(self, programName + " - Independent variables error", msg)
+        if self.selected_twvariables_row != -1:
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
+            r, msg = self.check_indep_var_config()
+            if not r:
+                QMessageBox.warning(self, programName + " - Independent variables error", msg)
 
     def leSetValues_changed(self):
-        self.twVariables.item(self.selected_twvariables_row, 4).setText(self.leSetValues.text())
+        if self.selected_twvariables_row != -1:
+            self.twVariables.item(self.selected_twvariables_row, 4).setText(self.leSetValues.text())
 
     def dte_default_date_changed(self):
-        self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+        if self.selected_twvariables_row != -1:
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
 
 
     def pbBehaviorsCategories_clicked(self):
@@ -383,7 +394,15 @@ class projectDialog(QDialog, Ui_dlgProject):
         check if default type is compatible with var type
         """
 
+        existing_var = []
         for r in range(self.twVariables.rowCount()):
+
+            if self.twVariables.item(r, 0).text().strip().upper() in existing_var:
+                return False, "Row: {} - The variable label <b>{}</b> is already in use." .format(r + 1, self.twVariables.item(r, 0).text())
+
+            # check if same lables
+            existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
+
             # check default value
             if self.twVariables.item(r, 2).text() != TIMESTAMP and not self.check_variable_default_value(self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text()):
                 return False, "Row: {} - The default value ({}) is not compatible with the variable type ({})".format(r + 1, self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text())
@@ -412,7 +431,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         '''
 
         return True, "OK"
-
 
 
     def cbtype_changed(self):
@@ -447,34 +465,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 
 
-    '''
-    def pbSaveVariable_clicked(self):
-        """
-        save variable to table
-        """
-
-        r, msg = self.check_indep_var_config()
-        if not r:
-            QMessageBox.warning(self, programName + " - Independent variables error", msg)
-            return
-
-        self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
-        self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
-        self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
-
-        if self.cbType.currentText() == TIMESTAMP:
-            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
-        else:
-            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
-
-        # remove spaces after and before comma
-        if self.cbType.currentText() == SET_OF_VALUES:
-            self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
-    '''
-
-
-
-
     def pbAddVariable_clicked(self):
         """
         add an independent variable
@@ -489,50 +479,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 item = QTableWidgetItem("numeric")
             else:
                 item = QTableWidgetItem("")
-            #item.setFlags(Qt.ItemIsEnabled)
             self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
         self.twVariables.setCurrentCell(self.twVariables.rowCount() - 1, 0)
 
         self.twVariables_cellClicked(self.twVariables.rowCount() - 1, 0)
 
-        '''
-
-        for w in [self.leLabel, self.leDescription, self.lePredefined, self.leSetValues, self.cbType]:
-            w.clear()
-
-        self.cbType.addItems(AVAILABLE_INDEP_VAR_TYPES)
-        self.cbType.setCurrentIndex(NUMERIC_idx)
-        '''
-
-
-
-    '''
-    def twVariables_cellDoubleClicked(self, row, column):
-
-        # check if double click on coding map
-
-        if column == tw_indVarFields.index("possible values"):
-            if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentText() == SET_OF_VALUES:
-                text = self.twVariables.item(row, column).text()
-                if text == "Double-click to add values":
-                    text = ""
-                newText, ok = QInputDialog.getText(self, "Independent variable", "Possible values: (comma separated)", QLineEdit.Normal, text)
-                if ok:
-                    if newText:
-                        newText = ",".join([x.strip() for x in newText.split(",")])
-                        self.twVariables.item(row, column).setText(newText)
-                        self.twVariables.item(row, column).setBackground(self.twVariables.item(row, column - 1).background())
-                    else:
-                        self.twVariables.item(row, column).setText("Double-click to add values")
-                        self.twVariables.item(row, column).setBackground(Qt.red)
-
-        if column == tw_indVarFields.index("default value"):
-            if self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentText() == TIMESTAMP:
-                print("cal")
-                self.cal = calendar.Calendar()
-                self.cal.exec_()
-    '''
 
     def pbRemoveVariable_clicked(self):
         """
@@ -573,45 +525,33 @@ class projectDialog(QDialog, Ui_dlgProject):
             if project[INDEPENDENT_VARIABLES]:
 
                 # check if variables are already present
-                if self.twVariables.rowCount():
+                existing_var = []
 
-                    response = dialog.MessageDialog(programName, "There are independent variables already configured. Do you want to append independent variables or replace them?", ['Append', 'Replace', CANCEL])
+                for r in range(self.twVariables.rowCount()):
+                    existing_var.append(self.twVariables.item(r, 0).text().strip().upper())  # = [self.pj[INDEPENDENT_VARIABLES][k]["label"].upper().strip() for k in self.pj[INDEPENDENT_VARIABLES]]
 
-                    if response == "Replace":
-                        self.twVariables.setRowCount(0)
-
-                    if response == CANCEL:
-                        return
-
-                for i in sorted(project[INDEPENDENT_VARIABLES].keys()):
+                for i in sorted_keys(project[INDEPENDENT_VARIABLES]):
 
                     self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
-
+                    flag_renamed = False
                     for idx, field in enumerate(tw_indVarFields):
-
                         item = QTableWidgetItem()
-
-                        '''
-                        if field == "type":
-
-                            comboBox = QComboBox()
-                            comboBox.addItems(AVAILABLE_INDEP_VAR_TYPES)
-
-                            for idx2, var_type in enumerate(AVAILABLE_INDEP_VAR_TYPES):
-                                if project[INDEPENDENT_VARIABLES][i][field] == var_type:
-                                    comboBox.setCurrentIndex(idx2)
-
-                            self.twVariables.setCellWidget(self.twVariables.rowCount() - 1, idx, comboBox)
-
-                        else:
-                        '''
                         if field in project[INDEPENDENT_VARIABLES][i]:
-                            item.setText(project[INDEPENDENT_VARIABLES][i][field])
+                            if field == "label":
+                                txt = project[INDEPENDENT_VARIABLES][i]["label"].strip()
+                                while txt.upper() in existing_var:
+                                    txt += "_2"
+                                    flag_renamed = True
+                            else:
+                                txt = project[INDEPENDENT_VARIABLES][i][field].strip()
+                            item.setText(txt)
                         else:
                             item.setText("")
                         self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
                 self.twVariables.resizeColumnsToContents()
+                if flag_renamed:
+                    QMessageBox.information(self, programName, "Some variables already present were renamed")
 
             else:
                 QMessageBox.warning(self, programName, "No independent variables found in project")
@@ -1271,6 +1211,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.selected_twvariables_row = row
 
+        logging.debug("selected row: {}".format(self.selected_twvariables_row))
+
+        # enable widget for indep var setting
+        for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
+            widget.setEnabled(True)
+
         self.leLabel.setText(self.twVariables.item(row, 0).text())
         self.leDescription.setText(self.twVariables.item(row, 1).text())
         self.lePredefined.setText(self.twVariables.item(row, 3).text())
@@ -1281,8 +1227,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.cbType.setCurrentIndex(NUMERIC_idx)
 
         self.cbType.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.twVariables.item(row, 2).text()))
-
-        #self.check_indep_var_config()
 
 
     def pbRemoveObservation_clicked(self):
@@ -1469,7 +1413,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             row = {}
             for idx, field in enumerate(tw_indVarFields):
                 if self.twVariables.item(r, idx):
-                    row[field] = self.twVariables.item(r, idx).text()
+                    row[field] = self.twVariables.item(r, idx).text().strip()
                 else:
                     row[field] = ""
 

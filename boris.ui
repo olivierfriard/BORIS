@@ -733,7 +733,7 @@
   </action>
   <action name="actionCheckUpdate">
    <property name="text">
-    <string>Check for updates</string>
+    <string>Check for updates and news</string>
    </property>
   </action>
   <action name="actionExportEvents">

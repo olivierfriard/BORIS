@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Thu May  4 13:54:40 2017
+# Created: Tue May  9 16:34:49 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -609,7 +609,7 @@ class Ui_MainWindow(object):
         self.actionJumpBackward.setToolTip(_translate("MainWindow", "Jump backward", None))
         self.actionJumpBackward.setShortcut(_translate("MainWindow", "Ctrl+B", None))
         self.actionEdit_observation.setText(_translate("MainWindow", "Edit observation", None))
-        self.actionCheckUpdate.setText(_translate("MainWindow", "Check for updates", None))
+        self.actionCheckUpdate.setText(_translate("MainWindow", "Check for updates and news", None))
         self.actionExportEvents.setText(_translate("MainWindow", "Export events", None))
         self.actionExportEventString.setText(_translate("MainWindow", "Export events as behavioural strings", None))
         self.actionClose_project.setText(_translate("MainWindow", "Close project", None))

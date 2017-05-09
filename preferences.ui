@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>596</width>
-    <height>444</height>
+    <height>459</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -193,7 +193,7 @@
            <item row="12" column="0">
             <widget class="QCheckBox" name="cbCheckForNewVersion">
              <property name="text">
-              <string>Check for new version</string>
+              <string>Check for new version and news</string>
              </property>
             </widget>
            </item>

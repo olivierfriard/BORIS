@@ -1790,14 +1790,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             versionURL = "http://www.boris.unito.it/static/ver.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
-            self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
-
             if versiontuple(lastVersion) > versiontuple(__version__):
                 msg = """A new version is available: v. <b>{}</b><br>Go to <a href="http://www.boris.unito.it">http://www.boris.unito.it</a> to install it.""".format(lastVersion)
             else:
                 msg = "The version you are using is the last one: <b>{}</b>".format(__version__)
 
+            newsURL = "http://www.boris.unito.it/static/news.dat"
+            news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
+
+            self.saveConfigFile(lastCheckForNewVersion = int(time.mktime(time.localtime())))
+
             QMessageBox.information(self, programName, msg)
+
+            if news:
+                QMessageBox.information(self, programName, news)
+
+
 
         except:
             QMessageBox.warning(self, programName, "Can not check for updates...")
@@ -3870,14 +3878,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check for new version
             self.checkForNewVersion = False
             try:
-                if settings.value('check_for_new_version') == None:
-                    self.checkForNewVersion = (dialog.MessageDialog(programName, ("Allow BORIS to automatically check for new version?\n"
+                if settings.value("check_for_new_version") == None:
+                    self.checkForNewVersion = (dialog.MessageDialog(programName, ("Allow BORIS to automatically check for new version and news?\n"
                                                                           "(An internet connection is required)\n"
                                                                           "You can change this option in the Preferences (File > Preferences)"), [YES, NO ]) == YES)
                 else:
-                    self.checkForNewVersion = (settings.value('check_for_new_version') == 'true')
+                    self.checkForNewVersion = (settings.value("check_for_new_version") == "true")
             except:
                 self.checkForNewVersion = False
+
 
             if self.checkForNewVersion:
                 if settings.value("last_check_for_new_version") and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
@@ -5364,9 +5373,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             from shutil import copyfile
             copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
 
-            QMessageBox.information(self, programName, "The project was updated to the current project version (from v.{} to v.{}).\n\n".format(self.pj["project_format_version"], project_format_version) + \
-                                                        "The old file project  was saved as {}".format(projectFileName.replace(".boris", "_old_version.boris")))
-
+            QMessageBox.information(self, programName, ("The project was updated to the current project version ({project_format_version}).\n\n"
+                                                        "The old file project  was saved as {project_file_name}").format(project_format_version=project_format_version,
+                                                                                                                         project_file_name=projectFileName.replace(".boris", "_old_version.boris")))
 
 
         # if one file is present in player #1 -> set "media_info" key with value of media_file_info
@@ -5462,14 +5471,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
-        '''
-        if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
-        else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
-        '''
-
-        fn = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        fn = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
@@ -5559,7 +5561,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == NEW:
             if self.projectChanged:
-                response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
+                response = dialog.MessageDialog(programName, "What to do with the current unsaved project?", [SAVE, DISCARD, CANCEL])
 
                 if response == SAVE:
                     self.save_project_activated()
@@ -5696,37 +5698,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
-                    '''signalMapper = QSignalMapper(self)'''
                     for idx, field in enumerate(tw_indVarFields):
-                        '''
-                        if field == "type":
-                            combobox = QComboBox()
-                            combobox.addItems(AVAILABLE_INDEP_VAR_TYPES)
-                            combobox.setCurrentIndex(AVAILABLE_INDEP_VAR_TYPES.index(self.pj[INDEPENDENT_VARIABLES][i][field]))
-
-                            newProjectWindow.twVariables.setCellWidget(newProjectWindow.twVariables.rowCount() - 1, 2, combobox)
-                            signalMapper.setMapping(combobox, newProjectWindow.twVariables.rowCount() - 1)
-                            combobox.currentIndexChanged["int"].connect(signalMapper.map)
-                            signalMapper.mapped["int"].connect(newProjectWindow.variableTypeChanged)
-
-
-                        else:
-                        '''
                         item = QTableWidgetItem("")
-                        #item.setFlags(Qt.ItemIsEnabled)
                         if field in self.pj[INDEPENDENT_VARIABLES][i]:
                             item.setText(self.pj[INDEPENDENT_VARIABLES][i][field])
-                        #else:
-                        #    item.setText("NA")
-                        '''
-                        if field == "possible values":
-                            item.setFlags(Qt.ItemIsEnabled)
-                            if self.pj[INDEPENDENT_VARIABLES][i]["type"] == SET_OF_VALUES:
-                                if self.pj[INDEPENDENT_VARIABLES][i]["possible values"] == "":
-                                    item.setText("Double-click to add values")
-                            else:
-                                item.setText("NA")
-                        '''
 
                         newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
 
@@ -5740,10 +5715,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        "project_date": "",
                        "project_name": "",
                        "project_description": "",
+                       "project_format_version": project_format_version,
                        SUBJECTS : {},
                        ETHOGRAM: {},
                        OBSERVATIONS: {},
-                       BEHAVIORAL_CATEGORIES : [],
+                       BEHAVIORAL_CATEGORIES: [],
+                       INDEPENDENT_VARIABLES: {},
                        "coding_map": {}}
 
         # pass copy of self.pj
@@ -8944,16 +8921,8 @@ item []:
         import observations from project file
         """
 
-        '''
-        if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
-        else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
-        '''
-
-        fn =  QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;Old project files (*.obs);;All files (*)")
+        fn =  QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
-
 
         if self.projectFileName and fileName == self.projectFileName:
             QMessageBox.critical(None, programName, "This project is already open", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)

@@ -598,7 +598,7 @@ class Ui_MainWindow(object):
         self.actionJumpBackward.setToolTip(_translate("MainWindow", "Jump backward"))
         self.actionJumpBackward.setShortcut(_translate("MainWindow", "Ctrl+B"))
         self.actionEdit_observation.setText(_translate("MainWindow", "Edit observation"))
-        self.actionCheckUpdate.setText(_translate("MainWindow", "Check for updates"))
+        self.actionCheckUpdate.setText(_translate("MainWindow", "Check for updates and news"))
         self.actionExportEvents.setText(_translate("MainWindow", "Export events"))
         self.actionExportEventString.setText(_translate("MainWindow", "Export events as behavioural strings"))
         self.actionClose_project.setText(_translate("MainWindow", "Close project"))

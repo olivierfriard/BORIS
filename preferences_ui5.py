@@ -12,7 +12,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName("prefDialog")
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(596, 444)
+        prefDialog.resize(596, 459)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(prefDialog)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -251,7 +251,7 @@ class Ui_prefDialog(object):
         self.cbEmbedPlayer.setText(_translate("prefDialog", "Embed media player in main window (program must be restarted)"))
         self.cbAlertNoFocalSubject.setText(_translate("prefDialog", "Alert if focal subject is not set"))
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event"))
-        self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version"))
+        self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version and news"))
         self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project"))
         self.lbFFmpegPath.setText(_translate("prefDialog", "FFmpeg path:"))

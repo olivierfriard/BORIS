@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created: Fri Mar 24 18:04:15 2017
+# Created: Tue May  9 16:15:39 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName(_fromUtf8("prefDialog"))
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(596, 444)
+        prefDialog.resize(596, 459)
         self.verticalLayout_5 = QtGui.QVBoxLayout(prefDialog)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.verticalLayout_2 = QtGui.QVBoxLayout()
@@ -261,7 +261,7 @@ class Ui_prefDialog(object):
         self.cbEmbedPlayer.setText(_translate("prefDialog", "Embed media player in main window (program must be restarted)", None))
         self.cbAlertNoFocalSubject.setText(_translate("prefDialog", "Alert if focal subject is not set", None))
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
-        self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version", None))
+        self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version and news", None))
         self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
         self.lbFFmpegPath.setText(_translate("prefDialog", "FFmpeg path:", None))
