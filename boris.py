@@ -44,8 +44,8 @@ import datetime
 import multiprocessing
 import socket
 
-__version__ = "4.0.0"
-__version_date__ = "2017-03-31"
+__version__ = "4.0.1"
+__version_date__ = "2017-05-09"
 __DEV__ = False
 
 #BITMAP_EXT = "jpg"
