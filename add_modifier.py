@@ -231,6 +231,11 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 return
 
         if txt:
+
+            if not self.modifiers_sets_dict:
+                self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+
+
             if len(self.leCode.text()) > 1:
                 if self.leCode.text().upper() not in ["F" + str(i) for i in range(1, 13)]:
                     QMessageBox.critical(self, programName, "The modifier key code can not exceed one key\nSelect one key or a function key (F1, F2 ... F12)")
@@ -245,6 +250,10 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         return
 
                 # check if code already exists
+
+                if not self.modifiers_sets_dict:
+                    self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] = {"name": "", "type": SINGLE_SELECTION, "values": []}
+
                 if "(" + self.leCode.text() + ")" in " ".join(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]):
                     QMessageBox.critical(self, programName, "The code {} already exists!".format(self.leCode.text()))
                     self.leCode.setFocus()
@@ -256,8 +265,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
             else:
                 self.lwModifiers.addItem(txt)
 
-            if not self.modifiers_sets_dict:
-                self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
 
             print(  "self.modifiers_sets_dict2", self.modifiers_sets_dict   )
             print(   self.tabWidgetModifiersSets.currentIndex()   )
