@@ -74,7 +74,10 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
 
-        self.modifiers_sets_dict = eval(modifiers_str)
+        if modifiers_str:
+            self.modifiers_sets_dict = eval(modifiers_str)
+        else:
+            self.modifiers_sets_dict = {}
 
         # create tab
         for idx in sorted_keys(self.modifiers_sets_dict):

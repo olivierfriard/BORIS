@@ -1104,7 +1104,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.show()
 
 
-
     def show_all_behaviors(self):
         """
         show all behaviors in ethogram
@@ -1117,7 +1116,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show all subjects in subjects list
         """
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-
 
 
     def filter_behaviors(self):
@@ -1236,7 +1234,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_subjects):
                 self.projectChanged = True
             self.load_subjects_in_twSubjects(paramPanelWindow.selectedBehaviors)
-
 
 
     def extract_events(self):
