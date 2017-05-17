@@ -901,8 +901,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def receive_signal(msg_dict):
 
-            print(msg_dict)
-
             if "RECEIVED" in msg_dict:
                 try:
                     sent_obs = json.loads(msg_dict["RECEIVED"][:-5]) # cut final #####
@@ -912,7 +910,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.actionSend_project.setText("Project server")
                     return
 
-                print("decoded", type(sent_obs), len(sent_obs))
+                logging.debug("decoded {} length: {}".format(type(sent_obs), len(sent_obs)))
                 del self.w
                 self.actionSend_project.setText("Project server")
 
