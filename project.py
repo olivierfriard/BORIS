@@ -37,7 +37,6 @@ from utilities import sorted_keys
 from config import *
 import add_modifier
 import dialog
-import calendar
 
 if QT_VERSION_STR[0] == "4":
     from project_ui import Ui_dlgProject

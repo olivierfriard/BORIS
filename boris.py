@@ -160,6 +160,7 @@ def bytes_to_str(b):
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 
+
 class ProjectServerThread(QThread):
     """
     thread for serving project to BORIS mobile app
@@ -180,7 +181,7 @@ class ProjectServerThread(QThread):
 
         s = socket.socket()
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.settimeout(60)
+        s.settimeout(120)
 
         s.bind((get_ip_address(), 0))
         self.signal.emit({"URL": "{}:{}".format(s.getsockname()[0], s.getsockname()[1])})
@@ -216,16 +217,9 @@ class ProjectServerThread(QThread):
 
             # receive an observation
             if rq == b"put":
-                print("put")
                 c.send(b"SEND")
-                print("sent SEND")
                 c.close()
-
-                print("listening")
-
                 c2, addr = s.accept()
-                print("accepted")
-
                 rq2 = b""
                 while 1:
                     d = c2.recv(BUFFER_SIZE)
@@ -235,11 +229,9 @@ class ProjectServerThread(QThread):
                             break
                     else:
                         break
-                print("received", rq2)
                 c2.close()
                 self.signal.emit({"RECEIVED": "{}".format(rq2.decode("utf-8")), "SENDER": addr})
                 return
-
 
 
 class TempDirCleanerThread(QThread):
@@ -295,13 +287,17 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     pj = {"time_format": HHMMSS,
-          "project_date": "",
-          "project_name": "",
-          "project_description": "",
-          SUBJECTS : {},
-          ETHOGRAM: {},
-          OBSERVATIONS: {} ,
-          "coding_map":{} }
+           "project_date": "",
+           "project_name": "",
+           "project_description": "",
+           "project_format_version": project_format_version,
+           SUBJECTS : {},
+           ETHOGRAM: {},
+           OBSERVATIONS: {},
+           BEHAVIORAL_CATEGORIES: [],
+           INDEPENDENT_VARIABLES: {},
+           "coding_map": {}}
+
     project = False
 
     ffmpeg_recode_process = None
@@ -939,17 +935,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                     "New observation id:", QLineEdit.Normal, new_id)
 
                             self.pj[OBSERVATIONS][new_id] = dict(sent_obs[obsId])
+                            self.projectChanged = True
                     else:
                         self.pj[OBSERVATIONS][obsId] = dict(sent_obs[obsId])
+                        self.projectChanged = True
                         mem_obsid = obsId
 
                 if not flag_msg:
-                    QMessageBox.information(self, "Project server", "Observation {} received".format(mem_obsId))
+                    QMessageBox.information(self, "Project server", "Observation <b>{}</b> successfully received".format(mem_obsid))
 
 
             elif "URL" in msg_dict:
                 self.tcp_port = int(msg_dict["URL"].split(":")[-1])
-                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 60 seconds".format(msg_dict["URL"]))
+                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 120 seconds".format(msg_dict["URL"]))
 
             else:
                 del self.w
@@ -5283,16 +5281,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "project_format_version" in self.pj and Decimal(self.pj["project_format_version"]) > Decimal(project_format_version):
             QMessageBox.critical(self, programName, ("This project file was created with a more recent version of BORIS.\n"
                                                      "You must update BORIS to open it"))
-            '''
-            self.pj = {"time_format": "hh:mm:ss",
-            "project_date": "",
-            "project_name": "",
-            "project_description": "",
-            "subjects_conf" : {},
-            "behaviors_conf": {},
-            "observations": {},
-            }
-            '''
             return
 
 
@@ -5517,7 +5505,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = False
         self.setWindowTitle(programName)
 
-        self.pj = {"time_format": self.timeFormat, "project_date": "", "project_name": "", "project_description": "", "subjects_conf" : {}, "behaviors_conf": {}, "observations": {}  }
+        self.pj = {"time_format": self.timeFormat,
+                   "project_date": "",
+                   "project_name": "",
+                   "project_description": "",
+                   SUBJECTS: {},
+                   ETHOGRAM: {},
+                   OBSERVATIONS: {},
+                   BEHAVIORAL_CATEGORIES: [],
+                   INDEPENDENT_VARIABLES: {},
+                   "coding_map": {}}
+
         self.project = False
 
         self.readConfigFile()
@@ -5532,10 +5530,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def convertTime(self, sec):
-        '''
+        """
         convert time in base of current format
         return string
-        '''
+        """
 
         if self.timeFormat == S:
             return '%.3f' % sec
