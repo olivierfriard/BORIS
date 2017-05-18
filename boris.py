@@ -46,7 +46,6 @@ import socket
 
 __version__ = "4.0.2"
 __version_date__ = "2017-05-16"
-__DEV__ = False
 
 #BITMAP_EXT = "jpg"
 
@@ -54,12 +53,14 @@ if sys.platform == "darwin":  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
 
 # check if argument
-usage = "usage: %prog [options]"
+usage = "usage: %prog [options] [PROJECT_PATH] [\"OBSERVATION ID\"]"
 parser = OptionParser(usage=usage)
 
 parser.add_option("-d", "--debug", action="store_true", default=False, dest="debug", help="Verbose mode for debugging")
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
+parser.add_option("-i", "--project-info", action="store_true", default=False, help="Project information")
+parser.add_option("-l", "--observations-list", action="store_true", default=False, help="List of observations")
 
 (options, args) = parser.parse_args()
 
@@ -1744,12 +1745,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result, selectedObs = self.selectObservations(SINGLE)
 
         if selectedObs:
-
             if result == OPEN:
-
                 self.observationId = selectedObs[0]
-
-                # load events in table widget
                 self.loadEventsInTW(self.observationId)
 
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
@@ -1767,13 +1764,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # title of dock widget
                 self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
 
-
             if result == EDIT:
-
                 if self.observationId != selectedObs[0]:
                     self.new_observation( mode=EDIT, obsId=selectedObs[0])   # observation id to edit
                 else:
-                    QMessageBox.warning(self, programName , 'The observation <b>%s</b> is running!<br>Close it before editing.' % self.observationId)
+                    QMessageBox.warning(self, programName , "The observation <b>{}</b> is running!<br>Close it before editing.".format(self.observationId))
 
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew = False):
@@ -3143,24 +3138,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         obsListFields = ["id", "date", "description", "subjects", "media"]
-
         indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
-
-        '''
-        NUMERIC = "numeric"
-        NUMERIC_idx = 0
-        TEXT = "text"
-        TEXT_idx = 1
-        SET_OF_VALUES = "value from set"
-        SET_OF_VALUES_idx = 2
-        '''
-
 
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
                 column_type.append(self.pj[INDEPENDENT_VARIABLES][idx]["type"])
-
 
         data = []
         for obs in sorted(list(self.pj[OBSERVATIONS].keys())):
@@ -3194,8 +3177,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         indepvar.append(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var_label])
                     else:
                         indepvar.append("")
-
-
 
             data.append([obs, date, descr, subjectsList, media] + indepvar)
 
@@ -3231,28 +3212,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsList.view.setSelectionMode( QAbstractItemView.SingleSelection )
             obsList.pbOk.setVisible(True)
 
-        #obsList.comboBox.addItems(obsListFields + indepVarHeader)
-
-        #obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
-        #obsList.view.setHorizontalHeaderLabels(obsListFields + indepVarHeader)
-
-        #obsList.view.horizontalHeader().setStretchLastSection(True)
-        #obsList.view.resizeColumnsToContents()
-
-        #obsList.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
-        #obsList.label.setText("{} observation{}".format(obsList.view.rowCount(), "s" * (obsList.view.rowCount()>1)))
-
         obsList.resize(900, 600)
-
-        # sort memory
-        '''
-        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
-        settings = QSettings(iniFilePath, QSettings.IniFormat)
-        try:
-            obsList.view.sortItems(settings.value("observations_list_order"), )
-        except:
-            print("Error:", sys.exc_info()[0])
-        '''
 
         obsList.view.sortItems(0, Qt.AscendingOrder)
 
@@ -3775,7 +3735,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         read config file
         """
 
-        logging.info("read config file")
+        logging.debug("read config file")
 
         if __version__ == 'DEV':
             iniFilePath = os.path.expanduser('~') + os.sep + '.boris_dev'
@@ -5244,7 +5204,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         open project json
         """
-        logging.info("open project: {0}".format(projectFileName))
+        logging.debug("open project: {0}".format(projectFileName))
 
         if not os.path.isfile(projectFileName):
             QMessageBox.warning(self, programName, "File not found")
@@ -5465,7 +5425,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         initialize interface and variables for a new or edited project
         """
-        logging.info("initialize new project...")
+        logging.debug("initialize new project...")
 
         self.lbLogoUnito.setVisible(False)
         self.lbLogoBoris.setVisible(False)
@@ -9246,12 +9206,11 @@ item []:
 
 
 if __name__=="__main__":
-    #multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
 
     # splashscreen
-    if not options.nosplashscreen:
+    if not options.nosplashscreen and not options.observations_list and not options.project_info:
         start = time.time()
         splash = QSplashScreen(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
         splash.show()
@@ -9272,7 +9231,7 @@ if __name__=="__main__":
 
     availablePlayers.append(VLC)
 
-    logging.info("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
+    logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
         QMessageBox.critical(None, programName, "The VLC media player seems very old ({}).<br>Go to http://www.videolan.org/vlc to update it".format(
             vlc.libvlc_get_version()), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -9300,6 +9259,26 @@ if __name__=="__main__":
         logging.debug("args: {}".format(args))
         if len(args) > 0:
             window.open_project_json(os.path.abspath(args[0]))
+
+            if options.project_info:
+                print("Summary of {} project file:".format(args[0]))
+                print("Project name: {}".format(window.pj[PROJECT_NAME]))
+                print("Project date: {}".format(window.pj[PROJECT_DATE]))
+                print("Project description: {}".format(window.pj[PROJECT_DESCRIPTION]))
+                print("Number of behaviors in ethogram: {}".format(len(window.pj[ETHOGRAM])))
+                print("Behaviors: {}".format(",".join([window.pj[ETHOGRAM][k]["code"] for k in sorted_keys(window.pj[ETHOGRAM])])))
+                print("Number of subjects: {}".format(len(window.pj[SUBJECTS])))
+                print("Subjects: {}".format(",".join([window.pj[SUBJECTS][k]["name"] for k in sorted_keys(window.pj[SUBJECTS])])))
+                print("Number of observations: {}".format(len(window.pj[OBSERVATIONS])))
+                print("Observations: {}".format(",".join(sorted(window.pj[OBSERVATIONS].keys()))))
+                sys.exit(0)
+
+
+            if options.observations_list:
+                print("List of observation(s) in {} project file:".format(args[0]))
+                print(os.linesep.join(sorted(window.pj[OBSERVATIONS].keys())))
+                sys.exit(0)
+
             if len(args) > 1:
                 r = window.load_observation(args[1])
                 if r:

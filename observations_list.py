@@ -85,17 +85,11 @@ class observationsList_widget(QDialog):
 
         self.label = QLabel(self)
 
-        '''
-        self.pbSearch = QPushButton("Search")
-        self.pbSearch.clicked.connect(self.view_filter)
-        '''
-
         self.gridLayout = QGridLayout(self)
         self.gridLayout.addWidget(self.label,    0, 0, 1, 3)
         self.gridLayout.addWidget(self.comboBox, 1, 0, 1, 1)
         self.gridLayout.addWidget(self.cbLogic,  1, 1, 1, 1)
         self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
-        '''self.gridLayout.addWidget(self.pbSearch, 1, 3, 1, 1)'''
 
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
 
@@ -176,13 +170,6 @@ class observationsList_widget(QDialog):
         """
         select or unselect all filtered observations
         """
-
-        '''
-        for r in range(self.view.rowCount()):
-            for c in range(self.view.columnCount()):
-                self.view.item(r, c).setSelected(True)
-
-        '''
 
         for idx in range(self.view.rowCount()):
             table_item = self.view.item(idx, 0)
