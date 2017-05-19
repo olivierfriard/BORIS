@@ -36,7 +36,9 @@ class Info_widget(QWidget):
         super(Info_widget, self).__init__(parent)
 
         self.setWindowTitle("BORIS")
-        layout = QHBoxLayout()
+        layout = QVBoxLayout()
         self.label = QLabel()
         layout.addWidget(self.label)
+        self.lwi = QListWidget()
+        layout.addWidget(self.lwi)
         self.setLayout(layout)

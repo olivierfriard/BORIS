@@ -182,7 +182,7 @@ class ProjectServerThread(QThread):
 
         s = socket.socket()
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.settimeout(120)
+        s.settimeout(1800)
 
         s.bind((get_ip_address(), 0))
         self.signal.emit({"URL": "{}:{}".format(s.getsockname()[0], s.getsockname()[1])})
@@ -190,29 +190,32 @@ class ProjectServerThread(QThread):
         s.listen(5)
         while True:
             try:
+                print("accept")
                 c, addr = s.accept()
-                logging.info("Got connection from {}".format(addr))
+                print("after accept")
+                logging.debug("Got connection from {}".format(addr))
             except socket.timeout:
                 s.close()
-                logging.info("Time out")
-                self.signal.emit({"MESSAGE": "Server time out"})
+                logging.debug("Project server timeout")
+                self.signal.emit({"MESSAGE": "Project server timeout"})
                 return
 
             rq = c.recv(BUFFER_SIZE)
             logging.info("request: {}".format(rq))
 
             if rq == b"get":
-                while self.message:
-                    c.send(self.message[0:BUFFER_SIZE])
-                    self.message = self.message[BUFFER_SIZE:]
+                msg = self.message
+                while msg:
+                    c.send(msg[0:BUFFER_SIZE])
+                    msg = msg[BUFFER_SIZE:]
                 c.close()
-                logging.info("Project sent")
+                logging.debug("Project sent")
                 self.signal.emit({"MESSAGE": "Project sent to {}".format(addr[0])})
-                return
+                #return
 
             if rq == b"stop":
                 c.close()
-                logging.info("server stopped")
+                logging.debug("server stopped")
                 self.signal.emit({"MESSAGE": "The server is now stopped"})
                 return
 
@@ -867,32 +870,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
+
     def view_behavior(self):
         """
         show details of selected behavior
         """
         if self.project:
-            print(self.twEthogram.selectedIndexes())
             if self.twEthogram.selectedIndexes():
                 ethogramRow = self.twEthogram.selectedIndexes()[0].row()
                 behav = dict(self.pj[ETHOGRAM][str(self.twEthogram.selectedIndexes()[0].row())])
-                if behav["modifiers"]:
+                if behav[MODIFIERS]:
                     modifiers = ""
-                    for idx in sorted_keys(behav["modifiers"]):
-                        if behav["modifiers"][idx]["name"]:
-                           modifiers += "   Name: {}:\n".format(behav["modifiers"][idx]["name"])
-                        for m in behav["modifiers"][idx]["values"]:
-                            modifiers += m +", "
-                        modifiers = modifiers[:-1] + "\n"
+                    for idx in sorted_keys(behav[MODIFIERS]):
+                        if behav[MODIFIERS][idx]["name"]:
+                           modifiers += "<br>Name: {}<br>Type: {}<br>".format(behav[MODIFIERS][idx]["name"] if behav[MODIFIERS][idx]["name"] else "-",
+                                                                           MODIFIERS_STR[behav[MODIFIERS][idx]["type"]])
+
+                        if behav[MODIFIERS][idx]["values"]:
+                            modifiers += "Values:<br>"
+                            for m in behav[MODIFIERS][idx]["values"]:
+                                modifiers += "{}, ".format(m)
+                            modifiers = modifiers.strip(" ,") + "<br>"
                 else:
-                    modifiers = ""
-                QMessageBox.information(self, "Behavior view", "Code: {}\nType: {}\nKey: {}\nDescription: {}\nCategory: {}\nModifiers: {}\nExclude: {}".format(behav["code"],
+                    modifiers = "-"
+                QMessageBox.information(self, "Behavior view",
+                            "Code: <b>{}</b><br>Type: {}<br>Key: {}<br>Description: {}<br>Category: {}<br>Exclude: {}<br><br>Modifiers:<br>{}".format(behav["code"],
                                                                                                                             behav["type"],
                                                                                                                             behav["key"],
                                                                                                                             behav["description"],
                                                                                                                             behav["category"],
-                                                                                                                            modifiers,
                                                                                                                             behav["excluded"],
+                                                                                                                            modifiers
                                                                                                                             ))
 
     def send_project_via_socket(self):
@@ -943,22 +951,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not flag_msg:
                     QMessageBox.information(self, "Project server", "Observation <b>{}</b> successfully received".format(mem_obsid))
 
-
             elif "URL" in msg_dict:
                 self.tcp_port = int(msg_dict["URL"].split(":")[-1])
-                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Time out: 120 seconds".format(msg_dict["URL"]))
+                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Timeout: 30 minutes".format(msg_dict["URL"]))
 
             else:
-                del self.w
-                self.actionSend_project.setText("Project server")
-                QMessageBox.information(self, "Project server", msg_dict["MESSAGE"])
+                if "stopped" in msg_dict["MESSAGE"] or "timeout" in msg_dict["MESSAGE"]:
+                    del self.w
+                    self.actionSend_project.setText("Project server")
+                    #QMessageBox.information(self, "Project server", msg_dict["MESSAGE"])
+                else:
+                    self.w.lwi.addItem(QListWidgetItem("{}: {}".format(datetime.datetime.now().isoformat(), msg_dict["MESSAGE"])))
 
 
         if "server" in self.actionSend_project.text():
 
-            include_obs = dialog.MessageDialog(programName, "Include observations?", [YES, NO, CANCEL])
-            if include_obs == CANCEL:
-                return
+            include_obs = NO
+            if self.pj[OBSERVATIONS]:
+                include_obs = dialog.MessageDialog(programName, "Include observations?", [YES, NO, CANCEL])
+                if include_obs == CANCEL:
+                    return
 
             self.w = recode_widget.Info_widget()
             self.w.resize(450, 100)
@@ -1018,13 +1030,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "BORIS is already re-encoding a video...")
             return
 
-        '''
-        if QT_VERSION_STR[0] == "4":
-            fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
-        else:
-            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
-        '''
-
         fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
         if fileNames:
@@ -1044,6 +1049,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             self.w = recode_widget.Info_widget()
+            w.lwi.setVisible(False)
             self.w.resize(350, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
@@ -1378,6 +1384,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             tmp_dir = self.ffmpeg_cache_dir
 
         w = recode_widget.Info_widget()
+        w.lwi.setVisible(False)
         w.resize(350, 100)
         w.setWindowFlags(Qt.WindowStaysOnTopHint)
         w.setWindowTitle(programName)

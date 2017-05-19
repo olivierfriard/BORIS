@@ -177,10 +177,12 @@ FRAME_BITMAP_FORMAT_LIST = ["JPG", "PNG"]
 FRAME_DEFAULT_BITMAT_FORMAT = "JPG"
 
 # modifiers
+MODIFIERS = "modifiers"
 SINGLE_SELECTION = 0
 MULTI_SELECTION = 1
 NUMERIC_MODIFIER = 2
 
+MODIFIERS_STR = {SINGLE_SELECTION: "Single item selection", MULTI_SELECTION: "Multiple items selection", NUMERIC_MODIFIER: "Numeric"}
 
 #colors
 subtitlesColors = ['cyan','red','blue','yellow','fuchsia','orange', 'lime', 'green']
