@@ -190,9 +190,7 @@ class ProjectServerThread(QThread):
         s.listen(5)
         while True:
             try:
-                print("accept")
                 c, addr = s.accept()
-                print("after accept")
                 logging.debug("Got connection from {}".format(addr))
             except socket.timeout:
                 s.close()
@@ -201,7 +199,7 @@ class ProjectServerThread(QThread):
                 return
 
             rq = c.recv(BUFFER_SIZE)
-            logging.info("request: {}".format(rq))
+            logging.debug("request: {}".format(rq))
 
             if rq == b"get":
                 msg = self.message
@@ -235,7 +233,7 @@ class ProjectServerThread(QThread):
                         break
                 c2.close()
                 self.signal.emit({"RECEIVED": "{}".format(rq2.decode("utf-8")), "SENDER": addr})
-                return
+                #return
 
 
 class TempDirCleanerThread(QThread):
@@ -914,21 +912,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 try:
                     sent_obs = json.loads(msg_dict["RECEIVED"][:-5]) # cut final #####
                 except:
-                    print("error")
+                    logging.debug("error receiving observation")
                     del self.w
                     self.actionSend_project.setText("Project server")
                     return
 
                 logging.debug("decoded {} length: {}".format(type(sent_obs), len(sent_obs)))
-                del self.w
-                self.actionSend_project.setText("Project server")
+                #del self.w
+                #self.actionSend_project.setText("Project server")
 
                 flag_msg = False
                 mem_obsid = ""
                 for obsId in sent_obs:
+
+                    self.w.lwi.addItem(QListWidgetItem("{}: Observation <b>{}</b> received".format(datetime.datetime.now().isoformat(), obsId)))
+                    self.lwi.scrollToBottom()
+
                     if obsId in self.pj[OBSERVATIONS]:
                         flag_msg = True
-                        response = dialog.MessageDialog(programName, "The observation <b>{}</b> received from <b>{}</b><br>already exists in the current project.".format(obsId, msg_dict["SENDER"][0]),
+                        response = dialog.MessageDialog(programName, ("An observation with the same id<br><b>{}</b><br>"
+                                                                      "received from<br><b>{}</b><br>"
+                                                                      "already exists in the current project.").format(obsId, msg_dict["SENDER"][0]),
                                                         ["Overwrite it", "Rename received observation", CANCEL])
                         if response == CANCEL:
                             return
@@ -948,8 +952,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.projectChanged = True
                         mem_obsid = obsId
 
-                if not flag_msg:
-                    QMessageBox.information(self, "Project server", "Observation <b>{}</b> successfully received".format(mem_obsid))
+
 
             elif "URL" in msg_dict:
                 self.tcp_port = int(msg_dict["URL"].split(":")[-1])
