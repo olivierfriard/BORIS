@@ -925,8 +925,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 mem_obsid = ""
                 for obsId in sent_obs:
 
-                    self.w.lwi.addItem(QListWidgetItem("{}: Observation <b>{}</b> received".format(datetime.datetime.now().isoformat(), obsId)))
-                    self.lwi.scrollToBottom()
+                    self.w.lwi.addItem(QListWidgetItem("{}: Observation {} received".format(datetime.datetime.now().isoformat(), obsId)))
+                    self.w.lwi.scrollToBottom()
 
                     if obsId in self.pj[OBSERVATIONS]:
                         flag_msg = True
@@ -936,17 +936,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         ["Overwrite it", "Rename received observation", CANCEL])
                         if response == CANCEL:
                             return
+                        self.projectChanged = True
                         if response == "Overwrite it":
                             self.pj[OBSERVATIONS][obsId] = dict(sent_obs[obsId])
-                        if response == "Rename received observation":
 
+                        if response == "Rename received observation":
                             new_id = obsId
                             while new_id in self.pj[OBSERVATIONS]:
                                 new_id, ok = QInputDialog.getText(self, "Rename observation received from {}".format(msg_dict["SENDER"][0]),
                                                                     "New observation id:", QLineEdit.Normal, new_id)
 
                             self.pj[OBSERVATIONS][new_id] = dict(sent_obs[obsId])
-                            self.projectChanged = True
+
                     else:
                         self.pj[OBSERVATIONS][obsId] = dict(sent_obs[obsId])
                         self.projectChanged = True
@@ -965,6 +966,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     #QMessageBox.information(self, "Project server", msg_dict["MESSAGE"])
                 else:
                     self.w.lwi.addItem(QListWidgetItem("{}: {}".format(datetime.datetime.now().isoformat(), msg_dict["MESSAGE"])))
+                    self.w.lwi.scrollToBottom()
 
 
         if "server" in self.actionSend_project.text():
