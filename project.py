@@ -230,9 +230,10 @@ class projectDialog(QDialog, Ui_dlgProject):
     def lePredefined_changed(self):
         if self.selected_twvariables_row != -1:
             self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
-            r, msg = self.check_indep_var_config()
-            if not r:
-                QMessageBox.warning(self, programName + " - Independent variables error", msg)
+            if not self.lePredefined.hasFocus():
+                r, msg = self.check_indep_var_config()
+                if not r:
+                    QMessageBox.warning(self, programName + " - Independent variables error", msg)
 
     def leSetValues_changed(self):
         if self.selected_twvariables_row != -1:
