@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Tue May 23 16:40:13 2017
+# Created: Tue May 23 16:58:58 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -335,21 +335,16 @@ class Ui_dlgProject(object):
         item = QtGui.QTableWidgetItem()
         self.twObservations.setHorizontalHeaderItem(3, item)
         self.horizontalLayout.addWidget(self.twObservations)
-        self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
-        self.pbRemoveObservation = QtGui.QPushButton(self.tabObservations)
-        self.pbRemoveObservation.setObjectName(_fromUtf8("pbRemoveObservation"))
-        self.verticalLayout.addWidget(self.pbRemoveObservation)
-        spacerItem9 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem9)
-        self.horizontalLayout.addLayout(self.verticalLayout)
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         self.tabProject.addTab(self.tabObservations, _fromUtf8(""))
         self.verticalLayout_6.addWidget(self.tabProject)
+        self.pbRemoveObservation = QtGui.QPushButton(dlgProject)
+        self.pbRemoveObservation.setObjectName(_fromUtf8("pbRemoveObservation"))
+        self.verticalLayout_6.addWidget(self.pbRemoveObservation)
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
-        spacerItem10 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem10)
+        spacerItem9 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(spacerItem9)
         self.pbCancel = QtGui.QPushButton(dlgProject)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout_4.addWidget(self.pbCancel)
@@ -447,8 +442,8 @@ class Ui_dlgProject(object):
         item.setText(_translate("dlgProject", "Description", None))
         item = self.twObservations.horizontalHeaderItem(3)
         item.setText(_translate("dlgProject", "Media", None))
-        self.pbRemoveObservation.setText(_translate("dlgProject", "Remove observation", None))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabObservations), _translate("dlgProject", "Observations", None))
+        self.pbRemoveObservation.setText(_translate("dlgProject", "Remove selected observations", None))
         self.pbCancel.setText(_translate("dlgProject", "Cancel", None))
         self.pbOK.setText(_translate("dlgProject", "OK", None))
 
