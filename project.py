@@ -410,7 +410,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
                 return False, "No values were defined in set"
 
-            if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(","):
+            if (self.twVariables.item(r, 2).text() == SET_OF_VALUES
+                and self.twVariables.item(r, 4).text()
+                and self.twVariables.item(r, 3).text()
+                and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
                 return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
 
 
