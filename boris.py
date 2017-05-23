@@ -22,6 +22,10 @@ This file is part of BORIS.
 
 """
 
+__version__ = "4.0.3"
+__version_date__ = "2017-05-23"
+
+
 import os
 import sys
 import platform
@@ -44,8 +48,6 @@ import datetime
 import multiprocessing
 import socket
 
-__version__ = "4.0.3"
-__version_date__ = "2017-05-19"
 
 #BITMAP_EXT = "jpg"
 
