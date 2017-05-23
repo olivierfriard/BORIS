@@ -893,15 +893,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             modifiers = modifiers.strip(" ,") + "<br>"
                 else:
                     modifiers = "-"
-                QMessageBox.information(self, "Behavior view",
-                            "Code: <b>{}</b><br>Type: {}<br>Key: {}<br>Description: {}<br>Category: {}<br>Exclude: {}<br><br>Modifiers:<br>{}".format(behav["code"],
-                                                                                                                            behav["type"],
-                                                                                                                            behav["key"],
-                                                                                                                            behav["description"],
-                                                                                                                            behav["category"],
-                                                                                                                            behav["excluded"],
-                                                                                                                            modifiers
-                                                                                                                            ))
+
+                self.results = dialog.ResultsWidget()
+                self.results.setWindowTitle("View behavior")
+                self.results.ptText.clear()
+                self.results.ptText.setReadOnly(True)
+
+                txt = ("Code: <b>{}</b><br>"
+                      "Type: {}<br>"
+                      "Key: <b>{}</b><br><br>"
+                      "Description: {}<br><br>"
+                      "Category: {}<br><br>"
+                      "Exclude: {}<br><br><br>"
+                      "Modifiers:<br>{}").format(behav["code"],
+                                                 behav["type"],
+                                                 behav["key"],
+                                                 behav["description"],
+                                                 behav["category"] if behav["category"] else "-",
+                                                 behav["excluded"],
+                                                 modifiers)
+
+                self.results.ptText.appendHtml(txt)
+                self.results.show()
+
 
     def send_project_via_socket(self):
         """
@@ -1132,6 +1146,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         allow user to filter behaviors in ethogram
         """
+
+        if not self.pj[ETHOGRAM]:
+            return
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle("Select the behaviors to show in the ethogram table")
@@ -1639,49 +1656,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
 
-    '''
-    todo: to be deleted
-
-    def check_state_events_old(self):
-        """
-        check state events for each subject in current observation
-        check if number is odd
-        """
-
-        out = ""
-        flagStateEvent = False
-
-        subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in  self.pj[OBSERVATIONS][self.observationId][EVENTS]]
-
-        for subject in sorted(set(subjects)):
-
-            behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][self.observationId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
-
-            for behavior in sorted(set(behaviors)):
-                if "STATE" in self.eventType(behavior).upper():
-                    flagStateEvent = True
-
-                    behavior_modifiers = [behav + "@@@" + mod for _, subj, behav, mod, _ in  self.pj[OBSERVATIONS][self.observationId][EVENTS] if behav == behavior and subj == subject]
-
-                    for behavior_modifier in set(behavior_modifiers):
-
-                        if behavior_modifiers.count(behavior_modifier) % 2:
-                            if subject:
-                                subject = " for subject <b>{}</b>".format(subject)
-                            modifier = behavior_modifier.split("@@@")[1]
-                            if modifier:
-                                modifier = "(modifier <b>{}</b>)".format(modifier)
-                            out += "The behavior <b>{0}</b> {1} is not PAIRED {2}<br>".format(behavior, modifier, subject)
-
-        if not out:
-            out = "State events are PAIRED"
-        if flagStateEvent:
-            QMessageBox.warning(self, programName + " - State events check", out)
-        else:
-            QMessageBox.warning(self, programName + " - State events check", "No state events in current observation")
-    '''
-
-
     def check_state_events(self):
         """
         check state events for each subject in current observation
@@ -1690,9 +1664,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         def check_state_events_obs(obsId):
+
+            # check if behaviors are defined as "state event"
+            event_types = {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]}
+            print(event_types)
+            if not event_types or event_types == {"Point event"}:
+                return "No behavior is defined as `State event`"
+
             out = ""
             flagStateEvent = False
-            subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in  self.pj[OBSERVATIONS][obsId][EVENTS]]
+            subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
             for subject in sorted(set(subjects)):
 
@@ -1718,14 +1699,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                    subject=subject if subject else NO_FOCAL_SUBJECT,
                                    time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
 
-            return out
+            return out if out else "All state events are PAIRED"
 
+        tot_out = ""
         if self.observationId:
+
             r = check_state_events_obs(self.observationId)
-            if not r:
-                r = "All state events are PAIRED"
             tot_out = "<strong>{0}</strong><br>{1}<br>".format(self.observationId, r)
-        else: # no current observation
+
+        # no current observation
+        else:
+            if not self.pj[OBSERVATIONS]:
+                QMessageBox.warning(self, programName, "The project does not contain any observation", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
 
              # ask user observations to analyze
             _, selectedObservations = self.selectObservations(MULTIPLE)
@@ -1735,14 +1721,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             tot_out = ""
             for obsId in sorted(selectedObservations):
                 r = check_state_events_obs(obsId)
-                if not r:
-                    r = "All state events are PAIRED"
                 tot_out += "<strong>{0}</strong><br>{1}<br>".format(obsId, r)
 
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle("Check state events")
         self.results.ptText.clear()
+        self.results.ptText.setReadOnly(True)
         self.results.ptText.appendHtml(tot_out)
         self.results.show()
 

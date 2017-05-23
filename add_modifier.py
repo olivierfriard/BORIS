@@ -226,7 +226,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         txt = self.leModifier.text()
         for c in "(|),`~":
             if c in txt:
-                QMessageBox.critical(self, programName, "The modifier contains a character that is not allowed.<br>Check the following characters: <b>,(|)`~</b>")
+                QMessageBox.critical(self, programName, "The character <b>{}</b> is not allowed.<br>The following characters are not allowed in modifiers:<br><b>,(|)`~</b>".format(c))
                 self.leModifier.setFocus()
                 return
 
@@ -254,8 +254,11 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 if not self.modifiers_sets_dict:
                     self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())] = {"name": "", "type": SINGLE_SELECTION, "values": []}
 
-                if "(" + self.leCode.text() + ")" in " ".join(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]):
-                    QMessageBox.critical(self, programName, "The code {} already exists!".format(self.leCode.text()))
+                print("value", " ".join(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]))
+                print("(" + self.leCode.text().upper() + ")")
+
+                if "(" + self.leCode.text().upper() + ")" in " ".join(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]):
+                    QMessageBox.critical(self, programName, "The shortcut code <b>{}</b> already exists!".format(self.leCode.text()))
                     self.leCode.setFocus()
                     return
                 txt += " ({})".format(self.leCode.text().upper())
