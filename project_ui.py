@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Tue May 23 16:58:58 2017
+# Created: Tue May 23 17:07:56 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -314,10 +314,10 @@ class Ui_dlgProject(object):
         self.tabProject.addTab(self.tabIndependentVariables, _fromUtf8(""))
         self.tabObservations = QtGui.QWidget()
         self.tabObservations.setObjectName(_fromUtf8("tabObservations"))
-        self.horizontalLayout_2 = QtGui.QHBoxLayout(self.tabObservations)
-        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
-        self.horizontalLayout = QtGui.QHBoxLayout()
-        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.verticalLayout_3 = QtGui.QVBoxLayout(self.tabObservations)
+        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.twObservations = QtGui.QTableWidget(self.tabObservations)
         self.twObservations.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.twObservations.setDragDropOverwriteMode(False)
@@ -334,13 +334,13 @@ class Ui_dlgProject(object):
         self.twObservations.setHorizontalHeaderItem(2, item)
         item = QtGui.QTableWidgetItem()
         self.twObservations.setHorizontalHeaderItem(3, item)
-        self.horizontalLayout.addWidget(self.twObservations)
-        self.horizontalLayout_2.addLayout(self.horizontalLayout)
+        self.verticalLayout.addWidget(self.twObservations)
+        self.pbRemoveObservation = QtGui.QPushButton(self.tabObservations)
+        self.pbRemoveObservation.setObjectName(_fromUtf8("pbRemoveObservation"))
+        self.verticalLayout.addWidget(self.pbRemoveObservation)
+        self.verticalLayout_3.addLayout(self.verticalLayout)
         self.tabProject.addTab(self.tabObservations, _fromUtf8(""))
         self.verticalLayout_6.addWidget(self.tabProject)
-        self.pbRemoveObservation = QtGui.QPushButton(dlgProject)
-        self.pbRemoveObservation.setObjectName(_fromUtf8("pbRemoveObservation"))
-        self.verticalLayout_6.addWidget(self.pbRemoveObservation)
         self.horizontalLayout_4 = QtGui.QHBoxLayout()
         self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
         spacerItem9 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
@@ -442,8 +442,8 @@ class Ui_dlgProject(object):
         item.setText(_translate("dlgProject", "Description", None))
         item = self.twObservations.horizontalHeaderItem(3)
         item.setText(_translate("dlgProject", "Media", None))
-        self.tabProject.setTabText(self.tabProject.indexOf(self.tabObservations), _translate("dlgProject", "Observations", None))
         self.pbRemoveObservation.setText(_translate("dlgProject", "Remove selected observations", None))
+        self.tabProject.setTabText(self.tabProject.indexOf(self.tabObservations), _translate("dlgProject", "Observations", None))
         self.pbCancel.setText(_translate("dlgProject", "Cancel", None))
         self.pbOK.setText(_translate("dlgProject", "OK", None))
 
