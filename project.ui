@@ -694,9 +694,9 @@ from a BORIS project</string>
         <attribute name="title">
          <string>Observations</string>
         </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
+          <layout class="QVBoxLayout" name="verticalLayout">
            <item>
             <widget class="QTableWidget" name="twObservations">
              <property name="editTriggers">
@@ -733,17 +733,17 @@ from a BORIS project</string>
              </column>
             </widget>
            </item>
+           <item>
+            <widget class="QPushButton" name="pbRemoveObservation">
+             <property name="text">
+              <string>Remove selected observations</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </item>
         </layout>
        </widget>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pbRemoveObservation">
-       <property name="text">
-        <string>Remove selected observations</string>
-       </property>
       </widget>
      </item>
      <item>
