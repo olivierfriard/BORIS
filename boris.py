@@ -47,6 +47,7 @@ import statistics
 import datetime
 import multiprocessing
 import socket
+import copy
 
 
 #BITMAP_EXT = "jpg"
@@ -1001,7 +1002,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.show()
             app.processEvents()
 
-            cp_project = dict(self.pj)
+            cp_project = copy.deepcopy(self.pj)
             if include_obs == NO:
                 cp_project[OBSERVATIONS] = {}
 
@@ -5528,19 +5529,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
 
+        # pass copy of self.pj
+        newProjectWindow.pj = copy.deepcopy(self.pj)
+
         if self.projectWindowGeometry:
             newProjectWindow.restoreGeometry(self.projectWindowGeometry)
 
         newProjectWindow.setWindowTitle(mode + " project")
         newProjectWindow.tabProject.setCurrentIndex(0)   # project information
 
-        newProjectWindow.obs = self.pj[ETHOGRAM]
-        newProjectWindow.subjects_conf = self.pj[SUBJECTS]
+        newProjectWindow.obs = newProjectWindow.pj[ETHOGRAM]
+        newProjectWindow.subjects_conf = newProjectWindow.pj[SUBJECTS]
 
-        if self.pj["time_format"] == S:
+        if newProjectWindow.pj["time_format"] == S:
             newProjectWindow.rbSeconds.setChecked(True)
 
-        if self.pj["time_format"] == HHMMSS:
+        if newProjectWindow.pj["time_format"] == HHMMSS:
             newProjectWindow.rbHMS.setChecked(True)
 
         if mode == NEW:
@@ -5549,25 +5553,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == EDIT:
 
-            if self.pj["project_name"]:
-                newProjectWindow.leProjectName.setText(self.pj["project_name"])
+            if newProjectWindow.pj["project_name"]:
+                newProjectWindow.leProjectName.setText(newProjectWindow.pj["project_name"])
 
-            newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName )
+            newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName)
 
-            if self.pj["project_description"]:
-                newProjectWindow.teDescription.setPlainText(self.pj["project_description"])
+            if newProjectWindow.pj["project_description"]:
+                newProjectWindow.teDescription.setPlainText(newProjectWindow.pj["project_description"])
 
-            if self.pj["project_date"]:
-                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(self.pj["project_date"], "yyyy-MM-ddThh:mm:ss"))
+            if newProjectWindow.pj["project_date"]:
+                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj["project_date"], "yyyy-MM-ddThh:mm:ss"))
             else:
                 newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
             # load subjects in editor
-            if self.pj[SUBJECTS]:
-                for idx in sorted_keys(self.pj[SUBJECTS]):
+            if newProjectWindow.pj[SUBJECTS]:
+                for idx in sorted_keys(newProjectWindow.pj[SUBJECTS]):
                     newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
                     for i, field in enumerate(subjectsFields):
-                        item = QTableWidgetItem(self.pj[SUBJECTS][idx][field])
+                        item = QTableWidgetItem(newProjectWindow.pj[SUBJECTS][idx][field])
                         newProjectWindow.twSubjects.setItem(newProjectWindow.twSubjects.rowCount() - 1, i ,item)
 
                 newProjectWindow.twSubjects.resizeColumnsToContents()
@@ -5575,28 +5579,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # load observation in project window
             newProjectWindow.twObservations.setRowCount(0)
 
-            if self.pj[OBSERVATIONS]:
+            if newProjectWindow.pj[OBSERVATIONS]:
 
-                for obs in sorted(self.pj[OBSERVATIONS].keys()):
+                for obs in sorted(newProjectWindow.pj[OBSERVATIONS].keys()):
 
                     newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
 
                     item = QTableWidgetItem(obs)
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 0, item)
 
-                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]["date"].replace("T"," "))
+                    item = QTableWidgetItem(newProjectWindow.pj[OBSERVATIONS][obs]["date"].replace("T"," "))
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 1, item)
 
-                    item = QTableWidgetItem( self.pj[OBSERVATIONS][obs]["description"])
+                    item = QTableWidgetItem(newProjectWindow.pj[OBSERVATIONS][obs]["description"])
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 2, item)
 
                     mediaList = []
-                    if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
-                        for idx in self.pj[OBSERVATIONS][obs][FILE]:
-                            for media in self.pj[OBSERVATIONS][obs][FILE][idx]:
+                    if newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
+                        for idx in newProjectWindow.pj[OBSERVATIONS][obs][FILE]:
+                            for media in newProjectWindow.pj[OBSERVATIONS][obs][FILE][idx]:
                                 mediaList.append("#{}: {}".format(idx , media))
 
-                    elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
+                    elif newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                         mediaList = [LIVE]
 
                     item = QTableWidgetItem("\n".join(mediaList))
@@ -5605,12 +5609,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.twObservations.resizeColumnsToContents()
 
             # configuration of behaviours
-            if self.pj[ETHOGRAM]:
+            if newProjectWindow.pj[ETHOGRAM]:
 
                 newProjectWindow.signalMapper = QSignalMapper(self)
                 newProjectWindow.comboBoxes = []
 
-                for i in sorted_keys(self.pj[ETHOGRAM]):  #  [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+                for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):  #  [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
 
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
@@ -5623,7 +5627,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             # add combobox with event type
                             newProjectWindow.comboBoxes.append(QComboBox())
                             newProjectWindow.comboBoxes[-1].addItems(BEHAVIOR_TYPES)
-                            newProjectWindow.comboBoxes[-1].setCurrentIndex(BEHAVIOR_TYPES.index(self.pj[ETHOGRAM][i][field]))
+                            newProjectWindow.comboBoxes[-1].setCurrentIndex(BEHAVIOR_TYPES.index(newProjectWindow.pj[ETHOGRAM][i][field]))
 
                             newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
                             newProjectWindow.comboBoxes[-1].currentIndexChanged["int"].connect(newProjectWindow.signalMapper.map)
@@ -5631,8 +5635,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], newProjectWindow.comboBoxes[-1])
 
                         else:
-                            if field in self.pj[ETHOGRAM][i]:
-                                item.setText(str(self.pj[ETHOGRAM][i][field]))  # str for modifiers dict
+                            if field in newProjectWindow.pj[ETHOGRAM][i]:
+                                item.setText(str(newProjectWindow.pj[ETHOGRAM][i][field]))  # str for modifiers dict
                             else:
                                 item.setText("")
 
@@ -5646,14 +5650,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
 
             # load independent variables
-            if INDEPENDENT_VARIABLES in self.pj:
-                for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+            if INDEPENDENT_VARIABLES in newProjectWindow.pj:
+                for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
                     for idx, field in enumerate(tw_indVarFields):
                         item = QTableWidgetItem("")
-                        if field in self.pj[INDEPENDENT_VARIABLES][i]:
-                            item.setText(self.pj[INDEPENDENT_VARIABLES][i][field])
+                        if field in newProjectWindow.pj[INDEPENDENT_VARIABLES][i]:
+                            item.setText(newProjectWindow.pj[INDEPENDENT_VARIABLES][i][field])
 
                         newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
 
@@ -5663,7 +5667,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == NEW:
 
-            self.pj = {"time_format": HHMMSS,
+            newProjectWindow.pj = {"time_format": HHMMSS,
                        "project_date": "",
                        "project_name": "",
                        "project_description": "",
@@ -5675,8 +5679,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        INDEPENDENT_VARIABLES: {},
                        "coding_map": {}}
 
-        # pass copy of self.pj
-        newProjectWindow.pj = dict(self.pj)
 
         if newProjectWindow.exec_():  # button OK
 
@@ -5688,15 +5690,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
 
             # retrieve project dict from window
-            self.pj = dict(newProjectWindow.pj)
+            self.pj = copy.deepcopy(newProjectWindow.pj)
 
             self.project = True
-
-            '''
-            self.pj["project_name"] = newProjectWindow.leProjectName.text()
-            self.pj["project_date"] = newProjectWindow.dteDate.dateTime().toString(Qt.ISODate)
-            self.pj["project_description"] = newProjectWindow.teDescription.toPlainText()
-            '''
 
             # time format
             if newProjectWindow.rbSeconds.isChecked():
@@ -5705,29 +5701,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if newProjectWindow.rbHMS.isChecked():
                 self.timeFormat = HHMMSS
 
-            '''self.pj["time_format"] = self.timeFormat'''
 
             # configuration
             if newProjectWindow.lbObservationsState.text() != "":
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
                 # ethogram
-                '''self.pj[ETHOGRAM] =  newProjectWindow.obs'''
                 self.twEthogram.setRowCount(0)
                 self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
 
                 # subjects
-                '''self.pj[SUBJECTS] =  newProjectWindow.subjects_conf'''
                 self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-
-                # indep variables
-                '''self.pj[INDEPENDENT_VARIABLES] = newProjectWindow.indVar'''
 
             self.initialize_new_project()
 
             self.menu_options()
 
         self.projectWindowGeometry = newProjectWindow.saveGeometry()
+
+        del   newProjectWindow
 
 
     def new_project_activated(self):

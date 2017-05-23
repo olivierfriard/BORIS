@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created: Wed May  3 17:55:59 2017
+# Created: Tue May 23 16:40:13 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -321,7 +321,7 @@ class Ui_dlgProject(object):
         self.twObservations = QtGui.QTableWidget(self.tabObservations)
         self.twObservations.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.twObservations.setDragDropOverwriteMode(False)
-        self.twObservations.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.twObservations.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.twObservations.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.twObservations.setObjectName(_fromUtf8("twObservations"))
         self.twObservations.setColumnCount(4)
@@ -360,7 +360,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(3)
+        self.tabProject.setCurrentIndex(4)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):

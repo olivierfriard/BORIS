@@ -194,15 +194,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.leSetValues.textChanged.connect(self.leSetValues_changed)
         self.dte_default_date.dateTimeChanged.connect(self.dte_default_date_changed)
 
-        #self.twVariables.cellChanged[int, int].connect(self.twVariables_cellChanged)
-
-        #self.twVariables.cellDoubleClicked[int, int].connect(self.twVariables_cellDoubleClicked)
         self.twVariables.cellClicked[int, int].connect(self.twVariables_cellClicked)
 
         self.cbType.currentIndexChanged.connect(self.cbtype_changed)
-        '''
-        self.pbSaveVariable.clicked.connect(self.pbSaveVariable_clicked)
-        '''
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
@@ -210,7 +204,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbRemoveObservation.clicked.connect(self.pbRemoveObservation_clicked)
 
         self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel.clicked.connect(self.reject)
+        self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         self.selected_twvariables_row = -1
 
@@ -417,21 +411,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
                 return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
 
-
-        '''
-        self.lePredefined.setStyleSheet("color: rgb(0, 0, 0);")
-        if self.cbType.currentText() != TIMESTAMP and not self.check_variable_default_value(self.lePredefined.text(), self.cbType.currentText()):
-            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
-            return False, "The default value is not compatible with the variable type"
-
-        # check if default value in set of values
-        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() == "":
-            return False, "No values were defined in set"
-
-        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() and self.lePredefined.text() not in self.leSetValues.text().split(","):
-            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
-            return False
-        '''
 
         return True, "OK"
 
@@ -1234,21 +1213,31 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def pbRemoveObservation_clicked(self):
         """
-        remove first selected observation
+        remove all selected observations
         """
 
         if not self.twObservations.selectedIndexes():
-            QMessageBox.warning(self, programName, 'First select an observation to remove')
+            QMessageBox.warning(self, programName, "No selected observation")
         else:
-
-            response = dialog.MessageDialog(programName, 'Are you sure to remove the selected observation?', [YES, CANCEL])
-
+            response = dialog.MessageDialog(programName, "Are you sure to remove all the selected observation?", [YES, CANCEL])
             if response == YES:
+                rows_to_delete = []
+                for index in self.twObservations.selectedIndexes():
+                    rows_to_delete.append(index.row())
+                    obs_id = self.twObservations.item(index.row(), 0).text()
+                    if obs_id in self.pj[OBSERVATIONS]:
+                        del self.pj[OBSERVATIONS][obs_id]
 
-                obs_id = self.twObservations.item(self.twObservations.selectedIndexes()[0].row(), 0).text()
+                print(rows_to_delete)
+                print(set(rows_to_delete))
+                for row in sorted(set(rows_to_delete), reverse=True):
+                    self.twObservations.removeRow(row)
 
-                del self.pj[OBSERVATIONS][obs_id]
-                self.twObservations.removeRow(self.twObservations.selectedIndexes()[0].row())
+    def pbCancel_clicked(self):
+
+        print(self.pj)
+
+        self.reject()
 
 
     def pbOK_clicked(self):

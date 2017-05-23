@@ -311,7 +311,7 @@ class Ui_dlgProject(object):
         self.twObservations = QtWidgets.QTableWidget(self.tabObservations)
         self.twObservations.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.twObservations.setDragDropOverwriteMode(False)
-        self.twObservations.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.twObservations.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.twObservations.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.twObservations.setObjectName("twObservations")
         self.twObservations.setColumnCount(4)
@@ -350,7 +350,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(3)
+        self.tabProject.setCurrentIndex(4)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
