@@ -23,7 +23,7 @@ This file is part of BORIS.
 """
 
 __version__ = "4.0.3"
-__version_date__ = "2017-05-23"
+__version_date__ = "2017-05-24"
 
 
 import os
