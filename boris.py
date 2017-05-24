@@ -1776,7 +1776,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check BORIS web site for updates
         """
         try:
-            versionURL = "http://www.boris.unito.it/static/ver.dat"
+            versionURL = "http://www.boris.unito.it/static/ver4.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
             if versiontuple(lastVersion) > versiontuple(__version__):
                 msg = """A new version is available: v. <b>{}</b><br>Go to <a href="http://www.boris.unito.it">http://www.boris.unito.it</a> to install it.""".format(lastVersion)
