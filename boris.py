@@ -6895,7 +6895,7 @@ item []:
 
             if self.timeFormat == HHMMSS:
                 editWindow.dsbTime.setVisible(False)
-                editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][ 0 ] ), "hh:mm:ss.zzz") )
+                editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), "hh:mm:ss.zzz") )
 
             if self.timeFormat == S:
                 editWindow.teTime.setVisible(False)
@@ -6908,7 +6908,7 @@ item []:
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
                 editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
             else:
-                QMessageBox.warning(self, programName, "The subject <b>{}</b> do not exists more in the subject's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
+                QMessageBox.warning(self, programName, "The subject <b>{}</b> does not exists more in the subject's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
                 editWindow.cobSubject.setCurrentIndex(0)
 
             sortedCodes = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
@@ -6917,10 +6917,10 @@ item []:
 
             # check if selected code is in code's list (no modification of codes)
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
-                editWindow.cobCode.setCurrentIndex( sortedCodes.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] ) )
+                editWindow.cobCode.setCurrentIndex(sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
             else:
-                logging.warning("The behaviour <b>{0}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] ) )
-                QMessageBox.warning(self, programName, "The behaviour <b>{}</b> do not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+                logging.warning("The behaviour <b>{0}</b> does not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] ) )
+                QMessageBox.warning(self, programName, "The behaviour <b>{}</b> does not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
                 editWindow.cobCode.setCurrentIndex(0)
 
             logging.debug("original modifiers: {}".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]))
@@ -7337,7 +7337,7 @@ item []:
         update status start/stop of events in Events table
         take consideration of subject and modifiers
 
-        do not return value
+        does not return value
         """
 
         stateEventsList = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
@@ -8945,7 +8945,7 @@ item []:
     def pause_video(self):
         """
         pause media
-        do not pause media if already paused (otherwise media will be played)
+        does not pause media if already paused (otherwise media will be played)
         """
 
         if self.playerType == VLC:
