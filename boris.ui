@@ -838,6 +838,11 @@
     <string>Check state events</string>
    </property>
   </action>
+  <action name="actionRunEventOutside">
+   <property name="text">
+    <string>Run Events Outside</string>
+   </property>
+  </action>
   <action name="actionEdit_selected_events">
    <property name="text">
     <string>Edit selected event(s)</string>

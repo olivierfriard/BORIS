@@ -598,6 +598,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFind_replace_events.setEnabled(flagObs)
 
         self.actionCheckStateEvents.setEnabled(flag)
+        self.actionRunEventOutside.setEnabled(flag)
 
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
@@ -704,6 +705,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_event.triggered.connect(self.edit_event)
 
         self.actionCheckStateEvents.triggered.connect(self.check_state_events)
+        self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
@@ -833,6 +835,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.addAction(separator2)
 
         self.twEvents.addAction(self.actionCheckStateEvents)
+        self.twEvents.addAction(self.actionRunEventOutside)
 
         separator2 = QAction(self)
         separator2.setSeparator(True)
@@ -6449,7 +6452,6 @@ item []:
             return out
 
 
-
         if self.observationId and self.playerType == VLC:
 
             media = self.mediaplayer.get_media()
@@ -6479,14 +6481,7 @@ item []:
 
         else:
 
-            '''
-            if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
-            else:
-                fileName, _ = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
-            '''
-
-            fn = QFileDialog(self).getOpenFileName(self, "Select a media file to re-encode/resize", "", "Media files (*)")
+            fn = QFileDialog(self).getOpenFileName(self, "Select a media file", "", "Media files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
             if fileName:
@@ -6872,6 +6867,78 @@ item []:
 
                     self.writeEvent(event, newTime)
                     break
+
+    def run_event_outside(self):
+        if not self.observationId:
+            self.no_observation()
+            return
+
+        if self.twEvents.selectedItems():
+            rowS = self.twEvents.selectedItems()[0].row()
+            rowE = self.twEvents.selectedItems()[-1].row()
+            eventtimeS = self.pj[OBSERVATIONS][self.observationId][EVENTS][rowS][ 0 ]
+            eventtimeE = self.pj[OBSERVATIONS][self.observationId][EVENTS][rowE][ 0 ]
+
+
+            duration1 = []   # in seconds
+            for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:   # check 2nd player
+                duration1.append(self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile])
+
+            mediaFileIdx_s = [idx1 for idx1, x in enumerate(duration1) if eventtimeS >= sum(duration1[0:idx1])][-1]
+            media_path_s = self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][mediaFileIdx_s]
+
+            mediaFileIdx_e = [idx1 for idx1, x in enumerate(duration1) if eventtimeE >= sum(duration1[0:idx1])][-1]
+            media_path_e = self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][mediaFileIdx_e]
+
+            print (rowS, media_path_s, eventtimeS)
+            print (self.pj[OBSERVATIONS][self.observationId][EVENTS][rowS])
+
+            print (rowE, media_path_e, eventtimeE)
+            print (self.pj[OBSERVATIONS][self.observationId][EVENTS][rowE])
+
+            if media_path_s != media_path_e:
+                print("events are located on 2 different media files")
+                return
+
+            ex = os.environ["BORISEXTERNAL"]
+            media_path = media_path_s
+            
+            # example of external command
+            external_command_template = "myprog {MEDIA_PATH} {START_S} {END_S} {DURATION_MS}"
+            
+            external_command = external_command_template.format(MEDIA_PATH=media_path,
+                                                                START_S=eventtimeS,
+                                                                END_S=eventtimeE,
+                                                                START_MS=eventtimeS * 1000,
+                                                                END_MS=eventtimeE * 1000,
+                                                                DURATION_S=eventtimeE-eventtimeS,
+                                                                DURATION_MS=(eventtimeE-eventtimeS) * 1000)
+
+            print(external_command)
+            '''
+            p = subprocess.Popen(external_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            '''
+            
+            '''
+            if eventtimeS == eventtimeE:
+                q = []
+            else:
+                durationsec = eventtimeE-eventtimeS
+                q = ["--durationmsec",str(int(durationsec*1000))]
+            args = [ex, "-f",os.path.abspath(fn),"--seekmsec",str(int(eventtimeS*1000)),*q,*("--size 1 --track 1 --redetect 100").split(" ")]
+            if os.path.split(fn)[1].split("_")[0] in set(["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10"]):
+                args.append("--flip")
+                args.append("2")
+            print (os.path.split(fn)[1].split("_")[0] )
+            print ("running",ex,"with",args,"in",os.path.split(ex)[0])
+            #pid = subprocess.Popen(args,executable=ex,cwd=os.path.split(ex)[0])
+            '''
+
+
+            # Extract Information:
+            #   videoname of current observation
+            #   timeinterval
+            #   custom execution
 
 
     def edit_event(self):
@@ -7990,7 +8057,7 @@ item []:
 
                     tot = 0
                     for idx, d in enumerate(self.duration):
-                        if newTime >= tot and newTime < tot+d:
+                        if newTime >= tot and newTime < tot + d:
                             self.mediaListPlayer.play_item_at_index(idx)
 
                             # wait until media is played
@@ -8001,7 +8068,7 @@ item []:
                             if flagPaused:
                                 self.mediaListPlayer.pause()
 
-                            self.mediaplayer.set_time( newTime -  sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media()) ]))
+                            self.mediaplayer.set_time(newTime - sum(self.duration[0 : self.media_list.index_of_item(self.mediaplayer.get_media())]))
                             break
 
                         tot += d
