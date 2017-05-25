@@ -6900,13 +6900,14 @@ item []:
                 print("events are located on 2 different media files")
                 return
 
-            ex = os.environ["BORISEXTERNAL"]
             media_path = media_path_s
             
-            # example of external command
-            external_command_template = "myprog {MEDIA_PATH} {START_S} {END_S} {DURATION_MS}"
+            # example of external command defined in environment:
+            # export BORISEXTERNAL="myprog {MEDIA_PATH} {START_S} {END_S} {DURATION_MS}"
+
+            external_command_template = os.environ["BORISEXTERNAL"]
             
-            external_command = external_command_template.format(MEDIA_PATH=media_path,
+            external_command = external_command_template.format(MEDIA_PATH='"{}"'.format(media_path),
                                                                 START_S=eventtimeS,
                                                                 END_S=eventtimeE,
                                                                 START_MS=eventtimeS * 1000,
@@ -6918,6 +6919,11 @@ item []:
             '''
             p = subprocess.Popen(external_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             '''
+
+
+
+
+
             
             '''
             if eventtimeS == eventtimeE:
