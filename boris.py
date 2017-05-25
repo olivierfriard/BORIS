@@ -6903,7 +6903,7 @@ item []:
             media_path = media_path_s
             
             # example of external command defined in environment:
-            # export BORISEXTERNAL="myprog {MEDIA_PATH} {START_S} {END_S} {DURATION_MS}"
+            # export BORISEXTERNAL="myprog -i {MEDIA_PATH} -s {START_S} -e {END_S} {DURATION_MS} --other"
 
             external_command_template = os.environ["BORISEXTERNAL"]
             
