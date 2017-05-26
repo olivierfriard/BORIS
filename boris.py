@@ -6885,7 +6885,7 @@ item []:
             # export BORISEXTERNAL="myprog -i {MEDIA_PATH} -s {START_S} -e {END_S} {DURATION_MS} --other"
 
 
-            if "BORISEXTERNAL" in os.environ["BORISEXTERNAL"]:
+            if "BORISEXTERNAL" in os.environ:
                 external_command_template = os.environ["BORISEXTERNAL"]
             else:
                 print("BORISEXTERNAL env var not defined")
