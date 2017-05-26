@@ -7089,17 +7089,6 @@ item []:
         about dialog
         """
 
-
-        ct = self.getLaps()
-        if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
-            ROW = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-        else:
-            cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
-
-        print(cr_list)
-        return
-
-
         ver = 'v. {0}'.format(__version__)
 
         players = []
