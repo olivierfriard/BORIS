@@ -6452,7 +6452,13 @@ item []:
 
         if self.observationId and self.playerType == VLC:
 
+            out = ""
+            for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
+                for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
+                    out += info_from_ffmpeg(file_) +"<br>"
+
             media = self.mediaplayer.get_media()
+
 
             logging.info("State: {}".format(self.mediaplayer.get_state()))
             logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
@@ -6469,10 +6475,6 @@ item []:
             logging.info("is seekable? {0}".format(self.mediaplayer.is_seekable()))
             logging.info("has_vout? {0}".format(self.mediaplayer.has_vout()))
 
-            out = ""
-            for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
-                for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
-                    out += info_from_ffmpeg(file_) +"<br>"
 
 
             self.results = dialog.ResultsWidget()
@@ -7087,6 +7089,17 @@ item []:
         about dialog
         """
 
+
+        ct = self.getLaps()
+        if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
+            ROW = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+        else:
+            cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
+
+        print(cr_list)
+        return
+
+
         ver = 'v. {0}'.format(__version__)
 
         players = []
@@ -7249,7 +7262,6 @@ item []:
                         if mediaTime2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000):
 
                             if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                                print("p1 paused")
                                 self.mediaplayer.set_time(0)
                                 self.mediaListPlayer.pause()
                         else:
@@ -7358,13 +7370,10 @@ item []:
                                     if ev[EVENT_BEHAVIOR_FIELD_IDX] == behav:   # code
                                         cm = ev[EVENT_MODIFIER_FIELD_IDX]
 
-                            #self.pj[OBSERVATIONS][self.observationId][EVENTS].append([currentTime / 1000 - Decimal('0.001'), subjName, behav, cm, ''] )
-
                             event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}
 
                             self.writeEvent(event, currentTime / 1000 - Decimal("0.001"))
 
-                            #self.loadEventsInTW(self.observationId)
 
             self.memMedia = mediaName
 
@@ -7595,15 +7604,7 @@ item []:
                         if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
                             cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
 
-            '''
-            print("csj",csj)
-            print("cm",cm)
-            print("modifier_str", modifier_str)
-            print("modifier_str", modifier_str.replace("None", "").replace("|", ""))
-            '''
-
             for cs in csj:
-                '''print("cs", cs)'''
 
                 # close state if same state without modifier
                 if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
