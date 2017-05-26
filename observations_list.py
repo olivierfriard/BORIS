@@ -109,7 +109,7 @@ class observationsList_widget(QDialog):
         self.pbCancel = QPushButton("Cancel")
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOpen = QPushButton("Open")
+        self.pbOpen = QPushButton("Start")
         hbox2.addWidget(self.pbOpen)
 
         self.pbEdit = QPushButton("Edit")

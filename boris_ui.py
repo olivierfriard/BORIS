@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Tue May  9 16:34:49 2017
+# Created: Fri May 26 13:17:54 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -323,6 +323,8 @@ class Ui_MainWindow(object):
         self.actionEdit_observation_2.setObjectName(_fromUtf8("actionEdit_observation_2"))
         self.actionCheckStateEvents = QtGui.QAction(MainWindow)
         self.actionCheckStateEvents.setObjectName(_fromUtf8("actionCheckStateEvents"))
+        self.actionRunEventOutside = QtGui.QAction(MainWindow)
+        self.actionRunEventOutside.setObjectName(_fromUtf8("actionRunEventOutside"))
         self.actionEdit_selected_events = QtGui.QAction(MainWindow)
         self.actionEdit_selected_events.setObjectName(_fromUtf8("actionEdit_selected_events"))
         self.actionShow_spectrogram = QtGui.QAction(MainWindow)
@@ -454,7 +456,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
-        self.menuObservations.addAction(self.actionMedia_file_information)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_transitions_matrix.menuAction())
@@ -621,7 +622,7 @@ class Ui_MainWindow(object):
         self.actionFrame_by_frame.setText(_translate("MainWindow", "Frame by frame", None))
         self.actionExportEventsSQL.setText(_translate("MainWindow", "Structured Query Language (SQL)", None))
         self.actionAggregatedEventsTabularFormat.setText(_translate("MainWindow", "Tab Separated Values (tsv)", None))
-        self.actionOpen_observation.setText(_translate("MainWindow", "Open observation", None))
+        self.actionOpen_observation.setText(_translate("MainWindow", "Start observation", None))
         self.actionOpen_observation.setShortcut(_translate("MainWindow", "Ctrl+O", None))
         self.actionExportEventTabular_ODS.setText(_translate("MainWindow", "Open Document Spreadsheet (ods)", None))
         self.actionAaaa.setText(_translate("MainWindow", "aaaa", None))
@@ -631,6 +632,7 @@ class Ui_MainWindow(object):
         self.actionEdit_observation_2.setText(_translate("MainWindow", "Edit observation", None))
         self.actionEdit_observation_2.setShortcut(_translate("MainWindow", "Ctrl+E", None))
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events", None))
+        self.actionRunEventOutside.setText(_translate("MainWindow", "Run external program with selected event(s)", None))
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)", None))
         self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram", None))
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "Export events as Praat TextGrid", None))

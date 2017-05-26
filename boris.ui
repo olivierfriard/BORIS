@@ -166,7 +166,6 @@
     <addaction name="actionExport_events_as_Praat_TextGrid"/>
     <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
-    <addaction name="actionMedia_file_information"/>
     <addaction name="actionExtract_events_from_media_files"/>
     <addaction name="separator"/>
     <addaction name="menuCreate_transitions_matrix"/>
@@ -794,7 +793,7 @@
   </action>
   <action name="actionOpen_observation">
    <property name="text">
-    <string>Open observation</string>
+    <string>Start observation</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -840,7 +839,7 @@
   </action>
   <action name="actionRunEventOutside">
    <property name="text">
-    <string>Run Events Outside</string>
+    <string>Run external program with selected event(s)</string>
    </property>
   </action>
   <action name="actionEdit_selected_events">

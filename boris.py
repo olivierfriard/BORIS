@@ -1764,9 +1764,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if result == EDIT:
                 if self.observationId != selectedObs[0]:
-                    self.new_observation( mode=EDIT, obsId=selectedObs[0])   # observation id to edit
+                    self.new_observation(mode=EDIT, obsId=selectedObs[0])   # observation id to edit
                 else:
-                    QMessageBox.warning(self, programName , "The observation <b>{}</b> is running!<br>Close it before editing.".format(self.observationId))
+                    QMessageBox.warning(self, programName, "The observation <b>{}</b> is running!<br>Close it before editing.".format(self.observationId))
 
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew = False):
@@ -6432,6 +6432,9 @@ item []:
         """
 
         def info_from_ffmpeg(media_file_path):
+            """
+            extract info from media file with FFmpeg
+            """
             if os.path.isfile(media_file_path):
                 out =  "<b>{}</b><br><br>".format(os.path.basename(media_file_path))
 
@@ -6469,10 +6472,18 @@ item []:
             out = ""
             for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
                 for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
-                    out += info_from_ffmpeg(file_)
+                    out += info_from_ffmpeg(file_) +"<br>"
 
 
-            QMessageBox.about(self, programName + " - Media file information", "{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle(programName + " - Media file information")
+            self.results.ptText.clear()
+            self.results.ptText.setReadOnly(True)
+
+            self.results.ptText.appendHtml("{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
+            self.results.show()
+
+            #QMessageBox.about(self, programName + " - Media file information", "{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
 
         else:
 
@@ -6480,7 +6491,15 @@ item []:
             fileName = fn[0] if type(fn) is tuple else fn
 
             if fileName:
-                QMessageBox.about(self, programName + " - Media file information", "{}<br>".format(info_from_ffmpeg(fileName)))
+                self.results = dialog.ResultsWidget()
+                self.results.setWindowTitle(programName + " - Media file information")
+                self.results.ptText.clear()
+                self.results.ptText.setReadOnly(True)
+
+                self.results.ptText.appendHtml("{}<br>".format(info_from_ffmpeg(fileName)))
+                self.results.show()
+
+                #QMessageBox.about(self, programName + " - Media file information", "{}<br>".format(info_from_ffmpeg(fileName)))
 
 
 
