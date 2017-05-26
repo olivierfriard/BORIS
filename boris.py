@@ -22,8 +22,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = "4.0.3"
-__version_date__ = "2017-05-24"
+__version__ = "4.1.0"
+__version_date__ = "2017-05-26"
 
 
 import os
