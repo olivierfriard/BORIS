@@ -1317,8 +1317,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     for behavior in plot_parameters["selected behaviors"]:
 
-                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
-                                       (obsId, subject, behavior))
+                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subject, behavior))
                         rows = [{"occurence":float2decimal(r["occurence"])}  for r in cursor.fetchall()]
 
                         if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
@@ -1330,7 +1329,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
                             globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
-                            start = round(row["occurence"] - timeOffset - sum(duration1[0:mediaFileIdx]), 3)
+                            start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
                             if start < timeOffset:
                                 start = Decimal("0.000")
 
@@ -1338,7 +1337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 globalStop = round(row["occurence"] + timeOffset, 3)
 
-                                stop = round(row["occurence"] + timeOffset - sum(duration1[0:mediaFileIdx]))
+                                stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
                                 ffmpeg_command = '"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" '.format(
                                         ffmpeg_bin=ffmpeg_bin,
@@ -1365,7 +1364,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                     globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
 
-                                    stop = round(rows[idx + 1]["occurence"] + timeOffset - sum( duration1[0:mediaFileIdx]))
+                                    stop = round(rows[idx + 1]["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
                                     # check if start after length of media
                                     if start >  self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
@@ -6849,31 +6848,38 @@ item []:
             return
 
         if self.twEvents.selectedItems():
-            rowS = self.twEvents.selectedItems()[0].row()
-            rowE = self.twEvents.selectedItems()[-1].row()
-            eventtimeS = self.pj[OBSERVATIONS][self.observationId][EVENTS][rowS][ 0 ]
-            eventtimeE = self.pj[OBSERVATIONS][self.observationId][EVENTS][rowE][ 0 ]
+            row_s = self.twEvents.selectedItems()[0].row()
+            row_e = self.twEvents.selectedItems()[-1].row()
+            eventtime_s = self.pj[OBSERVATIONS][self.observationId][EVENTS][row_s][0]
+            eventtime_e = self.pj[OBSERVATIONS][self.observationId][EVENTS][row_e][0]
 
 
-            duration1 = []   # in seconds
+            durations = []   # in seconds
 
             # TODO: check for 2nd player
             for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-                duration1.append(self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile])
+                durations.append(self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile])
 
-            mediaFileIdx_s = [idx1 for idx1, x in enumerate(duration1) if eventtimeS >= sum(duration1[0:idx1])][-1]
+            mediaFileIdx_s = [idx1 for idx1, x in enumerate(durations) if eventtime_s >= sum(durations[0:idx1])][-1]
             media_path_s = self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][mediaFileIdx_s]
 
-            mediaFileIdx_e = [idx1 for idx1, x in enumerate(duration1) if eventtimeE >= sum(duration1[0:idx1])][-1]
+            mediaFileIdx_e = [idx1 for idx1, x in enumerate(durations) if eventtime_e >= sum(durations[0:idx1])][-1]
             media_path_e = self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][mediaFileIdx_e]
 
-            # TODO: calculate time for current media file in case of many queued media files
+            # calculate time for current media file in case of many queued media files
 
-            print (rowS, media_path_s, eventtimeS)
-            print (self.pj[OBSERVATIONS][self.observationId][EVENTS][rowS])
+            print(mediaFileIdx_s)
+            print(type(eventtime_s))
+            print(durations)
 
-            print (rowE, media_path_e, eventtimeE)
-            print (self.pj[OBSERVATIONS][self.observationId][EVENTS][rowE])
+            eventtime_onmedia_s = round(eventtime_s - float2decimal(sum(durations[0:mediaFileIdx_s])), 3)
+            eventtime_onmedia_e = round(eventtime_e - float2decimal(sum(durations[0:mediaFileIdx_e])), 3)
+
+            print (row_s, media_path_s, eventtime_s, eventtime_onmedia_s)
+            print (self.pj[OBSERVATIONS][self.observationId][EVENTS][row_s])
+
+            print (row_e, media_path_e, eventtime_e, eventtime_onmedia_e)
+            print (self.pj[OBSERVATIONS][self.observationId][EVENTS][row_e])
 
             if media_path_s != media_path_e:
                 print("events are located on 2 different media files")
@@ -6892,12 +6898,12 @@ item []:
                 return
 
             external_command = external_command_template.format(MEDIA_PATH='"{}"'.format(media_path),
-                                                                START_S=eventtimeS,
-                                                                END_S=eventtimeE,
-                                                                START_MS=eventtimeS * 1000,
-                                                                END_MS=eventtimeE * 1000,
-                                                                DURATION_S=eventtimeE-eventtimeS,
-                                                                DURATION_MS=(eventtimeE-eventtimeS) * 1000)
+                                                                START_S=eventtime_onmedia_s,
+                                                                END_S=eventtime_onmedia_e,
+                                                                START_MS=eventtime_onmedia_s * 1000,
+                                                                END_MS=eventtime_onmedia_e * 1000,
+                                                                DURATION_S=eventtime_onmedia_e - eventtime_onmedia_s,
+                                                                DURATION_MS=(eventtime_onmedia_e - eventtime_onmedia_s) * 1000)
 
             print(external_command)
             '''

@@ -236,6 +236,9 @@ def url2path(url):
     return path
 
 def float2decimal(f):
+    """
+    return decimal value
+    """
     return Decimal(str(f))
 
 
