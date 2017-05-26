@@ -1269,7 +1269,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extract_events(self):
         """
-        extract sequences from media file corresponding to coded events
+        extract sequences from media file corresponding to coded events with FFmpeg
         in case of point event, from -n to +n seconds are extracted (n = self.repositioningTimeOffset)
         """
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -1336,12 +1336,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             if POINT in self.eventType(behavior).upper():
 
-                                #globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(row["occurence"] - timeOffset, 3)
                                 globalStop = round(row["occurence"] + timeOffset, 3)
 
-                                #start = round(row["occurence"] - timeOffset - sum(duration1[0:mediaFileIdx]), 3)
-                                #if start < timeOffset:
-                                #    start = Decimal("0.000")
                                 stop = round(row["occurence"] + timeOffset - sum(duration1[0:mediaFileIdx]))
 
                                 ffmpeg_command = '"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" '.format(
@@ -1367,15 +1363,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
 
-                                    #globalStart = round(row["occurence"], 3)
                                     globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
 
-                                    #start = round(row["occurence"] - sum( duration1[0:mediaFileIdx]), 3)
                                     stop = round(rows[idx + 1]["occurence"] + timeOffset - sum( duration1[0:mediaFileIdx]))
 
                                     # check if start after length of media
                                     if start >  self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
-                                        print("start after end", start, self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
+                                        logging.info("start after end", start, self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
                                         continue
 
                                     ffmpeg_command = '"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop} "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}-{globalStop}{extension}" '.format(
@@ -6819,7 +6813,7 @@ item []:
 
         editWindow.cobSubject.addItems(sortedSubjects)
 
-        sortedCodes = sorted([self.pj[ETHOGRAM][x]['code'] for x in self.pj[ETHOGRAM]])
+        sortedCodes = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
 
         editWindow.cobCode.addItems(sortedCodes)
 
@@ -6836,37 +6830,18 @@ item []:
             if self.timeFormat == S:
                 newTime = Decimal(editWindow.dsbTime.value())
 
-            """memTime = newTime"""
-
-            # get modifier(s)
-            # check mod type (QPushButton or QDialog)
-            '''
-            if type(editWindow.mod)  is select_modifiers.ModifiersRadioButton:
-                modifiers = editWindow.mod.getModifiers()
-
-                if len(modifiers) == 1:
-                    modifier_str = modifiers[0]
-                    if modifier_str == 'None':
-                        modifier_str = ''
-                else:
-                    modifier_str = '|'.join( modifiers )
-
-            #QPushButton coding map
-            if type(editWindow.mod)  is QPushButton:
-                modifier_str = editWindow.mod.text().split('\n')[1].replace('Area(s): ','')
-            '''
-
             for obs_idx in self.pj[ETHOGRAM]:
-                if self.pj[ETHOGRAM][obs_idx]['code'] == editWindow.cobCode.currentText():
+                if self.pj[ETHOGRAM][obs_idx]["code"] == editWindow.cobCode.currentText():
 
                     event = self.full_event(obs_idx)
 
-                    event['subject'] = editWindow.cobSubject.currentText()
+                    event["subject"] = editWindow.cobSubject.currentText()
                     if editWindow.leComment.toPlainText():
-                        event['comment'] = editWindow.leComment.toPlainText()
+                        event["comment"] = editWindow.leComment.toPlainText()
 
                     self.writeEvent(event, newTime)
                     break
+
 
     def run_event_outside(self):
         if not self.observationId:
@@ -6881,7 +6856,9 @@ item []:
 
 
             duration1 = []   # in seconds
-            for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:   # check 2nd player
+
+            # TODO: check for 2nd player
+            for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
                 duration1.append(self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile])
 
             mediaFileIdx_s = [idx1 for idx1, x in enumerate(duration1) if eventtimeS >= sum(duration1[0:idx1])][-1]
@@ -6889,6 +6866,8 @@ item []:
 
             mediaFileIdx_e = [idx1 for idx1, x in enumerate(duration1) if eventtimeE >= sum(duration1[0:idx1])][-1]
             media_path_e = self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][mediaFileIdx_e]
+
+            # TODO: calculate time for current media file in case of many queued media files
 
             print (rowS, media_path_s, eventtimeS)
             print (self.pj[OBSERVATIONS][self.observationId][EVENTS][rowS])
@@ -6901,12 +6880,17 @@ item []:
                 return
 
             media_path = media_path_s
-            
+
             # example of external command defined in environment:
             # export BORISEXTERNAL="myprog -i {MEDIA_PATH} -s {START_S} -e {END_S} {DURATION_MS} --other"
 
-            external_command_template = os.environ["BORISEXTERNAL"]
-            
+
+            if "BORISEXTERNAL" in os.environ["BORISEXTERNAL"]:
+                external_command_template = os.environ["BORISEXTERNAL"]
+            else:
+                print("BORISEXTERNAL env var not defined")
+                return
+
             external_command = external_command_template.format(MEDIA_PATH='"{}"'.format(media_path),
                                                                 START_S=eventtimeS,
                                                                 END_S=eventtimeE,
@@ -6924,7 +6908,7 @@ item []:
 
 
 
-            
+
             '''
             if eventtimeS == eventtimeE:
                 q = []
