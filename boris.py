@@ -1352,7 +1352,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         player="PLAYER{}".format(nplayer),
                                         subject=subject,
                                         behavior=behavior,
-                                        extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx])[-1])
+                                        extension=".mp4")
+                                        #extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx])[-1])
 
                                 logging.debug("ffmpeg command: {}".format( ffmpeg_command ))
                                 p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -1384,7 +1385,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     player="PLAYER{}".format(nplayer),
                                     subject=subject,
                                     behavior=behavior,
-                                    extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx])[-1])
+                                    extension=".mp4")
+                                    #extension=os.path.splitext(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx])[-1])
 
                                     logging.debug("ffmpeg command: {}".format(ffmpeg_command))
                                     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -6897,7 +6899,9 @@ item []:
                 print("BORISEXTERNAL env var not defined")
                 return
 
-            external_command = external_command_template.format(MEDIA_PATH='"{}"'.format(media_path),
+            external_command = external_command_template.format(OBS_ID=self.observationId,
+                                                                MEDIA_PATH='"{}"'.format(media_path),
+                                                                MEDIA_BASENAME='"{}"'.format(os.path.basename(media_path)),
                                                                 START_S=eventtime_onmedia_s,
                                                                 END_S=eventtime_onmedia_e,
                                                                 START_MS=eventtime_onmedia_s * 1000,
