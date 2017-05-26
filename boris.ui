@@ -165,6 +165,8 @@
     <addaction name="actionExportEventString"/>
     <addaction name="actionExport_events_as_Praat_TextGrid"/>
     <addaction name="separator"/>
+    <addaction name="actionIRR"/>
+    <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionExtract_events_from_media_files"/>
     <addaction name="separator"/>
@@ -1070,6 +1072,11 @@
    </property>
    <property name="toolTip">
     <string>View behavior</string>
+   </property>
+  </action>
+  <action name="actionIRR">
+   <property name="text">
+    <string>IRR</string>
    </property>
   </action>
  </widget>

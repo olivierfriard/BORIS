@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created: Fri May 26 13:17:54 2017
+# Created: Fri May 26 16:39:10 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -409,6 +409,8 @@ class Ui_MainWindow(object):
         self.actionSend_project.setObjectName(_fromUtf8("actionSend_project"))
         self.actionViewBehavior = QtGui.QAction(MainWindow)
         self.actionViewBehavior.setObjectName(_fromUtf8("actionViewBehavior"))
+        self.actionIRR = QtGui.QAction(MainWindow)
+        self.actionIRR.setObjectName(_fromUtf8("actionIRR"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -454,6 +456,8 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
+        self.menuObservations.addSeparator()
+        self.menuObservations.addAction(self.actionIRR)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
@@ -675,4 +679,5 @@ class Ui_MainWindow(object):
         self.actionSend_project.setText(_translate("MainWindow", "Project server", None))
         self.actionViewBehavior.setText(_translate("MainWindow", "View behavior", None))
         self.actionViewBehavior.setToolTip(_translate("MainWindow", "View behavior", None))
+        self.actionIRR.setText(_translate("MainWindow", "IRR", None))
 

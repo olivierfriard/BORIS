@@ -397,6 +397,8 @@ class Ui_MainWindow(object):
         self.actionSend_project.setObjectName("actionSend_project")
         self.actionViewBehavior = QtWidgets.QAction(MainWindow)
         self.actionViewBehavior.setObjectName("actionViewBehavior")
+        self.actionIRR = QtWidgets.QAction(MainWindow)
+        self.actionIRR.setObjectName("actionIRR")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -442,6 +444,8 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionExport_aggregated_events)
         self.menuObservations.addAction(self.actionExportEventString)
         self.menuObservations.addAction(self.actionExport_events_as_Praat_TextGrid)
+        self.menuObservations.addSeparator()
+        self.menuObservations.addAction(self.actionIRR)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
@@ -664,4 +668,5 @@ class Ui_MainWindow(object):
         self.actionSend_project.setText(_translate("MainWindow", "Project server"))
         self.actionViewBehavior.setText(_translate("MainWindow", "View behavior"))
         self.actionViewBehavior.setToolTip(_translate("MainWindow", "View behavior"))
+        self.actionIRR.setText(_translate("MainWindow", "IRR"))
 

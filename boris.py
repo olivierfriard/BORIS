@@ -35,6 +35,7 @@ import time
 import json
 from decimal import *
 import re
+import numpy as np
 import hashlib
 import subprocess
 import sqlite3
@@ -575,6 +576,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_observation_2.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled(self.pj[OBSERVATIONS] != {})
 
+        self.actionIRR.setEnabled(self.pj[OBSERVATIONS] != {})
+
         # enabled if observation
         flagObs = self.observationId != ""
 
@@ -730,6 +733,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
+        self.actionIRR.triggered.connect(self.irr)
+
         self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
         self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
         self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(lambda: self.transitions_matrix("frequencies_after_behaviors"))
@@ -875,6 +880,106 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
+    def irr(self):
+        """
+        calculate the Inter-rater Reliability index - Cohen's Kappa of 2 observations
+        https://en.wikipedia.org/wiki/Cohen%27s_kappa
+        """
+
+        # ask user observations to analyze
+        result, selectedObservations = self.selectObservations(MULTIPLE)
+        if not selectedObservations:
+            return
+        if len(selectedObservations) != 2:
+            QMessageBox.information(self, programName, "Select 2 observations for IRR calculation")
+            return
+
+        obsid1, obsid2 = selectedObservations
+
+        # ask for time slice
+        i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 10.0, 0.001, 86400, 3)
+        if not ok:
+            return
+        interval = float2decimal(i)
+
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
+
+        last_event = max(self.pj[OBSERVATIONS][obsid1][EVENTS][-1][0], self.pj[OBSERVATIONS][obsid2][EVENTS][-1][0])
+        print(last_event)
+
+        total_states = []
+
+        currentTime = Decimal("0")
+        while currentTime <= last_event:
+            s1 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+                                                      self.pj[OBSERVATIONS][obsid1][EVENTS],
+                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                       currentTime)[""]))
+
+            if s1 not in total_states:
+                total_states.append(s1)
+
+            s2 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+                                                      self.pj[OBSERVATIONS][obsid2][EVENTS],
+                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                       currentTime)[""]))
+
+            if s2 not in total_states:
+                total_states.append(s2)
+
+
+            currentTime += interval
+
+        total_states = sorted(total_states)
+
+        contingency_table = np.zeros((len(total_states),len(total_states)))
+
+        currentTime = Decimal("0")
+        while currentTime < last_event:
+            s1 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+                                                      self.pj[OBSERVATIONS][obsid1][EVENTS],
+                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                       currentTime)[""]))
+
+            s2 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+                                                      self.pj[OBSERVATIONS][obsid2][EVENTS],
+                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                       currentTime)[""]))
+
+
+            contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+
+            currentTime += interval
+
+        self.results = dialog.ResultsWidget()
+        self.results.setWindowTitle(programName + " - Media file information")
+        self.results.ptText.setReadOnly(True)
+        out = ""
+        out += "<b>Cohen's Kappa - Index of Inter-rater Reliability</b><br><br>"
+        out += "Interval time: {:.3f}<br>".format(interval)
+        out += "Observed behaviors: {}<br>".format(total_states)
+        out += "Number of observed behaviors: {}<br><br>".format(len(total_states))
+        out += "Contingency table: {}<br><br>".format(contingency_table)
+
+        cols_sums = contingency_table.sum(axis=0)
+        rows_sums = contingency_table.sum(axis=1)
+        overall_total = contingency_table.sum()
+        agreements = sum(contingency_table.diagonal())
+
+        sum_ef = 0
+        for idx in range(len(total_states)):
+            sum_ef += rows_sums[idx] * cols_sums[idx] / overall_total
+
+        K = (agreements - sum_ef) / (overall_total - sum_ef)
+
+        out += "K: <b>{:.3f}</b><br>".format(K)
+        self.results.ptText.appendHtml(out)
+        self.results.show()
+
+        return
+
+
+
     def view_behavior(self):
         """
         show details of selected behavior
@@ -983,7 +1088,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if "stopped" in msg_dict["MESSAGE"] or "timeout" in msg_dict["MESSAGE"]:
                     del self.w
                     self.actionSend_project.setText("Project server")
-                    #QMessageBox.information(self, "Project server", msg_dict["MESSAGE"])
                 else:
                     self.w.lwi.addItem(QListWidgetItem("{}: {}".format(datetime.datetime.now().isoformat(), msg_dict["MESSAGE"])))
                     self.w.lwi.scrollToBottom()
@@ -4877,7 +4981,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             import matplotlib.pyplot as plt
             import matplotlib.transforms as mtransforms
             from matplotlib import dates
-            import numpy as np
 
             LINE_WIDTH = line_width
             all_behaviors, observedBehaviors = [], []
@@ -6476,16 +6579,11 @@ item []:
             logging.info("has_vout? {0}".format(self.mediaplayer.has_vout()))
 
 
-
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle(programName + " - Media file information")
-            #self.results.ptText.clear()
             self.results.ptText.setReadOnly(True)
-
             self.results.ptText.appendHtml("{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
             self.results.show()
-
-            #QMessageBox.about(self, programName + " - Media file information", "{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
 
         else:
 
@@ -6495,9 +6593,7 @@ item []:
             if fileName:
                 self.results = dialog.ResultsWidget()
                 self.results.setWindowTitle(programName + " - Media file information")
-                #self.results.ptText.clear()
                 self.results.ptText.setReadOnly(True)
-
                 self.results.ptText.appendHtml("{}<br>".format(info_from_ffmpeg(fileName)))
                 self.results.show()
 
@@ -7173,6 +7269,7 @@ item []:
             self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
             self.twEvents.scrollToItem(self.twEvents.item(ROW, 0))
 
+
     def get_current_states_by_subject(self, stateBehaviorsCodes, events, subjects, time):
         """
         get current states for subjects at given time
@@ -7182,7 +7279,7 @@ item []:
         for idx in subjects:
             currentStates[idx] = []
             for sbc in stateBehaviorsCodes:
-                if len([x[ EVENT_BEHAVIOR_FIELD_IDX ] for x in events
+                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
                                                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
                                                           and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
                                                           and x[EVENT_TIME_FIELD_IDX] <= time]) % 2: # test if odd
