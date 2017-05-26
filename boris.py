@@ -6477,7 +6477,7 @@ item []:
 
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle(programName + " - Media file information")
-            self.results.ptText.clear()
+            #self.results.ptText.clear()
             self.results.ptText.setReadOnly(True)
 
             self.results.ptText.appendHtml("{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
@@ -6493,13 +6493,12 @@ item []:
             if fileName:
                 self.results = dialog.ResultsWidget()
                 self.results.setWindowTitle(programName + " - Media file information")
-                self.results.ptText.clear()
+                #self.results.ptText.clear()
                 self.results.ptText.setReadOnly(True)
 
                 self.results.ptText.appendHtml("{}<br>".format(info_from_ffmpeg(fileName)))
                 self.results.show()
 
-                #QMessageBox.about(self, programName + " - Media file information", "{}<br>".format(info_from_ffmpeg(fileName)))
 
 
 
