@@ -197,12 +197,7 @@ class observationsList_widget(QDialog):
                 item = MyTableWidgetItem(self.data[r][c], 0)
         else:
             item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
-        #self.view.setItem(r, c, QTableWidgetItem(self.data[r][c]))
         return item
-
-
-        #self.view.setItem(r, c, item)
-
 
 
     def view_filter(self):
