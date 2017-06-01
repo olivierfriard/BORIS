@@ -5403,8 +5403,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0.0"):
-            self.pj["project_format_version"] = project_format_version
-            self.projectChanged = True
+
             for idx in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][idx]["modifiers"]:
                     if isinstance(self.pj[ETHOGRAM][idx]["modifiers"], str):
@@ -5416,6 +5415,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.pj[ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
                 else:
                     self.pj[ETHOGRAM][idx]["modifiers"] = {}
+
+            if not project_lowerthan4:
+                QMessageBox.information(self, programName, "The project version was updated from {} to {}.".format(self.pj["project_format_version"], project_format_version))
+                self.pj["project_format_version"] = project_format_version
+                self.projectChanged = True
+
 
         print("project_lowerthan4", project_lowerthan4)
 
