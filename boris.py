@@ -5397,6 +5397,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # update modifiers to JSON format
 
         project_lowerthan4 = False
+
+        print( "project version:", versiontuple(self.pj["project_format_version"])  )
+        print(versiontuple("4.0.0")  )
+
+
         if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0.0"):
             self.pj["project_format_version"] = project_format_version
             for idx in self.pj[ETHOGRAM]:
