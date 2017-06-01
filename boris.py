@@ -898,8 +898,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if state events are paired
         for obsid in [obsid1, obsid2]:
-            if "PAIRED" not in self.check_state_events_obs(obsid):
-                QMessageBox.information(self, programName, "The state events in observation <b></b> are not paired".format(obsid))
+            print(self.check_state_events_obs(obsid))
+            if not self.check_state_events_obs(obsid)[0]:
+                QMessageBox.information(self, programName, "The state events in observation <b>{}</b> are not paired".format(obsid))
                 return
 
 
@@ -1035,7 +1036,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = ""
         out += "<b>Cohen's Kappa - Index of Inter-rater Reliability</b><br><br>"
 
-        out += "Interval time: {:.3f} s<br><br>".format(interval)
+        out += "Interval time: <b>{:.3f} s</b><br><br>".format(interval)
         out += "Selected subjects: <b>{}</b><br><br>".format(", ".join(selected_subjects))
 
 
@@ -1043,14 +1044,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out += "number of events: <b>{:.0f}</b><br>".format(len( [ event for event in  self.pj[OBSERVATIONS][obsid1][EVENTS]
          if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects) or (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in selected_subjects) ] )/2)
 
-        out += "Observation length: <b>{:.3f} s</b><br><br>".format(self.observationTotalMediaLength(obsid1))
+        out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
+        out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid1) / interval)
 
 
         out += "Observation #2: <b>{}</b><br>".format(obsid2)
         out += "number of events: <b>{:.0f}</b><br>".format(len( [ event for event in  self.pj[OBSERVATIONS][obsid2][EVENTS]
          if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects) or (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in selected_subjects) ] )/2)
 
-        out += "Observation length: <b>{:.3f} s</b><br><br>".format(self.observationTotalMediaLength(obsid2))
+        out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid2))
+        out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid2) / interval)
 
         #self.observationTotalMediaLength(obsid2)
 
@@ -1894,7 +1897,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                subject=subject if subject else NO_FOCAL_SUBJECT,
                                time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
 
-        return out if out else "All state events are PAIRED"
+        return (False, out) if out else (True, "All state events are PAIRED")
 
 
     def check_state_events(self):
@@ -1908,7 +1911,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         tot_out = ""
         if self.observationId:
 
-            r = self.check_state_events_obs(self.observationId)
+            _, r = self.check_state_events_obs(self.observationId)
             tot_out = "<strong>{0}</strong><br>{1}<br>".format(self.observationId, r)
 
         # no current observation
@@ -1924,7 +1927,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             tot_out = ""
             for obsId in sorted(selectedObservations):
-                r = self.check_state_events_obs(obsId)
+                _, r = self.check_state_events_obs(obsId)
                 tot_out += "<strong>{0}</strong><br>{1}<br>".format(obsId, r)
 
 
