@@ -5398,12 +5398,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         project_lowerthan4 = False
 
-        print( "project version:", versiontuple(self.pj["project_format_version"])  )
+        print( "project_format_version:", versiontuple(self.pj["project_format_version"])  )
         print(versiontuple("4.0.0")  )
 
 
         if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0.0"):
             self.pj["project_format_version"] = project_format_version
+            self.projectChanged = True
             for idx in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][idx]["modifiers"]:
                     if isinstance(self.pj[ETHOGRAM][idx]["modifiers"], str):
@@ -5413,9 +5414,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for modif_set in modif_set_list:
                             modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": modif_set.split(",")}
                         self.pj[ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
-                        self.projectChanged = True
                 else:
                     self.pj[ETHOGRAM][idx]["modifiers"] = {}
+
+        print("project_lowerthan4", project_lowerthan4)
 
         if project_lowerthan4:
 
