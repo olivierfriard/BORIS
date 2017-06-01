@@ -896,6 +896,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         obsid1, obsid2 = selectedObservations
 
+        # check if state events are paired
+        for obsid in [obsid1, obsid2]:
+            if "PAIRED" not in self.check_state_events_obs(obsid):
+                QMessageBox.information(self, programName, "The state events in observation <b></b> are not paired".format(obsid))
+                return
+
+
+        # ask for subjects to analyze
+
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setWindowTitle("Select the subjects to analyze")
+        paramPanelWindow.lbBehaviors.setText("Subjects")
+
+        for w in [paramPanelWindow.lwSubjects,
+                  paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects, paramPanelWindow.pbReverseSubjectsSelection,
+                  paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors,
+                  paramPanelWindow.lbStartTime, paramPanelWindow.teStartTime, paramPanelWindow.dsbStartTime,
+                  paramPanelWindow.lbEndTime, paramPanelWindow.teEndTime, paramPanelWindow.dsbEndTime]:
+            w.setVisible(False)
+
+        paramPanelWindow.item = QListWidgetItem(NO_FOCAL_SUBJECT)
+        paramPanelWindow.item.setCheckState(Qt.Unchecked)
+        paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
+            paramPanelWindow.item = QListWidgetItem(subject)
+            paramPanelWindow.item.setCheckState(Qt.Unchecked)
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        if paramPanelWindow.exec_():
+            selected_subjects = paramPanelWindow.selectedBehaviors
+
+        print(selected_subjects)
+        subjects_to_analyze = {}
+        if NO_FOCAL_SUBJECT in selected_subjects:
+            subjects_to_analyze[""] = {"name": ""}
+
+        for idx in self.pj[SUBJECTS]:
+            if self.pj[SUBJECTS][idx]["name"] in selected_subjects:
+                subjects_to_analyze[idx] = dict(self.pj[SUBJECTS][idx])
+
+        print("subjects_to_analyze", subjects_to_analyze)
+
+
         # ask for time slice
         i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 10.0, 0.001, 86400, 3)
         if not ok:
@@ -909,66 +953,125 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         total_states = []
 
+
+        all_subjects = dict(self.pj[SUBJECTS], **{"": {"name": NO_FOCAL_SUBJECT}})
+
         currentTime = Decimal("0")
         while currentTime <= last_event:
-            s1 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+
+            for idx in all_subjects:
+                if all_subjects[idx]["name"] not in selected_subjects:
+                    continue
+
+                print("subject", all_subjects[idx]["name"])
+
+                current_states1 = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                       self.pj[OBSERVATIONS][obsid1][EVENTS],
-                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                       currentTime)[""]))
+                                                       subjects_to_analyze, currentTime)
+                print("current_state1", current_states1)
 
-            if s1 not in total_states:
-                total_states.append(s1)
+                if idx in current_states1:
 
-            s2 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+                    s1 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states1[idx])))
+
+                    if s1 not in total_states:
+                        total_states.append(s1)
+
+                current_states2 = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                       self.pj[OBSERVATIONS][obsid2][EVENTS],
-                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                       currentTime)[""]))
+                                                       subjects_to_analyze, currentTime)
 
-            if s2 not in total_states:
-                total_states.append(s2)
+                if idx in current_states2:
+
+                    s2 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states2[idx])))
+
+                    if s2 not in total_states:
+                        total_states.append(s2)
 
 
             currentTime += interval
 
         total_states = sorted(total_states)
 
+        print("total_states", total_states)
+
         contingency_table = np.zeros((len(total_states),len(total_states)))
 
         currentTime = Decimal("0")
         while currentTime < last_event:
-            s1 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+
+            for idx in all_subjects:
+                if all_subjects[idx]["name"] not in selected_subjects:
+                    continue
+
+                current_states1 = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                       self.pj[OBSERVATIONS][obsid1][EVENTS],
-                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                       currentTime)[""]))
+                                                       subjects_to_analyze, currentTime)
 
-            s2 = "+".join(sorted(self.get_current_states_by_subject(StateBehaviorsCodes,
+                if idx in current_states1:
+
+                    s1 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states1[idx])))
+
+
+                current_states2 = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                       self.pj[OBSERVATIONS][obsid2][EVENTS],
-                                                       dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                       currentTime)[""]))
+                                                       subjects_to_analyze, currentTime)
+
+                if idx in current_states2:
+
+                    s2 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states2[idx])))
 
 
-            contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+                if idx in current_states1 and idx in current_states2:
+                    contingency_table[total_states.index(s1), total_states.index(s2)] += 1
 
             currentTime += interval
+
+        print("contingency_table",contingency_table)
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - Media file information")
         self.results.ptText.setReadOnly(True)
         out = ""
         out += "<b>Cohen's Kappa - Index of Inter-rater Reliability</b><br><br>"
-        out += "Interval time: {:.3f}<br>".format(interval)
-        out += "Observed behaviors: {}<br>".format(total_states)
-        out += "Number of observed behaviors: {}<br><br>".format(len(total_states))
-        out += "Contingency table: {}<br><br>".format(contingency_table)
+
+        out += "Interval time: {:.3f} s<br><br>".format(interval)
+        out += "Selected subjects: <b>{}</b><br><br>".format(", ".join(selected_subjects))
+
+
+        out += "Observation #1: <b>{}</b><br>".format(obsid1)
+        out += "number of events: <b>{:.0f}</b><br>".format(len( [ event for event in  self.pj[OBSERVATIONS][obsid1][EVENTS]
+         if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects) or (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in selected_subjects) ] )/2)
+
+        out += "Observation length: <b>{:.3f} s</b><br><br>".format(self.observationTotalMediaLength(obsid1))
+
+
+        out += "Observation #2: <b>{}</b><br>".format(obsid2)
+        out += "number of events: <b>{:.0f}</b><br>".format(len( [ event for event in  self.pj[OBSERVATIONS][obsid2][EVENTS]
+         if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects) or (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in selected_subjects) ] )/2)
+
+        out += "Observation length: <b>{:.3f} s</b><br><br>".format(self.observationTotalMediaLength(obsid2))
+
+        #self.observationTotalMediaLength(obsid2)
+
+
+
+        #out += "Observed behaviors: {}<br><br>".format(", ".join(total_states))
+        #out += "Number of observed behaviors: {}<br><br>".format(len(total_states))
+        #out += "Contingency table: {}<br><br>".format(contingency_table)
 
         cols_sums = contingency_table.sum(axis=0)
         rows_sums = contingency_table.sum(axis=1)
         overall_total = contingency_table.sum()
+        print("overall_total", overall_total)
         agreements = sum(contingency_table.diagonal())
+        print("agreements", agreements)
 
         sum_ef = 0
         for idx in range(len(total_states)):
             sum_ef += rows_sums[idx] * cols_sums[idx] / overall_total
+
+        print("sum_ef", sum_ef)
 
         K = (agreements - sum_ef) / (overall_total - sum_ef)
 
@@ -1333,29 +1436,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def filter_subjects(self):
+        """
+        allow user to select subjects to show in the subjects list
+        """
+
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
         paramPanelWindow.lbBehaviors.setText("Subjects")
-        paramPanelWindow.lwSubjects.setVisible(False)
 
-        paramPanelWindow.pbSelectAllSubjects.setVisible(False)
-        paramPanelWindow.pbUnselectAllSubjects.setVisible(False)
-        paramPanelWindow.pbReverseSubjectsSelection.setVisible(False)
-
-        paramPanelWindow.lbSubjects.setVisible(False)
-        paramPanelWindow.cbIncludeModifiers.setVisible(False)
-        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-        paramPanelWindow.lbStartTime.setVisible(False)
-        paramPanelWindow.teStartTime.setVisible(False)
-        paramPanelWindow.dsbStartTime.setVisible(False)
-        paramPanelWindow.lbEndTime.setVisible(False)
-        paramPanelWindow.teEndTime.setVisible(False)
-        paramPanelWindow.dsbEndTime.setVisible(False)
+        for w in [paramPanelWindow.lwSubjects,
+                  paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects, paramPanelWindow.pbReverseSubjectsSelection,
+                  paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors,
+                  paramPanelWindow.lbStartTime, paramPanelWindow.teStartTime, paramPanelWindow.dsbStartTime,
+                  paramPanelWindow.lbEndTime, paramPanelWindow.teEndTime, paramPanelWindow.dsbEndTime]:
+            w.setVisible(False)
 
         # behaviors  filtered
         filtered_subjects = [self.twSubjects.item(i, 1).text() for i in range(self.twSubjects.rowCount())]
 
-        for subject in [self.pj[SUBJECTS][x]["name"] for x in  sorted_keys(self.pj[SUBJECTS])]:
+        for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
 
             paramPanelWindow.item = QListWidgetItem(subject)
             if subject in filtered_subjects:
@@ -1759,6 +1858,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
 
+    def check_state_events_obs(self, obsId):
+
+        # check if behaviors are defined as "state event"
+        event_types = {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]}
+        print(event_types)
+        if not event_types or event_types == {"Point event"}:
+            return "No behavior is defined as `State event`"
+
+        out = ""
+        flagStateEvent = False
+        subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS]]
+
+        for subject in sorted(set(subjects)):
+
+            behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+
+            for behavior in sorted(set(behaviors)):
+                if "STATE" in self.eventType(behavior).upper():
+                    flagStateEvent = True
+                    lst, memTime = [], {}
+                    for event in [event for event in self.pj[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject]:
+                        behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+                        if behav_modif in lst:
+                            lst.remove(behav_modif)
+                            del memTime[str(behav_modif)]
+                        else:
+                            lst.append(behav_modif)
+                            memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+
+                    for event in lst:
+                        out += """The behavior <b>{behavior}</b> {modifier}is not PAIRED for subject "<b>{subject}</b>" at <b>{time}</b><br>""".format(
+                               behavior=behavior,
+                               modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
+                               subject=subject if subject else NO_FOCAL_SUBJECT,
+                               time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
+
+        return out if out else "All state events are PAIRED"
+
+
     def check_state_events(self):
         """
         check state events for each subject in current observation
@@ -1766,48 +1904,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check if number is odd
         """
 
-        def check_state_events_obs(obsId):
-
-            # check if behaviors are defined as "state event"
-            event_types = {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]}
-            print(event_types)
-            if not event_types or event_types == {"Point event"}:
-                return "No behavior is defined as `State event`"
-
-            out = ""
-            flagStateEvent = False
-            subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS]]
-
-            for subject in sorted(set(subjects)):
-
-                behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
-
-                for behavior in sorted(set(behaviors)):
-                    if "STATE" in self.eventType(behavior).upper():
-                        flagStateEvent = True
-                        lst, memTime = [], {}
-                        for event in [event for event in self.pj[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject]:
-                            behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
-                            if behav_modif in lst:
-                                lst.remove(behav_modif)
-                                del memTime[str(behav_modif)]
-                            else:
-                                lst.append(behav_modif)
-                                memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
-
-                        for event in lst:
-                            out += """The behavior <b>{behavior}</b> {modifier}is not PAIRED for subject "<b>{subject}</b>" at <b>{time}</b><br>""".format(
-                                   behavior=behavior,
-                                   modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
-                                   subject=subject if subject else NO_FOCAL_SUBJECT,
-                                   time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
-
-            return out if out else "All state events are PAIRED"
 
         tot_out = ""
         if self.observationId:
 
-            r = check_state_events_obs(self.observationId)
+            r = self.check_state_events_obs(self.observationId)
             tot_out = "<strong>{0}</strong><br>{1}<br>".format(self.observationId, r)
 
         # no current observation
@@ -1823,7 +1924,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             tot_out = ""
             for obsId in sorted(selectedObservations):
-                r = check_state_events_obs(obsId)
+                r = self.check_state_events_obs(obsId)
                 tot_out += "<strong>{0}</strong><br>{1}<br>".format(obsId, r)
 
 
@@ -4577,7 +4678,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
-                logging.debug("media length for {0} : {1}".format(obsId,totalMediaLength ))
+                logging.debug("media length for {0} : {1}".format(obsId, totalMediaLength))
             else: # LIVE
                 if self.pj[OBSERVATIONS][obsId][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
@@ -4872,12 +4973,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def observationTotalMediaLength(self, obsId):
-        '''
+        """
         total media length for observation
         if media length not available return 0
 
         return total media length in s
-        '''
+        """
 
         totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
 
@@ -5402,7 +5503,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(versiontuple("4.0.0")  )
 
 
-        if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0.0"):
+        if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0"):
 
             for idx in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][idx]["modifiers"]:
@@ -5417,7 +5518,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[ETHOGRAM][idx]["modifiers"] = {}
 
             if not project_lowerthan4:
-                QMessageBox.information(self, programName, "The project version was updated from {} to {}.".format(self.pj["project_format_version"], project_format_version))
+                QMessageBox.information(self, programName, "The project version was updated from {} to {}".format(self.pj["project_format_version"], project_format_version))
                 self.pj["project_format_version"] = project_format_version
                 self.projectChanged = True
 
