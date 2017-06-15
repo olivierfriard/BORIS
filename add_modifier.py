@@ -179,8 +179,33 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         if len(self.modifiers_sets_dict) > 1:
             if dialog.MessageDialog(programName, "Are you sure to remove this set of modifiers?", [YES, NO]) == YES:
-                del self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]
-                self.tabWidgetModifiersSets.removeTab(self.tabWidgetModifiersSets.currentIndex())
+                index_to_delete = self.tabWidgetModifiersSets.currentIndex()
+
+                print("index_to_delete",index_to_delete)
+                print("len(self.modifiers_sets_dict)",len(self.modifiers_sets_dict))
+
+                print( self.modifiers_sets_dict.keys() )
+
+                #del self.modifiers_sets_dict[str(index_to_delete)]
+                for k in range(index_to_delete, len(self.modifiers_sets_dict)-1):
+                    print("k", k)
+                    self.modifiers_sets_dict[str(k)] = self.modifiers_sets_dict[str(k+1)]
+                # del last key
+                del self.modifiers_sets_dict[str(len(self.modifiers_sets_dict)-1)]
+
+                print( self.modifiers_sets_dict.keys() )
+                print( self.modifiers_sets_dict.values() )
+
+                # remove all tabs
+                while self.tabWidgetModifiersSets.count():
+                    self.tabWidgetModifiersSets.removeTab(0)
+
+
+                # recreate tabs
+                for idx in sorted_keys(self.modifiers_sets_dict):
+                    if idx != "0":
+                        self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
+
         else:
             QMessageBox.information(self, programName, "It is not possible to remove the last modifiers' set.")
 
@@ -299,6 +324,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.leModifier.clear()
 
             self.tabMem = tabIndex
+
+            print(self.modifiers_sets_dict)
+
 
             self.leSetName.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
             self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
