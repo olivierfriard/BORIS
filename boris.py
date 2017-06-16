@@ -23,7 +23,7 @@ This file is part of BORIS.
 """
 
 __version__ = "4.1.1"
-__version_date__ = "2017-06-01"
+__version_date__ = "2017-06-16"
 
 
 import os
@@ -7077,6 +7077,13 @@ item []:
 
 
     def run_event_outside(self):
+        """
+        run external prog with events information
+        """
+        QMessageBox.warning(self, programName, "Function not yet implemented")
+        return
+
+
         if not self.observationId:
             self.no_observation()
             return
