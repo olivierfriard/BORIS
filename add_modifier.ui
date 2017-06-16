@@ -113,7 +113,7 @@
             <enum>QTabWidget::Rounded</enum>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>-1</number>
            </property>
            <property name="elideMode">
             <enum>Qt::ElideNone</enum>
@@ -121,11 +121,6 @@
            <property name="documentMode">
             <bool>true</bool>
            </property>
-           <widget class="QWidget" name="set1">
-            <attribute name="title">
-             <string>Set #1</string>
-            </attribute>
-           </widget>
           </widget>
          </item>
          <item>

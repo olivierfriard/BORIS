@@ -61,9 +61,6 @@ class Ui_Dialog(object):
         self.tabWidgetModifiersSets.setElideMode(QtCore.Qt.ElideNone)
         self.tabWidgetModifiersSets.setDocumentMode(True)
         self.tabWidgetModifiersSets.setObjectName("tabWidgetModifiersSets")
-        self.set1 = QtWidgets.QWidget()
-        self.set1.setObjectName("set1")
-        self.tabWidgetModifiersSets.addTab(self.set1, "")
         self.verticalLayout.addWidget(self.tabWidgetModifiersSets)
         self.label_3 = QtWidgets.QLabel(Dialog)
         self.label_3.setObjectName("label_3")
@@ -134,7 +131,7 @@ class Ui_Dialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
 
         self.retranslateUi(Dialog)
-        self.tabWidgetModifiersSets.setCurrentIndex(0)
+        self.tabWidgetModifiersSets.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -143,7 +140,6 @@ class Ui_Dialog(object):
         self.lbModifier.setText(_translate("Dialog", "Modifier"))
         self.lbCode.setText(_translate("Dialog", "Key code"))
         self.lbCodeHelp.setText(_translate("Dialog", "Key code is case insensitive. Type one character or a function key (F1, F2... F12)"))
-        self.tabWidgetModifiersSets.setTabText(self.tabWidgetModifiersSets.indexOf(self.set1), _translate("Dialog", "Set #1"))
         self.label_3.setText(_translate("Dialog", "Set name"))
         self.label_4.setText(_translate("Dialog", "Modifier type"))
         self.cbType.setItemText(0, _translate("Dialog", "Single selection"))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'add_modifier.ui'
 #
-# Created: Thu Apr  6 14:17:20 2017
+# Created: Fri Jun 16 09:24:24 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -76,9 +76,6 @@ class Ui_Dialog(object):
         self.tabWidgetModifiersSets.setElideMode(QtCore.Qt.ElideNone)
         self.tabWidgetModifiersSets.setDocumentMode(True)
         self.tabWidgetModifiersSets.setObjectName(_fromUtf8("tabWidgetModifiersSets"))
-        self.set1 = QtGui.QWidget()
-        self.set1.setObjectName(_fromUtf8("set1"))
-        self.tabWidgetModifiersSets.addTab(self.set1, _fromUtf8(""))
         self.verticalLayout.addWidget(self.tabWidgetModifiersSets)
         self.label_3 = QtGui.QLabel(Dialog)
         self.label_3.setObjectName(_fromUtf8("label_3"))
@@ -149,7 +146,7 @@ class Ui_Dialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_4)
 
         self.retranslateUi(Dialog)
-        self.tabWidgetModifiersSets.setCurrentIndex(0)
+        self.tabWidgetModifiersSets.setCurrentIndex(-1)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
@@ -157,7 +154,6 @@ class Ui_Dialog(object):
         self.lbModifier.setText(_translate("Dialog", "Modifier", None))
         self.lbCode.setText(_translate("Dialog", "Key code", None))
         self.lbCodeHelp.setText(_translate("Dialog", "Key code is case insensitive. Type one character or a function key (F1, F2... F12)", None))
-        self.tabWidgetModifiersSets.setTabText(self.tabWidgetModifiersSets.indexOf(self.set1), _translate("Dialog", "Set #1", None))
         self.label_3.setText(_translate("Dialog", "Set name", None))
         self.label_4.setText(_translate("Dialog", "Modifier type", None))
         self.cbType.setItemText(0, _translate("Dialog", "Single selection", None))

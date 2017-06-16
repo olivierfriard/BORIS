@@ -36,6 +36,8 @@ if QT_VERSION_STR[0] == "4":
 else:
     from add_modifier_ui5 import Ui_Dialog
 
+import copy
+
 import dialog
 from config import *
 from utilities import sorted_keys
@@ -68,28 +70,40 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
-        self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
-
         self.leSetName.textChanged.connect(self.set_name_changed)
 
         self.cbType.currentIndexChanged.connect(self.type_changed)
 
-        if modifiers_str:
-            self.modifiers_sets_dict = eval(modifiers_str)
-        else:
-            self.modifiers_sets_dict = {}
+        dummy_dict = eval(modifiers_str) if modifiers_str else {}
+        modif_values = []
+        for idx in sorted_keys(dummy_dict):
+            modif_values.append(dummy_dict[idx])
+        print("modifiers ", modif_values)
+
+        self.modifiers_sets_dict = {}
+        for modif in modif_values:
+            self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = copy.deepcopy(modif)
+
+        self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
 
         # create tab
         for idx in sorted_keys(self.modifiers_sets_dict):
+            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
+            '''
             if idx != "0":
                 self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
+            '''
 
         # set first tab as active
+        '''
         if self.modifiers_sets_dict:
             self.leSetName.setText(self.modifiers_sets_dict["0"]["name"])
             self.cbType.setCurrentIndex(self.modifiers_sets_dict["0"]["type"])
             self.lwModifiers.addItems(self.modifiers_sets_dict["0"]["values"])
+        '''
         self.tabMem = 0
+
+
 
 
     def set_name_changed(self):
@@ -200,11 +214,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 while self.tabWidgetModifiersSets.count():
                     self.tabWidgetModifiersSets.removeTab(0)
 
-
                 # recreate tabs
                 for idx in sorted_keys(self.modifiers_sets_dict):
-                    if idx != "0":
-                        self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
+                    self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
 
         else:
             QMessageBox.information(self, programName, "It is not possible to remove the last modifiers' set.")
@@ -327,10 +339,10 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
             print(self.modifiers_sets_dict)
 
-
-            self.leSetName.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
-            self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
-            self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
+            if tabIndex != -1:
+                self.leSetName.setText(self.modifiers_sets_dict[str(tabIndex)]["name"])
+                self.cbType.setCurrentIndex(self.modifiers_sets_dict[str(tabIndex)]["type"])
+                self.lwModifiers.addItems(self.modifiers_sets_dict[str(tabIndex)]["values"])
 
 
     def getModifiers(self):
