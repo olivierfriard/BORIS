@@ -9197,17 +9197,31 @@ item []:
                         # check if behaviors are in current project ethogram
                         new_behav_set = set([event[EVENT_BEHAVIOR_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
                         if new_behav_set:
-                            if dialog.MessageDialog(programName, "Some coded behaviors in <b>{}</b> are not in the ethogram:<br><b>{}</b>".format(obsId, ", ".join(new_behav_set)), ["Skip observation", "Import observation"]) == "Skip observation":
+                            diag_result = dialog.MessageDialog(programName, "Some coded behaviors in <b>{}</b> are not in the ethogram:<br><b>{}</b>".format(obsId, ", ".join(new_behav_set)),
+                                                                            ["Interrupt import", "Skip observation", "Import observation"])
+                            if diag_result == "Interrupt import":
+                                return
+                            if diag_result == "Skip observation":
                                 continue
 
                         # check if subjects are in current project
                         new_subject_set = set([event[EVENT_SUBJECT_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
-                        if new_subject_set and new_subject_set != {''}:
-                            if dialog.MessageDialog(programName, "Some coded subjects in <b>{}</b> are not defined in the project:<br><b>{}</b>".format(obsId, ", ".join(new_subject_set)), ["Skip observation", "Import observation"]) == "Skip observation":
+                        if new_subject_set and new_subject_set != {""}:
+                            diag_result = dialog.MessageDialog(programName, "Some coded subjects in <b>{}</b> are not defined in the project:<br><b>{}</b>".format(obsId, ", ".join(new_subject_set)),
+                                                                            ["Interrupt import", "Skip observation", "Import observation"])
+                            if diag_result == "Interrupt import":
+                                return
+
+                            if diag_result == "Skip observation":
                                 continue
 
                         if obsId in self.pj[OBSERVATIONS].keys():
-                            if dialog.MessageDialog(programName, "The observation <b>{}</b> already exists in the current project.<br>".format(obsId), ["Skip observation", "Rename observation"]) == "Rename observation":
+                            diag_result = dialog.MessageDialog(programName, "The observation <b>{}</b> already exists in the current project.<br>".format(obsId),
+                                                                                    ["Interrupt import", "Skip observation", "Rename observation"])
+                            if diag_result == "Interrupt import":
+                                return
+
+                            if diag_result == "Rename observation":
                                 self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId, datetime_iso8601())] = dict(fromProject[OBSERVATIONS][obsId])
                                 flagImported = True
                         else:
