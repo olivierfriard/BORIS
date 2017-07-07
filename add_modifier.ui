@@ -124,7 +124,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="lbSetName">
            <property name="text">
             <string>Set name</string>
            </property>
@@ -134,7 +134,7 @@
           <widget class="QLineEdit" name="leSetName"/>
          </item>
          <item>
-          <widget class="QLabel" name="label_4">
+          <widget class="QLabel" name="lbType">
            <property name="text">
             <string>Modifier type</string>
            </property>

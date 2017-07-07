@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'add_modifier.ui'
 #
-# Created: Fri Jun 16 09:24:24 2017
+# Created: Fri Jul  7 12:43:56 2017
 #      by: PyQt4 UI code generator 4.11.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -77,15 +77,15 @@ class Ui_Dialog(object):
         self.tabWidgetModifiersSets.setDocumentMode(True)
         self.tabWidgetModifiersSets.setObjectName(_fromUtf8("tabWidgetModifiersSets"))
         self.verticalLayout.addWidget(self.tabWidgetModifiersSets)
-        self.label_3 = QtGui.QLabel(Dialog)
-        self.label_3.setObjectName(_fromUtf8("label_3"))
-        self.verticalLayout.addWidget(self.label_3)
+        self.lbSetName = QtGui.QLabel(Dialog)
+        self.lbSetName.setObjectName(_fromUtf8("lbSetName"))
+        self.verticalLayout.addWidget(self.lbSetName)
         self.leSetName = QtGui.QLineEdit(Dialog)
         self.leSetName.setObjectName(_fromUtf8("leSetName"))
         self.verticalLayout.addWidget(self.leSetName)
-        self.label_4 = QtGui.QLabel(Dialog)
-        self.label_4.setObjectName(_fromUtf8("label_4"))
-        self.verticalLayout.addWidget(self.label_4)
+        self.lbType = QtGui.QLabel(Dialog)
+        self.lbType.setObjectName(_fromUtf8("lbType"))
+        self.verticalLayout.addWidget(self.lbType)
         self.cbType = QtGui.QComboBox(Dialog)
         self.cbType.setObjectName(_fromUtf8("cbType"))
         self.cbType.addItem(_fromUtf8(""))
@@ -154,8 +154,8 @@ class Ui_Dialog(object):
         self.lbModifier.setText(_translate("Dialog", "Modifier", None))
         self.lbCode.setText(_translate("Dialog", "Key code", None))
         self.lbCodeHelp.setText(_translate("Dialog", "Key code is case insensitive. Type one character or a function key (F1, F2... F12)", None))
-        self.label_3.setText(_translate("Dialog", "Set name", None))
-        self.label_4.setText(_translate("Dialog", "Modifier type", None))
+        self.lbSetName.setText(_translate("Dialog", "Set name", None))
+        self.lbType.setText(_translate("Dialog", "Modifier type", None))
         self.cbType.setItemText(0, _translate("Dialog", "Single selection", None))
         self.cbType.setItemText(1, _translate("Dialog", "Multiple selection", None))
         self.cbType.setItemText(2, _translate("Dialog", "Numeric", None))
