@@ -22,8 +22,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = "4.1.2"
-__version_date__ = "2017-07-07"
+__version__ = "4.1.3"
+__version_date__ = "2017-07-10"
 
 
 import os
@@ -1267,10 +1267,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
+
+        print("fileNames", fileNames)
+
         if fileNames:
 
             horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
                                                              "The aspect ratio will be maintained"), 1024, 352, 1920, 10)
+            if not ok:
+                return
 
             # check if recoded files already exist
             files_list = []
@@ -1284,7 +1289,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             self.w = recode_widget.Info_widget()
-            w.lwi.setVisible(False)
+            self.w.lwi.setVisible(False)
             self.w.resize(350, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
