@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 
-        <title>BORIS</title>
+        <title>Features</title>
         <meta charset="utf-8" />
 
 
@@ -38,7 +38,7 @@
               <ul class="columns">
                 <li><a href="/">Home</a></li>
 
-                <li><a href="/pages/features.html">Features</a></li>
+                <li class="active"><a href="/pages/features.html">Features</a></li>
                 <li><a href="/pages/screenshots.html">Screenshots</a></li>
                 <li><a href="/pages/download.html">Download</a></li>
                 <li><a href="/pages/documentation.html">Documentation</a></li>
@@ -46,95 +46,69 @@
               </ul>
             </div>
 
-<section id="content">
+    <h1>Features</h1>
+    
 
-
-<img src="images/logo_boris_500px.png">
-
-<img src="images/dbios_unito_500px.png">
-
-
-<br>
-      <h2><span style="font-size:larger;margin:0">B</span>ehavioral <span style="font-size:larger;margin:0">O</span>bservation <span style="font-size:larger;margin:0">R</span>esearch <span style="font-size:larger;margin:0">I</span>nteractive <span style="font-size:larger;margin:0">S</span>oftware</h2>
-<p>
-BORIS is an easy-to-use event logging software for video/audio coding and live observations.<br>
-BORIS is a free and open-source software available for GNU/Linux, Windows and Mac OS X.<br>
-</p>
-
-<p>
-<img src="images/tux_128px.png" alt="tux logo" width="68px" style="padding-right:20px">
-<img src="images/macos_logo.png" alt="mac logo logo" width="84px" style="padding-right:20px">
-<img src="images/windows_logo.png" alt="microsoft windows logo" style="padding-right:20px">
-<img src="images/android_logo.png" alt="android logo" width="84px" style="padding-right:20px">
-</p>
-
-
-
-<div class="card-block">
-<h2>Features</h2>
-
-<ul>
+    <ul class="simple">
 <li>Coding and describing visual and audio information using an integrated playback</li>
+<li>Configuration of an unlimited number of behaviors that can be organized in categories</li>
+<li>Configuration of an unlimited number of modifiers for each behavior. The modifiers can be of 3 type (single selection, multiple selection and numeric) and can be organized in an unlimited number of sets.</li>
+<li>Configuration of an unlimited number of subjects</li>
+<li>Behaviors can be defined as <strong>State events</strong> (with duration) or <strong>Point events</strong> (no duration)</li>
+<li>Definition of an unlimited number of independent variables (text, numeric, timestamp, set of values)</li>
 <li>Frame-by-frame mode</li>
-<li>Configuration of unlimited number of subjects and behaviors</li>
-<li>Definition of an unlimited number of independent variables (text, numeric, set of values)</li>
-<li>Up to 2 media files can be synchronously played (with positive or negative offset)</li>
-<li>Coding of media files at various playback speeds</li>
-<li><a href="/static/screenshots2/spectrogram.png">Sound spectrogram visualization</a></li>
-<li>Media files can be enqueue for playing, the event time will be the cumulative over all media.
-<li><a href="static/screenshots2/time_budget.png">Time budget analysis</a></li>
-<li><a href="static/screenshots2/plot_events.png">Graphical representation of coded data</a></li>
-<li><a href="static/screenshots2/geometric_measurements.png">Geometric measurements (distance, area and angle)</a></li>
-<li>Exporting coded data in various formats (TSV, CSV, ODS, XLS, SQL)</li>
-<li>Use of open format for storing data (JSON) to allow further analysis</li>
+<li>Up to 2 media files can be synchronously played. A time offset can be set for second player.</li>
+<li>Availability of a mobile app for live observations (BORIS App)</li>
+<li>Coding can be done with keyboard, mouse or with a coding pad (for touch screens)</li>
+<li>Coding of media files at various playback speeds (from x0.1 to x8)</li>
+<li>Sound spectrogram visualization</li>
+<li>Geometric measurements (distance, area and angle)</li>
+<li>More media can be enqueue for playing, in this case the coded event time will be the cumulative time over all media.</li>
+<li><dl class="first docutils">
+<dt>Coded events can be exported in various formats for further analysis:</dt>
+<dd><ul class="first last">
+<li>Tab/Comma separated values format (TSV CSV)</li>
+<li>Open Document Spreadsheet (ODS)</li>
+<li>Microsoft-Excel (XLS)</li>
+<li>HTML</li>
+<li>SDIS for analysis with the GSEQ program.</li>
+<li>Praat TextGrid</li>
+<li>Behavioral strings for analysis with BSA or other</li>
 </ul>
-<a href="/pages/features.html">All features</a>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Time budget analysis. Results can be exported in various formats:</dt>
+<dd><ul class="first last">
+<li>Tab Separated Values (TSV)</li>
+<li>Comma Separated Values (CSV)</li>
+<li>Open Document Spreadsheet (ODS)</li>
+<li>Microsoft-Excel (XLS)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Graphical representation of coded data with Matplotlib. The plots can be exported in various formats to be included in scientific presentations:</dt>
+<dd><ul class="first last">
+<li>SVG format</li>
+<li>Portable Document Format (PDF)</li>
+<li>Postscript (PS or EPS)</li>
+<li>Portable Network Graphics (PNG)</li>
+<li>JPEG</li>
+<li>Tagged Image File Format (TIFF)</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Definition of unlimited number of modifier's coding maps to facilitate activities like facial expression coding.</li>
+<li>Media snapshot</li>
+<li>Creation of video subtitles with coded events</li>
+<li>Use of open format for storing data (JSON) to allow further analysis</li>
+<li>Import of Global Definition File from JWatcher</li>
+</ul>
 
-
-</div> <!-- well features-->
-<!--
-   <div class="row">
-
-
-        <div class="eleven columns">
-                 <ol id="post-list">
-                </ol>
-
-        </div>
-
-<div class="three columns">
-
-<h4>Pages</h4>
-
- <ul>
-      <li><a href="/pages/features.html">Features</a></li>
-      <li><a href="/pages/screenshots.html">Screenshots</a></li>
-      <li><a href="/pages/download.html">Download</a></li>
-      <li><a href="/pages/documentation.html">Documentation</a></li>
-  </ul>
-
-<!--
-<h4>Categories</h4>
--->
-
-<!--
-<h4>Tags</h4>
--->
-
-<!--
-<nav class="widget">
-  <h4>Social</h4>
-  <ul class="blank">
-    <li><a href="https://twitter.com/BORIS_behav_obs">Twitter</a></li>
-    <li><a href="http://www.facebook.com/pages/BORIS-software/318697441616743">Facebook</a></li>
-  </ul>
-</nav>
-
--->
-
-</div> </div><!-- /.row -->
-
-</section><!-- /#content -->
 
        </div><!-- /.row -->
     </div><!-- /.container -->
