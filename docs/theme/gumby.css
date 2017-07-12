@@ -149,10 +149,12 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
     word-wrap: break-word;
   }
 }
+/*
 h1 {
   font-size: 68px;
   font-size: 4.25rem;
 }
+*/
 h1.xlarge {
   font-size: 110px;
   font-size: 6.875rem;
@@ -166,30 +168,36 @@ h1.absurd {
   font-size: 11.0625rem;
 }
 
-h2 {
+h1 {
   font-size: 42px;
   font-size: 2.625rem;
 }
 
-h3 {
+h2 {
   font-size: 30px;
   font-size: 1.875rem;
 }
 
-h4 {
+h3 {
   font-size: 26px;
   font-size: 1.625rem;
 }
 
-h5 {
+h4 {
   font-size: 18px;
   font-size: 1.125rem;
+}
+
+h5 {
+  font-size: 16px;
+  font-size: 1rem;
 }
 
 h6 {
   font-size: 16px;
   font-size: 1rem;
 }
+
 
 @media only screen and (max-width: 767px) {
   h1 {
@@ -209,9 +217,9 @@ h6 {
 }
 
 /*=====================================================
- 
+
   Links & Paragraph styles
-  
+
   ======================================================*/
 p {
   font-family: "Open Sans";
@@ -247,7 +255,7 @@ a:hover {
 /*=====================================================
 
   Lists
-  
+
  ======================================================*/
 ul, ol {
   margin-bottom: 0.273em;
