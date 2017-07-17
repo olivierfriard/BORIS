@@ -257,7 +257,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         if self.leProjectName.text():
             ethogram_data.title = "Ethogram of {} project".format(self.leProjectName.text())
             
-        ethogram_data.headers = ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category"]
+        ethogram_data.headers = ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"]
         
         for r in range(0, self.twBehaviors.rowCount()):
             
@@ -269,6 +269,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             row.append(self.twBehaviors.item(r, behavioursFields["description"]).text())
             row.append(self.twBehaviors.item(r, behavioursFields["key"]).text())
             row.append(self.twBehaviors.item(r, behavioursFields["category"]).text())
+            row.append(self.twBehaviors.item(r, behavioursFields["excluded"]).text())
             ethogram_data.append(row)
 
         try:
