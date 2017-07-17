@@ -22,8 +22,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = "4.1.3"
-__version_date__ = "2017-07-10"
+__version__ = "4.2"
+__version_date__ = "2017-07-17"
 
 
 import os
@@ -5507,9 +5507,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         project_lowerthan4 = False
 
-        print( "project_format_version:", versiontuple(self.pj["project_format_version"])  )
-        print(versiontuple("4.0.0")  )
-
+        logging.debug("project_format_version: {}".format(versiontuple(self.pj["project_format_version"])))
 
         if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0"):
 
@@ -5531,7 +5529,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectChanged = True
 
 
-        print("project_lowerthan4", project_lowerthan4)
+        # add category key if not found
+        for idx in self.pj[ETHOGRAM]:
+            if "category" not in self.pj[ETHOGRAM][idx]:
+                self.pj[ETHOGRAM][idx]["category"] = ""
+
+        logging.debug("project_lowerthan4: {}".format(project_lowerthan4))
 
         if project_lowerthan4:
 
@@ -5539,7 +5542,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
 
             QMessageBox.information(self, programName, ("The project was updated to the current project version ({project_format_version}).\n\n"
-                                                        "The old file project  was saved as {project_file_name}").format(project_format_version=project_format_version,
+                                                        "The old file project was saved as {project_file_name}").format(project_format_version=project_format_version,
                                                                                                                          project_file_name=projectFileName.replace(".boris", "_old_version.boris")))
 
 
@@ -5547,12 +5550,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         project_updated = False
 
         for obs in self.pj[OBSERVATIONS]:
+            
             if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and "media_info" not in self.pj[OBSERVATIONS][obs]:
                 self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
                 for player in [PLAYER1, PLAYER2]:
+                    
+                    # fix bug Anne Maijer 2017-07-17
+                    if self.pj[OBSERVATIONS][obs]["file"] == []:
+                        self.pj[OBSERVATIONS][obs]["file"] = {"1":[], "2":[]}
+                    
                     for media_file_path in self.pj[OBSERVATIONS][obs]["file"][player]:
                         nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_file_path)
-                        #print(media_file_path, nframe, videoTime, videoDuration, fps, hasVideo, hasAudio)
+
                         if videoDuration:
                             self.pj[OBSERVATIONS][obs]['media_info']["length"][media_file_path] = videoDuration
                             self.pj[OBSERVATIONS][obs]['media_info']["fps"][media_file_path] = fps
@@ -5728,7 +5737,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mode: new/edit
         """
 
-        print("self.projectChanged", self.projectChanged)
+        logging.debug("self.projectChanged: {}".format(self.projectChanged))
 
         if self.observationId:
             QMessageBox.warning(self, programName , "You must close the current observation before creating a new project or modifying the current project.")
@@ -6334,9 +6343,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
 
-                            print("duration1", duration1)
-                            print([idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])])
-
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
                             mediaFileString = self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]
                             fpsString = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]]
@@ -6456,7 +6462,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dataList = list(data[1:])
                 for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
 
-                    #print(event)
                     if event[0] == obsId:
 
                         behavior = event[-7]
@@ -6831,7 +6836,6 @@ item []:
             # show frame-by_frame tab
             self.toolBox.setCurrentIndex(1)
 
-            print("self.mediaplayer.get_time()", self.mediaplayer.get_time())
             globalTime = (sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) + self.mediaplayer.get_time())
 
             fps = list(self.fps.values())[0]

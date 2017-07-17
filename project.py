@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 """
 
-import logging
+
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -31,12 +31,14 @@ except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
+import logging
 import json
 from utilities import sorted_keys
 
 from config import *
 import add_modifier
 import dialog
+import tablib
 
 if QT_VERSION_STR[0] == "4":
     from project_ui import Ui_dlgProject
@@ -170,6 +172,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbImportFromJWatcher.clicked.connect(self.pbImportFromJWatcher_clicked)
         self.pbImportFromTextFile.clicked.connect(self.pbImportFromTextFile_clicked)
 
+        self.pbExportEthogram.clicked.connect(self.export_ethogram)
+
         self.twBehaviors.cellChanged[int, int].connect(self.twBehaviors_cellChanged)
         self.twBehaviors.cellDoubleClicked[int, int].connect(self.twBehaviors_cellDoubleClicked)
 
@@ -211,6 +215,98 @@ class projectDialog(QDialog, Ui_dlgProject):
         # disable widget for indep var setting
         for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
             widget.setEnabled(False)
+
+
+    def export_ethogram(self):
+        """
+        export ethogram in various format
+        """
+        while True:
+            
+            fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
+                               "Comma Separated Values (*.txt *.csv);;"
+                               "Microsoft Excel XLS (*.xls);;"
+                               "Open Document Spreadsheet ODS (*.ods);;"
+                               "HTML (*.html);;"
+                               "All files (*)")
+            
+            if QT_VERSION_STR[0] == "4":
+                f = QFileDialog(self).getSaveFileNameAndFilter
+            else:
+                f = QFileDialog(self).getSaveFileName
+
+            fileName, filter_ = f(self, "Export ethogram", "", fileFormats)
+            if not fileName:
+                return
+
+            outputFormat = ""
+            availableFormats = ("tsv", "csv", "xls", "ods", "html")
+            for fileExtension in availableFormats:
+                if fileExtension in filter_:
+                    outputFormat = fileExtension
+                    if not fileName.upper().endswith("." + fileExtension.upper()):
+                        fileName += "." + fileExtension
+
+            if not outputFormat:
+                QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            else:
+                break
+                
+        ethogram_data = tablib.Dataset()
+        ethogram_data.title = "Ethogram"
+        if self.leProjectName.text():
+            ethogram_data.title = "Ethogram of {} project".format(self.leProjectName.text())
+            
+        ethogram_data.headers = ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category"]
+        
+        for r in range(0, self.twBehaviors.rowCount()):
+            
+            row = []
+            row.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
+
+            combobox = self.twBehaviors.cellWidget(r, behavioursFields["type"])
+            row.append(BEHAVIOR_TYPES[combobox.currentIndex()])
+            row.append(self.twBehaviors.item(r, behavioursFields["description"]).text())
+            row.append(self.twBehaviors.item(r, behavioursFields["key"]).text())
+            row.append(self.twBehaviors.item(r, behavioursFields["category"]).text())
+            ethogram_data.append(row)
+
+        try:
+            if outputFormat == "tsv":
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(ethogram_data.tsv))
+            if outputFormat == "csv":
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(ethogram_data.csv))
+            if outputFormat == "ods":
+                with open(fileName, "wb") as f:
+                    f.write(ethogram_data.ods)
+            if outputFormat == "xls":
+                
+                # check worksheet title
+                for forbidden_char in r"\/*[]:?":
+                    ethogram_data.title = ethogram_data.title.replace(forbidden_char, " ")
+                if len(ethogram_data.title) > 31:
+                    ethogram_data.title = ethogram_data.title[:31]
+
+                with open(fileName, "wb") as f:
+                    f.write(ethogram_data.xls)
+            if outputFormat == "html":
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(ethogram_data.html))
+
+            '''
+            if outputFormat == "xlsx":
+                with open(fileName, "wb") as f:
+                    f.write(data.xlsx)
+            '''
+
+        except:
+            errorMsg = sys.exc_info()[1]
+
+            logging.critical(errorMsg)
+            QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
 
     def leLabel_changed(self):

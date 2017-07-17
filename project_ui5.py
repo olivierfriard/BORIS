@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created by: PyQt5 UI code generator 5.7.1
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -21,7 +21,6 @@ class Ui_dlgProject(object):
         self.tabInformation = QtWidgets.QWidget()
         self.tabInformation.setObjectName("tabInformation")
         self.formLayout = QtWidgets.QFormLayout(self.tabInformation)
-        self.formLayout.setContentsMargins(0, 0, 0, 0)
         self.formLayout.setObjectName("formLayout")
         self.label = QtWidgets.QLabel(self.tabInformation)
         self.label.setObjectName("label")
@@ -60,7 +59,6 @@ class Ui_dlgProject(object):
         self.tabConfiguration = QtWidgets.QWidget()
         self.tabConfiguration.setObjectName("tabConfiguration")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.tabConfiguration)
-        self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -127,6 +125,9 @@ class Ui_dlgProject(object):
         self.pbImportFromTextFile = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbImportFromTextFile.setObjectName("pbImportFromTextFile")
         self.verticalLayout_11.addWidget(self.pbImportFromTextFile)
+        self.pbExportEthogram = QtWidgets.QPushButton(self.tabConfiguration)
+        self.pbExportEthogram.setObjectName("pbExportEthogram")
+        self.verticalLayout_11.addWidget(self.pbExportEthogram)
         self.horizontalLayout_11.addLayout(self.verticalLayout_11)
         self.verticalLayout_5.addLayout(self.horizontalLayout_11)
         self.lbObservationsState = QtWidgets.QLabel(self.tabConfiguration)
@@ -137,7 +138,6 @@ class Ui_dlgProject(object):
         self.tabSubjects = QtWidgets.QWidget()
         self.tabSubjects.setObjectName("tabSubjects")
         self.verticalLayout_16 = QtWidgets.QVBoxLayout(self.tabSubjects)
-        self.verticalLayout_16.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_16.setObjectName("verticalLayout_16")
         self.verticalLayout_14 = QtWidgets.QVBoxLayout()
         self.verticalLayout_14.setObjectName("verticalLayout_14")
@@ -182,7 +182,6 @@ class Ui_dlgProject(object):
         self.tabIndependentVariables = QtWidgets.QWidget()
         self.tabIndependentVariables.setObjectName("tabIndependentVariables")
         self.horizontalLayout_14 = QtWidgets.QHBoxLayout(self.tabIndependentVariables)
-        self.horizontalLayout_14.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_14.setObjectName("horizontalLayout_14")
         self.horizontalLayout_13 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_13.setObjectName("horizontalLayout_13")
@@ -304,7 +303,6 @@ class Ui_dlgProject(object):
         self.tabObservations = QtWidgets.QWidget()
         self.tabObservations.setObjectName("tabObservations")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.tabObservations)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -345,7 +343,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(4)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -387,6 +385,7 @@ class Ui_dlgProject(object):
 "from a BORIS project"))
         self.pbImportFromJWatcher.setText(_translate("dlgProject", "Import from JWatcher"))
         self.pbImportFromTextFile.setText(_translate("dlgProject", "Import from text file"))
+        self.pbExportEthogram.setText(_translate("dlgProject", "Export Ethogram"))
         self.lbObservationsState.setText(_translate("dlgProject", "TextLabel"))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabConfiguration), _translate("dlgProject", "Ethogram"))
         self.twSubjects.setSortingEnabled(True)
