@@ -8051,19 +8051,15 @@ item []:
                 return
 
         ek = event.key()
-        #if ek == Qt.Key_Enter and event.text():
 
         logging.debug("key event {0}".format(ek))
 
-
-        if ek in [16777248, 16777249, 16777217, 16781571]: # shift tab ctrl
+        if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
             return
-
 
         if self.playerType == VIEWER:
             QMessageBox.critical(self, programName, "The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode.")
             return
-
 
         if ek == Qt.Key_Escape:  #16777216:
             self.switch_playing_mode()
@@ -8090,7 +8086,6 @@ item []:
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
-
                 logging.debug("(next) current frame {0}".format( self.FFmpegGlobalFrame))
                 self.ffmpegTimerOut()
                 logging.debug("(next) new frame {0}".format( self.FFmpegGlobalFrame))
