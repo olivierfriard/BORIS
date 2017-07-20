@@ -1268,8 +1268,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
 
-        print("fileNames", fileNames)
-
         if fileNames:
 
             horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
