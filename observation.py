@@ -150,6 +150,8 @@ class Observation(QDialog, Ui_Form):
     def check_parameters(self):
         """
         check observation parameters
+        
+        return True if everything OK else False
         """
         def is_numeric(s):
             try:
@@ -208,25 +210,25 @@ class Observation(QDialog, Ui_Form):
             self.accept()
 
 
-    def check_media(self, fileNames, nPlayer):
+    def check_media(self, filePaths, nPlayer):
         """
         parameters:
 
-        fileName -- path of media file
+        filePaths -- paths of media files
         nPlayer -- player #
         """
 
-        for fileName in fileNames:
-            nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, fileName)
+        for filePath in filePaths:
+            nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
 
-            if videoDuration:
-                self.mediaDurations[fileName] = videoDuration
-                self.mediaFPS[fileName] = fps
-                self.mediaHasVideo[fileName] = hasVideo
-                self.mediaHasAudio[fileName] = hasAudio
-                self.add_media_to_listview(nPlayer, fileName, "")
+            if videoDuration_s > 0:
+                self.mediaDurations[filePath] = videoDuration_s
+                self.mediaFPS[filePath] = fps
+                self.mediaHasVideo[filePath] = hasVideo
+                self.mediaHasAudio[filePath] = hasAudio
+                self.add_media_to_listview(nPlayer, filePath, "")
             else:
-                QMessageBox.critical(self, programName, "The <b>{}</b> file does not seem to be a media file.".format(fileName))
+                QMessageBox.critical(self, programName, "The <b>{filePath}</b> file does not seem to be a media file.".format(filePath=filePath))
 
 
     def add_media(self, nPlayer):
@@ -239,16 +241,14 @@ class Observation(QDialog, Ui_Form):
             return
 
         os.chdir(os.path.expanduser("~"))
-        if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
-        else:
-            fileName, _ = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
+        fn = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
+        fileNames = fn[0] if type(fn) is tuple else fn
 
-        if fileName:
-            self.check_media(fileName, nPlayer)
+        if fileNames:
+            self.check_media(fileNames, nPlayer)
 
         if self.FLAG_MATPLOTLIB_INSTALLED:
-            self.cbVisualizeSpectrogram.setEnabled( self.twVideo1.rowCount() > 0)
+            self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
@@ -258,7 +258,7 @@ class Observation(QDialog, Ui_Form):
         """
         dirName = QFileDialog().getExistingDirectory(self, "Select directory")
         if dirName:
-            for fileName in glob.glob(dirName + os.sep + "*" ):
+            for fileName in glob.glob(dirName + os.sep + "*"):
                 self.check_media(fileName, nPlayer)
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
@@ -273,7 +273,6 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, programName, "Add the first media file to Player #1")
             return False
 
-
         if self.twVideo1.rowCount() and self.twVideo2.rowCount():
             QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
             return False
@@ -281,7 +280,6 @@ class Observation(QDialog, Ui_Form):
         if self.twVideo2.rowCount() > 1:
             QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
             return False
-
 
         if nPlayer == PLAYER1:
             twVideo = self.twVideo1

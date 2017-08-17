@@ -417,12 +417,19 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     frame per second
     hasVideo: boolean
     hasAudio: boolean
+    
+    if invalid data found:
+    return
+    -1,
+    error_message,
+    -1, -1, false, False
+    
     """
 
     if sys.platform.startswith("win"):
-        cmdOutput = 'NUL'
+        cmdOutput = "NUL"
     else:
-        cmdOutput = '/dev/null'
+        cmdOutput = "/dev/null"
 
     command2 = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, fileName, cmdOutput)
 
@@ -430,16 +437,21 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
 
     duration, fps, hasVideo, hasAudio  = 0, 0, False, False
     try:
-        error = p.communicate()[1].decode('utf-8')
+        error = p.communicate()[1].decode("utf-8")
     except:
-        return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
+        return int(fps * duration), duration * 1000, duration, fps, hasVideo, hasAudio
+
+    # check for invalid data
+    if "Invalid data found when processing input" in error:
+        return -1, "Invalid data found when processing input", -1, -1, False, False
+        
 
     rows = error.split("\n")
-
+    
     # video duration
     try:
         for r in rows:
-            if 'Duration' in r:
+            if "Duration" in r:
                 duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
                 break
     except:
@@ -449,7 +461,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     fps = 0
     try:
         for r in rows:
-            if ' fps,' in r:
+            if " fps," in r:
                 re_results = re.search(', (.{1,5}) fps,', r, re.IGNORECASE)
                 if re_results:
                     fps = Decimal(re_results.group(1).strip())
@@ -461,7 +473,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     hasVideo = False
     try:
         for r in rows:
-            if 'Stream #' in r and 'Video:' in r:
+            if "Stream #" in r and "Video:" in r:
                 hasVideo = True
                 break
     except:
@@ -471,36 +483,13 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     hasAudio = False
     try:
         for r in rows:
-            if 'Stream #' in r and 'Audio:' in r:
+            if "Stream #" in r and "Audio:" in r:
                 hasAudio = True
                 break
     except:
         hasAudio = None
 
-
-    # video nframe and time
-    '''
-    nframe = 0
-    time_ = 0
-    print(rows)
-    try:
-        for rowIdx in range(len(rows) - 1, 0, -1):
-            if 'frame=' in rows[rowIdx]:
-                print( rows[rowIdx] )
-                re_results1 = re.search('frame=(.*)fps=', rows[rowIdx], re.IGNORECASE)
-                if re_results1:
-                    nframe = int(re_results1.group(1).strip())
-                    print('nframe',nframe)
-                re_results2 = re.search('time=(.*)bitrate=', rows[rowIdx], re.IGNORECASE)
-                if re_results2:
-                    time_ = time2seconds(re_results2.group(1).strip()) *1000
-                break
-
-    except:
-        nframe = 0
-        time_ = 0
-    '''
-
+   
     return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
 
 class ThreadSignal(QObject):

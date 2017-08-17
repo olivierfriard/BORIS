@@ -22,8 +22,8 @@ This file is part of BORIS.
 
 """
 
-__version__ = "4.1.4"
-__version_date__ = "2017-07-18"
+__version__ = "4.1.5"
+__version_date__ = "2017-08-17"
 
 
 import os
@@ -311,6 +311,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     observationId = ''   # current observation id
 
     timeOffset = 0.0
+    
+    wrongTimeResponse = ""
 
     confirmSound = False               # if True each keypress will be confirmed by a beep
     embedPlayer = True                 # if True the VLC player will be embedded in the main window
@@ -1760,7 +1762,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if dialog.MessageDialog(programName, ("Spectrogram file not found.<br>"
                                                       "Do you want to generate it now?<br>"
-                                                      "Spectrogram generation can take some time for long media, be patient"), [YES, NO ]) == YES:
+                                                      "Spectrogram generation can take some time for long media,"
+                                                      "be patient"), [YES, NO ]) == YES:
 
                     self.generate_spectrogram()
                     self.timer_spectro.start()
@@ -2998,7 +3001,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         initialize new observation for VLC
         """
 
-        logging.debug('initialize new observation for VLC')
+        logging.debug("initialize new observation for VLC")
 
         useMediaFromProjectDirectory = NO
 
@@ -3124,7 +3127,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("playing media #{0}".format(0))
 
         self.mediaListPlayer.play_item_at_index(0)
-        #app.processEvents()
 
         # play mediaListPlayer for a while to obtain media information
         while True:
@@ -3135,7 +3137,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         while True:
             if self.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                 break
-        #app.processEvents()
         self.mediaplayer.set_time(0)
 
         # no subtitles
@@ -3146,6 +3147,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             self.FFmpegTimerTick = int(1000 / list(self.fps.values())[0])
         except:
+            # default value 40 ms (25 frames / s)
             self.FFmpegTimerTick = 40
 
         self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
@@ -3791,7 +3793,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.observationId = ""
                 self.menu_options()
 
-            if rv == 2:  # launch
+            if rv == 2:  # start
                 self.observationId = new_obs_id
 
                 # title of dock widget
@@ -4446,14 +4448,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 categories[subject] = {}
 
-                print("selected behaviors", plot_parameters["selected behaviors"])
                 for behavior in plot_parameters["selected behaviors"]:
 
                     if plot_parameters["include modifiers"]:
 
                         cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
                         distinct_modifiers = list(cursor.fetchall())
-
+                        
                         if not distinct_modifiers:
                             if not plot_parameters["exclude behaviors"]:
                                 out.append({"subject": subject,
@@ -4671,7 +4672,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ### http://stackoverflow.com/questions/673867/python-arbitrary-order-by
             return out_sorted, categories
 
-
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
         logging.debug("Selected observations: {0}".format(selectedObservations))
@@ -4682,20 +4682,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedObsTotalMediaLength = Decimal("0.0")
 
         for obsId in selectedObservations:
-            if self.pj[OBSERVATIONS][ obsId ][TYPE] == MEDIA:
+            if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
                 logging.debug("media length for {0} : {1}".format(obsId, totalMediaLength))
-            else: # LIVE
+            
+            # check if time of last event > total media length
+            
+            
+            elif self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
                 if self.pj[OBSERVATIONS][obsId][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
+
             if totalMediaLength in [0, -1]:
                 selectedObsTotalMediaLength = -1
                 break
+
             selectedObsTotalMediaLength += totalMediaLength
 
-        if selectedObsTotalMediaLength == -1: # an observation media length is not available
+        # an observation media length is not available
+        if selectedObsTotalMediaLength == -1: 
             # propose to user to use max event time
             if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO]) == YES:
                 maxTime = 0 # max length for all events all subjects
@@ -4706,12 +4713,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 selectedObsTotalMediaLength = maxTime
             else:
                 selectedObsTotalMediaLength = 0
-
+                
         logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
 
         if len(selectedObservations) > 1:
             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
-            flagGroup = dialog.MessageDialog(programName, "Group observations?", [YES, NO]) == YES
+            flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
         else:
             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=(mode == "by_category"))
 
@@ -4722,7 +4729,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if (len(selectedObservations) > 1 and flagGroup) or (len(selectedObservations) == 1):
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
             out, categories = time_budget_analysis_by_category(cursor, plot_parameters, by_category=(mode == "by_category"))
-
+            
         else:
 
             items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)", "Microsoft Excel (*.xls)", "HTML (*.html)")
@@ -4875,7 +4882,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         f.write(workbook.ods)
             return
 
-
         # widget for results visualization
         self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
 
@@ -4899,8 +4905,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
             if self.timeFormat == S:
                 self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
-
-
 
         if mode == "by_behavior":
             tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
@@ -4965,17 +4969,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         item.setTextAlignment(Qt.AlignRight|Qt.AlignVCenter)
                         self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column , item)
 
-
-
         self.tb.twTB.resizeColumnsToContents()
 
         self.tb.show()
-
-
-
-
-
-
 
 
     def observationTotalMediaLength(self, obsId):
@@ -4993,7 +4989,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 mediaLength = self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
             except:
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, mediaFile)
+                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
                 if "media_info" not in self.pj[OBSERVATIONS][obsId]:
                     self.pj[OBSERVATIONS][obsId]["media_info"] = {"length": {}, "fps": {}}
                     if "length" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
@@ -5005,25 +5001,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile] = fps
 
                 mediaLength = videoDuration
-
-                '''
-                try:
-                    fileContentMD5 = hashfile( mediaFile , hashlib.md5())                  # md5 sum of file content
-                    mediaLength = self.pj["project_media_file_info"][fileContentMD5]["video_length"] / 1000
-                except:
-                    if os.path.isfile(mediaFile):
-                        try:
-                            instance = vlc.Instance()
-                            media = instance.media_new(mediaFile)
-                            media.parse()
-                            mediaLength = media.get_duration()/1000
-                        except:
-                            totalMediaLength1 = -1
-                            break
-                    else:
-                        totalMediaLength1 = -1
-                        break
-                '''
 
             totalMediaLength1 += Decimal(mediaLength)
 
@@ -5045,33 +5022,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 mediaLength = videoDuration
 
-
-
-                '''
-                try:
-                    fileContentMD5 = hashfile( mediaFile , hashlib.md5())                 # md5 sum of file content
-                    mediaLength = self.pj['project_media_file_info'][fileContentMD5]['video_length']/1000
-                except:
-                    if os.path.isfile(mediaFile):
-                        try:
-                            instance = vlc.Instance()
-                            media = instance.media_new(mediaFile)
-                            media.parse()
-                            mediaLength = media.get_duration()/1000
-                        except:
-                            totalMediaLength2 = -1
-                            break
-                    else:
-                        totalMediaLength2 = -1
-                        break
-                '''
-
             totalMediaLength2 += Decimal(mediaLength)
 
         if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
             totalMediaLength = -1
         else:
-            totalMediaLength = max( totalMediaLength1, totalMediaLength2 )
+            totalMediaLength = max(totalMediaLength1, totalMediaLength2)
 
         return totalMediaLength
 
@@ -6658,34 +6614,9 @@ item []:
         show info about media file (current media file if observation opened)
         """
 
-        def info_from_ffmpeg(media_file_path):
-            """
-            extract info from media file with FFmpeg
-            """
-            if os.path.isfile(media_file_path):
-                out =  "<b>{}</b><br><br>".format(os.path.basename(media_file_path))
-
-                out += "File size: {} Mb<br>".format(round(os.stat(media_file_path).st_size / 1024 / 1024, 1))
-
-                ffmpeg_output = subprocess.getoutput('"{}" -i "{}"'.format(ffmpeg_bin, media_file_path)).split("Stream #0")
-                if len(ffmpeg_output) > 1:
-                    out += "{}<br>".format(ffmpeg_output[1])
-                if len(ffmpeg_output) > 2:
-                    out += "{}<br>".format(ffmpeg_output[2].replace("At least one output file must be specified", ""))
-            else:
-                out = ""
-            return out
-
-
         if self.observationId and self.playerType == VLC:
 
-            out = ""
-            for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
-                for file_ in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
-                    out += info_from_ffmpeg(file_) +"<br>"
-
             media = self.mediaplayer.get_media()
-
 
             logging.info("State: {}".format(self.mediaplayer.get_state()))
             logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
@@ -6702,23 +6633,82 @@ item []:
             logging.info("is seekable? {0}".format(self.mediaplayer.is_seekable()))
             logging.info("has_vout? {0}".format(self.mediaplayer.has_vout()))
 
+            vlc_output = """State: {}<br>
+Media Resource Location: {}<br>
+File name: {}<br>
+Track: {}/{}<br>
+Number of media in media list: {}<br>
+get time: {}<br>
+duration: {}<br>
+Position: {} %<br>
+FPS: {}<br>
+Rate: {}<br>
+Video size: {}<br>
+Scale: {}<br>
+Aspect ratio: {}<br>
+is seekable? {}<br>
+has_vout? {}<br>
+""".format(
+self.mediaplayer.get_state(),
+bytes_to_str(media.get_mrl()),
+media.get_meta(0),
+self.mediaplayer.video_get_track(),
+self.mediaplayer.video_get_track_count(),
+self.media_list.count(),
+self.mediaplayer.get_time(),
+self.convertTime(media.get_duration()/1000),
+self.mediaplayer.get_position(),
+self.mediaplayer.get_fps(),
+self.mediaplayer.get_rate(),
+self.mediaplayer.video_get_size(0),
+self.mediaplayer.video_get_scale(),
+self.mediaplayer.video_get_aspect_ratio(),
+"Yes" if self.mediaplayer.is_seekable() else "No",
+"Yes" if self.mediaplayer.has_vout() else "No"
+)
 
             self.results = dialog.ResultsWidget()
+            self.results.resize(540, 640)
             self.results.setWindowTitle(programName + " - Media file information")
             self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml("{}<br><br>Total duration: {} s".format(out, self.convertTime(sum(self.duration)/1000)))
+
+            self.results.ptText.appendHtml("<b>VLC analysis</b><hr>" + vlc_output)
+            
+            # FFmpeg analysis
+            self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
+            for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
+                for filePath in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
+                    
+                    nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
+                    if nframes == -1:
+                        self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=duration_ms))
+                    else:
+                        self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
+                            format(filePath, self.convertTime(duration), fps, hasVideo, hasAudio))
+                    
+            self.results.ptText.appendHtml("Total duration: {} (hh:mm:ss.sss)".
+                format(self.convertTime(sum(self.duration)/1000)))
+
             self.results.show()
 
         else:
 
             fn = QFileDialog(self).getOpenFileName(self, "Select a media file", "", "Media files (*)")
-            fileName = fn[0] if type(fn) is tuple else fn
+            filePath = fn[0] if type(fn) is tuple else fn
 
-            if fileName:
+            if filePath:
                 self.results = dialog.ResultsWidget()
+                self.results.resize(540, 640)
                 self.results.setWindowTitle(programName + " - Media file information")
                 self.results.ptText.setReadOnly(True)
-                self.results.ptText.appendHtml("{}<br>".format(info_from_ffmpeg(fileName)))
+                self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
+                nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
+                if nframes == -1:
+                    self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=duration_ms))
+                else:
+                    self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
+                        format(filePath, self.convertTime(duration), fps, hasVideo, hasAudio))
+                
                 self.results.show()
 
 
@@ -7208,7 +7198,7 @@ item []:
 
             if self.timeFormat == HHMMSS:
                 editWindow.dsbTime.setVisible(False)
-                editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), "hh:mm:ss.zzz") )
+                editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), HHMMSSZZZ))
 
             if self.timeFormat == S:
                 editWindow.teTime.setVisible(False)
@@ -7219,9 +7209,10 @@ item []:
             editWindow.cobSubject.addItems(sortedSubjects)
 
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
-                editWindow.cobSubject.setCurrentIndex( sortedSubjects.index( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
+                editWindow.cobSubject.setCurrentIndex(sortedSubjects.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
             else:
-                QMessageBox.warning(self, programName, "The subject <b>{}</b> does not exists more in the subject's list".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
+                QMessageBox.warning(self, programName, "The subject <b>{}</b> does not exists more in the subject's list".
+                    format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
                 editWindow.cobSubject.setCurrentIndex(0)
 
             sortedCodes = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
@@ -7232,11 +7223,14 @@ item []:
             if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
                 editWindow.cobCode.setCurrentIndex(sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
             else:
-                logging.warning("The behaviour <b>{0}</b> does not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] ) )
-                QMessageBox.warning(self, programName, "The behaviour <b>{}</b> does not exists more in the ethogram".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+                logging.warning("The behaviour <b>{0}</b> does not exists more in the ethogram".
+                    format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+                QMessageBox.warning(self, programName, "The behaviour <b>{}</b> does not exists more in the ethogram".
+                    format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
                 editWindow.cobCode.setCurrentIndex(0)
 
-            logging.debug("original modifiers: {}".format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]))
+            logging.debug("original modifiers: {}".
+                format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]))
 
             # comment
             editWindow.leComment.setPlainText( self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
@@ -7323,25 +7317,24 @@ item []:
         players.append("FFmpeg path: {}".format(self.ffmpeg_bin))
 
 
-        QMessageBox.about(self, "About " + programName, """<b>{prog_name}</b> {ver} - {date}
-        <p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>
-        Department of Life Sciences and Systems Biology<br>
-        University of Torino - Italy<br>
-        <br>
-        BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>
-        See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>
-        <br>
-        The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help.
-        <hr>
-        How to cite BORIS:<br>
-        Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>
-        DOI:10.1111/2041-210X.12584
-        <hr>
-
-        <p>Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br>
-        CPU type: {cpu_info}<br>
-        <br>
-        {players}""".format(prog_name=programName,
+        QMessageBox.about(self, "About " + programName, ("<b>{prog_name}</b> {ver} - {date}"
+        "<p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>"
+        "Department of Life Sciences and Systems Biology<br>"
+        "University of Torino - Italy<br>"
+        "<br>"
+        """BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>"""
+        """See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>"""
+        "<br>"
+        "The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help."
+        "<hr>"
+        "How to cite BORIS:<br>"
+        "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
+        "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
+        "DOI:10.1111/2041-210X.12584"
+        "<hr>"
+        "Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br>"
+        "CPU type: {cpu_info}<br><br>"
+        "{players}").format(prog_name=programName,
                             ver=ver,
                             date=__version_date__,
                             python_ver=platform.python_version(),
@@ -7368,7 +7361,8 @@ item []:
                 # second video together
                 if self.simultaneousMedia:
                     # synchronize 2nd player
-                    self.mediaplayer2.set_time( int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
+                    self.mediaplayer2.set_time(int(self.mediaplayer.get_time() 
+                                   - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
 
@@ -7387,7 +7381,8 @@ item []:
             if ct >= self.pj[OBSERVATIONS][self.observationId][EVENTS][-1][0]:
                 ROW = len( self.pj[OBSERVATIONS][self.observationId][EVENTS] )
             else:
-                cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
+                cr_list =  [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][:-1]) 
+                         if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct ]
 
                 if cr_list:
                     ROW = cr_list[0]
@@ -7496,6 +7491,27 @@ item []:
             if self.mediaplayer.get_length():
 
                 self.mediaTotalLength = self.mediaplayer.get_length() / 1000
+                if abs(self.mediaTotalLength - totalGlobalTime/1000) > 10:
+                    self.timer.stop()
+                    #self.pause_video()
+                    if not self.wrongTimeResponse:
+                        self.wrongTimeResponse = dialog.MessageDialog(programName, ("The VLC media file duration seems to be wrong:<br>"
+                                                                                    "{} instead of {}.<br><br>"
+                                                           "It should be safer to close the current observation and re-encode your media file with the BORIS tool<br>"
+                                                           "See Tools > Re-encode / resize video").
+                                                           format(self.convertTime(self.mediaTotalLength),
+                                                                  self.convertTime(totalGlobalTime/1000)), [OK])
+
+                    '''
+                    if response == "Close observation":
+                        try:
+                            self.close_observation()
+                            return False
+                        except:
+                            pass
+                    '''
+                            
+                    
 
                 # current state(s)
 
