@@ -197,7 +197,7 @@ class ModifiersList(QDialog):
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
 
                     if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
-                        self.modifiers_dict[idx]["selected"].append(self.modifiers_dict[idx]["widget"].item(j).text())
+                        self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "",self.modifiers_dict[idx]["widget"].item(j).text()))
 
             if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
                 for item in self.modifiers_dict[idx]["widget"].selectedItems():
@@ -228,7 +228,8 @@ class ModifiersList(QDialog):
                     try:
                        val = float(self.modifiers_dict[idx]["widget"].text())
                     except:
-                        QMessageBox.warning(self, programName, "<b>{}</b> is not a numeric value".format(self.modifiers_dict[idx]["widget"].text()))
+                        QMessageBox.warning(self, programName, "<b>{}</b> is not a numeric value".format(
+                                                                            self.modifiers_dict[idx]["widget"].text()))
                         return
 
         self.accept()

@@ -67,7 +67,7 @@ from time_budget_widget import timeBudgetResults
 import select_modifiers
 
 __version__ = "4.1.5"
-__version_date__ = "2017-08-17"
+__version_date__ = "2017-08-30"
 
 # BITMAP_EXT = "jpg"
 
@@ -3125,7 +3125,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         TODO: check
         if FFMPEG in self.availablePlayers:
             if len(set( self.fps.values())) != 1:
-                QMessageBox.critical(self, programName, "The frame-by-frame mode will not be available because the video files have different frame rates (%s)." % (", ".join([str(i) for i in list(self.fps.values())])),\
+                QMessageBox.critical(self, programName, ("The frame-by-frame mode will not be available because the "
+                "video files have different frame rates (%s).") % (", ".join([str(i) for i in list(self.fps.values())])),\
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         """
 
@@ -3289,7 +3290,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = False
                     return True
 
-            self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath, self.chunk_length, self.spectrogram_color_map, self.spectrogramHeight))
+            self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
+                                                                                                   self.chunk_length,
+                                                                                                   self.spectrogram_color_map,
+                                                                                                   self.spectrogramHeight))
             # connect signal from spectrogram class to testsignal function to receive keypress events
             self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.spectro.sendEvent.connect(self.signal_from_spectrogram)
@@ -3362,7 +3366,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
 
         if INDEPENDENT_VARIABLES in self.pj:
-            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]): 
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
                 column_type.append(self.pj[INDEPENDENT_VARIABLES][idx]["type"])
 
@@ -3527,7 +3531,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if INDEPENDENT_VARIABLES in self.pj:
 
             observationWindow.twIndepVariables.setRowCount(0)
-            for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+            for i in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
 
                 observationWindow.twIndepVariables.setRowCount(observationWindow.twIndepVariables.rowCount() + 1)
 
@@ -3547,7 +3551,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # var value
                 item = QTableWidgetItem()
                 # check if obs has independent variables and var label is a key
-                if mode == EDIT and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId] and indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]:
+                if (mode == EDIT and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId] 
+                    and indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
                     txt = self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][indepVarLabel]
 
                 elif mode == NEW:
@@ -3654,13 +3659,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         twVideo.setRowCount(twVideo.rowCount() + 1)
                         twVideo.setItem(twVideo.rowCount() - 1, 0, QTableWidgetItem(mediaFile))
                         try:
-                            twVideo.setItem(twVideo.rowCount() - 1, 1, QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                            twVideo.setItem(twVideo.rowCount() - 1, 2, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
+                            twVideo.setItem(twVideo.rowCount() - 1, 1,
+                                QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                            twVideo.setItem(twVideo.rowCount() - 1, 2,
+                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
                         except:
                             pass
                         try:
-                            twVideo.setItem(twVideo.rowCount() - 1, 3, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
-                            twVideo.setItem(twVideo.rowCount() - 1, 4, QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"][mediaFile])))
+                            twVideo.setItem(twVideo.rowCount() - 1, 3,
+                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
+                            twVideo.setItem(twVideo.rowCount() - 1, 4,
+                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"][mediaFile])))
                         except:
                             pass
 
@@ -4065,7 +4074,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             if self.checkForNewVersion:
-                if settings.value("last_check_for_new_version") and  int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY:
+                if (settings.value("last_check_for_new_version") and
+                 int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY):
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
 
             self.ffmpeg_cache_dir = ""
@@ -4215,7 +4225,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cursor = db.cursor()
 
-        cursor.execute("CREATE TABLE events (observation TEXT, subject TEXT, code TEXT, type TEXT, modifiers TEXT, occurence FLOAT, comment TEXT);")
+        cursor.execute("""CREATE TABLE events (observation TEXT,
+                                               subject TEXT,
+                                               code TEXT,
+                                               type TEXT,
+                                               modifiers TEXT,
+                                               occurence FLOAT,
+                                               comment TEXT)""")
 
         for subject_to_analyze in selectedSubjects:
 
@@ -4233,7 +4249,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             eventType = STATE if STATE in self.eventType(event[2]).upper() else POINT
 
-                            r = cursor.execute("""INSERT INTO events (observation, subject, code, type, modifiers, occurence, comment) VALUES (?,?,?,?,?,?,?)""",
+                            r = cursor.execute("""INSERT INTO events
+                                                   (observation, subject, code, type, modifiers, occurence, comment)
+                                                    VALUES (?,?,?,?,?,?,?)""",
                             (obsId, subjectStr, event[2], eventType, event[3], str(event[0]), event[4]))
 
         db.commit()
@@ -4280,7 +4298,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return observed_behaviors
 
 
-    def choose_obs_subj_behav_category(self, selectedObservations, maxTime, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=True, by_category=False):
+    def choose_obs_subj_behav_category(self, selectedObservations, maxTime, flagShowIncludeModifiers=True,
+                                        flagShowExcludeBehaviorsWoEvents=True, by_category=False):
         """
         show window for:
         - selection of subjects
@@ -4485,10 +4504,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if POINT in self.eventType(behavior).upper():
                             for modifier in distinct_modifiers:
                                 if len(selectedObservations) > 1:
-                                    cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                    cursor.execute("""SELECT occurence,observation FROM events
+                                                        WHERE subject = ? 
+                                                            AND code = ? 
+                                                            AND modifiers = ? 
+                                                            ORDER BY observation, occurence""",
                                                    (subject, behavior, modifier[0]))
                                 else:
-                                    cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                    cursor.execute("""SELECT occurence,observation FROM events 
+                                                        WHERE subject = ? 
+                                                            AND code = ?
+                                                            AND modifiers = ?
+                                                            AND occurence BETWEEN ? and ? 
+                                                            ORDER BY observation, occurence""",
                                                    (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
 
                                 rows = cursor.fetchall()
@@ -7421,7 +7449,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         return currentStates
 
 
-
     def timer_out(self, scrollSlider=True):
         """
         indicate the video current position and total length for VLC player
@@ -7611,7 +7638,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                             self.writeEvent(event, currentTime / 1000 - Decimal("0.001"))
 
-
             self.memMedia = mediaName
 
             if self.mediaListPlayer.get_state() == vlc.State.Ended:
@@ -7734,7 +7760,8 @@ self.mediaplayer.video_get_aspect_ratio(),
         """
         check if a same event is already in events list (time, subject, code)
         """
-        return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
+        return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]]
+                                            for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
 
     def writeEvent(self, event, memTime):
@@ -7788,7 +7815,7 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                 if modifierSelector.exec_():
                     selected_modifiers = modifierSelector.getModifiers()
-
+                    
                     modifier_str = ""
                     for idx in sorted_keys(selected_modifiers):
                         if modifier_str:
@@ -7799,7 +7826,7 @@ self.mediaplayer.video_get_aspect_ratio(),
                             modifier_str += selected_modifiers[idx]["selected"]
                 else:
                     modifier_str = currentModifiers
-
+                    
                 # restart media
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
