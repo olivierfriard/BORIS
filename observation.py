@@ -212,6 +212,8 @@ class Observation(QDialog, Ui_Form):
 
     def check_media(self, filePaths, nPlayer):
         """
+        check media and add them to list view if duration > 0
+        
         parameters:
 
         filePaths -- paths of media files

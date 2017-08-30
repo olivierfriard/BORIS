@@ -462,7 +462,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     try:
         for r in rows:
             if " fps," in r:
-                re_results = re.search(', (.{1,5}) fps,', r, re.IGNORECASE)
+                re_results = re.search(', (.{1,10}) fps,', r, re.IGNORECASE)
                 if re_results:
                     fps = Decimal(re_results.group(1).strip())
                     break
@@ -489,8 +489,8 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     except:
         hasAudio = None
 
-   
     return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
+
 
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
