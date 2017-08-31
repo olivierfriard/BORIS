@@ -42,8 +42,10 @@ import math
 import datetime
 import socket
 
+
 def versiontuple(v):
     return tuple(map(int, (v.split("."))))
+
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -85,8 +87,13 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
 
     '''
 
-
-    ffmpeg_command = '"{ffmpeg_bin}" -ss {second_minus1} -loglevel quiet -i "{currentMedia}" -ss 1 -frames:v {fps} -vf scale={frame_resize}:-1 "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
+    ffmpeg_command = ('"{ffmpeg_bin}" -ss {second_minus1} '
+                      '-loglevel quiet '
+                      '-i "{currentMedia}" '
+                      '-ss 1 '
+                      '-frames:v {fps} '
+                      '-vf scale={frame_resize}:-1 '
+                      '"{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"').format(
                     ffmpeg_bin=ffmpeg_bin,
                     second_minus1=second - 1,
                     second=second,
@@ -98,18 +105,14 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
                     extension=extension,
                     frame_resize=frame_resize
                     )
-
-
-
-
     logging.debug("ffmpeg command: {}".format(ffmpeg_command))
 
-    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True )
+    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     out, error = p.communicate()
     out, error = out.decode("utf-8"), error.decode("utf-8")
 
     if error:
-        logging.debug('ffmpeg error: {0}'.format( error ))
+        logging.debug("ffmpeg error: {}".format(error))
 
 
 def decimal_default(obj):
@@ -126,8 +129,10 @@ def complete(l, max):
         l.append("")
     return l
 
+
 def datetime_iso8601():
     return datetime.datetime.now().isoformat().replace("T", "").split(".")[0]
+
 
 def behavior2color(behavior, behaviors):
     """
@@ -147,7 +152,6 @@ def sorted_keys(d):
     return [str(x) for x in sorted([int(x) for x in d.keys()])]
 
 
-
 def bestTimeUnit(t: int) -> str:
     """
     Return time in best format
@@ -156,7 +160,7 @@ def bestTimeUnit(t: int) -> str:
     t -- time (in seconds)
     """
     unit = "s"
-    if t >=  60:
+    if t >= 60:
         t = t / 60
         unit = "min"
     if t > 60:
@@ -189,12 +193,14 @@ def distance(p1, p2):
     x2, y2 = p2
     return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
 
+
 def angle(p1, p2, p3):
     """
     angle between 3 points (p1 must be the vertex)
     return angle in degree
     """
-    return math.acos( (distance(p1,p2)**2 + distance(p1,p3)**2 - distance(p2,p3)**2) / (2 * distance(p1,p2) * distance(p1,p3)) )/math.pi*180
+    return math.acos((distance(p1, p2)**2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
+
 
 def polygon_area(poly):
     """
@@ -215,7 +221,7 @@ def hashfile(fileName, hasher, blocksize=65536):
     """
     return hash of file content
     """
-    with open(fileName,'rb') as afile:
+    with open(fileName, 'rb') as afile:
         buf = afile.read(blocksize)
         while len(buf) > 0:
             hasher.update(buf)
@@ -235,6 +241,7 @@ def url2path(url):
         path = path[1:]
     return path
 
+
 def float2decimal(f):
     """
     return decimal value
@@ -249,12 +256,12 @@ def time2seconds(time):
     flagNeg = '-' in time
     time = time.replace("-", "")
 
-    tsplit= time.split(":")
+    tsplit = time.split(":")
 
-    h, m, s = int( tsplit[0] ), int( tsplit[1] ), Decimal( tsplit[2] )
+    h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
 
     if flagNeg:
-        return Decimal(-(h * 3600 + m * 60 + s))
+        return Decimal(- (h * 3600 + m * 60 + s))
     else:
         return Decimal(h * 3600 + m * 60 + s)
 
@@ -270,30 +277,32 @@ def seconds2time(sec):
 
     minutes = int(sec / 60)
     if minutes >= 60:
-        hours = int(minutes /60)
+        hours = int(minutes / 60)
         minutes = minutes % 60
 
     secs = sec - hours*3600 - minutes * 60
     ssecs = "%06.3f" % secs
 
-    return  "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs )
-
+    return "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs)
 
 
 def safeFileName(s):
-    '''replace characters not allowed in file name by _'''
+    """
+    replace characters not allowed in file name by _
+    """
     fileName = s
-    notAllowedChars = ['/','\\']
+    notAllowedChars = ['/', '\\']
     for char in notAllowedChars:
         fileName = fileName.replace(char, '_')
 
     return fileName
 
+
 def eol2space(s):
     """
     replace EOL char by space for all platforms
     """
-    return s.replace('\r\n',' ').replace('\n',' ').replace('\r',' ' )
+    return s.replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ')
 
 
 def test_ffmpeg_path(FFmpegPath):
@@ -301,7 +310,7 @@ def test_ffmpeg_path(FFmpegPath):
     test if ffmpeg has valid path
     """
 
-    out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath) ,stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True ).communicate()
+    out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
     logging.debug("test ffmpeg path output: {}".format(out))
     logging.debug("test ffmpeg path error: {}".format(error))
 
@@ -348,6 +357,7 @@ def playWithVLC(fileName):
 
     return out, fps, nvout
 
+
 def check_ffmpeg_path():
     """
     check ffmpeg path
@@ -361,8 +371,8 @@ def check_ffmpeg_path():
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
         r = False
-        if os.path.exists( os.path.abspath(os.path.join(syspath, os.pardir )) + "/FFmpeg/ffmpeg"):
-            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir )) + "/FFmpeg/ffmpeg"
+        if os.path.exists(os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"):
+            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
                 return ffmpeg_bin
@@ -372,7 +382,7 @@ def check_ffmpeg_path():
             ffmpeg_bin = syspath + "/ffmpeg"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
-               return ffmpeg_bin
+                return ffmpeg_bin
 
         # check for ffmpeg in system path
         ffmpeg_bin = "ffmpeg"
@@ -388,14 +398,14 @@ def check_ffmpeg_path():
 
         r = False
         if os.path.exists(os.path.abspath(os.path.join(syspath, os.pardir)) + "\\FFmpeg\\ffmpeg.exe"):
-            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir )) + "\\FFmpeg\\ffmpeg.exe"
-            r, msg = test_ffmpeg_path( ffmpeg_bin)
+            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "\\FFmpeg\\ffmpeg.exe"
+            r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
                 return ffmpeg_bin
 
         if os.path.exists(syspath + "\\ffmpeg.exe"):
             ffmpeg_bin = syspath + "\\ffmpeg.exe"
-            r, msg = test_ffmpeg_path( ffmpeg_bin)
+            r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
                 return ffmpeg_bin
             else:
@@ -417,13 +427,12 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     frame per second
     hasVideo: boolean
     hasAudio: boolean
-    
+
     if invalid data found:
     return
     -1,
     error_message,
     -1, -1, false, False
-    
     """
 
     if sys.platform.startswith("win"):
@@ -435,7 +444,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
 
     p = subprocess.Popen(command2, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
-    duration, fps, hasVideo, hasAudio  = 0, 0, False, False
+    duration, fps, hasVideo, hasAudio = 0, 0, False, False
     try:
         error = p.communicate()[1].decode("utf-8")
     except:
@@ -444,10 +453,9 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     # check for invalid data
     if "Invalid data found when processing input" in error:
         return -1, "Invalid data found when processing input", -1, -1, False, False
-        
 
     rows = error.split("\n")
-    
+
     # video duration
     try:
         for r in rows:
@@ -495,11 +503,12 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
 
+
 class Process(QThread):
     """
     process for accurate video analysis
     """
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.filePath = ''
         self.ffmpeg_bin = ''
@@ -509,5 +518,14 @@ class Process(QThread):
         self.signal = ThreadSignal()
 
     def run(self):
-        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis( self.ffmpeg_bin, self.filePath )
-        self.signal.sig.emit(nframe, videoTime, videoDuration, fps,  hasVideo, hasAudio, self.fileContentMD5, self.nPlayer, self.filePath)
+        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin,
+                                                                                            self.filePath)
+        self.signal.sig.emit(nframe,
+                             videoTime,
+                             videoDuration,
+                             fps,
+                             hasVideo,
+                             hasAudio,
+                             self.fileContentMD5,
+                             self.nPlayer,
+                             self.filePath)

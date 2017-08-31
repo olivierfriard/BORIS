@@ -3239,8 +3239,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 '''
 
                 # no subtitles
-                #self.mediaplayer2.video_set_spu(0)
-
+                # self.mediaplayer2.video_set_spu(0)
 
         self.videoTab.setEnabled(True)
 
@@ -3300,7 +3299,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.show()
             self.timer_spectro.start()
 
-
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
@@ -3313,7 +3311,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.keyPressEvent(event)
 
-
     def eventFilter(self, source, event):
         """
         send event from widget to mainwindow
@@ -3325,7 +3322,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.keyPressEvent(event)
 
         return QMainWindow.eventFilter(self, source, event)
-
 
     def loadEventsInTW(self, obsId):
         """
@@ -3355,7 +3351,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.update_events_start_stop()
 
-
     def selectObservations(self, mode):
         """
         show observations list window
@@ -3366,7 +3361,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
 
         if INDEPENDENT_VARIABLES in self.pj:
-            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]): 
+            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
                 indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
                 column_type.append(self.pj[INDEPENDENT_VARIABLES][idx]["type"])
 
@@ -3462,7 +3457,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return resultStr, selectedObs
 
-
     def initialize_new_live_observation(self):
         """
         initialize new live observation
@@ -3481,7 +3475,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbFocalSubject.setVisible(True)
         self.lbCurrentStates.setVisible(True)
-
 
         self.liveTab.setEnabled(True)
         self.toolBox.setItemEnabled(0, True)   # enable tab
@@ -3502,14 +3495,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def new_observation_triggered(self):
         self.new_observation(mode=NEW, obsId="")
 
-
     def new_observation(self, mode=NEW, obsId=""):
         """
         define a new observation or edit an existing observation
         """
         # check if current observation must be closed to create a new one
         if mode == NEW and self.observationId:
-            if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", [YES, NO]) == NO:
+            if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", 
+                                    [YES, NO]) == NO:
                 return
             else:
                 self.close_observation()
@@ -3551,8 +3544,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # var value
                 item = QTableWidgetItem()
                 # check if obs has independent variables and var label is a key
-                if (mode == EDIT and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId] 
-                    and indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
+                if (mode == EDIT and INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId] and
+                    indepVarLabel in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
                     txt = self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][indepVarLabel]
 
                 elif mode == NEW:
@@ -3577,7 +3570,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     item.setText(txt)
                     observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 2, item)
-
 
             observationWindow.twIndepVariables.resizeColumnsToContents()
 
@@ -3604,7 +3596,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 observationWindow.mediaDurations = {}
                 observationWindow.mediaFPS = {}
-
 
             try:
                 if "hasVideo" in self.pj[OBSERVATIONS][obsId]["media_info"]:
@@ -4289,7 +4280,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for events in all_events:
             for event in events:
-                if event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selectedSubjects):
+                if (event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or
+                   (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selectedSubjects)):
                     observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
         # remove duplicate
@@ -4305,8 +4297,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         - selection of subjects
         - selection of behaviors (based on selected subjects)
         - selection of time interval
-        - inclusion of modifiers
-        - exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
+        - inclusion/exclusion of modifiers
+        - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
 
         """
 
@@ -7213,7 +7205,6 @@ self.mediaplayer.video_get_aspect_ratio(),
             #   timeinterval
             #   custom execution
 
-
     def edit_event(self):
         """
         edit each event items from the selected row
@@ -7297,18 +7288,14 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             QMessageBox.warning(self, programName, "Select an event to edit")
 
-
     def no_media(self):
         QMessageBox.warning(self, programName, "There is no media available")
-
 
     def no_project(self):
         QMessageBox.warning(self, programName, "There is no project")
 
-
     def no_observation(self):
         QMessageBox.warning(self, programName, "There is no current observation")
-
 
     def twEthogram_doubleClicked(self):
         """
@@ -7326,7 +7313,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             self.no_observation()
 
-
     def actionUser_guide_triggered(self):
         """
         open user guide URL if it exists otherwise open user guide URL
@@ -7340,7 +7326,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
-
     def actionAbout_activated(self):
         """
         about dialog
@@ -7352,7 +7337,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         players.append("VLC media player v. {}".format(bytes_to_str(vlc.libvlc_get_version())))
         players.append("VLC libraries path: {}".format(vlc.plugin_path))
         players.append("FFmpeg path: {}".format(self.ffmpeg_bin))
-
 
         QMessageBox.about(self, "About " + programName, ("<b>{prog_name}</b> {ver} - {date}"
         "<p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>"
@@ -7382,7 +7366,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                             cpu_info=platform.machine(),
                             players="<br>".join(players)))
 
-
     def hsVideo_sliderMoved(self):
         """
         media position slider moved
@@ -7402,7 +7385,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                                    - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
-
 
     def get_events_current_row(self):
         """
@@ -7531,12 +7513,14 @@ self.mediaplayer.video_get_aspect_ratio(),
                     self.timer.stop()
                     #self.pause_video()
                     if not self.wrongTimeResponse:
-                        self.wrongTimeResponse = dialog.MessageDialog(programName, ("The VLC media file duration seems to be wrong:<br>"
-                                                                                    "{} instead of {}.<br><br>"
-                                                           "It should be safer to close the current observation and re-encode your media file with the BORIS tool<br>"
-                                                           "See Tools > Re-encode / resize video").
-                                                           format(self.convertTime(self.mediaTotalLength),
-                                                                  self.convertTime(totalGlobalTime/1000)), [OK])
+                        self.wrongTimeResponse = dialog.MessageDialog(programName,
+                                                                      ("The VLC media file duration seems to be wrong:<br>"
+                                                                      "{} instead of {}.<br><br>"
+                                                                      "It should be safer to close the current observation"
+                                                                      " and re-encode your media file with the BORIS tool<br>"
+                                                                      "See Tools > Re-encode / resize video").
+                                                                        format(self.convertTime(self.mediaTotalLength),
+                                                                               self.convertTime(totalGlobalTime/1000)), [OK])
 
                     '''
                     if response == "Close observation":
@@ -7643,9 +7627,6 @@ self.mediaplayer.video_get_aspect_ratio(),
             if self.mediaListPlayer.get_state() == vlc.State.Ended:
                 self.timer.stop()
 
-
-
-
     def load_behaviors_in_twEthogram(self, behaviorsToShow):
         """
         fill ethogram table with ethogram from pj
@@ -7668,7 +7649,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             self.dwEthogram.setWindowTitle("Ethogram")
 
-
     def load_subjects_in_twSubjects(self, subjects_to_show):
         """
         fill subjects table widget with subjects from subjects_to_show
@@ -7686,8 +7666,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                     # add cell for current state(s) after last subject field
                     self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields), QTableWidgetItem(""))
-
-
 
     def update_events_start_stop(self):
         """
@@ -7726,7 +7704,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                 else:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
 
-
     def update_events_start_stop2(self, events):
         """
         returns events with status (START/STOP or POINT)
@@ -7755,14 +7732,12 @@ self.mediaplayer.video_get_aspect_ratio(),
 
         return eventsFlagged
 
-
     def checkSameEvent(self, obsId, time, subject, code):
         """
         check if a same event is already in events list (time, subject, code)
         """
         return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]]
                                             for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
-
 
     def writeEvent(self, event, memTime):
         """
@@ -7911,9 +7886,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
         self.projectChanged = True
 
-
-
-
     def fill_lwDetailed(self, obs_key, memLaps):
         """
         fill listwidget with all events coded by key
@@ -7940,16 +7912,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                 return self.detailedObs[code]
             else:
                 return None
-
-        '''
-        item, ok = QInputDialog.getItem(self, programName, "The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items, 0, False)
-        if ok and item:
-            obs_idx = self.detailedObs[item]
-            return obs_idx
-        else:
-            return None
-        '''
-
 
     def getLaps(self):
         """
@@ -7989,7 +7951,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                               self.mediaplayer.get_time()) / 1000, 3)))
 
                     return memLaps
-
 
     def full_event(self, obs_idx):
         """
@@ -8057,7 +8018,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             app.beep()
 
-
     def keyPressEvent(self, event):
 
         logging.debug("text #{0}#  event key: {1} ".format(event.text(), event.key()))
@@ -8071,7 +8031,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
         ESC: 16777216
         '''
-
 
         if self.playMode == VLC:
             self.timer_out()
@@ -8106,7 +8065,7 @@ self.mediaplayer.video_get_aspect_ratio(),
             QMessageBox.critical(self, programName, "The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode.")
             return
 
-        if ek == Qt.Key_Escape:  #16777216:
+        if ek == Qt.Key_Escape:
             self.switch_playing_mode()
             return
 
@@ -8135,7 +8094,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                 self.ffmpegTimerOut()
                 logging.debug("(next) new frame {0}".format(self.FFmpegGlobalFrame))
                 return
-
 
         if self.playerType == VLC:
             #  jump backward
@@ -8174,7 +8132,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
         # get video time
 
-
         if (self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE]
            and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]
            and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
@@ -8189,7 +8146,9 @@ self.mediaplayer.video_get_aspect_ratio(),
         if memLaps == None:
             return
 
-        if ((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])) or (ek in function_keys) or (ek == Qt.Key_Enter and event.text()):
+        if (((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])) or
+           (ek in function_keys) or
+           (ek == Qt.Key_Enter and event.text())):
 
             obs_idx, subj_idx  = -1, -1
             count = 0
@@ -8292,7 +8251,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                 if not flag_subject:
                     self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
 
-
     def twEvents_doubleClicked(self):
         """
         seek video to double clicked position (add self.repositioningTimeOffset value)
@@ -8325,7 +8283,8 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                     if self.simultaneousMedia:
                         # synchronize 2nd player
-                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
+                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() -
+                                                       self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
                 else: # more media in player 1
 
@@ -8345,7 +8304,8 @@ self.mediaplayer.video_get_aspect_ratio(),
                             if flagPaused:
                                 self.mediaListPlayer.pause()
 
-                            self.mediaplayer.set_time(newTime - sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]))
+                            self.mediaplayer.set_time(newTime -
+                                                      sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]))
                             break
 
                         tot += d
@@ -8367,8 +8327,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                 self.ffmpegTimerOut()
 
-
-
     def twSubjects_doubleClicked(self):
         '''
         select subject by double-click
@@ -8387,7 +8345,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             self.no_observation()
 
-
     def select_events_between_activated(self):
         '''
         select events between a time interval
@@ -8398,7 +8355,7 @@ self.mediaplayer.video_get_aspect_ratio(),
             parse time in string (should be 00:00:00.000 or in seconds)
             '''
             if ':' in txt:
-                qtime = QTime.fromString(txt, "hh:mm:ss.zzz")    #timeRegExp(from_)
+                qtime = QTime.fromString(txt, "hh:mm:ss.zzz")
 
                 if qtime.toString():
                     timeSeconds = time2seconds(qtime.toString("hh:mm:ss.zzz"))
@@ -8413,7 +8370,8 @@ self.mediaplayer.video_get_aspect_ratio(),
 
 
         if self.twEvents.rowCount():
-            text, ok = QInputDialog.getText(self, "Select events in time interval", "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)", QLineEdit.Normal, "")
+            text, ok = QInputDialog.getText(self, "Select events in time interval", "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
+                                            QLineEdit.Normal, "")
 
             if ok and text != '':
 
@@ -8467,11 +8425,10 @@ self.mediaplayer.video_get_aspect_ratio(),
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
 
-
     def delete_selected_events(self):
-        '''
+        """
         delete selected observations
-        '''
+        """
 
         if not self.observationId:
             self.no_observation()
@@ -8482,10 +8439,11 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             # list of rows to delete (set for unique)
             rows = set([item.row() for item in self.twEvents.selectedIndexes()])
-            self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if not idx in rows]
+            self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event
+                                                                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                                                                 if idx not in rows]
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
-
 
     def edit_selected_events(self):
         """
@@ -8517,7 +8475,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                         self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
 
-
     def click_signal_find_in_events(self, msg):
         """
         find in events when "Find" button of find dialog box is pressed
@@ -8527,7 +8484,6 @@ self.mediaplayer.video_get_aspect_ratio(),
             self.find_dialog.close()
             return
         if not self.find_dialog.findText.text():
-            #QMessageBox.warning(self, programName, "Nothing to find", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         fields_list = []
@@ -8557,8 +8513,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             self.find_dialog.close()
 
-
-
     def find_events(self):
         """
         find  in events
@@ -8571,7 +8525,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
         self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.find_dialog.show()
-
 
     def click_signal_find_replace_in_events(self, msg):
         """
@@ -8800,9 +8753,9 @@ self.mediaplayer.video_get_aspect_ratio(),
 
             for event in eventsWithStatus:
 
-                if (((event[SUBJECT_EVENT_FIELD] in plot_parameters["selected subjects"])
-                   or (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in plot_parameters["selected subjects"]))
-                   and (event[BEHAVIOR_EVENT_FIELD] in plot_parameters["selected behaviors"])):
+                if (((event[SUBJECT_EVENT_FIELD] in plot_parameters["selected subjects"]) or
+                   (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in plot_parameters["selected subjects"])) and
+                   (event[BEHAVIOR_EVENT_FIELD] in plot_parameters["selected behaviors"])):
 
                     fields = []
                     fields.append(intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
@@ -8842,8 +8795,9 @@ self.mediaplayer.video_get_aspect_ratio(),
             if outputFormat == "xls":
                 if len(obsId) > 31:
                     data.title = obsId[0:31]
-                    QMessageBox.warning(None, programName, ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
-                                                            "The limit on worksheet name length is 31 characters").format(obsId, obsId[0:31]),
+                    QMessageBox.warning(None, programName,
+                                        ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
+                                         "The limit on worksheet name length is 31 characters").format(obsId, obsId[0:31]),
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             else:
@@ -8876,7 +8830,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                 '''
 
             except:
-                #errorMsg = sys.exc_info()[1].strerror
                 errorMsg = sys.exc_info()[1]
 
                 logging.critical(errorMsg)
@@ -8900,10 +8853,9 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                 if event[-1] == POINT:
                     if currentStates:
-                        #s += "+".join(replace_spaces(currentStates)) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]   #.replace(" ", "_")
                         s += "+".join(currentStates) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
                     else:
-                        s += event[EVENT_BEHAVIOR_FIELD_IDX]    #.replace(" ", "_")
+                        s += event[EVENT_BEHAVIOR_FIELD_IDX]
 
                     if plot_parameters["include modifiers"]:
                         s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
@@ -8912,7 +8864,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                 if event[-1] == START:
                     currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-                    #s += "+".join(replace_spaces(currentStates))
                     s += "+".join(currentStates)
 
                     if plot_parameters["include modifiers"]:
@@ -8925,7 +8876,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                         currentStates.remove(event[EVENT_BEHAVIOR_FIELD_IDX])
 
                     if currentStates:
-                        #s += "+".join(replace_spaces(currentStates))
                         s += "+".join(currentStates)
 
                         if plot_parameters["include modifiers"]:
@@ -8950,12 +8900,13 @@ self.mediaplayer.video_get_aspect_ratio(),
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True,
+                                                              flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        fn =  QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
@@ -8966,12 +8917,16 @@ self.mediaplayer.video_get_aspect_ratio(),
                 with open(fileName, "w", encoding="utf-8") as outFile:
                     for obsId in selectedObservations:
                         # observation id
-                        outFile.write("\n# observation id: {0}\n".format(obsId))
+                        outFile.write("\n# observation id: {}\n".format(obsId))
                         # observation descrition
-                        outFile.write("# observation description: {0}\n".format(self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, " ")))
+                        outFile.write("# observation description: {}\n".format(
+                                                                self.pj[OBSERVATIONS][obsId]["description"].replace(os.linesep, " ")))
                         # media file name
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
-                            outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x) for x in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]]), os.linesep))
+                            outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x)
+                                                                                           for x in self.pj[OBSERVATIONS]
+                                                                                           [obsId]
+                                                                                           [FILE][PLAYER1]]), os.linesep))
                         if self.pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
                             outFile.write("# Live observation{0}{0}".format(os.linesep))
 
@@ -8981,7 +8936,8 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                             # rows.append(["variable", "value"])
                             for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
-                                outFile.write("# {0}: {1}\n".format(variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
+                                outFile.write("# {0}: {1}\n".format(variable,
+                                                                    self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]))
                         outFile.write("\n")
 
                         # selected subjects
@@ -9014,25 +8970,22 @@ self.mediaplayer.video_get_aspect_ratio(),
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True,
+                                                              flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
         flagMulti = False
         if len(plot_parameters["selected subjects"]) == 1:
-            '''
-            if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
-            else:
-                fileName, _ = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
-            '''
 
-            fn =  QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+            fn = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "",
+                                                   "Transitions matrix files (*.txt *.tsv);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
         else:
-            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
+            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices",
+                                                               os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
             if not exportDir:
                 return
             flagMulti = True
@@ -9045,13 +8998,12 @@ self.mediaplayer.video_get_aspect_ratio(),
             for obsId in selectedObservations:
                 strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
 
-
-            print("strings_list", strings_list)
             sequences, observed_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 
-            print("observed behaviors", observed_behaviors)
-
-            observed_matrix = transitions.observed_transitions_matrix(sequences, sorted(list(set(observed_behaviors + plot_parameters["selected behaviors"]))), mode=mode)
+            observed_matrix = transitions.observed_transitions_matrix(sequences,
+                                                                      sorted(list(set(observed_behaviors +
+                                                                                      plot_parameters["selected behaviors"]))),
+                                                                      mode=mode)
 
             if not observed_matrix:
                 QMessageBox.warning(self, programName, "No transitions found for <b>{}</b>".format(subject))
@@ -9068,7 +9020,9 @@ self.mediaplayer.video_get_aspect_ratio(),
                                                                                           mode=mode)
 
                     if os.path.isfile(nf):
-                        if dialog.MessageDialog(programName, "A file with same name already exists.<br><b>{}</b>".format(nf), ["Overwrite", CANCEL]) == CANCEL:
+                        if dialog.MessageDialog(programName,
+                                                "A file with same name already exists.<br><b>{}</b>".format(nf),
+                                                ["Overwrite", CANCEL]) == CANCEL:
                             continue
 
                     with open(nf, "w") as outfile:
@@ -9087,30 +9041,29 @@ self.mediaplayer.video_get_aspect_ratio(),
         """
         create dot script (graphviz language) from transitions frequencies matrix
         """
-        '''
-        if QT_VERSION_STR[0] == "4":
-            fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
-        else:
-            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
-        '''
 
-        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "",
+                                                "Transitions matrix files (*.txt *.tsv);;All files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""
         for fileName in fileNames:
             with open(fileName, "r") as infile:
                 try:
-                    gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+                    gv = transitions.create_transitions_gv_from_matrix(infile.read(),
+                                                                       cutoff_all=0,
+                                                                       cutoff_behavior=0,
+                                                                       edge_label="percent_node")
                     with open(fileName + ".gv", "w") as f:
                         f.write(gv)
-                    #print(gv, file=open(fileName + ".gv", "w"))
+
                     out += "<b>{}</b> created<br>".format(fileName + ".gv")
                 except:
                     QMessageBox.information(self, programName, "Error during dot script creation.\n{}".format(str(sys.exc_info()[0])))
 
         if out:
-            QMessageBox.information(self, programName, out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
+            QMessageBox.information(self, programName,
+                                    out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
 
     def transitions_flow_diagram(self):
         """
@@ -9122,28 +9075,29 @@ self.mediaplayer.video_get_aspect_ratio(),
         if "graphviz" not in result:
             QMessageBox.critical(self, programName, ("The GraphViz package is not installed.<br>"
                                                      "The <b>dot</b> program was not found in the path.<br><br>"
-                                                     """Go to <a href="http://www.graphviz.org">http://www.graphviz.org</a> for information"""))
+                                                     """Go to <a href="http://www.graphviz.org">"""
+                                                     """http://www.graphviz.org</a> for information"""))
             return
 
-        '''
-        if QT_VERSION_STR[0] == "4":
-            fileNames = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
-        else:
-            fileNames, _ = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
-        '''
-
-        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "", "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "",
+                                                "Transitions matrix files (*.txt *.tsv);;All files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""
         for fileName in fileNames:
             with open(fileName, "r") as infile:
                 try:
-                    gv = transitions.create_transitions_gv_from_matrix(infile.read(), cutoff_all=0, cutoff_behavior=0, edge_label="percent_node")
+                    gv = transitions.create_transitions_gv_from_matrix(infile.read(),
+                                                                       cutoff_all=0,
+                                                                       cutoff_behavior=0,
+                                                                       edge_label="percent_node")
+
                     with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
                         f.write(gv)
-                    #print(gv, file=open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w"))
-                    result = subprocess.getoutput("""dot -Tpng -o "{0}.png" "{1}" """.format(fileName, tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv"))
+                    result = subprocess.getoutput("""dot -Tpng -o "{0}.png" "{1}" """.format(fileName,
+                                                                                             tempfile.gettempdir() +
+                                                                                             os.sep + os.path.basename(fileName) +
+                                                                                             ".tmp.gv"))
                     if not result:
                         out += "<b>{}</b> created<br>".format(fileName + ".png")
                     else:
@@ -9189,11 +9143,12 @@ self.mediaplayer.video_get_aspect_ratio(),
         import observations from project file
         """
 
-        fn =  QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;All files (*)")
+        fn = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if self.projectFileName and fileName == self.projectFileName:
-            QMessageBox.critical(None, programName, "This project is already open", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(None, programName,
+                                 "This project is already open", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if fileName:
@@ -9224,20 +9179,29 @@ self.mediaplayer.video_get_aspect_ratio(),
                     for obsId in selected_observations:
 
                         # check if behaviors are in current project ethogram
-                        new_behav_set = set([event[EVENT_BEHAVIOR_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
+                        new_behav_set = set([event[EVENT_BEHAVIOR_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS]
+                                             if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
                         if new_behav_set:
-                            diag_result = dialog.MessageDialog(programName, "Some coded behaviors in <b>{}</b> are not in the ethogram:<br><b>{}</b>".format(obsId, ", ".join(new_behav_set)),
-                                                                            ["Interrupt import", "Skip observation", "Import observation"])
+                            diag_result = dialog.MessageDialog(programName,
+                                                               ("Some coded behaviors in <b>{}</b> are"
+                                                                "not in the ethogram:<br><b>{}</b>").format(obsId,
+                                                                                                            ", ".join(new_behav_set)),
+                                                               ["Interrupt import", "Skip observation", "Import observation"])
                             if diag_result == "Interrupt import":
                                 return
                             if diag_result == "Skip observation":
                                 continue
 
                         # check if subjects are in current project
-                        new_subject_set = set([event[EVENT_SUBJECT_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
+                        new_subject_set = set([event[EVENT_SUBJECT_FIELD_IDX] for event in fromProject[OBSERVATIONS][obsId][EVENTS]
+                                               if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
                         if new_subject_set and new_subject_set != {""}:
-                            diag_result = dialog.MessageDialog(programName, "Some coded subjects in <b>{}</b> are not defined in the project:<br><b>{}</b>".format(obsId, ", ".join(new_subject_set)),
-                                                                            ["Interrupt import", "Skip observation", "Import observation"])
+                            diag_result = dialog.MessageDialog(programName,
+                                                               ("Some coded subjects in <b>{}</b> are not defined in the project:<br>"
+                                                                "<b>{}</b>").format(obsId,
+                                                                                    ", ".join(new_subject_set)),
+                                                               ["Interrupt import", "Skip observation", "Import observation"])
+
                             if diag_result == "Interrupt import":
                                 return
 
@@ -9245,13 +9209,17 @@ self.mediaplayer.video_get_aspect_ratio(),
                                 continue
 
                         if obsId in self.pj[OBSERVATIONS].keys():
-                            diag_result = dialog.MessageDialog(programName, "The observation <b>{}</b> already exists in the current project.<br>".format(obsId),
-                                                                                    ["Interrupt import", "Skip observation", "Rename observation"])
+                            diag_result = dialog.MessageDialog(programName,
+                                                               ("The observation <b>{}</b>"
+                                                                "already exists in the current project.<br>").format(obsId),
+                                                               ["Interrupt import", "Skip observation", "Rename observation"])
                             if diag_result == "Interrupt import":
                                 return
 
                             if diag_result == "Rename observation":
-                                self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId, datetime_iso8601())] = dict(fromProject[OBSERVATIONS][obsId])
+                                self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId,
+                                                                                   datetime_iso8601()
+                                                                                   )] = dict(fromProject[OBSERVATIONS][obsId])
                                 flagImported = True
                         else:
                             self.pj[OBSERVATIONS][obsId] = dict(fromProject[OBSERVATIONS][obsId])
@@ -9349,13 +9317,13 @@ self.mediaplayer.video_get_aspect_ratio(),
                     else:
                         self.mediaplayer.set_time(0)
                     if self.simultaneousMedia:
-                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
-
-
+                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() -
+                                                   self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
                 elif self.media_list.count() > 1:
 
-                    newTime = (sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) + self.mediaplayer.get_time()) - self.fast * 1000
+                    newTime = (sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) +
+                               self.mediaplayer.get_time()) - self.fast * 1000
                     if newTime < self.fast * 1000:
                         newTime = 0
 
@@ -9380,7 +9348,8 @@ self.mediaplayer.video_get_aspect_ratio(),
                             if flagPaused:
                                 self.mediaListPlayer.pause()
 
-                            self.mediaplayer.set_time(newTime - sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]))
+                            self.mediaplayer.set_time(newTime -
+                                                      sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]))
 
                             break
                         tot += d
@@ -9402,13 +9371,8 @@ self.mediaplayer.video_get_aspect_ratio(),
         if self.playerType == VLC:
 
             if self.playMode == FFMPEG:
-                '''
-                currentTime = self.FFmpegGlobalFrame / list(self.fps.values())[0]
-                self.FFmpegGlobalFrame = int((currentTime + self.fast) * list(self.fps.values())[0])
-                '''
 
                 self.FFmpegGlobalFrame += self.fast * list(self.fps.values())[0]
-
 
                 if self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]) >= sum(self.duration):
                     logging.debug("end of last media")
@@ -9419,17 +9383,12 @@ self.mediaplayer.video_get_aspect_ratio(),
                     self.FFmpegGlobalFrame -= 1
 
                 if self.second_player():
-                    '''
-                    currentTime2 = self.FFmpegGlobalFrame2 / list(self.fps2.values())[0]
-                    self.FFmpegGlobalFrame2 = int((currentTime2 + self.fast) * list(self.fps2.values())[0])
-                    '''
 
                     self.FFmpegGlobalFrame2 += self.fast * list(self.fps2.values())[0]
                     if self.FFmpegGlobalFrame2 * (1000 / list(self.fps2.values())[0]) >= sum(self.duration2):
                         logging.debug("end of last media")
                         self.FFmpegGlobalFrame2 = int(sum(self.duration2) * list(self.fps2.values())[0] / 1000)-1
                         logging.debug("FFmpegGlobalFrame2 {}  sum duration2 {}".format(self.FFmpegGlobalFrame2, sum(self.duration2)))
-
 
                     if self.FFmpegGlobalFrame2 > 0:
                         self.FFmpegGlobalFrame2 -= 1
@@ -9444,11 +9403,13 @@ self.mediaplayer.video_get_aspect_ratio(),
                         self.mediaplayer.set_time(self.mediaplayer.get_time() + self.fast * 1000)
 
                     if self.simultaneousMedia:
-                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
+                        self.mediaplayer2.set_time(int(self.mediaplayer.get_time() -
+                                                   self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
                 elif self.media_list.count() > 1:
 
-                    newTime = (sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) + self.mediaplayer.get_time()) + self.fast * 1000
+                    newTime = (sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) +
+                               self.mediaplayer.get_time()) + self.fast * 1000
                     if newTime < sum(self.duration):
                         # remember if player paused (go previous will start playing)
                         flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
@@ -9466,7 +9427,8 @@ self.mediaplayer.video_get_aspect_ratio(),
                                 if flagPaused:
                                     self.mediaListPlayer.pause()
 
-                                self.mediaplayer.set_time(newTime - sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]))
+                                self.mediaplayer.set_time(newTime - sum(
+                                    self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]))
 
                                 break
                             tot += d
@@ -9501,7 +9463,7 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                 self.ffmpegTimerOut()
 
-            else: #playmode VLC
+            else:  # playmode VLC
 
                 self.mediaplayer.set_time(0)
 
@@ -9547,17 +9509,19 @@ if __name__ == "__main__":
     if vlc.dll is None:
         logging.critical("VLC media player not found")
         QMessageBox.critical(None, programName, "This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc",
-             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(1)
 
     availablePlayers.append(VLC)
 
     logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        QMessageBox.critical(None, programName, "The VLC media player seems very old ({}).<br>Go to http://www.videolan.org/vlc to update it".format(
-            vlc.libvlc_get_version()), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        QMessageBox.critical(None, programName, ("The VLC media player seems very old ({}).<br>"
+                                                 "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version()),
+                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-        logging.critical("The VLC media player seems old ({}). Go to http://www.videolan.org/vlc to update it".format(vlc.libvlc_get_version()))
+        logging.critical(("The VLC media player seems old ({})."
+                          "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version()))
         sys.exit(2)
 
     # check FFmpeg
@@ -9594,7 +9558,6 @@ if __name__ == "__main__":
                 print("Observations: {}".format(",".join(sorted(window.pj[OBSERVATIONS].keys()))))
                 sys.exit(0)
 
-
             if options.observations_list:
                 print("List of observation(s) in {} project file:".format(args[0]))
                 print(os.linesep.join(sorted(window.pj[OBSERVATIONS].keys())))
@@ -9603,7 +9566,8 @@ if __name__ == "__main__":
             if len(args) > 1:
                 r = window.load_observation(args[1])
                 if r:
-                    QMessageBox.warning(None, programName, "Error opening observation: <b>{}</b><br>{}".format(args[1], r.split(":")[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    QMessageBox.warning(None, programName, "Error opening observation: <b>{}</b><br>{}".format(args[1], r.split(":")[1]),
+                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     window.show()
     window.raise_()
