@@ -40,6 +40,7 @@ import add_modifier
 import dialog
 import tablib
 
+
 if QT_VERSION_STR[0] == "4":
     from project_ui import Ui_dlgProject
 else:
@@ -354,9 +355,10 @@ class projectDialog(QDialog, Ui_dlgProject):
     def twBehaviors_cellDoubleClicked(self, row, column):
         """
         manage double-click on ethogram table:
-        * category
-        * modifiers coding map
+        * behavior category
         * modifiers
+        * exclusion
+        * modifiers coding map
 
         """
 
@@ -366,15 +368,17 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check if double click on 'coding map' column
         if column == behavioursFields["coding map"]:
-            QMessageBox.information(self, programName, "Change the behavior type on first column to select a coding map")
+
+            combobox = self.twBehaviors.cellWidget(row, behavioursFields["type"])
+            if "with coding map" in BEHAVIOR_TYPES[combobox.currentIndex()]:
+                self.behaviorTypeChanged(row)
+            else:
+                QMessageBox.information(self, programName, "Change the behavior type on first column to select a coding map")
+            
 
         # check if double click on category
         if column == behavioursFields["category"]:
             self.category_doubleclicked(row)
-
-        # check if double click on coding map
-        if column == behavioursFields["coding map"]:
-            self.behaviorTypeChanged(row)
 
         if column == behavioursFields["modifiers"]:
             # check if behavior has coding map
@@ -1166,21 +1170,20 @@ class projectDialog(QDialog, Ui_dlgProject):
         combobox = self.twBehaviors.cellWidget(row, behavioursFields["type"])
         if "with coding map" in BEHAVIOR_TYPES[combobox.currentIndex()]:
             # let user select a coding maop
-            fd = QFileDialog(self)
-            if QT_VERSION_STR[0] == "4":
-                fileName = fd.getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()), "", 'BORIS map files (*.boris_map);;All files (*)')
-            else:
-                fileName, _ = fd.getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()), "", 'BORIS map files (*.boris_map);;All files (*)')
+            
+            fn = QFileDialog(self).getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()),
+                                                    "", "BORIS map files (*.boris_map);;All files (*)")
+            fileName = fn[0] if type(fn) is tuple else fn
 
             if fileName:
-                import json
-                new_map = json.loads(open(fileName, 'r').read())
-                self.pj['coding_map'][new_map['name']] = new_map
+                new_map = json.loads(open(fileName, "r").read())
+                self.pj["coding_map"][new_map["name"]] = new_map
 
-                # add modifiers from coding map codes
-                modifStr = '|'.join(sorted(new_map['areas'].keys()))
-                self.twBehaviors.item(row, behavioursFields['modifiers']).setText(modifStr)
-                self.twBehaviors.item(row, behavioursFields['coding map']).setText(new_map['name'])
+                # add modifiers from coding map areas
+                modifstr = str({"0": {"name": new_map["name"], "type": MULTI_SELECTION, "values": list(sorted(new_map['areas'].keys()))}})
+                
+                self.twBehaviors.item(row, behavioursFields['modifiers']).setText(modifstr)
+                self.twBehaviors.item(row, behavioursFields['coding map']).setText(new_map["name"])
 
             else:
                 # if coding map already exists do not reset the behavior type if no filename selected
@@ -1188,7 +1191,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     QMessageBox.critical(self, programName, """No coding map was selected.\nEvent type will be reset to "Point event" """)
                     self.twBehaviors.cellWidget(row, behavioursFields["type"]).setCurrentIndex(0)
         else:
-            #self.twBehaviors.item(row, behavioursFields['modifiers']).setText("")
             self.twBehaviors.item(row, behavioursFields["coding map"]).setText("")
 
     def pbAddSubject_clicked(self):

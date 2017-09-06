@@ -66,8 +66,8 @@ import qrc_boris
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 
-__version__ = "4.1.5"
-__version_date__ = "2017-08-30"
+__version__ = "4.1.6"
+__version_date__ = "2017-09-06"
 
 # BITMAP_EXT = "jpg"
 
@@ -1248,8 +1248,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if fileNames:
 
-            horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\n"
-                                                             "The aspect ratio will be maintained"), 1024, 352, 1920, 10)
+            horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\nThe aspect ratio will be maintained"),
+                                                  1024, 352, 2048, 20)
             if not ok:
                 return
 
