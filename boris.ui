@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>522</width>
-             <height>402</height>
+             <width>532</width>
+             <height>383</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>22</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -229,7 +229,8 @@
     </widget>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionDistance"/>
-    <addaction name="actionBehaviors_map"/>
+    <addaction name="actionBehaviors_coding_map"/>
+    <addaction name="actionCoding_pad"/>
     <addaction name="separator"/>
     <addaction name="actionMapCreator"/>
     <addaction name="actionRecode_resize_video"/>
@@ -897,7 +898,7 @@
     <string>Export aggregated events</string>
    </property>
   </action>
-  <action name="actionBehaviors_map">
+  <action name="actionCoding_pad">
    <property name="text">
     <string>Coding pad</string>
    </property>
@@ -1077,6 +1078,11 @@
   <action name="actionIRR">
    <property name="text">
     <string>IRR</string>
+   </property>
+  </action>
+  <action name="actionBehaviors_coding_map">
+   <property name="text">
+    <string>Behaviors coding map</string>
    </property>
   </action>
  </widget>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.7.1
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -43,7 +43,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtWidgets.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 522, 402))
+        self.page.setGeometry(QtCore.QRect(0, 0, 532, 383))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 27))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -333,8 +333,8 @@ class Ui_MainWindow(object):
         self.actionShowAllBehaviors.setObjectName("actionShowAllBehaviors")
         self.actionExport_aggregated_events = QtWidgets.QAction(MainWindow)
         self.actionExport_aggregated_events.setObjectName("actionExport_aggregated_events")
-        self.actionBehaviors_map = QtWidgets.QAction(MainWindow)
-        self.actionBehaviors_map.setObjectName("actionBehaviors_map")
+        self.actionCoding_pad = QtWidgets.QAction(MainWindow)
+        self.actionCoding_pad.setObjectName("actionCoding_pad")
         self.actionTime_budget_by_behaviors_category = QtWidgets.QAction(MainWindow)
         self.actionTime_budget_by_behaviors_category.setObjectName("actionTime_budget_by_behaviors_category")
         self.actionExport_events_as_SDIS_file = QtWidgets.QAction(MainWindow)
@@ -399,6 +399,8 @@ class Ui_MainWindow(object):
         self.actionViewBehavior.setObjectName("actionViewBehavior")
         self.actionIRR = QtWidgets.QAction(MainWindow)
         self.actionIRR.setObjectName("actionIRR")
+        self.actionBehaviors_coding_map = QtWidgets.QAction(MainWindow)
+        self.actionBehaviors_coding_map.setObjectName("actionBehaviors_coding_map")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -479,7 +481,8 @@ class Ui_MainWindow(object):
         self.menuTransitions_flow_diagram.addAction(self.actionCreate_transitions_flow_diagram_2)
         self.menuTools.addAction(self.actionShow_spectrogram)
         self.menuTools.addAction(self.actionDistance)
-        self.menuTools.addAction(self.actionBehaviors_map)
+        self.menuTools.addAction(self.actionBehaviors_coding_map)
+        self.menuTools.addAction(self.actionCoding_pad)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.actionMapCreator)
         self.menuTools.addAction(self.actionRecode_resize_video)
@@ -637,7 +640,7 @@ class Ui_MainWindow(object):
         self.actionShowAllBehaviors.setText(_translate("MainWindow", "Show all behaviors"))
         self.actionShowAllBehaviors.setToolTip(_translate("MainWindow", "Show all behaviors"))
         self.actionExport_aggregated_events.setText(_translate("MainWindow", "Export aggregated events"))
-        self.actionBehaviors_map.setText(_translate("MainWindow", "Coding pad"))
+        self.actionCoding_pad.setText(_translate("MainWindow", "Coding pad"))
         self.actionTime_budget_by_behaviors_category.setText(_translate("MainWindow", "Time budget by behaviors category"))
         self.actionExport_events_as_SDIS_file.setText(_translate("MainWindow", "Export events as SDIS file"))
         self.actionRecode_resize_video.setText(_translate("MainWindow", "Re-encode/resize video"))
@@ -669,4 +672,5 @@ class Ui_MainWindow(object):
         self.actionViewBehavior.setText(_translate("MainWindow", "View behavior"))
         self.actionViewBehavior.setToolTip(_translate("MainWindow", "View behavior"))
         self.actionIRR.setText(_translate("MainWindow", "IRR"))
+        self.actionBehaviors_coding_map.setText(_translate("MainWindow", "Behaviors coding map"))
 
