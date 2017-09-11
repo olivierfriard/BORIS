@@ -111,7 +111,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
     bitmapFileName,mapName, fileName  = "", "", ""
     flagNewArea, flagMapChanged = False, False
-    areasList, polygonsList2 = {}, {}
+    areasList, polygonsList2 = {}, []
     areaColor = QColor("lime")
 
     def __init__(self, arg):
@@ -188,6 +188,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.hlayout.addWidget(self.lb)
 
         self.leAreaCode = QLineEdit(self)
+        self.leAreaCode.setReadOnly(True)
         self.leAreaCode.setVisible(False)
         '''self.leAreaCode.editingFinished.connect(self.area_editing_finished)'''
         self.hlayout.addWidget(self.leAreaCode)
@@ -197,8 +198,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btEditAreaCode.setVisible(False)
         #self.btEditAreaCode.setStyleSheet("QWidget {{background-color:{}}}".format(self.areaColor.name()))
         self.hlayout.addWidget(self.btEditAreaCode)
-        
-        
 
         self.btColor = QPushButton()
         self.btColor.clicked.connect(self.chooseColor)
@@ -232,11 +231,10 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btCancelAreaCreation.setVisible(False)
         hlayout2.addWidget(self.btCancelAreaCreation)
 
-
         self.btDeleteArea = QPushButton("Delete selected behavior area", self)
         self.btDeleteArea.clicked.connect(self.deleteArea)
-        self.btDeleteArea.setVisible(True)
-        self.btDeleteArea.setEnabled(False)
+        self.btDeleteArea.setVisible(False)
+        #self.btDeleteArea.setEnabled(False)
         hlayout2.addWidget(self.btDeleteArea)
 
         layout.addLayout(hlayout2)
@@ -250,53 +248,37 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.statusBar().showMessage("")
 
-    
+
     def edit_area_code(self):
         print("edit area code")
-        
-        print("editing finished", self.leAreaCode.text())
 
-        item, ok = QInputDialog.getItem(self, "select input dialog", "Available codes", self.codes_list, 0, False)
+        if self.leAreaCode.text() in self.codes_list:
+            code_index = self.codes_list.index(self.leAreaCode.text())
+        else:
+            code_index = 0
+
+        item, ok = QInputDialog.getItem(self, "Area codes", "Available codes", self.codes_list, code_index, False)
         self.leAreaCode.setText(item)
-        
+
+        print("new area code", self.leAreaCode.text())
+
+        '''
         if self.selectedPolygonAreaCode:
             for key in self.areasList:
                 if self.areasList[key]["code"] == self.selectedPolygonAreaCode:
                     self.areasList[key]["code"] = item
-            
             self.polygonsList2[item] = self.polygonsList2.pop(self.selectedPolygonAreaCode)
+        '''
+
+        if self.selectedPolygon:
+            for idx, area in enumerate(self.polygonsList2):
+                ac, pg = area
+                if pg == self.selectedPolygon:
+                    self.polygonsList2[idx] = [self.leAreaCode.text(), pg]
+                    print("area code changed")
+                    print(self.polygonsList2[idx])
+                    break
     
-    '''
-    def areacode_edited(self, edited_text):
-
-        print("edited text", edited_text)
-        print(self.selectedPolygonAreaCode)
-        
-        print(self.polygonsList2)
-        
-        for key in self.areasList:
-            if self.areasList[key]["code"] == self.selectedPolygonAreaCode:
-                self.areasList[key]["code"] = edited_text
-
-        self.polygonsList2[edited_text] = dictionary.pop(old_key)
-
-        #self.polygonsList2
-
-        print(self.areasList)
-    '''
-    
-    '''
-    def area_editing_finished(self):
-        print("editing finished", self.leAreaCode.text())
-        print("self.selectedPolygonAreaCode", self.selectedPolygonAreaCode)
-        
-        self.polygonsList2[self.leAreaCode.text()] = self.polygonsList2.pop(self.selectedPolygonAreaCode)
-        for key in self.areasList:
-            if self.areasList[key]["code"] == self.selectedPolygonAreaCode:
-                self.areasList[key]["code"] = self.leAreaCode.text()
-    '''
-
-
 
     def slAlpha_changed(self, val):
         """
@@ -308,11 +290,12 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         if self.selectedPolygon:
             self.selectedPolygon.setBrush(self.areaColor)
-
-            for key in self.areasList:
-                if self.areasList[key]["code"] == self.leAreaCode.text():
-                    self.areasList[key]["color"] = self.areaColor.rgba()
-            # self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
+            for idx, area in enumerate(self.polygonsList2):
+                ac, pg = area
+                if pg == self.selectedPolygon:
+                    pg.setBrush(self.areaColor)
+                    self.polygonsList2[idx] = [ac, pg]
+                    break
 
         if self.closedPolygon:
             self.closedPolygon.setBrush(self.areaColor)
@@ -324,8 +307,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         """
         cd = QColorDialog()
 
-        #cd.setOption(QColorDialog.ShowAlphaChannel)
-
         col = cd.getColor()
         if col.isValid():
             self.btColor.setStyleSheet("QWidget {background-color:%s}" % col.name())
@@ -336,13 +317,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             print("clsed polygon set brush", self.areaColor)
             self.selectedPolygon.setBrush(self.areaColor)
 
-            for x in self.areasList:
-                if self.areasList[x]["code"] == self.leAreaCode.text():
-                    self.areasList[x]["color"] = self.areaColor.rgba()
-            #self.areasList[self.leAreaCode.text()]["color"] = self.areaColor.rgba()
+            for idx, area in enumerate(self.polygonsList2):
+                ac, pg = area
+                if pg == self.selectedPolygon:
+                    pg.setBrush(self.areaColor)
+                    self.polygonsList2[idx] = [ac, pg]
+                    break
 
         if self.closedPolygon:
-            print("clsed polygon set brush", self.areaColor)
             self.closedPolygon.setBrush(self.areaColor)
 
 
@@ -374,8 +356,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         if not self.bitmapFileName:
             return
 
-        self.btDeleteArea.setEnabled(False)
-
         test = self.view.mapToScene(event.pos()).toPoint() # coordinates of clicked point
 
         if test.x() < 0 or test.y() < 0 or test.x() > self.pixmap.size().width() or test.y() > self.pixmap.size().height():
@@ -386,31 +366,28 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             # reset selected polygon to default pen
             if self.selectedPolygon:
-                self.selectedPolygon.setPen( QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin) )
+                self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
                 self.selectedPolygon = None
                 self.selectedPolygonMemBrush = None
 
-            for areaCode in self.polygonsList2:
+            for areaCode, pg in self.polygonsList2:
 
-                if self.polygonsList2[areaCode].contains(test):
+                if pg.contains(test):
 
-                    if txt:
-                        txt += ","
-
-                    txt += areaCode
-                    self.selectedPolygon = self.polygonsList2[areaCode]
+                    self.selectedPolygon = pg
                     self.selectedPolygonAreaCode = areaCode
 
                     self.selectedPolygonMemBrush = self.selectedPolygon.brush()
 
                     self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
 
+                    self.lb.setVisible(True)
                     self.leAreaCode.setText(areaCode)
                     self.leAreaCode.setVisible(True)
-                    self.leAreaCode.setEnabled(False)
+                    #self.leAreaCode.setEnabled(False)
                     self.btEditAreaCode.setVisible(True)
                     
-                    self.btDeleteArea.setEnabled(True)
+                    self.btDeleteArea.setVisible(True)
 
                     self.areaColor = self.selectedPolygon.brush().color()
                     self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.selectedPolygon.brush().color().name()))
@@ -421,13 +398,10 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                     break
 
-            if txt:
-                self.statusBar().showMessage("Behavior code{}: {}".format("s" if "," in txt else "", txt))
-            else:
-                self.statusBar().showMessage("")
-
             if not self.selectedPolygon:
                 self.leAreaCode.setVisible(False)
+                self.lb.setVisible(False)
+                self.btDeleteArea.setVisible(False)
                 self.btEditAreaCode.setVisible(False)
                 self.btColor.setVisible(False)
                 self.slAlpha.setVisible(False)
@@ -483,12 +457,10 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
                     # draw polygon a red polygon
                     self.closedPolygon = QGraphicsPolygonItem(newPolygon, None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem(newPolygon)
-
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+                    self.closedPolygon.setBrush(self.areaColor)
 
-                    self.closedPolygon.setBrush( self.areaColor )
-
-                    self.view.scene().addItem( self.closedPolygon )
+                    self.view.scene().addItem(self.closedPolygon)
 
                     return
 
@@ -574,12 +546,15 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
     def openMap(self):
         """
+        open a coding map from file
+
         load bitmap from data
         show it in view scene
         """
         if self.flagMapChanged:
             response = dialog.MessageDialog(programName + " - Behaviors coding map creator",
-                                            "What to do about the current unsaved coding map?", ['Save', 'Discard', 'Cancel'])
+                                            "What to do about the current unsaved coding map?",
+                                            ['Save', 'Discard', 'Cancel'])
 
             if (response == "Save" and not self.saveMap_clicked()) or (response == "Cancel"):
                 return
@@ -608,17 +583,19 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             self.fileName = fileName
 
+            '''
             self.areasList = {}
             for key in self.codingMap["areas"]:
+
+                print(key, self.codingMap["areas"][key])
+
                 self.areasList[int(key)] = self.codingMap["areas"][key]
+            '''
 
             #self.areasList = self.codingMap["areas"]   # dictionary of dictionaries
             bitmapContent = binascii.a2b_base64( self.codingMap['bitmap'] )
 
             self.pixmap.loadFromData(bitmapContent)
-
-            self.btDeleteArea.setEnabled(False)
-
 
             self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixItem = QGraphicsPixmapItem(self.pixmap)
@@ -626,33 +603,37 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.view.scene().addItem(pixItem)
 
             #for areaCode in self.areasList:
-            for key in self.areasList:
-                areaCode = self.areasList[key]["code"]
-                points = self.areasList[key]["geometry"]
+            
+            for key in self.codingMap["areas"]:
+                areaCode = self.codingMap["areas"][key]["code"]
+                points = self.codingMap["areas"][key]["geometry"]
+                
+                #for key in self.areasList:
+            
+                #areaCode = self.areasList[key]["code"]
+                #points = self.areasList[key]["geometry"]
 
                 newPolygon = QPolygonF()
                 for p in points:
                     newPolygon.append(QPoint(p[0], p[1]))
 
-                clr = QColor()
-                clr.setRgba(self.areasList[key]["color"])
-
                 # draw polygon
                 polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()
-
                 polygon.setPolygon(newPolygon)
-
+                clr = QColor()
+                clr.setRgba(self.codingMap["areas"][key]["color"])
                 polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
-
-                polygon.setBrush(QBrush( clr, Qt.SolidPattern))
+                polygon.setBrush(QBrush(clr, Qt.SolidPattern))
 
                 self.view.scene().addItem(polygon)
-                self.polygonsList2[areaCode] = polygon
+                
+                self.polygonsList2.append([areaCode, polygon])
+                #self.polygonsList2[][areaCode] = polygon
 
             self.btNewArea.setVisible(True)
-
             self.btLoad.setVisible(False)
 
+            #self.btDeleteArea.setEnabled(False)
             self.saveMapAction.setEnabled(True)
             self.saveAsMapAction.setEnabled(True)
             self.mapNameAction.setEnabled(True)
@@ -660,6 +641,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         else:
             self.statusBar().showMessage('No file', 5000)
 
+
+        
+        print("polygonsList2", self.polygonsList2)
 
     def saveMap(self):
         """
@@ -670,7 +654,20 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             
             mapDict = {"coding_map_type": "BORIS behaviors coding map",
                        "name": self.mapName,
-                       "areas": self.areasList}
+                       "areas": {}}
+
+            for ac, pg in self.polygonsList2:
+                if not mapDict["areas"]:
+                    idx = 0
+                else:
+                    idx = max(mapDict["areas"].keys()) + 1
+
+                points = []
+                for p in range(pg.polygon().count()):
+                    print(int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y()))
+                    points.append([int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y())])
+
+                mapDict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
 
             # Save QPixmap to QByteArray via QBuffer.
             byte_array = QByteArray()
@@ -738,7 +735,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.lb.setVisible(True)
         self.leAreaCode.clear()
         self.leAreaCode.setVisible(True)
-        self.leAreaCode.setEnabled(False)
+        #self.leAreaCode.setEnabled(False)
         self.btEditAreaCode.setVisible(True)
         self.btColor.setVisible(True)
         self.slAlpha.setVisible(True)
@@ -763,10 +760,12 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             return
 
         # check if not allowed character
+        '''
         for c in "|,()":
             if c in self.leAreaCode.text():
                 QMessageBox.critical(self, programName , "The behavior code contains a character that is not allowed <b>()|,</b>.")
                 return
+        '''
 
         # check if area code already used
 
@@ -783,6 +782,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             newPolygon.append(QPoint(p[0], p[1]))
         '''
 
+        
+        '''
         if not self.areasList:
             self.areasList[0] = {"code": self.leAreaCode.text(),
                                  "geometry": self.view.points,
@@ -790,7 +791,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         else:
             self.areasList[max(self.areasList.keys()) + 1] = {"code": self.leAreaCode.text(),
                                                                "geometry": self.view.points,
-                                                               "color": self.areaColor.rgba() }
+                                                               "color": self.areaColor.rgba()}
+        '''
+
 
         # remove all lines
         for l in self.view.elList:
@@ -798,27 +801,47 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         # draw polygon
         self.closedPolygon.setBrush(QBrush(self.areaColor, Qt.SolidPattern))
-        self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
+        #self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
+        self.polygonsList2.append([self.leAreaCode.text(), self.closedPolygon])
+        
+        
+        print("self.closedPolygon.brush().color()", self.closedPolygon.brush().color())
+        print("self.closedPolygon.count()", self.closedPolygon.polygon().count())
+        for p in range(self.closedPolygon.polygon().count()):
+            print(self.closedPolygon.polygon().value(p))
+        
         self.closedPolygon = None
         self.view._start = 0
         self.view.points = []
         self.view.elList = []
         self.flagNewArea = False
 
+        '''
         self.btSaveArea.setVisible(False)
         self.btCancelAreaCreation.setVisible(False)
         self.lb.setVisible(False)
         self.leAreaCode.setVisible(False)
-        self.leAreaCode.setEnabled(False)
+        self.btEditAreaCode.setVisible(False)
         self.btColor.setVisible(False)
         self.slAlpha.setVisible(False)
-        self.btDeleteArea.setVisible(True)
+
+        '''
+        
+        for widget in [self.btSaveArea, self.btCancelAreaCreation, self.lb,
+                       self.leAreaCode, self.btEditAreaCode, self.btColor, self.slAlpha,
+                       self.btDeleteArea, self.btNewArea]:
+            widget.setVisible(False)
+
+        #self.btDeleteArea.setVisible(True)
         self.btNewArea.setVisible(True)
+        
 
         self.leAreaCode.setText("")
 
         self.flagMapChanged = True
         self.statusBar().showMessage("New area saved", 5000)
+        
+        print("self.polygonsList2", self.polygonsList2)
 
 
     def cancelAreaCreation(self):
@@ -836,7 +859,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.view.points = []
         self.flagNewArea = False
         self.btCancelAreaCreation.setVisible(False)
-        self.btDeleteArea.setVisible(True)
+        self.btDeleteArea.setVisible(False)
         self.btSaveArea.setVisible(False)
         self.lb.setVisible(False)
 
@@ -846,6 +869,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
+        
+        self.btEditAreaCode.setVisible(False)
 
 
     def deleteArea(self):
@@ -858,15 +883,25 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         print("self.view.elList", self.view.elList )
 
         if self.selectedPolygon:
-            print("selected polygon")
             self.view.scene().removeItem(self.selectedPolygon)
-            self.view.scene().removeItem( self.polygonsList2[self.selectedPolygonAreaCode])
+               
+            #self.view.scene().removeItem(self.polygonsList2[self.selectedPolygonAreaCode])
 
-            del self.polygonsList2[self.selectedPolygonAreaCode]
+            to_delete = -1
+            for idx, area in enumerate(self.polygonsList2):
+                ac, pg = area
+                if pg == self.selectedPolygon:
+                    print("DELETE self.selectedPolygon")
+                    to_delete = idx
 
+            if to_delete != -1:
+                del self.polygonsList2[to_delete]
+
+            '''
             for x in self.areasList:
                 if self.areasList[x]["code"] == self.selectedPolygonAreaCode:
                     del self.areasList[x]
+            '''
             # del self.areasList[self.selectedPolygonAreaCode]
 
             self.flagMapChanged = True
@@ -886,7 +921,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
         
-        self.btDeleteArea.setEnabled(False)
+        #self.btDeleteArea.setEnabled(False)
+        self.btDeleteArea.setVisible(False)
         self.statusBar().showMessage("")
 
 
@@ -895,8 +931,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         remove current map
         """
         self.flagNewArea = False
-        self.areasList = {}
-        self.polygonsList2 = {}
+        #self.areasList = {}
+        self.polygonsList2 = []
         self.view.scene().clear()
         self.btLoad.setVisible(False)
         self.btDeleteArea.setVisible(False)
