@@ -171,82 +171,130 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
 
+        
         self.area_list = QListWidget(self)
-        self.area_list.setMaximumHeight(120)
+        #self.area_list.setMaximumHeight(120)
+        self.area_list.itemClicked.connect(self.area_list_item_click)
 
         self.btLoad = QPushButton("Load bitmap", self)
         self.btLoad.clicked.connect(self.loadBitmap)
         self.btLoad.setVisible(False)
 
+        hlayout_cmd = QHBoxLayout()
+
         self.btNewArea = QPushButton("New behavior area", self)
         self.btNewArea.clicked.connect(self.newArea)
         self.btNewArea.setVisible(False)
+        hlayout_cmd.addWidget(self.btNewArea)
 
-        self.hlayout = QHBoxLayout()
+        self.btSaveArea = QPushButton("Save the behavior area", self)
+        self.btSaveArea.clicked.connect(self.saveArea)
+        self.btSaveArea.setVisible(False)
+        hlayout_cmd.addWidget(self.btSaveArea)
+
+        self.btCancelAreaCreation = QPushButton("Cancel", self)
+        self.btCancelAreaCreation.clicked.connect(self.cancelAreaCreation)
+        self.btCancelAreaCreation.setVisible(False)
+        hlayout_cmd.addWidget(self.btCancelAreaCreation)
+
+        self.btDeleteArea = QPushButton("Delete selected behavior area", self)
+        self.btDeleteArea.clicked.connect(self.deleteArea)
+        self.btDeleteArea.setVisible(False)
+        hlayout_cmd.addWidget(self.btDeleteArea)
+
+        hlayout_area = QHBoxLayout()
 
         self.lb = QLabel("Behavior code")
         self.lb.setVisible(False)
-        self.hlayout.addWidget(self.lb)
+        hlayout_area.addWidget(self.lb)
 
         self.leAreaCode = QLineEdit(self)
         self.leAreaCode.setReadOnly(True)
         self.leAreaCode.setVisible(False)
-        self.hlayout.addWidget(self.leAreaCode)
+        hlayout_area.addWidget(self.leAreaCode)
 
         self.btEditAreaCode = QPushButton("Edit code")
         self.btEditAreaCode.clicked.connect(self.edit_area_code)
         self.btEditAreaCode.setVisible(False)
-        self.hlayout.addWidget(self.btEditAreaCode)
+        hlayout_area.addWidget(self.btEditAreaCode)
 
         self.btColor = QPushButton()
         self.btColor.clicked.connect(self.chooseColor)
         self.btColor.setVisible(False)
         self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.areaColor.name()))
-        self.hlayout.addWidget(self.btColor)
+        hlayout_area.addWidget(self.btColor)
 
         self.slAlpha = QSlider(Qt.Horizontal)
         self.slAlpha.setRange(20, 100)
         self.slAlpha.setValue(50)
         self.slAlpha.valueChanged.connect(self.slAlpha_changed)
         self.slAlpha.setVisible(False)
-        self.hlayout.addWidget(self.slAlpha)
-
+        hlayout_area.addWidget(self.slAlpha)
+        
         self.slAlpha_changed(50)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.view)
-        
-        layout.addWidget(self.area_list)
-        
-        layout.addWidget(self.btLoad)
+        vlayout_frame = QVBoxLayout()
+        vlayout_frame.addLayout(hlayout_cmd)
+        vlayout_frame.addLayout(hlayout_area)
+        vlayout_frame.addItem(QSpacerItem(20,40,QSizePolicy.Minimum,QSizePolicy.Expanding))
 
-        hlayout2 = QHBoxLayout()
-        hlayout2.addWidget(self.btNewArea)
+        frame = QFrame()
+        frame.setFrameStyle(QFrame.Panel | QFrame.Plain)
+        frame.setMinimumHeight(120)
+        frame.setMaximumHeight(120)
 
-        self.btSaveArea = QPushButton("Save the behavior area", self)
-        self.btSaveArea.clicked.connect(self.saveArea)
-        self.btSaveArea.setVisible(False)
-        hlayout2.addWidget(self.btSaveArea)
+        frame.setLayout(vlayout_frame)
 
-        self.btCancelAreaCreation = QPushButton("Cancel", self)
-        self.btCancelAreaCreation.clicked.connect(self.cancelAreaCreation)
-        self.btCancelAreaCreation.setVisible(False)
-        hlayout2.addWidget(self.btCancelAreaCreation)
+        vlayout = QVBoxLayout()
 
-        self.btDeleteArea = QPushButton("Delete selected behavior area", self)
-        self.btDeleteArea.clicked.connect(self.deleteArea)
-        self.btDeleteArea.setVisible(False)
-        hlayout2.addWidget(self.btDeleteArea)
-
-        layout.addLayout(hlayout2)
-        layout.addLayout(self.hlayout)
+        vlayout.addWidget(self.view)
+        vlayout.addWidget(QLabel("Defined area"))
+        vlayout.addWidget(self.area_list)
+        vlayout.addWidget(frame)
+        vlayout.addWidget(self.btLoad)
 
         main_widget = QWidget(self)
-        main_widget.setLayout(layout)
+        main_widget.setLayout(vlayout)
         self.setCentralWidget(main_widget)
 
         self.statusBar().showMessage("")
 
+
+    def area_list_item_click(self, item):
+        print(item.text())
+        
+        if self.selectedPolygon:
+            self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+            self.selectedPolygon = None
+            self.selectedPolygonMemBrush = None
+
+
+        idx = int(item.text().split("#")[1])
+        ac, pg = self.polygonsList2[idx]
+        
+        self.selectedPolygon = pg
+
+        self.selectedPolygonMemBrush = self.selectedPolygon.brush()
+
+        self.selectedPolygon.setPen(QPen(QColor(255, 0, 0, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+
+        self.lb.setVisible(True)
+        self.leAreaCode.setText(ac)
+        self.leAreaCode.setVisible(True)
+        self.btEditAreaCode.setVisible(True)
+        
+        self.btDeleteArea.setVisible(True)
+
+        self.areaColor = self.selectedPolygon.brush().color()
+        self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.selectedPolygon.brush().color().name()))
+        self.btColor.setVisible(True)
+
+        self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
+        self.slAlpha.setVisible(True)
+
+        
+        
+        
 
     def edit_area_code(self):
         print("edit area code")
@@ -259,17 +307,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         item, ok = QInputDialog.getItem(self, "Area codes", "Available codes", self.codes_list, code_index, False)
         self.leAreaCode.setText(item)
 
-        print("new area code", self.leAreaCode.text())
-
         if self.selectedPolygon:
             for idx, area in enumerate(self.polygonsList2):
                 ac, pg = area
                 if pg == self.selectedPolygon:
                     self.polygonsList2[idx] = [self.leAreaCode.text(), pg]
-                    print("area code changed")
-                    print(self.polygonsList2[idx])
                     break
     
+            self.update_area_list()
 
     def slAlpha_changed(self, val):
         """
@@ -353,7 +398,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             return
 
         if not self.flagNewArea:   # test clicked point for areas
-            txt = ""
 
             # reset selected polygon to default pen
             if self.selectedPolygon:
@@ -827,8 +871,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
     def update_area_list(self):
         self.area_list.clear()
-        for ac, pg in self.polygonsList2:
-            self.area_list.addItem(ac)
+        for idx, area in enumerate(self.polygonsList2):
+            ac, pg = area
+            self.area_list.addItem("{} #{}".format(ac, idx))
  
 
 
@@ -844,7 +889,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             for idx, area in enumerate(self.polygonsList2):
                 ac, pg = area
                 if pg == self.selectedPolygon:
-                    print("DELETE self.selectedPolygon")
                     to_delete = idx
 
             if to_delete != -1:
@@ -866,8 +910,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
+        self.btEditAreaCode.setVisible(False)
         
-        #self.btDeleteArea.setEnabled(False)
         self.btDeleteArea.setVisible(False)
         self.statusBar().showMessage("")
 
