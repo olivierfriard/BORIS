@@ -53,6 +53,7 @@ import param_panel
 import observation
 import modifiers_coding_map
 import map_creator
+import behav_coding_map_creator
 import select_modifiers
 from utilities import *
 import tablib
@@ -736,7 +737,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpTo.triggered.connect(self.jump_to)
 
         # menu Tools
-        self.actionMapCreator.triggered.connect(self.map_creator)
+        self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
+        self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
+
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
@@ -1771,13 +1774,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.spectro.memChunk = currentChunk
 
-    def map_creator(self):
+    def modifiers_coding_map_creator(self):
         """
-        show map creator window and hide program main window
+        show modifiers coding map creator window and hide program main window
         """
         self.mapCreatorWindow = map_creator.ModifiersMapCreatorWindow()
         self.mapCreatorWindow.move(self.pos())
-        self.mapCreatorWindow.resize(640, 640)
+        self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
+        self.mapCreatorWindow.show()
+
+    def behaviors_coding_map_creator(self):
+        """
+        show behaviors coding map creator window and hide program main window
+        """
+        self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(["aaa","bbb","ccc"])
+        self.mapCreatorWindow.move(self.pos())
+        self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()
 
     def load_observation(self, obsId):
