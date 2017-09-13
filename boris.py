@@ -1783,11 +1783,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()
 
+    def behaviors_coding_map_creator_signal_addtoproject(self, behav_coding_map):
+        print("behav_coding_map", behav_coding_map)
+
+        if not self.project:
+            return
+
+        if "behaviors_coding_map" not in self.pj:
+            self.pj["behaviors_coding_map"] = {}
+            
+        '''
+        if "coding_map_type" not in self.pj:
+            self.pj[]
+            
+             and self.pj["coding_map_type"] == "BORIS behaviors coding map":
+            pass
+        '''
+        
+
+
     def behaviors_coding_map_creator(self):
         """
         show behaviors coding map creator window and hide program main window
         """
-        self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(["aaa","bbb","ccc"])
+        
+        if not self.project:
+            QMessageBox.warning(self, programName, "No project found",
+                                QMessageBox.Ok | QMessageBox.Default,
+                                QMessageBox.NoButton)
+            return
+        
+        codes_list = []
+        for key in self.pj[ETHOGRAM]:
+            codes_list.append(self.pj[ETHOGRAM][key]["code"])
+        
+        self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(codes_list)
+        self.mapCreatorWindow.signal_add_to_project.connect(self.behaviors_coding_map_creator_signal_addtoproject)        
         self.mapCreatorWindow.move(self.pos())
         self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()
@@ -7365,6 +7396,15 @@ self.mediaplayer.video_get_aspect_ratio(),
         self.keyPressEvent(event)
 
     def show_behaviors_coding_map(self):
+        """
+        show a behavior coding map
+        """
+        if "behaviors_coding_map" not in self.pj:
+            return
+        
+        if "coding_map_type" in self.pj and self.pj["coding_map_type"] == "BORIS behaviors coding map":
+            pass
+            
 
         if "coding_map" in self.pj:
             if not self.pj["coding_map"]:

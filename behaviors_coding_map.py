@@ -123,30 +123,21 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         test = self.view.mapToScene(event.pos()).toPoint()
 
+        for areaCode, pg in self.polygonsList2:
+            if pg.contains(test):
+                self.clickSignal.emit(code)
+
+        '''
         for code in self.polygonsList2:
             if self.polygonsList2[ code ].contains(test):
                 self.clickSignal.emit(code)
-
-                '''
-                codes = self.leareaCode.text().split(codeSeparator)
-                if "" in codes:
-                    codes.remove("")
-
-                # check if code already in codes list
-                if code in codes:
-                    codes.remove(code)
-                else:
-                    codes.append(code)
-
-                self.leareaCode.setText(codeSeparator.join(sorted(codes)))
-                '''
-                
+        '''
 
 
-
-
+    '''
     def getCodes(self):
         return self.leareaCode.text()
+    '''
 
 
     def loadMap(self):
@@ -155,7 +146,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         show it in view scene
         """
 
-        self.areasList = self.codingMap
+        #self.areasList = self.codingMap
 
         bitmapContent = binascii.a2b_base64(self.areasList["bitmap"])
 
@@ -164,9 +155,34 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         self.view.setSceneRect(0, 0, pixmap.size().width(), pixmap.size().height())
         pixItem = QGraphicsPixmapItem(pixmap)
-        pixItem.setPos(0,0)
+        pixItem.setPos(0, 0)
         self.view.scene().addItem(pixItem)
 
+        for key in self.codingMap["areas"]:
+            areaCode = self.codingMap["areas"][key]["code"]
+            points = self.codingMap["areas"][key]["geometry"]
+            
+            newPolygon = QPolygonF()
+            for p in points:
+                newPolygon.append(QPoint(p[0], p[1]))
+
+            # draw polygon
+            polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()
+            polygon.setPolygon(newPolygon)
+            clr = QColor()
+            clr.setRgba(self.codingMap["areas"][key]["color"])
+            polygon.setPen(QPen(clr, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
+            polygon.setBrush(QBrush(clr, Qt.SolidPattern))
+
+            self.view.scene().addItem(polygon)
+            
+            self.polygonsList2.append([areaCode, polygon])
+
+
+
+
+
+        '''
         for area in self.areasList["areas"]:
             points = self.areasList["areas"][area]["geometry"]
 
@@ -174,24 +190,23 @@ class BehaviorsCodingMapWindowClass(QWidget):
             for p in points:
                 newPolygon.append(QPoint(p[0], p[1]))
 
-            clr = QColor( )
-            clr.setRgba( self.areasList["areas"][ area]['color'] )
+            clr = QColor()
+            clr.setRgba(self.areasList["areas"][area]['color'])
 
             # draw polygon
             #polygon = QGraphicsPolygonItem( None, None)
             #polygon.setPolygon(newPolygon)
 
-            if QT_VERSION_STR[0] == "4":
-                polygon = QGraphicsPolygonItem(newPolygon, None, None)
-            else:
-                polygon = QGraphicsPolygonItem(newPolygon)
+            polygon = QGraphicsPolygonItem(newPolygon, None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem(newPolygon)
 
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
 
-            polygon.setBrush( QBrush(clr, Qt.SolidPattern))
+            polygon.setBrush(QBrush(clr, Qt.SolidPattern))
 
-            self.view.scene().addItem( polygon )
-            self.polygonsList2[ area ] = polygon
+            self.view.scene().addItem(polygon)
+            #self.polygonsList2[area] = polygon
+            self.polygonsList2.append([areaCode, polygon])
+        '''
 
 
 if __name__ == '__main__':

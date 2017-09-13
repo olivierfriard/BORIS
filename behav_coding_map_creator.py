@@ -47,7 +47,6 @@ selectedBrush = QBrush()
 selectedBrush.setStyle(Qt.SolidPattern)
 selectedBrush.setColor(QColor(255, 255, 0, 255))
 
-
 def intersection(A, B, C, D):
     """
     line segments intersection with decimal precision
@@ -90,7 +89,7 @@ def intersection(A, B, C, D):
 
 class BehaviorsMapCreatorWindow(QMainWindow):
 
-    closed = pyqtSignal()
+    signal_add_to_project = pyqtSignal(dict)
 
     class View(QGraphicsView):
         """
@@ -153,6 +152,12 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.mapNameAction.setEnabled(False)
         self.mapNameAction.triggered.connect(self.mapName_clicked)
 
+        self.addToProject = QAction(QIcon(), "Add coding map to project", self)
+        self.addToProject.setStatusTip("Add coding map to project")
+        self.addToProject.setEnabled(False)
+        self.addToProject.triggered.connect(self.add_to_project)
+
+
         self.exitAction = QAction(QIcon(), "&Close", self)
         self.exitAction.setStatusTip("Close")
         self.exitAction.triggered.connect(self.close)
@@ -163,6 +168,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         fileMenu.addAction(self.openMapAction)
         fileMenu.addAction(self.saveMapAction)
         fileMenu.addAction(self.saveAsMapAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.addToProject)
         fileMenu.addSeparator()
         fileMenu.addAction(self.mapNameAction)
         fileMenu.addSeparator()
@@ -259,9 +266,16 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.statusBar().showMessage("")
 
-
+    def add_to_project(self, item):
+        """
+        add coding map to project
+        """
+        
+        mapDict = self.make_coding_map_dict()
+        
+        self.signal_add_to_project.emit(mapDict)
+        
     def area_list_item_click(self, item):
-        print(item.text())
         
         if self.selectedPolygon:
             self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
@@ -380,7 +394,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 event.ignore()
                 return
 
-        self.closed.emit()
+        #self.closed.emit()
         event.accept()
 
 
@@ -647,12 +661,45 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             self.saveMapAction.setEnabled(True)
             self.saveAsMapAction.setEnabled(True)
+            self.addToProject.setEnabled(True)
             self.mapNameAction.setEnabled(True)
 
             self.update_area_list()
 
         else:
             self.statusBar().showMessage("No file", 5000)
+
+    def make_coding_map_dict(self):
+        mapDict = {"coding_map_type": "BORIS behaviors coding map",
+                   "name": self.mapName,
+                   "areas": {}}
+
+        for ac, pg in self.polygonsList2:
+            if not mapDict["areas"]:
+                idx = 0
+            else:
+                idx = max(mapDict["areas"].keys()) + 1
+
+            points = []
+            for p in range(pg.polygon().count()):
+                # print(int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y()))
+                points.append([int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y())])
+
+            mapDict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
+
+        # Save QPixmap to QByteArray via QBuffer.
+        byte_array = QByteArray()
+        buffer = QBuffer(byte_array)
+        buffer.open(QIODevice.WriteOnly)
+        self.pixmap.save(buffer, "PNG")
+        string_io = io.BytesIO( byte_array )
+        string_io.seek(0)
+
+        # add codified bitmap
+        mapDict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
+        
+        return mapDict
+
 
 
     def saveMap(self):
@@ -661,7 +708,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         """
 
         if self.fileName:
+            mapDict = self.make_coding_map_dict()
             
+            '''
             mapDict = {"coding_map_type": "BORIS behaviors coding map",
                        "name": self.mapName,
                        "areas": {}}
@@ -689,9 +738,11 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             # add codified bitmap
             mapDict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
+            '''
+            
 
             with open(self.fileName, "w") as outfile:
-                outfile.write(json.dumps( mapDict ))
+                outfile.write(json.dumps(mapDict))
 
             self.flagMapChanged = False
 
@@ -819,11 +870,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         for p in range(self.closedPolygon.polygon().count()):
             print(self.closedPolygon.polygon().value(p))
 
-        self.closedPolygon = None
+        self.closedPolygon, self.flagNewArea = None, None
         self.view._start = 0
-        self.view.points = []
-        self.view.elList = []
-        self.flagNewArea = False
+        self.view.points, self.view.elList = [], []
 
         for widget in [self.btSaveArea, self.btCancelAreaCreation, self.lb,
                        self.leAreaCode, self.btEditAreaCode, self.btColor, self.slAlpha,
@@ -930,6 +979,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btNewArea.setVisible(False)
         self.saveMapAction.setEnabled(False)
         self.saveAsMapAction.setEnabled(False)
+        self.addToProject.setEnabled(False)
         self.mapNameAction.setEnabled(False)
         self.statusBar().showMessage("")
         
@@ -968,6 +1018,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.btLoad.setVisible(False)
             self.saveMapAction.setEnabled(True)
             self.saveAsMapAction.setEnabled(True)
+            self.addToProject.setEnabled(True)
             self.mapNameAction.setEnabled(True)
 
             self.statusBar().showMessage("""Click "New behavior area" to create a new behavior area""")
