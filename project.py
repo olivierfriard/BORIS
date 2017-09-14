@@ -39,6 +39,7 @@ from config import *
 import add_modifier
 import dialog
 import tablib
+import copy
 
 
 if QT_VERSION_STR[0] == "4":
@@ -226,13 +227,18 @@ class projectDialog(QDialog, Ui_dlgProject):
         fileName = fn[0] if type(fn) is tuple else fn
         if fileName:
             try:
-                self.codingMap = json.loads(open(fileName, "r").read())
+                bcm = json.loads(open(fileName, "r").read())
             except:
                 QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
                 return              
 
-            if "coding_map_type" not in self.codingMap or self.codingMap["coding_map_type"] != "BORIS behaviors coding map":
+            if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
                 QMessageBox.critical(self, programName, "The file {} seems not a BORIS behaviors coding map...".format(fileName))
+            
+            if BEHAVIORS_CODING_MAP not in self.pj:
+                self.pj[BEHAVIORS_CODING_MAP] = []
+
+            self.pj[BEHAVIORS_CODING_MAP].append(copy.deepcopy(bcm))
 
 
 

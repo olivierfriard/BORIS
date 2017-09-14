@@ -5996,7 +5996,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if newProjectWindow.rbHMS.isChecked():
                 self.timeFormat = HHMMSS
 
-
             # configuration
             if newProjectWindow.lbObservationsState.text() != "":
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
@@ -6014,7 +6013,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.projectWindowGeometry = newProjectWindow.saveGeometry()
 
-        del   newProjectWindow
+        del newProjectWindow
 
 
     def new_project_activated(self):
