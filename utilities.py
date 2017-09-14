@@ -324,9 +324,9 @@ def test_ffmpeg_path(FFmpegPath):
 
 
 def playWithVLC(fileName):
-    '''
+    """
     play media in filename and return out, fps and has_vout (number of video)
-    '''
+    """
 
     import vlc
     import time

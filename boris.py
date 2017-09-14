@@ -53,6 +53,7 @@ import param_panel
 import observation
 import modifiers_coding_map
 import map_creator
+import behav_coding_map_creator
 import select_modifiers
 from utilities import *
 import tablib
@@ -65,9 +66,10 @@ from config import *
 import qrc_boris
 from time_budget_widget import timeBudgetResults
 import select_modifiers
+import behaviors_coding_map
 
-__version__ = "4.1.7"
-__version_date__ = "2017-09-14"
+__version__ = "4.2"
+__version_date__ = "2017-09"
 
 # BITMAP_EXT = "jpg"
 
@@ -644,12 +646,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Tools
         if FLAG_MATPLOTLIB_INSTALLED:
-            self.actionShow_spectrogram.setEnabled(flagObs)
+            self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
         else:
             self.actionShow_spectrogram.setEnabled(False)
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
-        self.actionBehaviors_map.setEnabled(flagObs)
+        self.actionCoding_pad.setEnabled(flagObs)
+        self.actionBehaviors_coding_map.setEnabled(flagObs)
 
         # Analysis
         self.actionTime_budget.setEnabled(self.pj[OBSERVATIONS] != {})
@@ -734,10 +737,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpTo.triggered.connect(self.jump_to)
 
         # menu Tools
-        self.actionMapCreator.triggered.connect(self.map_creator)
+        self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
+        self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
+
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
-        self.actionBehaviors_map.triggered.connect(self.show_coding_pad)
+        self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
+        self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
@@ -1288,16 +1294,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
                 timerFFmpegRecoding.start(15000)
 
-    def click_signal_from_behaviors_map(self, behaviorCode):
+    def click_signal_from_coding_pad(self, behaviorCode):
+        """
+        handle click received from coding pad
+        """
 
         sendEventSignal = pyqtSignal(QEvent)
         sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
         self.keyPressEvent(q)
 
-    def signal_from_behaviors_map(self, event):
+    def signal_from_coding_pad(self, event):
         """
-        receive signal from behaviors map
+        receive signal from coding pad map
         """
         self.keyPressEvent(event)
 
@@ -1314,8 +1323,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.codingpad = coding_pad.CodingPad(self.pj)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.codingpad.sendEventSignal.connect(self.signal_from_behaviors_map)
-            self.codingpad.clickSignal.connect(self.click_signal_from_behaviors_map)
+            self.codingpad.sendEventSignal.connect(self.signal_from_coding_pad)
+            self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
             self.codingpad.show()
 
     def show_all_behaviors(self):
@@ -1765,13 +1774,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.spectro.memChunk = currentChunk
 
-    def map_creator(self):
+    def modifiers_coding_map_creator(self):
         """
-        show map creator window and hide program main window
+        show modifiers coding map creator window and hide program main window
         """
         self.mapCreatorWindow = map_creator.ModifiersMapCreatorWindow()
         self.mapCreatorWindow.move(self.pos())
-        self.mapCreatorWindow.resize(640, 640)
+        self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
+        self.mapCreatorWindow.show()
+
+    def behaviors_coding_map_creator_signal_addtoproject(self, behav_coding_map):
+        print("behav_coding_map", behav_coding_map)
+
+        if not self.project:
+            return
+
+        if "behaviors_coding_map" not in self.pj:
+            self.pj["behaviors_coding_map"] = []
+
+        self.pj["behaviors_coding_map"].append(behav_coding_map)
+        self.projectChanged = True
+
+
+    def behaviors_coding_map_creator(self):
+        """
+        show behaviors coding map creator window and hide program main window
+        """
+        
+        if not self.project:
+            QMessageBox.warning(self, programName, "No project found",
+                                QMessageBox.Ok | QMessageBox.Default,
+                                QMessageBox.NoButton)
+            return
+        
+        codes_list = []
+        for key in self.pj[ETHOGRAM]:
+            codes_list.append(self.pj[ETHOGRAM][key]["code"])
+        
+        self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(codes_list)
+        self.mapCreatorWindow.signal_add_to_project.connect(self.behaviors_coding_map_creator_signal_addtoproject)        
+        self.mapCreatorWindow.move(self.pos())
+        self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()
 
     def load_observation(self, obsId):
@@ -5392,7 +5435,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in pj[OBSERVATIONS]:
             if "time offset" in pj[OBSERVATIONS][obsId]:
                 pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
-
+            print(pj[OBSERVATIONS][obsId][EVENTS])
             for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
                 pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
 
@@ -7326,6 +7369,66 @@ self.mediaplayer.video_get_aspect_ratio(),
         else:
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
+
+    def click_signal_from_behaviors_coding_map(self, behaviorCode):
+        """
+        handle click signal from BehaviorsCodingMapWindowClass widget
+        """
+
+        #sendEventSignal = pyqtSignal(QEvent)
+        
+        print("behaviorCode", behaviorCode)
+        
+        q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
+        
+        self.keyPressEvent(q)
+
+    def keypress_signal_from_behaviors_coding_map(self, event):
+        """
+        receive signal from behaviors coding map
+        """
+        self.keyPressEvent(event)
+
+    def show_behaviors_coding_map(self):
+        """
+        show a behavior coding map
+        """
+        if "behaviors_coding_map" not in self.pj:
+            QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
+            return
+        
+        if "coding_map_type" in self.pj and self.pj["coding_map_type"] == "BORIS behaviors coding map":
+            pass
+            
+
+        if "coding_map" in self.pj:
+            if not self.pj["coding_map"]:
+                QMessageBox.warning(self, programName, "No coding map were defined")
+                return
+
+            if len(self.pj["coding_map"]) == 1:
+                coding_map_name = list(self.pj["coding_map"].keys())[0]
+            else:
+                items = list(self.pj["coding_map"].keys())
+                item, ok = QInputDialog.getItem(self, "select a coding map", "list of coding maps", items, 0, False)
+                if ok and item:
+                    coding_map_name = item
+                else:
+                    return
+        
+        self.bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["coding_map"][coding_map_name])
+        self.bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
+        self.bcm.keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)
+        self.bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
+        '''
+        if self.codingMapWindowGeometry:
+             self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
+        '''
+        
+        self.bcm.show()
+        
+        
+
     def actionAbout_activated(self):
         """
         about dialog
@@ -7970,7 +8073,7 @@ self.mediaplayer.video_get_aspect_ratio(),
 
             self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][obs_idx]["coding map"]])
 
-            self.codingMapWindow.resize(640, 640)
+            self.codingMapWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
             if self.codingMapWindowGeometry:
                  self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
 
@@ -7983,7 +8086,6 @@ self.mediaplayer.video_get_aspect_ratio(),
 
             # restart media
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-
                 if self.playerType == VLC:
                     if memState == vlc.State.Playing:
                         self.play_video()

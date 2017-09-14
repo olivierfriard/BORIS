@@ -49,6 +49,9 @@ SUBJECTS = 'subjects_conf'
 ETHOGRAM = 'behaviors_conf'
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
 
+CODING_MAP_RESIZE_W = 640
+CODING_MAP_RESIZE_H = 640
+
 subjects_config = ['key', 'id']
 
 subjectsFields = ['key', 'name', 'description']

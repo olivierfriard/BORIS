@@ -60,7 +60,7 @@ class ModifiersCodingMapWindowClass(QDialog):
         super(ModifiersCodingMapWindowClass, self).__init__()
 
         self.codingMap = modifiers_coding_map
-        self.setWindowTitle(self.codingMap["name"])
+        self.setWindowTitle("Modifiers coding map: {}".format(self.codingMap["name"]))
         Vlayout = QVBoxLayout(self)
 
         self.view = self.View(self)
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     if len(sys.argv) > 1:
-        cm = json.loads(open( sys.argv[1], "r").read())
+        cm = json.loads(open(sys.argv[1], "r").read())
         codingMapWindow = codingMapWindowClass(cm)
         codingMapWindow.resize(640, 640)
         codingMapWindow.show()
