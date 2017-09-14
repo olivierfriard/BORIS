@@ -146,9 +146,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.saveAsMapAction.setEnabled(False)
         self.saveAsMapAction.triggered.connect(self.saveAsMap_clicked)
 
-        self.mapNameAction = QAction(QIcon(), "&Behaviors coding map name", self)
+        self.mapNameAction = QAction(QIcon(), "&Edit name of behaviors coding map", self)
         self.mapNameAction.setShortcut("Ctrl+M")
-        self.mapNameAction.setStatusTip("Change the behaviors coding map name")
+        self.mapNameAction.setStatusTip("Edit name of behaviors coding map")
         self.mapNameAction.setEnabled(False)
         self.mapNameAction.triggered.connect(self.mapName_clicked)
 
@@ -168,9 +168,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         fileMenu.addAction(self.saveMapAction)
         fileMenu.addAction(self.saveAsMapAction)
         fileMenu.addSeparator()
-        fileMenu.addAction(self.addToProject)
-        fileMenu.addSeparator()
         fileMenu.addAction(self.mapNameAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.addToProject)
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAction)
 
@@ -272,9 +272,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         mapDict = self.make_coding_map_dict()
         self.signal_add_to_project.emit(mapDict)
         
-        QMessageBox.information(self, programName,
-                                "The behaviors coding map was added to current project".format(self.pixmap.size().width(),
-                                                                                               self.pixmap.size().height()))
+        
         
         
     def area_list_item_click(self, item):
@@ -629,7 +627,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             self.fileName = fileName
 
-            bitmapContent = binascii.a2b_base64( self.codingMap['bitmap'] )
+            bitmapContent = binascii.a2b_base64(self.codingMap['bitmap'])
 
             self.pixmap.loadFromData(bitmapContent)
 
@@ -690,6 +688,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                 points.append([int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y())])
 
             mapDict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
+
+        mapDict["areas"] = json.loads(json.dumps(mapDict["areas"]))
 
         # Save QPixmap to QByteArray via QBuffer.
         byte_array = QByteArray()

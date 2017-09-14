@@ -37,6 +37,14 @@ import binascii
 import os
 import config
 
+penWidth = 0
+penStyle = Qt.NoPen
+'''
+selectedBrush = QBrush()
+selectedBrush.setStyle(Qt.SolidPattern)
+selectedBrush.setColor(QColor(255, 255, 0, 255))
+'''
+
 class BehaviorsCodingMapWindowClass(QWidget):
 
     class View(QGraphicsView):
@@ -54,10 +62,9 @@ class BehaviorsCodingMapWindowClass(QWidget):
             self.setScene(QGraphicsScene(self))
             self.scene().update()
 
-    areasList = {}
-    polygonsList2 = {}
+    polygonsList2 = []
 
-    clickSignal = pyqtSignal(str)  # click signal to be sent to mainwindow
+    clickSignal = pyqtSignal(list)  # click signal to be sent to mainwindow
     keypressSignal = pyqtSignal(QEvent)
 
     def __init__(self, behaviors_coding_map):
@@ -66,6 +73,9 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.installEventFilter(self)
 
         self.codingMap = behaviors_coding_map
+        
+        print(self.codingMap.keys())
+        
         self.setWindowTitle("Behaviors coding map: {}".format(self.codingMap["name"]))
         Vlayout = QVBoxLayout(self)
 
@@ -123,9 +133,14 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         test = self.view.mapToScene(event.pos()).toPoint()
 
+        to_be_sent = []
+
         for areaCode, pg in self.polygonsList2:
             if pg.contains(test):
-                self.clickSignal.emit(code)
+                to_be_sent.append(areaCode)
+
+        if to_be_sent:
+            self.clickSignal.emit(to_be_sent)
 
         '''
         for code in self.polygonsList2:
@@ -146,9 +161,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         show it in view scene
         """
 
-        #self.areasList = self.codingMap
-
-        bitmapContent = binascii.a2b_base64(self.areasList["bitmap"])
+        bitmapContent = binascii.a2b_base64(self.codingMap['bitmap'])
 
         pixmap = QPixmap()
         pixmap.loadFromData(bitmapContent)
@@ -177,36 +190,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
             self.view.scene().addItem(polygon)
             
             self.polygonsList2.append([areaCode, polygon])
-
-
-
-
-
-        '''
-        for area in self.areasList["areas"]:
-            points = self.areasList["areas"][area]["geometry"]
-
-            newPolygon = QPolygonF()
-            for p in points:
-                newPolygon.append(QPoint(p[0], p[1]))
-
-            clr = QColor()
-            clr.setRgba(self.areasList["areas"][area]['color'])
-
-            # draw polygon
-            #polygon = QGraphicsPolygonItem( None, None)
-            #polygon.setPolygon(newPolygon)
-
-            polygon = QGraphicsPolygonItem(newPolygon, None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem(newPolygon)
-
-            polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
-
-            polygon.setBrush(QBrush(clr, Qt.SolidPattern))
-
-            self.view.scene().addItem(polygon)
-            #self.polygonsList2[area] = polygon
-            self.polygonsList2.append([areaCode, polygon])
-        '''
 
 
 if __name__ == '__main__':

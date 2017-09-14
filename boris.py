@@ -1784,15 +1784,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.show()
 
     def behaviors_coding_map_creator_signal_addtoproject(self, behav_coding_map):
-        print("behav_coding_map", behav_coding_map)
+        """
+        input:
+        behav_coding_map (dict)
+        add the behav coding map received from behav_coding_map_creator to current project
+        """
 
         if not self.project:
+            QMessageBox.warning(self, programName, "No project found",
+                                QMessageBox.Ok | QMessageBox.Default,
+                                QMessageBox.NoButton)
             return
 
         if "behaviors_coding_map" not in self.pj:
             self.pj["behaviors_coding_map"] = []
 
+        if [bcm for bcm in self.pj["behaviors_coding_map"] if bcm["name"] == behav_coding_map["name"]]:
+            QMessageBox.critical(self, programName, ("The current project already contains a behaviors coding map "
+                                                     "with the same name (<b>{}</b>)").format(behav_coding_map["name"]),
+                                 QMessageBox.Ok | QMessageBox.Default,
+                                 QMessageBox.NoButton)
+            return
+        
         self.pj["behaviors_coding_map"].append(behav_coding_map)
+        QMessageBox.information(self, programName, "The behaviors coding map <b>{}</b> was added to current project".format(behav_coding_map["name"]))
         self.projectChanged = True
 
 
@@ -7347,11 +7362,8 @@ self.mediaplayer.video_get_aspect_ratio(),
         if self.observationId:
             if self.twEthogram.selectedIndexes():
                 ethogramRow = self.twEthogram.selectedIndexes()[0].row()
-                logging.debug('ethogram row: {0}'.format(ethogramRow))
-                logging.debug(self.pj[ETHOGRAM][str(ethogramRow)])
                 code = self.twEthogram.item(ethogramRow, 1).text()
                 event = self.full_event(str(ethogramRow))
-                logging.debug('event: {0}'.format(event))
                 self.writeEvent(event, self.getLaps())
         else:
             self.no_observation()
@@ -7370,18 +7382,26 @@ self.mediaplayer.video_get_aspect_ratio(),
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
 
-    def click_signal_from_behaviors_coding_map(self, behaviorCode):
+    def click_signal_from_behaviors_coding_map(self, behavior_codes_list):
         """
         handle click signal from BehaviorsCodingMapWindowClass widget
         """
 
         #sendEventSignal = pyqtSignal(QEvent)
         
-        print("behaviorCode", behaviorCode)
+        print("behavior_codes_list", behavior_codes_list)
         
-        q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
-        
-        self.keyPressEvent(q)
+        for code in behavior_codes_list:
+            try:
+                behavior_idx = [key for key in  self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key]["code"] == code][0]
+            except:
+                QMessageBox.critical(self, programName, "The code <b>{}</b> of behavior coding map do not exists in ethogram.".format(code))
+                return
+
+            print("behavior_idx",behavior_idx)
+            event = self.full_event(behavior_idx)
+            self.writeEvent(event, self.getLaps())
+
 
     def keypress_signal_from_behaviors_coding_map(self, event):
         """
@@ -7393,30 +7413,21 @@ self.mediaplayer.video_get_aspect_ratio(),
         """
         show a behavior coding map
         """
-        if "behaviors_coding_map" not in self.pj:
+        if "behaviors_coding_map" not in self.pj or not self.pj["behaviors_coding_map"]:
             QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
             return
         
-        if "coding_map_type" in self.pj and self.pj["coding_map_type"] == "BORIS behaviors coding map":
-            pass
-            
-
-        if "coding_map" in self.pj:
-            if not self.pj["coding_map"]:
-                QMessageBox.warning(self, programName, "No coding map were defined")
-                return
-
-            if len(self.pj["coding_map"]) == 1:
-                coding_map_name = list(self.pj["coding_map"].keys())[0]
+        items = [x["name"] for x in  self.pj["behaviors_coding_map"]]   
+        if len(items) == 1:
+            coding_map_name = items[0]
+        else:
+            item, ok = QInputDialog.getItem(self, "select a coding map", "list of coding maps", items, 0, False)
+            if ok and item:
+                coding_map_name = item
             else:
-                items = list(self.pj["coding_map"].keys())
-                item, ok = QInputDialog.getItem(self, "select a coding map", "list of coding maps", items, 0, False)
-                if ok and item:
-                    coding_map_name = item
-                else:
-                    return
+                return
         
-        self.bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["coding_map"][coding_map_name])
+        self.bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)])
         self.bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
         self.bcm.keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)
         self.bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
@@ -7426,8 +7437,7 @@ self.mediaplayer.video_get_aspect_ratio(),
         '''
         
         self.bcm.show()
-        
-        
+
 
     def actionAbout_activated(self):
         """
@@ -8055,14 +8065,17 @@ self.mediaplayer.video_get_aspect_ratio(),
 
                     return memLaps
 
-    def full_event(self, obs_idx):
+    def full_event(self, behavior_idx):
         """
+        input: behavior index in ethogram
+        return: event (dict)
+
         ask modifiers from coding map if configured and add them under 'from map' key
         """
 
-        event = dict(self.pj[ETHOGRAM][obs_idx])
+        event = dict(self.pj[ETHOGRAM][behavior_idx])
         # check if coding map
-        if "coding map" in self.pj[ETHOGRAM][obs_idx] and self.pj[ETHOGRAM][obs_idx]["coding map"]:
+        if "coding map" in self.pj[ETHOGRAM][behavior_idx] and self.pj[ETHOGRAM][behavior_idx]["coding map"]:
 
             # pause if media and media playing
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -8071,7 +8084,7 @@ self.mediaplayer.video_get_aspect_ratio(),
                     if memState == vlc.State.Playing:
                         self.pause_video()
 
-            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][obs_idx]["coding map"]])
+            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][behavior_idx]["coding map"]])
 
             self.codingMapWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
             if self.codingMapWindowGeometry:
