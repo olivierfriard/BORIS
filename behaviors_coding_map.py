@@ -110,11 +110,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         self.loadMap()
 
-    '''
-    def click(self, behaviorCode):
-        self.clickSignal.emit(behaviorCode)
-    '''
-
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window

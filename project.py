@@ -212,10 +212,31 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         self.selected_twvariables_row = -1
+        
+        self.pbAddBehaviorsCodingMap.clicked.connect(self.add_behaviors_coding_map)
 
         # disable widget for indep var setting
         for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
             widget.setEnabled(False)
+
+    def add_behaviors_coding_map(self):
+        print("create_behaviors_coding_map")
+        
+        fn = QFileDialog(self).getOpenFileName(self, "Open a behaviors coding map", "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
+        if fileName:
+            try:
+                self.codingMap = json.loads(open(fileName, "r").read())
+            except:
+                QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
+                return              
+
+            if "coding_map_type" not in self.codingMap or self.codingMap["coding_map_type"] != "BORIS behaviors coding map":
+                QMessageBox.critical(self, programName, "The file {} seems not a BORIS behaviors coding map...".format(fileName))
+
+
+
+
 
 
     def export_ethogram(self):

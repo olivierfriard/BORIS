@@ -1770,7 +1770,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         get_time = (currentMediaTime % (self.chunk_length * 1000) / (self.chunk_length*1000))
 
-        self.spectro.item.setPos(self.spectro.scene.width()//2 - int(get_time * self.spectro.w), 0)
+        self.spectro.item.setPos(self.spectro.scene.width() // 2 - int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
 
@@ -3909,6 +3909,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if hasattr(self, "results"):
             del self.results
 
+        if hasattr(self, "bcm"):
+            del self.bcm
+            
+        if hasattr(self, "mapCreatorWindow"):
+            self.mapCreatorWindow.close()
+            
+
 
     def close_observation(self):
         """
@@ -5892,7 +5899,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.signalMapper = QSignalMapper(self)
                 newProjectWindow.comboBoxes = []
 
-                for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):  #  [str(x) for x in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]:
+                for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):
 
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
 
@@ -5929,7 +5936,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # load independent variables
             if INDEPENDENT_VARIABLES in newProjectWindow.pj:
-                for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):   #[str(x) for x in sorted([int(x) for x in self.pj[INDEPENDENT_VARIABLES].keys()])]:
+                for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
 
                     for idx, field in enumerate(tw_indVarFields):
@@ -5940,6 +5947,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
+
+            if BEHAVIORS_CODING_MAP in newProjectWindow.pj:
+                for bcm in newProjectWindow.pj[BEHAVIORS_CODING_MAP]:
+                    newProjectWindow.twBehavCodingMap.setRowCount(newProjectWindow.twBehavCodingMap.rowCount() + 1)
+                    #for idx, field in enumerate(BEHAV_CODING_MAP_FIELDS):
+                    #item = 
+                    newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
+                    codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
+                    newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
 
         newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
 
@@ -5955,7 +5971,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        OBSERVATIONS: {},
                        BEHAVIORAL_CATEGORIES: [],
                        INDEPENDENT_VARIABLES: {},
-                       "coding_map": {}}
+                       CODING_MAP: {},
+                       BEHAVIORS_CODING_MAP: []}
 
 
         if newProjectWindow.exec_():  # button OK
@@ -7413,10 +7430,15 @@ self.mediaplayer.video_get_aspect_ratio(),
         """
         show a behavior coding map
         """
+        
+        if hasattr(self, "bcm"):
+            print("show already existing bcm")
+            self.bcm.show()
+
         if "behaviors_coding_map" not in self.pj or not self.pj["behaviors_coding_map"]:
             QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
             return
-        
+
         items = [x["name"] for x in  self.pj["behaviors_coding_map"]]   
         if len(items) == 1:
             coding_map_name = items[0]

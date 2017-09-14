@@ -790,7 +790,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             return
 
         if self.selectedPolygon:
-            self.selectedPolygon.setPen( QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin) )
+            self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
             self.selectedPolygon = None
 
         self.flagNewArea = True
@@ -824,43 +824,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             QMessageBox.critical(self, programName , "You must define a code for the new behavior area")
             return
 
-        # check if not allowed character
-        '''
-        for c in "|,()":
-            if c in self.leAreaCode.text():
-                QMessageBox.critical(self, programName , "The behavior code contains a character that is not allowed <b>()|,</b>.")
-                return
-        '''
-
-        # check if area code already used
-
-        '''
-        if self.leAreaCode.text() in self.areasList:
-            QMessageBox.critical(self, programName , "The modifier is already in use" )
-            return
-        '''
-
-        # create polygon
-        '''
-        newPolygon = QPolygon()
-        for p in self.view.points:
-            newPolygon.append(QPoint(p[0], p[1]))
-        '''
-
-        
-        '''
-        if not self.areasList:
-            self.areasList[0] = {"code": self.leAreaCode.text(),
-                                 "geometry": self.view.points,
-                                 "color": self.areaColor.rgba()}
-        else:
-            self.areasList[max(self.areasList.keys()) + 1] = {"code": self.leAreaCode.text(),
-                                                               "geometry": self.view.points,
-                                                               "color": self.areaColor.rgba()}
-        '''
-
-
-        # remove all lines
+         # remove all lines
         for l in self.view.elList:
             self.view.scene().removeItem(l)
 
@@ -964,7 +928,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.leAreaCode.setVisible(False)
         self.leAreaCode.setText("")
         self.btEditAreaCode.setVisible(False)
-        
+
         self.btDeleteArea.setVisible(False)
         self.statusBar().showMessage("")
 
@@ -975,7 +939,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         remove current map
         """
         self.flagNewArea = False
-        #self.areasList = {}
         self.polygonsList2 = []
         self.view.scene().clear()
         self.btLoad.setVisible(False)
@@ -986,7 +949,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.addToProject.setEnabled(False)
         self.mapNameAction.setEnabled(False)
         self.statusBar().showMessage("")
-        
+
         self.flagMapChanged = False
 
 
@@ -1006,7 +969,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             # scale image
             if self.pixmap.size().width() > CODING_MAP_RESIZE_W or self.pixmap.size().height() > CODING_MAP_RESIZE_H:
-                self.pixmap = self.pixmap.scaled (CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
+                self.pixmap = self.pixmap.scaled(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
                 QMessageBox.information(self, programName,
                                         ("The bitmap was resized to {}x{} pixels\n"
                                          "The original file was not modified").format(self.pixmap.size().width(),
@@ -1033,7 +996,7 @@ if __name__ == '__main__':
 
     import sys
     app = QApplication(sys.argv)
-    window = BehaviorsMapCreatorWindow(["aaa","bbb","ccc"])
+    window = BehaviorsMapCreatorWindow(["aaa", "bbb", "ccc"])
     window.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
     window.show()
     sys.exit(app.exec_())

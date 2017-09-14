@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>1</number>
+        <number>5</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -750,6 +750,62 @@ from a BORIS project</string>
           </layout>
          </item>
         </layout>
+       </widget>
+       <widget class="QWidget" name="tabBehavCodingMap">
+        <attribute name="title">
+         <string>Behaviors coding map</string>
+        </attribute>
+        <widget class="QTableWidget" name="twBehavCodingMap">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>20</y>
+           <width>631</width>
+           <height>445</height>
+          </rect>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Sunken</enum>
+         </property>
+         <property name="midLineWidth">
+          <number>0</number>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string>Name</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Behavior codes</string>
+          </property>
+         </column>
+        </widget>
+        <widget class="QPushButton" name="pbAddBehaviorsCodingMap">
+         <property name="geometry">
+          <rect>
+           <x>700</x>
+           <y>30</y>
+           <width>211</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Add a behaviors coding map</string>
+         </property>
+        </widget>
        </widget>
       </widget>
      </item>

@@ -45,6 +45,7 @@ TIME_OFFSET='time offset'
 TIME_OFFSET_SECOND_PLAYER='time offset second player'
 
 CODING_MAP = 'coding_map'
+BEHAVIORS_CODING_MAP = 'behaviors_coding_map'
 SUBJECTS = 'subjects_conf'
 ETHOGRAM = 'behaviors_conf'
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
@@ -93,6 +94,8 @@ tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
 pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
 
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
+
+BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
 
 # create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}
