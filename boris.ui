@@ -75,8 +75,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>532</width>
-             <height>387</height>
+             <width>522</width>
+             <height>402</height>
             </rect>
            </property>
            <attribute name="label">
@@ -97,7 +97,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -227,19 +227,11 @@
      <addaction name="actionCreate_transitions_flow_diagram"/>
      <addaction name="actionCreate_transitions_flow_diagram_2"/>
     </widget>
-    <widget class="QMenu" name="menu_coding_map_creator">
-     <property name="title">
-      <string>Create a coding map</string>
-     </property>
-     <addaction name="action_create_behaviors_coding_map"/>
-     <addaction name="action_create_modifiers_coding_map"/>
-    </widget>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionDistance"/>
-    <addaction name="actionBehaviors_coding_map"/>
-    <addaction name="actionCoding_pad"/>
+    <addaction name="actionBehaviors_map"/>
     <addaction name="separator"/>
-    <addaction name="menu_coding_map_creator"/>
+    <addaction name="actionMapCreator"/>
     <addaction name="actionRecode_resize_video"/>
     <addaction name="actionMedia_file_information_2"/>
     <addaction name="menuTransitions_flow_diagram"/>
@@ -768,6 +760,11 @@
     <string>Ctrl+L</string>
    </property>
   </action>
+  <action name="actionMapCreator">
+   <property name="text">
+    <string>Modifiers coding map creator</string>
+   </property>
+  </action>
   <action name="actionNormalSpeed">
    <property name="text">
     <string>Normal speed</string>
@@ -900,7 +897,7 @@
     <string>Export aggregated events</string>
    </property>
   </action>
-  <action name="actionCoding_pad">
+  <action name="actionBehaviors_map">
    <property name="text">
     <string>Coding pad</string>
    </property>
@@ -1080,21 +1077,6 @@
   <action name="actionIRR">
    <property name="text">
     <string>IRR</string>
-   </property>
-  </action>
-  <action name="actionBehaviors_coding_map">
-   <property name="text">
-    <string>Behaviors coding map</string>
-   </property>
-  </action>
-  <action name="action_create_behaviors_coding_map">
-   <property name="text">
-    <string>for behaviors</string>
-   </property>
-  </action>
-  <action name="action_create_modifiers_coding_map">
-   <property name="text">
-    <string>for modifiers</string>
    </property>
   </action>
  </widget>

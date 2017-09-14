@@ -526,21 +526,18 @@ class ModifiersMapCreatorWindow(QMainWindow):
             if response == "Cancel":
                 return
 
+            self.cancelMap()
 
 
-        fn = QFileDialog(self).getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
-        fileName = fn[0] if type(fn) is tuple else fn
+        if QT_VERSION_STR[0] == "4":
+            fileName = QFileDialog(self).getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
+        else:
+            fileName, _ = QFileDialog(self).getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
 
         if fileName:
 
-            try:
-                self.codingMap = json.loads( open( fileName , 'r').read() )
-            except:
-                QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
-                return              
+            self.codingMap = json.loads( open( fileName , 'r').read() )
 
-            self.cancelMap()
-            
             self.mapName = self.codingMap['name']
 
             self.setWindowTitle(programName + ' - Map creator tool - ' + self.mapName)
@@ -866,8 +863,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
         self.saveMapAction.setEnabled(False)
         self.saveAsMapAction.setEnabled(False)
         self.mapNameAction.setEnabled(False)
-        self.statusBar().showMessage("")
-        self.flagMapChanged = False
+        self.statusBar().showMessage('')
 
 
     def loadBitmap(self):

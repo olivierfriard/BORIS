@@ -157,7 +157,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.addToProject.setEnabled(False)
         self.addToProject.triggered.connect(self.add_to_project)
 
-
         self.exitAction = QAction(QIcon(), "&Close", self)
         self.exitAction.setStatusTip("Close")
         self.exitAction.triggered.connect(self.close)
@@ -178,7 +177,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
 
-        
         self.area_list = QListWidget(self)
         #self.area_list.setMaximumHeight(120)
         self.area_list.itemClicked.connect(self.area_list_item_click)
@@ -272,16 +270,22 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         """
         
         mapDict = self.make_coding_map_dict()
-        
         self.signal_add_to_project.emit(mapDict)
         
+        QMessageBox.information(self, programName,
+                                "The behaviors coding map was added to current project".format(self.pixmap.size().width(),
+                                                                                               self.pixmap.size().height()))
+        
+        
     def area_list_item_click(self, item):
+        """
+        select the polygon corresponding to the clicked area
+        """
         
         if self.selectedPolygon:
             self.selectedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
             self.selectedPolygon = None
             self.selectedPolygonMemBrush = None
-
 
         idx = int(item.text().split("#")[1])
         ac, pg = self.polygonsList2[idx]
