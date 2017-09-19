@@ -71,68 +71,31 @@ class Spectrogram(QWidget):
         self.pixmap.load(fileName1stChunk)
         self.w, self.h = self.pixmap.width(), self.pixmap.height()
 
-
-        #print(self.pixmap.width(), self.pixmap.height())
-
-        #self.setGeometry(300, 300, 1000, self.h + 50)
-
-        '''
-        self.resize(1000, self.h + 50)
-        self.setMinimumHeight(self.h + 50)
-        self.setMaximumHeight(self.h + 50)
-
-        self.resize(1000, self.h)
-        self.setMinimumHeight(self.h)
-        self.setMaximumHeight(self.h)
-        '''
-
-        #self.resize(600, 120)
         self.resize(1000, self.h + 20)
 
         self.scene = QGraphicsScene(self)
         self.scene.setBackgroundBrush(QColor(0, 0, 0, 255))
 
-        #self.scene.setSceneRect(0, 0, 500, 100)
-        #self.scene.setSceneRect(0, 0, 500, self.h)
         self.scene.setSceneRect(0, 0, int(self.width() * .95), self.h)
 
-        #print("self.scene width",self.scene.width())
-
-
-        '''
         if QT_VERSION_STR[0] == "4":
-            self.line = QGraphicsLineItem(0, 0, 0, self.h, scen =self.scene)
+            self.line = QGraphicsLineItem(int(self.width() * .95) // 2, 0, int(self.width() * .95) // 2, self.h, scen =self.scene)
         else:
-            self.line = QGraphicsLineItem(0, 0, 0, self.h)
-        '''
-
-
-        if QT_VERSION_STR[0] == "4":
-            self.line = QGraphicsLineItem(int(self.width() * .95) //2, 0, int(self.width() * .95) //2, self.h, scen =self.scene)
-        else:
-            self.line = QGraphicsLineItem(int(self.width() * .95) //2, 0, int(self.width() * .95) //2, self.h)
-
+            self.line = QGraphicsLineItem(int(self.width() * .95) // 2, 0, int(self.width() * .95) // 2, self.h)
 
         self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)) # blue
         self.line.setZValue(100.0)
         self.scene.addItem(self.line)
 
         self.view = QGraphicsView(self.scene)
-
-        #self.view.setFixedSize(500, 100)
-        #self.view.setFixedSize(500, self.h)
         self.view.setFixedSize(int(self.width() * .95), self.h)
-
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        #self.view.showMaximized()
 
         hbox = QHBoxLayout(self)
         hbox.addWidget(self.view)
 
         self.setWindowTitle("Spectrogram")
-        #self.setWindowFlags(Qt.WindowMinimizeButtonHint) # only for Linux
 
         self.installEventFilter(self)
 
@@ -186,22 +149,13 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
         wav.close()
         return sound_info, frame_rate
 
-
-    #print("init graph spectrogram", file=open(r'c:\users\user\testfile.txt', 'a'))
-
     matplotlib.use("Agg")
     import pylab # do not move. It is important that this line is after the previous one
 
     fileName1stChunk = ""
     mediaBaseName = os.path.basename(mediaFile)
 
-    #QMessageBox.warning(QWidget(), "" , "extract wav file")
-    #print("extract wav file\n", file=open(r'c:\users\user\testfile.txt', 'a'))
-
     wav_file = extract_wav(mediaFile, tmp_dir)
-
-    #QMessageBox.warning(QWidget(), "" , "wav file: {}".format(wav_file))
-    #print("wav file: {}".format(wav_file), file=open(r'c:\users\user\testfile.txt', 'a'))
 
     if not wav_file:
         return None
@@ -219,13 +173,6 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
 
             # complete bitmat spectrogram chunk if shorter than chunk length
             if len(sound_info_slice) / frame_rate < chunk_size:
-                '''
-                print(frame_rate, type(frame_rate))
-                print("chunk_size  ",chunk_size)
-                print("len(sound_info_slice)  ", len(sound_info_slice))
-                print("chunk_size - len(sound_info_slice) / frame_rate", chunk_size - len(sound_info_slice) / frame_rate)
-                '''
-                #concat = np.zeros((chunk_size - len(sound_info_slice) / frame_rate) * frame_rate)
                 concat = np.zeros(  int( (chunk_size - len(sound_info_slice) / frame_rate) + 1 ) * frame_rate)
                 sound_info_slice = np.concatenate((sound_info_slice, concat))
 
@@ -234,7 +181,12 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
             pylab.margins(0, 0)
             pylab.gca().xaxis.set_major_locator(pylab.NullLocator())
             pylab.gca().yaxis.set_major_locator(pylab.NullLocator())
-            pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap(spectrogram_color_map), scale_by_freq=False)
+            try:
+                pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap(spectrogram_color_map), scale_by_freq=False)
+            except ValueError:
+                # color_map gray_r is available on all version of matplotlib
+                pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap("gray_r"), scale_by_freq=False)
+ 
             pylab.savefig(chunkFileName, bbox_inches="tight", pad_inches=0)
             pylab.clf()
             pylab.close()
