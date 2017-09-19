@@ -215,13 +215,16 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.selected_twvariables_row = -1
         
         self.pbAddBehaviorsCodingMap.clicked.connect(self.add_behaviors_coding_map)
+        self.pbRemoveBehaviorsCodingMap.clicked.connect(self.remove_behaviors_coding_map)
 
         # disable widget for indep var setting
         for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
             widget.setEnabled(False)
 
     def add_behaviors_coding_map(self):
-        print("create_behaviors_coding_map")
+        """
+        Add a behaviors coding map from file
+        """
         
         fn = QFileDialog(self).getOpenFileName(self, "Open a behaviors coding map", "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
@@ -237,6 +240,16 @@ class projectDialog(QDialog, Ui_dlgProject):
             
             if BEHAVIORS_CODING_MAP not in self.pj:
                 self.pj[BEHAVIORS_CODING_MAP] = []
+                
+            bcm_code_not_found = []
+            existing_codes = [self.pj[ETHOGRAM][key]["code"] for key in self.pj[ETHOGRAM]]
+            for code in [bcm["areas"][key]["code"] for key in bcm["areas"]]:
+                if code not in existing_codes:
+                    bcm_code_not_found.append(code)
+                    
+            if bcm_code_not_found:
+                QMessageBox.warning(self, programName, ("The following behavior{} are not defined in the ethogram:<br>"
+                                                        "{}").format("s" if len(bcm_code_not_found)>1 else "", ",".join(bcm_code_not_found)))
 
             self.pj[BEHAVIORS_CODING_MAP].append(copy.deepcopy(bcm))
             
@@ -247,8 +260,17 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
 
 
-
-
+    def remove_behaviors_coding_map(self):
+        """
+        remove the first selected behaviors coding map
+        """
+        if not self.twBehavCodingMap.selectedIndexes():
+            QMessageBox.warning(self, programName, "Select a behaviors coding map")
+        else:
+            if dialog.MessageDialog(programName, "Remove the selected behaviors coding map?", [YES, CANCEL]) == YES:
+                del self.pj[BEHAVIORS_CODING_MAP][self.twBehavCodingMap.selectedIndexes()[0].row()]
+                self.twBehavCodingMap.removeRow(self.twBehavCodingMap.selectedIndexes()[0].row())
+                
 
 
     def export_ethogram(self):
