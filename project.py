@@ -365,7 +365,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-
     def leLabel_changed(self):
         if self.selected_twvariables_row != -1:
             self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
@@ -631,14 +630,15 @@ class projectDialog(QDialog, Ui_dlgProject):
         logging.debug("remove selected independent variable")
 
         if not self.twVariables.selectedIndexes():
-            QMessageBox.warning(self, programName, "First select a variable to remove")
+            QMessageBox.warning(self, programName, "Select a variable to remove")
         else:
             if dialog.MessageDialog(programName, "Remove the selected variable?", [YES, CANCEL]) == YES:
                 self.twVariables.removeRow(self.twVariables.selectedIndexes()[0].row())
 
         if self.twVariables.selectedIndexes():
-            self.selected_twvariables_row = self.twVariables.selectedIndexes()[0].row()
-            self.twVariables_cellClicked(self.selected_twvariables_row, 0)
+            self.twVariables_cellClicked(self.twVariables.selectedIndexes()[0].row(), 0)
+        else:
+            self.twVariables_cellClicked(-1, 0)
 
 
 
@@ -1346,8 +1346,20 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         self.selected_twvariables_row = row
-
         logging.debug("selected row: {}".format(self.selected_twvariables_row))
+
+        if self.selected_twvariables_row == -1:
+            for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
+                widget.setEnabled(False)
+                self.leLabel.setText("")
+                self.leDescription.setText("")
+                self.lePredefined.setText("")
+                self.leSetValues.setText("")
+        
+                self.cbType.clear()
+            return
+            
+
 
         # enable widget for indep var setting
         for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
