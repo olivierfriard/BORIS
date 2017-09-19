@@ -5621,13 +5621,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.pj[OBSERVATIONS][obs]['media_info']["hasAudio"][media_file_path] = hasAudio
                             project_updated, self.projectChanged = True, True
                         else:  # file path not found
-                            if (len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
+                            if ("media_file_info" in self.pj[OBSERVATIONS][obs]
+                                and len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
                                 and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
                                 and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
-                                    media_md5_key = list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]
+                                    media_md5_key = list(self.pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]
                                     # duration
-                                    self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {media_file_path:
-                                             self.pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['video_length']/1000}}
+                                    self.pj[OBSERVATIONS][obs]["media_info"] = {"length": {media_file_path:
+                                             self.pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"]/1000}}
                                     project_updated, self.projectChanged = True, True
 
                                     # FPS

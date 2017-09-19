@@ -239,6 +239,12 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.pj[BEHAVIORS_CODING_MAP] = []
 
             self.pj[BEHAVIORS_CODING_MAP].append(copy.deepcopy(bcm))
+            
+            self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
+
+            self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
+            codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
+            self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
 
 
 
