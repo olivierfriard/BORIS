@@ -7368,8 +7368,7 @@ self.mediaplayer.video_get_aspect_ratio(),
                         event["subject"] = editWindow.cobSubject.currentText()
                         event["comment"] = editWindow.leComment.toPlainText()
                         event["row"] = row
-                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields['modifier']]
-                        print("edited", event)
+                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
 
                         self.writeEvent(event, newTime)
                         break
