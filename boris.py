@@ -68,8 +68,8 @@ from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
 
-__version__ = "4.2"
-__version_date__ = "2017-09"
+__version__ = "4.1.8"
+__version_date__ = "2017-09-20"
 
 # BITMAP_EXT = "jpg"
 
@@ -739,10 +739,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Tools
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
+        
+        # TO DO: remove when behavaiors coding map ready
+        self.action_create_behaviors_coding_map.setVisible(False)
+        
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
+        
+        # TO DO: remove when behav coding map ready
+        
+        self.actionBehaviors_coding_map.setVisible(False)
+        
+        
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
@@ -5783,7 +5793,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == HHMMSS:
             return seconds2time(sec)
 
-
     def edit_project(self, mode):
         """
         project management
@@ -5814,6 +5823,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twEvents.setRowCount(0)
 
         newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
+        
+
+        # TO DO: remove when behav coding map ready
+        newProjectWindow.tabProject.setTabEnabled(5, False) 
+
 
         # pass copy of self.pj
         newProjectWindow.pj = copy.deepcopy(self.pj)
