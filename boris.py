@@ -68,7 +68,7 @@ from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
 
-__version__ = "4.1.8"
+__version__ = "4.1.9"
 __version_date__ = "2017-09-20"
 
 # BITMAP_EXT = "jpg"
@@ -7955,12 +7955,10 @@ self.mediaplayer.video_get_aspect_ratio(),
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                     if self.playerType == VLC:
-
                         if self.playMode == FFMPEG:
                             if memState:
                                 self.play_video()
                         else:
-
                             if memState == vlc.State.Playing:
                                 self.play_video()
 
