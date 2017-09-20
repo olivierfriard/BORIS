@@ -132,12 +132,13 @@ class Observation(QDialog, Ui_Form):
                                                                                       ffmpeg_bin=self.ffmpeg_bin,
                                                                                       spectrogramHeight=self.spectrogramHeight,
                                                                                       spectrogram_color_map=self.spectrogram_color_map)
-                        w.show()
-                        while True:
-                            QApplication.processEvents()
-                            if not process.is_alive():
-                                w.hide()
-                                break
+                        if process:
+                            w.show()
+                            while True:
+                                QApplication.processEvents()
+                                if not process.is_alive():
+                                    w.hide()
+                                    break
                     else:
                         QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(self.twVideo1.item(row, 0).text()))
             else:

@@ -201,7 +201,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     return fileName1stChunk
 
 
-def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map):
+def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map="gray_r"):
     """
     create and start process in multiprocessing mode for creation of spectrogram
     """
