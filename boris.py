@@ -68,8 +68,8 @@ from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
 
-__version__ = "4.1.8"
-__version_date__ = "2017-09-20"
+__version__ = "4.2"
+__version_date__ = "2017-09"
 
 # BITMAP_EXT = "jpg"
 
@@ -740,17 +740,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
         
-        # TO DO: remove when behavaiors coding map ready
-        self.action_create_behaviors_coding_map.setVisible(False)
+        # TODO: remove when behavaiors coding map ready
+        # self.action_create_behaviors_coding_map.setVisible(False)
         
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
         
-        # TO DO: remove when behav coding map ready
-        
-        self.actionBehaviors_coding_map.setVisible(False)
+        # TODO: remove when behav coding map ready
+        #self.actionBehaviors_coding_map.setVisible(False)
         
         
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
@@ -5825,8 +5824,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
         
 
-        # TO DO: remove when behav coding map ready
-        newProjectWindow.tabProject.setTabEnabled(5, False) 
+        # TODO: remove when behav coding map ready
+        # newProjectWindow.tabProject.setTabEnabled(5, False) 
 
 
         # pass copy of self.pj
@@ -6129,19 +6128,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.currentStates = {}
         # add states for no focal subject
 
-        # TODO: replace with function (see timerout)
-
         self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
                                                                 dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
                                                                 currentTime)
 
-        '''
-        self.currentStates[""] = []
-        for sbc in StateBehaviorsCodes:
-            if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS] if x[pj_obs_fields['subject'] ] == '' and x[ pj_obs_fields['code'] ] == sbc and x[ pj_obs_fields['time'] ] <= currentTime  ]) % 2: # test if odd
-                self.currentStates[''].append(sbc)
-        '''
 
         # add states for all configured subjects
         for idx in self.pj[SUBJECTS]:
@@ -7198,7 +7189,6 @@ self.mediaplayer.video_get_aspect_ratio(),
         QMessageBox.warning(self, programName, "Function not yet implemented")
         return
 
-
         if not self.observationId:
             self.no_observation()
             return
@@ -7483,11 +7473,31 @@ self.mediaplayer.video_get_aspect_ratio(),
         ver = 'v. {0}'.format(__version__)
 
         players = []
-        players.append("VLC media player v. {}".format(bytes_to_str(vlc.libvlc_get_version())))
-        players.append("VLC libraries path: {}".format(vlc.plugin_path))
-        players.append("FFmpeg path: {}".format(self.ffmpeg_bin))
+        players.append("VLC media player")
+        players.append("version {}".format(bytes_to_str(vlc.libvlc_get_version())))
+        if vlc.plugin_path:
+            players.append("VLC libraries path: {}".format(vlc.plugin_path))
 
-        QMessageBox.about(self, "About " + programName, ("<b>{prog_name}</b> {ver} - {date}"
+        players.append("\nFFmpeg")
+        players.append(subprocess.getoutput('"{}" -version'.format(self.ffmpeg_bin)).split("\n")[0])
+        if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
+            ffmpeg_true_path = subprocess.getoutput("which ffmpeg")
+        else:
+            ffmpeg_true_path = self.ffmpeg_bin
+        players.append("Path: {}".format(ffmpeg_true_path))
+        
+        players.append("\nMatplotlib")
+        players.append("version {}".format(matplotlib.__version__))
+
+        gv_result = subprocess.getoutput("dot -V")
+        gv_version = gv_result if "graphviz" in gv_result else "not installed"
+        players.append("\nGraphViz")
+        players.append(gv_version)
+
+        about_dialog = msg = QMessageBox()
+        about_dialog.setWindowTitle("About " + programName)
+
+        about_dialog.setInformativeText(("<b>{prog_name}</b> {ver} - {date}"
         "<p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>"
         "Department of Life Sciences and Systems Biology<br>"
         "University of Torino - Italy<br>"
@@ -7500,20 +7510,25 @@ self.mediaplayer.video_get_aspect_ratio(),
         "How to cite BORIS:<br>"
         "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
         "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
-        "DOI:10.1111/2041-210X.12584"
-        "<hr>"
-        "Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}<br>"
-        "CPU type: {cpu_info}<br><br>"
-        "{players}").format(prog_name=programName,
+        "DOI:10.1111/2041-210X.12584").format(prog_name=programName,
                             ver=ver,
                             date=__version_date__,
-                            python_ver=platform.python_version(),
+                            python_ver=platform.python_version()
+                            ))
+
+        details = ("Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}\n"
+        "CPU type: {cpu_info}\n\n"
+        "{players}").format(python_ver=platform.python_version(),
                             architecture="64-bit" if sys.maxsize > 2**32 else "32-bit",
                             pyqt_ver=PYQT_VERSION_STR,
                             system=platform.system(),
                             qt_ver=QT_VERSION_STR,
                             cpu_info=platform.machine(),
-                            players="<br>".join(players)))
+                            players="\n".join(players))
+
+        about_dialog.setDetailedText(details)
+
+        retval = about_dialog.exec_()
 
     def hsVideo_sliderMoved(self):
         """
