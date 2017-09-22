@@ -2765,8 +2765,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
 
         # show selected subjects
+        self.show_current_states_in_subjects_table()        
+        '''
         for idx in sorted_keys(self.pj[SUBJECTS]):
             self.twSubjects.item(int(idx), len(subjectsFields)).setText(",".join(self.currentStates[idx]))
+        '''
 
         # show tracking cursor
         self.get_events_current_row()
@@ -6159,9 +6162,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             self.lbCurrentStates.setText(', '.join(self.currentStates['']))
 
-        # show selected subjects
+        
+        self.show_current_states_in_subjects_table()
+
+        '''
         for idx in sorted_keys(self.pj[SUBJECTS]):
             self.twSubjects.item(int(idx), len(subjectsFields)).setText(','.join(self.currentStates[idx]))
+        '''
 
         # check scan sampling
 
@@ -7579,6 +7586,13 @@ self.mediaplayer.video_get_aspect_ratio(),
         return currentStates
 
 
+    def show_current_states_in_subjects_table(self):
+        for idx in sorted_keys(self.pj[SUBJECTS]):
+            for j in range(self.twSubjects.rowCount()):
+                if self.twSubjects.item(j, 1).text() == self.pj[SUBJECTS][idx]["name"]:
+                    self.twSubjects.item(j, len(subjectsFields)).setText(",".join(self.currentStates[idx]))
+        
+
     def timer_out(self, scrollSlider=True):
         """
         indicate the video current position and total length for VLC player
@@ -7713,8 +7727,7 @@ self.mediaplayer.video_get_aspect_ratio(),
                 self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
 
                 # show current states in subjects table
-                for idx in sorted_keys(self.pj[SUBJECTS]):  #[str(x) for x in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]:
-                    self.twSubjects.item(int(idx), len(subjectsFields)).setText(",".join(self.currentStates[idx]))
+                self.show_current_states_in_subjects_table()
 
                 mediaName = self.mediaplayer.get_media().get_meta(0)
 
