@@ -68,8 +68,8 @@ from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
 
-__version__ = "4.1.9"
-__version_date__ = "2017-09-20"
+__version__ = "4.1.10"
+__version_date__ = "2017-09-22"
 
 # BITMAP_EXT = "jpg"
 
