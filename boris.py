@@ -73,13 +73,9 @@ import select_modifiers
 import behaviors_coding_map
 import plot_events
 
-<<<<<<< HEAD
+
 __version__ = "4.2"
 __version_date__ = "2017-09"
-=======
-__version__ = "4.1.10"
-__version_date__ = "2017-09-22"
->>>>>>> master
 
 # BITMAP_EXT = "jpg"
 
@@ -669,10 +665,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget_by_behaviors_category.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # plot events
-        if FLAG_MATPLOTLIB_INSTALLED:
-            self.actionVisualize_data.setEnabled(self.pj[OBSERVATIONS] != {})
-        else:
-            self.actionVisualize_data.setEnabled(False)
+        self.menuPlot_events.setEnabled(FLAG_MATPLOTLIB_INSTALLED and self.pj[OBSERVATIONS] != {})
+        #self.actionPlot_events1.setEnabled(FLAG_MATPLOTLIB_INSTALLED and self.pj[OBSERVATIONS] != {})
+        #self.actionPlot_events2.setEnabled(FLAG_MATPLOTLIB_INSTALLED and self.pj[OBSERVATIONS] != {})
 
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
@@ -774,7 +769,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget_by_category(
                                                                                                     "by_category"))
 
-        self.actionVisualize_data.triggered.connect(self.plot_events_triggered)
+        self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
+        self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -5170,6 +5166,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return totalMediaLength
 
 
+    
     def plot_events_old(self):
         """
         plot events with matplotlib
@@ -5518,13 +5515,329 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 line_width=10):
             QMessageBox.warning(self, programName, "Check events")
 
-    '''
-    def plot_events_triggered(self):
-        plot_events.plot_events(self.pj, )
-    '''
+    def plot_events1_triggered(self):
+        """
+        plot events with matplotlib
+        """
+
+        def plot_time_ranges(obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
+            """
+            create "hlines" matplotlib plot
+            """
+
+            import matplotlib.pyplot as plt
+            import matplotlib.transforms as mtransforms
+            from matplotlib import dates
+
+            LINE_WIDTH = line_width
+            all_behaviors, observedBehaviors = [], []
+            maxTime = 0  # max time in all events of all subjects
+
+            # all behaviors defined in project without modifiers
+            all_project_behaviors = [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])]
+            all_project_subjects = [NO_FOCAL_SUBJECT] + [self.pj[SUBJECTS][idx]["name"] for idx in sorted_keys(self.pj[SUBJECTS])]
+
+            for subject in obs.keys():
+
+                for behavior_modifiers_json in obs[subject].keys():
+
+                    behavior_modifiers = json.loads(behavior_modifiers_json)
+
+                    if not excludeBehaviorsWithoutEvents:
+                        observedBehaviors.append(behavior_modifiers_json)
+                    else:
+                        if obs[subject][behavior_modifiers_json]:
+                            observedBehaviors.append(behavior_modifiers_json)
+
+                    if not behavior_modifiers_json in all_behaviors:
+                        all_behaviors.append(behavior_modifiers_json)
+
+                    for t1, t2 in obs[subject][behavior_modifiers_json]:
+                        maxTime = max(maxTime, t1, t2)
+
+                observedBehaviors.append("")
+
+            all_behaviors2 = [json.loads(x)[0] for x in all_behaviors]
+            all_behaviors = ['["{}"]'.format(x) for x in all_project_behaviors if x in all_behaviors2]
+
+            lbl = []
+            if excludeBehaviorsWithoutEvents:
+                for behav_modif_json in observedBehaviors:
+                    behav_modif = json.loads(behav_modif_json)
+                    if len(behav_modif) == 2:
+                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+                    else:
+                        lbl.append(behav_modif[0])
+
+            else:
+                all_behaviors.append('[""]') # empty json list element
+                for behav_modif_json in all_behaviors:
+                    behav_modif = json.loads(behav_modif_json)
+                    if len(behav_modif) == 2:
+                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+                    else:
+                        lbl.append(behav_modif[0])
+                lbl = lbl[:] * len(obs)
+
+
+            lbl = lbl[:-1]  # remove last empty line
+
+            fig = plt.figure(figsize=(20, 10))
+            fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
+            ax = fig.add_subplot(111)
+            labels = ax.set_yticklabels(lbl)
+
+            ax.set_ylabel("Behaviors")
+
+            if self.timeFormat == HHMMSS:
+                fmtr = dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
+                ax.xaxis.set_major_formatter(fmtr)
+                ax.set_xlabel("Time (hh:mm:ss)")
+            else:
+                ax.set_xlabel("Time (s)")
+
+            plt.ylim(len(lbl), -0.5)
+
+            if not videoLength:
+                videoLength = maxTime
+
+            if self.pj[OBSERVATIONS][obsId]["time offset"]:
+                t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + minTime)
+                t1 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
+            else:
+                t0 = round(minTime)
+                t1 = round(videoLength)
+            subjectPosition = t0 + (t1 - t0) * 0.05
+
+            if self.timeFormat == HHMMSS:
+                t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600) / 60), int(t0 % 60), round(round(t0 % 1, 3) * 1000000))
+                t1d = datetime.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600) / 60), int(t1 % 60), round(round(t1 % 1, 3) * 1000000))
+                subjectPositiond = datetime.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600) / 60), int(subjectPosition % 60), round(round(subjectPosition % 1, 3) * 1000000))
+
+            if self.timeFormat == S:
+                t0d, t1d = t0, t1
+                subjectPositiond = subjectPosition
+
+            plt.xlim(t0d, t1d)
+            plt.yticks(range(len(lbl) + 1), np.array(lbl))
+
+            count = 0
+            flagFirstSubject = True
+
+            for subject in all_project_subjects:
+                if subject not in obs.keys():
+                    continue
+
+                if not flagFirstSubject:
+                    if excludeBehaviorsWithoutEvents:
+                        count += 1
+                    ax.axhline(y=(count-1), linewidth=1, color="black")
+                    ax.hlines(np.array([count]), np.array([0]), np.array([0]), lw=LINE_WIDTH, color=col)
+                else:
+                    flagFirstSubject = False
+
+                ax.text(subjectPositiond, count - 0.5, subject)
+
+                behaviors = obs[subject]
+
+                x1, x2, y, col, pointsx, pointsy, guide = [], [], [], [], [], [], []
+                col_count = 0
+
+                for bm_json in all_behaviors:
+                    if bm_json in obs[subject]:
+                        if obs[subject][bm_json]:
+                            for t1, t2 in obs[subject][bm_json]:
+                                if t1 == t2:
+                                    pointsx.append(t1)
+                                    pointsy.append(count)
+                                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                                else:
+                                    x1.append(t1)
+                                    x2.append(t2)
+                                    y.append(count)
+
+                                    col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(json.loads(bm_json)[0]) % len(BEHAVIORS_PLOT_COLORS)])
+
+                                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                            count += 1
+                        else:
+                            x1.append(0)
+                            x2.append(0)
+                            y.append(count)
+                            col.append("white")
+                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                            count += 1
+
+                    else:
+                        if not excludeBehaviorsWithoutEvents:
+                            x1.append(0)
+                            x2.append(0)
+                            y.append(count)
+                            col.append("white")
+                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                            count += 1
+
+                    col_count += 1
+
+                if self.timeFormat == HHMMSS:
+                    ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p / 3600),
+                                                                       int((p - int(p / 3600) * 3600) / 60),
+                                                                       int(p % 60), round(round(p % 1, 3) * 1e6))
+                                                    for p in x1]),
+                    np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600) / 60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in x2]),
+                    lw=LINE_WIDTH, color=col)
+
+                if self.timeFormat == S:
+                    ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
+
+                if self.timeFormat == HHMMSS:
+                    ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600)/60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in pointsx]), pointsy, "r^")
+
+                if self.timeFormat == S:
+                    ax.plot(pointsx, pointsy, "r^")
+
+                #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
+
+            def on_draw(event):
+
+                # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
+                bboxes = []
+                for label in labels:
+                    bbox = label.get_window_extent()
+                    bboxi = bbox.inverse_transformed(fig.transFigure)
+                    bboxes.append(bboxi)
+
+                bbox = mtransforms.Bbox.union(bboxes)
+                if fig.subplotpars.left < bbox.width:
+                    fig.subplots_adjust(left=1.1*bbox.width)
+                    fig.canvas.draw()
+                return False
+
+            fig.canvas.mpl_connect("draw_event", on_draw)
+            plt.show()
+
+            return True
+
+        result, selectedObservations = self.selectObservations(SELECT1)
+
+        logging.debug("Selected observations: {0}".format(selectedObservations))
+
+        if not selectedObservations:
+            return
+
+        if not self.pj[OBSERVATIONS][selectedObservations[0]][EVENTS]:
+            QMessageBox.warning(self, programName, "There are no events in the selected observation")
+            return
+
+        for obsId in selectedObservations:
+            if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
+                totalMediaLength = self.observationTotalMediaLength(obsId)
+            else: # LIVE
+                if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+                else:
+                    totalMediaLength = Decimal("0.0")
+
+        if totalMediaLength == -1:
+            totalMediaLength = 0
+
+        logging.debug("totalMediaLength: {0}".format(totalMediaLength))
+
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, totalMediaLength)
+
+        logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
+
+        totalMediaLength = int(totalMediaLength)
+
+        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+            return
+
+        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+
+        o = {}
+
+        for subject in plot_parameters["selected subjects"]:
+
+            o[subject] = {}
+
+            for behavior in plot_parameters["selected behaviors"]:
+
+                if plot_parameters["include modifiers"]:
+
+                    cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
+                    distinct_modifiers = list(cursor.fetchall())
+
+                    for modifier in distinct_modifiers:
+                        cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
+                                      (subject, behavior, modifier[0]))
+
+                        rows = cursor.fetchall()
+
+                        if modifier[0]:
+                            behaviorOut = [behavior, modifier[0].replace("|", ",")]
+
+                        else:
+                            behaviorOut = [behavior]
+
+                        behaviorOut_json = json.dumps(behaviorOut)
+
+                        if not behaviorOut_json in o[subject]:
+                            o[subject][behaviorOut_json] = []
+
+                        for idx, row in enumerate(rows):
+                            if POINT in self.eventType(behavior).upper():
+                                o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
+
+                            if STATE in self.eventType(behavior).upper():
+                                if idx % 2 == 0:
+                                    try:
+                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+                                    except:
+                                        if NO_FOCAL_SUBJECT in subject:
+                                            sbj = ""
+                                        else:
+                                            sbj = "for subject <b>{0}</b>".format(subject)
+                                        QMessageBox.critical(self, programName,
+                                            "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
+                else:
+                    cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ?  ORDER BY observation, occurence",
+                                  (subject, behavior))
+                    rows = list(cursor.fetchall())
+
+                    if not len(rows) and plot_parameters["exclude behaviors"]:
+                        continue
+
+                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:
+                        continue
+
+                    behaviorOut = [behavior]
+                    behaviorOut_json = json.dumps(behaviorOut)
+
+                    if not behaviorOut_json in o[subject]:
+                        o[subject][behaviorOut_json] = []
+
+                    for idx, row in enumerate(rows):
+                        if POINT in self.eventType(behavior).upper():
+                            o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
+                        if STATE in self.eventType(behavior).upper():
+                            if idx % 2 == 0:
+                                o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+
+        logging.debug("intervals: {}".format(o))
+        logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
+        logging.debug("excludeBehaviorsWithoutEvents: {}".format(plot_parameters["exclude behaviors"]))
+
+        if not plot_time_ranges(o,
+                                selectedObservations[0],
+                                plot_parameters["start time"],
+                                plot_parameters["end time"],
+                                plot_parameters["exclude behaviors"],
+                                line_width=10):
+            QMessageBox.warning(self, programName, "Check events")
+
         
 
-    def plot_events_triggered(self):
+    def plot_events2_triggered(self):
         """
         plot events with matplotlib 
         """
@@ -5676,11 +5989,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             print("o", o)
             if len(selectedObservations) == 1:
-                plot_events.CreateGanttChart(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                plot_events.create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
                                             min_t=float(plot_parameters["start time"]),
                                             max_t=float(plot_parameters["end time"]))
             else:
-                plot_events.CreateGanttChart(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                plot_events.create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
                                             #min_t=float(plot_parameters["start time"]),
                                             #max_t=float(plot_parameters["end time"]),
                                             output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
@@ -7854,7 +8167,7 @@ self.mediaplayer.video_get_aspect_ratio(),
             currentTime = self.getLaps() * 1000
 
             if self.beep_every:
-                if currentTime % (self.beep_every*1000) <= 300:
+                if currentTime % (self.beep_every * 1000) <= 300:
                     self.beep(" -f 555 -l 460")
 
             # current media time

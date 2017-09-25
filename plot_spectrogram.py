@@ -49,7 +49,6 @@ try:
     import matplotlib
 except:
     pass
-import recode_widget
 
 
 class Spectrogram(QWidget):
