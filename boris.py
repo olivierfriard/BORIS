@@ -71,6 +71,7 @@ import qrc_boris
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
+import plot_events
 
 __version__ = "4.2"
 __version_date__ = "2017-09"
@@ -768,7 +769,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget_by_category(
                                                                                                     "by_category"))
 
-        self.actionVisualize_data.triggered.connect(self.plot_events)
+        self.actionVisualize_data.triggered.connect(self.plot_events_triggered)
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -4288,6 +4289,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
         """
         populate the db databse with events from selectedObservations, selectedSubjects and selectedBehaviors
+        selectedObservations: list
+        selectedSubjects: list
+        selectedBehaviors: list
         """
         db = sqlite3.connect(":memory:")
         db.row_factory = sqlite3.Row
@@ -4368,8 +4372,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return observed_behaviors
 
 
-    def choose_obs_subj_behav_category(self, selectedObservations, maxTime, flagShowIncludeModifiers=True,
-                                        flagShowExcludeBehaviorsWoEvents=True, by_category=False):
+    def choose_obs_subj_behav_category(self,
+                                       selectedObservations,
+                                       maxTime=0,
+                                       flagShowIncludeModifiers=True,
+                                       flagShowExcludeBehaviorsWoEvents=True,
+                                       by_category=False):
+
         """
         show window for:
         - selection of subjects
@@ -4377,6 +4386,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         - selection of time interval
         - inclusion/exclusion of modifiers
         - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
+
+        returns dict:
+        
+        {"selected subjects": selectedSubjects,
+                "selected behaviors": selectedBehaviors,
+                "include modifiers": True/False,
+                "exclude behaviors": True/False,
+                "start time": startTime,
+                "end time": endTime
+                }
+
 
         """
 
@@ -5089,7 +5109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         total media length for observation
         if media length not available return 0
 
-        return total media length in s
+        return total media length in s (Decimal type)
         """
 
         totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
@@ -5141,6 +5161,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return totalMediaLength
 
+
     def plot_events_old(self):
         """
         plot events with matplotlib
@@ -5148,7 +5169,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def plot_time_ranges(obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
             """
-            create "hlines" matplotlib plot
+            create plot with axhline matplotlib function
             """
 
             LINE_WIDTH = line_width
@@ -5489,25 +5510,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 line_width=10):
             QMessageBox.warning(self, programName, "Check events")
 
+    '''
+    def plot_events_triggered(self):
+        plot_events.plot_events(self.pj, )
+    '''
+        
 
-
-    def plot_events(self):
+    def plot_events_triggered(self):
         """
         plot events with matplotlib 
         """
 
-
-        result, selectedObservations = self.selectObservations(SELECT1)
-
-        logging.debug("Selected observations: {0}".format(selectedObservations))
+        result, selectedObservations = self.selectObservations(MULTIPLE)
 
         if not selectedObservations:
             return
 
-        if not self.pj[OBSERVATIONS][selectedObservations[0]][EVENTS]:
-            QMessageBox.warning(self, programName, "There are no events in the selected observation")
+        # check if almost one selected observation has events
+        flag_no_events = True
+        for obsId in selectedObservations:
+            if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                flag_no_events = False
+                break
+        if flag_no_events:
+            QMessageBox.warning(self, programName, "No events found in the selected observations")
             return
 
+        max_media_length = -1
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
@@ -5517,103 +5546,139 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     totalMediaLength = Decimal("0.0")
 
-        if totalMediaLength == -1:
-            totalMediaLength = 0
+            if totalMediaLength == -1:
+                totalMediaLength = 0
 
-        logging.debug("totalMediaLength: {0}".format(totalMediaLength))
+            max_media_length = max(max_media_length, totalMediaLength)
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, totalMediaLength)
 
-        logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
-
-        totalMediaLength = int(totalMediaLength)
+        if len(selectedObservations) == 1:
+            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=totalMediaLength)
+        else:
+            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
 
+
+        if len(selectedObservations) > 1:
+            plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save events' plots",
+                                                                    os.path.expanduser("~"),
+                                                                    options=QFileDialog(self).ShowDirsOnly)
+
+            if not plot_directory:
+                return
+                
+            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
+            if ok and item:
+                file_format = item.lower()
+            else:
+                return
+
+        totalMediaLength = int(totalMediaLength)
+
+
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
-        o = {}
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            
+            
+            if not self.check_state_events_obs(obsId)[0]:
+                not_paired_obs_list.append(obsId)
+                continue
 
-        for subject in plot_parameters["selected subjects"]:
-
-            o[subject] = {}
-
-            for behavior in plot_parameters["selected behaviors"]:
-
-                if plot_parameters["include modifiers"]:
-
-                    cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
-                    distinct_modifiers = list(cursor.fetchall())
-
-                    for modifier in distinct_modifiers:
-                      
-                        cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
-                                      (subject, behavior, modifier[0]))
-
-                        rows = cursor.fetchall()
-
-                        if modifier[0]:
-                            behaviorOut = [behavior, modifier[0]]
-                        else:
-                            behaviorOut = [behavior]
-
-                        behaviorOut_json = json.dumps(behaviorOut)
-
+            o = {}
+    
+            for subject in plot_parameters["selected subjects"]:
+    
+                o[subject] = {}
+    
+                for behavior in plot_parameters["selected behaviors"]:
+    
+                    if plot_parameters["include modifiers"]:
+    
+                        cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                                       (obsId, subject, behavior))
+                        distinct_modifiers = list(cursor.fetchall())
+    
+                        for modifier in distinct_modifiers:
+                          
+                            cursor.execute(("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
+                                            "ORDER BY observation, occurence"),
+                                          (obsId, subject, behavior, modifier[0]))
+    
+                            rows = cursor.fetchall()
+    
+                            if modifier[0]:
+                                behaviorOut = [behavior, modifier[0]]
+                            else:
+                                behaviorOut = [behavior]
+    
+                            behaviorOut_json = json.dumps(behaviorOut)
+    
+                            if not behaviorOut_json in o[subject]:
+                                o[subject][behaviorOut_json] = []
+    
+                            for idx, row in enumerate(rows):
+                                if POINT in self.eventType(behavior).upper():
+                                    o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
+    
+                                if STATE in self.eventType(behavior).upper():
+                                    if idx % 2 == 0:
+                                        try:
+                                            o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+                                        except:
+                                            if NO_FOCAL_SUBJECT in subject:
+                                                sbj = ""
+                                            else:
+                                                sbj = "for subject <b>{0}</b>".format(subject)
+                                            QMessageBox.critical(self, programName,
+                                                "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
+    
+                    else:  # do not include modifiers
+    
+                        cursor.execute(("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ? "
+                                        "ORDER BY observation, occurence"),
+                                      (obsId, subject, behavior))
+                        rows = list(cursor.fetchall())
+    
+                        if not len(rows) and plot_parameters["exclude behaviors"]:
+                            continue
+    
+                        if STATE in self.eventType(behavior).upper() and len(rows) % 2:
+                            continue
+    
+                        behaviorOut_json = json.dumps([behavior])
+    
                         if not behaviorOut_json in o[subject]:
                             o[subject][behaviorOut_json] = []
-
+    
                         for idx, row in enumerate(rows):
                             if POINT in self.eventType(behavior).upper():
-                                o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
+                                o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
 
                             if STATE in self.eventType(behavior).upper():
                                 if idx % 2 == 0:
-                                    try:
-                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
-                                    except:
-                                        if NO_FOCAL_SUBJECT in subject:
-                                            sbj = ""
-                                        else:
-                                            sbj = "for subject <b>{0}</b>".format(subject)
-                                        QMessageBox.critical(self, programName,
-                                            "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
-
-                else:  # do not include modifiers
-
-                    cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence",
-                                  (subject, behavior))
-                    rows = list(cursor.fetchall())
-
-                    if not len(rows) and plot_parameters["exclude behaviors"]:
-                        continue
-
-                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:
-                        continue
-
-                    behaviorOut_json = json.dumps([behavior])
-
-                    if not behaviorOut_json in o[subject]:
-                        o[subject][behaviorOut_json] = []
-
-                    for idx, row in enumerate(rows):
-                        if POINT in self.eventType(behavior).upper():
-                            o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
-                        if STATE in self.eventType(behavior).upper():
-                            if idx % 2 == 0:
-                                o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
-
-        print("o", o)
-        
-
-        import plot_events
-        
-        plot_events.CreateGanttChart(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
-                                     min_t=float(plot_parameters["start time"]),
-                                     max_t=float(plot_parameters["end time"]))
+                                    o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
 
 
+
+
+            print("o", o)
+            if len(selectedObservations) == 1:
+                plot_events.CreateGanttChart(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                                            min_t=float(plot_parameters["start time"]),
+                                            max_t=float(plot_parameters["end time"]))
+            else:
+                plot_events.CreateGanttChart(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                                            #min_t=float(plot_parameters["start time"]),
+                                            #max_t=float(plot_parameters["end time"]),
+                                            output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
+                                                                                                             obsId=obsId,
+                                                                                                             file_format=file_format))
+             
 
 
 

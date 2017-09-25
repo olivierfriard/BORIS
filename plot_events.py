@@ -40,25 +40,22 @@ import config
 
 
 
-def CreateGanttChart(events, all_behaviors, min_t=-1, max_t=-1, output_file_name=""):
+def create_events_plot2(events, all_behaviors, min_t=-1, max_t=-1, output_file_name=""):
     """
-        Create gantt charts with matplotlib
-        Give file name.
+    Create gantt charts with barh matplotlib function
     """
 
     def behav_color(behav):
-        try:
+
+        if behav in all_behaviors:
             return config.BEHAVIORS_PLOT_COLORS[all_behaviors.index(behav) % len(config.BEHAVIORS_PLOT_COLORS)]
-        except:
-            return 'red'
+        else:
+            return "red"
 
 
     par1 = 1
-
     bar_height = 0.5
-
     point_event_duration = 0.010
-    
     init = dt.datetime(2017,9,21)
 
     if len(events) > 1:
@@ -67,7 +64,11 @@ def CreateGanttChart(events, all_behaviors, min_t=-1, max_t=-1, output_file_name
         fig, ax = plt.subplots(figsize=(20,8), nrows=len(events), ncols=1, sharex=True)
         axs = np.ndarray(shape=(1), dtype=type(ax))
         axs[0] = ax
-       
+    
+    # determine the max number of behaviors
+    max_len = 0
+    for subject in events:
+        max_len = max(max_len, len(events[subject]))
       
     for ax_idx, subject in enumerate(sorted(events.keys())):
         
@@ -86,25 +87,23 @@ def CreateGanttChart(events, all_behaviors, min_t=-1, max_t=-1, output_file_name
             
         ylabels = [str(k) for k in sorted(events[subject].keys())]
         
-        print(ylabels)
+        #ilen = len(ylabels)
         
-        ilen = len(ylabels)
+        ilen = max_len
        
         axs[ax_idx].set_ylim(ymin=0, ymax = (ilen * par1) + par1)
         
         pos = np.arange(par1, ilen * par1 + par1, par1)
         
-        axs[ax_idx].set_yticks(pos)
-        axs[ax_idx].set_yticklabels(labels, fontdict={'fontsize':12})
-        #plt.setp(labelsy, fontsize=10)
+        axs[ax_idx].set_yticks(pos[:len(ylabels)])
+        axs[ax_idx].set_yticklabels(labels, fontdict={"fontsize": 12})
     
         i = 0
         min_time, max_time = 86400, 0
 
-        #axs[ax_idx].text( matplotlib.dates.date2num(init + dt.timedelta(seconds=1)), (i * par1) + par1 - par1, "TEST",fontsize=20, color='black',)
         for ylabel in ylabels:
             for interval in events[subject][ylabel]:
-                if len(interval) == 1:
+                if interval[0] == interval[1]:
                     start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
                     end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0] + point_event_duration))
                     bar_color = "black"
@@ -113,103 +112,224 @@ def CreateGanttChart(events, all_behaviors, min_t=-1, max_t=-1, output_file_name
                 else:
                     start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
                     end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[1]))
-                    bar_color = behav_color(ylabel)
+                    
+                    print("ylabel", json.loads(ylabel)[0])
+                    
+                    bar_color = behav_color(json.loads(ylabel)[0])
                     min_time = min(min_time, interval[0])
                     max_time = max(max_time, interval[1])
     
-                
-                print((i * par1) + par1)
-                
                 axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
                                  align='center', edgecolor=bar_color, color=bar_color, alpha = 1)
             i += 1
     
-
         #axs[ax_idx].axis('tight')
-    
-                
         if min_t == -1:
             min_time = 0
         else:
             min_time = min_t
-            
+
         if max_t != -1:
             max_time = max_t
-        
+
         axs[ax_idx].set_xlim(xmin = matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
-                    xmax = matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
-    
-        axs[ax_idx].grid(color = 'g', linestyle = ':')
+                             xmax = matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
+
+        axs[ax_idx].grid(color = "g", linestyle = ":")
         axs[ax_idx].xaxis_date()
-    
-    
-        #rule = rrulewrapper(MINUTELY, interval=10)
-        duration = max_time + 1 - min_time
-        
-        print("duration", duration)
-        
        
-        
-        
-        '''if duration <= 300:
-            loc = RRuleLocator(rrulewrapper(SECONDLY, interval=10))
-        else:
-            loc = RRuleLocator(rrulewrapper(MINUTELY, interval=round((duration/60)//10)))
-            
-        print(loc)
-
-        axs[ax_idx].xaxis.set_major_locator(loc)
-        '''
-          
-  
-
-        
         axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
-        
 
-        #axs[ax_idx].set_xticks(pos)
-        #axs[ax_idx].set_xticklabels(ylabels)
-
-    
-        #font = font_manager.FontProperties(size='small')
-        #axs[ax_idx].legend(loc=1,prop=font)
-    
         axs[ax_idx].invert_yaxis()
 
     fig.autofmt_xdate()
-    #plt.savefig('gantt.svg')
     plt.tight_layout()
-    plt.show()
+    if output_file_name:
+        plt.savefig(output_file_name)
+    else:
+        plt.show()
+
+
+'''
+def plot_events(self):
+    """
+    plot events with matplotlib 
+    """
+
+    result, selectedObservations = self.selectObservations(MULTIPLE)
+
+    if not selectedObservations:
+        return
+
+    # check if almost one selected observation has events
+    flag_no_events = True
+    for obsId in selectedObservations:
+        if self.pj[OBSERVATIONS][obsId][EVENTS]:
+            flag_no_events = False
+            break
+    if flag_no_events:
+        QMessageBox.warning(self, programName, "No events found in the selected observations")
+        return
+
+    max_media_length = -1
+    for obsId in selectedObservations:
+        if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
+            totalMediaLength = self.observationTotalMediaLength(obsId)
+        else: # LIVE
+            if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+            else:
+                totalMediaLength = Decimal("0.0")
+
+        if totalMediaLength == -1:
+            totalMediaLength = 0
+
+        max_media_length = max(max_media_length, totalMediaLength)
+
+
+    if len(selectedObservations) == 1:
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=totalMediaLength)
+    else:
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0)
+
+    if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
+        return
+
+
+    if len(selectedObservations) > 1:
+        plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save events' plots",
+                                                                os.path.expanduser("~"),
+                                                                options=QFileDialog(self).ShowDirsOnly)
+
+        if not plot_directory:
+            return
+            
+        item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
+        if ok and item:
+            file_format = item.lower()
+        else:
+            return
+
+    totalMediaLength = int(totalMediaLength)
+
+
+    cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+
+    not_paired_obs_list = []
+    for obsId in selectedObservations:
+        
+        
+        if not self.check_state_events_obs(obsId)[0]:
+            not_paired_obs_list.append(obsId)
+            continue
+
+        o = {}
+
+        for subject in plot_parameters["selected subjects"]:
+
+            o[subject] = {}
+
+            for behavior in plot_parameters["selected behaviors"]:
+
+                if plot_parameters["include modifiers"]:
+
+                    cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                                   (obsId, subject, behavior))
+                    distinct_modifiers = list(cursor.fetchall())
+
+                    for modifier in distinct_modifiers:
+                      
+                        cursor.execute(("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
+                                        "ORDER BY observation, occurence"),
+                                      (obsId, subject, behavior, modifier[0]))
+
+                        rows = cursor.fetchall()
+
+                        if modifier[0]:
+                            behaviorOut = [behavior, modifier[0]]
+                        else:
+                            behaviorOut = [behavior]
+
+                        behaviorOut_json = json.dumps(behaviorOut)
+
+                        if not behaviorOut_json in o[subject]:
+                            o[subject][behaviorOut_json] = []
+
+                        for idx, row in enumerate(rows):
+                            if POINT in self.eventType(behavior).upper():
+                                o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
+
+                            if STATE in self.eventType(behavior).upper():
+                                if idx % 2 == 0:
+                                    try:
+                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+                                    except:
+                                        if NO_FOCAL_SUBJECT in subject:
+                                            sbj = ""
+                                        else:
+                                            sbj = "for subject <b>{0}</b>".format(subject)
+                                        QMessageBox.critical(self, programName,
+                                            "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
+
+                else:  # do not include modifiers
+
+                    cursor.execute(("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ? "
+                                    "ORDER BY observation, occurence"),
+                                  (obsId, subject, behavior))
+                    rows = list(cursor.fetchall())
+
+                    if not len(rows) and plot_parameters["exclude behaviors"]:
+                        continue
+
+                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:
+                        continue
+
+                    behaviorOut_json = json.dumps([behavior])
+
+                    if not behaviorOut_json in o[subject]:
+                        o[subject][behaviorOut_json] = []
+
+                    for idx, row in enumerate(rows):
+                        if POINT in self.eventType(behavior).upper():
+                            o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
+
+                        if STATE in self.eventType(behavior).upper():
+                            if idx % 2 == 0:
+                                o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+
+
+
+
+        print("o", o)
+        if len(selectedObservations) == 1:
+            create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                                        min_t=float(plot_parameters["start time"]),
+                                        max_t=float(plot_parameters["end time"]))
+        else:
+            create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                                        #min_t=float(plot_parameters["start time"]),
+                                        #max_t=float(plot_parameters["end time"]),
+                                        output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
+                                                                                                         obsId=obsId,
+                                                                                                         file_format=file_format))
+'''
+
+
+
+
+
 
 
 if __name__ == '__main__':
     
- 
-    events = {"Subject 1":
-               {'azzzzza': [ [8, 100],
-                          [2.456, 3.895],
-                          [5.444,6.777]
-                          ],
-                    'bb':[ [5],[6],
-                          [6.8, 7.9],
-                          [5.2, 6.3]
-                          ],
-                'ccc' : [[50],[1,2],[3,4],[5,147]],
-                'dd': [[1,7]]
-                },
-            "Subject 2": {"q":[[1,2],[3,4],[5,17]],
-            "q":[[20,29],[33,44.969]],
-                
-                },
-                "subject 3":{"bb":[[1,2],[3,4],[5,205]]}
-            }
-    
+  
     all_behaviors = ["aa","bb","ccc","dd","q","zzz","xxx"]
     
     #events = {'No focal subject': {'n': [[0.844], [4.324], [6.58]]},    }
     
-    events = {'No focal subject': {'["a"]': [[1.533, 7.539], [9.813, 16.491], [20.349, 58.74]], '["n"]': [[2.964, 2.964]]}}
-    events = {'No focal subject': {'["a", "None|None"]': [[1.533, 9.813]], '["a", "aaa,ccc|eee"]': [[7.539, 16.491]], '["a", "bbb|ddd"]': [[20.349, 58.74]], '["n", "123"]': [[2.964, 2.964]]}}
+    #events = {'No focal subject': {'["a"]': [[0.5,0.5] ,[1.533, 7.539], [9.813, 16.491], [20.349, 58.74]], '["n"]': [[2.964, 2.964]]}}
+    events = {'No focal subject': {'["a", "None|None"]': [[0.5,0.5] ,[1.533, 9.813]], '["a", "aaa,ccc|eee"]': [[7.539, 16.491]], '["a", "bbb|ddd"]': [[20.349, 58.74]], '["n", "123"]': [[2.964, 2.964]]}}
     
     
-    CreateGanttChart(events, all_behaviors, min_t=0, max_t=300)
+    create_events_plot2(events, all_behaviors, min_t=0, max_t=300)
