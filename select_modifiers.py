@@ -44,6 +44,8 @@ class ModifiersList(QDialog):
 
         self.modifiers_dict = dict(modifiers_dict)
         currentModifierList = currentModifier.split("|")
+        
+        print("currentModifierList", currentModifierList)
 
         V1layout = QVBoxLayout()
         label = QLabel()
@@ -58,7 +60,6 @@ class ModifiersList(QDialog):
             V2layout = QVBoxLayout()
 
             self.modifiersSetNumber += 1
-            '''if len(modifiers_dict) > 1:'''
 
             lb = QLabel()
             lb.setText("Modifier <b>{}</b>".format(self.modifiers_dict[idx]["name"]))
@@ -70,12 +71,10 @@ class ModifiersList(QDialog):
                 lw.setObjectName("lw_modifiers")
                 lw.installEventFilter(self)
 
-                item = QListWidgetItem("None")
-                lw.addItem(item)
-                if QT_VERSION_STR[0] == "4":
-                    lw.setItemSelected(item, True)
-                else:
-                    item.setSelected(True)
+                if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
+                    item = QListWidgetItem("None")
+                    lw.addItem(item)
+                    lw.setItemSelected(item, True) if QT_VERSION_STR[0] == "4" else item.setSelected(True)
 
                 #lw.setFixedHeight(len(modifiers_dict[idx]["values"])*20)
                 for modifier in self.modifiers_dict[idx]["values"]:
@@ -84,9 +83,16 @@ class ModifiersList(QDialog):
                         item.setCheckState(Qt.Unchecked)
 
                         # previously selected
-                        if currentModifierList != [""] and modifier in currentModifierList[int(idx)]:
+                        print("\n\nmodifier:", modifier)
+                        print(re.sub(" \(.\)", "", modifier))
+                        print("currentModifierList",currentModifierList)
+                        print("idx", idx)
+                        print(currentModifierList[int(idx)])
+                        if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
                             item.setCheckState(Qt.Checked)
+
                     lw.addItem(item)
+
                     if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
                         if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
                             if QT_VERSION_STR[0] == "4":
@@ -192,12 +198,14 @@ class ModifiersList(QDialog):
         for idx in sorted_keys(self.modifiers_dict):
 
             self.modifiers_dict[idx]["selected"] = []
+
             if self.modifiers_dict[idx]["type"] == MULTI_SELECTION:
-
                 for j in range(self.modifiers_dict[idx]["widget"].count()):
-
                     if self.modifiers_dict[idx]["widget"].item(j).checkState() == Qt.Checked:
                         self.modifiers_dict[idx]["selected"].append(re.sub(" \(.*\)", "",self.modifiers_dict[idx]["widget"].item(j).text()))
+                        
+                if not self.modifiers_dict[idx]["selected"]:
+                    self.modifiers_dict[idx]["selected"].append("None")
 
             if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
                 for item in self.modifiers_dict[idx]["widget"].selectedItems():
