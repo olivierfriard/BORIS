@@ -40,54 +40,73 @@ import config
 
 
 
-def create_events_plot2(events, all_behaviors, min_t=-1, max_t=-1, output_file_name=""):
+def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=True, min_t=-1, max_t=-1, output_file_name=""):
     """
     Create gantt charts with barh matplotlib function
     """
 
     def behav_color(behav):
+        """
+        return color corresponding to behavior
+        if color not found returns "darkgray"
+
+        see BEHAVIORS_PLOT_COLORS list in config.py
+        """
 
         if behav in all_behaviors:
             return config.BEHAVIORS_PLOT_COLORS[all_behaviors.index(behav) % len(config.BEHAVIORS_PLOT_COLORS)]
         else:
-            return "red"
-
+            return "darkgray"
 
     par1 = 1
     bar_height = 0.5
     point_event_duration = 0.010
-    init = dt.datetime(2017,9,21)
+    init = dt.datetime(2017, 1, 1)
 
     if len(events) > 1:
-        fig, axs = plt.subplots(figsize=(20,8), nrows=len(events), ncols=1, sharex=True)
+        fig, axs = plt.subplots(figsize=(20, 8), nrows=len(events), ncols=1, sharex=True)
     else:
-        fig, ax = plt.subplots(figsize=(20,8), nrows=len(events), ncols=1, sharex=True)
+        fig, ax = plt.subplots(figsize=(20, 8), nrows=len(events), ncols=1, sharex=True)
         axs = np.ndarray(shape=(1), dtype=type(ax))
         axs[0] = ax
     
     # determine the max number of behaviors
     max_len = 0
+    observed_behaviors_modifiers_json = []
     for subject in events:
         max_len = max(max_len, len(events[subject]))
-      
-    for ax_idx, subject in enumerate(sorted(events.keys())):
+        observed_behaviors_modifiers_json = list(set(observed_behaviors_modifiers_json + list(events[subject].keys())))
+
+    print("observed_behaviors_modifiers_json", observed_behaviors_modifiers_json)
+
+    # order subjects
+    try:
+        ordered_subjects = [x[1] for x in sorted(list(zip([all_subjects.index(x) for x in sorted(list(events.keys()))], sorted(list(events.keys())))))]
+    except ValueError:
+        ordered_subjects = sorted(list(events.keys()))
+        
+    for ax_idx, subject in enumerate(ordered_subjects):
         
         axs[ax_idx].set_title(subject, fontsize=14)
 
-        observed_behaviors = []
-        labels = []
-        for k in sorted(events[subject].keys()):
-            behav_modif = json.loads(str(k))
-            if len(behav_modif) > 1:
-                behav, modif = behav_modif
-                labels.append("{} ({})".format(behav, modif))
-            else:
-                behav = behav_modif[0]
-                labels.append(behav)
-            
-        ylabels = [str(k) for k in sorted(events[subject].keys())]
+        labels_str, ylabels = [], []
         
-        #ilen = len(ylabels)
+        flag_modifiers = False
+        for behav1 in all_behaviors:
+            #for bm_json in events[subject]:
+            for bm_json in (events[subject] if exclude_behaviors_wo_events else observed_behaviors_modifiers_json):
+                if behav1 == json.loads(bm_json)[0]:
+                    ylabels.append(bm_json) 
+                    behav_modif = json.loads(bm_json)
+                    if len(behav_modif) > 1:
+                        behav, modif = behav_modif
+                        labels_str.append("{} ({})".format(behav, modif))
+                        flag_modifiers = True
+                    else:
+                        behav = behav_modif[0]
+                        labels_str.append(behav)
+        
+        print("ylabels", ylabels)
         
         ilen = max_len
        
@@ -96,31 +115,38 @@ def create_events_plot2(events, all_behaviors, min_t=-1, max_t=-1, output_file_n
         pos = np.arange(par1, ilen * par1 + par1, par1)
         
         axs[ax_idx].set_yticks(pos[:len(ylabels)])
-        axs[ax_idx].set_yticklabels(labels, fontdict={"fontsize": 12})
-    
+        axs[ax_idx].set_yticklabels(labels_str, fontdict={"fontsize": 12})
+        
+        if flag_modifiers:
+            axs[ax_idx].set_ylabel("Behaviors (modifiers)", fontdict={"fontsize": 12})
+        else:
+            axs[ax_idx].set_ylabel("Behaviors", fontdict={"fontsize": 12})
+
         i = 0
         min_time, max_time = 86400, 0
 
         for ylabel in ylabels:
-            for interval in events[subject][ylabel]:
-                if interval[0] == interval[1]:
-                    start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
-                    end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0] + point_event_duration))
-                    bar_color = "black"
-                    min_time = min(min_time, interval[0])
-                    max_time = max(max_time, interval[0] + point_event_duration)
-                else:
-                    start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
-                    end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[1]))
-                    
-                    print("ylabel", json.loads(ylabel)[0])
-                    
-                    bar_color = behav_color(json.loads(ylabel)[0])
-                    min_time = min(min_time, interval[0])
-                    max_time = max(max_time, interval[1])
-    
-                axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
-                                 align='center', edgecolor=bar_color, color=bar_color, alpha = 1)
+            if ylabel in events[subject]:
+                for interval in events[subject][ylabel]:
+                    if interval[0] == interval[1]:
+                        start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
+                        end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0] + point_event_duration))
+                        bar_color = "black"
+                        min_time = min(min_time, interval[0])
+                        max_time = max(max_time, interval[0] + point_event_duration)
+                    else:
+                        start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
+                        end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[1]))
+                        bar_color = behav_color(json.loads(ylabel)[0])
+                        min_time = min(min_time, interval[0])
+                        max_time = max(max_time, interval[1])
+        
+                    try:
+                        axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
+                                         align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
+                    except ValueError:
+                        return {"error code": 1, "msg": "Invalid color name: <b>{}</b>".format(bar_color)}
+
             i += 1
     
         #axs[ax_idx].axis('tight')
@@ -139,6 +165,7 @@ def create_events_plot2(events, all_behaviors, min_t=-1, max_t=-1, output_file_n
         axs[ax_idx].xaxis_date()
        
         axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+        axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
 
         axs[ax_idx].invert_yaxis()
 
@@ -149,187 +176,13 @@ def create_events_plot2(events, all_behaviors, min_t=-1, max_t=-1, output_file_n
     else:
         plt.show()
 
-
-'''
-def plot_events(self):
-    """
-    plot events with matplotlib 
-    """
-
-    result, selectedObservations = self.selectObservations(MULTIPLE)
-
-    if not selectedObservations:
-        return
-
-    # check if almost one selected observation has events
-    flag_no_events = True
-    for obsId in selectedObservations:
-        if self.pj[OBSERVATIONS][obsId][EVENTS]:
-            flag_no_events = False
-            break
-    if flag_no_events:
-        QMessageBox.warning(self, programName, "No events found in the selected observations")
-        return
-
-    max_media_length = -1
-    for obsId in selectedObservations:
-        if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
-            totalMediaLength = self.observationTotalMediaLength(obsId)
-        else: # LIVE
-            if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-            else:
-                totalMediaLength = Decimal("0.0")
-
-        if totalMediaLength == -1:
-            totalMediaLength = 0
-
-        max_media_length = max(max_media_length, totalMediaLength)
-
-
-    if len(selectedObservations) == 1:
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=totalMediaLength)
-    else:
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0)
-
-    if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
-        QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
-        return
-
-
-    if len(selectedObservations) > 1:
-        plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save events' plots",
-                                                                os.path.expanduser("~"),
-                                                                options=QFileDialog(self).ShowDirsOnly)
-
-        if not plot_directory:
-            return
-            
-        item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
-        if ok and item:
-            file_format = item.lower()
-        else:
-            return
-
-    totalMediaLength = int(totalMediaLength)
-
-
-    cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-
-    not_paired_obs_list = []
-    for obsId in selectedObservations:
-        
-        
-        if not self.check_state_events_obs(obsId)[0]:
-            not_paired_obs_list.append(obsId)
-            continue
-
-        o = {}
-
-        for subject in plot_parameters["selected subjects"]:
-
-            o[subject] = {}
-
-            for behavior in plot_parameters["selected behaviors"]:
-
-                if plot_parameters["include modifiers"]:
-
-                    cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?",
-                                   (obsId, subject, behavior))
-                    distinct_modifiers = list(cursor.fetchall())
-
-                    for modifier in distinct_modifiers:
-                      
-                        cursor.execute(("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
-                                        "ORDER BY observation, occurence"),
-                                      (obsId, subject, behavior, modifier[0]))
-
-                        rows = cursor.fetchall()
-
-                        if modifier[0]:
-                            behaviorOut = [behavior, modifier[0]]
-                        else:
-                            behaviorOut = [behavior]
-
-                        behaviorOut_json = json.dumps(behaviorOut)
-
-                        if not behaviorOut_json in o[subject]:
-                            o[subject][behaviorOut_json] = []
-
-                        for idx, row in enumerate(rows):
-                            if POINT in self.eventType(behavior).upper():
-                                o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
-
-                            if STATE in self.eventType(behavior).upper():
-                                if idx % 2 == 0:
-                                    try:
-                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
-                                    except:
-                                        if NO_FOCAL_SUBJECT in subject:
-                                            sbj = ""
-                                        else:
-                                            sbj = "for subject <b>{0}</b>".format(subject)
-                                        QMessageBox.critical(self, programName,
-                                            "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
-
-                else:  # do not include modifiers
-
-                    cursor.execute(("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ? "
-                                    "ORDER BY observation, occurence"),
-                                  (obsId, subject, behavior))
-                    rows = list(cursor.fetchall())
-
-                    if not len(rows) and plot_parameters["exclude behaviors"]:
-                        continue
-
-                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:
-                        continue
-
-                    behaviorOut_json = json.dumps([behavior])
-
-                    if not behaviorOut_json in o[subject]:
-                        o[subject][behaviorOut_json] = []
-
-                    for idx, row in enumerate(rows):
-                        if POINT in self.eventType(behavior).upper():
-                            o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
-
-                        if STATE in self.eventType(behavior).upper():
-                            if idx % 2 == 0:
-                                o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
-
-
-
-
-        print("o", o)
-        if len(selectedObservations) == 1:
-            create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
-                                        min_t=float(plot_parameters["start time"]),
-                                        max_t=float(plot_parameters["end time"]))
-        else:
-            create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
-                                        #min_t=float(plot_parameters["start time"]),
-                                        #max_t=float(plot_parameters["end time"]),
-                                        output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
-                                                                                                         obsId=obsId,
-                                                                                                         file_format=file_format))
-'''
-
-
-
-
-
-
+    return {"error code": 0, "msg": ""}
 
 if __name__ == '__main__':
-    
   
-    all_behaviors = ["aa","bb","ccc","dd","q","zzz","xxx"]
-    
-    #events = {'No focal subject': {'n': [[0.844], [4.324], [6.58]]},    }
-    
-    #events = {'No focal subject': {'["a"]': [[0.5,0.5] ,[1.533, 7.539], [9.813, 16.491], [20.349, 58.74]], '["n"]': [[2.964, 2.964]]}}
-    events = {'No focal subject': {'["a", "None|None"]': [[0.5,0.5] ,[1.533, 9.813]], '["a", "aaa,ccc|eee"]': [[7.539, 16.491]], '["a", "bbb|ddd"]': [[20.349, 58.74]], '["n", "123"]': [[2.964, 2.964]]}}
-    
-    
-    create_events_plot2(events, all_behaviors, min_t=0, max_t=300)
+    all_behaviors = ["p","s","a","n"]
+    all_subjects = ["No focal subject", "subj 2", "subj 1"]
+    #events = {'No focal subject': {'["p"]': [], '["s"]': [], '["a"]': [[47.187, 56.107]], '["n"]': []}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]], '["a"]': [], '["n"]': []}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a"]': [[15.787, 24.01]], '["n"]': [[11.459, 11.459], [17.611, 17.611]]}}
+    events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]]}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a", "None"]': [[15.787, 24.01]], '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
+
+    create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=False, min_t=0, max_t=100)

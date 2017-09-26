@@ -205,7 +205,7 @@ BEHAVIORS_PLOT_COLORS = ["blue", "green", "red", "cyan", "magenta","yellow", "li
                           'beige','bisque','black','blanchedalmond','blueviolet','brown',
                           'burlywood','cadetblue','chartreuse','chocolate','coral',
                           'cornflowerblue','cornsilk','crimson','darkblue','darkcyan',
-                          'darkgray','darkgreen','darkgrey','darkkhaki','darkmagenta',
+                          'darkgreen','darkgrey','darkkhaki','darkmagenta',
                           'darkolivegreen','darkorange','darkorchid','darkred',
                           'darksage','darkseagreen','darkslateblue','darkslategray',
                           'darkslategrey','darkturquoise','darkviolet','deeppink',
@@ -227,4 +227,4 @@ BEHAVIORS_PLOT_COLORS = ["blue", "green", "red", "cyan", "magenta","yellow", "li
                           'royalblue','saddlebrown','sage','salmon','sandybrown','seagreen',
                           'seashell','sienna','skyblue','slategray','slategrey','snow',
                           'springgreen','tan','teal','thistle','tomato','turquoise','violet',
-                          'wheat','white','whitesmoke','yellowgreen']
+                          'wheat','white','whitesmoke','yellowgreen','darkgray']

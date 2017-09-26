@@ -1960,6 +1960,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return (False, out) if out else (True, "All state events are PAIRED")
 
+
     def check_state_events(self):
         """
         check state events for each subject in current observation
@@ -1970,7 +1971,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         tot_out = ""
         if self.observationId:
             _, r = self.check_state_events_obs(self.observationId)
-            tot_out = "<strong>{0}</strong><br>{1}<br>".format(self.observationId, r)
+            tot_out = "<strong>{}</strong><br>{}<br><br>".format(self.observationId, r)
 
         # no current observation
         else:
@@ -3427,12 +3428,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.update_events_start_stop()
 
+
     def selectObservations(self, mode):
         """
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         """
-
+        import select_observations
+        
+        resultStr, selectedObs = select_observations.select_observations(self.pj, mode)
+        
+        return resultStr, selectedObs
+        '''
         obsListFields = ["id", "date", "description", "subjects", "media"]
         indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
 
@@ -3532,6 +3539,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             resultStr = EDIT
 
         return resultStr, selectedObs
+    '''
+
 
     def initialize_new_live_observation(self):
         """
@@ -5167,15 +5176,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     
-    def plot_events_old(self):
+
+    def plot_events1_triggered(self):
         """
         plot events with matplotlib
         """
 
         def plot_time_ranges(obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
             """
-            create plot with axhline matplotlib function
+            create "hlines" matplotlib plot
             """
+
+            import matplotlib.pyplot as plt
+            import matplotlib.transforms as mtransforms
+            from matplotlib import dates
 
             LINE_WIDTH = line_width
             all_behaviors, observedBehaviors = [], []
@@ -5190,15 +5204,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for behavior_modifiers_json in obs[subject]:
 
                     behavior_modifiers = json.loads(behavior_modifiers_json)
-                    print("behavior_modifiers", behavior_modifiers)
 
-                    '''
-                    if excludeBehaviorsWithoutEvents:
+                    if not excludeBehaviorsWithoutEvents:
+                        observedBehaviors.append(behavior_modifiers_json)
+                    else:
                         if obs[subject][behavior_modifiers_json]:
                             observedBehaviors.append(behavior_modifiers_json)
-                    else:
-                    '''
-                    observedBehaviors.append(behavior_modifiers_json)
 
                     if not behavior_modifiers_json in all_behaviors:
                         all_behaviors.append(behavior_modifiers_json)
@@ -5206,41 +5217,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for t1, t2 in obs[subject][behavior_modifiers_json]:
                         maxTime = max(maxTime, t1, t2)
 
-                #observedBehaviors.append("")
+                observedBehaviors.append("")
 
+            '''
             all_behaviors2 = [json.loads(x)[0] for x in all_behaviors]
-            all_behaviors = ['["{}"]'.format(x) for x in all_project_behaviors if x in all_behaviors2]
-
-            lbl = []
             
-            print("observedBehaviors", observedBehaviors)
+            print("all_behaviors2", all_behaviors2)
+            
+            all_behaviors = ['["{}"]'.format(x) for x in all_project_behaviors if x in all_behaviors2]
+            
             print("all_behaviors", all_behaviors)
             '''
-            print(excludeBehaviorsWithoutEvents)
-            if excludeBehaviorsWithoutEvents:'''
 
-            for behav_modif_json in observedBehaviors:
-                behav_modif = json.loads(behav_modif_json)
-                print("behav_modif", behav_modif)
-                if len(behav_modif) == 2:
+            lbl = []
+            if excludeBehaviorsWithoutEvents:
+                for behav_modif_json in observedBehaviors:
+                    
+                    if not behav_modif_json:
+                        lbl.append("")
+                        continue
+                    
+                    behav_modif = json.loads(behav_modif_json)
+                    if len(behav_modif) == 2:
+                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+                    else:
+                        lbl.append(behav_modif[0])
 
-                    lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
-                else:
-                    lbl.append(behav_modif[0])
-
-            print("lbl", lbl)
-
-            '''
             else:
-                # all_behaviors.append('[""]') # empty json list element
+                all_behaviors.append('[""]') # empty json list element
                 for behav_modif_json in all_behaviors:
+                    
+                    print("behav_modif_json", behav_modif_json)
+                    
                     behav_modif = json.loads(behav_modif_json)
                     if len(behav_modif) == 2:
                         lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
                     else:
                         lbl.append(behav_modif[0])
                 lbl = lbl[:] * len(obs)
-            '''
+
 
             lbl = lbl[:-1]  # remove last empty line
 
@@ -5288,344 +5303,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for subject in all_project_subjects:
                 if subject not in obs:
-                    continue
-
-                if not flagFirstSubject:
-                    if excludeBehaviorsWithoutEvents:
-                        count += 1
-                    ax.axhline(y=(count-1), linewidth=1, color="black")
-                    ax.hlines(np.array([count]), np.array([0]), np.array([0]), lw=LINE_WIDTH, color=col)
-                else:
-                    flagFirstSubject = False
-
-                ax.text(subjectPositiond, count - 0.5, subject)
-
-                behaviors = obs[subject]
-
-                x1, x2, y, col, pointsx, pointsy, guide = [], [], [], [], [], [], []
-                col_count = 0
-
-                #for bm_json in all_behaviors:
-                
-                print("obs[subject]", obs[subject])
-                
-                for bm_json in observedBehaviors:
-                    if bm_json in obs[subject]:
-                        print("obs[subject][bm_json]", obs[subject][bm_json])
-                        if obs[subject][bm_json]:
-                            print(bm_json, "IN")
-                            for t1, t2 in obs[subject][bm_json]:
-                                if t1 == t2:
-                                    pointsx.append(t1)
-                                    pointsy.append(count)
-                                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                                else:
-                                    x1.append(t1)
-                                    x2.append(t2)
-                                    y.append(count)
-
-                                    col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(json.loads(bm_json)[0]) % len(BEHAVIORS_PLOT_COLORS)])
-
-                                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                            count += 1
-                        else:
-                            x1.append(0)
-                            x2.append(0)
-                            y.append(count)
-                            col.append("white")
-                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                            count += 1
-
-                    '''
-                    else:
-                        if not excludeBehaviorsWithoutEvents:
-                            x1.append(0)
-                            x2.append(0)
-                            y.append(count)
-                            col.append("white")
-                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                            count += 1
-                    '''
-
-                    col_count += 1
-
-                if self.timeFormat == HHMMSS:
-                    ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p / 3600),
-                                                                       int((p - int(p / 3600) * 3600) / 60),
-                                                                       int(p % 60), round(round(p % 1, 3) * 1e6))
-                                                    for p in x1]),
-                    np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600) / 60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in x2]),
-                    lw=LINE_WIDTH, color=col)
-
-                if self.timeFormat == S:
-                    ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
-
-                if self.timeFormat == HHMMSS:
-                    ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600)/60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in pointsx]), pointsy, "r^")
-
-                if self.timeFormat == S:
-                    ax.plot(pointsx, pointsy, "r^")
-
-                #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
-
-            def on_draw(event):
-
-                # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
-                bboxes = []
-                for label in labels:
-                    bbox = label.get_window_extent()
-                    bboxi = bbox.inverse_transformed(fig.transFigure)
-                    bboxes.append(bboxi)
-
-                bbox = mtransforms.Bbox.union(bboxes)
-                if fig.subplotpars.left < bbox.width:
-                    fig.subplots_adjust(left=1.1*bbox.width)
-                    fig.canvas.draw()
-                return False
-
-            #fig.canvas.mpl_connect("draw_event", on_draw)
-            plt.show()
-
-            return True
-
-
-        result, selectedObservations = self.selectObservations(SELECT1)
-
-        logging.debug("Selected observations: {0}".format(selectedObservations))
-
-        if not selectedObservations:
-            return
-
-        if not self.pj[OBSERVATIONS][selectedObservations[0]][EVENTS]:
-            QMessageBox.warning(self, programName, "There are no events in the selected observation")
-            return
-
-        for obsId in selectedObservations:
-            if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
-                totalMediaLength = self.observationTotalMediaLength(obsId)
-            else: # LIVE
-                if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                else:
-                    totalMediaLength = Decimal("0.0")
-
-        if totalMediaLength == -1:
-            totalMediaLength = 0
-
-        logging.debug("totalMediaLength: {0}".format(totalMediaLength))
-
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, totalMediaLength)
-
-        logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
-
-        totalMediaLength = int(totalMediaLength)
-
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
-            QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
-            return
-
-        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-
-        o = {}
-
-        for subject in plot_parameters["selected subjects"]:
-
-            o[subject] = {}
-
-            for behavior in plot_parameters["selected behaviors"]:
-
-                if plot_parameters["include modifiers"]:
-
-                    cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
-                    distinct_modifiers = list(cursor.fetchall())
-
-                    for modifier in distinct_modifiers:
-                        
-                        print("modifier", modifier[0])
-                        
-                        cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
-                                      (subject, behavior, modifier[0]))
-
-                        rows = cursor.fetchall()
-                        print("rows",list(rows))
-
-                        if modifier[0]:
-                            #behaviorOut = [behavior, modifier[0].replace("|", ",")]
-                            behaviorOut = [behavior, modifier[0]]
-                        else:
-                            behaviorOut = [behavior]
-
-                        behaviorOut_json = json.dumps(behaviorOut)
-
-                        if not behaviorOut_json in o[subject]:
-                            o[subject][behaviorOut_json] = []
-
-                        for idx, row in enumerate(rows):
-                            if POINT in self.eventType(behavior).upper():
-                                o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
-
-                            if STATE in self.eventType(behavior).upper():
-                                if idx % 2 == 0:
-                                    try:
-                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
-                                    except:
-                                        if NO_FOCAL_SUBJECT in subject:
-                                            sbj = ""
-                                        else:
-                                            sbj = "for subject <b>{0}</b>".format(subject)
-                                        QMessageBox.critical(self, programName,
-                                            "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
-
-                else:  # do not include modifiers
-
-                    cursor.execute("SELECT occurence FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence",
-                                  (subject, behavior))
-                    rows = list(cursor.fetchall())
-
-                    if not len(rows) and plot_parameters["exclude behaviors"]:
-                        continue
-
-                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:
-                        continue
-
-                    behaviorOut = [behavior]
-                    behaviorOut_json = json.dumps(behaviorOut)
-
-                    if not behaviorOut_json in o[subject]:
-                        o[subject][behaviorOut_json] = []
-
-                    for idx, row in enumerate(rows):
-                        if POINT in self.eventType(behavior).upper():
-                            o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
-                        if STATE in self.eventType(behavior).upper():
-                            if idx % 2 == 0:
-                                o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
-
-        logging.debug("intervals: {}".format(o))
-        logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
-        logging.debug("excludeBehaviorsWithoutEvents: {}".format(plot_parameters["exclude behaviors"]))
-
-        print("o", o)
-
-        if not plot_time_ranges(o,
-                                selectedObservations[0],
-                                plot_parameters["start time"],
-                                plot_parameters["end time"],
-                                plot_parameters["exclude behaviors"],
-                                line_width=10):
-            QMessageBox.warning(self, programName, "Check events")
-
-    def plot_events1_triggered(self):
-        """
-        plot events with matplotlib
-        """
-
-        def plot_time_ranges(obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
-            """
-            create "hlines" matplotlib plot
-            """
-
-            import matplotlib.pyplot as plt
-            import matplotlib.transforms as mtransforms
-            from matplotlib import dates
-
-            LINE_WIDTH = line_width
-            all_behaviors, observedBehaviors = [], []
-            maxTime = 0  # max time in all events of all subjects
-
-            # all behaviors defined in project without modifiers
-            all_project_behaviors = [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])]
-            all_project_subjects = [NO_FOCAL_SUBJECT] + [self.pj[SUBJECTS][idx]["name"] for idx in sorted_keys(self.pj[SUBJECTS])]
-
-            for subject in obs.keys():
-
-                for behavior_modifiers_json in obs[subject].keys():
-
-                    behavior_modifiers = json.loads(behavior_modifiers_json)
-
-                    if not excludeBehaviorsWithoutEvents:
-                        observedBehaviors.append(behavior_modifiers_json)
-                    else:
-                        if obs[subject][behavior_modifiers_json]:
-                            observedBehaviors.append(behavior_modifiers_json)
-
-                    if not behavior_modifiers_json in all_behaviors:
-                        all_behaviors.append(behavior_modifiers_json)
-
-                    for t1, t2 in obs[subject][behavior_modifiers_json]:
-                        maxTime = max(maxTime, t1, t2)
-
-                observedBehaviors.append("")
-
-            all_behaviors2 = [json.loads(x)[0] for x in all_behaviors]
-            all_behaviors = ['["{}"]'.format(x) for x in all_project_behaviors if x in all_behaviors2]
-
-            lbl = []
-            if excludeBehaviorsWithoutEvents:
-                for behav_modif_json in observedBehaviors:
-                    behav_modif = json.loads(behav_modif_json)
-                    if len(behav_modif) == 2:
-                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
-                    else:
-                        lbl.append(behav_modif[0])
-
-            else:
-                all_behaviors.append('[""]') # empty json list element
-                for behav_modif_json in all_behaviors:
-                    behav_modif = json.loads(behav_modif_json)
-                    if len(behav_modif) == 2:
-                        lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
-                    else:
-                        lbl.append(behav_modif[0])
-                lbl = lbl[:] * len(obs)
-
-
-            lbl = lbl[:-1]  # remove last empty line
-
-            fig = plt.figure(figsize=(20, 10))
-            fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
-            ax = fig.add_subplot(111)
-            labels = ax.set_yticklabels(lbl)
-
-            ax.set_ylabel("Behaviors")
-
-            if self.timeFormat == HHMMSS:
-                fmtr = dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
-                ax.xaxis.set_major_formatter(fmtr)
-                ax.set_xlabel("Time (hh:mm:ss)")
-            else:
-                ax.set_xlabel("Time (s)")
-
-            plt.ylim(len(lbl), -0.5)
-
-            if not videoLength:
-                videoLength = maxTime
-
-            if self.pj[OBSERVATIONS][obsId]["time offset"]:
-                t0 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + minTime)
-                t1 = round(self.pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
-            else:
-                t0 = round(minTime)
-                t1 = round(videoLength)
-            subjectPosition = t0 + (t1 - t0) * 0.05
-
-            if self.timeFormat == HHMMSS:
-                t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600) / 60), int(t0 % 60), round(round(t0 % 1, 3) * 1000000))
-                t1d = datetime.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600) / 60), int(t1 % 60), round(round(t1 % 1, 3) * 1000000))
-                subjectPositiond = datetime.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600) / 60), int(subjectPosition % 60), round(round(subjectPosition % 1, 3) * 1000000))
-
-            if self.timeFormat == S:
-                t0d, t1d = t0, t1
-                subjectPositiond = subjectPosition
-
-            plt.xlim(t0d, t1d)
-            plt.yticks(range(len(lbl) + 1), np.array(lbl))
-
-            count = 0
-            flagFirstSubject = True
-
-            for subject in all_project_subjects:
-                if subject not in obs.keys():
                     continue
 
                 if not flagFirstSubject:
@@ -5720,8 +5397,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         result, selectedObservations = self.selectObservations(SELECT1)
 
-        logging.debug("Selected observations: {0}".format(selectedObservations))
-
         if not selectedObservations:
             return
 
@@ -5741,11 +5416,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if totalMediaLength == -1:
             totalMediaLength = 0
 
-        logging.debug("totalMediaLength: {0}".format(totalMediaLength))
-
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, totalMediaLength)
-
-        logging.debug("totalMediaLength: {0} s".format(totalMediaLength))
 
         totalMediaLength = int(totalMediaLength)
 
@@ -5827,6 +5498,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
         logging.debug("excludeBehaviorsWithoutEvents: {}".format(plot_parameters["exclude behaviors"]))
 
+        print("o",o)
+
         if not plot_time_ranges(o,
                                 selectedObservations[0],
                                 plot_parameters["start time"],
@@ -5846,6 +5519,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not selectedObservations:
             return
+
+        # check if state events are paired
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            if not self.check_state_events_obs(obsId)[0]:
+                not_paired_obs_list.append(obsId)
+
+        if not_paired_obs_list:
+            QMessageBox.critical(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
+        
+        selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
+        if not selectedObservations:
+            return
+
 
         # check if almost one selected observation has events
         flag_no_events = True
@@ -5872,7 +5559,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             max_media_length = max(max_media_length, totalMediaLength)
 
-
         if len(selectedObservations) == 1:
             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=totalMediaLength)
         else:
@@ -5881,7 +5567,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
-
 
         if len(selectedObservations) > 1:
             plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save events' plots",
@@ -5902,14 +5587,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
-        not_paired_obs_list = []
         for obsId in selectedObservations:
             
-            
-            if not self.check_state_events_obs(obsId)[0]:
-                not_paired_obs_list.append(obsId)
-                continue
-
             o = {}
     
             for subject in plot_parameters["selected subjects"]:
@@ -5947,16 +5626,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     o[subject][behaviorOut_json].append([row[0], row[0]])  # for point event start = end
     
                                 if STATE in self.eventType(behavior).upper():
-                                    if idx % 2 == 0:
+                                    if idx % 2 == 0:  # only 1 occurence of 2
                                         try:
                                             o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
                                         except:
-                                            if NO_FOCAL_SUBJECT in subject:
-                                                sbj = ""
-                                            else:
-                                                sbj = "for subject <b>{0}</b>".format(subject)
-                                            QMessageBox.critical(self, programName,
-                                                "The STATE behavior <b>{0}</b> is not paired {1}".format(behaviorOut, sbj))
+                                            QMessageBox.critical(self, programName, "Error on observation <b>{}</b>".format(obsId))
     
                     else:  # do not include modifiers
     
@@ -5981,26 +5655,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 o[subject][behaviorOut_json].append([row[0], row[0]])   # for point event start = end
 
                             if STATE in self.eventType(behavior).upper():
-                                if idx % 2 == 0:
-                                    o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+                                if idx % 2 == 0:  # only 1 occurence of 2
+                                    try:
+                                        o[subject][behaviorOut_json].append([row[0], rows[idx + 1][0]])
+                                    except:
+                                        QMessageBox.critical(self, programName, "Error on observation <b>{}</b>".format(obsId))
+                                    
 
+            print("o",o)
 
-
-
-            print("o", o)
             if len(selectedObservations) == 1:
-                plot_events.create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
-                                            min_t=float(plot_parameters["start time"]),
-                                            max_t=float(plot_parameters["end time"]))
+                ret = plot_events.create_events_plot2(o,
+                                                      all_behaviors=[self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                                                      all_subjects=[NO_FOCAL_SUBJECT] + [self.pj[SUBJECTS][idx]["name"] for idx in sorted_keys(self.pj[SUBJECTS])],
+                                                      exclude_behaviors_wo_events=plot_parameters["exclude behaviors"],
+                                                      min_t=float(plot_parameters["start time"]),
+                                                      max_t=float(plot_parameters["end time"]))
             else:
-                plot_events.create_events_plot2(o, [self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
-                                            #min_t=float(plot_parameters["start time"]),
-                                            #max_t=float(plot_parameters["end time"]),
-                                            output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
-                                                                                                             obsId=obsId,
-                                                                                                             file_format=file_format))
-             
-
+                ret = plot_events.create_events_plot2(o,
+                                                      all_behaviors=[self.pj[ETHOGRAM][idx]["code"] for idx in sorted_keys(self.pj[ETHOGRAM])],
+                                                      all_subjects=[NO_FOCAL_SUBJECT] + [self.pj[SUBJECTS][idx]["name"] for idx in sorted_keys(self.pj[SUBJECTS])],
+                                                      exclude_behaviors_wo_events=plot_parameters["exclude behaviors"],
+                                                      #min_t=float(plot_parameters["start time"]),
+                                                      #max_t=float(plot_parameters["end time"]),
+                                                      output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
+                                                                                                                       obsId=obsId,
+                                                                                                                       file_format=file_format))
+            if ret["error code"]:
+                QMessageBox.critical(self, programName, ret["msg"])
 
 
     def convert_time_to_decimal(self, pj):
@@ -10206,6 +9888,7 @@ self.mediaplayer.video_get_aspect_ratio(),
             app.focusWidget().installEventFilter(self)
         '''
 
+
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
@@ -10250,7 +9933,7 @@ if __name__ == "__main__":
     # check matplotlib
     if not FLAG_MATPLOTLIB_INSTALLED:
         QMessageBox.warning(None, programName,
-                            ("""Some functions (plot events and spectrogram) require the Matplotlib module."""
+                            ("Some functions (plot events and spectrogram) require the Matplotlib module."
                              """<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>"""),
                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
