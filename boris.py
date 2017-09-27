@@ -72,6 +72,7 @@ from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
 import plot_events
+import project_functions
 
 
 __version__ = "4.2"
@@ -4344,25 +4345,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return cursor
 
 
-    def extract_observed_subjects(self, selected_observations):
-        """
-        extract unique subjects from obs_id observation
-        """
-
-        observed_subjects = []
-
-        # extract events from selected observations
-        all_events = [self.pj[OBSERVATIONS][x][EVENTS] for x in self.pj[OBSERVATIONS] if x in selected_observations]
-        for events in all_events:
-            for event in events:
-                observed_subjects.append(event[pj_obs_fields['subject']])
-
-        # remove duplicate
-        observed_subjects = list(set(observed_subjects))
-
-        return observed_subjects
-
-
     def extract_observed_behaviors(self, selected_observations, selectedSubjects):
         """
         extract unique behaviors codes from obs_id observation
@@ -4454,7 +4436,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # extract subjects present in observations
-        observedSubjects = self.extract_observed_subjects(selectedObservations)
+        '''observedSubjects = self.extract_observed_subjects(selectedObservations)'''
+        
+        observedSubjects = project_functions.extract_observed_subjects(self.pj, selectedObservations)
+        
         selectedSubjects = []
 
         # add 'No focal subject'
@@ -5119,61 +5104,70 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def observationTotalMediaLength(self, obsId):
         """
-        total media length for observation
+        total length for observation
         if media length not available return 0
 
-        return total media length in s (Decimal type)
+        return total length in s (Decimal type)
         """
 
-        totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
+        if self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
+            if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+            else:
+                totalMediaLength = Decimal("0.0")
+            return totalMediaLength
 
-        for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-            mediaLength = 0
-            try:
-                mediaLength = self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
-            except:
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
-                if "media_info" not in self.pj[OBSERVATIONS][obsId]:
-                    self.pj[OBSERVATIONS][obsId]["media_info"] = {"length": {}, "fps": {}}
-                    if "length" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
-                        self.pj[OBSERVATIONS][obsId]["media_info"]["length"] = {}
-                    if "fps" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
-                        self.pj[OBSERVATIONS][obsId]["media_info"]["fps"] = {}
+        if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
+            totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
 
-                self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile] = videoDuration
-                self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile] = fps
+            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
+                mediaLength = 0
+                try:
+                    mediaLength = self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
+                except:
+                    nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                    if "media_info" not in self.pj[OBSERVATIONS][obsId]:
+                        self.pj[OBSERVATIONS][obsId]["media_info"] = {"length": {}, "fps": {}}
+                        if "length" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
+                            self.pj[OBSERVATIONS][obsId]["media_info"]["length"] = {}
+                        if "fps" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
+                            self.pj[OBSERVATIONS][obsId]["media_info"]["fps"] = {}
 
-                mediaLength = videoDuration
+                    self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile] = videoDuration
+                    self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile] = fps
 
-            totalMediaLength1 += Decimal(mediaLength)
+                    mediaLength = videoDuration
 
-        for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:
-            mediaLength = 0
-            try:
-                mediaLength = self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
-            except:
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
-                if "media_info" not in self.pj[OBSERVATIONS][obsId]:
-                    self.pj[OBSERVATIONS][obsId]["media_info"] = {"length": {}, "fps": {}}
-                    if "length" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
-                        self.pj[OBSERVATIONS][obsId]["media_info"]["length"] = {}
-                    if "fps" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
-                        self.pj[OBSERVATIONS][obsId]["media_info"]["fps"] = {}
+                totalMediaLength1 += Decimal(mediaLength)
 
-                self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile] = videoDuration
-                self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile] = fps
+            for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER2]:
+                mediaLength = 0
+                try:
+                    mediaLength = self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
+                except:
+                    nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                    if "media_info" not in self.pj[OBSERVATIONS][obsId]:
+                        self.pj[OBSERVATIONS][obsId]["media_info"] = {"length": {}, "fps": {}}
+                        if "length" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
+                            self.pj[OBSERVATIONS][obsId]["media_info"]["length"] = {}
+                        if "fps" not in self.pj[OBSERVATIONS][obsId]["media_info"]:
+                            self.pj[OBSERVATIONS][obsId]["media_info"]["fps"] = {}
 
-                mediaLength = videoDuration
+                    self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile] = videoDuration
+                    self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile] = fps
 
-            totalMediaLength2 += Decimal(mediaLength)
+                    mediaLength = videoDuration
 
-        if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
-            totalMediaLength = -1
-        else:
-            totalMediaLength = max(totalMediaLength1, totalMediaLength2)
+                totalMediaLength2 += Decimal(mediaLength)
 
-        return totalMediaLength
+            if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
+                totalMediaLength = -1
+            else:
+                totalMediaLength = max(totalMediaLength1, totalMediaLength2)
 
+            return totalMediaLength
+
+        return Decimal("0.0")
 
     
 
@@ -5548,7 +5542,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
-            else: # LIVE
+            elif self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
                 if self.pj[OBSERVATIONS][obsId][EVENTS]:
                     totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 else:
@@ -5661,8 +5655,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     except:
                                         QMessageBox.critical(self, programName, "Error on observation <b>{}</b>".format(obsId))
                                     
-
-            print("o",o)
 
             if len(selectedObservations) == 1:
                 ret = plot_events.create_events_plot2(o,
