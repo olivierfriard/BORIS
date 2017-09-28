@@ -66,16 +66,16 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
     clickSignal = pyqtSignal(list)  # click signal to be sent to mainwindow
     keypressSignal = pyqtSignal(QEvent)
+    close_signal = pyqtSignal(int)
 
-    def __init__(self, behaviors_coding_map):
+    def __init__(self, behaviors_coding_map, idx):
         super(BehaviorsCodingMapWindowClass, self).__init__()
         
         self.installEventFilter(self)
 
         self.codingMap = behaviors_coding_map
-        
-        print(self.codingMap.keys())
-        
+        self.idx = idx
+       
         self.setWindowTitle("Behaviors coding map: {}".format(self.codingMap["name"]))
         Vlayout = QVBoxLayout(self)
 
@@ -110,6 +110,14 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         self.loadMap()
 
+    def closeEvent(self, event):
+
+        self.close_signal.emit(self.idx)
+
+        #event.accept()
+
+
+
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
@@ -129,25 +137,19 @@ class BehaviorsCodingMapWindowClass(QWidget):
         test = self.view.mapToScene(event.pos()).toPoint()
 
         to_be_sent = []
+        
+        print("test", test)
 
         for areaCode, pg in self.polygonsList2:
+            
+            print("areaCode, pg", areaCode, pg)
+            
             if pg.contains(test):
                 to_be_sent.append(areaCode)
+                self.clickSignal.emit(to_be_sent)
 
-        if to_be_sent:
-            self.clickSignal.emit(to_be_sent)
-
-        '''
-        for code in self.polygonsList2:
-            if self.polygonsList2[ code ].contains(test):
-                self.clickSignal.emit(code)
-        '''
-
-
-    '''
-    def getCodes(self):
-        return self.leareaCode.text()
-    '''
+        #if to_be_sent:
+        #    self.clickSignal.emit(to_be_sent)
 
 
     def loadMap(self):

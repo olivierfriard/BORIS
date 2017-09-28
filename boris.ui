@@ -165,8 +165,6 @@
     <addaction name="actionExportEventString"/>
     <addaction name="actionExport_events_as_Praat_TextGrid"/>
     <addaction name="separator"/>
-    <addaction name="actionIRR"/>
-    <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionExtract_events_from_media_files"/>
     <addaction name="separator"/>
@@ -183,9 +181,16 @@
      <addaction name="actionPlot_events1"/>
      <addaction name="actionPlot_events2"/>
     </widget>
+    <widget class="QMenu" name="menuInter_rater_reliability">
+     <property name="title">
+      <string>Inter-rater reliability</string>
+     </property>
+     <addaction name="actionCohen_s_kappa"/>
+    </widget>
     <addaction name="actionTime_budget"/>
     <addaction name="actionTime_budget_by_behaviors_category"/>
     <addaction name="menuPlot_events"/>
+    <addaction name="menuInter_rater_reliability"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1079,11 +1084,6 @@
     <string>View behavior</string>
    </property>
   </action>
-  <action name="actionIRR">
-   <property name="text">
-    <string>IRR</string>
-   </property>
-  </action>
   <action name="actionBehaviors_coding_map">
    <property name="text">
     <string>Behaviors coding map</string>
@@ -1107,6 +1107,11 @@
   <action name="actionPlot_events2">
    <property name="text">
     <string>Plot events</string>
+   </property>
+  </action>
+  <action name="actionCohen_s_kappa">
+   <property name="text">
+    <string>Cohen's kappa</string>
    </property>
   </action>
  </widget>

@@ -61,30 +61,36 @@ def intersection(A, B, C, D):
     xc, yc = Dec(str(C[0])), Dec(str(C[1]))
     xd, yd = Dec(str(D[0])), Dec(str(D[1]))
 
+    print("xa,xb,xc,xd", xa,xb,xc,xd)
+
     # check if first segment is vertical
-    if xa == xb:
-        slope = (yc - yd) / (xc - xd)
-        intersept = yc - slope * xc
-        xm = xa
-        ym = slope * xm + intersept
+    try:
+        if xa == xb:
+            slope = (yc - yd) / (xc - xd)
+            intersept = yc - slope * xc
+            xm = xa
+            ym = slope * xm + intersept
+    
+        # check if second segment is vertical
+        elif xc == xd:
+            slope = (ya - yb) / (xa - xb)
+            intersept = ya - slope * xa
+            xm = xc
+            ym = slope * xm + intersept
+        else:
+            # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
+            xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
+            ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
+    
+        xmin1, xmax1 = min(xa, xb), max(xa, xb)
+        xmin2, xmax2 = min(xc, xd), max(xc, xd)
+        ymin1, ymax1 = min(ya, yb), max(ya, yb)
+        ymin2, ymax2 = min(yc, yd), max(yc, yd)
+    
+        return (xm >= xmin1 and xm <= xmax1 and xm >= xmin2 and xm <= xmax2 and ym >= ymin1 and ym <= ymax1 and ym >= ymin2 and ym <= ymax2)
 
-    # check if second segment is vertical
-    elif xc == xd:
-        slope = (ya - yb) / (xa - xb)
-        intersept = ya - slope * xa
-        xm = xc
-        ym = slope * xm + intersept
-    else:
-        # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
-        xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
-        ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc) / (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
-
-    xmin1, xmax1 = min(xa, xb), max(xa, xb)
-    xmin2, xmax2 = min(xc, xd), max(xc, xd)
-    ymin1, ymax1 = min(ya, yb), max(ya, yb)
-    ymin2, ymax2 = min(yc, yd), max(yc, yd)
-
-    return (xm >= xmin1 and xm <= xmax1 and xm >= xmin2 and xm <= xmax2 and ym >= ymin1 and ym <= ymax1 and ym >= ymin2 and ym <= ymax2)
+    except: # for cases xa=xb=xc=xd
+        return True
 
 
 class BehaviorsMapCreatorWindow(QMainWindow):
@@ -863,6 +869,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.closedPolygon = None
 
         # remove all lines
+        print("self.view.elList", self.view.elList)
         for l in self.view.elList:
             self.view.scene().removeItem(l)
 

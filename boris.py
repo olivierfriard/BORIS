@@ -406,6 +406,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     cleaningThread = TempDirCleanerThread()
 
+    bcm_list = []
+
+
     def __init__(self, availablePlayers, ffmpeg_bin, parent=None):
 
         super(MainWindow, self).__init__(parent)
@@ -578,7 +581,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionEdit_observation_2.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled(self.pj[OBSERVATIONS] != {})
 
-        self.actionIRR.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionCohen_s_kappa.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # enabled if observation
         flagObs = self.observationId != ""
@@ -732,7 +735,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
-        self.actionIRR.triggered.connect(self.irr)
+        self.actionCohen_s_kappa.triggered.connect(self.irr_cohen_kappa)
 
         self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
         self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
@@ -887,7 +890,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
-    def irr(self):
+    def irr_cohen_kappa(self):
         """
         calculate the Inter-rater Reliability index - Cohen's Kappa of 2 observations
         https://en.wikipedia.org/wiki/Cohen%27s_kappa
@@ -5213,16 +5216,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 observedBehaviors.append("")
 
-            '''
-            all_behaviors2 = [json.loads(x)[0] for x in all_behaviors]
-            
-            print("all_behaviors2", all_behaviors2)
-            
-            all_behaviors = ['["{}"]'.format(x) for x in all_project_behaviors if x in all_behaviors2]
-            
-            print("all_behaviors", all_behaviors)
-            '''
-
             lbl = []
             if excludeBehaviorsWithoutEvents:
                 for behav_modif_json in observedBehaviors:
@@ -5240,8 +5233,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 all_behaviors.append('[""]') # empty json list element
                 for behav_modif_json in all_behaviors:
-                    
-                    print("behav_modif_json", behav_modif_json)
                     
                     behav_modif = json.loads(behav_modif_json)
                     if len(behav_modif) == 2:
@@ -5399,6 +5390,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         for obsId in selectedObservations:
+            totalMediaLength = self.observationTotalMediaLength(obsId)
+            '''
             if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
             else: # LIVE
@@ -5406,6 +5399,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
+            '''
 
         if totalMediaLength == -1:
             totalMediaLength = 0
@@ -5540,6 +5534,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         max_media_length = -1
         for obsId in selectedObservations:
+            totalMediaLength = self.observationTotalMediaLength(obsId)
+            '''
             if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
             elif self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
@@ -5547,6 +5543,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
+            '''
 
             if totalMediaLength == -1:
                 totalMediaLength = 0
@@ -7652,14 +7649,27 @@ self.mediaplayer.video_get_aspect_ratio(),
         """
         self.keyPressEvent(event)
 
+    def close_behaviors_coding_map(self, idx):
+        
+        if hasattr(self, "bcm"):
+            print("del bcm")
+            self.bcm.deleteLater()
+            del self.bcm
+            
+        #del self.bcm_list[idx]
+
     def show_behaviors_coding_map(self):
         """
         show a behavior coding map
         """
         
+        '''
         if hasattr(self, "bcm"):
             print("show already existing bcm")
             self.bcm.show()
+            return
+        '''
+        #print(self.bcm_list)
 
         if "behaviors_coding_map" not in self.pj or not self.pj["behaviors_coding_map"]:
             QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
@@ -7675,16 +7685,29 @@ self.mediaplayer.video_get_aspect_ratio(),
             else:
                 return
         
+        '''
         self.bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)])
         self.bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
         self.bcm.keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)
+        self.bcm.close_signal.connect(self.close_behaviors_coding_map)
         self.bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
+        self.bcm.show()
+        '''
+
         '''
         if self.codingMapWindowGeometry:
              self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
         '''
-        
-        self.bcm.show()
+        bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)], len(self.bcm_list))
+        bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
+        bcm.keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)
+        bcm.close_signal.connect(self.close_behaviors_coding_map)
+        bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
+
+        self.bcm_list.append(bcm)
+        self.bcm_list[-1].show()
+
+
 
 
     def actionAbout_activated(self):
