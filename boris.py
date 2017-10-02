@@ -45,6 +45,31 @@ import datetime
 import multiprocessing
 import socket
 import copy
+
+try:
+    from PyQt5.QtCore import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWidgets import *
+    from boris_ui5 import *
+except:
+    logging.info("PyQt5 not installed!\nTrying with PyQt4")
+    try:
+        from PyQt4.QtCore import *
+        from PyQt4.QtGui import *
+        from boris_ui import *
+
+    except:
+        logging.critical("PyQt4 not installed!\nTry PyQt4")
+        sys.exit()
+
+
+import matplotlib
+
+if QT_VERSION_STR[0] == "4":
+    matplotlib.use("Qt4Agg")
+else:
+    matplotlib.use("Qt5Agg")
+
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 from matplotlib import dates
@@ -109,31 +134,18 @@ if platform.python_version() < "3.4":
     logging.critical("BORIS requires Python 3.4+! You are using v. {}")
     sys.exit()
 
-try:
-    from PyQt5.QtCore import *
-    from PyQt5.QtGui import *
-    from PyQt5.QtWidgets import *
-    from boris_ui5 import *
-except:
-    logging.info("PyQt5 not installed!\nTrying with PyQt4")
-    try:
-        from PyQt4.QtCore import *
-        from PyQt4.QtGui import *
-        from boris_ui import *
 
-    except:
-        logging.critical("PyQt4 not installed!\nTry PyQt4")
-        sys.exit()
+
 
 video, live = 0, 1
-
+'''
 try:
     import matplotlib
     FLAG_MATPLOTLIB_INSTALLED = True
 except:
     logging.warning("matplotlib plotting library not installed")
     FLAG_MATPLOTLIB_INSTALLED = False
-
+'''
 FLAG_MATPLOTLIB_INSTALLED = True
 
 

@@ -133,10 +133,10 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
             out, error = p.communicate()
             out, error = out.decode("utf-8"), error.decode("utf-8")
 
-            if not out:
+            if "does not contain any stream" not in error:
                 return wavTmpPath
             else:
-                return None
+                return ""
 
 
     def get_wav_info(wav_file):
@@ -148,7 +148,12 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
         wav.close()
         return sound_info, frame_rate
 
-    matplotlib.use("Agg")
+
+    if QT_VERSION_STR[0] == "4":
+        matplotlib.use("Qt4Agg")
+    else:
+        matplotlib.use("Qt5Agg")
+
     import pylab # do not move. It is important that this line is after the previous one
 
     fileName1stChunk = ""
