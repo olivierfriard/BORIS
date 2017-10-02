@@ -75,8 +75,8 @@ import plot_events
 import project_functions
 
 
-__version__ = "4.2"
-__version_date__ = "2017-09"
+__version__ = "4.1.11"
+__version_date__ = "2017-10-01"
 
 # BITMAP_EXT = "jpg"
 
@@ -406,7 +406,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     cleaningThread = TempDirCleanerThread()
 
-    bcm_list = []
+    bcm_dict = {}
 
 
     def __init__(self, availablePlayers, ffmpeg_bin, parent=None):
@@ -750,7 +750,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
         
         # TODO: remove when behavaiors coding map ready
-        # self.action_create_behaviors_coding_map.setVisible(False)
+        self.action_create_behaviors_coding_map.setVisible(False)
         
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
@@ -758,7 +758,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
         
         # TODO: remove when behav coding map ready
-        #self.actionBehaviors_coding_map.setVisible(False)
+        self.actionBehaviors_coding_map.setVisible(False)
         
         
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
@@ -1323,11 +1323,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
         self.keyPressEvent(q)
 
+
     def signal_from_coding_pad(self, event):
         """
         receive signal from coding pad map
         """
         self.keyPressEvent(event)
+
 
     def show_coding_pad(self):
         """
@@ -1346,11 +1348,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
             self.codingpad.show()
 
+
     def show_all_behaviors(self):
         """
         show all behaviors in ethogram
         """
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+
 
     def show_all_subjects(self):
         """
@@ -6041,7 +6045,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
         # TODO: remove when behav coding map ready
-        # newProjectWindow.tabProject.setTabEnabled(5, False) 
+        newProjectWindow.tabProject.setTabEnabled(5, False) 
 
 
         # pass copy of self.pj
@@ -7622,14 +7626,15 @@ self.mediaplayer.video_get_aspect_ratio(),
             QDesktopServices.openUrl(QUrl("http://boris.readthedocs.org"))
 
 
-    def click_signal_from_behaviors_coding_map(self, behavior_codes_list):
+    def click_signal_from_behaviors_coding_map(self, bcm_name, behavior_codes_list):
         """
         handle click signal from BehaviorsCodingMapWindowClass widget
         """
 
         #sendEventSignal = pyqtSignal(QEvent)
-        
-        print("behavior_codes_list", behavior_codes_list)
+        print("sender", self.sender())
+        print("bcm_name", bcm_name )
+        print("behavior_codes_list", bcm_name, behavior_codes_list)
         
         for code in behavior_codes_list:
             try:
@@ -7638,7 +7643,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                 QMessageBox.critical(self, programName, "The code <b>{}</b> of behavior coding map do not exists in ethogram.".format(code))
                 return
 
-            print("behavior_idx",behavior_idx)
             event = self.full_event(behavior_idx)
             self.writeEvent(event, self.getLaps())
 
@@ -7652,16 +7656,24 @@ self.mediaplayer.video_get_aspect_ratio(),
     def close_behaviors_coding_map(self, idx):
         
         if hasattr(self, "bcm"):
+            '''
             print("del bcm")
-            self.bcm.deleteLater()
-            del self.bcm
-            
-        #del self.bcm_list[idx]
 
+            self.bcm.clickSignal.disconnect()
+            self.bcm.keypressSignal.disconnect()
+            self.bcm.close_signal.disconnect()
+            
+            self.bcm.deleteLater()
+            #del self.bcm
+            '''
+            
+            print('hasattr(self, "bcm")', hasattr(self, "bcm"))
+            
     def show_behaviors_coding_map(self):
         """
         show a behavior coding map
         """
+        
         
         '''
         if hasattr(self, "bcm"):
@@ -7669,6 +7681,7 @@ self.mediaplayer.video_get_aspect_ratio(),
             self.bcm.show()
             return
         '''
+
         #print(self.bcm_list)
 
         if "behaviors_coding_map" not in self.pj or not self.pj["behaviors_coding_map"]:
@@ -7679,11 +7692,29 @@ self.mediaplayer.video_get_aspect_ratio(),
         if len(items) == 1:
             coding_map_name = items[0]
         else:
-            item, ok = QInputDialog.getItem(self, "select a coding map", "list of coding maps", items, 0, False)
+            item, ok = QInputDialog.getItem(self, "Select a coding map", "list of coding maps", items, 0, False)
             if ok and item:
                 coding_map_name = item
             else:
                 return
+        
+        if coding_map_name in self.bcm_dict:
+            self.bcm_dict[coding_map_name].show()
+        else:
+            self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)])
+            
+            self.bcm_dict[coding_map_name + "sig1"] = self.click_signal_from_behaviors_coding_map
+            self.bcm_dict[coding_map_name].clickSignal.connect(self.bcm_dict[coding_map_name + "sig1"])
+
+            '''self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)'''
+            
+            
+            '''self.bcm_dict[coding_map_name].keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)'''
+
+            #self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
+            self.bcm_dict[coding_map_name].resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
+            self.bcm_dict[coding_map_name].show()
+
         
         '''
         self.bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)])
@@ -7693,10 +7724,8 @@ self.mediaplayer.video_get_aspect_ratio(),
         self.bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
         self.bcm.show()
         '''
-
-        '''
-        if self.codingMapWindowGeometry:
-             self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
+       
+        
         '''
         bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)], len(self.bcm_list))
         bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
@@ -7706,6 +7735,7 @@ self.mediaplayer.video_get_aspect_ratio(),
 
         self.bcm_list.append(bcm)
         self.bcm_list[-1].show()
+        '''
 
 
 
@@ -7731,9 +7761,11 @@ self.mediaplayer.video_get_aspect_ratio(),
             ffmpeg_true_path = self.ffmpeg_bin
         players.append("Path: {}".format(ffmpeg_true_path))
         
+        # matplotlib
         players.append("\nMatplotlib")
         players.append("version {}".format(matplotlib.__version__))
 
+        # graphviz
         gv_result = subprocess.getoutput("dot -V")
         gv_version = gv_result if "graphviz" in gv_result else "not installed"
         players.append("\nGraphViz")

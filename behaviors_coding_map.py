@@ -64,11 +64,11 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
     polygonsList2 = []
 
-    clickSignal = pyqtSignal(list)  # click signal to be sent to mainwindow
+    clickSignal = pyqtSignal(str, list)  # click signal to be sent to mainwindow
     keypressSignal = pyqtSignal(QEvent)
-    close_signal = pyqtSignal(int)
+    #close_signal = pyqtSignal(int)
 
-    def __init__(self, behaviors_coding_map, idx):
+    def __init__(self, behaviors_coding_map, idx=0):
         super(BehaviorsCodingMapWindowClass, self).__init__()
         
         self.installEventFilter(self)
@@ -77,7 +77,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.idx = idx
        
         self.setWindowTitle("Behaviors coding map: {}".format(self.codingMap["name"]))
-        Vlayout = QVBoxLayout(self)
+        Vlayout = QVBoxLayout()
 
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
@@ -88,7 +88,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         Vlayout.addWidget(self.view)
         #Vlayout.addWidget(self.leareaCode)
 
-        hBoxLayout = QHBoxLayout(self)
+        hBoxLayout = QHBoxLayout()
 
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hBoxLayout.addItem(spacerItem)
@@ -97,7 +97,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         #hBoxLayout.addWidget(self.pbCancel)
         #self.pbCancel.clicked.connect(self.reject)
 
-        self.btDone = QPushButton("Close", self)
+        self.btDone = QPushButton("Close")
         #self.btDone.clicked.connect(self.accept)
         self.btDone.clicked.connect(self.close)
         self.btDone.setVisible(True)
@@ -112,10 +112,11 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
     def closeEvent(self, event):
 
-        self.close_signal.emit(self.idx)
+        #self.close_signal.emit(self.idx)
 
-        #event.accept()
+        #self.deleteLater()
 
+        event.accept()
 
 
     def eventFilter(self, receiver, event):
@@ -128,7 +129,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
         else:
             return False
 
-
     def viewMousePressEvent(self, event):
         """
         insert clicked areas codes
@@ -137,19 +137,14 @@ class BehaviorsCodingMapWindowClass(QWidget):
         test = self.view.mapToScene(event.pos()).toPoint()
 
         to_be_sent = []
-        
-        print("test", test)
 
         for areaCode, pg in self.polygonsList2:
             
-            print("areaCode, pg", areaCode, pg)
-            
             if pg.contains(test):
                 to_be_sent.append(areaCode)
-                self.clickSignal.emit(to_be_sent)
 
-        #if to_be_sent:
-        #    self.clickSignal.emit(to_be_sent)
+        if to_be_sent:
+            self.clickSignal.emit(self.codingMap["name"], to_be_sent)
 
 
     def loadMap(self):
@@ -158,10 +153,8 @@ class BehaviorsCodingMapWindowClass(QWidget):
         show it in view scene
         """
 
-        bitmapContent = binascii.a2b_base64(self.codingMap['bitmap'])
-
         pixmap = QPixmap()
-        pixmap.loadFromData(bitmapContent)
+        pixmap.loadFromData(binascii.a2b_base64(self.codingMap['bitmap']))
 
         self.view.setSceneRect(0, 0, pixmap.size().width(), pixmap.size().height())
         pixItem = QGraphicsPixmapItem(pixmap)
