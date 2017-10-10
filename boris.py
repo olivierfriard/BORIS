@@ -781,9 +781,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
 
         # menu Analyze
-        self.actionTime_budget.triggered.connect(lambda: self.time_budget_by_category("by_behavior"))
-        self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget_by_category(
-                                                                                                    "by_category"))
+        self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
+        self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -4573,12 +4572,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def time_budget_by_category(self, mode):
+    def time_budget(self, mode):
         """
         time budget (by behavior or category)
+        mode must be in ("by_behavior","by_category")
         """
 
-        def time_budget_analysis_by_category(cursor, plot_parameters, by_category=False):
+        def time_budget_analysis(cursor, plot_parameters, by_category=False):
 
             categories = {}
             out = []
@@ -4857,7 +4857,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for obsId in selectedObservations:
                     if self.pj[OBSERVATIONS][obsId][EVENTS]:
                         maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                logging.debug("max time all events all subjects: {0}".format(maxTime))
+                logging.debug("max time all events all subjects: {}".format(maxTime))
                 selectedObsTotalMediaLength = maxTime
             else:
                 selectedObsTotalMediaLength = 0
@@ -4876,39 +4876,72 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if time_budget window must be used
         if (len(selectedObservations) > 1 and flagGroup) or (len(selectedObservations) == 1):
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            out, categories = time_budget_analysis_by_category(cursor, plot_parameters, by_category=(mode == "by_category"))
+            out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
         else:
 
-            items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)", "Microsoft Excel (*.xls)", "HTML (*.html)")
+            items = ("Tab Separated Values (*.tsv)",
+                     "Comma separated values (*.csv)",
+                     "OpenDocument Spreadsheet (*.ods)",
+                     "OpenDocument Workbook (*.ods)",
+                     "Microsoft Excel Spreadsheet (*.xlsx)",
+                     "Microsoft Excel Workbook (*.xlsx)",
+                     "HTML (*.html)",
+                     "Pandas dataframe (*.df)",
+                     "Legacy Microsoft Excel Spreadsheet (*.xls)")
+
+            formats = ["tsv", "csv", "od spreadsheet", "od workbook", "xlsx spreadsheet", "xlsx workbook", "html", "pd dataframe", "xls legacy"]
+
             item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
             if not ok:
                 return
-            outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
+                
+            outputFormat = formats[items.index(item)]
+            extension = re.sub(".* \(\*\.", "", item)[:-1]
 
             flagWorkBook = False
-            if outputFormat in ["xls", "ods"]:
-                flagWorkBook = dialog.MessageDialog(programName, "Choose the type of file", ["Single sheets", "Workbook"]) == "Workbook"
-                if flagWorkBook:
-                    workbook = tablib.Databook()
-                    if outputFormat == "xls":
-                        filters = "Microsoft Excel XLS (*.xls);;All files (*)"
-                    if outputFormat == "ods":
-                        filters = "Open Document Spreadsheet ODS (*.ods);;All files (*)"
+            
+            if "workbook" in outputFormat:
+                workbook = tablib.Databook()
+                flagWorkBook = True
+                
+                if "xls" in outputFormat:
+                    filters = "Microsoft Excel Workbook (*.xlsx);;All files (*)"
+                if "od" in outputFormat:
+                    filters = "Open Document Workbook (*.ods);;All files (*)"
 
-                    if QT_VERSION_STR[0] == "4":
-                        WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
-                    else:
-                        WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
+                
+                if QT_VERSION_STR[0] == "4":
+                    WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
+                else:
+                    WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
+                if not WBfileName:
+                    print("no file ")
+                    return
 
-                    if not WBfileName:
-                        return
+            
+                '''
+                if outputFormat in ["xls", "ods"]:
+                    flagWorkBook = dialog.MessageDialog(programName, "Choose the type of file", ["Single sheets", "Workbook"]) == "Workbook"
+                    if flagWorkBook:
+                        workbook = tablib.Databook()
+                        if outputFormat == "xls":
+                            filters = "Microsoft Excel XLS (*.xls);;All files (*)"
+                        if outputFormat == "ods":
+                            filters = "Open Document Spreadsheet ODS (*.ods);;All files (*)"
+    
+                        if QT_VERSION_STR[0] == "4":
+                            WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
+                        else:
+                            WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
+    
+                        if not WBfileName:
+                            return
+                '''
 
-
-            if not flagWorkBook:
+            else: # not workbook
                 exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the time budget analysis", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
                 if not exportDir:
                     return
-
 
             if mode == "by_behavior":
                     fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
@@ -4918,7 +4951,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for obsId in selectedObservations:
 
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
-                out, categories = time_budget_analysis_by_category(cursor, plot_parameters, by_category=(mode == "by_category"))
+                out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
                 rows = []
 
@@ -4979,18 +5012,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for row in rows:
                     data.append(complete(row, max([len(r) for r in rows])))
 
+                if "xls" in outputFormat:
+                    for forbidden_char in r"\/*[]:?":
+                        data.title = data.title.replace(forbidden_char, " ")
+                    
+
                 if flagWorkBook:
                     # check data title for worksheet name
                     if len(data.title) > 31:
                         data.title = data.title[:31]
-                    for forbidden_char in r"\/*[]:?":
-                        data.title = data.title.replace(forbidden_char, " ")
-
                     workbook.add_sheet(data)
+
                 else:
 
-                    fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
-
+                    fileName = exportDir + os.sep + safeFileName(obsId) + "." + extension
+                    
                     if outputFormat == "tsv":
                         with open(fileName, "wb") as f:
                             f.write(str.encode(data.tsv))
@@ -4999,15 +5035,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         with open(fileName, "wb") as f:
                             f.write(str.encode(data.csv))
 
-                    if outputFormat == "ods":
+                    if outputFormat == "od spreadsheet":
                         with open(fileName, "wb") as f:
                             f.write(data.ods)
+
+                    if outputFormat == "xlsx spreadsheet":
+                        with open(fileName, "wb") as f:
+                            f.write(data.xlsx)
+
+                    if outputFormat == "pd dataframe":
+                        with open(fileName, "wb") as f:
+                            f.write(str.encode(data.df))
 
                     if outputFormat == "html":
                         with open(fileName, "wb") as f:
                             f.write(str.encode(data.html))
+                       
 
-                    if outputFormat == "xls":
+                    if outputFormat == "xls legacy":
 
                         if len(data.title) > 31:
                             data.title = data.title[:31]
@@ -5015,16 +5060,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                     "The limit on worksheet name length is 31 characters").format(obsId, data.title),
                                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-                        for forbidden_char in r"\/*[]:?":
-                            data.title = data.title.replace(forbidden_char, " ")
                         with open(fileName, "wb") as f:
                             f.write(data.xls)
 
             if flagWorkBook:
-                if outputFormat == "xls":
+                if "xls" in outputFormat:
                     with open(WBfileName, "wb") as f:
                         f.write(workbook.xls)
-                if outputFormat == "ods":
+                if "od" in outputFormat:
                     with open(WBfileName, "wb") as f:
                         f.write(workbook.ods)
             return

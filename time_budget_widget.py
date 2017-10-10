@@ -98,29 +98,31 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
+        formats_str = ("Tab Separated Values (*.txt *.tsv);;"
+                       "Comma Separated Values (*.txt *.csv);;"
+                       "Open Document Spreadsheet ODS (*.ods);;"
+                       "Microsoft Excel Spreadsheet (*.xlsx);;"
+                       "HTML (*.html);;"
+                       "Pandas dataframe (*.df);;"
+                       "Legacy Microsoft Excel Spreadsheet (*.xls);;"
+                       "All files (*)")
+
         while True:
             if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;HTML (*.html);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", formats_str)
             else:
-                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", "Tab Separated Values (*.txt *.tsv);;Comma Separated Values (*.txt *.csv);;HTML (*.html);;Microsoft Excel XLS (*.xls);;Open Document Spreadsheet ODS (*.ods);;All files (*)")
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", formats_str)
 
             if not fileName:
                 return
 
             outputFormat = ""
-            availableFormats = ("tsv", "csv", "xls", "ods", "html")
+            availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html", "df")
             for fileExtension in availableFormats:
                 if fileExtension in filter_:
-                    outputFormat = fileExtension
-                    if not fileName.upper().endswith("." + fileExtension.upper()):
-                        fileName += "." + fileExtension
-
-                '''
-                if fileExtension in filter_ and not fileName.upper().endswith("." + fileExtension.upper()):
-                    fileName += "." + fileExtension
-                if fileExtension in filter_:
-                    outputFormat = fileExtension
-                '''
+                    outputFormat = fileExtension.replace(")", "")
+                    if not fileName.upper().endswith("." + outputFormat.upper()):
+                        fileName += "." + outputFormat
 
             if not outputFormat:
                 QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -142,20 +144,6 @@ class timeBudgetResults(QWidget):
                     for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
                         rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
 
-
-
-            # check if only one observation was selected
-            ''' added indep variables for each observation
-            if self.lw.count() == 1:
-                rows.append([""])
-
-                # write independant variables to file
-                if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(0).text()]:
-                    rows.append(["Independent variables:"])
-                    for var in self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES]:
-                        rows.append([var, self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES][var]])
-            '''
-
             rows.append([""])
             rows.append([""])
             rows.append(["Time budget:"])
@@ -173,18 +161,6 @@ class timeBudgetResults(QWidget):
                 for col in range(self.twTB.columnCount()):
 
                     values.append(intfloatstr(self.twTB.item(row,col).text()))
-
-                    '''
-                    try:
-                        val = int(self.twTB.item(row,col).text())
-                        values.append(val)
-                    except:
-                        try:
-                            val = float(self.twTB.item(row,col).text())
-                            values.append("{:0.3f}".format(val))
-                        except:
-                            values.append(self.twTB.item(row,col).text())
-                    '''
 
                 rows.append(values)
 
@@ -205,17 +181,28 @@ class timeBudgetResults(QWidget):
                     f.write(str.encode(data.csv))
                 return
 
-            if outputFormat == "html":
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(data.html))
-                return
-
             if outputFormat == "ods":
                 with open(fileName, "wb") as f:
                     f.write(data.ods)
+                return
+
+            if outputFormat == "xlsx":
+                with open(fileName, "wb") as f:
+                    f.write(data.xlsx)
                 return
 
             if outputFormat == "xls":
                 with open(fileName, "wb") as f:
                     f.write(data.xls)
                 return
+
+            if outputFormat == "html":
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.html))
+                return
+
+            if outputFormat == "df":
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(data.df))
+                return
+
