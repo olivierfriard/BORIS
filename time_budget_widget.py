@@ -33,6 +33,7 @@ except:
 import logging
 import os
 import tablib
+import dialog
 
 from config import *
 from utilities import intfloatstr
@@ -103,7 +104,7 @@ class timeBudgetResults(QWidget):
                        "Open Document Spreadsheet ODS (*.ods);;"
                        "Microsoft Excel Spreadsheet (*.xlsx);;"
                        "HTML (*.html);;"
-                       "Pandas dataframe (*.df);;"
+                       #"Pandas dataframe (*.df);;"
                        "Legacy Microsoft Excel Spreadsheet (*.xls);;"
                        "All files (*)")
 
@@ -117,12 +118,18 @@ class timeBudgetResults(QWidget):
                 return
 
             outputFormat = ""
-            availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html", "df")
+            availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html")
             for fileExtension in availableFormats:
                 if fileExtension in filter_:
                     outputFormat = fileExtension.replace(")", "")
                     if not fileName.upper().endswith("." + outputFormat.upper()):
                         fileName += "." + outputFormat
+                        if os.path.isfile(fileName):
+                            if dialog.MessageDialog(programName, "The file {} already exists".format(fileName),
+                                                 ["Overwrite", "Cancel"]) == "Overwrite":
+                                break
+                            else:
+                                return
 
             if not outputFormat:
                 QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -201,8 +208,12 @@ class timeBudgetResults(QWidget):
                     f.write(str.encode(data.html))
                 return
 
+            
+            '''
             if outputFormat == "df":
                 with open(fileName, "wb") as f:
-                    f.write(str.encode(data.df))
+                    f.write(data.df)
                 return
+            '''
+            
 

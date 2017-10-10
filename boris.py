@@ -100,8 +100,8 @@ import plot_events
 import project_functions
 
 
-__version__ = "4.1.11"
-__version_date__ = "2017-10-01"
+__version__ = "4.1.12"
+__version_date__ = "2017-10-10"
 
 # BITMAP_EXT = "jpg"
 
