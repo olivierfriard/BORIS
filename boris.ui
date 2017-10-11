@@ -188,6 +188,7 @@
      <addaction name="actionCohen_s_kappa"/>
     </widget>
     <addaction name="actionTime_budget"/>
+    <addaction name="actionTime_budget_report"/>
     <addaction name="actionTime_budget_by_behaviors_category"/>
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
@@ -1112,6 +1113,11 @@
   <action name="actionCohen_s_kappa">
    <property name="text">
     <string>Cohen's kappa</string>
+   </property>
+  </action>
+  <action name="actionTime_budget_report">
+   <property name="text">
+    <string>Time budget report</string>
    </property>
   </action>
  </widget>

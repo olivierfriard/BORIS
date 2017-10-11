@@ -677,8 +677,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_coding_map.setEnabled(flagObs)
 
         # Analysis
-        self.actionTime_budget.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.actionTime_budget_by_behaviors_category.setEnabled(self.pj[OBSERVATIONS] != {})
+        for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report]: 
+            w.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # plot events
         self.menuPlot_events.setEnabled(FLAG_MATPLOTLIB_INSTALLED and self.pj[OBSERVATIONS] != {})
@@ -688,10 +688,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # statusbar label
-        self.lbTime.setVisible(self.playerType == VLC)
-        self.lbSubject.setVisible(self.playerType == VLC)
-        self.lbTimeOffset.setVisible(self.playerType == VLC)
-        self.lbSpeed.setVisible(self.playerType == VLC)
+        for w in [self.lbTime, self.lbSubject, self.lbTimeOffset, self.lbSpeed]:
+            w.setVisible(self.playerType == VLC)
 
     def connections(self):
 
@@ -783,6 +781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
+        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("report"))
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -4814,12 +4813,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for subject in plot_parameters["selected subjects"]:
                 for behavior in plot_parameters["selected behaviors"]:
                     for row in out:
-                        if row['subject'] == subject and row['behavior'] == behavior:
+                        if row["subject"] == subject and row["behavior"] == behavior:
                             out_sorted.append(row)
 
 
             ### http://stackoverflow.com/questions/673867/python-arbitrary-order-by
             return out_sorted, categories
+
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
@@ -4831,6 +4831,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedObsTotalMediaLength = Decimal("0.0")
 
         for obsId in selectedObservations:
+            totalMediaLength = self.observationTotalMediaLength(obsId)
+            logging.debug("media length for {0}: {1}".format(obsId, totalMediaLength))
+            '''
             if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
                 totalMediaLength = self.observationTotalMediaLength(obsId)
                 logging.debug("media length for {0} : {1}".format(obsId, totalMediaLength))
@@ -4842,6 +4845,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
                 else:
                     totalMediaLength = Decimal("0.0")
+            '''
 
             if totalMediaLength in [0, -1]:
                 selectedObsTotalMediaLength = -1
@@ -4864,87 +4868,235 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
 
-        if len(selectedObservations) > 1:
-            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
-            flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
-        else:
-            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=(mode == "by_category"))
+        flagGroup = False
+        if mode in ["by_behavior", "by_category"]:
+            if len(selectedObservations) > 1:
+                plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
+                flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
+            else:
+                plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=(mode == "by_category"))
+
+        if mode == "report":
+             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
         # check if time_budget window must be used
-        if (len(selectedObservations) > 1 and flagGroup) or (len(selectedObservations) == 1):
+        if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
-        else:
+            
+            # widget for results visualization
+            self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
+    
+            # observations list
+            self.tb.label.setText("Selected observations")
+            for obs in selectedObservations:
+                self.tb.lw.addItem(obs)
+    
+            # media length
+            if len(selectedObservations) > 1:
+                if selectedObsTotalMediaLength:
+                    if self.timeFormat == HHMMSS:
+                        self.tb.lbTotalObservedTime.setText("Total media length: {}".format(seconds2time(selectedObsTotalMediaLength)))
+                    if self.timeFormat == S:
+                        self.tb.lbTotalObservedTime.setText("Total media length: {:0.3f}".format(float(selectedObsTotalMediaLength)))
+                else:
+                    self.tb.lbTotalObservedTime.setText("Total media length: not available")
+            else:
+    
+                if self.timeFormat == HHMMSS:
+                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
+                if self.timeFormat == S:
+                    self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
+    
+            if mode == "by_behavior":
+                tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
+                             "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
+                             "inter-event intervals std dev", "% of total media length"]
+    
+                fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
+                self.tb.twTB.setColumnCount(len(tb_fields))
+                self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
+    
+                for row in out:
+                    self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
+                    column = 0
+                    for field in fields:
+                        item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
+                        # no modif allowed
+                        item.setFlags(Qt.ItemIsEnabled)
+                        self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+                        column += 1
+    
+                    # % of total time
+                    if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                        if len(selectedObservations) > 1:
+                            item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
+                        else:
+                            item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
+                    else:
+                        item = QTableWidgetItem("-")
+    
+                    item.setFlags(Qt.ItemIsEnabled)
+                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+    
+            if mode == "by_category":
+                tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
+                fields = ["number", "duration"]
+                self.tb.twTB.setColumnCount(len(tb_fields))
+                self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
+    
+                for subject in categories:
+    
+                    for category in categories[subject]:
+    
+                        self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
+    
+                        column = 0
+                        item = QTableWidgetItem(subject)
+                        item.setFlags(Qt.ItemIsEnabled)
+                        self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+    
+                        column = 1
+                        if category == "":
+                            item = QTableWidgetItem("No category")
+                        else:
+                            item = QTableWidgetItem(category)
+                        item.setFlags(Qt.ItemIsEnabled)
+                        self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+    
+                        for field in fields:
+                            column += 1
+                            item = QTableWidgetItem(str(categories[subject][category][field]))
+                            item.setFlags(Qt.ItemIsEnabled)
+                            item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                            self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
+    
+            self.tb.twTB.resizeColumnsToContents()
+    
+            self.tb.show()
 
-            items = ("Tab Separated Values (*.tsv)",
+
+
+        if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) \
+            or mode == "report":
+
+            if mode in ["by_behavior", "by_category"]:
+                items = ("Tab Separated Values (*.tsv)",
                      "Comma separated values (*.csv)",
                      "OpenDocument Spreadsheet (*.ods)",
                      "OpenDocument Workbook (*.ods)",
                      "Microsoft Excel Spreadsheet (*.xlsx)",
                      "Microsoft Excel Workbook (*.xlsx)",
                      "HTML (*.html)",
-                     "Pandas dataframe (*.df)",
+                     #"Pandas dataframe (*.df)",
                      "Legacy Microsoft Excel Spreadsheet (*.xls)")
 
-            formats = ["tsv", "csv", "od spreadsheet", "od workbook", "xlsx spreadsheet", "xlsx workbook", "html", "pd dataframe", "xls legacy"]
+                #formats = ["tsv", "csv", "od spreadsheet", "od workbook", "xlsx spreadsheet", "xlsx workbook", "html", "pd dataframe", "xls legacy"]
+                formats = ["tsv", "csv", "od spreadsheet", "od workbook", "xlsx spreadsheet", "xlsx workbook", "html", "xls legacy"]
 
-            item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
-            if not ok:
-                return
+                item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
+                if not ok:
+                    return
+                    
+                outputFormat = formats[items.index(item)]
+                extension = re.sub(".* \(\*\.", "", item)[:-1]
+
+
+            '''
+            if mode == "report":
+                items = ("Tab Separated Values (*.tsv)",
+                     "Comma separated values (*.csv)",
+                     "OpenDocument Spreadsheet (*.ods)",
+                     "Microsoft Excel Spreadsheet (*.xlsx)",
+                     "HTML (*.html)",
+                     #"Pandas dataframe (*.df)",
+                     "Legacy Microsoft Excel Spreadsheet (*.xls)")
+
+                #formats = ["tsv", "csv", "od spreadsheet",  "xlsx spreadsheet",  "html", "pd dataframe", "xls legacy"]
+                formats = ["tsv", "csv", "od spreadsheet", "xlsx spreadsheet", "html", "xls legacy"]
+            '''
                 
-            outputFormat = formats[items.index(item)]
-            extension = re.sub(".* \(\*\.", "", item)[:-1]
+
 
             flagWorkBook = False
             
-            if "workbook" in outputFormat:
+            if mode in ["by_behavior", "by_category"] and "workbook" in outputFormat:
                 workbook = tablib.Databook()
                 flagWorkBook = True
-                
                 if "xls" in outputFormat:
-                    filters = "Microsoft Excel Workbook (*.xlsx);;All files (*)"
+                    filters = "Microsoft Excel Workbook *.xlsx (*.xlsx);;All files (*)"
                 if "od" in outputFormat:
-                    filters = "Open Document Workbook (*.ods);;All files (*)"
-
+                    filters = "Open Document Workbook *.ods (*.ods);;All files (*)"
                 
                 if QT_VERSION_STR[0] == "4":
                     WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
                 else:
                     WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
                 if not WBfileName:
-                    print("no file ")
                     return
 
-            
-                '''
-                if outputFormat in ["xls", "ods"]:
-                    flagWorkBook = dialog.MessageDialog(programName, "Choose the type of file", ["Single sheets", "Workbook"]) == "Workbook"
-                    if flagWorkBook:
-                        workbook = tablib.Databook()
-                        if outputFormat == "xls":
-                            filters = "Microsoft Excel XLS (*.xls);;All files (*)"
-                        if outputFormat == "ods":
-                            filters = "Open Document Spreadsheet ODS (*.ods);;All files (*)"
-    
-                        if QT_VERSION_STR[0] == "4":
-                            WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
-                        else:
-                            WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
-    
-                        if not WBfileName:
-                            return
-                '''
-
-            else: # not workbook
-                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the time budget analysis", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
+            if mode in ["by_behavior", "by_category"] and "workbook" not in outputFormat: # not workbook
+                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the time budget analysis",
+                                                                   os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
                 if not exportDir:
                     return
 
+            if mode == "report":
+
+                formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
+                       "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
+                       "Open Document Spreadsheet *.ods (*.ods);;"
+                       "Microsoft Excel Spreadsheet *.xlsx (*.xlsx);;"
+                       "HTML *.html (*.html);;"
+                       #"Pandas dataframe (*.df);;"
+                       "Legacy Microsoft Excel Spreadsheet *.xls (*.xls);;"
+                       "All files (*)")
+
+                while True:
+                    if QT_VERSION_STR[0] == "4":
+                        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget report", "", formats_str)
+                    else:
+                        fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget report", "", formats_str)
+
+                    if not fileName:
+                        return
+
+                    extension = ""
+                    availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html")
+                    for fileExtension in availableFormats:
+                        if fileExtension in filter_:
+                            extension = fileExtension.replace(")", "")
+                            
+                    if not extension:
+                        QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    else:
+                        break
+
+                data_report = tablib.Dataset()
+                
+                columns = [""]
+                for behav in plot_parameters["selected behaviors"]:
+                    for i in range(2):
+                        columns.append(behav)
+    
+                data_report.append(columns)
+                
+                columns = ["observation"]
+                for behav in plot_parameters["selected behaviors"]:
+                    columns.append("duration")
+                    columns.append("number of occurence")
+                    
+                data_report.append(columns)
+
+
             if mode == "by_behavior":
-                    fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
+                    fields = ["subject", "behavior",  "modifiers", "number",
+                              "duration", "duration_mean", "duration_stdev",
+                              "inter_duration_mean", "inter_duration_stdev"]
+
             if mode == "by_category":
                     fields = ["subject", "category",  "number", "duration"]
 
@@ -4953,215 +5105,146 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
-                rows = []
+                if mode == "report":
 
-                # observation id
-                rows.append(["Observations:"])
-                rows.append([obsId])
-                rows.append([""])
+                    # data.title = obsId
+                    columns = []
+                    behaviors = {}
+                    for element in out:
+                        behaviors[element['behavior']] =  {"duration": element['duration'], "number": element['number']}
+    
+                    columns.append(obsId)
+                    for behav in plot_parameters["selected behaviors"]:
+                        columns.append( behaviors[behav]["duration"])
+                        columns.append( behaviors[behav]["number"])
+        
+                    data_report.append(columns)
+        
+                    #print(data_report.tsv)
+                    
 
-                #indep variables
-                if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]:
-                    rows.append(["Independent variables:"])
-                    for var in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]:
-                        rows.append([var, self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][var]])
-                rows.append([""])
-                rows.append([""])
-                rows.append(["Time budget:"])
-
-                if mode == "by_behavior":
-
-                    rows.append(fields + ["% of total media length"])
-                    #data.headers = fields + ["% of total media length"]
-
-                    for row in out:
-                        values = []
-                        for field in fields:
-                            values.append(str(row[field]).replace(" ()", ""))
-
-                        # % of total time
-                        if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
-                            if len(selectedObservations) > 1:
-                                values.append(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1))
-                            else:
-                                values.append(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1))
-                        else:
-                            values.append("-")
-                        rows.append(values)
-
-                if mode == "by_category":
-                    rows.append = fields
-                    #data.headers = fields # + ["% of total media length"]
-                    for subject in categories:
-
-                        for category in categories[subject]:
+                if mode in ["by_behavior", "by_category"]:
+                    rows = []
+                    # observation id
+                    rows.append(["Observations:"])
+                    rows.append([obsId])
+                    rows.append([""])
+    
+                    #indep variables
+                    if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]:
+                        rows.append(["Independent variables:"])
+                        for var in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]:
+                            rows.append([var, self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][var]])
+                    rows.append([""])
+                    rows.append([""])
+                    rows.append(["Time budget:"])
+    
+                    if mode == "by_behavior":
+    
+                        rows.append(fields + ["% of total media length"])
+                        #data.headers = fields + ["% of total media length"]
+    
+                        for row in out:
                             values = []
-                            values.append(subject)
-                            if category == "":
-                                values.append("No category")
+                            for field in fields:
+                                values.append(str(row[field]).replace(" ()", ""))
+    
+                            # % of total time
+                            if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                                if len(selectedObservations) > 1:
+                                    values.append(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1))
+                                else:
+                                    values.append(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1))
                             else:
-                                values.append(category)
-
-                            values.append(categories[subject][category]["number"])
-                            values.append(categories[subject][category]["duration"])
-
+                                values.append("-")
                             rows.append(values)
+    
+                    if mode == "by_category":
+                        rows.append = fields
+                        #data.headers = fields # + ["% of total media length"]
+                        for subject in categories:
+    
+                            for category in categories[subject]:
+                                values = []
+                                values.append(subject)
+                                if category == "":
+                                    values.append("No category")
+                                else:
+                                    values.append(category)
+    
+                                values.append(categories[subject][category]["number"])
+                                values.append(categories[subject][category]["duration"])
+    
+                                rows.append(values)
+    
+                    data = tablib.Dataset()
+                    data.title = obsId
+                    for row in rows:
+                        data.append(complete(row, max([len(r) for r in rows])))
+    
+                    if "xls" in outputFormat:
+                        for forbidden_char in r"\/*[]:?":
+                            data.title = data.title.replace(forbidden_char, " ")
+    
+                    if flagWorkBook:
+    
+                        for forbidden_char in r"\/*[]:?":
+                            data.title = data.title.replace(forbidden_char, " ")
+    
+                        if "xls" in outputFormat:
+                            if len(data.title) > 31:
+                                data.title = data.title[:31]
+                        workbook.add_sheet(data)
+    
+                    else:
+    
+                        fileName = exportDir + os.sep + safeFileName(obsId) + "." + extension
+                        
+                        if outputFormat == "tsv":
+                            with open(fileName, "wb") as f:
+                                f.write(str.encode(data.tsv))
+                        if outputFormat == "csv":
+                            with open(fileName, "wb") as f:
+                                f.write(str.encode(data.csv))
+                        if outputFormat == "od spreadsheet":
+                            with open(fileName, "wb") as f:
+                                f.write(data.ods)
+                        if outputFormat == "xlsx spreadsheet":
+                            with open(fileName, "wb") as f:
+                                f.write(data.xlsx)
+                        '''
+                        if outputFormat == "pd dataframe":
+                            with open(fileName, "wb") as f:
+                                f.write(str.encode(data.df))
+                        '''
+                        if outputFormat == "html":
+                            with open(fileName, "wb") as f:
+                                f.write(str.encode(data.html))
+                        if outputFormat == "xls legacy":
+                            if len(data.title) > 31:
+                                data.title = data.title[:31]
+                                QMessageBox.warning(None, programName, ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
+                                                                        "The limit on worksheet name length is 31 characters").format(obsId, data.title),
+                                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+    
+                            with open(fileName, "wb") as f:
+                                f.write(data.xls)
 
-                data = tablib.Dataset()
-                data.title = obsId
-                for row in rows:
-                    data.append(complete(row, max([len(r) for r in rows])))
 
-                if "xls" in outputFormat:
-                    for forbidden_char in r"\/*[]:?":
-                        data.title = data.title.replace(forbidden_char, " ")
-                    
-
-                if flagWorkBook:
-                    # check data title for worksheet name
-                    if len(data.title) > 31:
-                        data.title = data.title[:31]
-                    workbook.add_sheet(data)
-
-                else:
-
-                    fileName = exportDir + os.sep + safeFileName(obsId) + "." + extension
-                    
-                    if outputFormat == "tsv":
-                        with open(fileName, "wb") as f:
-                            f.write(str.encode(data.tsv))
-
-                    if outputFormat == "csv":
-                        with open(fileName, "wb") as f:
-                            f.write(str.encode(data.csv))
-
-                    if outputFormat == "od spreadsheet":
-                        with open(fileName, "wb") as f:
-                            f.write(data.ods)
-
-                    if outputFormat == "xlsx spreadsheet":
-                        with open(fileName, "wb") as f:
-                            f.write(data.xlsx)
-
-                    if outputFormat == "pd dataframe":
-                        with open(fileName, "wb") as f:
-                            f.write(str.encode(data.df))
-
-                    if outputFormat == "html":
-                        with open(fileName, "wb") as f:
-                            f.write(str.encode(data.html))
-                       
-
-                    if outputFormat == "xls legacy":
-
-                        if len(data.title) > 31:
-                            data.title = data.title[:31]
-                            QMessageBox.warning(None, programName, ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
-                                                                    "The limit on worksheet name length is 31 characters").format(obsId, data.title),
-                                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-                        with open(fileName, "wb") as f:
-                            f.write(data.xls)
-
-            if flagWorkBook:
+            if mode == "report":
+                if "xlsx" in extension:
+                    with open(fileName, "wb") as f:
+                         f.write(data_report.xlsx)
+                
+                
+            if mode in ["by_behavior", "by_category"] and flagWorkBook:
                 if "xls" in outputFormat:
                     with open(WBfileName, "wb") as f:
-                        f.write(workbook.xls)
+                        f.write(workbook.xlsx)
                 if "od" in outputFormat:
                     with open(WBfileName, "wb") as f:
                         f.write(workbook.ods)
-            return
 
-        # widget for results visualization
-        self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
-
-        # observations list
-        self.tb.label.setText("Selected observations")
-        for obs in selectedObservations:
-            self.tb.lw.addItem(obs)
-
-        # media length
-        if len(selectedObservations) > 1:
-            if selectedObsTotalMediaLength:
-                if self.timeFormat == HHMMSS:
-                    self.tb.lbTotalObservedTime.setText("Total media length: {}".format(seconds2time(selectedObsTotalMediaLength)))
-                if self.timeFormat == S:
-                    self.tb.lbTotalObservedTime.setText("Total media length: {:0.3f}".format(float(selectedObsTotalMediaLength)))
-            else:
-                self.tb.lbTotalObservedTime.setText("Total media length: not available")
-        else:
-
-            if self.timeFormat == HHMMSS:
-                self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
-            if self.timeFormat == S:
-                self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
-
-        if mode == "by_behavior":
-            tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
-                         "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
-                         "inter-event intervals std dev", "% of total media length"]
-
-            fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
-            self.tb.twTB.setColumnCount(len(tb_fields))
-            self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
-
-            for row in out:
-                self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
-                column = 0
-                for field in fields:
-                    item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
-                    # no modif allowed
-                    item.setFlags(Qt.ItemIsEnabled)
-                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
-                    column += 1
-
-                # % of total time
-                if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
-                    if len(selectedObservations) > 1:
-                        item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
-                    else:
-                        item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
-                else:
-                    item = QTableWidgetItem("-")
-
-                item.setFlags(Qt.ItemIsEnabled)
-                self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
-
-        if mode == "by_category":
-            tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
-            fields = ["number", "duration"]
-            self.tb.twTB.setColumnCount(len(tb_fields))
-            self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
-
-            for subject in categories:
-
-                for category in categories[subject]:
-
-                    self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
-
-                    column = 0
-                    item = QTableWidgetItem(subject)
-                    item.setFlags(Qt.ItemIsEnabled)
-                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
-
-                    column = 1
-                    if category == "":
-                        item = QTableWidgetItem("No category")
-                    else:
-                        item = QTableWidgetItem(category)
-                    item.setFlags(Qt.ItemIsEnabled)
-                    self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
-
-                    for field in fields:
-                        column += 1
-                        item = QTableWidgetItem(str(categories[subject][category][field]))
-                        item.setFlags(Qt.ItemIsEnabled)
-                        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-                        self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
-
-        self.tb.twTB.resizeColumnsToContents()
-
-        self.tb.show()
 
 
     def observationTotalMediaLength(self, obsId):

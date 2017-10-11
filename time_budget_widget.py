@@ -99,13 +99,13 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        formats_str = ("Tab Separated Values (*.txt *.tsv);;"
-                       "Comma Separated Values (*.txt *.csv);;"
-                       "Open Document Spreadsheet ODS (*.ods);;"
-                       "Microsoft Excel Spreadsheet (*.xlsx);;"
-                       "HTML (*.html);;"
+        formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
+                       "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
+                       "Open Document Spreadsheet *.ods (*.ods);;"
+                       "Microsoft Excel Spreadsheet *.xlsx (*.xlsx);;"
+                       "HTML *.html (*.html);;"
                        #"Pandas dataframe (*.df);;"
-                       "Legacy Microsoft Excel Spreadsheet (*.xls);;"
+                       "Legacy Microsoft Excel Spreadsheet *.xls (*.xls);;"
                        "All files (*)")
 
         while True:
@@ -122,15 +122,7 @@ class timeBudgetResults(QWidget):
             for fileExtension in availableFormats:
                 if fileExtension in filter_:
                     outputFormat = fileExtension.replace(")", "")
-                    if not fileName.upper().endswith("." + outputFormat.upper()):
-                        fileName += "." + outputFormat
-                        if os.path.isfile(fileName):
-                            if dialog.MessageDialog(programName, "The file {} already exists".format(fileName),
-                                                 ["Overwrite", "Cancel"]) == "Overwrite":
-                                break
-                            else:
-                                return
-
+                    
             if not outputFormat:
                 QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             else:
