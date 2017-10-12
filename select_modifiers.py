@@ -83,22 +83,30 @@ class ModifiersList(QDialog):
                         item.setCheckState(Qt.Unchecked)
 
                         # previously selected
+                        '''
                         print("\n\nmodifier:", modifier)
                         print(re.sub(" \(.\)", "", modifier))
                         print("currentModifierList",currentModifierList)
                         print("idx", idx)
                         print(currentModifierList[int(idx)])
-                        if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
-                            item.setCheckState(Qt.Checked)
+                        '''
+                        try:
+                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) in currentModifierList[int(idx)].split(","):
+                                item.setCheckState(Qt.Checked)
+                        except: # for old projects due to a fixed bug 
+                            pass
 
                     lw.addItem(item)
 
                     if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
-                        if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
-                            if QT_VERSION_STR[0] == "4":
-                                lw.setItemSelected(item, True)
-                            else:
-                                item.setSelected(True)
+                        try:
+                            if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
+                                if QT_VERSION_STR[0] == "4":
+                                    lw.setItemSelected(item, True)
+                                else:
+                                    item.setSelected(True)
+                        except: # for old projects due to a fixed bug
+                            pass
                 V2layout.addWidget(lw)
 
             if self.modifiers_dict[idx]["type"] in [NUMERIC_MODIFIER]:

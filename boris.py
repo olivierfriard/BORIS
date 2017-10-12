@@ -5005,22 +5005,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 extension = re.sub(".* \(\*\.", "", item)[:-1]
 
 
-            '''
-            if mode == "report":
-                items = ("Tab Separated Values (*.tsv)",
-                     "Comma separated values (*.csv)",
-                     "OpenDocument Spreadsheet (*.ods)",
-                     "Microsoft Excel Spreadsheet (*.xlsx)",
-                     "HTML (*.html)",
-                     #"Pandas dataframe (*.df)",
-                     "Legacy Microsoft Excel Spreadsheet (*.xls)")
-
-                #formats = ["tsv", "csv", "od spreadsheet",  "xlsx spreadsheet",  "html", "pd dataframe", "xls legacy"]
-                formats = ["tsv", "csv", "od spreadsheet", "xlsx spreadsheet", "html", "xls legacy"]
-            '''
-                
-
-
             flagWorkBook = False
             
             if mode in ["by_behavior", "by_category"] and "workbook" in outputFormat:
@@ -5076,19 +5060,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         break
 
                 data_report = tablib.Dataset()
+                data_report.title = "Synthetic time budget"
                 
+                parameters = [["duration", "Total duration"], ["number", "Number of occurence"]]
+                
+                # subjects header
                 columns = [""]
-                for behav in plot_parameters["selected behaviors"]:
-                    for i in range(2):
-                        columns.append(behav)
-    
+                for subj in plot_parameters["selected subjects"]:
+                    for i in range(len(plot_parameters["selected behaviors"]) * len(parameters)):
+                        columns.append(subj)
                 data_report.append(columns)
                 
+                # behaviors header
+                columns = [""]
+                for subj in plot_parameters["selected subjects"]:
+                    for behav in plot_parameters["selected behaviors"]:
+                        for i in range(len(parameters)):
+                            columns.append(behav)
+                data_report.append(columns)
+                
+                # parameters header
                 columns = ["observation"]
                 for behav in plot_parameters["selected behaviors"]:
-                    columns.append("duration")
-                    columns.append("number of occurence")
-                    
+                    for i in range(len(plot_parameters["selected subjects"])):
+                        for param in parameters:
+                            columns.append(param[1])
                 data_report.append(columns)
 
 
@@ -5100,28 +5096,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if mode == "by_category":
                     fields = ["subject", "category",  "number", "duration"]
 
+
+
             for obsId in selectedObservations:
 
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
                 if mode == "report":
-
-                    # data.title = obsId
                     columns = []
                     behaviors = {}
                     for element in out:
-                        behaviors[element['behavior']] =  {"duration": element['duration'], "number": element['number']}
-    
+                        for subj in plot_parameters["selected subjects"]:
+                            if subj not in behaviors:
+                                behaviors[subj] = {}
+                            for behav in plot_parameters["selected behaviors"]:
+                                if behav not in behaviors[subj]:
+                                    behaviors[subj][behav] = {}
+                                for param in parameters:
+                                    if element["subject"] == subj and element["behavior"] == behav:
+                                        behaviors[subj][behav][param[0]] = element[param[0]]
+
                     columns.append(obsId)
-                    for behav in plot_parameters["selected behaviors"]:
-                        columns.append( behaviors[behav]["duration"])
-                        columns.append( behaviors[behav]["number"])
+                    for subj in plot_parameters["selected subjects"]:
+                        for behav in plot_parameters["selected behaviors"]:
+                            for param in parameters:
+                                columns.append( behaviors[subj][behav][param[0]])
         
                     data_report.append(columns)
-        
-                    #print(data_report.tsv)
-                    
 
                 if mode in ["by_behavior", "by_category"]:
                     rows = []
@@ -5232,9 +5234,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             if mode == "report":
-                if "xlsx" in extension:
+                if "tsv" == extension:
+                    with open(fileName, "wb") as f:
+                         f.write(str.encode(data_report.tsv))
+                if "csv" == extension:
+                    with open(fileName, "wb") as f:
+                         f.write(str.encode(data_report.csv))
+                if "ods" == extension:
+                    with open(fileName, "wb") as f:
+                         f.write(data_report.ods)
+                if "xlsx" == extension:
                     with open(fileName, "wb") as f:
                          f.write(data_report.xlsx)
+                if "xls" == extension:
+                    with open(fileName, "wb") as f:
+                         f.write(data_report.xls)
+                if "html" == extension:
+                    with open(fileName, "wb") as f:
+                         f.write(str.encode(data_report.html))
+
+                
                 
                 
             if mode in ["by_behavior", "by_category"] and flagWorkBook:
@@ -5628,7 +5647,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("totalMediaLength: {}".format(plot_parameters["end time"]))
         logging.debug("excludeBehaviorsWithoutEvents: {}".format(plot_parameters["exclude behaviors"]))
 
-        print("o",o)
 
         if not plot_time_ranges(o,
                                 selectedObservations[0],
@@ -5824,7 +5842,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in pj[OBSERVATIONS]:
             if "time offset" in pj[OBSERVATIONS][obsId]:
                 pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
-            print(pj[OBSERVATIONS][obsId][EVENTS])
             for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
                 pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
 
@@ -6688,11 +6705,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
                        "Comma Separated Values (*.txt *.csv);;"
-                       "Microsoft Excel XLS (*.xls);;"
                        "Open Document Spreadsheet ODS (*.ods);;"
+                       "Microsoft Excel Spreadsheet XLSX (*.xlsx);;"
                        "HTML (*.html);;"
                        "SDIS (*.sds);;"
                        "SQL dump file file (*.sql);;"
+                       "Legacy Microsoft Excel Spreadsheet XLS (*.xls);;"                       
                        "All files (*)")
         while True:
             if QT_VERSION_STR[0] == "4":
@@ -6704,18 +6722,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             outputFormat = ""
-            availableFormats = ("tsv", "csv", "xls", "ods", "html", "sql", "sds")
+            availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html", "sql", "sds")
             for fileExtension in availableFormats:
                 if fileExtension in filter_:
-                    outputFormat = fileExtension
+                    outputFormat = fileExtension.replace(")", "")
+                    '''
                     if not fileName.upper().endswith("." + fileExtension.upper()):
                         fileName += "." + fileExtension
+                    '''
 
             if not outputFormat:
                 QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             else:
                 break
-
 
         if not outputFormat:
             QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -6736,12 +6755,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx in sorted_keys(self.pj["independent_variables"]):
                     header.append(self.pj["independent_variables"][idx]["label"])
 
-            header.extend(["Subject", "Behavior", "Modifiers", "Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
+            header.extend(["Subject", "Behavior"])
+
+            # check max number of modifiers
+            '''
+            eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+            
+            max_modifiers = 0
+            for event in eventsWithStatus:
+                for c in pj_events_fields:
+                    if c == "modifier" and event[pj_obs_fields[c]]:
+                        max_modifiers = max(max_modifiers, len(event[pj_obs_fields[c]].split('|')))
+
+            
+            for x in range(1, max_modifiers + 1):
+                header.append("Modifier {}".format(x))
+            '''
+            
+            header.extend(["Modifiers"]) 
+            
+            
+            header.extend(["Behavior type", "Start", "Stop", "Comment start", "Comment stop"])
 
             data.append(header)
 
         self.statusbar.showMessage("Exporting aggregated events in {} format".format(outputFormat.upper()), 0)
         flagUnpairedEventFound = False
+
+
+
 
         for obsId in selectedObservations:
 
@@ -6933,6 +6975,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if outputFormat == "ods":
                 with open(fileName, "wb") as f:
                     f.write(data.ods)
+            if outputFormat == "xlsx":
+                with open(fileName, "wb") as f:
+                    f.write(data.xlsx)
             if outputFormat == "xls":
                 with open(fileName, "wb") as f:
                     f.write(data.xls)
@@ -6964,7 +7009,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not exportDir:
             return
 
-        self.statusbar.showMessage("Exporting events as TextGrid", 0)
+        # self.statusbar.showMessage("Exporting events as TextGrid", 0)
 
         for obsId in selectedObservations:
 
@@ -9185,9 +9230,10 @@ self.mediaplayer.video_get_aspect_ratio(),
         self.find_replace_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.find_replace_dialog.show()
 
+
     def export_tabular_events(self):
         """
-        export events from selected observations in various formats: TSV, CSV, ODS, XLS
+        export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS
         """
 
         # ask user observations to analyze
@@ -9209,7 +9255,12 @@ self.mediaplayer.video_get_aspect_ratio(),
 
         if len(selectedObservations) > 1:  # choose directory for exporting more observations
 
-            items = ("Tab Separated Values (*.tsv)", "Comma separated values (*.csv)", "Open Document Spreadsheet (*.ods)", "Microsoft Excel (*.xls)", "HTML (*.html)")
+            items = ("Tab Separated Values (*.tsv)",
+                     "Comma separated values (*.csv)",
+                     "Open Document Spreadsheet (*.ods)",
+                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                     "Microsoft Excel Spreadsheet XLS (*.xls)",
+                     "HTML (*.html)")
             item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
             if not ok:
                 return
@@ -9223,8 +9274,9 @@ self.mediaplayer.video_get_aspect_ratio(),
             if len(selectedObservations) == 1:
                 fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
                                "Comma Separated Values (*.txt *.csv);;"
-                               "Microsoft Excel XLS (*.xls);;"
+                               "Microsoft Excel Spreadsheet XLSX (*.xlsx);;"
                                "Open Document Spreadsheet ODS (*.ods);;"
+                               "Legacy Microsoft Excel Spreadsheet XLS (*.xls);;"
                                "HTML (*.html);;"
                                "All files (*)")
                 while True:
@@ -9237,12 +9289,14 @@ self.mediaplayer.video_get_aspect_ratio(),
                         return
 
                     outputFormat = ""
-                    availableFormats = ("tsv", "csv", "xls", "ods", "html")
+                    availableFormats = ("tsv", "csv", "xlsx)", "ods", "xls)", "html")  # ) allows to distinguish between xls and xlsx
                     for fileExtension in availableFormats:
                         if fileExtension in filter_:
-                            outputFormat = fileExtension
+                            outputFormat = fileExtension.replace(")", "")
+                            '''
                             if not fileName.upper().endswith("." + fileExtension.upper()):
                                 fileName += "." + fileExtension
+                            '''
 
                     if not outputFormat:
                         QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -9376,17 +9430,21 @@ self.mediaplayer.video_get_aspect_ratio(),
             maxLen = max([len(r) for r in rows])
             data = tablib.Dataset()
 
+            data.title = obsId
             # check if worksheet name will be > 31 char
-            if outputFormat == "xls":
-                if len(obsId) > 31:
-                    data.title = obsId[0:31]
+            if outputFormat in ["xls", "xlsx"]:
+                for forbidden_char in r"\/*[]:?":
+                    data.title = data.title.replace(forbidden_char, " ")
+
+            if outputFormat in ["xls"]:
+                if len(data.title) > 31:
+                    data.title = data.title[0:31]
                     QMessageBox.warning(None, programName,
-                                        ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
-                                         "The limit on worksheet name length is 31 characters").format(obsId, obsId[0:31]),
+                                        ("The worksheet name for {} was shortened due to XLS format limitations.\n"
+                                         "The limit on worksheet name length is 31 characters").format(obsId),
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-            else:
-                data.title = obsId
+
 
             for row in rows:
                 data.append(complete(row, maxLen))
@@ -9401,18 +9459,15 @@ self.mediaplayer.video_get_aspect_ratio(),
                 if outputFormat == "ods":
                     with open(fileName, "wb") as f:
                         f.write(data.ods)
+                if outputFormat == "xlsx":
+                    with open(fileName, "wb") as f:
+                        f.write(data.xlsx)
                 if outputFormat == "xls":
                     with open(fileName, "wb") as f:
                         f.write(data.xls)
                 if outputFormat == "html":
                     with open(fileName, "wb") as f:
                         f.write(str.encode(data.html))
-
-                '''
-                if outputFormat == "xlsx":
-                    with open(fileName, "wb") as f:
-                        f.write(data.xlsx)
-                '''
 
             except:
                 errorMsg = sys.exc_info()[1]
