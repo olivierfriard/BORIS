@@ -105,7 +105,6 @@ class ExclusionMatrix(QDialog):
         """
         for r in range(self.twExclusions.rowCount()):
             for c in range(self.twExclusions.columnCount()):
-                print(r,c)
                 if mode == "select":
                     state = True
                 if mode == "unselect":
@@ -1344,11 +1343,13 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # check key length
                 if self.twSubjects.item(r, 0).text().upper() not in ["F" + str(i) for i in range(1, 13)] \
                    and len(self.twSubjects.item(r, 0).text()) > 1:
-                    self.lbSubjectsState.setText("""<font color="red">Error on key {} for subject!</font> The key is too long (keys must be of one character except for function keys _F1, F2..._)""".format(self.twSubjects.item(r, 0).text()))
+                    self.lbSubjectsState.setText(("""<font color="red">Error on key {} for subject!</font>"""
+                                                  "The key is too long (keys must be of one character"
+                                                  " except for function keys _F1, F2..._)").format(self.twSubjects.item(r, 0).text()))
                     return
 
                 if self.twSubjects.item(r, 0).text() in keys:
-                    self.lbSubjectsState.setText("""<font color="red">Key duplicated at line # {}</font>""".format(r + 1))
+                    self.lbSubjectsState.setText("""<font color="red">Key duplicated at row # {}</font>""".format(r + 1))
                 else:
                     if self.twSubjects.item(r, 0).text():
                         keys.append(self.twSubjects.item(r, 0).text())
@@ -1359,7 +1360,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check subject
             if self.twSubjects.item(r, 1):
                 if self.twSubjects.item(r, 1).text() in subjects:
-                    self.lbSubjectsState.setText("""<font color="red">Subject duplicated at line # {}</font>""".format(r + 1))
+                    self.lbSubjectsState.setText("""<font color="red">Subject duplicated at row # {}</font>""".format(r + 1))
                 else:
                     if self.twSubjects.item(r, 1).text():
                         subjects.append(self.twSubjects.item(r, 1).text())
@@ -1428,13 +1429,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if obs_id in self.pj[OBSERVATIONS]:
                         del self.pj[OBSERVATIONS][obs_id]
 
-                print(rows_to_delete)
-                print(set(rows_to_delete))
                 for row in sorted(set(rows_to_delete), reverse=True):
                     self.twObservations.removeRow(row)
 
     def pbCancel_clicked(self):
-
         self.reject()
 
 
@@ -1494,18 +1492,22 @@ class projectDialog(QDialog, Ui_dlgProject):
                 else:
                     subjectName = self.twSubjects.item(row, 1).text()
 
+                # check if subject name is empty
+                if subjectName == "":
+                    QMessageBox.warning(self, programName, "The subject name can not be empty (check row #{}).".format(row + 1))
+                    return
+
                 if "|" in subjectName:
                     QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in subject name <b>{}</b>".format(subjectName))
                     return
             else:
-                QMessageBox.warning(self, programName, "Missing subject name in subjects configuration at row {}".format(row))
+                QMessageBox.warning(self, programName, "Missing subject name in subjects configuration at row {}".format(row + 1))
                 return
 
             # description
+            subjectDescription = ""
             if self.twSubjects.item(row, 2):
                 subjectDescription = self.twSubjects.item(row, 2).text().strip()
-            else:
-                subjectDescription = ""
 
             self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
 
