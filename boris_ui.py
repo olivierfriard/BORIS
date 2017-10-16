@@ -705,5 +705,5 @@ class Ui_MainWindow(object):
         self.actionPlot_events1.setText(_translate("MainWindow", "Plot events (back compatibility)", None))
         self.actionPlot_events2.setText(_translate("MainWindow", "Plot events", None))
         self.actionCohen_s_kappa.setText(_translate("MainWindow", "Cohen\'s kappa", None))
-        self.actionTime_budget_report.setText(_translate("MainWindow", "Time budget report", None))
+        self.actionTime_budget_report.setText(_translate("MainWindow", "Synthetic time budget", None))
 

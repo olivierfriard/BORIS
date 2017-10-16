@@ -1117,7 +1117,7 @@
   </action>
   <action name="actionTime_budget_report">
    <property name="text">
-    <string>Time budget report</string>
+    <string>Synthetic time budget</string>
    </property>
   </action>
  </widget>

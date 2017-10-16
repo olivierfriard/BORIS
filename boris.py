@@ -4579,9 +4579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         def time_budget_analysis(cursor, plot_parameters, by_category=False):
 
-            categories = {}
-            out = []
-
+            categories, out = {}, []
             for subject in plot_parameters["selected subjects"]:
                 out_cat = []
 
@@ -5004,7 +5002,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 outputFormat = formats[items.index(item)]
                 extension = re.sub(".* \(\*\.", "", item)[:-1]
 
-
             flagWorkBook = False
             
             if mode in ["by_behavior", "by_category"] and "workbook" in outputFormat:
@@ -5053,7 +5050,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for fileExtension in availableFormats:
                         if fileExtension in filter_:
                             extension = fileExtension.replace(")", "")
-                            
                     if not extension:
                         QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                     else:
@@ -5101,28 +5097,56 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for obsId in selectedObservations:
 
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
+                
+                print("plot_parameters", plot_parameters)
+                
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
+                
+                print(out)
 
                 if mode == "report":
-                    columns = []
-                    behaviors = {}
-                    for element in out:
-                        for subj in plot_parameters["selected subjects"]:
-                            if subj not in behaviors:
-                                behaviors[subj] = {}
-                            for behav in plot_parameters["selected behaviors"]:
-                                if behav not in behaviors[subj]:
-                                    behaviors[subj][behav] = {}
-                                for param in parameters:
-                                    if element["subject"] == subj and element["behavior"] == behav:
-                                        behaviors[subj][behav][param[0]] = element[param[0]]
+                    
+                    columns, behaviors = [], {}
+                    if not plot_parameters["include modifiers"]:
+                        for element in out:
+                            for subj in plot_parameters["selected subjects"]:
+                                if subj not in behaviors:
+                                    behaviors[subj] = {}
+                                for behav in plot_parameters["selected behaviors"]:
+                                    if behav not in behaviors[subj]:
+                                        behaviors[subj][behav] = {}
+                                    for param in parameters:
+                                        if element["subject"] == subj and element["behavior"] == behav:
+                                            behaviors[subj][behav][param[0]] = element[param[0]]
 
+                    if plot_parameters["include modifiers"]:
+                        for element in out:
+                            for subj in plot_parameters["selected subjects"]:
+                                if subj not in behaviors:
+                                    behaviors[subj] = {}
+                                for behav in plot_parameters["selected behaviors"]:
+                                    if behav not in behaviors[subj]:
+                                        behaviors[subj][behav] = {}
+                                    for param in parameters:
+                                        if element["subject"] == subj and element["behavior"] == behav:
+                                            if element['modifiers'] not in behaviors[subj][behav]:
+                                                behaviors[subj][behav][element['modifiers']] = {}
+                                            behaviors[subj][behav][element['modifiers']][param[0]] = element[param[0]]
+
+                    print(behaviors)
                     columns.append(obsId)
                     for subj in plot_parameters["selected subjects"]:
                         for behav in plot_parameters["selected behaviors"]:
-                            for param in parameters:
-                                columns.append( behaviors[subj][behav][param[0]])
+                            if not plot_parameters["include modifiers"]:
+                                for param in parameters:
+                                    columns.append(behaviors[subj][behav][param[0]])
+                            if plot_parameters["include modifiers"]:
+                                for modif in sorted(list(behaviors[subj][behav].keys())):
+                                    for param in parameters:
+                                        columns.append(behaviors[subj][behav][modif][param[0]])
         
+        
+                    print("columns", columns)
                     data_report.append(columns)
 
                 if mode in ["by_behavior", "by_category"]:
