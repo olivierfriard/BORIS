@@ -4325,6 +4325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedBehaviors: list
         """
         db = sqlite3.connect(":memory:")
+        #db = sqlite3.connect("/tmp/1.sqlite")
         db.row_factory = sqlite3.Row
 
         cursor = db.cursor()
@@ -4349,7 +4350,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if ((subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == "") or
                                 (event[1] == subject_to_analyze)):
 
-                            subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else  event[1]
+                            subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else event[1]
 
                             eventType = STATE if STATE in self.eventType(event[2]).upper() else POINT
 
@@ -4570,11 +4571,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 }
 
 
-
     def time_budget(self, mode):
         """
         time budget (by behavior or category)
-        mode must be in ("by_behavior","by_category")
+        mode must be in ("by_behavior", "by_category", "report")
         """
 
         def time_budget_analysis(cursor, plot_parameters, by_category=False):
@@ -5058,9 +5058,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data_report = tablib.Dataset()
                 data_report.title = "Synthetic time budget"
                 
-                parameters = [["duration", "Total duration"], ["number", "Number of occurence"]]
+                parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
                 
                 # subjects header
+                '''
                 columns = [""]
                 for subj in plot_parameters["selected subjects"]:
                     for i in range(len(plot_parameters["selected behaviors"]) * len(parameters)):
@@ -5082,6 +5083,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for param in parameters:
                             columns.append(param[1])
                 data_report.append(columns)
+                '''
 
 
             if mode == "by_behavior":
@@ -5092,8 +5094,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if mode == "by_category":
                     fields = ["subject", "category",  "number", "duration"]
 
-
-
+            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            cursor.execute("SELECT distinct code, modifiers FROM events")
+            distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
+            print("distinct_behav_modif", distinct_behav_modif)
+            
+            
+            columns_list = []
+            
+            
             for obsId in selectedObservations:
 
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
@@ -5134,18 +5143,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             behaviors[subj][behav][element['modifiers']][param[0]] = element[param[0]]
 
                     print(behaviors)
+
+                    subj_header = [""]
+                    behav_header = [""]
+                    modif_header = [""]
+                    param_header = [""]
                     columns.append(obsId)
                     for subj in plot_parameters["selected subjects"]:
                         for behav in plot_parameters["selected behaviors"]:
                             if not plot_parameters["include modifiers"]:
                                 for param in parameters:
                                     columns.append(behaviors[subj][behav][param[0]])
+                                    subj_header.append(subj)
+                                    behav_header.append(behav)
+                                    param_header.append(param[1])
+                                    
                             if plot_parameters["include modifiers"]:
                                 for modif in sorted(list(behaviors[subj][behav].keys())):
                                     for param in parameters:
                                         columns.append(behaviors[subj][behav][modif][param[0]])
+                                        subj_header.append(subj)
+                                        behav_header.append(behav)
+                                        modif_header.append(modif)
+                                        param_header.append(param[1])
+
         
-        
+                    '''
+                    print(subj_header, len(subj_header))
+                    print(behav_header, len(behav_header))
+                    print(modif_header, len(modif_header))
+                    print(param_header, len(param_header))
+                    '''
+                    
+                    data_report.append(subj_header)
+                    data_report.append(behav_header)
+                    if plot_parameters["include modifiers"]:
+                        data_report.append(modif_header)
+                    data_report.append(param_header)
+
                     print("columns", columns)
                     data_report.append(columns)
 
