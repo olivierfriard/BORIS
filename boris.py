@@ -2016,6 +2016,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.results.ptText.appendHtml(tot_out)
         self.results.show()
 
+
     def observations_list(self):
         """
         view all observations
@@ -4594,15 +4595,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if not distinct_modifiers:
                             if not plot_parameters["exclude behaviors"]:
-                                out.append({"subject": subject,
+
+                                if {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behavior} == {"State event"}:
+                                    out.append({"subject": subject,
                                             "behavior": behavior,
                                             "modifiers": "-",
-                                            "duration": "-",
-                                            "duration_mean": "-",
-                                            "duration_stdev": "-",
-                                            "number": 0,
-                                            "inter_duration_mean": "-",
-                                            "inter_duration_stdev": "-"})
+                                            "duration": 0,
+                                            "duration_mean": 0,
+                                            "duration_stdev": "NA",
+                                            "number": "0",
+                                            "inter_duration_mean": "NA",
+                                            "inter_duration_stdev": "NA"})
+                                
+                                else: # point 
+                                    out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "-",
+                                            "duration": "NA",
+                                            "duration_mean": "NA",
+                                            "duration_stdev": "NA",
+                                            "number": "0",
+                                            "inter_duration_mean": "NA",
+                                            "inter_duration_stdev": "NA"})
                             continue
 
                         if POINT in self.eventType(behavior).upper():
@@ -4634,9 +4648,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 out_cat.append({"subject": subject,
                                             "behavior": behavior,
                                             "modifiers": modifier[0],
-                                            "duration": "-",
-                                            "duration_mean": "-",
-                                            "duration_stdev": "-",
+                                            "duration": "NA",
+                                            "duration_mean": "NA",
+                                            "duration_stdev": "NA",
                                             "number": len(rows),
                                             "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
                                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
@@ -4726,10 +4740,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             out_cat.append({"subject": subject,
                                             "behavior": behavior,
-                                            "modifiers": "NA",
-                                            "duration": "-",
-                                            "duration_mean": "-",
-                                            "duration_stdev": "-",
+                                            "modifiers": "-",
+                                            "duration": "NA",
+                                            "duration_mean": "NA",
+                                            "duration_stdev": "NA",
                                             "number": len(rows),
                                             "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
                                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
@@ -4778,7 +4792,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 out_cat.append({"subject": subject,
                                             "behavior": behavior,
-                                            "modifiers": "NA",
+                                            "modifiers": "-",
                                             "duration": round(sum(all_event_durations), 3),
                                             "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
                                             "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
@@ -4817,6 +4831,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### http://stackoverflow.com/questions/673867/python-arbitrary-order-by
             return out_sorted, categories
+
+        def default_value(behav, param):
+            default_value_ = 0
+            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+               and param in ["duration"]):
+                   default_value_ = "-"
+            return default_value_
+
+
+        def init_behav_modif():
+            behaviors = {}
+            for subj in plot_parameters["selected subjects"]:
+                behaviors[subj] = {}
+                for behav_modif in distinct_behav_modif:
+                    behav, modif = behav_modif
+                    if behav not in behaviors[subj]:
+                        behaviors[subj][behav] = {}
+                    if not plot_parameters["include modifiers"]:
+                        for param in parameters:
+                            '''
+                            default_value = 0
+                            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+                               and param[0] in ["duration"]):
+                                   default_value = "-"
+                            '''
+                            behaviors[subj][behav][param[0]] = default_value(behav, param[0])
+
+                    if plot_parameters["include modifiers"]:
+                        behaviors[subj][behav][modif] = {}
+                        for param in parameters:
+                            '''
+                            default_value = 0
+                            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+                               and param[0] in ["duration"]):
+                                   default_value = "-"
+                            '''
+                            behaviors[subj][behav][modif][param[0]] = default_value(behav, param[0])
+
+            return behaviors
 
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -4929,13 +4982,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         column += 1
     
                     # % of total time
-                    if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                    if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
                         if len(selectedObservations) > 1:
                             item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
                         else:
                             item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
                     else:
-                        item = QTableWidgetItem("-")
+                        item = QTableWidgetItem("NA")
     
                     item.setFlags(Qt.ItemIsEnabled)
                     self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
@@ -5031,9 +5084,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
                        "Open Document Spreadsheet *.ods (*.ods);;"
                        "Microsoft Excel Spreadsheet *.xlsx (*.xlsx);;"
-                       "HTML *.html (*.html);;"
                        #"Pandas dataframe (*.df);;"
                        "Legacy Microsoft Excel Spreadsheet *.xls (*.xls);;"
+                       "HTML *.html (*.html);;"
                        "All files (*)")
 
                 while True:
@@ -5060,32 +5113,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                 parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
                 
-                # subjects header
-                '''
-                columns = [""]
-                for subj in plot_parameters["selected subjects"]:
-                    for i in range(len(plot_parameters["selected behaviors"]) * len(parameters)):
-                        columns.append(subj)
-                data_report.append(columns)
-                
-                # behaviors header
-                columns = [""]
-                for subj in plot_parameters["selected subjects"]:
-                    for behav in plot_parameters["selected behaviors"]:
-                        for i in range(len(parameters)):
-                            columns.append(behav)
-                data_report.append(columns)
-                
-                # parameters header
-                columns = ["observation"]
-                for behav in plot_parameters["selected behaviors"]:
-                    for i in range(len(plot_parameters["selected subjects"])):
-                        for param in parameters:
-                            columns.append(param[1])
-                data_report.append(columns)
-                '''
-
-
             if mode == "by_behavior":
                     fields = ["subject", "behavior",  "modifiers", "number",
                               "duration", "duration_mean", "duration_stdev",
@@ -5095,40 +5122,135 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     fields = ["subject", "category",  "number", "duration"]
 
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            cursor.execute("SELECT distinct code, modifiers FROM events")
+            cursor.execute("SELECT distinct code, modifiers FROM events WHERE subject in ({})".format(",".join("?" * len(plot_parameters["selected subjects"]))),
+                           (plot_parameters["selected subjects"]))
+            
             distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
-            print("distinct_behav_modif", distinct_behav_modif)
+            print("distinct_behav_modif: {}\n\n".format(distinct_behav_modif))
+            
+            # add selected behaviors that are not observed
+            for behav in plot_parameters["selected behaviors"]:
+                if [x for x in distinct_behav_modif if x[0] == behav] == []:
+                    distinct_behav_modif.append([behav, "-"])
+
+            print("distinct_behav_modif: {}\n\n".format(distinct_behav_modif))
+            
+            import pprint
+            
+            '''
+            behaviors = {}
+            for subj in plot_parameters["selected subjects"]:
+                behaviors[subj] = {}
+                for behav_modif in distinct_behav_modif:
+                    behav, modif = behav_modif
+                    if behav not in behaviors[subj]:
+                        behaviors[subj][behav] = {}
+                    if not plot_parameters["include modifiers"]:
+                        for param in parameters:
+                            default_value = 0
+                            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+                               and param[0] in ["duration"]):
+                                   default_value = "-"
+                            behaviors[subj][behav][param[0]] = default_value
+
+                    if plot_parameters["include modifiers"]:
+                        behaviors[subj][behav][modif] = {}
+                        for param in parameters:
+                            default_value = 0
+                            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+                               and param[0] in ["duration"]):
+                                   default_value = "-"
+                            behaviors[subj][behav][modif][param[0]] = default_value
+            
+            pprint.pprint(behaviors)
+            print("\n\n")
+            '''
+            behaviors = init_behav_modif()
             
             
-            columns_list = []
-            
-            
+            subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
+            for subj in plot_parameters["selected subjects"]:
+                for behav in plot_parameters["selected behaviors"]:
+                    if not plot_parameters["include modifiers"]:
+                        for param in parameters:
+                            subj_header.append(subj)
+                            behav_header.append(behav)
+                            param_header.append(param[1])
+                            
+                    if plot_parameters["include modifiers"]:
+                        for modif in sorted(list(behaviors[subj][behav].keys())):
+                            for param in parameters:
+                                subj_header.append(subj)
+                                behav_header.append(behav)
+                                modif_header.append(modif)
+                                param_header.append(param[1])
+
+            '''
+            print(subj_header, len(subj_header))
+            print(behav_header, len(behav_header))
+            print(modif_header, len(modif_header))
+            print(param_header, len(param_header))
+            '''
+
+            data_report.append(subj_header)
+            data_report.append(behav_header)
+            if plot_parameters["include modifiers"]:
+                data_report.append(modif_header)
+            data_report.append(param_header)
+
             for obsId in selectedObservations:
 
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
-                
-                print("plot_parameters", plot_parameters)
-                
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
-                
-                print(out)
 
                 if mode == "report":
-                    
-                    columns, behaviors = [], {}
-                    if not plot_parameters["include modifiers"]:
-                        for element in out:
-                            for subj in plot_parameters["selected subjects"]:
-                                if subj not in behaviors:
-                                    behaviors[subj] = {}
-                                for behav in plot_parameters["selected behaviors"]:
-                                    if behav not in behaviors[subj]:
-                                        behaviors[subj][behav] = {}
-                                    for param in parameters:
-                                        if element["subject"] == subj and element["behavior"] == behav:
-                                            behaviors[subj][behav][param[0]] = element[param[0]]
 
-                    if plot_parameters["include modifiers"]:
+                    behaviors = init_behav_modif()
+                    '''
+                    behaviors = {}
+                    for subj in plot_parameters["selected subjects"]:
+                        behaviors[subj] = {}
+                        for behav_modif in distinct_behav_modif:
+                            behav, modif = behav_modif
+                            if behav not in behaviors[subj]:
+                                behaviors[subj][behav] = {}
+                            if not plot_parameters["include modifiers"]:
+                                for param in parameters:
+                                    default_value = 0
+                                    if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+                                       and param[0] in ["duration"]):
+                                           default_value = "-"
+                                    behaviors[subj][behav][param[0]] = default_value
+
+                            if plot_parameters["include modifiers"]:
+                                behaviors[subj][behav][modif] = {}
+                                for param in parameters:
+                                    default_value = 0
+                                    if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+                                       and param[0] in ["duration"]):
+                                           default_value = "-"
+                                    behaviors[subj][behav][modif][param[0]] = default_value
+                    '''
+
+                   
+                    for element in out:
+                        #pprint.pprint(behaviors)
+                        #print("\n")
+                        pprint.pprint(element)
+                        print("\n")
+                        for param in parameters:
+                            if not plot_parameters["include modifiers"]:
+                                try:
+                                    behaviors[element["subject"]][element["behavior"]][param[0]] = element[param[0]]
+                                except:
+                                    pass
+                            if plot_parameters["include modifiers"]:
+                                try:
+                                    behaviors[element["subject"]][element["behavior"]][element["modifiers"]][param[0]] = element[param[0]]
+                                except:
+                                    pass
+
+                    '''if plot_parameters["include modifiers"]:
                         for element in out:
                             for subj in plot_parameters["selected subjects"]:
                                 if subj not in behaviors:
@@ -5141,47 +5263,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             if element['modifiers'] not in behaviors[subj][behav]:
                                                 behaviors[subj][behav][element['modifiers']] = {}
                                             behaviors[subj][behav][element['modifiers']][param[0]] = element[param[0]]
+                    '''
 
-                    print(behaviors)
+                    #pprint.pprint(behaviors)
+                    #print("\n\n")
 
-                    subj_header = [""]
-                    behav_header = [""]
-                    modif_header = [""]
-                    param_header = [""]
+                    columns = []
                     columns.append(obsId)
+
                     for subj in plot_parameters["selected subjects"]:
                         for behav in plot_parameters["selected behaviors"]:
                             if not plot_parameters["include modifiers"]:
                                 for param in parameters:
                                     columns.append(behaviors[subj][behav][param[0]])
-                                    subj_header.append(subj)
-                                    behav_header.append(behav)
-                                    param_header.append(param[1])
-                                    
                             if plot_parameters["include modifiers"]:
                                 for modif in sorted(list(behaviors[subj][behav].keys())):
                                     for param in parameters:
                                         columns.append(behaviors[subj][behav][modif][param[0]])
-                                        subj_header.append(subj)
-                                        behav_header.append(behav)
-                                        modif_header.append(modif)
-                                        param_header.append(param[1])
 
-        
-                    '''
-                    print(subj_header, len(subj_header))
-                    print(behav_header, len(behav_header))
-                    print(modif_header, len(modif_header))
-                    print(param_header, len(param_header))
-                    '''
-                    
-                    data_report.append(subj_header)
-                    data_report.append(behav_header)
-                    if plot_parameters["include modifiers"]:
-                        data_report.append(modif_header)
-                    data_report.append(param_header)
-
-                    print("columns", columns)
+                    #print("columns", columns,len(columns))
                     data_report.append(columns)
 
                 if mode in ["by_behavior", "by_category"]:

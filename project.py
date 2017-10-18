@@ -230,6 +230,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.twVariables.cellClicked[int, int].connect(self.twVariables_cellClicked)
 
         self.cbType.currentIndexChanged.connect(self.cbtype_changed)
+        self.cbType.activated.connect(self.cbtype_activated)
+        '''self.cbType.highlighted.connect(self.cbtype_changed)'''
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
@@ -599,6 +601,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def cbtype_changed(self):
 
+        print("changed")
         self.leSetValues.setVisible(self.cbType.currentText() == SET_OF_VALUES)
         self.label_5.setVisible(self.cbType.currentText() == SET_OF_VALUES)
 
@@ -608,6 +611,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.label_4.setVisible(self.cbType.currentText() != TIMESTAMP)
 
 
+        '''
         if self.cbType.hasFocus():
             if self.cbType.currentText() == TIMESTAMP:
                 self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
@@ -626,6 +630,30 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if not r:
                 QMessageBox.warning(self, programName + " - Independent variables error", msg)
+        '''
+        
+    def cbtype_activated(self):
+        
+        print("activated")
+        
+        if self.cbType.currentText() == TIMESTAMP:
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
+            self.twVariables.item(self.selected_twvariables_row, 4).setText("")
+        else:
+            self.twVariables.item(self.selected_twvariables_row, 3).setText(self.lePredefined.text())
+            self.twVariables.item(self.selected_twvariables_row, 4).setText("")
+
+        # remove spaces after and before comma
+        if self.cbType.currentText() == SET_OF_VALUES:
+            self.twVariables.item(self.selected_twvariables_row, 4).setText( ",".join([x.strip() for x in  self.leSetValues.text().split(",")]))
+
+        self.twVariables.item(self.selected_twvariables_row, 2).setText(self.cbType.currentText())
+
+        r, msg = self.check_indep_var_config()
+
+        if not r:
+            QMessageBox.warning(self, programName + " - Independent variables error", msg)
+        
 
 
 
@@ -1605,6 +1633,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             row = {}
             for idx, field in enumerate(tw_indVarFields):
                 if self.twVariables.item(r, idx):
+                    # check if label is empty
+                    if field  == "label" and self.twVariables.item(r, idx).text() == "":
+                        QMessageBox.warning(self, programName, "The label of an indipendent variable can not be empty (check row #{}).".format(r + 1))
+                        return
                     row[field] = self.twVariables.item(r, idx).text().strip()
                 else:
                     row[field] = ""
