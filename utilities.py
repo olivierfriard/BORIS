@@ -152,7 +152,7 @@ def sorted_keys(d):
     return [str(x) for x in sorted([int(x) for x in d.keys()])]
 
 
-def bestTimeUnit(t: int) -> str:
+def bestTimeUnit(int):
     """
     Return time in best format
 
