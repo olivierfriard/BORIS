@@ -37,14 +37,14 @@ from matplotlib.dates import MICROSECONDLY, SECONDLY, MINUTELY, HOURLY, WEEKLY, 
 import numpy as np
 import json
 import config
-
+import utilities
 
 
 def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=True, min_t=-1, max_t=-1, output_file_name=""):
     """
     Create gantt charts with barh matplotlib function
     """
-
+    
     def behav_color(behav):
         """
         return color corresponding to behavior
@@ -77,8 +77,6 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
         max_len = max(max_len, len(events[subject]))
         observed_behaviors_modifiers_json = list(set(observed_behaviors_modifiers_json + list(events[subject].keys())))
 
-    print("observed_behaviors_modifiers_json", observed_behaviors_modifiers_json)
-
     # order subjects
     try:
         ordered_subjects = [x[1] for x in sorted(list(zip([all_subjects.index(x) for x in sorted(list(events.keys()))], sorted(list(events.keys())))))]
@@ -105,9 +103,7 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
                     else:
                         behav = behav_modif[0]
                         labels_str.append(behav)
-        
-        print("ylabels", ylabels)
-        
+     
         ilen = max_len
        
         axs[ax_idx].set_ylim(ymin=0, ymax = (ilen * par1) + par1)

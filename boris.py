@@ -781,7 +781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("report"))
+        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -4575,7 +4575,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def time_budget(self, mode):
         """
         time budget (by behavior or category)
-        mode must be in ("by_behavior", "by_category", "report")
+        mode must be in ("by_behavior", "by_category", "synthetic")
         """
 
         def time_budget_analysis(cursor, plot_parameters, by_category=False):
@@ -4884,19 +4884,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             totalMediaLength = self.observationTotalMediaLength(obsId)
             logging.debug("media length for {0}: {1}".format(obsId, totalMediaLength))
-            '''
-            if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
-                totalMediaLength = self.observationTotalMediaLength(obsId)
-                logging.debug("media length for {0} : {1}".format(obsId, totalMediaLength))
-
-            # check if time of last event > total media length
-
-            elif self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
-                if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                else:
-                    totalMediaLength = Decimal("0.0")
-            '''
 
             if totalMediaLength in [0, -1]:
                 selectedObsTotalMediaLength = -1
@@ -4925,10 +4912,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
                 flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
             else:
-                plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=(mode == "by_category"))
+                plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                maxTime=selectedObsTotalMediaLength,
+                by_category=(mode == "by_category"))
 
-        if mode == "report":
-             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=selectedObsTotalMediaLength, by_category=False)
+        if mode == "synthetic":
+             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                                   maxTime=0,
+                                                                   flagShowExcludeBehaviorsWoEvents=False,
+                                                                   by_category=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
@@ -5032,7 +5024,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) \
-            or mode == "report":
+            or mode == "synthetic":
 
             if mode in ["by_behavior", "by_category"]:
                 items = ("Tab Separated Values (*.tsv)",
@@ -5078,7 +5070,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not exportDir:
                     return
 
-            if mode == "report":
+            if mode == "synthetic":
 
                 formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
                        "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
@@ -5135,7 +5127,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             print("distinct_behav_modif: {}\n\n".format(distinct_behav_modif))
             
-            import pprint
+            #import pprint
             
             '''
             behaviors = {}
@@ -5167,7 +5159,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             '''
             behaviors = init_behav_modif()
             
-            
             subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
             for subj in plot_parameters["selected subjects"]:
                 for behav in plot_parameters["selected behaviors"]:
@@ -5185,12 +5176,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 modif_header.append(modif)
                                 param_header.append(param[1])
 
-            '''
-            print(subj_header, len(subj_header))
-            print(behav_header, len(behav_header))
-            print(modif_header, len(modif_header))
-            print(param_header, len(param_header))
-            '''
 
             data_report.append(subj_header)
             data_report.append(behav_header)
@@ -5203,7 +5188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
-                if mode == "report":
+                if mode == "synthetic":
 
                     behaviors = init_behav_modif()
                     '''
@@ -5236,8 +5221,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for element in out:
                         #pprint.pprint(behaviors)
                         #print("\n")
-                        pprint.pprint(element)
-                        print("\n")
+                        #pprint.pprint(element)
+                        #print("\n")
                         for param in parameters:
                             if not plot_parameters["include modifiers"]:
                                 try:
@@ -5392,7 +5377,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 f.write(data.xls)
 
 
-            if mode == "report":
+            if mode == "synthetic":
                 if "tsv" == extension:
                     with open(fileName, "wb") as f:
                          f.write(str.encode(data_report.tsv))
@@ -5834,12 +5819,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obsId)
 
         if not_paired_obs_list:
-            QMessageBox.critical(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
+            QMessageBox.warning(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
         
         selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
         if not selectedObservations:
             return
-
 
         # check if almost one selected observation has events
         flag_no_events = True
@@ -5854,16 +5838,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         max_media_length = -1
         for obsId in selectedObservations:
             totalMediaLength = self.observationTotalMediaLength(obsId)
-            '''
-            if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
-                totalMediaLength = self.observationTotalMediaLength(obsId)
-            elif self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
-                if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                else:
-                    totalMediaLength = Decimal("0.0")
-            '''
-
             if totalMediaLength == -1:
                 totalMediaLength = 0
 
@@ -5893,7 +5867,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         totalMediaLength = int(totalMediaLength)
-
 
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
@@ -5987,7 +5960,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                       #min_t=float(plot_parameters["start time"]),
                                                       #max_t=float(plot_parameters["end time"]),
                                                       output_file_name="{plot_directory}/{obsId}.{file_format}".format(plot_directory=plot_directory,
-                                                                                                                       obsId=obsId,
+                                                                                                                       obsId=safeFileName(obsId),
                                                                                                                        file_format=file_format))
             if ret["error code"]:
                 QMessageBox.critical(self, programName, ret["msg"])
@@ -9602,7 +9575,6 @@ self.mediaplayer.video_get_aspect_ratio(),
                                         ("The worksheet name for {} was shortened due to XLS format limitations.\n"
                                          "The limit on worksheet name length is 31 characters").format(obsId),
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
 
 
             for row in rows:
