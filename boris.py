@@ -4322,11 +4322,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedBehaviors: list
         """
         db = sqlite3.connect(":memory:")
-        #db = sqlite3.connect("/tmp/1.sqlite")
+        # db = sqlite3.connect("/tmp/11.sqlite")
         db.row_factory = sqlite3.Row
-
         cursor = db.cursor()
-
         cursor.execute("""CREATE TABLE events (observation TEXT,
                                                subject TEXT,
                                                code TEXT,
@@ -4341,11 +4339,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
 
-                    if event[2] in selectedBehaviors:
+                    if event[EVENT_BEHAVIOR_FIELD_IDX] in selectedBehaviors:
 
                         # extract time, code, modifier and comment (time:0, subject:1, code:2, modifier:3, comment:4)
                         if ((subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == "") or
-                                (event[1] == subject_to_analyze)):
+                                (event[EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze)):
 
                             subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else event[1]
 
@@ -4354,7 +4352,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             r = cursor.execute("""INSERT INTO events
                                                    (observation, subject, code, type, modifiers, occurence, comment)
                                                     VALUES (?,?,?,?,?,?,?)""",
-                            (obsId, subjectStr, event[2], eventType, event[3], str(event[0]), event[4]))
+                            (obsId,
+                             subjectStr,
+                             event[EVENT_BEHAVIOR_FIELD_IDX],
+                             eventType,
+                             event[EVENT_MODIFIER_FIELD_IDX], 
+                             str(event[EVENT_TIME_FIELD_IDX]),
+                             event[EVENT_COMMENT_FIELD_IDX]))
 
         db.commit()
         return cursor
@@ -4575,6 +4579,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         def time_budget_analysis(cursor, plot_parameters, by_category=False):
+            """
+            extract number of occurrences, total duration, mean ...
+            if start_time = 0 and end_time = 0 all events are extracted
+            """
 
             categories, out = {}, []
             for subject in plot_parameters["selected subjects"]:
@@ -4602,7 +4610,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             "number": "0",
                                             "inter_duration_mean": "NA",
                                             "inter_duration_stdev": "NA"})
-                                
                                 else: # point 
                                     out.append({"subject": subject,
                                             "behavior": behavior,
@@ -4617,13 +4624,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if POINT in self.eventType(behavior).upper():
                             for modifier in distinct_modifiers:
-                                if len(selectedObservations) > 1:
-                                    cursor.execute("""SELECT occurence,observation FROM events
+
+                                if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                    cursor.execute("""SELECT occurence, observation FROM events
                                                         WHERE subject = ? 
                                                             AND code = ? 
                                                             AND modifiers = ? 
                                                             ORDER BY observation, occurence""",
                                                    (subject, behavior, modifier[0]))
+
                                 else:
                                     cursor.execute("""SELECT occurence,observation FROM events 
                                                         WHERE subject = ? 
@@ -4655,8 +4664,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if STATE in self.eventType(behavior).upper():
                             for modifier in distinct_modifiers:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND modifiers = ? ORDER BY observation, occurence",
-                                              (subject, behavior, modifier[0]))
+
+                                if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                    cursor.execute("""SELECT occurence, observation FROM events
+                                                        WHERE subject = ? 
+                                                            AND code = ? 
+                                                            AND modifiers = ? 
+                                                            ORDER BY observation, occurence""",
+                                                   (subject, behavior, modifier[0]))
+
+                                else:
+                                    cursor.execute("""SELECT occurence,observation FROM events 
+                                                        WHERE subject = ? 
+                                                            AND code = ?
+                                                            AND modifiers = ?
+                                                            AND occurence BETWEEN ? and ? 
+                                                            ORDER BY observation, occurence""",
+                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+
                                 rows = list(cursor.fetchall())
                                 if len(rows) % 2:
                                     out.append({"subject": subject, "behavior": behavior,
@@ -4705,7 +4730,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if POINT in self.eventType(behavior).upper():
 
-                            if len(selectedObservations) > 1:
+                            #if len(selectedObservations) > 1:
+                            if not plot_parameters["start time"] and not plot_parameters["end time"]:
                                 cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
                             else:
                                 cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
@@ -4723,16 +4749,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             if not len(rows):
                                 if not plot_parameters["exclude behaviors"]:
-                                    out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
-                                                "duration": "-", "duration_mean": "-", "duration_stdev": "-", "number": 0,
-                                                "inter_duration_mean": "-", "inter_duration_stdev": "-"})
+
+                                    if {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behavior} == {"State event"}:
+                                        out.append({"subject": subject,
+                                                "behavior": behavior,
+                                                "modifiers": "",
+                                                "duration": 0,
+                                                "duration_mean": 0,
+                                                "duration_stdev": "NA",
+                                                "number": "0",
+                                                "inter_duration_mean": "NA",
+                                                "inter_duration_stdev": "NA"})
+                                    else: # point 
+                                        out.append({"subject": subject,
+                                                "behavior": behavior,
+                                                "modifiers": "",
+                                                "duration": "NA",
+                                                "duration_mean": "NA",
+                                                "duration_stdev": "NA",
+                                                "number": "0",
+                                                "inter_duration_mean": "NA",
+                                                "inter_duration_stdev": "NA"})
                                 continue
 
                             # inter events duration
                             all_event_interdurations = []
                             for idx, row in enumerate(rows):
                                 if idx and row[1] == rows[idx - 1][1]:
-                                    all_event_interdurations.append(float(row[0]) - float(rows[idx-1][0]))
+                                    all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
                             out_cat.append({"subject": subject,
                                             "behavior": behavior,
@@ -4745,18 +4789,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
                                             })
 
-
                         if STATE in self.eventType(behavior).upper():
-                            cursor.execute("SELECT occurence, observation FROM events where subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+
+                            if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            else:
+                                cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                               (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+
                             rows = list(cursor.fetchall())
 
                             if not len(rows):
                                 if not plot_parameters["exclude behaviors"]: # include behaviors without events
                                     out.append({"subject": subject, "behavior": behavior,
-                                                "modifiers": "NA", "duration": 0, "duration_mean": 0,
+                                                "modifiers": "-", "duration": 0, "duration_mean": 0,
                                                 "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
                                                 "inter_duration_stdev": "-"})
                                 continue
+
                             if len(rows) % 2:
                                 out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
                                             "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
@@ -4913,12 +4963,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         flagGroup = False
         if mode in ["by_behavior", "by_category"]:
             if len(selectedObservations) > 1:
-                plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, by_category=(mode == "by_category"))
-                flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
-            else:
                 plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
-                maxTime=selectedObsTotalMediaLength,
-                by_category=(mode == "by_category"))
+                                                                      maxTime=0,
+                                                                      by_category=(mode == "by_category"))
+                flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
+
+            else:
+
+                plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                                      maxTime=selectedObsTotalMediaLength,
+                                                                      by_category=(mode == "by_category"))
 
         if mode == "synthetic":
             QMessageBox.warning(self, programName, "This function is experimental.<br>Please check results carefully and report any bug")            
@@ -4933,8 +4987,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
-            
+
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
     
@@ -4947,11 +5002,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if len(selectedObservations) > 1:
                 if selectedObsTotalMediaLength:
                     if self.timeFormat == HHMMSS:
-                        self.tb.lbTotalObservedTime.setText("Total media length: {}".format(seconds2time(selectedObsTotalMediaLength)))
+                        self.tb.lbTotalObservedTime.setText("Total observation length: {}".format(seconds2time(selectedObsTotalMediaLength)))
                     if self.timeFormat == S:
-                        self.tb.lbTotalObservedTime.setText("Total media length: {:0.3f}".format(float(selectedObsTotalMediaLength)))
+                        self.tb.lbTotalObservedTime.setText("Total observation length: {:0.3f}".format(float(selectedObsTotalMediaLength)))
                 else:
-                    self.tb.lbTotalObservedTime.setText("Total media length: not available")
+                    self.tb.lbTotalObservedTime.setText("Total observation length: not available")
             else:
     
                 if self.timeFormat == HHMMSS:
@@ -5026,10 +5081,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
             self.tb.show()
 
-
         if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) \
             or mode == "synthetic":
-                
+
             if mode in ["by_behavior", "by_category"]:
                 items = ("Tab Separated Values (*.tsv)",
                      "Comma separated values (*.csv)",
@@ -5109,85 +5163,63 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                 parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
                 
-            if mode == "by_behavior":
-                    fields = ["subject", "behavior",  "modifiers", "number",
-                              "duration", "duration_mean", "duration_stdev",
-                              "inter_duration_mean", "inter_duration_stdev"]
-
-            if mode == "by_category":
-                    fields = ["subject", "category",  "number", "duration"]
-
-            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            cursor.execute("SELECT distinct code, modifiers FROM events WHERE subject in ({})".format(",".join("?" * len(plot_parameters["selected subjects"]))),
-                           (plot_parameters["selected subjects"]))
-            
-            distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
-            
-            # add selected behaviors that are not observed
-            for behav in plot_parameters["selected behaviors"]:
-                if [x for x in distinct_behav_modif if x[0] == behav] == []:
-                    distinct_behav_modif.append([behav, "-"])
-
-            behaviors = init_behav_modif()
-            
-            subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
-            for subj in plot_parameters["selected subjects"]:
+                cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+                cursor.execute("SELECT distinct code, modifiers FROM events WHERE subject in ({})".format(",".join("?" * len(plot_parameters["selected subjects"]))),
+                               (plot_parameters["selected subjects"]))
+                
+                distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
+                
+                # add selected behaviors that are not observed
                 for behav in plot_parameters["selected behaviors"]:
-                    if not plot_parameters["include modifiers"]:
-                        for param in parameters:
-                            subj_header.append(subj)
-                            behav_header.append(behav)
-                            param_header.append(param[1])
-                            
-                    if plot_parameters["include modifiers"]:
-                        for modif in sorted(list(behaviors[subj][behav].keys())):
+                    if [x for x in distinct_behav_modif if x[0] == behav] == []:
+                        distinct_behav_modif.append([behav, "-"])
+    
+                behaviors = init_behav_modif()
+                
+                subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
+                for subj in plot_parameters["selected subjects"]:
+                    for behav in plot_parameters["selected behaviors"]:
+                        if not plot_parameters["include modifiers"]:
                             for param in parameters:
                                 subj_header.append(subj)
                                 behav_header.append(behav)
-                                modif_header.append(modif)
                                 param_header.append(param[1])
+                                
+                        if plot_parameters["include modifiers"]:
+                            for modif in sorted(list(behaviors[subj][behav].keys())):
+                                for param in parameters:
+                                    subj_header.append(subj)
+                                    behav_header.append(behav)
+                                    modif_header.append(modif)
+                                    param_header.append(param[1])
+    
+    
+                data_report.append(subj_header)
+                data_report.append(behav_header)
+                if plot_parameters["include modifiers"]:
+                    data_report.append(modif_header)
+                data_report.append(param_header)
 
+            if mode == "by_behavior":
+                fields = ["subject", "behavior",  "modifiers", "number",
+                          "duration", "duration_mean", "duration_stdev",
+                          "inter_duration_mean", "inter_duration_stdev"]
 
-            data_report.append(subj_header)
-            data_report.append(behav_header)
-            if plot_parameters["include modifiers"]:
-                data_report.append(modif_header)
-            data_report.append(param_header)
+            if mode == "by_category":
+                fields = ["subject", "category",  "number", "duration"]
+
 
             for obsId in selectedObservations:
-
+                
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
-
+                
+                
+                print("out",out)
+                
                 if mode == "synthetic":
 
                     behaviors = init_behav_modif()
-                    '''
-                    behaviors = {}
-                    for subj in plot_parameters["selected subjects"]:
-                        behaviors[subj] = {}
-                        for behav_modif in distinct_behav_modif:
-                            behav, modif = behav_modif
-                            if behav not in behaviors[subj]:
-                                behaviors[subj][behav] = {}
-                            if not plot_parameters["include modifiers"]:
-                                for param in parameters:
-                                    default_value = 0
-                                    if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
-                                       and param[0] in ["duration"]):
-                                           default_value = "-"
-                                    behaviors[subj][behav][param[0]] = default_value
-
-                            if plot_parameters["include modifiers"]:
-                                behaviors[subj][behav][modif] = {}
-                                for param in parameters:
-                                    default_value = 0
-                                    if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
-                                       and param[0] in ["duration"]):
-                                           default_value = "-"
-                                    behaviors[subj][behav][modif][param[0]] = default_value
-                    '''
-
                    
                     for element in out:
                         #pprint.pprint(behaviors)
@@ -5205,21 +5237,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     behaviors[element["subject"]][element["behavior"]][element["modifiers"]][param[0]] = element[param[0]]
                                 except:
                                     pass
-
-                    '''if plot_parameters["include modifiers"]:
-                        for element in out:
-                            for subj in plot_parameters["selected subjects"]:
-                                if subj not in behaviors:
-                                    behaviors[subj] = {}
-                                for behav in plot_parameters["selected behaviors"]:
-                                    if behav not in behaviors[subj]:
-                                        behaviors[subj][behav] = {}
-                                    for param in parameters:
-                                        if element["subject"] == subj and element["behavior"] == behav:
-                                            if element['modifiers'] not in behaviors[subj][behav]:
-                                                behaviors[subj][behav][element['modifiers']] = {}
-                                            behaviors[subj][behav][element['modifiers']][param[0]] = element[param[0]]
-                    '''
 
                     #pprint.pprint(behaviors)
                     #print("\n\n")
@@ -5267,13 +5284,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 values.append(str(row[field]).replace(" ()", ""))
     
                             # % of total time
-                            if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                            if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                            #if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
                                 if len(selectedObservations) > 1:
                                     values.append(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1))
                                 else:
                                     values.append(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1))
                             else:
                                 values.append("-")
+
                             rows.append(values)
     
                     if mode == "by_category":
@@ -5368,9 +5387,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     with open(fileName, "wb") as f:
                          f.write(str.encode(data_report.html))
 
-                
-                
-                
             if mode in ["by_behavior", "by_category"] and flagWorkBook:
                 if "xls" in outputFormat:
                     with open(WBfileName, "wb") as f:
@@ -6890,7 +6906,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for obsId in selectedObservations:
 
-            
             duration1 = []   # in seconds
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 try:
@@ -6913,7 +6928,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     selectedObsTotalMediaLength = -1
                     break
             '''
-    
 
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
