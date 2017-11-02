@@ -4323,8 +4323,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects: list
         selectedBehaviors: list
         """
-        db = sqlite3.connect(":memory:")
-        # db = sqlite3.connect("/tmp/11.sqlite")
+        #db = sqlite3.connect(":memory:")
+        os.system("rm /tmp/11.sqlite")
+        db = sqlite3.connect("/tmp/11.sqlite")
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute("""CREATE TABLE events (observation TEXT,
@@ -4822,7 +4823,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if STATE in self.eventType(behavior).upper():
 
                             if not plot_parameters["start time"] and not plot_parameters["end time"]:
-                                print("1")
+                                print("1...")
                                 cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
                             else:
                                 cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
@@ -4850,6 +4851,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     # event
                                     if idx % 2 == 0:
                                         new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                        
+                                        '''
                                         if len(selectedObservations) == 1:
                                             if ((new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"])
                                                or
@@ -4860,6 +4863,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 new_init = float(plot_parameters["start time"])
                                             if new_end > plot_parameters["end time"]:
                                                 new_end = float(plot_parameters["end time"])
+                                        '''
 
                                         all_event_durations.append(new_end - new_init)
 
@@ -5019,40 +5023,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        # time interval
-
-        if plot_parameters["time"] == TIME_FULL_OBS:
-            min_time = float(0)
-            max_time = float(0)
-
-        '''
-        if plot_parameters["time"] == TIME_EVENTS:
-            try:
-                min_time = float(self.pj[OBSERVATIONS]["events"][0][0])
-            except:
-                min_time = float(0)
-            try:
-                max_time = float(self.pj[OBSERVATIONS]["events"][-1][0])
-            except:
-                max_time = float(obs_length)
-        '''
-
-        if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
-            min_time = float(plot_parameters["start time"])
-            max_time = float(plot_parameters["end time"])
-
-        plot_parameters["start time"] = min_time
-        plot_parameters["end time"] = max_time
-        
-        print(plot_parameters["start time"])
-        print(plot_parameters["end time"])
-
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
-
+            
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
+            for obsId in selectedObservations:
+
+                obs_length = self.observationTotalMediaLength(obsId)
+                if obs_length == -1:
+                    obs_length = 0
+                print("obs_length",obs_length)
+
+                if plot_parameters["time"] == TIME_FULL_OBS:
+                    min_time = float(0)
+                    max_time = float(obs_length)
+    
+                if plot_parameters["time"] == TIME_EVENTS:
+                    try:
+                        min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])
+                    except:
+                        min_time = float(0)
+                    try:
+                        max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
+                    except:
+                        max_time = float(obs_length)
+    
+                if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
+                    min_time = float(plot_parameters["start time"])
+                    max_time = float(plot_parameters["end time"])
+                
+                plot_parameters["start time"] = 0
+                plot_parameters["end time"] = 0
+                
+                print(min_time, max_time)
+                
+                cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
+                cursor.execute("commit")
+
+            
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
+
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
@@ -5074,9 +5085,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
     
                 if self.timeFormat == HHMMSS:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
+                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(min_time), seconds2time(max_time)))
                 if self.timeFormat == S:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
+                    self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(min_time), float(max_time)))
     
             if mode == "by_behavior":
 
@@ -5298,11 +5309,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     except:
                         max_time = float(obs_length)
     
-                '''
+                
                 if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
                     min_time = float(plot_parameters["start time"])
                     max_time = float(plot_parameters["end time"])
-                '''
+                
                 plot_parameters["start time"] = min_time
                 plot_parameters["end time"] = max_time
                 
@@ -5493,14 +5504,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def observationTotalMediaLength(self, obsId):
         """
         total length for observation
-        if media length not available return 0
-
+        
+        media: if media length not available return 0
+                if more media are queued, return sum of media length
+        
+        live: return last event time
+        
         return total length in s (Decimal type)
         """
 
         if self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
             if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[EVENT_TIME_FIELD_IDX]
             else:
                 totalMediaLength = Decimal("0.0")
             return totalMediaLength
@@ -5550,8 +5565,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
                 totalMediaLength = -1
+                return totalMediaLength
             else:
                 totalMediaLength = max(totalMediaLength1, totalMediaLength2)
+
+            # check if events are recorded after totalmedialength
+            if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                if max(self.pj[OBSERVATIONS][obsId][EVENTS])[EVENT_TIME_FIELD_IDX] > totalMediaLength:
+                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[EVENT_TIME_FIELD_IDX]
 
             return totalMediaLength
 

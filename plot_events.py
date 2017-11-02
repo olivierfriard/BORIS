@@ -40,11 +40,11 @@ import config
 import utilities
 
 
-def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=True, min_t=-1, max_t=-1, output_file_name=""):
+def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=True, min_time=-1, max_time=-1, output_file_name=""):
     """
     Create gantt charts with barh matplotlib function
     """
-    
+
     def behav_color(behav):
         """
         return color corresponding to behavior
@@ -69,7 +69,7 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
         fig, ax = plt.subplots(figsize=(20, 8), nrows=len(events), ncols=1, sharex=True)
         axs = np.ndarray(shape=(1), dtype=type(ax))
         axs[0] = ax
-    
+
     # determine the max number of behaviors
     max_len = 0
     observed_behaviors_modifiers_json = []
@@ -82,16 +82,14 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
         ordered_subjects = [x[1] for x in sorted(list(zip([all_subjects.index(x) for x in sorted(list(events.keys()))], sorted(list(events.keys())))))]
     except ValueError:
         ordered_subjects = sorted(list(events.keys()))
-        
-    for ax_idx, subject in enumerate(ordered_subjects):
-        
-        axs[ax_idx].set_title(subject, fontsize=14)
 
+    for ax_idx, subject in enumerate(ordered_subjects):
+
+        axs[ax_idx].set_title(subject, fontsize=14)
         labels_str, ylabels = [], []
-        
         flag_modifiers = False
+
         for behav1 in all_behaviors:
-            #for bm_json in events[subject]:
             for bm_json in (events[subject] if exclude_behaviors_wo_events else observed_behaviors_modifiers_json):
                 if behav1 == json.loads(bm_json)[0]:
                     ylabels.append(bm_json) 
@@ -103,13 +101,10 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
                     else:
                         behav = behav_modif[0]
                         labels_str.append(behav)
-     
+
         ilen = max_len
-       
         axs[ax_idx].set_ylim(ymin=0, ymax = (ilen * par1) + par1)
-        
         pos = np.arange(par1, ilen * par1 + par1, par1)
-        
         axs[ax_idx].set_yticks(pos[:len(ylabels)])
         axs[ax_idx].set_yticklabels(labels_str, fontdict={"fontsize": 12})
         
@@ -119,7 +114,7 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
             axs[ax_idx].set_ylabel("Behaviors", fontdict={"fontsize": 12})
 
         i = 0
-        min_time, max_time = 86400, 0
+        #min_time, max_time = 86400, 0
 
         for ylabel in ylabels:
             if ylabel in events[subject]:
@@ -128,24 +123,26 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
                         start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
                         end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0] + point_event_duration))
                         bar_color = "black"
-                        min_time = min(min_time, interval[0])
-                        max_time = max(max_time, interval[0] + point_event_duration)
+                        #min_time = min(min_time, interval[0])
+                        #max_time = max(max_time, interval[0] + point_event_duration)
                     else:
                         start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
                         end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[1]))
                         bar_color = behav_color(json.loads(ylabel)[0])
-                        min_time = min(min_time, interval[0])
-                        max_time = max(max_time, interval[1])
-        
+                        #min_time = min(min_time, interval[0])
+                        #max_time = max(max_time, interval[1])
                     try:
                         axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
                                          align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
                     except ValueError:
                         return {"error code": 1, "msg": "Invalid color name: <b>{}</b>".format(bar_color)}
-
             i += 1
-    
+
+        #print("min_time",min_time)
+        #print("max_time",max_time)
+
         #axs[ax_idx].axis('tight')
+        '''
         if min_t == -1:
             min_time = 0
         else:
@@ -153,6 +150,11 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
 
         if max_t != -1:
             max_time = max_t
+        '''
+
+        #print("min_time",min_time)
+        #print("max_time",max_time)
+        #print()
 
         axs[ax_idx].set_xlim(xmin = matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
                              xmax = matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
@@ -181,4 +183,4 @@ if __name__ == '__main__':
     #events = {'No focal subject': {'["p"]': [], '["s"]': [], '["a"]': [[47.187, 56.107]], '["n"]': []}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]], '["a"]': [], '["n"]': []}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a"]': [[15.787, 24.01]], '["n"]': [[11.459, 11.459], [17.611, 17.611]]}}
     events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]]}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a", "None"]': [[15.787, 24.01]], '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
 
-    create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=False, min_t=0, max_t=100)
+    create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=False, min_time=0, max_time=100)

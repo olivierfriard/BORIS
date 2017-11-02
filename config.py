@@ -151,6 +151,11 @@ SET_OF_VALUES_idx = 2
 TIMESTAMP = "timestamp"
 TIMESTAMP_idx = 3
 
+
+TIME_FULL_OBS = "full obs"
+TIME_EVENTS = "limit to events"
+TIME_ARBITRARY_INTERVAL = "time interval"
+
 AVAILABLE_INDEP_VAR_TYPES = [NUMERIC, TEXT, SET_OF_VALUES, TIMESTAMP]
 
 

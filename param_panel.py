@@ -37,7 +37,7 @@ from config import *
 
 if QT_VERSION_STR[0] == "4":
     from param_panel_ui import Ui_Dialog
-else:
+if QT_VERSION_STR[0] == "5":
     from param_panel_ui5 import Ui_Dialog
 
 class Param_panel(QDialog, Ui_Dialog):
@@ -60,6 +60,15 @@ class Param_panel(QDialog, Ui_Dialog):
 
         self.lwBehaviors.itemClicked.connect(self.behavior_item_clicked)
 
+        self.rb_full.clicked.connect(lambda: self.rb_time(TIME_FULL_OBS))
+        self.rb_limit.clicked.connect(lambda: self.rb_time(TIME_EVENTS))
+        self.rb_interval.clicked.connect(lambda: self.rb_time(TIME_ARBITRARY_INTERVAL))
+
+    def rb_time(self, button):
+        """
+        time
+        """
+        self.frm_time_interval.setEnabled(button == TIME_ARBITRARY_INTERVAL)
 
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
@@ -110,9 +119,9 @@ class Param_panel(QDialog, Ui_Dialog):
 
 
     def behavior_item_clicked(self, item):
-        '''
+        """
         check / uncheck behaviors belonging to the clicked category
-        '''
+        """
 
         if item.data(33) == "category":
             category = item.data(34)
