@@ -926,10 +926,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in [paramPanelWindow.lwSubjects,
                   paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
                   paramPanelWindow.pbReverseSubjectsSelection,
-                  paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors,
-                  paramPanelWindow.lbStartTime, paramPanelWindow.teStartTime, paramPanelWindow.dsbStartTime,
-                  paramPanelWindow.lbEndTime, paramPanelWindow.teEndTime, paramPanelWindow.dsbEndTime]:
+                  paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors]:
             w.setVisible(False)
+        paramPanelWindow.frm_time.setVisible(False)
 
         paramPanelWindow.item = QListWidgetItem(NO_FOCAL_SUBJECT)
         paramPanelWindow.item.setCheckState(Qt.Unchecked)
@@ -942,6 +941,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if paramPanelWindow.exec_():
             selected_subjects = paramPanelWindow.selectedBehaviors
+        else:
+            return
 
         print(selected_subjects)
         subjects_to_analyze = {}
@@ -4324,7 +4325,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedBehaviors: list
         """
         db = sqlite3.connect(":memory:")
-        # db = sqlite3.connect("/tmp/11.sqlite")
+        #os.system("rm /tmp/11.sqlite")
+        #db = sqlite3.connect("/tmp/11.sqlite")
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute("""CREATE TABLE events (observation TEXT,
@@ -4393,7 +4395,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                        maxTime=0,
                                        flagShowIncludeModifiers=True,
                                        flagShowExcludeBehaviorsWoEvents=True,
-                                       by_category=False):
+                                       by_category=False,
+                                       show_time=False):
 
         """
         show window for:
@@ -4447,6 +4450,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # hide max time
+        if not maxTime:
+            paramPanelWindow.frm_time.setVisible(False)
         """
         if maxTime:
             if self.timeFormat == HHMMSS:
@@ -4822,7 +4827,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if STATE in self.eventType(behavior).upper():
 
                             if not plot_parameters["start time"] and not plot_parameters["end time"]:
-                                print("1")
+                                print("1...")
                                 cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
                             else:
                                 cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
@@ -4850,6 +4855,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     # event
                                     if idx % 2 == 0:
                                         new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                        
+                                        '''
                                         if len(selectedObservations) == 1:
                                             if ((new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"])
                                                or
@@ -4860,6 +4867,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 new_init = float(plot_parameters["start time"])
                                             if new_end > plot_parameters["end time"]:
                                                 new_end = float(plot_parameters["end time"])
+                                        '''
 
                                         all_event_durations.append(new_end - new_init)
 
@@ -4911,6 +4919,338 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return out_sorted, categories
 
 
+        def time_budget_analysis_2(cursor, plot_parameters, by_category=False):
+            """
+            extract number of occurrences, total duration, mean ...
+            if start_time = 0 and end_time = 0 all events are extracted
+            """
+
+            categories, out = {}, []
+            for subject in plot_parameters["selected subjects"]:
+                out_cat = []
+
+                categories[subject] = {}
+
+                for behavior in plot_parameters["selected behaviors"]:
+
+                    if plot_parameters["include modifiers"]:
+
+                        cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
+                        distinct_modifiers = list(cursor.fetchall())
+
+                        if not distinct_modifiers:
+                            if not plot_parameters["exclude behaviors"]:
+
+                                if {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behavior} == {"State event"}:
+                                    out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "-",
+                                            "duration": 0,
+                                            "duration_mean": 0,
+                                            "duration_stdev": "NA",
+                                            "number": "0",
+                                            "inter_duration_mean": "NA",
+                                            "inter_duration_stdev": "NA"})
+                                else: # point 
+                                    out.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "-",
+                                            "duration": "NA",
+                                            "duration_mean": "NA",
+                                            "duration_stdev": "NA",
+                                            "number": "0",
+                                            "inter_duration_mean": "NA",
+                                            "inter_duration_stdev": "NA"})
+                            continue
+
+                        if POINT in self.eventType(behavior).upper():
+                            for modifier in distinct_modifiers:
+
+                                cursor.execute(("SELECT occurence, observation FROM events "
+                                                "WHERE subject = ? "
+                                                "AND code = ? "
+                                                "AND modifiers = ? "
+                                                "ORDER BY observation, occurence"),
+                                               (subject, behavior, modifier[0]))
+
+                                '''
+                                if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                    cursor.execute("""SELECT occurence, observation FROM events
+                                                        WHERE subject = ? 
+                                                            AND code = ? 
+                                                            AND modifiers = ? 
+                                                            ORDER BY observation, occurence""",
+                                                   (subject, behavior, modifier[0]))
+
+                                else:
+                                    cursor.execute("""SELECT occurence,observation FROM events 
+                                                        WHERE subject = ? 
+                                                            AND code = ?
+                                                            AND modifiers = ?
+                                                            AND occurence BETWEEN ? and ? 
+                                                            ORDER BY observation, occurence""",
+                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+                                '''
+
+                                rows = cursor.fetchall()
+
+                                # inter events duration
+                                all_event_interdurations = []
+                                for idx, row in enumerate(rows):
+                                    if idx and row[1] == rows[idx - 1][1]:
+                                        all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
+
+                                out_cat.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": modifier[0],
+                                            "duration": "NA",
+                                            "duration_mean": "NA",
+                                            "duration_stdev": "NA",
+                                            "number": len(rows),
+                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                            })
+
+
+                        if STATE in self.eventType(behavior).upper():
+                            for modifier in distinct_modifiers:
+
+                                cursor.execute(("SELECT occurence, observation FROM events "
+                                                 "WHERE subject = ? "
+                                                 "AND code = ? "
+                                                 "AND modifiers = ? "
+                                                 "ORDER BY observation, occurence"),
+                                               (subject, behavior, modifier[0]))
+
+
+                                '''
+                                if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                    cursor.execute("""SELECT occurence, observation FROM events
+                                                        WHERE subject = ? 
+                                                            AND code = ? 
+                                                            AND modifiers = ? 
+                                                            ORDER BY observation, occurence""",
+                                                   (subject, behavior, modifier[0]))
+
+                                else:
+                                    cursor.execute("""SELECT occurence,observation FROM events 
+                                                        WHERE subject = ? 
+                                                            AND code = ?
+                                                            AND modifiers = ?
+                                                            AND occurence BETWEEN ? and ? 
+                                                            ORDER BY observation, occurence""",
+                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+                                '''
+
+                                rows = list(cursor.fetchall())
+                                if len(rows) % 2:
+                                    out.append({"subject": subject, "behavior": behavior,
+                                                "modifiers": modifier[0], "duration": UNPAIRED,
+                                                "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                                "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                                "inter_duration_stdev": UNPAIRED})
+                                else:
+                                    all_event_durations, all_event_interdurations = [], []
+                                    for idx, row in enumerate(rows):
+                                        # event
+                                        if idx % 2 == 0:
+                                            new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                            
+                                            '''
+                                            if len(selectedObservations) == 1:
+                                                if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
+                                                   or \
+                                                   (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
+                                                    continue
+
+                                                if new_init < plot_parameters["start time"]:
+                                                    new_init = float(plot_parameters["start time"])
+                                                if new_end > plot_parameters["end time"]:
+                                                    new_end = float(plot_parameters["end time"])
+                                            '''
+
+                                            all_event_durations.append(new_end - new_init)
+
+                                        # inter event if same observation
+                                        if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                            if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
+                                                all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                                            #all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                                    out_cat.append({"subject": subject,
+                                                "behavior": behavior,
+                                                "modifiers": modifier[0],
+                                                "duration": round(sum(all_event_durations), 3),
+                                                "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
+                                                "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
+                                                "number": len(all_event_durations),
+                                                "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                                "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                                })
+
+                    else:  # no modifiers
+
+                        if POINT in self.eventType(behavior).upper():
+
+                            #if len(selectedObservations) > 1:
+                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            '''
+                            if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            else:
+                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                               (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+                            '''
+
+                            rows = list(cursor.fetchall())
+
+                            if len(selectedObservations) == 1:
+                                new_rows = []
+                                for occurence, observation in rows:
+                                    new_occurence = max(float(plot_parameters["start time"]), occurence)
+                                    new_occurence = min(new_occurence, float(plot_parameters["end time"]))
+                                    new_rows.append([new_occurence, observation])
+                                rows = list(new_rows)
+
+                            if not len(rows):
+                                if not plot_parameters["exclude behaviors"]:
+
+                                    if {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behavior} == {"State event"}:
+                                        out.append({"subject": subject,
+                                                "behavior": behavior,
+                                                "modifiers": "",
+                                                "duration": 0,
+                                                "duration_mean": 0,
+                                                "duration_stdev": "NA",
+                                                "number": "0",
+                                                "inter_duration_mean": "NA",
+                                                "inter_duration_stdev": "NA"})
+                                    else: # point 
+                                        out.append({"subject": subject,
+                                                "behavior": behavior,
+                                                "modifiers": "",
+                                                "duration": "NA",
+                                                "duration_mean": "NA",
+                                                "duration_stdev": "NA",
+                                                "number": "0",
+                                                "inter_duration_mean": "NA",
+                                                "inter_duration_stdev": "NA"})
+                                continue
+
+                            # inter events duration
+                            all_event_interdurations = []
+                            for idx, row in enumerate(rows):
+                                if idx and row[1] == rows[idx - 1][1]:
+                                    all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
+
+                            out_cat.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "-",
+                                            "duration": "NA",
+                                            "duration_mean": "NA",
+                                            "duration_stdev": "NA",
+                                            "number": len(rows),
+                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                            })
+
+                        if STATE in self.eventType(behavior).upper():
+
+                            cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            '''
+                            if not plot_parameters["start time"] and not plot_parameters["end time"]:
+                                cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
+                            else:
+                                cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
+                                               (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
+                            '''
+
+                            rows = list(cursor.fetchall())
+                            if not len(rows):
+                                if not plot_parameters["exclude behaviors"]: # include behaviors without events
+                                    out.append({"subject": subject, "behavior": behavior,
+                                                "modifiers": "-", "duration": 0, "duration_mean": 0,
+                                                "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
+                                                "inter_duration_stdev": "-"})
+                                continue
+
+                            if len(rows) % 2:
+                                out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                                            "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                            "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                            "inter_duration_stdev": UNPAIRED})
+                            else:
+                                all_event_durations, all_event_interdurations = [], []
+                                for idx, row in enumerate(rows):
+                                    # event
+                                    if idx % 2 == 0:
+                                        new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+                                        
+                                        '''
+                                        if len(selectedObservations) == 1:
+                                            if ((new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"])
+                                               or
+                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"])):
+                                                continue
+
+                                            if new_init < plot_parameters["start time"]:
+                                                new_init = float(plot_parameters["start time"])
+                                            if new_end > plot_parameters["end time"]:
+                                                new_end = float(plot_parameters["end time"])
+                                        '''
+
+                                        all_event_durations.append(new_end - new_init)
+
+                                    # inter event if same observation
+                                    if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                        if plot_parameters["start time"] <= row[0] <= plot_parameters["end time"] and plot_parameters["start time"] <= rows[idx + 1][0] <= plot_parameters["end time"]:
+                                            all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                                out_cat.append({"subject": subject,
+                                            "behavior": behavior,
+                                            "modifiers": "-",
+                                            "duration": round(sum(all_event_durations), 3),
+                                            "duration_mean": round(statistics.mean(all_event_durations), 3) if len(all_event_durations) else "NA",
+                                            "duration_stdev": round(statistics.stdev(all_event_durations), 3) if len(all_event_durations) > 1 else "NA",
+                                            "number": len(all_event_durations),
+                                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3) if len(all_event_interdurations) else "NA",
+                                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3) if len(all_event_interdurations) > 1 else "NA"
+                                            })
+
+                out += out_cat
+
+                if by_category: # and flagCategories:
+
+                    for behav in out_cat:
+
+                        try:
+                            category = [self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["code"] == behav['behavior']][0]
+                        except:
+                            category = ""
+
+                        if category in categories[subject]:
+                            if behav["duration"] != "-" and categories[subject][category]["duration"] != "-":
+                                categories[subject][category]["duration"] += behav["duration"]
+                            else:
+                                categories[subject][category]["duration"] = "-"
+                            categories[subject][category]["number"] += behav["number"]
+                        else:
+                            categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
+
+            out_sorted = []
+            for subject in plot_parameters["selected subjects"]:
+                for behavior in plot_parameters["selected behaviors"]:
+                    for row in out:
+                        if row["subject"] == subject and row["behavior"] == behavior:
+                            out_sorted.append(row)
+
+
+            ### http://stackoverflow.com/questions/673867/python-arbitrary-order-by
+            return out_sorted, categories
+
+
+
         def default_value(behav, param):
             default_value_ = 0
             if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
@@ -4959,7 +5299,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         flagGroup = False
-        if len(selectedObservations) > 1:
+        if len(selectedObservations) > 1 and mode != "synthetic":
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
 
         # check if state events are paired
@@ -5019,44 +5359,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        # time interval
-
-        if plot_parameters["time"] == TIME_FULL_OBS:
-            min_time = float(0)
-            max_time = float(0)
-
-        '''
-        if plot_parameters["time"] == TIME_EVENTS:
-            try:
-                min_time = float(self.pj[OBSERVATIONS]["events"][0][0])
-            except:
-                min_time = float(0)
-            try:
-                max_time = float(self.pj[OBSERVATIONS]["events"][-1][0])
-            except:
-                max_time = float(obs_length)
-        '''
-
-        if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
-            min_time = float(plot_parameters["start time"])
-            max_time = float(plot_parameters["end time"])
-
-        plot_parameters["start time"] = min_time
-        plot_parameters["end time"] = max_time
-        
-        print(plot_parameters["start time"])
-        print(plot_parameters["end time"])
-
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
-
+            
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
-            out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
+            total_observation_time = 0
+            for obsId in selectedObservations:
+
+                obs_length = self.observationTotalMediaLength(obsId)
+                if obs_length == -1:
+                    obs_length = 0
+
+                if plot_parameters["time"] == TIME_FULL_OBS:
+                    min_time = float(0)
+                    max_time = float(obs_length)
+
+                if plot_parameters["time"] == TIME_EVENTS:
+                    try:
+                        min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])
+                    except:
+                        min_time = float(0)
+                    try:
+                        max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
+                    except:
+                        max_time = float(obs_length)
+    
+                if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
+                    min_time = float(plot_parameters["start time"])
+                    max_time = float(plot_parameters["end time"])
+
+                print("min_time, max_time", min_time, max_time)
+
+                total_observation_time += (max_time - min_time)
+
+                cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
+                cursor.execute("commit")
+
+            print("total_observation_time", total_observation_time)
+
+            out, categories = time_budget_analysis_2(cursor, plot_parameters, by_category=(mode == "by_category"))
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
-    
+
             # observations list
             self.tb.label.setText("Selected observations")
             for obs in selectedObservations:
@@ -5064,25 +5410,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
             # media length
             if len(selectedObservations) > 1:
-                if selectedObsTotalMediaLength:
+                if total_observation_time:
                     if self.timeFormat == HHMMSS:
-                        self.tb.lbTotalObservedTime.setText("Total observation length: {}".format(seconds2time(selectedObsTotalMediaLength)))
+                        self.tb.lbTotalObservedTime.setText("Total observation length: {}".format(seconds2time(total_observation_time)))
                     if self.timeFormat == S:
-                        self.tb.lbTotalObservedTime.setText("Total observation length: {:0.3f}".format(float(selectedObsTotalMediaLength)))
+                        self.tb.lbTotalObservedTime.setText("Total observation length: {:0.3f}".format(float(total_observation_time)))
                 else:
                     self.tb.lbTotalObservedTime.setText("Total observation length: not available")
             else:
-    
                 if self.timeFormat == HHMMSS:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(plot_parameters["start time"]), seconds2time(plot_parameters["end time"])))
+                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(min_time), seconds2time(max_time)))
                 if self.timeFormat == S:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(plot_parameters["start time"]), float(plot_parameters["end time"])))
+                    self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(min_time), float(max_time)))
     
             if mode == "by_behavior":
 
                 tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
                              "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
-                             "inter-event intervals std dev", "% of total media length"]
+                             "inter-event intervals std dev", "% of total length"]
     
                 fields = ["subject", "behavior",  "modifiers", "number", "duration", "duration_mean", "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
                 self.tb.twTB.setColumnCount(len(tb_fields))
@@ -5100,10 +5445,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                     # % of total time
                     if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                        item = QTableWidgetItem(str(round(row["duration"] / float(total_observation_time) * 100, 1)))
+                        '''
                         if len(selectedObservations) > 1:
                             item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
                         else:
                             item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
+                        '''
                     else:
                         item = QTableWidgetItem("NA")
     
@@ -5243,7 +5591,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                 behaviors = init_behav_modif()
                 
-                subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
+                subj_header, behav_header, modif_header, param_header = ["", ""], ["", ""], ["", ""], ["", "Total length (s)"]
+                #subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
                 for subj in plot_parameters["selected subjects"]:
                     for behav in plot_parameters["selected behaviors"]:
                         if not plot_parameters["include modifiers"]:
@@ -5260,7 +5609,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     modif_header.append(modif)
                                     param_header.append(param[1])
     
-    
+                print(len(subj_header))
                 data_report.append(subj_header)
                 data_report.append(behav_header)
                 if plot_parameters["include modifiers"]:
@@ -5297,16 +5646,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
                     except:
                         max_time = float(obs_length)
-    
-                '''
+
                 if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
                     min_time = float(plot_parameters["start time"])
                     max_time = float(plot_parameters["end time"])
-                '''
-                plot_parameters["start time"] = min_time
-                plot_parameters["end time"] = max_time
-                
-                out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
+
+                cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
+                cursor.execute("commit")
+
+                out, categories = time_budget_analysis_2(cursor, plot_parameters, by_category=(mode == "by_category"))
 
                 print("out",out)
                 
@@ -5315,10 +5663,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     behaviors = init_behav_modif()
                    
                     for element in out:
-                        #pprint.pprint(behaviors)
-                        #print("\n")
-                        #pprint.pprint(element)
-                        #print("\n")
                         for param in parameters:
                             if not plot_parameters["include modifiers"]:
                                 try:
@@ -5331,11 +5675,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 except:
                                     pass
 
-                    #pprint.pprint(behaviors)
-                    #print("\n\n")
-
                     columns = []
                     columns.append(obsId)
+                    columns.append("{:0.3f}".format(max_time - min_time))
+                    #columns.append([obsId])
 
                     for subj in plot_parameters["selected subjects"]:
                         for behav in plot_parameters["selected behaviors"]:
@@ -5347,28 +5690,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     for param in parameters:
                                         columns.append(behaviors[subj][behav][modif][param[0]])
 
-                    #print("columns", columns,len(columns))
+                    print(len(columns))
                     data_report.append(columns)
 
                 if mode in ["by_behavior", "by_category"]:
                     rows = []
                     # observation id
-                    rows.append(["Observations:"])
-                    rows.append([obsId])
+                    rows.append(["Observation id", obsId])
                     rows.append([""])
     
                     #indep variables
+                    '''
                     if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]:
                         rows.append(["Independent variables:"])
                         for var in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]:
                             rows.append([var, self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][var]])
+                    '''
+                    labels = ["Independent variables"]
+                    values = [""]
+                    if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
+                        for idx in self.pj[INDEPENDENT_VARIABLES]:
+                            labels.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+                            if (INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
+                                and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
+                                values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
+                    rows.append(labels)
+                    rows.append(values)
                     rows.append([""])
+
+                    rows.append(["Analysis from", "{:0.3f}".format(float(min_time)),"to", "{:0.3f}".format(float(max_time))])
+                    rows.append(["Total length (s)", "{:0.3f}".format(float(max_time - min_time))])
                     rows.append([""])
-                    rows.append(["Time budget:"])
+                    rows.append(["Time budget"])
     
                     if mode == "by_behavior":
     
-                        rows.append(fields + ["% of total media length"])
+                        rows.append(fields + ["% of total length"])
                         #data.headers = fields + ["% of total media length"]
     
                         for row in out:
@@ -5379,10 +5736,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             # % of total time
                             if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
                             #if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
+                                values.append(round(row["duration"] / float(max_time - min_time) * 100, 1))
+                                '''
                                 if len(selectedObservations) > 1:
                                     values.append(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1))
                                 else:
-                                    values.append(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1))
+                                    values.append(round(row["duration"] / float(max_time - min_time) * 100, 1))
+                                '''
                             else:
                                 values.append("-")
 
@@ -5493,14 +5853,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def observationTotalMediaLength(self, obsId):
         """
         total length for observation
-        if media length not available return 0
-
+        
+        media: if media length not available return 0
+                if more media are queued, return sum of media length
+        
+        live: return last event time
+        
         return total length in s (Decimal type)
         """
 
         if self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
             if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+                totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[EVENT_TIME_FIELD_IDX]
             else:
                 totalMediaLength = Decimal("0.0")
             return totalMediaLength
@@ -5550,8 +5914,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
                 totalMediaLength = -1
+                return totalMediaLength
             else:
                 totalMediaLength = max(totalMediaLength1, totalMediaLength2)
+
+            # check if events are recorded after totalmedialength
+            if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                if max(self.pj[OBSERVATIONS][obsId][EVENTS])[EVENT_TIME_FIELD_IDX] > totalMediaLength:
+                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[EVENT_TIME_FIELD_IDX]
 
             return totalMediaLength
 
