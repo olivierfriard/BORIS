@@ -96,7 +96,7 @@ import project_functions
 
 
 __version__ = "4.2"
-__version_date__ = "2017-10-20"
+__version_date__ = "2017-11-03"
 
 # BITMAP_EXT = "jpg"
 
