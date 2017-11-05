@@ -500,6 +500,16 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
 
 
+def behavior_color(colors_list, idx):
+    """
+    return color with index corresponding to behavior index
+
+    see BEHAVIORS_PLOT_COLORS list in config.py
+    """
+
+    return colors_list[idx % len(colors_list)]
+
+
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
 

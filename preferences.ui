@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>596</width>
-    <height>459</height>
+    <height>502</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>4</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -430,6 +430,37 @@
               </size>
              </property>
             </spacer>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_5">
+        <attribute name="title">
+         <string>Plot colors</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_11">
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_10">
+           <item>
+            <widget class="QLabel" name="label_10">
+             <property name="text">
+              <string>List of colors to be used in plot. See &lt;a href=&quot;https://matplotlib.org/api/colors_api.html&quot;&gt;matplotlib colors&lt;/a&gt;</string>
+             </property>
+             <property name="openExternalLinks">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPlainTextEdit" name="te_plot_colors"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pb_reset_colors">
+             <property name="text">
+              <string>Reset colors to default</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </item>

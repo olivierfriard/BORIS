@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.7.1
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName("prefDialog")
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(596, 459)
+        prefDialog.resize(596, 502)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(prefDialog)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -22,7 +22,6 @@ class Ui_prefDialog(object):
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.tab)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setObjectName("formLayout")
@@ -107,7 +106,6 @@ class Ui_prefDialog(object):
         self.tab_2 = QtWidgets.QWidget()
         self.tab_2.setObjectName("tab_2")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.tab_2)
-        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -149,7 +147,6 @@ class Ui_prefDialog(object):
         self.tab_3 = QtWidgets.QWidget()
         self.tab_3.setObjectName("tab_3")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.tab_3)
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout()
         self.verticalLayout_6.setObjectName("verticalLayout_6")
@@ -186,7 +183,6 @@ class Ui_prefDialog(object):
         self.tab_4 = QtWidgets.QWidget()
         self.tab_4.setObjectName("tab_4")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.tab_4)
-        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout()
         self.verticalLayout_8.setObjectName("verticalLayout_8")
@@ -216,6 +212,24 @@ class Ui_prefDialog(object):
         self.verticalLayout_8.addItem(spacerItem2)
         self.verticalLayout_9.addLayout(self.verticalLayout_8)
         self.tabWidget.addTab(self.tab_4, "")
+        self.tab_5 = QtWidgets.QWidget()
+        self.tab_5.setObjectName("tab_5")
+        self.verticalLayout_11 = QtWidgets.QVBoxLayout(self.tab_5)
+        self.verticalLayout_11.setObjectName("verticalLayout_11")
+        self.verticalLayout_10 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_10.setObjectName("verticalLayout_10")
+        self.label_10 = QtWidgets.QLabel(self.tab_5)
+        self.label_10.setOpenExternalLinks(True)
+        self.label_10.setObjectName("label_10")
+        self.verticalLayout_10.addWidget(self.label_10)
+        self.te_plot_colors = QtWidgets.QPlainTextEdit(self.tab_5)
+        self.te_plot_colors.setObjectName("te_plot_colors")
+        self.verticalLayout_10.addWidget(self.te_plot_colors)
+        self.pb_reset_colors = QtWidgets.QPushButton(self.tab_5)
+        self.pb_reset_colors.setObjectName("pb_reset_colors")
+        self.verticalLayout_10.addWidget(self.pb_reset_colors)
+        self.verticalLayout_11.addLayout(self.verticalLayout_10)
+        self.tabWidget.addTab(self.tab_5, "")
         self.verticalLayout_2.addWidget(self.tabWidget)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
@@ -231,7 +245,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(4)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -268,6 +282,9 @@ class Ui_prefDialog(object):
         self.lbspectrogram.setText(_translate("prefDialog", "Spectrogram height"))
         self.label_7.setText(_translate("prefDialog", "Color map"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("prefDialog", "Spectrogram"))
+        self.label_10.setText(_translate("prefDialog", "List of colors to be used in plot. See <a href=\"https://matplotlib.org/api/colors_api.html\">matplotlib colors</a>"))
+        self.pb_reset_colors.setText(_translate("prefDialog", "Reset colors to default"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), _translate("prefDialog", "Plot colors"))
         self.pbCancel.setText(_translate("prefDialog", "Cancel"))
         self.pbOK.setText(_translate("prefDialog", "OK"))
 

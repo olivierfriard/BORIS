@@ -356,6 +356,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     saveMediaFilePath = True
 
     beep_every = 0
+    
+    plot_colors = BEHAVIORS_PLOT_COLORS
 
     measurement_w = None
     memPoints = []   # memory of clicked points for measurement tool
@@ -2359,14 +2361,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # spectrogram
         preferencesWindow.sbSpectrogramHeight.setValue(self.spectrogramHeight)
-
         preferencesWindow.cbSpectrogramColorMap.clear()
         preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
-
         try:
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
         except:
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+        
+        # plot colors
+        if not self.plot_colors:
+            self.plot_colors = BEHAVIORS_PLOT_COLORS
+        preferencesWindow.te_plot_colors.setPlainText("\n".join(self.plot_colors))
 
         if preferencesWindow.exec_():
 
@@ -2459,6 +2464,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.FFmpegGlobalFrame2 -= 1
 
                     self.ffmpegTimerOut()
+
+            # plot colors
+            self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
 
             self.menu_options()
 
@@ -4232,6 +4240,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
             except:
                 self.spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
+            
+            # plot colors
+            try:
+                self.plot_colors = settings.value("plot_colors").split("|")
+            except:
+                self.plot_colors = BEHAVIORS_PLOT_COLORS
+                
 
 
         else: # no .boris file found
@@ -4282,6 +4297,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # spectrogram
         settings.setValue("spectrogram_height", self.spectrogramHeight)
         settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
+        # plot colors
+        settings.setValue("plot_colors", "|".join(self.plot_colors))
 
 
 
@@ -4324,9 +4341,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects: list
         selectedBehaviors: list
         """
-        db = sqlite3.connect(":memory:")
-        #os.system("rm /tmp/11.sqlite")
-        #db = sqlite3.connect("/tmp/11.sqlite")
+        #db = sqlite3.connect(":memory:")
+        os.system("rm /tmp/11.sqlite")
+        db = sqlite3.connect("/tmp/11.sqlite")
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute("""CREATE TABLE events (observation TEXT,
@@ -4346,20 +4363,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if event[EVENT_BEHAVIOR_FIELD_IDX] in selectedBehaviors:
 
                         # extract time, code, modifier and comment (time:0, subject:1, code:2, modifier:3, comment:4)
-                        if ((subject_to_analyze == NO_FOCAL_SUBJECT and event[1] == "") or
+                        if ((subject_to_analyze == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == "") or
                                 (event[EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze)):
-
-                            subjectStr = NO_FOCAL_SUBJECT if event[1] == "" else event[1]
-
-                            eventType = STATE if STATE in self.eventType(event[2]).upper() else POINT
 
                             r = cursor.execute("""INSERT INTO events
                                                    (observation, subject, code, type, modifiers, occurence, comment)
                                                     VALUES (?,?,?,?,?,?,?)""",
                             (obsId,
-                             subjectStr,
+                             NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else event[EVENT_SUBJECT_FIELD_IDX],
                              event[EVENT_BEHAVIOR_FIELD_IDX],
-                             eventType,
+                             STATE if STATE in self.eventType(event[EVENT_BEHAVIOR_FIELD_IDX]).upper() else POINT,
                              event[EVENT_MODIFIER_FIELD_IDX], 
                              str(event[EVENT_TIME_FIELD_IDX]),
                              event[EVENT_COMMENT_FIELD_IDX]))
@@ -4613,6 +4626,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mode must be in ("by_behavior", "by_category", "synthetic")
         """
 
+        '''
         def time_budget_analysis(cursor, plot_parameters, by_category=False):
             """
             extract number of occurrences, total duration, mean ...
@@ -4856,7 +4870,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if idx % 2 == 0:
                                         new_init, new_end = float(row[0]), float(rows[idx + 1][0])
                                         
-                                        '''
+                                        """
                                         if len(selectedObservations) == 1:
                                             if ((new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"])
                                                or
@@ -4867,7 +4881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 new_init = float(plot_parameters["start time"])
                                             if new_end > plot_parameters["end time"]:
                                                 new_end = float(plot_parameters["end time"])
-                                        '''
+                                        """
 
                                         all_event_durations.append(new_end - new_init)
 
@@ -4917,6 +4931,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             ### http://stackoverflow.com/questions/673867/python-arbitrary-order-by
             return out_sorted, categories
+        '''
 
 
         def time_budget_analysis_2(cursor, plot_parameters, by_category=False):
@@ -5388,6 +5403,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
                     min_time = float(plot_parameters["start time"])
                     max_time = float(plot_parameters["end time"])
+                    # check intervals
+                    for subj in plot_parameters["selected subjects"]:
+                        for behav in plot_parameters["selected behaviors"]:
+                            if POINT in self.eventType(behav).upper():
+                                continue
+                            #cursor.execute("""SELECT * FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? AND ?""",
+                            #               (subj, behav, min_time, max_time))
+                            #if len(cursor.fetchall()) % 2: # odd 
+                            # check 
+                            if len(cursor.execute("""SELECT * FROM events WHERE subject = ? AND code = ? AND occurence <= ?""",
+                                           (subj, behav, min_time)).fetchall()) % 2:
+                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                (obsId, subj, behav, "STATE", "", min_time))
+                            if len(cursor.execute("""SELECT * FROM events WHERE subject = ? AND code = ? AND occurence >= ?""",
+                                           (subj, behav, max_time)).fetchall()) % 2:
+                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                (obsId, subj, behav, "STATE", "", max_time))
+                            try:
+                                cursor.execute("COMMIT")
+                            except:
+                                pass
+                            
 
                 print("min_time, max_time", min_time, max_time)
 
@@ -6073,7 +6110,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     x2.append(t2)
                                     y.append(count)
 
-                                    col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(json.loads(bm_json)[0]) % len(BEHAVIORS_PLOT_COLORS)])
+                                    #col.append(BEHAVIORS_PLOT_COLORS[all_project_behaviors.index(json.loads(bm_json)[0]) % len(BEHAVIORS_PLOT_COLORS)])
+                                    col.append(behavior_color(self.plot_colors, all_project_behaviors.index(json.loads(bm_json)[0])))
+                                    
 
                                     ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
                             count += 1
@@ -6435,7 +6474,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                   exclude_behaviors_wo_events=plot_parameters["exclude behaviors"],
                                                   min_time=min_time,
                                                   max_time=max_time,
-                                                  output_file_name=output_file_name)
+                                                  output_file_name=output_file_name,
+                                                  plot_colors=self.plot_colors)
 
             if ret["error code"]:
                 QMessageBox.critical(self, programName, ret["msg"])
@@ -8582,10 +8622,10 @@ item []:
         "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
         "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
         "DOI:10.1111/2041-210X.12584").format(prog_name=programName,
-                            ver=ver,
-                            date=__version_date__,
-                            python_ver=platform.python_version()
-                            ))
+                                              ver=ver,
+                                              date=__version_date__,
+                                              python_ver=platform.python_version()
+                                              ))
 
         details = ("Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}\n"
         "CPU type: {cpu_info}\n\n"

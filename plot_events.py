@@ -40,7 +40,11 @@ import config
 import utilities
 
 
-def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=True, min_time=-1, max_time=-1, output_file_name=""):
+def create_events_plot2(events,
+                        all_behaviors,
+                        all_subjects,
+                        exclude_behaviors_wo_events=True, min_time=-1, max_time=-1, output_file_name="",
+                        plot_colors=config.BEHAVIORS_PLOT_COLORS):
     """
     Create gantt charts with barh matplotlib function
     """
@@ -54,7 +58,7 @@ def create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_w
         """
 
         if behav in all_behaviors:
-            return config.BEHAVIORS_PLOT_COLORS[all_behaviors.index(behav) % len(config.BEHAVIORS_PLOT_COLORS)]
+            return utilities.behavior_color(plot_colors, all_behaviors.index(behav))
         else:
             return "darkgray"
 

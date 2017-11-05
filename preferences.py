@@ -48,6 +48,7 @@ class Preferences(QDialog, Ui_prefDialog):
         self.setupUi(self)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
+        self.pb_reset_colors.clicked.connect(self.reset_colors)
 
         self.pbOK.clicked.connect(self.ok)
         self.pbCancel.clicked.connect(self.reject)
@@ -61,6 +62,9 @@ class Preferences(QDialog, Ui_prefDialog):
 
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
+
+    def reset_colors(self):
+        self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
 
     def ok(self):
         self.accept()
