@@ -413,6 +413,8 @@ class Ui_MainWindow(object):
         self.actionCohen_s_kappa.setObjectName("actionCohen_s_kappa")
         self.actionTime_budget_report = QtWidgets.QAction(MainWindow)
         self.actionTime_budget_report.setObjectName("actionTime_budget_report")
+        self.actionCheckStateEventsSingleObs = QtWidgets.QAction(MainWindow)
+        self.actionCheckStateEventsSingleObs.setObjectName("actionCheckStateEventsSingleObs")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -696,4 +698,5 @@ class Ui_MainWindow(object):
         self.actionPlot_events2.setText(_translate("MainWindow", "Plot events"))
         self.actionCohen_s_kappa.setText(_translate("MainWindow", "Cohen\'s kappa"))
         self.actionTime_budget_report.setText(_translate("MainWindow", "Synthetic time budget"))
+        self.actionCheckStateEventsSingleObs.setText(_translate("MainWindow", "Check state events"))
 

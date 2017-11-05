@@ -424,6 +424,8 @@ class Ui_MainWindow(object):
         self.actionCohen_s_kappa.setObjectName(_fromUtf8("actionCohen_s_kappa"))
         self.actionTime_budget_report = QtGui.QAction(MainWindow)
         self.actionTime_budget_report.setObjectName(_fromUtf8("actionTime_budget_report"))
+        self.actionCheckStateEventsSingleObs = QtGui.QAction(MainWindow)
+        self.actionCheckStateEventsSingleObs.setObjectName(_fromUtf8("actionCheckStateEventsSingleObs"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -706,4 +708,5 @@ class Ui_MainWindow(object):
         self.actionPlot_events2.setText(_translate("MainWindow", "Plot events", None))
         self.actionCohen_s_kappa.setText(_translate("MainWindow", "Cohen\'s kappa", None))
         self.actionTime_budget_report.setText(_translate("MainWindow", "Synthetic time budget", None))
+        self.actionCheckStateEventsSingleObs.setText(_translate("MainWindow", "Check state events", None))
 

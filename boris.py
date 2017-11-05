@@ -95,8 +95,8 @@ import plot_events
 import project_functions
 
 
-__version__ = "4.2"
-__version_date__ = "2017-11-03"
+__version__ = "5.0.0"
+__version_date__ = "2017-11-05"
 
 # BITMAP_EXT = "jpg"
 
@@ -614,6 +614,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFind_replace_events.setEnabled(flagObs)
 
         self.actionCheckStateEvents.setEnabled(flag)
+        self.actionCheckStateEventsSingleObs.setEnabled(flag)
         self.actionRunEventOutside.setEnabled(flag)
 
         self.actionMedia_file_information.setEnabled(flagObs)
@@ -716,7 +717,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
 
-        self.actionCheckStateEvents.triggered.connect(self.check_state_events)
+        self.actionCheckStateEvents.triggered.connect(lambda: self.check_state_events("all"))
+        self.actionCheckStateEventsSingleObs.triggered.connect(lambda: self.check_state_events("current"))
         self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
@@ -755,7 +757,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
         
-        # TODO: remove when behavaiors coding map ready
+        # TODO: remove when behaviors coding map ready
         self.action_create_behaviors_coding_map.setVisible(False)
         
 
@@ -857,7 +859,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         separator2.setSeparator(True)
         self.twEvents.addAction(separator2)
 
-        self.twEvents.addAction(self.actionCheckStateEvents)
+        self.twEvents.addAction(self.actionCheckStateEventsSingleObs)
         self.twEvents.addAction(self.actionRunEventOutside)
 
         separator2 = QAction(self)
@@ -913,11 +915,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         obsid1, obsid2 = selectedObservations
 
         # check if state events are paired
-        for obsid in [obsid1, obsid2]:
-            print(self.check_state_events_obs(obsid))
-            if not self.check_state_events_obs(obsid)[0]:
-                QMessageBox.information(self, programName, "The state events in observation <b>{}</b> are not paired".
-                                                           format(obsid))
+        for obsId in [obsid1, obsid2]:
+            r, msg = self.check_state_events_obs(obsId)
+            if not r:
+                QMessageBox.information(self, programName, "Observation: <b>{obsId}</b><br>{msg}".format(obsId=obsId, msg=msg))
                 return
 
         # ask for subjects to analyze
@@ -1953,8 +1954,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for behavior in sorted(set(behaviors)):
                 if behavior not in ethogram_behaviors:
-                    # QMessageBox.warning(self, programName, "The behaviour <b>{}</b> does not exist more in the ethogram".format(behavior))
-                    return (False, "The behaviour <b>{}</b> does not exist more in the ethogram".format(behavior))
+                    return (False, "The behaviour <b>{}</b> does not exist more in the ethogram.<br>".format(behavior))
                 else:
                     if "STATE" in self.eventType(behavior).upper():
                         flagStateEvent = True
@@ -1978,10 +1978,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                           subject=subject if subject else NO_FOCAL_SUBJECT,
                                           time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
 
-        return (False, out) if out else (True, "All state events are PAIRED")
+        return (False, out) if out else (True, "All state events are PAIRED<br>")
 
 
-    def check_state_events(self):
+    def check_state_events(self, mode="all"):
         """
         check state events for each subject in current observation
         if no current observation check all observations
@@ -1989,27 +1989,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         tot_out = ""
-        if self.observationId:
-            _, r = self.check_state_events_obs(self.observationId)
-            tot_out = "<strong>{}</strong><br>{}<br><br>".format(self.observationId, r)
+        if mode == "current":
+            if self.observationId:
+                r, msg = self.check_state_events_obs(self.observationId)
+                tot_out = "<strong>{}</strong><br>{}<br><br>".format(self.observationId, msg)
 
-        # no current observation
-        else:
+        if mode == "all":
             if not self.pj[OBSERVATIONS]:
                 QMessageBox.warning(self, programName, "The project does not contain any observation",
                                     QMessageBox.Ok | QMessageBox.Default,
                                     QMessageBox.NoButton)
                 return
-
+    
             # ask user observations to analyze
             _, selectedObservations = self.selectObservations(MULTIPLE)
             if not selectedObservations:
                 return
-
-            tot_out = ""
+    
             for obsId in sorted(selectedObservations):
-                _, r = self.check_state_events_obs(obsId)
-                tot_out += "<strong>{0}</strong><br>{1}<br>".format(obsId, r)
+                r, msg = self.check_state_events_obs(obsId)
+                tot_out += "<strong>{}</strong><br>{}<br>".format(obsId, msg)
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle("Check state events")
@@ -3095,6 +3094,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except:
             return False
         return True
+
 
     def initialize_new_observation_vlc(self):
         """
@@ -4608,8 +4608,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if paramPanelWindow.rb_interval.isChecked():
             time_param = TIME_ARBITRARY_INTERVAL
 
-
-
         return {"selected subjects": selectedSubjects,
                 "selected behaviors": selectedBehaviors,
                 "include modifiers": paramPanelWindow.cbIncludeModifiers.isChecked(),
@@ -5265,7 +5263,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return out_sorted, categories
 
 
-
         def default_value(behav, param):
             default_value_ = 0
             if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
@@ -5318,12 +5315,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
 
         # check if state events are paired
-        not_paired_obs_list = []
+        out = ""
         for obsId in selectedObservations:
-            if not self.check_state_events_obs(obsId)[0]:
-                not_paired_obs_list.append(obsId)
-        if not_paired_obs_list:
-            QMessageBox.warning(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
+            r, msg = self.check_state_events_obs(obsId)
+            if not r:
+                out += "<strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+
+        if out:
+            d = QDialog()
+            d.setWindowTitle("Check selected observations")
+            hbox = QVBoxLayout()
+
+            d.lb = QLabel("The following observations have some problems")
+            hbox.addWidget(d.lb)
+
+            d.ptText = QPlainTextEdit()
+            d.ptText.setReadOnly(True)
+            d.ptText.appendHtml(out)
+            hbox.addWidget(d.ptText)
+
+            hbox2 = QHBoxLayout()
+            d.pbOK = QPushButton("OK")
+            d.pbOK.clicked.connect(d.close)
+
+            hbox2.addWidget(d.pbOK)
+            hbox.addLayout(hbox2)
+
+            d.setLayout(hbox)
+
+            d.setWindowModality(Qt.ApplicationModal)
+            d.exec_()
+            #dialog.MessageDialog(programName, tot_out, [OK])
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -5376,7 +5398,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
-            
+
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
             total_observation_time = 0
@@ -5408,34 +5430,51 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         for behav in plot_parameters["selected behaviors"]:
                             if POINT in self.eventType(behav).upper():
                                 continue
-                            #cursor.execute("""SELECT * FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? AND ?""",
-                            #               (subj, behav, min_time, max_time))
-                            #if len(cursor.fetchall()) % 2: # odd 
-                            # check 
-                            if len(cursor.execute("""SELECT * FROM events WHERE subject = ? AND code = ? AND occurence <= ?""",
-                                           (subj, behav, min_time)).fetchall()) % 2:
-                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
-                                (obsId, subj, behav, "STATE", "", min_time))
-                            if len(cursor.execute("""SELECT * FROM events WHERE subject = ? AND code = ? AND occurence >= ?""",
-                                           (subj, behav, max_time)).fetchall()) % 2:
-                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
-                                (obsId, subj, behav, "STATE", "", max_time))
+                            # extract modifiers
+                            #if plot_parameters["include modifiers"]:
+
+                            cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subj, behav))
+                            distinct_modifiers = list(cursor.fetchall())
+
+                            for modifier in distinct_modifiers:
+                                print("modifier", modifier[0])
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence <= ?""",
+                                               (obsId, subj, behav, modifier[0], min_time)).fetchall()) % 2:
+                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                                   (obsId, subj, behav, "STATE", modifier[0], min_time))
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence >= ?""",
+                                               (obsId, subj, behav, modifier[0], max_time)).fetchall()) % 2:
+                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                                   (obsId, subj, behav, "STATE", modifier[0], max_time))
                             try:
                                 cursor.execute("COMMIT")
                             except:
                                 pass
-                            
 
-                print("min_time, max_time", min_time, max_time)
+                            '''
+                            else: # no modif
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND occurence <= ?""",
+                                               (obsId, subj, behav, min_time)).fetchall()) % 2:
+                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                                   (obsId, subj, behav, "STATE", "", min_time))
+    
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND occurence >= ?""",
+                                               (obsId, subj, behav, max_time)).fetchall()) % 2:
+                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                                   (obsId, subj, behav, "STATE", "", max_time))
+                                try:
+                                    cursor.execute("COMMIT")
+                                except:
+                                    pass
+                            '''
 
                 total_observation_time += (max_time - min_time)
 
-                cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
+                cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time, max_time))
                 cursor.execute("commit")
 
-            print("total_observation_time", total_observation_time)
-
             out, categories = time_budget_analysis_2(cursor, plot_parameters, by_category=(mode == "by_category"))
+            print("out", out)
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
@@ -5533,8 +5572,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-        if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) \
-            or mode == "synthetic":
+        if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) or mode == "synthetic":
 
             if mode in ["by_behavior", "by_category"]:
                 items = ("Tab Separated Values (*.tsv)",
@@ -5688,17 +5726,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     min_time = float(plot_parameters["start time"])
                     max_time = float(plot_parameters["end time"])
 
+                    # check intervals
+                    for subj in plot_parameters["selected subjects"]:
+                        for behav in plot_parameters["selected behaviors"]:
+                            if POINT in self.eventType(behav).upper():
+                                continue
+                            # extract modifiers
+                            #if plot_parameters["include modifiers"]:
+
+                            cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subj, behav))
+                            distinct_modifiers = list(cursor.fetchall())
+
+                            for modifier in distinct_modifiers:
+                                print("modifier", modifier[0])
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence <= ?""",
+                                               (obsId, subj, behav, modifier[0], min_time)).fetchall()) % 2:
+                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                                   (obsId, subj, behav, "STATE", modifier[0], min_time))
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence >= ?""",
+                                               (obsId, subj, behav, modifier[0], max_time)).fetchall()) % 2:
+                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                                   (obsId, subj, behav, "STATE", modifier[0], max_time))
+                            try:
+                                cursor.execute("COMMIT")
+                            except:
+                                pass
+
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
                 cursor.execute("commit")
 
                 out, categories = time_budget_analysis_2(cursor, plot_parameters, by_category=(mode == "by_category"))
 
-                print("out",out)
-                
                 if mode == "synthetic":
 
                     behaviors = init_behav_modif()
-                   
+
                     for element in out:
                         for param in parameters:
                             if not plot_parameters["include modifiers"]:
@@ -6302,6 +6364,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            r, msg = self.check_state_events_obs(obsId)
+            if not r:
+                out += "<strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            d = QDialog()
+            d.setWindowTitle("Check selected observations")
+            hbox = QVBoxLayout()
+
+            d.lb = QLabel("The following observations have some problems")
+            hbox.addWidget(d.lb)
+
+            d.ptText = QPlainTextEdit()
+            d.ptText.setReadOnly(True)
+            d.ptText.appendHtml(out)
+            hbox.addWidget(d.ptText)
+
+            hbox2 = QHBoxLayout()
+            d.pbOK = QPushButton("OK")
+            d.pbOK.clicked.connect(d.close)
+
+            hbox2.addWidget(d.pbOK)
+            hbox.addLayout(hbox2)
+
+            d.setLayout(hbox)
+
+            d.setWindowModality(Qt.ApplicationModal)
+            d.exec_()
+
+        '''
         not_paired_obs_list = []
         for obsId in selectedObservations:
             if not self.check_state_events_obs(obsId)[0]:
@@ -6309,7 +6405,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not_paired_obs_list:
             QMessageBox.warning(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
-        
+        '''        
         selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
         if not selectedObservations:
             return
@@ -7340,13 +7436,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if state events are paired
+        out = ""
         not_paired_obs_list = []
         for obsId in selectedObservations:
-            if not self.check_state_events_obs(obsId)[0]:
+            r, msg = self.check_state_events_obs(obsId)
+            if not r:
+                out += "<strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
 
-        if not_paired_obs_list:
-            QMessageBox.warning(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
+        if out:
+            d = QDialog()
+            d.setWindowTitle("Check selected observations")
+            hbox = QVBoxLayout()
+
+            d.lb = QLabel("The following observations have some problems")
+            hbox.addWidget(d.lb)
+
+            d.ptText = QPlainTextEdit()
+            d.ptText.setReadOnly(True)
+            d.ptText.appendHtml(out)
+            hbox.addWidget(d.ptText)
+
+            hbox2 = QHBoxLayout()
+            d.pbOK = QPushButton("OK")
+            d.pbOK.clicked.connect(d.close)
+
+            hbox2.addWidget(d.pbOK)
+            hbox.addLayout(hbox2)
+
+            d.setLayout(hbox)
+
+            d.setWindowModality(Qt.ApplicationModal)
+            d.exec_()
 
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
@@ -10890,7 +11011,6 @@ if __name__ == "__main__":
         if not project_to_open:
             print("No project file!")
             sys.exit()
-        
 
         if options.action == "check_state_events_obs":
             

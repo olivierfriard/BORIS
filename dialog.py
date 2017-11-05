@@ -452,6 +452,7 @@ class ResultsWidget(QWidget):
 
         self.setLayout(hbox)
 
+
     def pbOK_clicked(self):
         self.close()
 
