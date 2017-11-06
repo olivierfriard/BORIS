@@ -4341,9 +4341,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects: list
         selectedBehaviors: list
         """
-        #db = sqlite3.connect(":memory:")
-        os.system("rm /tmp/11.sqlite")
-        db = sqlite3.connect("/tmp/11.sqlite")
+        db = sqlite3.connect(":memory:")
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute("""CREATE TABLE events (observation TEXT,
