@@ -96,7 +96,7 @@ import project_functions
 
 
 __version__ = "5.0.0"
-__version_date__ = "2017-11-05"
+__version_date__ = "2017-11-06"
 
 # BITMAP_EXT = "jpg"
 
@@ -5345,7 +5345,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             d.setWindowModality(Qt.ApplicationModal)
             d.exec_()
-            #dialog.MessageDialog(programName, tot_out, [OK])
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -5451,30 +5450,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             except:
                                 pass
 
-                            '''
-                            else: # no modif
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND occurence <= ?""",
-                                               (obsId, subj, behav, min_time)).fetchall()) % 2:
-                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
-                                                   (obsId, subj, behav, "STATE", "", min_time))
-    
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND occurence >= ?""",
-                                               (obsId, subj, behav, max_time)).fetchall()) % 2:
-                                    cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
-                                                   (obsId, subj, behav, "STATE", "", max_time))
-                                try:
-                                    cursor.execute("COMMIT")
-                                except:
-                                    pass
-                            '''
-
                 total_observation_time += (max_time - min_time)
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time, max_time))
                 cursor.execute("commit")
 
             out, categories = time_budget_analysis_2(cursor, plot_parameters, by_category=(mode == "by_category"))
-            print("out", out)
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
@@ -5522,12 +5503,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # % of total time
                     if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
                         item = QTableWidgetItem(str(round(row["duration"] / float(total_observation_time) * 100, 1)))
-                        '''
-                        if len(selectedObservations) > 1:
-                            item = QTableWidgetItem(str(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1)))
-                        else:
-                            item = QTableWidgetItem(str(round(row["duration"] / float(plot_parameters["end time"] - plot_parameters["start time"]) * 100, 1)))
-                        '''
                     else:
                         item = QTableWidgetItem("NA")
     
@@ -5639,7 +5614,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return
 
                     extension = ""
-                    availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html")
+                    availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html") # ) is added to distinguish between xls and xlsx
                     for fileExtension in availableFormats:
                         if fileExtension in filter_:
                             extension = fileExtension.replace(")", "")
