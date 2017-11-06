@@ -4151,6 +4151,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.embedPlayer = True
 
+            if sys.platform == "darwin":
+                self.embedPlayer = False
+
             self.alertNoFocalSubject = False
             try:
                 self.alertNoFocalSubject = (settings.value('alert_nosubject') == "true")
