@@ -2964,10 +2964,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.media_list = self.instance.media_list_new()
 
         # video will be drawn in this widget
+        '''
         if sys.platform == "darwin":  # for MacOS
             self.videoframe = QMacCocoaViewContainer(0)
         else:
             self.videoframe = QFrame()
+        '''
+
+        self.videoframe = QFrame()
+
         self.palette = self.videoframe.palette()
         self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.videoframe.setPalette(self.palette)
