@@ -2330,7 +2330,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
         # beep every
         preferencesWindow.sbBeepEvery.setValue(self.beep_every)
+
         # embed player
+        if sys.platform == "darwin":
+            self.embedPlayer = False
+            preferencesWindow.cbEmbedPlayer.setEnabled(False)
+
         preferencesWindow.cbEmbedPlayer.setChecked(self.embedPlayer)
         # alert no focal subject
         preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
@@ -2366,7 +2371,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
         except:
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
-        
+
         # plot colors
         if not self.plot_colors:
             self.plot_colors = BEHAVIORS_PLOT_COLORS
@@ -3036,10 +3041,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         app.processEvents()
 
+        '''
         if sys.platform == "darwin":  # for MacOS
             self.videoframe2 = QMacCocoaViewContainer(0)
         else:
             self.videoframe2 = QFrame()
+        '''
+
+        self.videoframe2 = QFrame()
+        
         self.palette2 = self.videoframe2.palette()
         self.palette2.setColor(QPalette.Window, QColor(0, 0, 0))
         self.videoframe2.setPalette(self.palette2)
