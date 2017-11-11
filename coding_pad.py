@@ -40,23 +40,35 @@ class CodingPad(QWidget):
     clickSignal = pyqtSignal(str)
     sendEventSignal = pyqtSignal(QEvent)
 
-    def __init__(self, pj, parent = None):
+    def __init__(self, pj, filtered_behaviors, parent=None):
         super(CodingPad, self).__init__(parent)
         self.pj = pj
+        self.filtered_behaviors = filtered_behaviors
 
         self.setWindowTitle("Coding pad")
         self.grid = QGridLayout(self)
         self.installEventFilter(self)
+        self.compose()
 
+    def compose(self):
+        for i in reversed(range(self.grid.count())): 
+            self.grid.itemAt(i).widget().setParent(None)
+        
         self.colors_dict = {}
         if BEHAVIORAL_CATEGORIES in self.pj:
-            for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x]])):
+            for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"]
+                                                for x in self.pj[ETHOGRAM]
+                                                    if "category" in self.pj[ETHOGRAM][x]])):
                 self.colors_dict[category] = CATEGORY_COLORS_LIST[idx % len(CATEGORY_COLORS_LIST)]
 
         if self.colors_dict:
-            behaviorsList = [[pj[ETHOGRAM][x]["category"], pj[ETHOGRAM][x]["code"]] for x in sorted_keys(pj[ETHOGRAM]) if "category" in pj[ETHOGRAM][x]]
+            behaviorsList = [[self.pj[ETHOGRAM][x]["category"], self.pj[ETHOGRAM][x]["code"]]
+                             for x in sorted_keys(self.pj[ETHOGRAM])
+                                 if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
         else:
-            behaviorsList = [["", pj[ETHOGRAM][x]["code"]] for x in sorted_keys(pj[ETHOGRAM])]
+            behaviorsList = [["", self.pj[ETHOGRAM][x]["code"]]
+                             for x in sorted_keys(self.pj[ETHOGRAM])
+                                 if self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
         dim = int(len(behaviorsList)**0.5 + 0.999)
 
         c = 0
@@ -66,7 +78,7 @@ class CodingPad(QWidget):
                     break
                 self.addWidget(behaviorsList[c][1], i, j)
                 c += 1
-
+        
 
     def addWidget(self, behaviorCode, i, j):
 

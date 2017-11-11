@@ -1348,9 +1348,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if hasattr(self, "codingpad"):
+            self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            self.codingpad.compose()
             self.codingpad.show()
         else:
-            self.codingpad = coding_pad.CodingPad(self.pj)
+            filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            self.codingpad = coding_pad.CodingPad(self.pj, filtered_behaviors)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.codingpad.sendEventSignal.connect(self.signal_from_coding_pad)
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
@@ -1370,6 +1373,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
+
     def filter_behaviors(self):
         """
         allow user to filter behaviors in ethogram
@@ -1379,24 +1383,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setMaximumHeight(800)
         paramPanelWindow.setWindowTitle("Select the behaviors to show in the ethogram table")
-        paramPanelWindow.lwSubjects.setVisible(False)
+        for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
+                  paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
+                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
+            w.setVisible(False)
 
-        paramPanelWindow.pbSelectAllSubjects.setVisible(False)
-        paramPanelWindow.pbUnselectAllSubjects.setVisible(False)
-        paramPanelWindow.pbReverseSubjectsSelection.setVisible(False)
-
-        paramPanelWindow.lbSubjects.setVisible(False)
-        paramPanelWindow.cbIncludeModifiers.setVisible(False)
-        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
-        paramPanelWindow.lbStartTime.setVisible(False)
-        paramPanelWindow.teStartTime.setVisible(False)
-        paramPanelWindow.dsbStartTime.setVisible(False)
-        paramPanelWindow.lbEndTime.setVisible(False)
-        paramPanelWindow.teEndTime.setVisible(False)
-        paramPanelWindow.dsbEndTime.setVisible(False)
-
-        # behaviors  filtered
+        # behaviors filtered
         filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
 
         if BEHAVIORAL_CATEGORIES in self.pj:
@@ -1453,6 +1447,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
                 self.projectChanged = True
             self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
+            if hasattr(self, "codingpad"):
+                self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+                self.codingpad.compose()
 
     def filter_subjects(self):
         """
@@ -3969,9 +3966,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pass
 
         if hasattr(self, "codingpad"):
+            print("del coding pad")
+            self.codingpad.close()
             del self.codingpad
 
         if hasattr(self, "spectro"):
+            self.spectro.close()
             del self.spectro
 
         if hasattr(self, "frame_viewer1"):
@@ -3981,9 +3981,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             del self.frame_viewer2
 
         if hasattr(self, "results"):
+            self.results.close()
             del self.results
 
         if hasattr(self, "bcm"):
+            self.bcm.close()
             del self.bcm
             
         if hasattr(self, "mapCreatorWindow"):
@@ -4455,6 +4457,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setMaximumHeight(800)
         paramPanelWindow.setWindowTitle("Select subjects and behaviors")
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
@@ -10010,7 +10013,10 @@ item []:
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                              maxTime=0,
+                                                              flagShowIncludeModifiers=False,
+                                                              flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
