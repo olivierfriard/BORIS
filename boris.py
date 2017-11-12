@@ -84,6 +84,7 @@ import tablib
 import observations_list
 import plot_spectrogram
 import coding_pad
+import subjects_pad
 import transitions
 import recode_widget
 from config import *
@@ -770,6 +771,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
+        self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
+        
         self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
@@ -870,7 +873,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.addAction(self.actionDelete_all_observations)
 
         # Actions for twSubjects context menu
-        self.actionDeselectCurrentSubject.triggered.connect(self.deselectSubject)
+        self.actionDeselectCurrentSubject.triggered.connect(lambda: self.update_subject(""))
 
         self.twSubjects.setContextMenuPolicy(Qt.ActionsContextMenu)
         self.twSubjects.addAction(self.actionDeselectCurrentSubject)
@@ -1321,23 +1324,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
                 timerFFmpegRecoding.start(15000)
 
+
     def click_signal_from_coding_pad(self, behaviorCode):
         """
         handle click received from coding pad
         """
-
         sendEventSignal = pyqtSignal(QEvent)
-        sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text=behaviorCode)
         self.keyPressEvent(q)
 
 
     def signal_from_coding_pad(self, event):
         """
-        receive signal from coding pad map
+        receive signal from coding pad
         """
         self.keyPressEvent(event)
 
+    def close_signal_from_coding_pad(self, geom):
+        self.codingpad_geometry_memory = geom
+
+
+    def click_signal_from_subjects_pad(self, subject):
+        """
+        handle click received from subjects pad
+        """
+        sendEventSignal = pyqtSignal(QEvent)
+        q = QKeyEvent(QEvent.KeyPress, Qt.Key_Enter, Qt.NoModifier, text="#subject#" + subject)
+        self.keyPressEvent(q)
+
+
+    def signal_from_subjects_pad(self, event):
+        """
+        receive signal from subjects pad 
+        """
+        self.keyPressEvent(event)
+
+    def close_signal_from_subjects_pad(self, geom):
+        self.subjectspad_geometry_memory = geom
 
     def show_coding_pad(self):
         """
@@ -1351,13 +1374,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             self.codingpad.compose()
             self.codingpad.show()
+            self.codingpad.setGeometry(self.codingpad_geometry_memory.x(),
+                              self.codingpad_geometry_memory.y(),
+                              self.codingpad_geometry_memory.width(),
+                              self.codingpad_geometry_memory.height())
+
         else:
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             self.codingpad = coding_pad.CodingPad(self.pj, filtered_behaviors)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.codingpad.sendEventSignal.connect(self.signal_from_coding_pad)
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
+            self.codingpad.close_signal.connect(self.close_signal_from_coding_pad)
             self.codingpad.show()
+
+
+    def show_subjects_pad(self):
+        """
+        show subjects pad window
+        """
+        if self.playerType == VIEWER:
+            QMessageBox.warning(self, programName, "The subjects pad is not available in <b>VIEW</b> mode")
+            return
+
+        if hasattr(self, "subjects_pad"):
+            self.subjects_pad.filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text()
+                                                   for i in range(self.twSubjects.rowCount())]
+            self.subjects_pad.compose()
+            self.subjects_pad.show()
+            self.subjects_pad.setGeometry(self.subjectspad_geometry_memory.x(),
+                                          self.subjectspad_geometry_memory.y(),
+                                          self.subjectspad_geometry_memory.width(),
+                                          self.subjectspad_geometry_memory.height())
+        else:
+            filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text()
+                                 for i in range(self.twSubjects.rowCount())]
+            self.subjects_pad = subjects_pad.SubjectsPad(self.pj, filtered_subjects)
+            self.subjects_pad.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.subjects_pad.sendEventSignal.connect(self.signal_from_subjects_pad)
+            self.subjects_pad.clickSignal.connect(self.click_signal_from_subjects_pad)
+            self.subjects_pad.close_signal.connect(self.close_signal_from_subjects_pad)
+            self.subjects_pad.show()
 
 
     def show_all_behaviors(self):
@@ -1384,6 +1441,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setMaximumHeight(800)
+        paramPanelWindow.setMaximumWidth(600)
         paramPanelWindow.setWindowTitle("Select the behaviors to show in the ethogram table")
         for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
                   paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
@@ -1447,6 +1505,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
                 self.projectChanged = True
             self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
+            # update subjects pad
             if hasattr(self, "codingpad"):
                 self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
                 self.codingpad.compose()
@@ -1457,19 +1516,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.setMaximumHeight(800)
+        paramPanelWindow.setMaximumWidth(600)
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
         paramPanelWindow.lbBehaviors.setText("Subjects")
 
-        for w in [paramPanelWindow.lwSubjects,
-                  paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
-                  paramPanelWindow.pbReverseSubjectsSelection,
-                  paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors,
-                  paramPanelWindow.lbStartTime, paramPanelWindow.teStartTime, paramPanelWindow.dsbStartTime,
-                  paramPanelWindow.lbEndTime, paramPanelWindow.teEndTime, paramPanelWindow.dsbEndTime]:
+        for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
+                  paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
+                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
             w.setVisible(False)
 
-        # behaviors  filtered
-        filtered_subjects = [self.twSubjects.item(i, 1).text() for i in range(self.twSubjects.rowCount())]
+        # subjects filtered
+        filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())]
 
         for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
 
@@ -1485,6 +1543,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_subjects):
                 self.projectChanged = True
             self.load_subjects_in_twSubjects(paramPanelWindow.selectedBehaviors)
+            # update subjects pad
+            if hasattr(self, "subjects_pad"):
+                self.subjects_pad.filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text()
+                                                       for i in range(self.twSubjects.rowCount())]
+                self.subjects_pad.compose()
+
 
     def extract_events(self):
         """
@@ -2284,21 +2348,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.info("automatic backup")
             self.save_project_activated()
 
-    def deselectSubject(self):
+    def update_subject(self, subject):
         """
-        deselect the current subject
+        update the current subject
         """
-        self.currentSubject = ""
-        self.lbSubject.setText("<b>{}</b>".format(NO_FOCAL_SUBJECT))
-        self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
-
-    def selectSubject(self, subject):
-        """
-        deselect the current subject
-        """
-        self.currentSubject = subject
-        self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))
-        self.lbFocalSubject.setText(" Focal subject: <b>{}</b>".format(self.currentSubject))
+        if not subject or (self.currentSubject == subject):
+            self.currentSubject = ""
+            self.lbSubject.setText("<b>{}</b>".format(NO_FOCAL_SUBJECT))
+            self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
+        else:
+            self.currentSubject = subject
+            self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))
+            self.lbFocalSubject.setText(" Focal subject: <b>{}</b>".format(self.currentSubject))
 
     def preferences(self):
         """
@@ -3966,9 +4027,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pass
 
         if hasattr(self, "codingpad"):
-            print("del coding pad")
             self.codingpad.close()
             del self.codingpad
+
+        if hasattr(self, "subjects_pad"):
+            self.subjects_pad.close()
+            del self.subjects_pad
 
         if hasattr(self, "spectro"):
             self.spectro.close()
@@ -9549,7 +9613,7 @@ item []:
 
         if (((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])) or
            (ek in function_keys) or
-           (ek == Qt.Key_Enter and event.text())):
+           (ek == Qt.Key_Enter and event.text())):  # click from coding pad or subjects pad
 
             obs_idx, subj_idx  = -1, -1
             count = 0
@@ -9559,12 +9623,29 @@ item []:
             elif ek != Qt.Key_Enter:
                 ek_unichr = chr(ek)
 
-            if ek == Qt.Key_Enter and event.text():
+            if ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ""
-                for o in self.pj[ETHOGRAM]:
-                    if self.pj[ETHOGRAM][o]["code"] == event.text():
-                        obs_idx = o
-                        count += 1
+
+                if "#subject#" in event.text():
+                    print("event.text()", event.text(), event.text().replace("#subject#", ""))
+                    for idx in self.pj[SUBJECTS]:
+                        if self.pj[SUBJECTS][idx]["name"] == event.text().replace("#subject#", ""):
+                            subj_idx = idx
+                            '''
+                            if self.currentSubject == self.pj[SUBJECTS][subj_idx]["name"]:
+                                self.update_subject("")
+                            else:
+                                self.update_subject(self.pj[SUBJECTS][subj_idx]["name"])
+                            '''
+                            self.update_subject(self.pj[SUBJECTS][subj_idx]["name"])
+                            return
+
+
+                else: # behavior
+                    for o in self.pj[ETHOGRAM]:
+                        if self.pj[ETHOGRAM][o]["code"] == event.text():
+                            obs_idx = o
+                            count += 1
             else:
                 # count key occurence in ethogram
                 for o in self.pj[ETHOGRAM]:
@@ -9573,26 +9654,24 @@ item []:
                         count += 1
 
             # check if key defines a suject
-            flag_subject = False
-            for idx in self.pj[SUBJECTS]:
-                if ek_unichr == self.pj[SUBJECTS][idx]["key"]:
-                    subj_idx = idx
+            if subj_idx == -1:  # subject not selected with subjects pad
+                flag_subject = False
+                for idx in self.pj[SUBJECTS]:
+                    if ek_unichr == self.pj[SUBJECTS][idx]["key"]:
+                        subj_idx = idx
 
             # select between code and subject
             if subj_idx != -1 and count:
-
                 if self.playerType == VLC:
                     if self.mediaListPlayer.get_state() != vlc.State.Paused:
                         flagPlayerPlaying = True
                         self.pause_video()
-
 
                 r = dialog.MessageDialog(programName, "This key defines a behavior and a subject. Choose one", ["&Behavior", "&Subject"])
                 if r == "&Subject":
                     count = 0
                 if r == "&Behavior":
                     subj_idx = -1
-
 
             # check if key codes more events
             if subj_idx == -1 and count > 1:
@@ -9637,17 +9716,20 @@ item []:
 
             elif count == 0:
 
-                # check if key defines a suject
-                flag_subject = False
-                for idx in self.pj[SUBJECTS]:
-                    if ek_unichr == self.pj[SUBJECTS][idx]["key"]:
-                        flag_subject = True
-
-                        # select or deselect current subject
-                        if self.currentSubject == self.pj[SUBJECTS][idx]["name"]:
-                            self.deselectSubject()
-                        else:
-                            self.selectSubject(self.pj[SUBJECTS][idx]["name"])
+                if subj_idx != -1:
+                    # check if key defines a suject
+                    flag_subject = False
+                    for idx in self.pj[SUBJECTS]:
+                        if ek_unichr == self.pj[SUBJECTS][idx]["key"]:
+                            flag_subject = True
+                            # select or deselect current subject
+                            '''
+                            if self.currentSubject == self.pj[SUBJECTS][idx]["name"]:
+                                self.update_subject("")
+                            else:
+                                self.update_subject(self.pj[SUBJECTS][idx]["name"])
+                            '''
+                            self.update_subject(self.pj[SUBJECTS][idx]["name"])
 
                 if not flag_subject:
                     self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
@@ -9729,9 +9811,9 @@ item []:
                 self.ffmpegTimerOut()
 
     def twSubjects_doubleClicked(self):
-        '''
+        """
         select subject by double-click
-        '''
+        """
 
         if self.observationId:
             if self.twSubjects.selectedIndexes():
@@ -9739,22 +9821,25 @@ item []:
                 row = self.twSubjects.selectedIndexes()[0].row()
 
                 # select or deselect current subject
+                '''
                 if self.currentSubject == self.twSubjects.item(row, 1).text():
-                    self.deselectSubject()
+                    self.update_subject("")
                 else:
-                    self.selectSubject(self.twSubjects.item(row, 1).text())
+                    self.update_subject(self.twSubjects.item(row, 1).text())
+                '''
+                self.update_subject(self.twSubjects.item(row, 1).text())
         else:
             self.no_observation()
 
     def select_events_between_activated(self):
-        '''
+        """
         select events between a time interval
-        '''
+        """
 
         def parseTime(txt):
-            '''
+            """
             parse time in string (should be 00:00:00.000 or in seconds)
-            '''
+            """
             if ':' in txt:
                 qtime = QTime.fromString(txt, "hh:mm:ss.zzz")
 

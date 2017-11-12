@@ -5,7 +5,6 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2017 Olivier Friard
 
-
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -39,6 +38,7 @@ class CodingPad(QWidget):
 
     clickSignal = pyqtSignal(str)
     sendEventSignal = pyqtSignal(QEvent)
+    close_signal = pyqtSignal(QRect)
 
     def __init__(self, pj, filtered_behaviors, parent=None):
         super(CodingPad, self).__init__(parent)
@@ -110,6 +110,11 @@ class CodingPad(QWidget):
         else:
             return False
 
+    def closeEvent(self, event):
+        """
+        send event for widget geometry memory
+        """
+        self.close_signal.emit(self.geometry())
 
 
 class Button(QWidget):

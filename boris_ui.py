@@ -426,6 +426,8 @@ class Ui_MainWindow(object):
         self.actionTime_budget_report.setObjectName(_fromUtf8("actionTime_budget_report"))
         self.actionCheckStateEventsSingleObs = QtGui.QAction(MainWindow)
         self.actionCheckStateEventsSingleObs.setObjectName(_fromUtf8("actionCheckStateEventsSingleObs"))
+        self.actionSubjects_pad = QtGui.QAction(MainWindow)
+        self.actionSubjects_pad.setObjectName(_fromUtf8("actionSubjects_pad"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -513,6 +515,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionBehaviors_coding_map)
         self.menuTools.addAction(self.actionCoding_pad)
+        self.menuTools.addAction(self.actionSubjects_pad)
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menu_coding_map_creator.menuAction())
         self.menuTools.addAction(self.actionRecode_resize_video)
@@ -709,4 +712,5 @@ class Ui_MainWindow(object):
         self.actionCohen_s_kappa.setText(_translate("MainWindow", "Cohen\'s kappa", None))
         self.actionTime_budget_report.setText(_translate("MainWindow", "Synthetic time budget", None))
         self.actionCheckStateEventsSingleObs.setText(_translate("MainWindow", "Check state events", None))
+        self.actionSubjects_pad.setText(_translate("MainWindow", "Subjects pad", None))
 

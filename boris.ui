@@ -251,6 +251,7 @@
     <addaction name="actionDistance"/>
     <addaction name="actionBehaviors_coding_map"/>
     <addaction name="actionCoding_pad"/>
+    <addaction name="actionSubjects_pad"/>
     <addaction name="separator"/>
     <addaction name="menu_coding_map_creator"/>
     <addaction name="actionRecode_resize_video"/>
@@ -1123,6 +1124,11 @@
   <action name="actionCheckStateEventsSingleObs">
    <property name="text">
     <string>Check state events</string>
+   </property>
+  </action>
+  <action name="actionSubjects_pad">
+   <property name="text">
+    <string>Subjects pad</string>
    </property>
   </action>
  </widget>
