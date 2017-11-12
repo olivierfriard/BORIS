@@ -626,29 +626,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpBackward.setEnabled(self.playerType == VLC)
         self.actionJumpTo.setEnabled(self.playerType == VLC)
 
-        self.menuZoom1.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
-        self.menuZoom2.setEnabled(False)
-        try:
-            zv = self.mediaplayer.video_get_scale()
-            self.actionZoom1_fitwindow.setChecked(zv == 0)
-            self.actionZoom1_1_1.setChecked(zv == 1)
-            self.actionZoom1_1_2.setChecked(zv == 0.5)
-            self.actionZoom1_1_4.setChecked(zv == 0.25)
-            self.actionZoom1_2_1.setChecked(zv == 2)
-        except:
-            pass
-
-        if self.simultaneousMedia:
-            self.menuZoom2.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
+        if sys.platform == "darwin":
+            self.menuZoom1.setEnabled(False)
+            self.menuZoom2.setEnabled(False)
+        else:
+            self.menuZoom1.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
+            self.menuZoom2.setEnabled(False)
             try:
-                zv = self.mediaplayer2.video_get_scale()
-                self.actionZoom2_fitwindow.setChecked(zv == 0)
-                self.actionZoom2_1_1.setChecked(zv == 1)
-                self.actionZoom2_1_2.setChecked(zv == 0.5)
-                self.actionZoom2_1_4.setChecked(zv == 0.25)
-                self.actionZoom2_2_1.setChecked(zv == 2)
+                zv = self.mediaplayer.video_get_scale()
+                self.actionZoom1_fitwindow.setChecked(zv == 0)
+                self.actionZoom1_1_1.setChecked(zv == 1)
+                self.actionZoom1_1_2.setChecked(zv == 0.5)
+                self.actionZoom1_1_4.setChecked(zv == 0.25)
+                self.actionZoom1_2_1.setChecked(zv == 2)
             except:
                 pass
+    
+            if self.simultaneousMedia:
+                self.menuZoom2.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
+                try:
+                    zv = self.mediaplayer2.video_get_scale()
+                    self.actionZoom2_fitwindow.setChecked(zv == 0)
+                    self.actionZoom2_1_1.setChecked(zv == 1)
+                    self.actionZoom2_1_2.setChecked(zv == 0.5)
+                    self.actionZoom2_1_4.setChecked(zv == 0.25)
+                    self.actionZoom2_2_1.setChecked(zv == 2)
+                except:
+                    pass
 
         self.actionPlay.setEnabled(self.playerType == VLC)
         self.actionPause.setEnabled(self.playerType == VLC)
@@ -759,7 +763,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
         
         # TODO: remove when behaviors coding map ready
-        self.action_create_behaviors_coding_map.setVisible(False)
+        #self.action_create_behaviors_coding_map.setVisible(False)
         
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
@@ -767,7 +771,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
         
         # TODO: remove when behav coding map ready
-        self.actionBehaviors_coding_map.setVisible(False)
+        #self.actionBehaviors_coding_map.setVisible(False)
         
         
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
@@ -1875,6 +1879,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()
 
+
     def behaviors_coding_map_creator_signal_addtoproject(self, behav_coding_map):
         """
         input:
@@ -1907,7 +1912,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show behaviors coding map creator window and hide program main window
         """
-        
+
         if not self.project:
             QMessageBox.warning(self, programName, "No project found",
                                 QMessageBox.Ok | QMessageBox.Default,
@@ -4020,40 +4025,78 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         close tool windows: spectrogram, measurements, coding pad
         """
+        
+        '''
+        for w in [self.measurement_w, self.codingpad, self.subjects_pad, self.spectro,
+                  self.frame_viewer1, self.frame_viewer2, self.results,
+                  self.mapCreatorWindow]:
+            try:
+                w.close()
+            except:
+                pass
+        '''
 
-        try:
-            self.measurement_w.close()
-        except:
-            pass
+        if hasattr(self, "measurement_w"):
+            try:
+                self.measurement_w.close()
+                del self.codingpad
+            except:
+                pass
 
+        
         if hasattr(self, "codingpad"):
-            self.codingpad.close()
-            del self.codingpad
+            try:
+                self.codingpad.close()
+                del self.codingpad
+            except:
+                pass
 
         if hasattr(self, "subjects_pad"):
-            self.subjects_pad.close()
-            del self.subjects_pad
+            try:
+                self.subjects_pad.close()
+                del self.subjects_pad
+            except:
+                pass
 
         if hasattr(self, "spectro"):
-            self.spectro.close()
-            del self.spectro
+            try:
+                self.spectro.close()
+                del self.spectro
+            except:
+                pass
 
         if hasattr(self, "frame_viewer1"):
-            del self.frame_viewer1
+            try:
+                self.frame_viewer1.close()
+                del self.frame_viewer1
+            except:
+                pass
 
         if hasattr(self, "frame_viewer2"):
-            del self.frame_viewer2
+            try:
+                self.frame_viewer2.close()
+                del self.frame_viewer2
+            except:
+                pass
 
         if hasattr(self, "results"):
-            self.results.close()
-            del self.results
+            try:
+                self.results.close()
+                del self.results
+            except:
+                pass
 
-        if hasattr(self, "bcm"):
-            self.bcm.close()
-            del self.bcm
-            
         if hasattr(self, "mapCreatorWindow"):
-            self.mapCreatorWindow.close()
+            try:
+                self.mapCreatorWindow.close()
+                del self.mapCreatorWindow
+            except:
+                pass
+            
+        for idx in self.bcm_dict:
+            self.bcm_dict[idx].close()
+            if idx in self.bcm_dict:
+                del self.bcm_dict[idx]
             
 
 
@@ -7006,7 +7049,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
         # TODO: remove when behav coding map ready
-        newProjectWindow.tabProject.setTabEnabled(5, False) 
+        #newProjectWindow.tabProject.setTabEnabled(5, False) 
 
 
         # pass copy of self.pj
@@ -8671,7 +8714,11 @@ item []:
         """
         self.keyPressEvent(event)
 
-    def close_behaviors_coding_map(self, idx):
+
+    def close_behaviors_coding_map(self, coding_map_name):
+        
+        print("signal close received ",coding_map_name)
+        del self.bcm_dict[coding_map_name]
         
         if hasattr(self, "bcm"):
             '''
@@ -8686,12 +8733,12 @@ item []:
             '''
             
             print('hasattr(self, "bcm")', hasattr(self, "bcm"))
-            
+
+
     def show_behaviors_coding_map(self):
         """
         show a behavior coding map
         """
-        
         
         '''
         if hasattr(self, "bcm"):
@@ -8702,11 +8749,11 @@ item []:
 
         #print(self.bcm_list)
 
-        if "behaviors_coding_map" not in self.pj or not self.pj["behaviors_coding_map"]:
+        if BEHAVIORS_CODING_MAP not in self.pj or not self.pj[BEHAVIORS_CODING_MAP]:
             QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
             return
 
-        items = [x["name"] for x in  self.pj["behaviors_coding_map"]]   
+        items = [x["name"] for x in  self.pj[BEHAVIORS_CODING_MAP]]   
         if len(items) == 1:
             coding_map_name = items[0]
         else:
@@ -8719,19 +8766,16 @@ item []:
         if coding_map_name in self.bcm_dict:
             self.bcm_dict[coding_map_name].show()
         else:
-            self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)])
-            
-            self.bcm_dict[coding_map_name + "sig1"] = self.click_signal_from_behaviors_coding_map
-            self.bcm_dict[coding_map_name].clickSignal.connect(self.bcm_dict[coding_map_name + "sig1"])
+            self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(
+                                                   self.pj[BEHAVIORS_CODING_MAP][items.index(coding_map_name)], idx=items.index(coding_map_name))
+            self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)
 
-            '''self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)'''
-            
-            
-            '''self.bcm_dict[coding_map_name].keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)'''
+            self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
 
-            #self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
             self.bcm_dict[coding_map_name].resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
             self.bcm_dict[coding_map_name].show()
+            
+            print("self.bcm_dict", self.bcm_dict)
 
         
         '''
@@ -8975,7 +9019,7 @@ item []:
             if self.mediaplayer.get_length():
 
                 self.mediaTotalLength = self.mediaplayer.get_length() / 1000
-                if abs(self.mediaTotalLength - totalGlobalTime/1000) > 10:
+                if abs(self.mediaTotalLength - totalGlobalTime / 1000) > 10:
                     self.timer.stop()
                     #self.pause_video()
                     if not self.wrongTimeResponse:

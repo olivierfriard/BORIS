@@ -48,34 +48,33 @@ selectedBrush.setColor(QColor(255, 255, 0, 255))
 class BehaviorsCodingMapWindowClass(QWidget):
 
     class View(QGraphicsView):
-
         mousePress = pyqtSignal(QMouseEvent)
         def mousePressEvent(self, event):
             self.mousePress.emit(event)
 
         _start=0
-        elList = []
-        points = []
+        elList, points = [], []
 
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
             self.setScene(QGraphicsScene(self))
             self.scene().update()
 
-    polygonsList2 = []
-
     clickSignal = pyqtSignal(str, list)  # click signal to be sent to mainwindow
     keypressSignal = pyqtSignal(QEvent)
-    #close_signal = pyqtSignal(int)
+    close_signal = pyqtSignal(str)
 
     def __init__(self, behaviors_coding_map, idx=0):
         super(BehaviorsCodingMapWindowClass, self).__init__()
         
+        self.polygonsList2 = []
+        print("init polygonsList2", self.polygonsList2,len(self.polygonsList2))
+
         self.installEventFilter(self)
 
         self.codingMap = behaviors_coding_map
         self.idx = idx
-       
+
         self.setWindowTitle("Behaviors coding map: {}".format(self.codingMap["name"]))
         Vlayout = QVBoxLayout()
 
@@ -109,13 +108,12 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.setLayout(Vlayout)
 
         self.loadMap()
+        
+        print("poly list", self.polygonsList2)
+
 
     def closeEvent(self, event):
-
-        #self.close_signal.emit(self.idx)
-
-        #self.deleteLater()
-
+        self.close_signal.emit(self.codingMap["name"])
         event.accept()
 
 
@@ -135,11 +133,9 @@ class BehaviorsCodingMapWindowClass(QWidget):
         """
 
         test = self.view.mapToScene(event.pos()).toPoint()
-
         to_be_sent = []
 
         for areaCode, pg in self.polygonsList2:
-            
             if pg.contains(test):
                 to_be_sent.append(areaCode)
 
@@ -154,7 +150,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         """
 
         pixmap = QPixmap()
-        pixmap.loadFromData(binascii.a2b_base64(self.codingMap['bitmap']))
+        pixmap.loadFromData(binascii.a2b_base64(self.codingMap["bitmap"]))
 
         self.view.setSceneRect(0, 0, pixmap.size().width(), pixmap.size().height())
         pixItem = QGraphicsPixmapItem(pixmap)
