@@ -1343,7 +1343,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(event)
 
     def close_signal_from_coding_pad(self, geom):
+        """
+        save coding pad geometry after close
+        """
         self.codingpad_geometry_memory = geom
+        print(geom)
 
 
     def click_signal_from_subjects_pad(self, subject):
@@ -1362,7 +1366,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(event)
 
     def close_signal_from_subjects_pad(self, geom):
+        """
+        save subjects pad geometry after close
+        """
         self.subjectspad_geometry_memory = geom
+
 
     def show_coding_pad(self):
         """
@@ -1377,9 +1385,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.codingpad.compose()
             self.codingpad.show()
             self.codingpad.setGeometry(self.codingpad_geometry_memory.x(),
-                              self.codingpad_geometry_memory.y(),
-                              self.codingpad_geometry_memory.width(),
-                              self.codingpad_geometry_memory.height())
+                                       self.codingpad_geometry_memory.y(),
+                                       self.codingpad_geometry_memory.width(),
+                                       self.codingpad_geometry_memory.height())
 
         else:
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
@@ -1395,6 +1403,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show subjects pad window
         """
+        if not self.pj[SUBJECTS]:
+            QMessageBox.warning(self, programName, "No subjects are defined")
+            return
+            
+        
+        
         if self.playerType == VIEWER:
             QMessageBox.warning(self, programName, "The subjects pad is not available in <b>VIEW</b> mode")
             return
@@ -8737,15 +8751,6 @@ item []:
         """
         show a behavior coding map
         """
-        
-        '''
-        if hasattr(self, "bcm"):
-            print("show already existing bcm")
-            self.bcm.show()
-            return
-        '''
-
-        #print(self.bcm_list)
 
         if BEHAVIORS_CODING_MAP not in self.pj or not self.pj[BEHAVIORS_CODING_MAP]:
             QMessageBox.warning(self, programName, "No behaviors coding map found in current project")
@@ -8766,37 +8771,14 @@ item []:
         else:
             self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(
                                                    self.pj[BEHAVIORS_CODING_MAP][items.index(coding_map_name)], idx=items.index(coding_map_name))
+
             self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)
 
             self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
 
             self.bcm_dict[coding_map_name].resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
+            self.bcm_dict[coding_map_name].setWindowFlags(Qt.WindowStaysOnTopHint)
             self.bcm_dict[coding_map_name].show()
-            
-            print("self.bcm_dict", self.bcm_dict)
-
-        
-        '''
-        self.bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)])
-        self.bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
-        self.bcm.keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)
-        self.bcm.close_signal.connect(self.close_behaviors_coding_map)
-        self.bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
-        self.bcm.show()
-        '''
-       
-        
-        '''
-        bcm = behaviors_coding_map.BehaviorsCodingMapWindowClass(self.pj["behaviors_coding_map"][items.index(coding_map_name)], len(self.bcm_list))
-        bcm.clickSignal.connect(self.click_signal_from_behaviors_coding_map)
-        bcm.keypressSignal.connect(self.keypress_signal_from_behaviors_coding_map)
-        bcm.close_signal.connect(self.close_behaviors_coding_map)
-        bcm.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
-
-        self.bcm_list.append(bcm)
-        self.bcm_list[-1].show()
-        '''
-
 
 
 

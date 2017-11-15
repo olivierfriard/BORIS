@@ -48,27 +48,49 @@ selectedBrush.setColor(QColor(255, 255, 0, 255))
 class BehaviorsCodingMapWindowClass(QWidget):
 
     class View(QGraphicsView):
-        mousePress = pyqtSignal(QMouseEvent)
-        def mousePressEvent(self, event):
-            self.mousePress.emit(event)
+        
 
-        _start=0
+        mousePress = pyqtSignal(QMouseEvent)
+        mouseMove = pyqtSignal(QMouseEvent)
+
+        '''
+        def mousePressEvent(self, event):
+            print("mouse press")
+            self.mousePress.emit(event)
+        '''
+
+        '''
+        def mouseMoveEvent(self, event):
+            print(event)
+        '''
+        def eventFilter(self, source, event):
+            if (event.type() == QEvent.MouseMove):
+                self.mouseMove.emit(event)
+                
+            if (event.type() == QEvent.MouseButtonPress):
+                self.mousePress.emit(event)
+                
+            return QWidget.eventFilter(self, source, event)
+
         elList, points = [], []
 
         def __init__(self, parent):
             QGraphicsView.__init__(self, parent)
             self.setScene(QGraphicsScene(self))
             self.scene().update()
+            
+            self.viewport().installEventFilter(self)
+            self.setMouseTracking(True)
 
     clickSignal = pyqtSignal(str, list)  # click signal to be sent to mainwindow
     keypressSignal = pyqtSignal(QEvent)
     close_signal = pyqtSignal(str)
 
+
     def __init__(self, behaviors_coding_map, idx=0):
         super(BehaviorsCodingMapWindowClass, self).__init__()
         
         self.polygonsList2 = []
-        print("init polygonsList2", self.polygonsList2,len(self.polygonsList2))
 
         self.installEventFilter(self)
 
@@ -80,37 +102,27 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
-
-        #self.leareaCode = QLineEdit(self)
-        #self.leareaCode.setVisible(True)
+        self.view.mouseMove.connect(self.mouse_move_event)
 
         Vlayout.addWidget(self.view)
-        #Vlayout.addWidget(self.leareaCode)
 
-        hBoxLayout = QHBoxLayout()
+        hBoxLayout1 = QHBoxLayout()
+        
+        self.label = QLabel("Behavior(s)")
+        hBoxLayout1.addWidget(self.label)
 
-        spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        hBoxLayout.addItem(spacerItem)
+        self.leareaCode = QLineEdit(self)
+        hBoxLayout1.addWidget(self.leareaCode)
+        
+        self.btClose = QPushButton("Close")
+        self.btClose.clicked.connect(self.close)
+        hBoxLayout1.addWidget(self.btClose)
 
-        #self.pbCancel = QPushButton("Cancel")
-        #hBoxLayout.addWidget(self.pbCancel)
-        #self.pbCancel.clicked.connect(self.reject)
-
-        self.btDone = QPushButton("Close")
-        #self.btDone.clicked.connect(self.accept)
-        self.btDone.clicked.connect(self.close)
-        self.btDone.setVisible(True)
-
-        hBoxLayout.addWidget(self.btDone)
-
-        Vlayout.addLayout(hBoxLayout)
+        Vlayout.addLayout(hBoxLayout1)
 
         self.setLayout(Vlayout)
 
         self.loadMap()
-        
-        print("poly list", self.polygonsList2)
-
 
     def closeEvent(self, event):
         self.close_signal.emit(self.codingMap["name"])
@@ -126,6 +138,20 @@ class BehaviorsCodingMapWindowClass(QWidget):
             return True
         else:
             return False
+
+    def mouse_move_event(self, event):
+        """
+        display behavior under mouse position
+        """
+
+        self.leareaCode.clear()
+        codes = []
+        test = self.view.mapToScene(event.pos()).toPoint()
+        for areaCode, pg in self.polygonsList2:
+            if pg.contains(test):
+                codes.append(areaCode)
+        self.leareaCode.setText(", ".join(codes))
+        
 
     def viewMousePressEvent(self, event):
         """
@@ -184,8 +210,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     if len(sys.argv) > 1:
-        cm = json.loads(open(sys.argv[1], "r").read())
-        codingMapWindow = codingMapWindowClass(cm)
+        cm = json.loads(open(sys.argv[1]).read())
+        codingMapWindow = BehaviorsCodingMapWindowClass(cm)
         codingMapWindow.resize(config.CODING_MAP_RESIZE_W, config.CODING_MAP_RESIZE_H)
         codingMapWindow.show()
         sys.exit(app.exec_())
