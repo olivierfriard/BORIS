@@ -96,8 +96,8 @@ import plot_events
 import project_functions
 
 
-__version__ = "5.0.2"
-__version_date__ = "2017-11-11"
+__version__ = "5.1.0"
+__version_date__ = "2017-11-15"
 
 # BITMAP_EXT = "jpg"
 
@@ -7900,8 +7900,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as TextGrid", os.path.expanduser('~'), options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
             return
-
-        # self.statusbar.showMessage("Exporting events as TextGrid", 0)
 
         for obsId in selectedObservations:
 
