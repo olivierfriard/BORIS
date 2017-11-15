@@ -578,16 +578,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             pn + (" - "*(pn != "")), programName))
 
         # project menu
-        self.actionEdit_project.setEnabled(flag)
-        self.actionSave_project.setEnabled(flag)
-        self.actionSave_project_as.setEnabled(flag)
-        self.actionClose_project.setEnabled(flag)
-        self.actionSend_project.setEnabled(flag)
+        for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionClose_project, self.actionSend_project,
+                  self.actionNew_observation]:
+            w.setEnabled(flag)
+
         # observations
 
         # enabled if project
-        self.actionNew_observation.setEnabled(flag)
-
         self.actionOpen_observation.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionEdit_observation_2.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled(self.pj[OBSERVATIONS] != {})
@@ -676,6 +673,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCoding_pad.setEnabled(flagObs)
+        self.actionSubjects_pad.setEnabled(flagObs)
         self.actionBehaviors_coding_map.setEnabled(flagObs)
 
         # Analysis
@@ -8834,7 +8832,11 @@ item []:
         players.append(gv_version)
 
         about_dialog = msg = QMessageBox()
+        about_dialog.setIconPixmap(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/logo_eye.128px.png"))
         about_dialog.setWindowTitle("About " + programName)
+        about_dialog.setStandardButtons(QMessageBox.Ok)
+        about_dialog.setDefaultButton(QMessageBox.Ok)
+        about_dialog.setEscapeButton(QMessageBox.Ok)
 
         about_dialog.setInformativeText(("<b>{prog_name}</b> {ver} - {date}"
         "<p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>"
@@ -8867,7 +8869,7 @@ item []:
 
         about_dialog.setDetailedText(details)
 
-        retval = about_dialog.exec_()
+        _ = about_dialog.exec_()
 
     def hsVideo_sliderMoved(self):
         """
