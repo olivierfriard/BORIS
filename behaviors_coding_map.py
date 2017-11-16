@@ -48,7 +48,6 @@ selectedBrush.setColor(QColor(255, 255, 0, 255))
 class BehaviorsCodingMapWindowClass(QWidget):
 
     class View(QGraphicsView):
-        
 
         mousePress = pyqtSignal(QMouseEvent)
         mouseMove = pyqtSignal(QMouseEvent)

@@ -180,12 +180,34 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         fileMenu.addSeparator()
         fileMenu.addAction(self.exitAction)
 
+
+        splitter1 = QSplitter(Qt.Vertical)
+        '''
+        splitter1.addWidget(splitter1)
+        splitter1.addWidget(bottom)
+        '''
+
+        '''vlayout_list = QVBoxLayout()'''
+
         self.view = self.View(self)
         self.view.mousePress.connect(self.viewMousePressEvent)
+        splitter1.addWidget(self.view)
+
+        vlayout_list = QVBoxLayout()
+        vlayout_list.addWidget(QLabel("Defined area"))
 
         self.area_list = QListWidget(self)
         #self.area_list.setMaximumHeight(120)
         self.area_list.itemClicked.connect(self.area_list_item_click)
+        vlayout_list.addWidget(self.area_list)
+        w = QWidget()
+        w.setLayout(vlayout_list)
+        splitter1.addWidget(w)
+        splitter1.setSizes([300, 100])
+        splitter1.setStretchFactor(2, 8)
+
+        
+
 
         self.btLoad = QPushButton("Load bitmap", self)
         self.btLoad.clicked.connect(self.loadBitmap)
@@ -215,16 +237,17 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         hlayout_area = QHBoxLayout()
 
-        self.lb = QLabel("Behavior code")
+        self.lb = QLabel("Behavior")
         self.lb.setVisible(False)
         hlayout_area.addWidget(self.lb)
 
         self.leAreaCode = QLineEdit(self)
         self.leAreaCode.setReadOnly(True)
         self.leAreaCode.setVisible(False)
+        self.leAreaCode.setEnabled(False)
         hlayout_area.addWidget(self.leAreaCode)
 
-        self.btEditAreaCode = QPushButton("Edit code")
+        self.btEditAreaCode = QPushButton("Select behavior")
         self.btEditAreaCode.clicked.connect(self.edit_area_code)
         self.btEditAreaCode.setVisible(False)
         hlayout_area.addWidget(self.btEditAreaCode)
@@ -258,9 +281,14 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         vlayout = QVBoxLayout()
 
+        '''
         vlayout.addWidget(self.view)
         vlayout.addWidget(QLabel("Defined area"))
         vlayout.addWidget(self.area_list)
+        '''
+        vlayout.addWidget(splitter1)
+        '''vlayout.addLayout(vlayout_view_list)'''
+
         vlayout.addWidget(frame)
         vlayout.addWidget(self.btLoad)
 
@@ -319,14 +347,16 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         
 
     def edit_area_code(self):
-        print("edit area code")
+        """
+        select a behavior
+        """
 
         if self.leAreaCode.text() in self.codes_list:
             code_index = self.codes_list.index(self.leAreaCode.text())
         else:
             code_index = 0
 
-        item, ok = QInputDialog.getItem(self, "Area codes", "Available codes", self.codes_list, code_index, False)
+        item, ok = QInputDialog.getItem(self, "Select a behavior", "Available behaviors", self.codes_list, code_index, False)
         self.leAreaCode.setText(item)
 
         if self.selectedPolygon:
@@ -1003,7 +1033,7 @@ if __name__ == '__main__':
 
     import sys
     app = QApplication(sys.argv)
-    window = BehaviorsMapCreatorWindow(["aaa", "bbb", "ccc"])
+    window = BehaviorsMapCreatorWindow(["North zone", "East zone", "South zone", "West zone"])
     window.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
     window.show()
     sys.exit(app.exec_())
