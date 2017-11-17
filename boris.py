@@ -2018,7 +2018,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         event_types = {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]}
 
         if not event_types or event_types == {"Point event"}:
-            return "No behavior is defined as `State event`"
+            return (True, "No behavior is defined as `State event`")
 
         out = ""
         flagStateEvent = False
