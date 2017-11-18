@@ -6572,14 +6572,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         totalMediaLength = int(totalMediaLength)
         
-        print("max_obs_length", max_obs_length)
-
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
-        print("plot parameters", plot_parameters)
-
         for obsId in selectedObservations:
-            print(obsId)
 
             obs_length = self.observationTotalMediaLength(obsId)
             if obs_length == -1:
