@@ -77,15 +77,22 @@ class Plot_data(QWidget):
         self.thread.start()
         
        
+        '''
         self.timer = QTimer()
         self.timer.timeout.connect(self.timer_out)
+        '''
 
     def start_update(self):
+        print("start timer")
         # start the plotting
         self.timer.start(200)
 
-    def timer_out(self):
+    def timer_out(self, time_):
+        '''
         self.send_fig.emit(time.time() - self.timer_started_at)
+        '''
+        self.send_fig.emit(time_)
+
 
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end, max_frequency):

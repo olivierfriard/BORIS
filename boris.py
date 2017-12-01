@@ -1803,6 +1803,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC and self.playMode == VLC and not flagPaused:
                 self.play_video()
 
+
     def timer_spectro_out(self):
         """
         timer for spectrogram visualization
@@ -1821,7 +1822,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             if self.playMode == VLC:
-
                 currentMediaTime = self.mediaplayer.get_time()
 
             if self.playMode == FFMPEG:
@@ -1882,6 +1882,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.spectro.item.setPos(self.spectro.scene.width() // 2 - int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
+
 
     def modifiers_coding_map_creator(self):
         """
@@ -3333,6 +3334,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # read txt for sync
+        '''
         if "sync_txt" in self.pj[OBSERVATIONS][self.observationId]:
             if self.pj[OBSERVATIONS][self.observationId]["sync_txt"]:
                 if os.path.isfile(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0]):
@@ -3346,6 +3348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             mem = line
                             
                     print(intervals)
+        '''
                             
 
 
@@ -3518,11 +3521,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.show()
             self.timer_spectro.start()
 
+
+        # data plot
+        if "sync_txt" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["sync_txt"]:
+            import plot_data_module
+            self.plot_data = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0],
+                                                        60,
+                                                        "b-",
+                                                        os.path.basename(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0]),
+                                                        "y label")
+            self.plot_data.show()
+            #self.plot_data.start_update()
+            
+            
+            self.plot_data_timer = QTimer()
+            self.plot_data_timer.timeout.connect(self.timer_plot_data_out)
+            self.plot_data_timer.start(200)
+            
+            
+            
+        
+
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
         return True
+
+    def timer_plot_data_out(self):
+        currentMediaTime = self.mediaplayer.get_time()
+        self.plot_data.timer_out(currentMediaTime / 1000)
+
 
     def signal_from_spectrogram(self, event):
         """
@@ -3721,6 +3750,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def new_observation_triggered(self):
         self.new_observation(mode=NEW, obsId="")
+
 
     def new_observation(self, mode=NEW, obsId=""):
         """
@@ -3979,7 +4009,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
             
-            # sync txt file
+            # plot data
             self.pj[OBSERVATIONS][new_obs_id]["sync_txt"] = [observationWindow.le_txt1.text()]
 
             # cbCloseCurrentBehaviorsBetweenVideo
