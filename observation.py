@@ -66,6 +66,8 @@ class Observation(QDialog, Ui_Form):
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
+        
+        self.pb_add_txt1.clicked.connect(self.add_txt1)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
@@ -98,6 +100,14 @@ class Observation(QDialog, Ui_Form):
 
         self.PlayPause()
     """
+
+    def add_txt1(self):
+        os.chdir(os.path.expanduser("~"))
+        fn = QFileDialog(self).getOpenFileName(self, "Add txt file", "", "All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        if file_name:
+            self.le_txt1.setText(file_name)
+        
 
 
     def generate_spectrogram(self):

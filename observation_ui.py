@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created: Mon May  9 14:45:42 2016
-#      by: PyQt4 UI code generator 4.11.2
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +25,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(985, 590)
+        Form.resize(997, 767)
         self.verticalLayout_13 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_13.setObjectName(_fromUtf8("verticalLayout_13"))
         self.splitter_2 = QtGui.QSplitter(Form)
@@ -35,7 +34,6 @@ class Ui_Form(object):
         self.layoutWidget = QtGui.QWidget(self.splitter_2)
         self.layoutWidget.setObjectName(_fromUtf8("layoutWidget"))
         self.verticalLayout_12 = QtGui.QVBoxLayout(self.layoutWidget)
-        self.verticalLayout_12.setMargin(0)
         self.verticalLayout_12.setObjectName(_fromUtf8("verticalLayout_12"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
@@ -59,7 +57,6 @@ class Ui_Form(object):
         self.layoutWidget1 = QtGui.QWidget(self.splitter)
         self.layoutWidget1.setObjectName(_fromUtf8("layoutWidget1"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.layoutWidget1)
-        self.verticalLayout_2.setMargin(0)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.label_9 = QtGui.QLabel(self.layoutWidget1)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
@@ -83,7 +80,6 @@ class Ui_Form(object):
         self.layoutWidget2 = QtGui.QWidget(self.splitter)
         self.layoutWidget2.setObjectName(_fromUtf8("layoutWidget2"))
         self.verticalLayout_11 = QtGui.QVBoxLayout(self.layoutWidget2)
-        self.verticalLayout_11.setMargin(0)
         self.verticalLayout_11.setObjectName(_fromUtf8("verticalLayout_11"))
         self.label_3 = QtGui.QLabel(self.layoutWidget2)
         self.label_3.setObjectName(_fromUtf8("label_3"))
@@ -124,7 +120,6 @@ class Ui_Form(object):
         self.layoutWidget3 = QtGui.QWidget(self.splitter_2)
         self.layoutWidget3.setObjectName(_fromUtf8("layoutWidget3"))
         self.verticalLayout_9 = QtGui.QVBoxLayout(self.layoutWidget3)
-        self.verticalLayout_9.setMargin(0)
         self.verticalLayout_9.setObjectName(_fromUtf8("verticalLayout_9"))
         self.tabProjectType = QtGui.QTabWidget(self.layoutWidget3)
         self.tabProjectType.setEnabled(True)
@@ -187,6 +182,12 @@ class Ui_Form(object):
         self.cbCloseCurrentBehaviorsBetweenVideo = QtGui.QCheckBox(self.tabVideo)
         self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName(_fromUtf8("cbCloseCurrentBehaviorsBetweenVideo"))
         self.verticalLayout_3.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
+        self.pb_add_txt1 = QtGui.QPushButton(self.tabVideo)
+        self.pb_add_txt1.setObjectName(_fromUtf8("pb_add_txt1"))
+        self.verticalLayout_3.addWidget(self.pb_add_txt1)
+        self.le_txt1 = QtGui.QLineEdit(self.tabVideo)
+        self.le_txt1.setObjectName(_fromUtf8("le_txt1"))
+        self.verticalLayout_3.addWidget(self.le_txt1)
         self.verticalLayout_5.addLayout(self.verticalLayout_3)
         self.verticalLayout_4 = QtGui.QVBoxLayout()
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
@@ -316,7 +317,7 @@ class Ui_Form(object):
         self.rbSubstract.setText(_translate("Form", "Substract", None))
         self.leTimeOffset.setText(_translate("Form", "0", None))
         self.teTimeOffset.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz", None))
-        self.label_5.setText(_translate("Form", "Media file paths", None))
+        self.label_5.setText(_translate("Form", "Media file paths (first player)", None))
         item = self.twVideo1.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Path", None))
         item = self.twVideo1.horizontalHeaderItem(1)
@@ -333,6 +334,7 @@ class Ui_Form(object):
 "from directory", None))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram", None))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files", None))
+        self.pb_add_txt1.setText(_translate("Form", "Add txt", None))
         self.label_2.setText(_translate("Form", "Media file paths for second player (will be played simultaneously)", None))
         item = self.twVideo2.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Path", None))

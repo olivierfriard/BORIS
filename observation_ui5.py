@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created by: PyQt5 UI code generator 5.7.1
+# Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(985, 590)
+        Form.resize(997, 767)
         self.verticalLayout_13 = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout_13.setObjectName("verticalLayout_13")
         self.splitter_2 = QtWidgets.QSplitter(Form)
@@ -123,7 +123,6 @@ class Ui_Form(object):
         self.tabVideo = QtWidgets.QWidget()
         self.tabVideo.setObjectName("tabVideo")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.tabVideo)
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
@@ -173,6 +172,12 @@ class Ui_Form(object):
         self.cbCloseCurrentBehaviorsBetweenVideo = QtWidgets.QCheckBox(self.tabVideo)
         self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName("cbCloseCurrentBehaviorsBetweenVideo")
         self.verticalLayout_3.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
+        self.pb_add_txt1 = QtWidgets.QPushButton(self.tabVideo)
+        self.pb_add_txt1.setObjectName("pb_add_txt1")
+        self.verticalLayout_3.addWidget(self.pb_add_txt1)
+        self.le_txt1 = QtWidgets.QLineEdit(self.tabVideo)
+        self.le_txt1.setObjectName("le_txt1")
+        self.verticalLayout_3.addWidget(self.le_txt1)
         self.verticalLayout_5.addLayout(self.verticalLayout_3)
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -235,7 +240,6 @@ class Ui_Form(object):
         self.tabLive = QtWidgets.QWidget()
         self.tabLive.setObjectName("tabLive")
         self.verticalLayout_10 = QtWidgets.QVBoxLayout(self.tabLive)
-        self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout()
         self.verticalLayout_8.setObjectName("verticalLayout_8")
@@ -304,7 +308,7 @@ class Ui_Form(object):
         self.rbSubstract.setText(_translate("Form", "Substract"))
         self.leTimeOffset.setText(_translate("Form", "0"))
         self.teTimeOffset.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz"))
-        self.label_5.setText(_translate("Form", "Media file paths"))
+        self.label_5.setText(_translate("Form", "Media file paths (first player)"))
         item = self.twVideo1.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Path"))
         item = self.twVideo1.horizontalHeaderItem(1)
@@ -321,6 +325,7 @@ class Ui_Form(object):
 "from directory"))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram"))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files"))
+        self.pb_add_txt1.setText(_translate("Form", "Add txt"))
         self.label_2.setText(_translate("Form", "Media file paths for second player (will be played simultaneously)"))
         item = self.twVideo2.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Path"))

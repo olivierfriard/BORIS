@@ -97,7 +97,7 @@ import project_functions
 
 
 __version__ = "5.1.0"
-__version_date__ = "2017-11-15"
+__version_date__ = "2017-11-20"
 
 # BITMAP_EXT = "jpg"
 
@@ -1313,6 +1313,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
             self.w.show()
 
+            # check in platform win and program frozen by pyinstaller
             if sys.platform.startswith("win") and getattr(sys, "frozen", False):
                 app.processEvents()
                 ffmpeg_recode(fileNames, horiz_resol, ffmpeg_bin)
@@ -2011,6 +2012,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if selectedObs:
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
+
 
     def check_state_events_obs(self, obsId):
 
@@ -3329,6 +3331,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         """
 
+
+        # read txt for sync
+        if "sync_txt" in self.pj[OBSERVATIONS][self.observationId]:
+            if self.pj[OBSERVATIONS][self.observationId]["sync_txt"]:
+                if os.path.isfile(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0]):
+                    with open(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0], "r") as f_in:
+                        intervals = []
+                        mem = ""
+                        for line in f_in:
+                            #print(line.strip())
+                            if mem:
+                                intervals.append([mem.strip().split("\t")[0], line.strip().split("\t")[0]])
+                            mem = line
+                            
+                    print(intervals)
+                            
+
+
         # show first frame of video
         logging.debug("playing media #{0}".format(0))
 
@@ -3848,6 +3868,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
+                
+            if "sync_txt" in self.pj[OBSERVATIONS][obsId]:
+                if self.pj[OBSERVATIONS][obsId]["sync_txt"]:
+                    observationWindow.le_txt1.setText(self.pj[OBSERVATIONS][obsId]["sync_txt"][0])
 
             for player, twVideo in zip([PLAYER1, PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
 
@@ -3954,12 +3978,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
+            
+            # sync txt file
+            self.pj[OBSERVATIONS][new_obs_id]["sync_txt"] = [observationWindow.le_txt1.text()]
 
             # cbCloseCurrentBehaviorsBetweenVideo
             self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
 
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
                 self.pj[OBSERVATIONS][new_obs_id]["scan_sampling_time"] = observationWindow.sbScanSampling.value()
+                
+            
 
             # media file
             fileName = {}
