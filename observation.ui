@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>997</width>
+    <width>1140</width>
     <height>767</height>
    </rect>
   </property>
@@ -220,79 +220,122 @@
           <attribute name="title">
            <string>Media</string>
           </attribute>
-          <layout class="QVBoxLayout" name="verticalLayout_7">
+          <layout class="QVBoxLayout" name="verticalLayout_14">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_3">
+            <widget class="QTabWidget" name="tabWidget">
+             <property name="currentIndex">
+              <number>2</number>
+             </property>
+             <widget class="QWidget" name="tab_player_1">
+              <attribute name="title">
+               <string>Player 1</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
-                <widget class="QLabel" name="label_5">
-                 <property name="text">
-                  <string>Media file paths (first player)</string>
+                <widget class="QSplitter" name="splitter_3">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_4">
-                 <item>
-                  <widget class="QTableWidget" name="twVideo1">
-                   <property name="editTriggers">
-                    <set>QAbstractItemView::NoEditTriggers</set>
-                   </property>
-                   <property name="selectionMode">
-                    <enum>QAbstractItemView::SingleSelection</enum>
-                   </property>
-                   <property name="selectionBehavior">
-                    <enum>QAbstractItemView::SelectRows</enum>
-                   </property>
-                   <column>
-                    <property name="text">
-                     <string>Path</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Duration</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>FPS</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Video</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Audio</string>
-                    </property>
-                   </column>
-                  </widget>
-                 </item>
-                 <item>
+                 <widget class="QWidget" name="">
+                  <layout class="QVBoxLayout" name="verticalLayout_3">
+                   <item>
+                    <widget class="QLabel" name="label_5">
+                     <property name="text">
+                      <string>Media file paths (first player)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QTableWidget" name="twVideo1">
+                     <property name="editTriggers">
+                      <set>QAbstractItemView::NoEditTriggers</set>
+                     </property>
+                     <property name="selectionMode">
+                      <enum>QAbstractItemView::SingleSelection</enum>
+                     </property>
+                     <property name="selectionBehavior">
+                      <enum>QAbstractItemView::SelectRows</enum>
+                     </property>
+                     <column>
+                      <property name="text">
+                       <string>Path</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Duration</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>FPS</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Video</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Audio</string>
+                      </property>
+                     </column>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="">
                   <layout class="QVBoxLayout" name="verticalLayout">
                    <item>
-                    <widget class="QPushButton" name="pbAddVideo">
+                    <layout class="QHBoxLayout" name="horizontalLayout_3">
+                     <item>
+                      <widget class="QPushButton" name="pbAddVideo">
+                       <property name="text">
+                        <string>Add media</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pbRemoveVideo">
+                       <property name="text">
+                        <string>Remove media</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pbAddMediaFromDir">
+                       <property name="text">
+                        <string>Add all media from directory</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_6">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="cbVisualizeSpectrogram">
                      <property name="text">
-                      <string>Add media</string>
+                      <string>Visualize spectrogram</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pbRemoveVideo">
+                    <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
                      <property name="text">
-                      <string>Remove media</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="pbAddMediaFromDir">
-                     <property name="text">
-                      <string>Add all media
-from directory</string>
+                      <string>Stop ongoing state events between successive media files</string>
                      </property>
                     </widget>
                    </item>
@@ -301,6 +344,9 @@ from directory</string>
                      <property name="orientation">
                       <enum>Qt::Vertical</enum>
                      </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::MinimumExpanding</enum>
+                     </property>
                      <property name="sizeHint" stdset="0">
                       <size>
                        <width>20</width>
@@ -310,93 +356,151 @@ from directory</string>
                     </spacer>
                    </item>
                   </layout>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="cbVisualizeSpectrogram">
-                 <property name="text">
-                  <string>Visualize spectrogram</string>
-                 </property>
+                 </widget>
                 </widget>
-               </item>
-               <item>
-                <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
-                 <property name="text">
-                  <string>Stop ongoing state events between successive media files</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pb_add_txt1">
-                 <property name="text">
-                  <string>Add txt</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="le_txt1"/>
                </item>
               </layout>
-             </item>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout_4">
+             </widget>
+             <widget class="QWidget" name="tab_player_2">
+              <attribute name="title">
+               <string>Player 2</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
-                <widget class="QLabel" name="label_2">
-                 <property name="text">
-                  <string>Media file paths for second player (will be played simultaneously)</string>
+                <widget class="QSplitter" name="splitter_4">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
                  </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_5">
-                 <item>
-                  <widget class="QTableWidget" name="twVideo2">
-                   <column>
-                    <property name="text">
-                     <string>Path</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Duration</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>FPS</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Video</string>
-                    </property>
-                   </column>
-                   <column>
-                    <property name="text">
-                     <string>Audio</string>
-                    </property>
-                   </column>
-                  </widget>
-                 </item>
-                 <item>
+                 <widget class="QWidget" name="">
+                  <layout class="QVBoxLayout" name="verticalLayout_4">
+                   <item>
+                    <widget class="QLabel" name="label_2">
+                     <property name="text">
+                      <string>Media file paths for second player (will be played simultaneously)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QTableWidget" name="twVideo2">
+                     <column>
+                      <property name="text">
+                       <string>Path</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Duration</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>FPS</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Video</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Audio</string>
+                      </property>
+                     </column>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="">
                   <layout class="QVBoxLayout" name="verticalLayout_6">
                    <item>
-                    <widget class="QPushButton" name="pbAddVideo_2">
-                     <property name="text">
-                      <string>Add media</string>
-                     </property>
-                    </widget>
+                    <layout class="QHBoxLayout" name="horizontalLayout_4">
+                     <item>
+                      <widget class="QPushButton" name="pbAddVideo_2">
+                       <property name="text">
+                        <string>Add media</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pbRemoveVideo_2">
+                       <property name="text">
+                        <string>Remove media</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_5">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
                    </item>
                    <item>
-                    <widget class="QPushButton" name="pbRemoveVideo_2">
-                     <property name="text">
-                      <string>Remove media</string>
-                     </property>
-                    </widget>
+                    <layout class="QHBoxLayout" name="horizontalLayout_7">
+                     <item>
+                      <widget class="QLabel" name="lbTimeOffset_2">
+                       <property name="text">
+                        <string>Time offset for second player</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="rbEarlier">
+                       <property name="text">
+                        <string>Earlier</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QRadioButton" name="rbLater">
+                       <property name="text">
+                        <string>Later</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QLineEdit" name="leTimeOffset_2">
+                       <property name="text">
+                        <string>0</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QTimeEdit" name="teTimeOffset_2">
+                       <property name="displayFormat">
+                        <string>hh:mm:ss.zzz</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_4">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
                    </item>
                    <item>
-                    <spacer name="verticalSpacer_4">
+                    <spacer name="verticalSpacer_3">
                      <property name="orientation">
                       <enum>Qt::Vertical</enum>
                      </property>
@@ -409,67 +513,82 @@ from directory</string>
                     </spacer>
                    </item>
                   </layout>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_7">
-                 <item>
-                  <widget class="QLabel" name="lbTimeOffset_2">
-                   <property name="text">
-                    <string>Time offset for second player</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbEarlier">
-                   <property name="text">
-                    <string>Earlier</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="rbLater">
-                   <property name="text">
-                    <string>Later</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="leTimeOffset_2">
-                   <property name="text">
-                    <string>0</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QTimeEdit" name="teTimeOffset_2">
-                   <property name="displayFormat">
-                    <string>hh:mm:ss.zzz</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_4">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
+                 </widget>
+                </widget>
                </item>
               </layout>
-             </item>
-            </layout>
+             </widget>
+             <widget class="QWidget" name="tab_data_files">
+              <attribute name="title">
+               <string>Data files</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_16">
+               <item>
+                <widget class="QSplitter" name="splitter_5">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <widget class="QWidget" name="">
+                  <layout class="QVBoxLayout" name="verticalLayout_15">
+                   <item>
+                    <widget class="QLabel" name="label_7">
+                     <property name="text">
+                      <string>Data files to plot</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QTableWidget" name="tw_data_files">
+                     <column>
+                      <property name="text">
+                       <string>Path</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Title</string>
+                      </property>
+                     </column>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                 <widget class="QWidget" name="">
+                  <layout class="QHBoxLayout" name="horizontalLayout_5">
+                   <item>
+                    <widget class="QPushButton" name="pb_add_data_file">
+                     <property name="text">
+                      <string>Add data file</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="pb_remove_data_file">
+                     <property name="text">
+                      <string>Remove data file</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="horizontalSpacer_7">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>40</width>
+                       <height>20</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
            </item>
           </layout>
          </widget>

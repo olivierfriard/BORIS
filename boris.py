@@ -94,7 +94,7 @@ import select_modifiers
 import behaviors_coding_map
 import plot_events
 import project_functions
-
+import plot_data_module
 
 __version__ = "5.1.0"
 __version_date__ = "2017-11-20"
@@ -3335,10 +3335,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # read txt for sync
         '''
-        if "sync_txt" in self.pj[OBSERVATIONS][self.observationId]:
-            if self.pj[OBSERVATIONS][self.observationId]["sync_txt"]:
-                if os.path.isfile(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0]):
-                    with open(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0], "r") as f_in:
+        if "PLOT_DATA" in self.pj[OBSERVATIONS][self.observationId]:
+            if self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+                if os.path.isfile(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0]):
+                    with open(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0], "r") as f_in:
                         intervals = []
                         mem = ""
                         for line in f_in:
@@ -3523,24 +3523,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # data plot
-        if "sync_txt" in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId]["sync_txt"]:
-            import plot_data_module
-            self.plot_data = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0],
+        if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+            
+            self.plot_data = []
+
+            for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+                self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_name"],
+                                                                 60,
+                                                                 "b-",
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
+                                                                 "y label"))
+                self.plot_data[-1].show()
+
+            '''
+            self.plot_data = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0],
                                                         60,
                                                         "b-",
-                                                        os.path.basename(self.pj[OBSERVATIONS][self.observationId]["sync_txt"][0]),
+                                                        os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0]),
                                                         "y label")
+
             self.plot_data.show()
-            #self.plot_data.start_update()
-            
-            
+            '''
+
             self.plot_data_timer = QTimer()
             self.plot_data_timer.timeout.connect(self.timer_plot_data_out)
             self.plot_data_timer.start(200)
-            
-            
-            
-        
 
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
@@ -3549,8 +3556,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
     def timer_plot_data_out(self):
-        currentMediaTime = self.mediaplayer.get_time()
-        self.plot_data.timer_out(currentMediaTime / 1000)
+        """
+        timer for plotting data from txt file
+        """
+        for pd in self.plot_data:
+            currentMediaTime = self.mediaplayer.get_time()
+            pd.update_plot(currentMediaTime / 1000)
 
 
     def signal_from_spectrogram(self, event):
@@ -3748,6 +3759,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveStartTime = None
         self.liveTimer.stop()
 
+
     def new_observation_triggered(self):
         self.new_observation(mode=NEW, obsId="")
 
@@ -3899,9 +3911,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
                 
-            if "sync_txt" in self.pj[OBSERVATIONS][obsId]:
-                if self.pj[OBSERVATIONS][obsId]["sync_txt"]:
-                    observationWindow.le_txt1.setText(self.pj[OBSERVATIONS][obsId]["sync_txt"][0])
+            if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
+                if self.pj[OBSERVATIONS][obsId][PLOT_DATA]:
+                    observationWindow.le_txt1.setText(self.pj[OBSERVATIONS][obsId][PLOT_DATA][0])
 
             for player, twVideo in zip([PLAYER1, PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
 
@@ -4010,15 +4022,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
             
             # plot data
-            self.pj[OBSERVATIONS][new_obs_id]["sync_txt"] = [observationWindow.le_txt1.text()]
+            if observationWindow.tw_data_files.rowCount():
+                self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA] = {}
+                for row in range(observationWindow.tw_data_files.rowCount()):
+                    self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][row] = {"file_name": observationWindow.tw_data_files.item(row, 0).text(),
+                                                                         "title": observationWindow.tw_data_files.item(row, 1).text()}
+
 
             # cbCloseCurrentBehaviorsBetweenVideo
             self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
 
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
                 self.pj[OBSERVATIONS][new_obs_id]["scan_sampling_time"] = observationWindow.sbScanSampling.value()
-                
-            
 
             # media file
             fileName = {}

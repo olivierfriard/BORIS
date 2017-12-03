@@ -82,15 +82,17 @@ class Plot_data(QWidget):
         self.timer.timeout.connect(self.timer_out)
         '''
 
+    '''
     def start_update(self):
         print("start timer")
         # start the plotting
         self.timer.start(200)
+    '''
 
-    def timer_out(self, time_):
-        '''
-        self.send_fig.emit(time.time() - self.timer_started_at)
-        '''
+    def update_plot(self, time_):
+        """
+        update plot by emeting a signal
+        """
         self.send_fig.emit(time_)
 
 

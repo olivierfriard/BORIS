@@ -72,6 +72,8 @@ NO_FOCAL_SUBJECT = 'No focal subject'
 TYPE = "type"
 FILE = "file"
 
+PLOT_DATA = "plot_data"
+
 BEHAVIOR_CODE = "code"
 
 # fields for event configuration

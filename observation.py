@@ -67,7 +67,8 @@ class Observation(QDialog, Ui_Form):
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
         
-        self.pb_add_txt1.clicked.connect(self.add_txt1)
+        self.pb_add_data_file.clicked.connect(self.add_data_file)
+        self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
@@ -101,12 +102,31 @@ class Observation(QDialog, Ui_Form):
         self.PlayPause()
     """
 
-    def add_txt1(self):
+    def add_data_file(self):
         os.chdir(os.path.expanduser("~"))
-        fn = QFileDialog(self).getOpenFileName(self, "Add txt file", "", "All files (*)")
+        fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
+
         if file_name:
-            self.le_txt1.setText(file_name)
+            self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 0, QTableWidgetItem(file_name))
+            # title
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 1, QTableWidgetItem(""))
+
+            '''
+            text, ok = QInputDialog.getText(self, 'Plot data', 'Title:')
+            if ok:
+                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 1, QTableWidgetItem(str(text)))
+            else:
+                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 1, QTableWidgetItem(""))
+            '''    
+
+            '''
+            tw_data_files.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format(seconds2time(self.mediaDurations[fileName]))))
+            tw_data_files.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format(self.mediaFPS[fileName])))
+            tw_data_files.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
+            tw_data_files.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
+            '''
         
 
 
@@ -245,7 +265,7 @@ class Observation(QDialog, Ui_Form):
 
     def add_media(self, nPlayer):
         """
-        add media in player
+        add media in player nPlayer
         """
         # check if more media in player1 before adding media to player2
         if nPlayer == PLAYER2 and self.twVideo1.rowCount() > 1:
@@ -259,8 +279,7 @@ class Observation(QDialog, Ui_Form):
         if fileNames:
             self.check_media(fileNames, nPlayer)
 
-        if self.FLAG_MATPLOTLIB_INSTALLED:
-            self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
@@ -305,6 +324,13 @@ class Observation(QDialog, Ui_Form):
         twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
         twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
 
+
+    def remove_data_file(self):
+        """
+        remove selected data file from list widget
+        """
+        if self.tw_data_files.selectedIndexes():
+            self.tw_data_files.removeRow(self.tw_data_files.selectedIndexes()[0].row())
 
     def remove_media(self, nPlayer):
         """
