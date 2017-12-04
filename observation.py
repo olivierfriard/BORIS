@@ -32,6 +32,7 @@ except:
     from PyQt4.QtCore import *
 
 import os
+#import csv
 import time
 import hashlib
 import tempfile
@@ -111,9 +112,32 @@ class Observation(QDialog, Ui_Form):
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
+            
+            columns_to_plot = "1,2"
+            # check data file
+            r = check_txt_file(file_name)
+            if not r["homogeneous"]: # not all rows have 2 fields
+                QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")
+                return
+
+            if r["fields number"] != 2: # number of fields is != 2 
+                
+                
+                text, ok = QInputDialog.getText(self, "This file contains {} fields. 2 are required".format(r["fields number"]), "Enter the column number to plot (time,value)")
+                if ok:
+                    if len(str(text).split(",")) != 2:
+                        QMessageBox.critical(self, programName , "Indicate only 2 columns")
+                        return
+                    columns_to_plot = str(text).replace(" ", "")
+                else:
+                    return
+            
+            
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_FILEPATH_IDX, QTableWidgetItem(file_name))
+
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_COLUMNS_IDX, QTableWidgetItem(columns_to_plot))
             # plot title
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTTITLE_IDX, QTableWidgetItem(""))
             # variable name
@@ -142,6 +166,7 @@ class Observation(QDialog, Ui_Form):
             tw_data_files.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
             '''
         
+
 
 
     def generate_spectrogram(self):

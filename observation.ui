@@ -224,7 +224,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>0</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -542,6 +542,11 @@
                      <column>
                       <property name="text">
                        <string>Path</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Columns to plot</string>
                       </property>
                      </column>
                      <column>

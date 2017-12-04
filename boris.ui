@@ -75,7 +75,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>532</width>
+             <width>522</width>
              <height>383</height>
             </rect>
            </property>
@@ -248,6 +248,7 @@
      <addaction name="action_create_modifiers_coding_map"/>
     </widget>
     <addaction name="actionShow_spectrogram"/>
+    <addaction name="actionShow_data_files"/>
     <addaction name="actionDistance"/>
     <addaction name="actionBehaviors_coding_map"/>
     <addaction name="actionCoding_pad"/>
@@ -1129,6 +1130,11 @@
   <action name="actionSubjects_pad">
    <property name="text">
     <string>Subjects pad</string>
+   </property>
+  </action>
+  <action name="actionShow_data_files">
+   <property name="text">
+    <string>Show data files</string>
    </property>
   </action>
  </widget>

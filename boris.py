@@ -668,10 +668,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
 
         # Tools
-        if FLAG_MATPLOTLIB_INSTALLED:
-            self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
-        else:
-            self.actionShow_spectrogram.setEnabled(False)
+        self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
+        self.actionShow_data_files.setEnabled(self.playerType == VLC)
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCoding_pad.setEnabled(flagObs)
@@ -767,6 +765,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
+        self.actionShow_data_files.triggered.connect(self.show_data_files)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
         
@@ -1812,7 +1811,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC and self.playMode == VLC and not flagPaused:
                 self.play_video()
 
-
     def timer_spectro_out(self):
         """
         timer for spectrogram visualization
@@ -1891,6 +1889,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.spectro.item.setPos(self.spectro.scene.width() // 2 - int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
+
+    def show_data_files(self):
+        """
+        show plot of data files (if any)
+        """
+        for pd in self.plot_data:
+            pd.show()
+        
 
 
     def modifiers_coding_map_creator(self):
@@ -3521,11 +3527,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.plot_data = []
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+                
+                print(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"])
+                
                 self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"]
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"]
                                                                  )
                                      )
                 self.plot_data[-1].show()

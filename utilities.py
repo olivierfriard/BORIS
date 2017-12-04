@@ -29,6 +29,7 @@ except:
     from PyQt4.QtGui import *
 
 import math
+import csv
 import re
 import subprocess
 import urllib.parse
@@ -51,6 +52,44 @@ def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
+
+
+def check_txt_file(file_name):
+    """
+    returns parameters of txt file (test for tsv csv)
+    """
+
+    # test CSV
+    rows_len = []
+    with open(file_name, "r") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) not in rows_len:
+                rows_len.append(len(row))
+                if len(rows_len) > 1:
+                    break
+    if len(rows_len) == 1 and rows_len[0] >= 2:
+        return {"homogeneous": True, "fields number": rows_len[0], "separator": ","}
+    
+    # TSV
+    csv.register_dialect("tab", delimiter="\t")
+    rows_len = []
+    with open(file_name, "r") as f:
+        reader = csv.reader(f, dialect="tab")
+        for row in reader:
+            if len(row) not in rows_len:
+                rows_len.append(len(row))
+                if len(rows_len) > 1:
+                    break
+    if len(rows_len) == 1 and rows_len[0] >= 2:
+        return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t"}
+    
+    if len(rows_len) > 1:
+        return {"homogeneous": False}
+    else:
+        return {"homogeneous": True, "fields number": rows_len[0]}
+
+
 
 '''
 def get_set_of_modifiers(text):

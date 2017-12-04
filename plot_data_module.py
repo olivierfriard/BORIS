@@ -15,6 +15,7 @@ import sys
 import numpy as np
 import time
 
+from utilities import check_txt_file
 
 
 class MyMplCanvas(FigureCanvas):
@@ -33,7 +34,7 @@ class MyMplCanvas(FigureCanvas):
 class Plot_data(QWidget):
     send_fig = pyqtSignal(float)
 
-    def __init__(self, file_name, interval, color, plot_title, y_label):
+    def __init__(self, file_name, interval, color, plot_title, y_label, columns_to_plot):
         super(Plot_data, self).__init__()
 
         self.myplot = MyMplCanvas(self)
@@ -44,11 +45,23 @@ class Plot_data(QWidget):
         self.color = color
         self.plot_title = plot_title
         self.y_label = y_label
+        
+        r = check_txt_file(file_name)
 
-        data = np.loadtxt(file_name, delimiter="\t")
+        all_data = np.loadtxt(file_name, delimiter=r["separator"])
+        
+        time_column_idx = int(columns_to_plot.split(",")[0]) - 1
+        value_column_idx = int(columns_to_plot.split(",")[-1]) - 1
+        
+        print("time_column_idx,value_column_idx", time_column_idx,value_column_idx)
+
+        data = all_data[:, [time_column_idx, value_column_idx]] # time in 1st column, value in 2nd
+        
+        del all_data
+
         min_value, max_value = min(data[:,1]), max(data[:,1])
 
-        period = round((data[-1,0] - data[0,0]) / len(data),4)
+        period = round((data[-1, 0] - data[0, 0]) / len(data),4)
 
         max_frequency = 1 / period
 
@@ -125,7 +138,7 @@ class Plotter(QObject):
             data1 = int(position_start)
             data2 = int(position_end)
 
-        self.return_fig.emit(np.arange(data1, data2, 1), self.data[ data1:data2],
+        self.return_fig.emit(np.arange(data1, data2, 1), self.data[ data1:data2][:,1],
                              position_data,
                              position_start,
                              self.min_value, self.max_value,
