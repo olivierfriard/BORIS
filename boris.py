@@ -347,6 +347,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     projectChanged = False
 
     liveObservationStarted = False
+    
+    plot_data = []
 
     frame_viewer1_mem_geometry = None
     frame_viewer2_mem_geometry = None
@@ -888,8 +890,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # timer for spectrogram visualization
         self.timer_spectro = QTimer(self)
+        # TODO check value of interval
         self.timer_spectro.setInterval(50)
         self.timer_spectro.timeout.connect(self.timer_spectro_out)
+
+        # timer for data files visualization
+        self.plot_data_timer = QTimer(self)
+        self.plot_data_timer.setInterval(200)
+        self.plot_data_timer.timeout.connect(self.timer_plot_data_out)
+
 
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
@@ -2242,6 +2251,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.timer_out()
                     self.timer_spectro_out()
+                    self.timer_plot_data_out()
 
     def previous_media_file(self):
         """
@@ -2287,6 +2297,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
@@ -2339,6 +2350,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
 
@@ -3333,25 +3345,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
 
-        # read txt for sync
-        '''
-        if "PLOT_DATA" in self.pj[OBSERVATIONS][self.observationId]:
-            if self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-                if os.path.isfile(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0]):
-                    with open(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0], "r") as f_in:
-                        intervals = []
-                        mem = ""
-                        for line in f_in:
-                            #print(line.strip())
-                            if mem:
-                                intervals.append([mem.strip().split("\t")[0], line.strip().split("\t")[0]])
-                            mem = line
-                            
-                    print(intervals)
-        '''
-                            
-
-
         # show first frame of video
         logging.debug("playing media #{0}".format(0))
 
@@ -3528,25 +3521,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.plot_data = []
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-                self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_name"],
-                                                                 60,
-                                                                 "b-",
+                self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
-                                                                 "y label"))
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"]
+                                                                 )
+                                     )
                 self.plot_data[-1].show()
 
-            '''
-            self.plot_data = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0],
-                                                        60,
-                                                        "b-",
-                                                        os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][0]),
-                                                        "y label")
-
-            self.plot_data.show()
-            '''
-
-            self.plot_data_timer = QTimer()
-            self.plot_data_timer.timeout.connect(self.timer_plot_data_out)
             self.plot_data_timer.start(200)
 
         # check if "filtered behaviors"
@@ -3911,10 +3894,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
                 
-            if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
-                if self.pj[OBSERVATIONS][obsId][PLOT_DATA]:
-                    observationWindow.le_txt1.setText(self.pj[OBSERVATIONS][obsId][PLOT_DATA][0])
-
             for player, twVideo in zip([PLAYER1, PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
 
                 if player in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
@@ -3951,6 +3930,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             if "visualize_spectrogram" in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId]["visualize_spectrogram"])
+
+            # plot data
+            if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
+                if self.pj[OBSERVATIONS][obsId][PLOT_DATA]:
+                    observationWindow.tw_data_files.setRowCount(0)
+                    for idx2 in sorted_keys(self.pj[OBSERVATIONS][obsId][PLOT_DATA]):
+                        observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
+                        for idx3 in DATA_PLOT_FIELDS:
+                            if idx3 == PLOT_DATA_PLOTCOLOR_IDX:
+                                
+                                combobox = QComboBox()
+                                combobox.addItems(DATA_PLOT_STYLES)
+                                combobox.setCurrentIndex(DATA_PLOT_STYLES.index(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
+
+                                observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
+                                                                              PLOT_DATA_PLOTCOLOR_IDX, combobox)
+                            else:
+                                observationWindow.tw_data_files.setItem(observationWindow.tw_data_files.rowCount() - 1, idx3,
+                                    QTableWidgetItem(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
+
+
 
             # cbCloseCurrentBehaviorsBetweenVideo
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
@@ -4025,8 +4025,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if observationWindow.tw_data_files.rowCount():
                 self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA] = {}
                 for row in range(observationWindow.tw_data_files.rowCount()):
-                    self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][row] = {"file_name": observationWindow.tw_data_files.item(row, 0).text(),
-                                                                         "title": observationWindow.tw_data_files.item(row, 1).text()}
+                    self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)] = {}
+                    for idx2 in DATA_PLOT_FIELDS:
+                        if idx2 == PLOT_DATA_PLOTCOLOR_IDX:
+                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
+                        else:
+                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.item(row, idx2).text()
+
+
+                    '''
+                    self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][row] = {"file_name": observationWindow.tw_data_files.item(row, PLOT_DATA_FILEPATH_IDX).text(),
+                                                                         "title": observationWindow.tw_data_files.item(row, PLOT_DATA_PLOTTITLE_IDX).text(),
+                                                                         "color": observationWindow.tw_data_files.item(row, PLOT_DATA_PLOTCOLOR_IDX).text(),
+                                                                         "variable_name": observationWindow.tw_data_files.item(row, PLOT_DATA_VARIABLENAME_IDX).text()
+                                                                         }
+                    '''
 
 
             # cbCloseCurrentBehaviorsBetweenVideo
@@ -4122,6 +4135,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
         '''
 
+        while self.plot_data:
+            self.plot_data[0].close_plot()
+            time.sleep(1)
+            del self.plot_data[0]
+        
         if hasattr(self, "measurement_w"):
             try:
                 self.measurement_w.close()
@@ -4209,6 +4227,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.timer.stop()
             self.timer_spectro.stop()
+            self.plot_data_timer.stop()
 
             self.mediaplayer.stop()
             del self.mediaplayer
@@ -8939,6 +8958,8 @@ item []:
                                    - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
+                
 
     def get_events_current_row(self):
         """
@@ -9890,6 +9911,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
 
             if self.playMode == FFMPEG:
@@ -10840,6 +10862,9 @@ item []:
 
                 self.timer.start(200)
                 self.timer_spectro.start()
+                self.plot_data_timer.start()
+                
+                
 
     def pause_video(self):
         """
@@ -10857,6 +10882,7 @@ item []:
 
                     self.timer.stop()
                     self.timer_spectro.stop()
+                    self.plot_data_timer.stop()
                     self.mediaListPlayer.pause()
                     # wait for pause
 
@@ -10878,6 +10904,7 @@ item []:
                 time.sleep(1)
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
     def play_activated(self):
         """
@@ -10954,6 +10981,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
@@ -11033,6 +11061,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
                 # no subtitles
                 '''
@@ -11068,6 +11097,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
     def changedFocusSlot(self, old, now):
         """

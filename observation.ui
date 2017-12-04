@@ -224,7 +224,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>2</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -236,7 +236,7 @@
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
                  </property>
-                 <widget class="QWidget" name="">
+                 <widget class="QWidget" name="layoutWidget">
                   <layout class="QVBoxLayout" name="verticalLayout_3">
                    <item>
                     <widget class="QLabel" name="label_5">
@@ -285,7 +285,7 @@
                    </item>
                   </layout>
                  </widget>
-                 <widget class="QWidget" name="">
+                 <widget class="QWidget" name="layoutWidget">
                   <layout class="QVBoxLayout" name="verticalLayout">
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -371,7 +371,7 @@
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
                  </property>
-                 <widget class="QWidget" name="">
+                 <widget class="QWidget" name="layoutWidget">
                   <layout class="QVBoxLayout" name="verticalLayout_4">
                    <item>
                     <widget class="QLabel" name="label_2">
@@ -411,7 +411,7 @@
                    </item>
                   </layout>
                  </widget>
-                 <widget class="QWidget" name="">
+                 <widget class="QWidget" name="layoutWidget">
                   <layout class="QVBoxLayout" name="verticalLayout_6">
                    <item>
                     <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -528,7 +528,7 @@
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
                  </property>
-                 <widget class="QWidget" name="">
+                 <widget class="QWidget" name="layoutWidget">
                   <layout class="QVBoxLayout" name="verticalLayout_15">
                    <item>
                     <widget class="QLabel" name="label_7">
@@ -546,14 +546,29 @@
                      </column>
                      <column>
                       <property name="text">
-                       <string>Title</string>
+                       <string>Plot title</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Variable name</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Time interval (s)</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Color</string>
                       </property>
                      </column>
                     </widget>
                    </item>
                   </layout>
                  </widget>
-                 <widget class="QWidget" name="">
+                 <widget class="QWidget" name="layoutWidget">
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <item>
                     <widget class="QPushButton" name="pb_add_data_file">
@@ -585,6 +600,19 @@
                   </layout>
                  </widget>
                 </widget>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_4">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
                </item>
               </layout>
              </widget>

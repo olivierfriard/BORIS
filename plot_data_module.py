@@ -23,9 +23,6 @@ class MyMplCanvas(FigureCanvas):
         self.fig = Figure()
         self.axes = self.fig.add_subplot(1,1,1)
         
-        # plot empty line 
-        #self.line, = self.axes.plot([],[], color="orange")
-
         FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
 
@@ -65,7 +62,6 @@ class Plot_data(QWidget):
         self.plotter.min_value = min_value
         self.plotter.max_value = max_value
         self.timer_started_at = time.time()
-        #self.plotter.time_ = 0
 
         self.thread = QThread()
 
@@ -75,25 +71,17 @@ class Plot_data(QWidget):
         #move to thread and start
         self.plotter.moveToThread(self.thread)
         self.thread.start()
-        
-       
-        '''
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.timer_out)
-        '''
-
-    '''
-    def start_update(self):
-        print("start timer")
-        # start the plotting
-        self.timer.start(200)
-    '''
 
     def update_plot(self, time_):
         """
         update plot by emeting a signal
         """
         self.send_fig.emit(time_)
+        
+    def close_plot(self):
+        self.thread.quit()
+        self.thread.wait()
+        self.close()
 
 
     # Slot receives data and plots it
@@ -107,7 +95,6 @@ class Plot_data(QWidget):
         self.myplot.axes.set_xticklabels([str(int(w / max_frequency)) for w in self.myplot.axes.get_xticks()])
 
         self.myplot.axes.set_ylim((min_value, max_value))
-        
         
         self.myplot.axes.set_ylabel(self.y_label)
         
@@ -151,7 +138,6 @@ if __name__ == '__main__':
     plot_data = Plot_data("ecg_converted.tsv", 60, "b-", "aa", "y lab")
     
     plot_data.show()
-    
 
     plot_data2 = Plot_data("ecg_converted2.tsv", 120, "r-", "bb", "y lab")
     

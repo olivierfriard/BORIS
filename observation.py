@@ -103,15 +103,29 @@ class Observation(QDialog, Ui_Form):
     """
 
     def add_data_file(self):
+        """
+        user select a data file to be plotted synchronously with media file
+        """
         os.chdir(os.path.expanduser("~"))
         fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 0, QTableWidgetItem(file_name))
-            # title
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 1, QTableWidgetItem(""))
+
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_FILEPATH_IDX, QTableWidgetItem(file_name))
+            # plot title
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTTITLE_IDX, QTableWidgetItem(""))
+            # variable name
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_VARIABLENAME_IDX, QTableWidgetItem(""))
+            # time interval
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEINTERVAL_IDX, QTableWidgetItem("60"))
+            # plot line color  
+            
+            combobox = QComboBox()
+            combobox.addItems(DATA_PLOT_STYLES)
+            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
+            
 
             '''
             text, ok = QInputDialog.getText(self, 'Plot data', 'Title:')

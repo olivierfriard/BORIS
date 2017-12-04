@@ -74,6 +74,20 @@ FILE = "file"
 
 PLOT_DATA = "plot_data"
 
+PLOT_DATA_FILEPATH_IDX = 0
+PLOT_DATA_PLOTTITLE_IDX = 1
+PLOT_DATA_VARIABLENAME_IDX = 2
+PLOT_DATA_TIMEINTERVAL_IDX = 3
+PLOT_DATA_PLOTCOLOR_IDX = 4
+
+DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
+                    PLOT_DATA_PLOTTITLE_IDX: "title",
+                    PLOT_DATA_VARIABLENAME_IDX: "variable_name",
+                    PLOT_DATA_TIMEINTERVAL_IDX: "time_interval",
+                    PLOT_DATA_PLOTCOLOR_IDX: "color"
+                    }
+DATA_PLOT_STYLES = ["b-", "r-", "g-"]
+
 BEHAVIOR_CODE = "code"
 
 # fields for event configuration
