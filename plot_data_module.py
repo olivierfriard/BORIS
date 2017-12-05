@@ -58,6 +58,44 @@ class Plot_data(QWidget):
         data = all_data[:, [time_column_idx, value_column_idx]] # time in 1st column, value in 2nd
         
         del all_data
+        
+        # time
+        min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
+
+        print("min_time_value, max_time_value", min_time_value, max_time_value)
+
+        # variable
+        min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
+        
+        diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
+
+        print("diff", diff, min(diff))
+        
+        if min(diff) == 0:
+            print("more values for same time")
+            self.close()
+
+        if len(diff) != 1:
+            min_time_step = min(diff)
+
+            # increase display speed
+            if min_time_step > 0.1:
+                min_time_step = 0.1
+            
+            x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
+            
+            y2 = np.interp(x2, data[:,0], data[:,1])
+            '''
+            print("len(x1)", len(x2))
+            print("len(y2)", len(y2))
+            '''
+            
+            data = np.array((x2, y2)).T
+            
+            diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
+
+        
+        
 
         min_value, max_value = min(data[:,1]), max(data[:,1])
 
@@ -72,9 +110,7 @@ class Plot_data(QWidget):
         self.plotter.data = data
         self.plotter.max_frequency = max_frequency
         self.plotter.time_interval = time_interval
-        self.plotter.min_value = min_value
-        self.plotter.max_value = max_value
-        self.timer_started_at = time.time()
+        self.plotter.min_value, self.plotter.max_value = min_var_value, max_var_value
 
         self.thread = QThread()
 
@@ -87,7 +123,7 @@ class Plot_data(QWidget):
 
     def update_plot(self, time_):
         """
-        update plot by emeting a signal
+        update plot by signal
         """
         self.send_fig.emit(time_)
         
@@ -137,8 +173,16 @@ class Plotter(QObject):
         else:
             data1 = int(position_start)
             data2 = int(position_end)
+            
+        x = np.arange(data1, data2, 1)
+        y = self.data[data1:data2][:,1]
+        
+        # check if values are enough
+        if len(y) < len(x):
+            # complete with nan until len of x
+            y = np.append(y, [np.nan] * (len(x) - len(y)))
 
-        self.return_fig.emit(np.arange(data1, data2, 1), self.data[ data1:data2][:,1],
+        self.return_fig.emit(x, y,
                              position_data,
                              position_start,
                              self.min_value, self.max_value,
