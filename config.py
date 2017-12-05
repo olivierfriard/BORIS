@@ -79,13 +79,15 @@ PLOT_DATA_COLUMNS_IDX = 1
 PLOT_DATA_PLOTTITLE_IDX = 2
 PLOT_DATA_VARIABLENAME_IDX = 3
 PLOT_DATA_TIMEINTERVAL_IDX = 4
-PLOT_DATA_PLOTCOLOR_IDX = 5
+PLOT_DATA_TIMEOFFSET_IDX = 5
+PLOT_DATA_PLOTCOLOR_IDX = 6
 
 DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
                     PLOT_DATA_COLUMNS_IDX: "columns",
                     PLOT_DATA_PLOTTITLE_IDX: "title",
                     PLOT_DATA_VARIABLENAME_IDX: "variable_name",
                     PLOT_DATA_TIMEINTERVAL_IDX: "time_interval",
+                    PLOT_DATA_TIMEOFFSET_IDX: "time_offset",
                     PLOT_DATA_PLOTCOLOR_IDX: "color"
                     }
 DATA_PLOT_STYLES = ["b-", "r-", "g-"]

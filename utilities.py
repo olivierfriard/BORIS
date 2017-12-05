@@ -42,6 +42,54 @@ from decimal import *
 import math
 import datetime
 import socket
+from io import StringIO
+import numpy as np
+
+
+def txt2np_array(file_name, columns):
+    """
+    read a txt file (tsv or csv) and return np array with columns
+    """
+    out = ""
+    lengths = []
+    
+    with open(file_name) as csvfile:
+        
+        buff = csvfile.read(1024)
+        snif = csv.Sniffer()
+        
+        dialect = snif.sniff(buff)
+        
+        has_header = snif.has_header(buff)
+        csvfile.seek(0)
+    
+        reader = csv.reader(csvfile, dialect)
+        if has_header:
+            next(reader, None)  # skip the headers
+
+        for row in reader:
+    
+            if len(row) not in lengths:
+                lengths.append(len(row))
+    
+                if len(lengths) != 1:
+                    return False, numpy.array([])
+
+            for column_idx in columns:
+                val = row[column_idx - 1]
+                if val.count(",") > 1:
+                    val = val.replace(",", "")
+                try:
+                    val = float(val.replace(",", "."))
+                except:
+                    val = np.nan
+    
+                out += "{}\t".format(val)
+            out = out.strip() + "\n"
+    
+    data = np.loadtxt(StringIO(out))
+    del out
+    return True, data
 
 
 def versiontuple(v):

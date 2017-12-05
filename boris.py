@@ -3532,6 +3532,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                 self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
+                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
@@ -3881,7 +3882,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbLater.setChecked(True)
 
             if self.timeFormat == HHMMSS:
-
                 time = QTime()
                 h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset"])).split(":")
                 s, ms = s_dec.split(".")
@@ -3899,7 +3899,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbEarlier.setChecked(True)
                     else:
                         observationWindow.rbLater.setChecked(True)
-
 
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
@@ -3944,12 +3943,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # plot data
             if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
                 if self.pj[OBSERVATIONS][obsId][PLOT_DATA]:
+
                     observationWindow.tw_data_files.setRowCount(0)
                     for idx2 in sorted_keys(self.pj[OBSERVATIONS][obsId][PLOT_DATA]):
                         observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
                         for idx3 in DATA_PLOT_FIELDS:
                             if idx3 == PLOT_DATA_PLOTCOLOR_IDX:
-                                
                                 combobox = QComboBox()
                                 combobox.addItems(DATA_PLOT_STYLES)
                                 combobox.setCurrentIndex(DATA_PLOT_STYLES.index(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))

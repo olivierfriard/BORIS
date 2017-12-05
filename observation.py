@@ -271,6 +271,7 @@ class Observation(QDialog, Ui_Form):
         if self.check_parameters():
             self.done(2)
 
+
     def pbSave_clicked(self):
         """
         Close window and save observation

@@ -15,7 +15,7 @@ import sys
 import numpy as np
 import time
 
-from utilities import check_txt_file
+from utilities import check_txt_file, txt2np_array
 
 
 class MyMplCanvas(FigureCanvas):
@@ -34,7 +34,7 @@ class MyMplCanvas(FigureCanvas):
 class Plot_data(QWidget):
     send_fig = pyqtSignal(float)
 
-    def __init__(self, file_name, interval, color, plot_title, y_label, columns_to_plot):
+    def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot):
         super(Plot_data, self).__init__()
 
         self.myplot = MyMplCanvas(self)
@@ -44,35 +44,47 @@ class Plot_data(QWidget):
         
         self.color = color
         self.plot_title = plot_title
+        self.time_offset = time_offset
         self.y_label = y_label
         
+        '''
         r = check_txt_file(file_name)
-
         all_data = np.loadtxt(file_name, delimiter=r["separator"])
-        
+        '''
+        result, data = txt2np_array(file_name, [int(x) for x in columns_to_plot.split(",")])
+
+        '''
         time_column_idx = int(columns_to_plot.split(",")[0]) - 1
         value_column_idx = int(columns_to_plot.split(",")[-1]) - 1
-        
+
         print("time_column_idx,value_column_idx", time_column_idx,value_column_idx)
+
 
         data = all_data[:, [time_column_idx, value_column_idx]] # time in 1st column, value in 2nd
         
         del all_data
-        
+        '''
+
         # time
         min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
 
+        '''
         print("min_time_value, max_time_value", min_time_value, max_time_value)
+        '''
 
         # variable
         min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
         
+        '''
         print("min_var_value, max_var_value", min_var_value, max_var_value)
+        '''
         
         diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
         min_time_step = min(diff)
 
+        '''
         print("diff", diff, min_time_step)
+        '''
         
         if min(diff) == 0:
             print("more values for same time")
@@ -89,14 +101,16 @@ class Plot_data(QWidget):
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             
             y2 = np.interp(x2, data[:,0], data[:,1])
+            '''
             print("len(x1)", len(x2))
             print("len(y2)", len(y2))
+            '''
             
             data = np.array((x2, y2)).T
             
             del x2, y2
             
-            print(data)
+            '''print(data)'''
             
             # time
             min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
@@ -115,8 +129,6 @@ class Plot_data(QWidget):
             del x
 
         min_value, max_value = min(data[:, 1]), max(data[:, 1])
-
-        #period = round((data[-1, 0] - data[0, 0]) / len(data), 4)
 
         max_frequency = 1 / list(diff)[0]
 
@@ -142,7 +154,7 @@ class Plot_data(QWidget):
         """
         update plot by signal
         """
-        self.send_fig.emit(time_)
+        self.send_fig.emit(time_ + self.time_offset)
         
     def close_plot(self):
         self.thread.quit()
