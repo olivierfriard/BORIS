@@ -67,6 +67,8 @@ class Plot_data(QWidget):
         # variable
         min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
         
+        print("min_var_value, max_var_value", min_var_value, max_var_value)
+        
         diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
         min_time_step = min(diff)
 
@@ -87,12 +89,15 @@ class Plot_data(QWidget):
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             
             y2 = np.interp(x2, data[:,0], data[:,1])
-            '''
             print("len(x1)", len(x2))
             print("len(y2)", len(y2))
-            '''
             
             data = np.array((x2, y2)).T
+            
+            del x2, y2
+            
+            print(data)
+            
             # time
             min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
             # variable
@@ -104,16 +109,16 @@ class Plot_data(QWidget):
         # check if time starts from 0
         if min_time_value != 0:
             
-            x =  np.arange(0,min_time_value, min_time_step)
+            x =  np.arange(0, min_time_value, min_time_step)
             # head = np.array( (x, np.array([np.nan]*len(x))) ).T 
-            data = np.append(np.array( (x, np.array([np.nan]*len(x))) ).T , data, axis=0)
+            data = np.append(np.array( (x, np.array([np.nan] * len(x))) ).T , data, axis=0)
             del x
 
         min_value, max_value = min(data[:, 1]), max(data[:, 1])
 
-        period = round((data[-1, 0] - data[0, 0]) / len(data), 4)
+        #period = round((data[-1, 0] - data[0, 0]) / len(data), 4)
 
-        max_frequency = 1 / period
+        max_frequency = 1 / list(diff)[0]
 
         time_interval = interval * max_frequency
 
