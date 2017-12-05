@@ -46,7 +46,7 @@ from io import StringIO
 import numpy as np
 
 
-def txt2np_array(file_name, columns):
+def txt2np_array(file_name, columns, converters = {}):
     """
     read a txt file (tsv or csv) and return np array with columns
     """
