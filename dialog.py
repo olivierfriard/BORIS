@@ -454,6 +454,7 @@ class ResultsWidget(QWidget):
 
 
     def pbOK_clicked(self):
+        print("close")
         self.close()
 
 

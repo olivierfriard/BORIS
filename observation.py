@@ -32,7 +32,6 @@ except:
     from PyQt4.QtCore import *
 
 import os
-#import csv
 import time
 import hashlib
 import tempfile
@@ -69,6 +68,7 @@ class Observation(QDialog, Ui_Form):
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
         
         self.pb_add_data_file.clicked.connect(self.add_data_file)
+        self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
@@ -121,8 +121,6 @@ class Observation(QDialog, Ui_Form):
                 return
 
             if r["fields number"] != 2: # number of fields is != 2 
-                
-                
                 text, ok = QInputDialog.getText(self, "This file contains {} fields. 2 are required".format(r["fields number"]), "Enter the column number to plot (time,value)")
                 if ok:
                     if len(str(text).split(",")) != 2:
@@ -151,21 +149,37 @@ class Observation(QDialog, Ui_Form):
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
             
 
-            '''
-            text, ok = QInputDialog.getText(self, 'Plot data', 'Title:')
-            if ok:
-                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 1, QTableWidgetItem(str(text)))
-            else:
-                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, 1, QTableWidgetItem(""))
-            '''    
+    def view_data_file_head(self):
+        """
+        view first parts of data file
+        """
+        if self.tw_data_files.selectedIndexes():
+            text = ""
+            try:
+                with open(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()) as f_in:
+                    for _ in range(5):
+                        text += f_in.readline()
+                 
+                    # QMessageBox.warning(self, programName , "<pre>{}</pre>".format(text))
+            except:
+                QMessageBox.critical(self, programName, str(sys.exc_info()[0]))
 
-            '''
-            tw_data_files.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format(seconds2time(self.mediaDurations[fileName]))))
-            tw_data_files.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format(self.mediaFPS[fileName])))
-            tw_data_files.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
-            tw_data_files.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
-            '''
-        
+            if text:
+
+                dialog.MessageDialog(programName, "<pre>"+text+"</pre>", [OK])
+
+
+                '''
+                self.data_file_head = dialog.ResultsWidget()
+                #self.results.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.data_file_head.resize(540, 340)
+                self.data_file_head.setWindowTitle(programName + " - Data file first lines")
+                self.data_file_head.lb.setText(os.path.basename(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()))
+                self.data_file_head.ptText.setReadOnly(True)
+                self.data_file_head.ptText.appendHtml("<pre>" + text + "</pre>")
+                
+                self.data_file_head.show()
+                '''
 
 
 

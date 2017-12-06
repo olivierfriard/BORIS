@@ -46,12 +46,14 @@ class Plot_data(QWidget):
         self.plot_title = plot_title
         self.time_offset = time_offset
         self.y_label = y_label
+        self.error_msg = ""
+
+        print("file_name", file_name)
         
-        '''
-        r = check_txt_file(file_name)
-        all_data = np.loadtxt(file_name, delimiter=r["separator"])
-        '''
-        result, data = txt2np_array(file_name, [int(x) for x in columns_to_plot.split(",")])
+        result, data = txt2np_array(file_name, columns_to_plot, "")
+        if not result:
+            self.error_msg = data
+            return
 
         '''
         time_column_idx = int(columns_to_plot.split(",")[0]) - 1
@@ -150,12 +152,14 @@ class Plot_data(QWidget):
         self.plotter.moveToThread(self.thread)
         self.thread.start()
 
+
     def update_plot(self, time_):
         """
         update plot by signal
         """
         self.send_fig.emit(time_ + self.time_offset)
-        
+
+
     def close_plot(self):
         self.thread.quit()
         self.thread.wait()

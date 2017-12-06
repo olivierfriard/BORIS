@@ -42,17 +42,38 @@ from decimal import *
 import math
 import datetime
 import socket
-from io import StringIO
 import numpy as np
+import importlib
 
 
-def txt2np_array(file_name, columns, converters = {}):
+def txt2np_array(file_name, columns_str, converters_str=""):
     """
-    read a txt file (tsv or csv) and return np array with columns
+    read a txt file (tsv or csv) and return np array with passed columns
     """
-    out = ""
-    lengths = []
+    # check columns
+    try:
+        columns = [int(x) - 1 for x in columns_str.split(",") ]
+    except:
+        return False, "Problem with columns {}".format(columns_str)
     
+    # check converters
+    converters, plugins = {}, []
+    if converters_str:
+        for converter in converters_str.split(","):
+            try:
+                column_idx = int(converter.split(":")[0]) - 1
+                plugin_name = converter.split(":")[-1]
+            except:
+                return False, "Problem with converter {}".format(converter)
+            try:
+                plugin = importlib.import_module(plugin_name)
+            except ModuleNotFoundError:
+                return False, "Plugin {} not found".format(plugin_name)
+
+            plugins.append(plugin)
+            converters[column_idx] = plugins[-1].convert
+
+   
     with open(file_name) as csvfile:
         
         buff = csvfile.read(1024)
@@ -61,34 +82,16 @@ def txt2np_array(file_name, columns, converters = {}):
         dialect = snif.sniff(buff)
         
         has_header = snif.has_header(buff)
-        csvfile.seek(0)
-    
-        reader = csv.reader(csvfile, dialect)
-        if has_header:
-            next(reader, None)  # skip the headers
 
-        for row in reader:
-    
-            if len(row) not in lengths:
-                lengths.append(len(row))
-    
-                if len(lengths) != 1:
-                    return False, numpy.array([])
+    try:
+        data = np.loadtxt(file_name,
+                      delimiter=dialect.delimiter,
+                      usecols=columns,
+                      skiprows=has_header,
+                      converters=converters)
+    except:
+        return False, sys.exc_info()[0]
 
-            for column_idx in columns:
-                val = row[column_idx - 1]
-                if val.count(",") > 1:
-                    val = val.replace(",", "")
-                try:
-                    val = float(val.replace(",", "."))
-                except:
-                    val = np.nan
-    
-                out += "{}\t".format(val)
-            out = out.strip() + "\n"
-    
-    data = np.loadtxt(StringIO(out))
-    del out
     return True, data
 
 

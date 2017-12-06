@@ -3528,8 +3528,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
                 
-                print(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"])
-                
                 self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
@@ -3539,6 +3537,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"]
                                                                  )
                                      )
+                # print("Error msg", self.plot_data[-1].error_msg)
+                if self.plot_data[-1].error_msg:
+                    QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
+                                                                                                         self.plot_data[-1].error_msg))
+                    del self.plot_data[-1]                                                                            
+                    continue
+
                 self.plot_data[-1].show()
 
             self.plot_data_timer.start(200)
