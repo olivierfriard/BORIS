@@ -159,15 +159,11 @@ class Observation(QDialog, Ui_Form):
                 with open(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()) as f_in:
                     for _ in range(5):
                         text += f_in.readline()
-                 
-                    # QMessageBox.warning(self, programName , "<pre>{}</pre>".format(text))
             except:
                 QMessageBox.critical(self, programName, str(sys.exc_info()[0]))
 
             if text:
-
                 dialog.MessageDialog(programName, "<pre>"+text+"</pre>", [OK])
-
 
                 '''
                 self.data_file_head = dialog.ResultsWidget()
