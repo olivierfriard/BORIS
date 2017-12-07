@@ -90,7 +90,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters_str="
         return False, sys.exc_info()[0]
 
     # check if first value must be substracted
-    if substract_first_value = "True":
+    if substract_first_value == "True":
         data = data
 
     return True, data
