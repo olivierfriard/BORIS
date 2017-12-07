@@ -3534,14 +3534,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"]
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"]
                                                                  )
                                      )
                 # print("Error msg", self.plot_data[-1].error_msg)
                 if self.plot_data[-1].error_msg:
                     QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
                                                                                                          self.plot_data[-1].error_msg))
-                    del self.plot_data[-1]                                                                            
+                    del self.plot_data[-1]
                     continue
 
                 self.plot_data[-1].show()

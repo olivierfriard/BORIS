@@ -34,7 +34,7 @@ class MyMplCanvas(FigureCanvas):
 class Plot_data(QWidget):
     send_fig = pyqtSignal(float)
 
-    def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot):
+    def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot, substract_first_value):
         super(Plot_data, self).__init__()
 
         self.myplot = MyMplCanvas(self)
@@ -50,7 +50,7 @@ class Plot_data(QWidget):
 
         print("file_name", file_name)
         
-        result, data = txt2np_array(file_name, columns_to_plot, "")
+        result, data = txt2np_array(file_name, columns_to_plot, substract_first_value)
         if not result:
             self.error_msg = data
             return

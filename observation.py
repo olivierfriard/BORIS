@@ -116,6 +116,10 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = "1,2"
             # check data file
             r = check_txt_file(file_name)
+            if "error" in r:
+                QMessageBox.critical(self, programName , r["error"])
+                return
+            
             if not r["homogeneous"]: # not all rows have 2 fields
                 QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")
                 return

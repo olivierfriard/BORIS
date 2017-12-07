@@ -46,7 +46,7 @@ import numpy as np
 import importlib
 
 
-def txt2np_array(file_name, columns_str, converters_str=""):
+def txt2np_array(file_name, columns_str, substract_first_value, converters_str=""):
     """
     read a txt file (tsv or csv) and return np array with passed columns
     """
@@ -73,24 +73,25 @@ def txt2np_array(file_name, columns_str, converters_str=""):
             plugins.append(plugin)
             converters[column_idx] = plugins[-1].convert
 
-   
+    # snif txt file
     with open(file_name) as csvfile:
-        
         buff = csvfile.read(1024)
         snif = csv.Sniffer()
-        
         dialect = snif.sniff(buff)
-        
         has_header = snif.has_header(buff)
 
     try:
         data = np.loadtxt(file_name,
-                      delimiter=dialect.delimiter,
-                      usecols=columns,
-                      skiprows=has_header,
-                      converters=converters)
+                          delimiter=dialect.delimiter,
+                          usecols=columns,
+                          skiprows=has_header,
+                          converters=converters)
     except:
         return False, sys.exc_info()[0]
+
+    # check if first value must be substracted
+    if substract_first_value = "True":
+        data = data
 
     return True, data
 
@@ -114,11 +115,15 @@ def check_txt_file(file_name):
     rows_len = []
     with open(file_name, "r") as f:
         reader = csv.reader(f)
-        for row in reader:
-            if len(row) not in rows_len:
-                rows_len.append(len(row))
-                if len(rows_len) > 1:
-                    break
+        try:
+            for row in reader:
+                if len(row) not in rows_len:
+                    rows_len.append(len(row))
+                    if len(rows_len) > 1:
+                        break
+        except:
+            return {"error": "Data file error"}
+
     if len(rows_len) == 1 and rows_len[0] >= 2:
         return {"homogeneous": True, "fields number": rows_len[0], "separator": ","}
     
