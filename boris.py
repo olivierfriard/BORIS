@@ -96,8 +96,8 @@ import plot_events
 import project_functions
 import plot_data_module
 
-__version__ = "5.1.0"
-__version_date__ = "2017-11-20"
+__version__ = "5.1.900"
+__version_date__ = "2017-12-07"
 
 # BITMAP_EXT = "jpg"
 
