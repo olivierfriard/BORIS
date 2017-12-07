@@ -140,10 +140,20 @@ class Observation(QDialog, Ui_Form):
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTTITLE_IDX, QTableWidgetItem(""))
             # variable name
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_VARIABLENAME_IDX, QTableWidgetItem(""))
+
             # time interval
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEINTERVAL_IDX, QTableWidgetItem("60"))
+
+            # offset
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEOFFSET_IDX, QTableWidgetItem("0"))
+
+
+            # substract first value
+            combobox = QComboBox()
+            combobox.addItems(["False", "True"])
+            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
+
             # plot line color  
-            
             combobox = QComboBox()
             combobox.addItems(DATA_PLOT_STYLES)
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)

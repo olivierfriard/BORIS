@@ -276,7 +276,7 @@ class Ui_Form(object):
         self.verticalLayout_15.addWidget(self.label_7)
         self.tw_data_files = QtGui.QTableWidget(self.layoutWidget6)
         self.tw_data_files.setObjectName(_fromUtf8("tw_data_files"))
-        self.tw_data_files.setColumnCount(7)
+        self.tw_data_files.setColumnCount(8)
         self.tw_data_files.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.tw_data_files.setHorizontalHeaderItem(0, item)
@@ -292,6 +292,8 @@ class Ui_Form(object):
         self.tw_data_files.setHorizontalHeaderItem(5, item)
         item = QtGui.QTableWidgetItem()
         self.tw_data_files.setHorizontalHeaderItem(6, item)
+        item = QtGui.QTableWidgetItem()
+        self.tw_data_files.setHorizontalHeaderItem(7, item)
         self.verticalLayout_15.addWidget(self.tw_data_files)
         self.layoutWidget7 = QtGui.QWidget(self.splitter_5)
         self.layoutWidget7.setObjectName(_fromUtf8("layoutWidget7"))
@@ -369,7 +371,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -440,6 +442,8 @@ class Ui_Form(object):
         item = self.tw_data_files.horizontalHeaderItem(5)
         item.setText(_translate("Form", "Start position (s)", None))
         item = self.tw_data_files.horizontalHeaderItem(6)
+        item.setText(_translate("Form", "Substract first value", None))
+        item = self.tw_data_files.horizontalHeaderItem(7)
         item.setText(_translate("Form", "Color", None))
         self.pb_add_data_file.setText(_translate("Form", "Add data file", None))
         self.pb_view_data_head.setText(_translate("Form", "View first parts", None))

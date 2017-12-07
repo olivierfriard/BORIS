@@ -3960,10 +3960,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
                                                                               PLOT_DATA_PLOTCOLOR_IDX, combobox)
+                            elif idx3 == PLOT_DATA_SUBSTRACT1STVALUE_IDX:
+                                combobox2 = QComboBox()
+                                combobox2.addItems(["False","True"])
+                                combobox2.setCurrentIndex(["False", "True"].index(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
+
+                                observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
+                                                                              PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox2)
                             else:
                                 observationWindow.tw_data_files.setItem(observationWindow.tw_data_files.rowCount() - 1, idx3,
                                     QTableWidgetItem(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
-
 
 
             # cbCloseCurrentBehaviorsBetweenVideo
@@ -4041,19 +4047,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for row in range(observationWindow.tw_data_files.rowCount()):
                     self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)] = {}
                     for idx2 in DATA_PLOT_FIELDS:
-                        if idx2 == PLOT_DATA_PLOTCOLOR_IDX:
+                        if idx2 in [PLOT_DATA_PLOTCOLOR_IDX, PLOT_DATA_SUBSTRACT1STVALUE_IDX]:
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
                         else:
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.item(row, idx2).text()
-
-
-                    '''
-                    self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][row] = {"file_name": observationWindow.tw_data_files.item(row, PLOT_DATA_FILEPATH_IDX).text(),
-                                                                         "title": observationWindow.tw_data_files.item(row, PLOT_DATA_PLOTTITLE_IDX).text(),
-                                                                         "color": observationWindow.tw_data_files.item(row, PLOT_DATA_PLOTCOLOR_IDX).text(),
-                                                                         "variable_name": observationWindow.tw_data_files.item(row, PLOT_DATA_VARIABLENAME_IDX).text()
-                                                                         }
-                    '''
 
 
             # cbCloseCurrentBehaviorsBetweenVideo
