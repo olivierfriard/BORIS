@@ -9607,7 +9607,8 @@ item []:
         emit beep on various platform
         """
         if sys.platform.startswith("linux"):
-            os.system("beep {}".format(parameters))
+            #os.system("beep {}".format(parameters))
+            app.beep()
         else:
             app.beep()
 

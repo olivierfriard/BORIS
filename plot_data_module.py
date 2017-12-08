@@ -39,8 +39,31 @@ class Plot_data(QWidget):
 
         self.myplot = MyMplCanvas(self)
 
-        self.layout = QGridLayout()
+        self.button_plus = QPushButton("+", self)
+        self.button_plus.clicked.connect(lambda: self.zoom(-1))
+        
+        self.button_minus = QPushButton("-", self)
+        self.button_minus.clicked.connect(lambda: self.zoom(1))
+
+        self.layout = QVBoxLayout()
+        
+        self.hlayout1 = QHBoxLayout()
+        self.hlayout1.addWidget(QLabel("Zoom"))
+        self.hlayout1.addWidget(self.button_plus)
+        self.hlayout1.addWidget(self.button_minus)
+        self.hlayout1.addItem( QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        
+        self.hlayout2 = QHBoxLayout()
+        self.hlayout2.addWidget(QLabel("Value"))
+        self.lb_value = QLabel("")
+        self.hlayout2.addWidget(self.lb_value)
+        self.hlayout2.addItem( QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        
+        self.layout.addLayout(self.hlayout1)
+        self.layout.addLayout(self.hlayout2)
         self.layout.addWidget(self.myplot)
+        
+        self.setLayout(self.layout)
         
         self.color = color
         self.plot_title = plot_title
@@ -54,18 +77,6 @@ class Plot_data(QWidget):
         if not result:
             self.error_msg = data
             return
-
-        '''
-        time_column_idx = int(columns_to_plot.split(",")[0]) - 1
-        value_column_idx = int(columns_to_plot.split(",")[-1]) - 1
-
-        print("time_column_idx,value_column_idx", time_column_idx,value_column_idx)
-
-
-        data = all_data[:, [time_column_idx, value_column_idx]] # time in 1st column, value in 2nd
-        
-        del all_data
-        '''
 
         # time
         min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
@@ -152,6 +163,8 @@ class Plot_data(QWidget):
         self.plotter.moveToThread(self.thread)
         self.thread.start()
 
+    def zoom(self, z):
+        self.plotter.time_interval = round(self.plotter.time_interval + z * self.plotter.time_interval/2)
 
     def update_plot(self, time_):
         """
@@ -168,6 +181,9 @@ class Plot_data(QWidget):
 
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end, max_frequency):
+        
+        self.lb_value.setText(str(round(y[position_data],3)))
+        
         self.myplot.axes.clear()
         
         self.myplot.axes.set_title(self.plot_title)

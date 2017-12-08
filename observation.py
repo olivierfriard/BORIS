@@ -190,7 +190,8 @@ class Observation(QDialog, Ui_Form):
                 
                 self.data_file_head.show()
                 '''
-
+        else:
+            QMessageBox.warning(self, programName, "Select a data file")
 
 
     def generate_spectrogram(self):
@@ -395,6 +396,8 @@ class Observation(QDialog, Ui_Form):
         """
         if self.tw_data_files.selectedIndexes():
             self.tw_data_files.removeRow(self.tw_data_files.selectedIndexes()[0].row())
+        else:
+            QMessageBox.warning(self, programName, "Select a data file")
 
     def remove_media(self, nPlayer):
         """
