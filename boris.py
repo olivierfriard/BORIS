@@ -4494,9 +4494,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects: list
         selectedBehaviors: list
         """
-        #db = sqlite3.connect(":memory:")
+        db = sqlite3.connect(":memory:")
         
-        db = sqlite3.connect("/tmp/boris_debug.sqlite")
+        #db = sqlite3.connect("/tmp/boris_debug.sqlite")
         
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
@@ -5264,7 +5264,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     min_time = float(plot_parameters["start time"])
                     max_time = float(plot_parameters["end time"])
                     
-                    print("min_time, max_time", min_time, max_time)
+                    #print("min_time, max_time", min_time, max_time)
                     
                     # check intervals
                     for subj in plot_parameters["selected subjects"]:
@@ -5284,7 +5284,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if not modifier[0]:
                                     continue
 
-                                print("modifier #{}#".format(modifier[0]))
+                                #print("modifier #{}#".format(modifier[0]))
 
                                 if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence <= ?""",
                                                (obsId, subj, behav, modifier[0], min_time)).fetchall()) % 2:
