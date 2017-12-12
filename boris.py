@@ -96,8 +96,8 @@ import plot_events
 import project_functions
 
 
-__version__ = "5.1.0"
-__version_date__ = "2017-11-15"
+__version__ = "5.1.1"
+__version_date__ = "2017-12-12"
 
 # BITMAP_EXT = "jpg"
 
@@ -2187,7 +2187,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if self.FFmpegGlobalFrame > 0:
                         self.FFmpegGlobalFrame -= 1
-                        if self.FFmpegGlobalFrame2 > 0:
+                        if self.second_player() and self.FFmpegGlobalFrame2 > 0:
                             self.FFmpegGlobalFrame2 -= 1
                     self.ffmpegTimerOut()
 
@@ -2377,6 +2377,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.currentSubject = subject
             self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))
             self.lbFocalSubject.setText(" Focal subject: <b>{}</b>".format(self.currentSubject))
+
 
     def preferences(self):
         """
@@ -2665,9 +2666,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,
-                                                 second=int(frameCurrentMedia / fps)) not in self.imagesList:
+                                                 second=int((frameCurrentMedia -1)/ fps)) not in self.imagesList:
 
-            extract_frames(self.ffmpeg_bin, int(frameCurrentMedia / fps),
+            extract_frames(self.ffmpeg_bin,
+                           int((frameCurrentMedia -1) / fps),
                            currentMedia,
                            str(round(fps) + 1),
                            self.imageDirectory,
@@ -2695,7 +2697,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("image1: {}".format(img))
         if not os.path.isfile(img):
-            logging.warning("image 1 not found: {0}".format(img))
+            logging.warning("image 1 not found: {} {} {}".format(img, frameCurrentMedia, int(frameCurrentMedia / fps)))
             extract_frames(self.ffmpeg_bin,
                            int(frameCurrentMedia / fps),
                            currentMedia,
@@ -4329,7 +4331,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.checkForNewVersion:
                 if (settings.value("last_check_for_new_version") and
-                 int(time.mktime(time.localtime())) - int(settings.value('last_check_for_new_version')) > CHECK_NEW_VERSION_DELAY):
+                 int(time.mktime(time.localtime())) - int(settings.value("last_check_for_new_version")) > CHECK_NEW_VERSION_DELAY):
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew = True)
 
             self.ffmpeg_cache_dir = ""
@@ -4390,7 +4392,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_colors = settings.value("plot_colors").split("|")
             except:
                 self.plot_colors = BEHAVIORS_PLOT_COLORS
-                
+
+            if ("white" in self.plot_colors 
+                or "azure" in self.plot_colors
+                or "snow" in self.plot_colors):
+                if dialog.MessageDialog(programName, ("The colors list contain colors that are very light.\n"
+                                                   "Do you want to reload the default colors list?"),
+                                                    [NO, YES]) == YES:
+                    self.plot_colors = BEHAVIORS_PLOT_COLORS
 
 
         else: # no .boris file found
