@@ -94,10 +94,10 @@ import select_modifiers
 import behaviors_coding_map
 import plot_events
 import project_functions
+import plot_data_module
 
-
-__version__ = "5.1.3"
-__version_date__ = "2017-12-14"
+__version__ = "5.1.900"
+__version_date__ = "2017-12-07"
 
 # BITMAP_EXT = "jpg"
 
@@ -347,6 +347,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     projectChanged = False
 
     liveObservationStarted = False
+    
+    plot_data = []
 
     frame_viewer1_mem_geometry = None
     frame_viewer2_mem_geometry = None
@@ -666,10 +668,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
 
         # Tools
-        if FLAG_MATPLOTLIB_INSTALLED:
-            self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
-        else:
-            self.actionShow_spectrogram.setEnabled(False)
+        self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
+        self.actionShow_data_files.setEnabled(self.playerType == VLC)
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCoding_pad.setEnabled(flagObs)
@@ -765,6 +765,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
+        self.actionShow_data_files.triggered.connect(self.show_data_files)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
         
@@ -888,8 +889,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # timer for spectrogram visualization
         self.timer_spectro = QTimer(self)
+        # TODO check value of interval
         self.timer_spectro.setInterval(50)
         self.timer_spectro.timeout.connect(self.timer_spectro_out)
+
+        # timer for data files visualization
+        self.plot_data_timer = QTimer(self)
+        self.plot_data_timer.setInterval(200)
+        self.plot_data_timer.timeout.connect(self.timer_plot_data_out)
+
 
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
@@ -1313,6 +1321,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
             self.w.show()
 
+            # check in platform win and program frozen by pyinstaller
             if sys.platform.startswith("win") and getattr(sys, "frozen", False):
                 app.processEvents()
                 ffmpeg_recode(fileNames, horiz_resol, ffmpeg_bin)
@@ -1820,7 +1829,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             if self.playMode == VLC:
-
                 currentMediaTime = self.mediaplayer.get_time()
 
             if self.playMode == FFMPEG:
@@ -1881,6 +1889,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.spectro.item.setPos(self.spectro.scene.width() // 2 - int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
+
+    def show_data_files(self):
+        """
+        show plot of data files (if any)
+        """
+        for pd in self.plot_data:
+            pd.show()
+        
+
 
     def modifiers_coding_map_creator(self):
         """
@@ -2011,6 +2028,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if selectedObs:
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
+
 
     def check_state_events_obs(self, obsId):
 
@@ -2239,6 +2257,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.timer_out()
                     self.timer_spectro_out()
+                    self.timer_plot_data_out()
 
     def previous_media_file(self):
         """
@@ -2284,6 +2303,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
@@ -2336,6 +2356,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
 
@@ -3331,6 +3352,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         """
 
+
         # show first frame of video
         logging.debug("playing media #{0}".format(0))
 
@@ -3500,11 +3522,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.show()
             self.timer_spectro.start()
 
+
+        # data plot
+        if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+            
+            self.plot_data = []
+
+            for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+                
+                self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
+                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"]
+                                                                 )
+                                     )
+                # print("Error msg", self.plot_data[-1].error_msg)
+                if self.plot_data[-1].error_msg:
+                    QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
+                                                                                                         self.plot_data[-1].error_msg))
+                    del self.plot_data[-1]
+                    continue
+
+                self.plot_data[-1].show()
+
+            self.plot_data_timer.start(200)
+
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
         return True
+
+    def timer_plot_data_out(self):
+        """
+        timer for plotting data from txt file
+        """
+        for pd in self.plot_data:
+            currentMediaTime = self.mediaplayer.get_time()
+            pd.update_plot(currentMediaTime / 1000)
+
 
     def signal_from_spectrogram(self, event):
         """
@@ -3701,8 +3761,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveStartTime = None
         self.liveTimer.stop()
 
+
     def new_observation_triggered(self):
         self.new_observation(mode=NEW, obsId="")
+
 
     def new_observation(self, mode=NEW, obsId=""):
         """
@@ -3828,7 +3890,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbLater.setChecked(True)
 
             if self.timeFormat == HHMMSS:
-
                 time = QTime()
                 h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset"])).split(":")
                 s, ms = s_dec.split(".")
@@ -3847,10 +3908,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         observationWindow.rbLater.setChecked(True)
 
-
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
-
+                
             for player, twVideo in zip([PLAYER1, PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
 
                 if player in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
@@ -3887,6 +3947,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
             if "visualize_spectrogram" in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId]["visualize_spectrogram"])
+
+            # plot data
+            if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
+                if self.pj[OBSERVATIONS][obsId][PLOT_DATA]:
+
+                    observationWindow.tw_data_files.setRowCount(0)
+                    for idx2 in sorted_keys(self.pj[OBSERVATIONS][obsId][PLOT_DATA]):
+                        observationWindow.tw_data_files.setRowCount(observationWindow.tw_data_files.rowCount() + 1)
+                        for idx3 in DATA_PLOT_FIELDS:
+                            if idx3 == PLOT_DATA_PLOTCOLOR_IDX:
+                                combobox = QComboBox()
+                                combobox.addItems(DATA_PLOT_STYLES)
+                                combobox.setCurrentIndex(DATA_PLOT_STYLES.index(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
+
+                                observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
+                                                                              PLOT_DATA_PLOTCOLOR_IDX, combobox)
+                            elif idx3 == PLOT_DATA_SUBSTRACT1STVALUE_IDX:
+                                combobox2 = QComboBox()
+                                combobox2.addItems(["False","True"])
+                                combobox2.setCurrentIndex(["False", "True"].index(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
+
+                                observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
+                                                                              PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox2)
+                            else:
+                                observationWindow.tw_data_files.setItem(observationWindow.tw_data_files.rowCount() - 1, idx3,
+                                    QTableWidgetItem(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
+
 
             # cbCloseCurrentBehaviorsBetweenVideo
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
@@ -3956,6 +4043,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
+            
+            # plot data
+            if observationWindow.tw_data_files.rowCount():
+                self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA] = {}
+                for row in range(observationWindow.tw_data_files.rowCount()):
+                    self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)] = {}
+                    for idx2 in DATA_PLOT_FIELDS:
+                        if idx2 in [PLOT_DATA_PLOTCOLOR_IDX, PLOT_DATA_SUBSTRACT1STVALUE_IDX]:
+                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
+                        else:
+                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.item(row, idx2).text()
+
 
             # cbCloseCurrentBehaviorsBetweenVideo
             self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
@@ -4050,6 +4149,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
         '''
 
+        while self.plot_data:
+            self.plot_data[0].close_plot()
+            time.sleep(1)
+            del self.plot_data[0]
+        
         if hasattr(self, "measurement_w"):
             try:
                 self.measurement_w.close()
@@ -4137,6 +4241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.timer.stop()
             self.timer_spectro.stop()
+            self.plot_data_timer.stop()
 
             self.mediaplayer.stop()
             del self.mediaplayer
@@ -8578,6 +8683,8 @@ item []:
                                    - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
+                
 
     def get_events_current_row(self):
         """
@@ -9213,7 +9320,8 @@ item []:
         emit beep on various platform
         """
         if sys.platform.startswith("linux"):
-            os.system("beep {}".format(parameters))
+            #os.system("beep {}".format(parameters))
+            app.beep()
         else:
             app.beep()
 
@@ -9529,6 +9637,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
 
             if self.playMode == FFMPEG:
@@ -10483,6 +10592,9 @@ item []:
 
                 self.timer.start(200)
                 self.timer_spectro.start()
+                self.plot_data_timer.start()
+                
+                
 
     def pause_video(self):
         """
@@ -10500,6 +10612,7 @@ item []:
 
                     self.timer.stop()
                     self.timer_spectro.stop()
+                    self.plot_data_timer.stop()
                     self.mediaListPlayer.pause()
                     # wait for pause
 
@@ -10521,6 +10634,7 @@ item []:
                 time.sleep(1)
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
     def play_activated(self):
         """
@@ -10597,6 +10711,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
@@ -10676,6 +10791,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
                 # no subtitles
                 '''
@@ -10711,6 +10827,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+                self.timer_plot_data_out()
 
     def changedFocusSlot(self, old, now):
         """

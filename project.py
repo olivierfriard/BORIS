@@ -1266,7 +1266,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 comboBox.setCurrentIndex(BEHAVIOR_TYPES.index(response))
 
                 signalMapper.setMapping(comboBox, self.twBehaviors.rowCount() - 1)
-                comboBox.currentIndexChanged['int'].connect(signalMapper.map)
+                comboBox.currentIndexChanged["int"].connect(signalMapper.map)
                 self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], comboBox)
             else:
 
@@ -1275,7 +1275,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
-        signalMapper.mapped['int'].connect(self.behaviorTypeChanged)
+        signalMapper.mapped["int"].connect(self.behaviorTypeChanged)
 
 
     def behaviorTypeChanged(self, row):

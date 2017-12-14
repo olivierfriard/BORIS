@@ -66,6 +66,10 @@ class Observation(QDialog, Ui_Form):
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
+        
+        self.pb_add_data_file.clicked.connect(self.add_data_file)
+        self.pb_view_data_head.clicked.connect(self.view_data_file_head)
+        self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
@@ -98,6 +102,96 @@ class Observation(QDialog, Ui_Form):
 
         self.PlayPause()
     """
+
+    def add_data_file(self):
+        """
+        user select a data file to be plotted synchronously with media file
+        """
+        os.chdir(os.path.expanduser("~"))
+        fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+
+        if file_name:
+            
+            columns_to_plot = "1,2"
+            # check data file
+            r = check_txt_file(file_name)
+            if "error" in r:
+                QMessageBox.critical(self, programName , r["error"])
+                return
+            
+            if not r["homogeneous"]: # not all rows have 2 fields
+                QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")
+                return
+
+            if r["fields number"] != 2: # number of fields is != 2 
+                text, ok = QInputDialog.getText(self, "This file contains {} fields. 2 are required".format(r["fields number"]), "Enter the column number to plot (time,value)")
+                if ok:
+                    if len(str(text).split(",")) != 2:
+                        QMessageBox.critical(self, programName , "Indicate only 2 columns")
+                        return
+                    columns_to_plot = str(text).replace(" ", "")
+                else:
+                    return
+            
+            
+            self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
+
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_FILEPATH_IDX, QTableWidgetItem(file_name))
+
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_COLUMNS_IDX, QTableWidgetItem(columns_to_plot))
+            # plot title
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTTITLE_IDX, QTableWidgetItem(""))
+            # variable name
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_VARIABLENAME_IDX, QTableWidgetItem(""))
+
+            # time interval
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEINTERVAL_IDX, QTableWidgetItem("60"))
+
+            # offset
+            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEOFFSET_IDX, QTableWidgetItem("0"))
+
+
+            # substract first value
+            combobox = QComboBox()
+            combobox.addItems(["False", "True"])
+            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
+
+            # plot line color  
+            combobox = QComboBox()
+            combobox.addItems(DATA_PLOT_STYLES)
+            self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
+            
+
+    def view_data_file_head(self):
+        """
+        view first parts of data file
+        """
+        if self.tw_data_files.selectedIndexes():
+            text = ""
+            try:
+                with open(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()) as f_in:
+                    for _ in range(5):
+                        text += f_in.readline()
+            except:
+                QMessageBox.critical(self, programName, str(sys.exc_info()[0]))
+
+            if text:
+                dialog.MessageDialog(programName, "<pre>"+text+"</pre>", [OK])
+
+                '''
+                self.data_file_head = dialog.ResultsWidget()
+                #self.results.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.data_file_head.resize(540, 340)
+                self.data_file_head.setWindowTitle(programName + " - Data file first lines")
+                self.data_file_head.lb.setText(os.path.basename(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()))
+                self.data_file_head.ptText.setReadOnly(True)
+                self.data_file_head.ptText.appendHtml("<pre>" + text + "</pre>")
+                
+                self.data_file_head.show()
+                '''
+        else:
+            QMessageBox.warning(self, programName, "Select a data file")
 
 
     def generate_spectrogram(self):
@@ -202,6 +296,7 @@ class Observation(QDialog, Ui_Form):
         if self.check_parameters():
             self.done(2)
 
+
     def pbSave_clicked(self):
         """
         Close window and save observation
@@ -235,7 +330,7 @@ class Observation(QDialog, Ui_Form):
 
     def add_media(self, nPlayer):
         """
-        add media in player
+        add media in player nPlayer
         """
         # check if more media in player1 before adding media to player2
         if nPlayer == PLAYER2 and self.twVideo1.rowCount() > 1:
@@ -249,8 +344,7 @@ class Observation(QDialog, Ui_Form):
         if fileNames:
             self.check_media(fileNames, nPlayer)
 
-        if self.FLAG_MATPLOTLIB_INSTALLED:
-            self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
@@ -295,6 +389,15 @@ class Observation(QDialog, Ui_Form):
         twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
         twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
 
+
+    def remove_data_file(self):
+        """
+        remove selected data file from list widget
+        """
+        if self.tw_data_files.selectedIndexes():
+            self.tw_data_files.removeRow(self.tw_data_files.selectedIndexes()[0].row())
+        else:
+            QMessageBox.warning(self, programName, "Select a data file")
 
     def remove_media(self, nPlayer):
         """

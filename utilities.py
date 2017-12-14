@@ -29,6 +29,7 @@ except:
     from PyQt4.QtGui import *
 
 import math
+import csv
 import re
 import subprocess
 import urllib.parse
@@ -41,6 +42,58 @@ from decimal import *
 import math
 import datetime
 import socket
+import numpy as np
+import importlib
+
+
+def txt2np_array(file_name, columns_str, substract_first_value, converters_str=""):
+    """
+    read a txt file (tsv or csv) and return np array with passed columns
+    """
+    # check columns
+    try:
+        columns = [int(x) - 1 for x in columns_str.split(",") ]
+    except:
+        return False, "Problem with columns {}".format(columns_str)
+    
+    # check converters
+    converters, plugins = {}, []
+    if converters_str:
+        for converter in converters_str.split(","):
+            try:
+                column_idx = int(converter.split(":")[0]) - 1
+                plugin_name = converter.split(":")[-1]
+            except:
+                return False, "Problem with converter {}".format(converter)
+            try:
+                plugin = importlib.import_module(plugin_name)
+            except ModuleNotFoundError:
+                return False, "Plugin {} not found".format(plugin_name)
+
+            plugins.append(plugin)
+            converters[column_idx] = plugins[-1].convert
+
+    # snif txt file
+    with open(file_name) as csvfile:
+        buff = csvfile.read(1024)
+        snif = csv.Sniffer()
+        dialect = snif.sniff(buff)
+        has_header = snif.has_header(buff)
+
+    try:
+        data = np.loadtxt(file_name,
+                          delimiter=dialect.delimiter,
+                          usecols=columns,
+                          skiprows=has_header,
+                          converters=converters)
+    except:
+        return False, sys.exc_info()[0]
+
+    # check if first value must be substracted
+    if substract_first_value == "True":
+        data[:,0] -= data[:,0][0]
+
+    return True, data
 
 
 def versiontuple(v):
@@ -51,6 +104,48 @@ def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
+
+
+def check_txt_file(file_name):
+    """
+    returns parameters of txt file (test for tsv csv)
+    """
+
+    # test CSV
+    rows_len = []
+    with open(file_name, "r") as f:
+        reader = csv.reader(f)
+        try:
+            for row in reader:
+                if len(row) not in rows_len:
+                    rows_len.append(len(row))
+                    if len(rows_len) > 1:
+                        break
+        except:
+            return {"error": "Data file error"}
+
+    if len(rows_len) == 1 and rows_len[0] >= 2:
+        return {"homogeneous": True, "fields number": rows_len[0], "separator": ","}
+    
+    # TSV
+    csv.register_dialect("tab", delimiter="\t")
+    rows_len = []
+    with open(file_name, "r") as f:
+        reader = csv.reader(f, dialect="tab")
+        for row in reader:
+            if len(row) not in rows_len:
+                rows_len.append(len(row))
+                if len(rows_len) > 1:
+                    break
+    if len(rows_len) == 1 and rows_len[0] >= 2:
+        return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t"}
+    
+    if len(rows_len) > 1:
+        return {"homogeneous": False}
+    else:
+        return {"homogeneous": True, "fields number": rows_len[0]}
+
+
 
 '''
 def get_set_of_modifiers(text):
