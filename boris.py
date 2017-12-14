@@ -9658,12 +9658,16 @@ item []:
             QMessageBox.warning(self, programName, "No event selected!")
         else:
             # list of rows to delete (set for unique)
-            rows = set([item.row() for item in self.twEvents.selectedIndexes()])
-            self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event
-                                                                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-                                                                 if idx not in rows]
-            self.projectChanged = True
-            self.loadEventsInTW(self.observationId)
+            try:
+                rows = set([item.row() for item in self.twEvents.selectedIndexes()])
+                self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event
+                                                                     for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                                                                     if idx not in rows]
+                self.projectChanged = True
+                self.loadEventsInTW(self.observationId)
+            except:
+                QMessageBox.critical(self, programName, "Problem during event deletion!")
+
 
     def edit_selected_events(self):
         """
