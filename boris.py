@@ -4494,11 +4494,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects: list
         selectedBehaviors: list
         """
-        #db = sqlite3.connect(":memory:")
+        db = sqlite3.connect(":memory:")
         
+        '''
         if os.path.isfile("/tmp/boris_debug.sqlite"):
             os.system("rm /tmp/boris_debug.sqlite")
         db = sqlite3.connect("/tmp/boris_debug.sqlite")
+        '''
         
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
