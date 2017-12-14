@@ -96,8 +96,8 @@ import plot_events
 import project_functions
 
 
-__version__ = "5.1.2"
-__version_date__ = "2017-12-12"
+__version__ = "5.1.3"
+__version_date__ = "2017-12-14"
 
 # BITMAP_EXT = "jpg"
 
@@ -4494,9 +4494,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects: list
         selectedBehaviors: list
         """
-        db = sqlite3.connect(":memory:")
+        #db = sqlite3.connect(":memory:")
         
-        #db = sqlite3.connect("/tmp/boris_debug.sqlite")
+        if os.path.isfile("/tmp/boris_debug.sqlite"):
+            os.system("rm /tmp/boris_debug.sqlite")
+        db = sqlite3.connect("/tmp/boris_debug.sqlite")
         
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
@@ -5144,7 +5146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
-        logging.debug("Selected observations: {0}".format(selectedObservations))
+        logging.debug("Selected observations: {}".format(selectedObservations))
 
         if not selectedObservations:
             return
@@ -5277,21 +5279,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subj, behav))
                             distinct_modifiers = list(cursor.fetchall())
                             
-                            print("distinct_modifiers: {}".format(distinct_modifiers))
+                            logging.debug("distinct_modifiers: {}".format(distinct_modifiers))
 
                             for modifier in distinct_modifiers:
 
-                                if not modifier[0]:
-                                    continue
+                                #if not modifier[0]:
+                                #    continue
 
-                                #print("modifier #{}#".format(modifier[0]))
+                                logging.debug("modifier #{}#".format(modifier[0]))
 
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence <= ?""",
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence < ?""",
                                                (obsId, subj, behav, modifier[0], min_time)).fetchall()) % 2:
+
                                     cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
                                                    (obsId, subj, behav, "STATE", modifier[0], min_time))
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence >= ?""",
+
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence > ?""",
                                                (obsId, subj, behav, modifier[0], max_time)).fetchall()) % 2:
+
                                     cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
                                                    (obsId, subj, behav, "STATE", modifier[0], max_time))
                             try:
@@ -5562,12 +5567,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             distinct_modifiers = list(cursor.fetchall())
 
                             for modifier in distinct_modifiers:
-                                print("modifier", modifier[0])
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence <= ?""",
+
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence < ?""",
                                                (obsId, subj, behav, modifier[0], min_time)).fetchall()) % 2:
                                     cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
                                                    (obsId, subj, behav, "STATE", modifier[0], min_time))
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence >= ?""",
+                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence > ?""",
                                                (obsId, subj, behav, modifier[0], max_time)).fetchall()) % 2:
                                     cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
                                                    (obsId, subj, behav, "STATE", modifier[0], max_time))
