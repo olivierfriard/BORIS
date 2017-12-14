@@ -181,9 +181,19 @@ class Plot_data(QWidget):
 
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end, max_frequency):
-        
-        self.lb_value.setText(str(round(y[position_data],3)))
-        
+
+        try:
+            print("len(y)", len(y))
+            print(y[0])
+            #self.lb_value.setText(str(round(y[ len(y) // 2], 3)))
+            self.lb_value.setText(str(round(y[ 0], 3)))
+            
+            
+            
+        except:
+            print("Error reading value at position {}".format(position_data))
+            self.lb_value.setText("")
+
         self.myplot.axes.clear()
         
         self.myplot.axes.set_title(self.plot_title)
@@ -210,12 +220,12 @@ class Plotter(QObject):
     def replot(self, time_): # time_ in s
 
         current_time = time_
-               
+
         position_data = int(current_time * self.max_frequency)
 
         position_start = position_data - self.time_interval // 2
         position_end = position_data + self.time_interval // 2
-        
+
         if position_start < 0:
             data1 = 0
             data2 = int(position_start + self.time_interval)
