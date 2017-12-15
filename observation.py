@@ -112,8 +112,8 @@ class Observation(QDialog, Ui_Form):
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
-            
-            columns_to_plot = "1,2"
+
+            columns_to_plot = "1,2" # columns to plot by default
             # check data file
             r = check_txt_file(file_name)
             if "error" in r:
@@ -125,16 +125,21 @@ class Observation(QDialog, Ui_Form):
                 return
 
             if r["fields number"] != 2: # number of fields is != 2 
-                text, ok = QInputDialog.getText(self, "This file contains {} fields. 2 are required".format(r["fields number"]), "Enter the column number to plot (time,value)")
-                if ok:
-                    if len(str(text).split(",")) != 2:
-                        QMessageBox.critical(self, programName , "Indicate only 2 columns")
+                
+                header = self.return_file_header(file_name)
+                if header:
+                    text, ok = QInputDialog.getText(self, "Data file: {}".format(os.path.basename(file_name)),
+                                                    ("This file contains {} fields. 2 are required for the plot<br><br>"
+                                                    "<pre>{}</pre><br>"
+                                                    "Enter the column number to plot (time,value)").format(r["fields number"], header))
+                    if ok:
+                        if len(str(text).split(",")) != 2:
+                            QMessageBox.critical(self, programName , "Indicate only 2 columns")
+                            return
+                        columns_to_plot = str(text).replace(" ", "")
+                    else:
                         return
-                    columns_to_plot = str(text).replace(" ", "")
-                else:
-                    return
-            
-            
+
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 
             self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_FILEPATH_IDX, QTableWidgetItem(file_name))
@@ -161,23 +166,36 @@ class Observation(QDialog, Ui_Form):
             combobox = QComboBox()
             combobox.addItems(DATA_PLOT_STYLES)
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
-            
+
+
+    def return_file_header(self, file_name):
+        """
+        return file header
+        """
+        header = ""
+        try:
+            with open(file_name) as f_in:
+                for _ in range(5):
+                    header += f_in.readline()
+        except:
+            QMessageBox.critical(self, programName, str(sys.exc_info()[0]))
+            return ""
+        return header
+        
 
     def view_data_file_head(self):
         """
         view first parts of data file
         """
-        if self.tw_data_files.selectedIndexes():
-            text = ""
-            try:
-                with open(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()) as f_in:
-                    for _ in range(5):
-                        text += f_in.readline()
-            except:
-                QMessageBox.critical(self, programName, str(sys.exc_info()[0]))
+        if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
 
-            if text:
-                dialog.MessageDialog(programName, "<pre>"+text+"</pre>", [OK])
+            if self.tw_data_files.rowCount() == 1:
+                header = self.return_file_header(self.tw_data_files.item(0, 0).text())
+            else:
+                header = self.return_file_header(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text())
+
+            if header:
+                dialog.MessageDialog(programName, "<pre>{}</pre>".format(header), [OK])
 
                 '''
                 self.data_file_head = dialog.ResultsWidget()
