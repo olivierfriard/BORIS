@@ -71,7 +71,7 @@ class Plot_data(QWidget):
         self.y_label = y_label
         self.error_msg = ""
 
-        print("file_name", file_name)
+        #print("file_name", file_name)
         
         result, data = txt2np_array(file_name, columns_to_plot, substract_first_value)
         if not result:
@@ -145,13 +145,13 @@ class Plot_data(QWidget):
 
         max_frequency = 1 / list(diff)[0]
 
-        time_interval = interval * max_frequency
+        self.time_interval = interval * max_frequency
 
         # plotter and thread are none at the beginning
         self.plotter = Plotter()
         self.plotter.data = data
         self.plotter.max_frequency = max_frequency
-        self.plotter.time_interval = time_interval
+        self.plotter.time_interval = self.time_interval
         self.plotter.min_value, self.plotter.max_value = min_var_value, max_var_value
 
         self.thread = QThread()
@@ -163,8 +163,10 @@ class Plot_data(QWidget):
         self.plotter.moveToThread(self.thread)
         self.thread.start()
 
+
     def zoom(self, z):
         self.plotter.time_interval = round(self.plotter.time_interval + z * self.plotter.time_interval/2)
+
 
     def update_plot(self, time_):
         """
@@ -180,19 +182,26 @@ class Plot_data(QWidget):
 
 
     # Slot receives data and plots it
-    def plot(self, x, y, position_data, position_start, min_value, max_value, position_end, max_frequency):
+    def plot(self, x, y, position_data, position_start, min_value, max_value, position_end, max_frequency, time_interval):
 
+
+        if len(y) < time_interval:
+            #print("position data", y[position_data])
+            self.lb_value.setText(str(round(y[position_data], 3)))
+        else:
+            #print("//2", y[len(y)//2])
+            self.lb_value.setText(str(round(y[len(y) // 2], 3)))
+
+        '''
         try:
             print("len(y)", len(y))
             print(y[0])
             #self.lb_value.setText(str(round(y[ len(y) // 2], 3)))
             self.lb_value.setText(str(round(y[ 0], 3)))
-            
-            
-            
         except:
             print("Error reading value at position {}".format(position_data))
             self.lb_value.setText("")
+        '''
 
         self.myplot.axes.clear()
         
@@ -214,7 +223,7 @@ class Plot_data(QWidget):
 
 
 class Plotter(QObject):
-    return_fig = pyqtSignal(object, object, int, float, float, float, float, float)
+    return_fig = pyqtSignal(object, object, int, float, float, float, float, float, float)
 
     @pyqtSlot(float)
     def replot(self, time_): # time_ in s
@@ -245,7 +254,9 @@ class Plotter(QObject):
                              position_data,
                              position_start,
                              self.min_value, self.max_value,
-                             position_end, self.max_frequency)
+                             position_end,
+                             self.max_frequency,
+                             self.time_interval)
 
         
 
