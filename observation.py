@@ -84,6 +84,8 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
+        
+        self.tabWidget.setCurrentIndex(0)
 
     """
     def processSpectrogramCompleted(self, fileName1stChunk):
@@ -119,26 +121,37 @@ class Observation(QDialog, Ui_Form):
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
                 return
-            
+
             if not r["homogeneous"]: # not all rows have 2 fields
                 QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")
                 return
 
+            '''
             if r["fields number"] != 2: # number of fields is != 2 
-                
-                header = self.return_file_header(file_name)
-                if header:
-                    text, ok = QInputDialog.getText(self, "Data file: {}".format(os.path.basename(file_name)),
-                                                    ("This file contains {} fields. 2 are required for the plot<br><br>"
-                                                    "<pre>{}</pre><br>"
-                                                    "Enter the column number to plot (time,value)").format(r["fields number"], header))
-                    if ok:
-                        if len(str(text).split(",")) != 2:
-                            QMessageBox.critical(self, programName , "Indicate only 2 columns")
-                            return
-                        columns_to_plot = str(text).replace(" ", "")
-                    else:
+            '''
+
+            header = self.return_file_header(file_name)
+            if header:
+                text, ok = QInputDialog.getText(self, "Data file: {}".format(os.path.basename(file_name)),
+                                                ("This file contains {} fields. 2 are required for the plot.<br>"
+                                                 "<pre>{}</pre><br>"
+                                                 "Enter the column indices to plot (time,value) separated by comma").format(r["fields number"], header))
+                if ok:
+                    if len(text.split(",")) != 2:
+                        QMessageBox.critical(self, programName , "Indicate only 2 column indices")
                         return
+                    columns_to_plot = str(text).replace(" ", "")
+                    for col in text.split(","):
+                        try:
+                            col_idx = int(col)
+                        except:
+                            QMessageBox.critical(self, programName , "<b>{}</b> does not seem to be a column index".format(col))
+                            return
+                        if col_idx < 0 or col_idx > r["fields number"]:
+                            QMessageBox.critical(self, programName , "<b>{}</b> is not a valid column index".format(col))
+                            return
+                else:
+                    return
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
 

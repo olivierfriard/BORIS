@@ -165,6 +165,8 @@ class Plot_data(QWidget):
 
 
     def zoom(self, z):
+        if z == -1 and self.plotter.time_interval < 10:
+            return
         self.plotter.time_interval = round(self.plotter.time_interval + z * self.plotter.time_interval/2)
 
 
@@ -185,23 +187,10 @@ class Plot_data(QWidget):
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end, max_frequency, time_interval):
 
 
-        if len(y) < time_interval:
-            #print("position data", y[position_data])
+        if x[0] == 0:
             self.lb_value.setText(str(round(y[position_data], 3)))
         else:
-            #print("//2", y[len(y)//2])
             self.lb_value.setText(str(round(y[len(y) // 2], 3)))
-
-        '''
-        try:
-            print("len(y)", len(y))
-            print(y[0])
-            #self.lb_value.setText(str(round(y[ len(y) // 2], 3)))
-            self.lb_value.setText(str(round(y[ 0], 3)))
-        except:
-            print("Error reading value at position {}".format(position_data))
-            self.lb_value.setText("")
-        '''
 
         self.myplot.axes.clear()
         
