@@ -1958,11 +1958,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
         self.mapCreatorWindow.show()
 
+
     def load_observation(self, obsId):
         """
         load observation obsId
         """
-        print(obsId)
+
         if obsId in self.pj[OBSERVATIONS]:
 
             self.observationId = obsId
@@ -1988,9 +1989,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return "Error: Observation not found"
 
+
     def open_observation(self):
         """
-        open an observation
+        satrt an observation
         """
 
         # check if current observation must be closed to open a new one
@@ -2009,6 +2011,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return self.load_observation(selectedObs[0])
         else:
             return ""
+
 
     def edit_observation(self):
         """
@@ -3260,8 +3263,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     "are loaded in the first media player"))
             return False
 
-        self.playerType = VLC
-        self.playMode = VLC
+        self.playerType, self.playMode = VLC, VLC
         self.fps = {}
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(True)
@@ -3335,10 +3337,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # for mac always embed player
         if sys.platform == "darwin":  # for MacOS
-            
-            print("video frame winid", self.videoframe.winId())
-            print("int video frame winid", int(self.videoframe.winId()))
-            
             self.mediaplayer.set_nsobject(int(self.videoframe.winId()))
 
 
@@ -3523,13 +3521,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.timer_spectro.start()
 
 
-        # data plot
+        # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-            
+
             self.plot_data = []
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-                
+
                 self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
@@ -3556,6 +3554,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
         return True
+
 
     def timer_plot_data_out(self):
         """

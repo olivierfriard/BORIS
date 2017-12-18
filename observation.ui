@@ -54,7 +54,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QLabel" name="label_9">
@@ -591,7 +591,14 @@
                      <item>
                       <widget class="QPushButton" name="pb_view_data_head">
                        <property name="text">
-                        <string>View first parts</string>
+                        <string>View first rows</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pb_plot_data">
+                       <property name="text">
+                        <string>Check data</string>
                        </property>
                       </widget>
                      </item>
@@ -707,18 +714,6 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="lbMediaAnalysis">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>BORIS</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <spacer name="horizontalSpacer_3">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -759,8 +754,6 @@
     </widget>
    </item>
   </layout>
-  <zorder>splitter_2</zorder>
-  <zorder>tabProjectType</zorder>
  </widget>
  <resources/>
  <connections/>

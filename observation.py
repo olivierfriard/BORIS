@@ -43,6 +43,8 @@ from utilities import *
 import dialog
 import plot_spectrogram
 import recode_widget
+import plot_data_module
+
 
 if QT_VERSION_STR[0] == "4":
     from observation_ui import Ui_Form
@@ -61,14 +63,13 @@ class Observation(QDialog, Ui_Form):
 
         self.setupUi(self)
 
-        self.lbMediaAnalysis.setText("")
-
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
         
         self.pb_add_data_file.clicked.connect(self.add_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
+        self.pb_plot_data.clicked.connect(self.check_data_file)
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
@@ -84,7 +85,7 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
-        
+
         self.tabWidget.setCurrentIndex(0)
 
     """
@@ -104,6 +105,55 @@ class Observation(QDialog, Ui_Form):
 
         self.PlayPause()
     """
+
+
+    def check_data_file(self):
+
+        if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
+        
+            if self.tw_data_files.rowCount() == 1:
+                row_idx = 0
+            else:
+                row_idx = self.tw_data_files.selectedIndexes()[0].row()
+
+            filename = self.tw_data_files.item(row_idx, PLOT_DATA_FILEPATH_IDX).text()
+            columns_to_plot = self.tw_data_files.item(row_idx, PLOT_DATA_COLUMNS_IDX).text()
+            plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
+            variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
+            time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
+            time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
+            
+            substract_first_value = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
+            
+            plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
+
+            print(filename,
+                                              time_interval, # time interval
+                                              time_offset,  # time offset
+                                              plot_color,
+                                              plot_title, # plot title
+                                              variable_name, 
+                                              columns_to_plot,
+                                              substract_first_value)
+
+            test = plot_data_module.Plot_data(filename,
+                                              time_interval, # time interval
+                                              time_offset,  # time offset
+                                              plot_color,
+                                              plot_title, # plot title
+                                              variable_name, 
+                                              columns_to_plot,
+                                              substract_first_value
+                                              )
+
+            if test.error_msg:
+                QMessageBox.critical(self, programName, "Impossibile to plot data:\n{}".format(test.error_msg))
+                del test
+                return
+
+            test.show()
+            test.update_plot(0)
+
 
     def add_data_file(self):
         """
@@ -414,11 +464,18 @@ class Observation(QDialog, Ui_Form):
             twVideo = self.twVideo2
 
         twVideo.setRowCount(twVideo.rowCount() + 1)
-        twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(fileName) )
-        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format(seconds2time(self.mediaDurations[fileName]))))
-        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format(self.mediaFPS[fileName])))
+        
+        for idx, s in enumerate(fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
+                                self.mediaHasAudio[fileName]):
+            twVideo.setItem(twVideo.rowCount()-1, idx, QTableWidgetItem("{}".format(s)))
+        
+        '''
+        twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(fileName))
+        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format( seconds2time(self.mediaDurations[fileName])  )))
+        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format( self.mediaFPS[fileName] )))
         twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
         twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
+        '''
 
 
     def remove_data_file(self):

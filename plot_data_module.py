@@ -22,7 +22,7 @@ class MyMplCanvas(FigureCanvas):
 
     def __init__(self, parent=None):
         self.fig = Figure()
-        self.axes = self.fig.add_subplot(1,1,1)
+        self.axes = self.fig.add_subplot(1, 1, 1)
         
         FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
@@ -71,7 +71,6 @@ class Plot_data(QWidget):
         self.y_label = y_label
         self.error_msg = ""
 
-        #print("file_name", file_name)
         
         result, data = txt2np_array(file_name, columns_to_plot, substract_first_value)
         if not result:
@@ -98,10 +97,10 @@ class Plot_data(QWidget):
         '''
         print("diff", diff, min_time_step)
         '''
-        
+
         if min(diff) == 0:
-            print("more values for same time")
-            self.close()
+            self.error_msg = "more values for same time"
+            return
 
         # check if time is not regular
         if len(diff) != 1:
@@ -118,7 +117,7 @@ class Plot_data(QWidget):
             print("len(x1)", len(x2))
             print("len(y2)", len(y2))
             '''
-            
+
             data = np.array((x2, y2)).T
             
             del x2, y2
@@ -247,20 +246,3 @@ class Plotter(QObject):
                              self.max_frequency,
                              self.time_interval)
 
-        
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    plot_data = Plot_data("ecg_converted.tsv", 60, "b-", "aa", "y lab")
-    
-    plot_data.show()
-
-    plot_data2 = Plot_data("ecg_converted2.tsv", 120, "r-", "bb", "y lab")
-    
-    plot_data2.show()
-
-    plot_data.start_update()
-    plot_data2.start_update()
-
-
-    sys.exit(app.exec_())
