@@ -110,7 +110,7 @@ class Observation(QDialog, Ui_Form):
     def check_data_file(self):
 
         if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
-        
+
             if self.tw_data_files.rowCount() == 1:
                 row_idx = 0
             else:
@@ -122,19 +122,10 @@ class Observation(QDialog, Ui_Form):
             variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
             time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
             time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
-            
+
             substract_first_value = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
             
             plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
-
-            print(filename,
-                                              time_interval, # time interval
-                                              time_offset,  # time offset
-                                              plot_color,
-                                              plot_title, # plot title
-                                              variable_name, 
-                                              columns_to_plot,
-                                              substract_first_value)
 
             test = plot_data_module.Plot_data(filename,
                                               time_interval, # time interval
@@ -151,6 +142,7 @@ class Observation(QDialog, Ui_Form):
                 del test
                 return
 
+            test.setWindowFlags(Qt.WindowStaysOnTopHint)
             test.show()
             test.update_plot(0)
 
