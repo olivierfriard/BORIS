@@ -77,6 +77,13 @@ class Plot_data(QWidget):
             self.error_msg = data
             return
 
+        print(data)
+        print(data.shape)
+
+
+        if data.shape == (0,):
+            self.error_msg = "Empty input file"
+            return
         # time
         min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
 

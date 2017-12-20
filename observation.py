@@ -146,6 +146,9 @@ class Observation(QDialog, Ui_Form):
             test.show()
             test.update_plot(0)
 
+        else:
+            QMessageBox.warning(self, programName, "Select a data file")
+
 
     def add_data_file(self):
         """
@@ -158,6 +161,7 @@ class Observation(QDialog, Ui_Form):
         if file_name:
 
             columns_to_plot = "1,2" # columns to plot by default
+
             # check data file
             r = check_txt_file(file_name)
             if "error" in r:
@@ -168,9 +172,6 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")
                 return
 
-            '''
-            if r["fields number"] != 2: # number of fields is != 2 
-            '''
 
             header = self.return_file_header(file_name)
             if header:
@@ -196,21 +197,10 @@ class Observation(QDialog, Ui_Form):
                     return
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
-
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_FILEPATH_IDX, QTableWidgetItem(file_name))
-
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_COLUMNS_IDX, QTableWidgetItem(columns_to_plot))
-            # plot title
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTTITLE_IDX, QTableWidgetItem(""))
-            # variable name
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_VARIABLENAME_IDX, QTableWidgetItem(""))
-
-            # time interval
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEINTERVAL_IDX, QTableWidgetItem("60"))
-
-            # offset
-            self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, PLOT_DATA_TIMEOFFSET_IDX, QTableWidgetItem("0"))
-
+            
+            for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX, PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX, PLOT_DATA_TIMEINTERVAL_IDX, PLOT_DATA_TIMEOFFSET_IDX],
+                                      [file_name, columns_to_plot, "", "", "60", "0"]):
+                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, QTableWidgetItem(value))
 
             # substract first value
             combobox = QComboBox()
@@ -233,7 +223,7 @@ class Observation(QDialog, Ui_Form):
                 for _ in range(5):
                     header += f_in.readline()
         except:
-            QMessageBox.critical(self, programName, str(sys.exc_info()[0]))
+            QMessageBox.critical(self, programName, str(sys.exc_info()[1]))
             return ""
         return header
         
@@ -390,6 +380,8 @@ class Observation(QDialog, Ui_Form):
 
         for filePath in filePaths:
             nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
+            
+            print(nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio)
 
             if videoDuration_s > 0:
                 self.mediaDurations[filePath] = videoDuration_s
@@ -428,7 +420,8 @@ class Observation(QDialog, Ui_Form):
         dirName = QFileDialog().getExistingDirectory(self, "Select directory")
         if dirName:
             for fileName in glob.glob(dirName + os.sep + "*"):
-                self.check_media(fileName, nPlayer)
+                self.check_media([fileName], nPlayer)
+
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
@@ -457,8 +450,8 @@ class Observation(QDialog, Ui_Form):
 
         twVideo.setRowCount(twVideo.rowCount() + 1)
         
-        for idx, s in enumerate(fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
-                                self.mediaHasAudio[fileName]):
+        for idx, s in enumerate([fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
+                                self.mediaHasAudio[fileName]]):
             twVideo.setItem(twVideo.rowCount()-1, idx, QTableWidgetItem("{}".format(s)))
         
         '''

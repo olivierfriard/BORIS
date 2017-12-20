@@ -87,7 +87,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters_str="
                           skiprows=has_header,
                           converters=converters)
     except:
-        return False, sys.exc_info()[0]
+        return False, sys.exc_info()[1]
 
     # check if first value must be substracted
     if substract_first_value == "True":
@@ -96,19 +96,39 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters_str="
     return True, data
 
 
-def versiontuple(v):
-    return tuple(map(int, (v.split("."))))
+def versiontuple(version_str):
+    """Convert version from text to tuple
+    
+    Args:
+        version_str (str): version
+        
+    Returns:
+        tuple: version in tuple format (for comparison)
+    """
+    return tuple(map(int, (version_str.split("."))))
 
 
 def get_ip_address():
+    """Get current IP address
+    
+    Args:
+    
+    Returns:
+        str: IP address
+    """
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
 
 
 def check_txt_file(file_name):
-    """
-    returns parameters of txt file (test for tsv csv)
+    """Extract parameters of txt file (test for tsv csv)
+    
+    Args:
+        filename (str): path of file to be analyzed
+        
+    Returns:
+        dict: 
     """
 
     # test CSV

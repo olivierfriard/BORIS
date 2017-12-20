@@ -8683,7 +8683,7 @@ item []:
                 self.timer_out(scrollSlider=False)
                 self.timer_spectro_out()
                 self.timer_plot_data_out()
-                
+
 
     def get_events_current_row(self):
         """
