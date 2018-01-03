@@ -96,6 +96,16 @@ class Converters(QDialog, Ui_converters):
     def save_converter(self):
         """Save converter"""
 
+        # test code with evel
+        code = self.pteCode.toPlainText()
+        try:
+            eval(code)
+        except:
+            print(sys.exc_info()[1])
+            QMessageBox.critical(self, "BORIS", "The code produced an error:<br><b>{}</b>".format(sys.exc_info()[1]))
+            return
+            
+
         if self.row_in_modification == -1:
             self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
             row = self.tw_converters.rowCount() - 1
