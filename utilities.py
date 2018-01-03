@@ -43,35 +43,50 @@ import math
 import datetime
 import socket
 import numpy as np
-import importlib
+
+#import importlib
 
 
 def txt2np_array(file_name, columns_str, substract_first_value, converters_str=""):
-    """
-    read a txt file (tsv or csv) and return np array with passed columns
+    """read a txt file (tsv or csv) and return np array with passed columns
+    
+    Args:
+        file_name (str): path of the file to load in numpy array
+        columns_str (str): indexes of columns to be loaded. First columns must be the timestamp. Example: "4,5"
+        substract_first_value (str): "True" or "False"
+        converters_str (str): not currently used
+
+    Returns:
+        bool: True if data successfullly loaded, False if case of error
+        str: error message. Empty if success
+        numpy array: data. Empty if not data failed to be loaded
+
     """
     # check columns
     try:
         columns = [int(x) - 1 for x in columns_str.split(",") ]
     except:
-        return False, "Problem with columns {}".format(columns_str)
+        return False, "Problem with columns {}".format(columns_str), np.array([])
     
     # check converters
     converters, plugins = {}, []
+    
+    '''
     if converters_str:
         for converter in converters_str.split(","):
             try:
                 column_idx = int(converter.split(":")[0]) - 1
                 plugin_name = converter.split(":")[-1]
             except:
-                return False, "Problem with converter {}".format(converter)
+                return False, "Problem with converter {}".format(converter), np.array([])
             try:
                 plugin = importlib.import_module(plugin_name)
             except ModuleNotFoundError:
-                return False, "Plugin {} not found".format(plugin_name)
+                return False, "Plugin {} not found".format(plugin_name), np.array([])
 
             plugins.append(plugin)
             converters[column_idx] = plugins[-1].convert
+    '''
 
     # snif txt file
     with open(file_name) as csvfile:
@@ -87,13 +102,13 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters_str="
                           skiprows=has_header,
                           converters=converters)
     except:
-        return False, sys.exc_info()[1]
+        return False, sys.exc_info()[1], np.array([])
 
     # check if first value must be substracted
     if substract_first_value == "True":
         data[:,0] -= data[:,0][0]
 
-    return True, data
+    return True, "", data
 
 
 def versiontuple(version_str):

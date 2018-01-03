@@ -294,7 +294,7 @@ class Ui_dlgProject(object):
         self.leSetValues = QtGui.QLineEdit(self.tabIndependentVariables)
         self.leSetValues.setObjectName(_fromUtf8("leSetValues"))
         self.horizontalLayout_9.addWidget(self.leSetValues)
-        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_9.addItem(spacerItem7)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
         self.horizontalLayout_13.addLayout(self.verticalLayout_2)
@@ -390,7 +390,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(5)
+        self.tabProject.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):

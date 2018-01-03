@@ -167,6 +167,8 @@ class Observation(QDialog, Ui_Form):
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
                 return
+            
+            
 
             if not r["homogeneous"]: # not all rows have 2 fields
                 QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")

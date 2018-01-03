@@ -1811,6 +1811,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playerType == VLC and self.playMode == VLC and not flagPaused:
                 self.play_video()
 
+
     def timer_spectro_out(self):
         """
         timer for spectrogram visualization
@@ -1872,6 +1873,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 return
 
+            logging.debug("current chunk file name: {}".format(currentChunkFileName))
             self.spectro.pixmap.load(currentChunkFileName)
 
             self.spectro.setWindowTitle("Spectrogram - {}".format(
@@ -2654,6 +2656,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     self.frame_viewer2.setGeometry(150, 150, 256, 256)
 
+
     def ffmpegTimerOut(self):
         """
         triggered when frame-by-frame mode is activated:
@@ -2664,16 +2667,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         fps = list(self.fps.values())[0]
 
-        logging.debug("fps {0}".format(fps))
+        logging.debug("fps {}".format(fps))
 
         frameMs = 1000 / fps
 
-        logging.debug("framMs {0}".format(frameMs))
+        logging.debug("framMs {}".format(frameMs))
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
-        logging.debug("required frame 1: {0}".format(requiredFrame))
-        logging.debug("sum self.duration1 {0}".format(sum(self.duration)))
+        logging.debug("required frame 1: {}".format(requiredFrame))
+        logging.debug("sum self.duration1 {}".format(sum(self.duration)))
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.duration):
@@ -2683,9 +2686,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, requiredFrame, fps)
         logging.debug("frame current media 1: {}".format(frameCurrentMedia))
 
+        '''
         if ("visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and
                 self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]):
-            self.timer_spectro_out()
+        '''
+
+        # plot spectro
+        self.timer_spectro_out()
+
+        # plot external data files
+        self.timer_plot_data_out()
 
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
@@ -2903,7 +2913,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
 
         # show selected subjects
-        self.show_current_states_in_subjects_table()        
+        self.show_current_states_in_subjects_table()
         '''
         for idx in sorted_keys(self.pj[SUBJECTS]):
             self.twSubjects.item(int(idx), len(subjectsFields)).setText(",".join(self.currentStates[idx]))
@@ -3561,8 +3571,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for plotting data from txt file
         """
         for pd in self.plot_data:
+            '''
             currentMediaTime = self.mediaplayer.get_time()
             pd.update_plot(currentMediaTime / 1000)
+            '''
+
+            pd.update_plot(self.getLaps())
 
 
     def signal_from_spectrogram(self, event):
@@ -3570,6 +3584,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from spectrogram widget
         """
         self.keyPressEvent(event)
+
 
     def eventFilter(self, source, event):
         """
@@ -3582,6 +3597,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.keyPressEvent(event)
 
         return QMainWindow.eventFilter(self, source, event)
+
 
     def loadEventsInTW(self, obsId):
         """
@@ -8663,6 +8679,7 @@ item []:
 
         _ = about_dialog.exec_()
 
+
     def hsVideo_sliderMoved(self):
         """
         media position slider moved
@@ -8681,6 +8698,7 @@ item []:
                     self.mediaplayer2.set_time(int(self.mediaplayer.get_time()
                                    - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
+
                 self.timer_spectro_out()
                 self.timer_plot_data_out()
 
@@ -8735,7 +8753,7 @@ item []:
             for j in range(self.twSubjects.rowCount()):
                 if self.twSubjects.item(j, 1).text() == self.pj[SUBJECTS][idx]["name"]:
                     self.twSubjects.item(j, len(subjectsFields)).setText(",".join(self.currentStates[idx]))
-        
+
 
     def timer_out(self, scrollSlider=True):
         """
@@ -8815,6 +8833,8 @@ item []:
             if self.mediaplayer.get_length():
 
                 self.mediaTotalLength = self.mediaplayer.get_length() / 1000
+                
+                '''
                 if abs(self.mediaTotalLength - totalGlobalTime / 1000) > 10:
                     self.timer.stop()
                     #self.pause_video()
@@ -8828,14 +8848,15 @@ item []:
                                                                         format(self.convertTime(self.mediaTotalLength),
                                                                                self.convertTime(totalGlobalTime/1000)), [OK])
 
-                    '''
+                    """
                     if response == "Close observation":
                         try:
                             self.close_observation()
                             return False
                         except:
                             pass
-                    '''
+                    """
+                '''
                 # current state(s)
                 # extract State events
                 StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
@@ -8931,6 +8952,7 @@ item []:
 
             if self.mediaListPlayer.get_state() == vlc.State.Ended:
                 self.timer.stop()
+
 
     def load_behaviors_in_twEthogram(self, behaviorsToShow):
         """
@@ -9216,11 +9238,16 @@ item []:
             else:
                 return None
 
+
     def getLaps(self):
-        """
-        return cumulative laps time from begining of observation
-        as Decimal in seconds
+        """Cumulative laps time from begining of observation
         no more add time offset!
+
+        Args:
+        
+        Returns:
+            decimal: cumulative time in seconds
+
         """
 
         if self.pj[OBSERVATIONS][self.observationId]["type"] in [LIVE]:
@@ -9295,6 +9322,7 @@ item []:
 
         return event
 
+
     def frame_backward(self):
         """
         go one frame back
@@ -9307,12 +9335,14 @@ item []:
                 self.ffmpegTimerOut()
                 logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
 
+
     def frame_forward(self):
         """
         go one frame forward
         """
         if self.playMode == FFMPEG:
             self.ffmpegTimerOut()
+
 
     def beep(self, parameters):
         """

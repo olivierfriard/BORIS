@@ -20,6 +20,9 @@ def select_observations(pj, mode):
 
     data = []
     for obs in sorted(list(pj[OBSERVATIONS].keys())):
+        
+        print("observation id", obs)
+        
         date = pj[OBSERVATIONS][obs]["date"].replace("T", " ")
         descr = pj[OBSERVATIONS][obs]["description"]
 

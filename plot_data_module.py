@@ -72,14 +72,13 @@ class Plot_data(QWidget):
         self.error_msg = ""
 
         
-        result, data = txt2np_array(file_name, columns_to_plot, substract_first_value)
+        result, error_msg, data = txt2np_array(file_name, columns_to_plot, substract_first_value)
         if not result:
-            self.error_msg = data
+            self.error_msg = error_msg
             return
 
         print(data)
         print(data.shape)
-
 
         if data.shape == (0,):
             self.error_msg = "Empty input file"
