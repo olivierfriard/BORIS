@@ -76,6 +76,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pb_load_from_file">
+       <property name="text">
+        <string>Load converters from file</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_load_from_repo">
+       <property name="text">
+        <string>Load converters from BORIS repository</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -169,7 +183,14 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Code</string>
+          <string>Python code</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pb_code_help">
+         <property name="text">
+          <string>Help</string>
          </property>
         </widget>
        </item>

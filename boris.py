@@ -2158,6 +2158,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         ("The observation <b>{}</b> is running!<br>"
                                          "Close it before editing.").format(self.observationId))
 
+
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
         """
         check BORIS web site for updates
@@ -2184,6 +2185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         except:
             QMessageBox.warning(self, programName, "Can not check for updates...")
+
 
     def jump_to(self):
         """
@@ -2263,6 +2265,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.timer_out()
                     self.timer_spectro_out()
                     self.timer_plot_data_out()
+
 
     def previous_media_file(self):
         """
@@ -10511,8 +10514,10 @@ item []:
 
         self.close_tool_windows()
 
+
     def actionQuit_activated(self):
         self.close()
+
 
     def import_observations(self):
         """
@@ -10528,7 +10533,6 @@ item []:
             return
 
         if fileName:
-
             try:
                 fromProject = json.loads(open(fileName, "r").read())
             except:

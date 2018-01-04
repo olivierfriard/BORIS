@@ -113,7 +113,7 @@ class DuplicateBehaviorCode(QDialog):
 
 class ChooseObservationsToImport(QDialog):
     """
-
+    dialog for selectiong items
     """
 
     def __init__(self, text, observations_list):
