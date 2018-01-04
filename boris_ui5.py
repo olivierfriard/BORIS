@@ -419,6 +419,8 @@ class Ui_MainWindow(object):
         self.actionSubjects_pad.setObjectName("actionSubjects_pad")
         self.actionShow_data_files = QtWidgets.QAction(MainWindow)
         self.actionShow_data_files.setObjectName("actionShow_data_files")
+        self.actionConverters_manager = QtWidgets.QAction(MainWindow)
+        self.actionConverters_manager.setObjectName("actionConverters_manager")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -513,6 +515,7 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionRecode_resize_video)
         self.menuTools.addAction(self.actionMedia_file_information_2)
         self.menuTools.addAction(self.menuTransitions_flow_diagram.menuAction())
+        self.menuTools.addAction(self.actionConverters_manager)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())
@@ -707,4 +710,5 @@ class Ui_MainWindow(object):
         self.actionCheckStateEventsSingleObs.setText(_translate("MainWindow", "Check state events"))
         self.actionSubjects_pad.setText(_translate("MainWindow", "Subjects pad"))
         self.actionShow_data_files.setText(_translate("MainWindow", "Show data files"))
+        self.actionConverters_manager.setText(_translate("MainWindow", "Time converters manager"))
 

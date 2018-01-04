@@ -136,7 +136,7 @@ class Ui_converters(object):
         QtCore.QMetaObject.connectSlotsByName(converters)
 
     def retranslateUi(self, converters):
-        converters.setWindowTitle(_translate("converters", "Form", None))
+        converters.setWindowTitle(_translate("converters", "Time converters", None))
         self.label_4.setText(_translate("converters", "Converters", None))
         self.tw_converters.setSortingEnabled(True)
         item = self.tw_converters.horizontalHeaderItem(0)

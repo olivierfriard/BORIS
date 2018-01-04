@@ -258,6 +258,7 @@
     <addaction name="actionRecode_resize_video"/>
     <addaction name="actionMedia_file_information_2"/>
     <addaction name="menuTransitions_flow_diagram"/>
+    <addaction name="actionConverters_manager"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>
@@ -1135,6 +1136,11 @@
   <action name="actionShow_data_files">
    <property name="text">
     <string>Show data files</string>
+   </property>
+  </action>
+  <action name="actionConverters_manager">
+   <property name="text">
+    <string>Time converters manager</string>
    </property>
   </action>
  </widget>

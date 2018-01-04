@@ -123,7 +123,7 @@ class Ui_converters(object):
 
     def retranslateUi(self, converters):
         _translate = QtCore.QCoreApplication.translate
-        converters.setWindowTitle(_translate("converters", "Form"))
+        converters.setWindowTitle(_translate("converters", "Time converters"))
         self.label_4.setText(_translate("converters", "Converters"))
         self.tw_converters.setSortingEnabled(True)
         item = self.tw_converters.horizontalHeaderItem(0)

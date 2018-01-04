@@ -95,6 +95,7 @@ import behaviors_coding_map
 import plot_events
 import project_functions
 import plot_data_module
+import converters
 
 __version__ = "5.1.900"
 __version_date__ = "2017-12-07"
@@ -782,6 +783,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
         self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
 
+        self.actionConverters_manager.triggered.connect(self.converters_manager)
+
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
@@ -910,6 +913,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+
+    def converters_manager(self):
+        """
+        manage converters: conversion of time values in seconds for external data
+        """
+        
+        CONVERTERS = {
+    "BORIS converters":
+    {"convert_time_ecg":
+{
+"name": "convert_time_ecg",
+"description": "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+"code":
+"""
+import datetime
+epoch = datetime.datetime.utcfromtimestamp(0)
+datetime_format = "%d/%m/%Y %H:%M:%S.%f"
+
+OUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()
+"""
+},
+
+"hhmmss_2_seconds":
+{
+"name": "hhmmss_2_seconds",
+"description": "convert HH:MM:SS in seconds",
+
+"code":
+
+"""
+h, m, s = INPUT.split(':')
+OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
+
+"""
+}
+}
+}
+
+        conv_man_wgt = converters.Converters(CONVERTERS["BORIS converters"])
+        rv = conv_man_wgt.exec_()
+
+        if rv:
+            print(conv_man_wgt.converters)
 
     def irr_cohen_kappa(self):
         """
