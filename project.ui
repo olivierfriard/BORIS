@@ -876,23 +876,9 @@ from a BORIS project</string>
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_17">
              <item>
-              <widget class="QPushButton" name="pb_load_from_repo">
+              <widget class="QPushButton" name="pb_add_converter">
                <property name="text">
-                <string>Load converters from BORIS repository</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pb_load_from_file">
-               <property name="text">
-                <string>Load converters from file</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pb_delete_converter">
-               <property name="text">
-                <string>Delete converter</string>
+                <string>Add new converter</string>
                </property>
               </widget>
              </item>
@@ -904,9 +890,23 @@ from a BORIS project</string>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pb_add_converter">
+              <widget class="QPushButton" name="pb_delete_converter">
                <property name="text">
-                <string>Add new converter</string>
+                <string>Delete converter</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_load_from_file">
+               <property name="text">
+                <string>Load converters from file</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pb_load_from_repo">
+               <property name="text">
+                <string>Load converters from BORIS repository</string>
                </property>
               </widget>
              </item>
@@ -943,7 +943,7 @@ from a BORIS project</string>
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leName"/>
+            <widget class="QLineEdit" name="le_converter_name"/>
            </item>
            <item>
             <spacer name="horizontalSpacer_11">
@@ -979,7 +979,7 @@ from a BORIS project</string>
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="leDescription_2"/>
+            <widget class="QLineEdit" name="le_converter_description"/>
            </item>
            <item>
             <spacer name="horizontalSpacer_9">

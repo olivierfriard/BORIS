@@ -34,7 +34,8 @@ class MyMplCanvas(FigureCanvas):
 class Plot_data(QWidget):
     send_fig = pyqtSignal(float)
 
-    def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot, substract_first_value):
+    def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot,
+                       substract_first_value, converters, column_converter):
         super(Plot_data, self).__init__()
 
         self.myplot = MyMplCanvas(self)
@@ -71,8 +72,12 @@ class Plot_data(QWidget):
         self.y_label = y_label
         self.error_msg = ""
 
-        
-        result, error_msg, data = txt2np_array(file_name, columns_to_plot, substract_first_value)
+        result, error_msg, data = txt2np_array(file_name,
+                                               columns_to_plot,
+                                               substract_first_value,
+                                               converters=converters,
+                                               column_converter=column_converter,
+                                               ) # txt2np_array defined in utilities.py
         if not result:
             self.error_msg = error_msg
             return
@@ -86,69 +91,62 @@ class Plot_data(QWidget):
         # time
         min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
 
-        '''
-        print("min_time_value, max_time_value", min_time_value, max_time_value)
-        '''
-
         # variable
         min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
-        
-        '''
-        print("min_var_value, max_var_value", min_var_value, max_var_value)
-        '''
-        
+
+        # check if time is linear
         diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
-        min_time_step = min(diff)
-
-        '''
-        print("diff", diff, min_time_step)
-        '''
-
         if min(diff) == 0:
             self.error_msg = "more values for same time"
             return
 
-        # check if time is not regular
+        min_time_step = min(diff)
+
+
+        # check if sample rate is not constant
         if len(diff) != 1:
             min_time_step = min(diff)
 
             # increase display speed
             if min_time_step > 0.1:
                 min_time_step = 0.1
-            
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
-            
             y2 = np.interp(x2, data[:,0], data[:,1])
-            '''
-            print("len(x1)", len(x2))
-            print("len(y2)", len(y2))
-            '''
 
             data = np.array((x2, y2)).T
-            
             del x2, y2
-            
-            '''print(data)'''
-            
+
             # time
             min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
             # variable
             min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
 
             diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
+            min_time_step = min(diff)
 
 
         # check if time starts from 0
         if min_time_value != 0:
-            
             x =  np.arange(0, min_time_value, min_time_step)
-            # head = np.array( (x, np.array([np.nan]*len(x))) ).T 
             data = np.append(np.array( (x, np.array([np.nan] * len(x))) ).T , data, axis=0)
             del x
 
+
+        # subsampling
+        data = data[0::int(0.04 / min_time_step)]
+        
+        min_time_step = 0.04
+
+        '''
+        print("new data after subsampling")
+        print(data)
+        '''
+
+
+
         min_value, max_value = min(data[:, 1]), max(data[:, 1])
 
-        max_frequency = 1 / list(diff)[0]
+        max_frequency = 1 / min_time_step
 
         self.time_interval = interval * max_frequency
 

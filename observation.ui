@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>967</width>
-    <height>770</height>
+    <width>1032</width>
+    <height>812</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -551,6 +551,11 @@
                      <column>
                       <property name="text">
                        <string>Variable name</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Time converter</string>
                       </property>
                      </column>
                      <column>

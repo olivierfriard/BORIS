@@ -49,6 +49,7 @@ BEHAVIORS_CODING_MAP = 'behaviors_coding_map'
 SUBJECTS = 'subjects_conf'
 ETHOGRAM = 'behaviors_conf'
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
+CONVERTERS = "converters"
 
 CODING_MAP_RESIZE_W = 640
 CODING_MAP_RESIZE_H = 640
@@ -78,15 +79,17 @@ PLOT_DATA_FILEPATH_IDX = 0
 PLOT_DATA_COLUMNS_IDX = 1
 PLOT_DATA_PLOTTITLE_IDX = 2
 PLOT_DATA_VARIABLENAME_IDX = 3
-PLOT_DATA_TIMEINTERVAL_IDX = 4
-PLOT_DATA_TIMEOFFSET_IDX = 5
-PLOT_DATA_SUBSTRACT1STVALUE_IDX = 6
-PLOT_DATA_PLOTCOLOR_IDX = 7
+PLOT_DATA_TIME_CONVERTER_IDX = 4
+PLOT_DATA_TIMEINTERVAL_IDX = 5
+PLOT_DATA_TIMEOFFSET_IDX = 6
+PLOT_DATA_SUBSTRACT1STVALUE_IDX = 7
+PLOT_DATA_PLOTCOLOR_IDX = 8
 
 DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
                     PLOT_DATA_COLUMNS_IDX: "columns",
                     PLOT_DATA_PLOTTITLE_IDX: "title",
                     PLOT_DATA_VARIABLENAME_IDX: "variable_name",
+                    PLOT_DATA_TIME_CONVERTER_IDX: "time_converter",
                     PLOT_DATA_TIMEINTERVAL_IDX: "time_interval",
                     PLOT_DATA_TIMEOFFSET_IDX: "time_offset",
                     PLOT_DATA_SUBSTRACT1STVALUE_IDX: "substract_first_value",
@@ -118,6 +121,8 @@ pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
 tw_indVarFields = ["label", "description", "type", "default value", "possible values"]
 
 BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
+
+
 
 # create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}
@@ -268,3 +273,17 @@ BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'seashell','sienna','skyblue','slategray','slategrey',
                          'springgreen','tan','teal','thistle','tomato','turquoise','violet',
                          'wheat','yellowgreen','darkgray']
+
+EMPTY_PROJECT = {"time_format": HHMMSS,
+                       "project_date": "",
+                       "project_name": "",
+                       "project_description": "",
+                       "project_format_version": project_format_version,
+                       SUBJECTS: {},
+                       ETHOGRAM: {},
+                       OBSERVATIONS: {},
+                       BEHAVIORAL_CATEGORIES: [],
+                       INDEPENDENT_VARIABLES: {},
+                       CODING_MAP: {},
+                       BEHAVIORS_CODING_MAP: [],
+                       CONVERTERS: {}}

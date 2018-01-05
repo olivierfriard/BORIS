@@ -95,7 +95,7 @@ import behaviors_coding_map
 import plot_events
 import project_functions
 import plot_data_module
-import converters
+#import converters
 
 __version__ = "5.1.900"
 __version_date__ = "2017-12-07"
@@ -136,14 +136,6 @@ if options.version:
 
 
 video, live = 0, 1
-'''
-try:
-    import matplotlib
-    FLAG_MATPLOTLIB_INSTALLED = True
-except:
-    logging.warning("matplotlib plotting library not installed")
-    FLAG_MATPLOTLIB_INSTALLED = False
-'''
 FLAG_MATPLOTLIB_INSTALLED = True
 
 
@@ -307,7 +299,9 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    pj = {"time_format": HHMMSS,
+    pj = dict(EMPTY_PROJECT)
+    '''
+    {"time_format": HHMMSS,
           "project_date": "",
           "project_name": "",
           "project_description": "",
@@ -317,7 +311,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
           OBSERVATIONS: {},
           BEHAVIORAL_CATEGORIES: [],
           INDEPENDENT_VARIABLES: {},
+          CODING_MAP: {},
+          CONVERTERS: {},
           "coding_map": {}}
+    '''
 
     project = False
 
@@ -532,6 +529,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.connections()
 
+
     def create_live_tab(self):
         """
         create tab with widget for live observation
@@ -557,6 +555,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveTab = QWidget()
         self.liveTab.setLayout(self.liveLayout)
         self.toolBox.insertItem(2, self.liveTab, "Live")
+
 
     def menu_options(self):
         """
@@ -783,7 +782,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
         self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
 
-        self.actionConverters_manager.triggered.connect(self.converters_manager)
+        #self.actionConverters_manager.triggered.connect(self.converters_manager)
 
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
@@ -914,49 +913,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
-
-    def converters_manager(self):
-        """
-        manage converters: conversion of time values in seconds for external data
-        """
-        
-        CONVERTERS = {
-    "BORIS converters":
-    {"convert_time_ecg":
-{
-"name": "convert_time_ecg",
-"description": "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
-"code":
-"""
-import datetime
-epoch = datetime.datetime.utcfromtimestamp(0)
-datetime_format = "%d/%m/%Y %H:%M:%S.%f"
-
-OUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()
-"""
-},
-
-"hhmmss_2_seconds":
-{
-"name": "hhmmss_2_seconds",
-"description": "convert HH:MM:SS in seconds",
-
-"code":
-
-"""
-h, m, s = INPUT.split(':')
-OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
-
-"""
-}
-}
-}
-
-        conv_man_wgt = converters.Converters(CONVERTERS["BORIS converters"])
-        rv = conv_man_wgt.exec_()
-
-        if rv:
-            print(conv_man_wgt.converters)
 
     def irr_cohen_kappa(self):
         """
@@ -3843,7 +3799,8 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
             else:
                 self.close_observation()
 
-        observationWindow = observation.Observation(logging.getLogger().getEffectiveLevel())
+        observationWindow = observation.Observation(converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
+                                                    log_level=logging.getLogger().getEffectiveLevel())
 
         observationWindow.pj = self.pj
         observationWindow.mode = mode
@@ -6870,7 +6827,9 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
         self.projectChanged = False
         self.setWindowTitle(programName)
 
-        self.pj = {"time_format": self.timeFormat,
+        self.pj = dict(EMPTY_PROJECT)
+        '''
+        {"time_format": self.timeFormat,
                    "project_date": "",
                    "project_name": "",
                    "project_description": "",
@@ -6879,7 +6838,9 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
                    OBSERVATIONS: {},
                    BEHAVIORAL_CATEGORIES: [],
                    INDEPENDENT_VARIABLES: {},
+                   CONVERTERS: {},
                    "coding_map": {}}
+        '''
 
         self.project = False
 
@@ -6906,6 +6867,7 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
         if self.timeFormat == HHMMSS:
             return seconds2time(sec)
 
+
     def edit_project(self, mode):
         """
         project management
@@ -6931,16 +6893,10 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
                     return
 
             # empty main window tables
-            self.twEthogram.setRowCount(0)   # behaviors
-            self.twSubjects.setRowCount(0)
-            self.twEvents.setRowCount(0)
+            for w in [self.twEthogram, self.twSubjects, self.twEvents]:
+                w.setRowCount(0)   # behaviors
 
         newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
-        
-
-        # TODO: remove when behav coding map ready
-        #newProjectWindow.tabProject.setTabEnabled(5, False) 
-
 
         # pass copy of self.pj
         newProjectWindow.pj = copy.deepcopy(self.pj)
@@ -7066,7 +7022,6 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
             if INDEPENDENT_VARIABLES in newProjectWindow.pj:
                 for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):
                     newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
-
                     for idx, field in enumerate(tw_indVarFields):
                         item = QTableWidgetItem("")
                         if field in newProjectWindow.pj[INDEPENDENT_VARIABLES][i]:
@@ -7076,20 +7031,27 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
 
                 newProjectWindow.twVariables.resizeColumnsToContents()
 
+            # behaviors coding map
             if BEHAVIORS_CODING_MAP in newProjectWindow.pj:
                 for bcm in newProjectWindow.pj[BEHAVIORS_CODING_MAP]:
                     newProjectWindow.twBehavCodingMap.setRowCount(newProjectWindow.twBehavCodingMap.rowCount() + 1)
-                    #for idx, field in enumerate(BEHAV_CODING_MAP_FIELDS):
-                    #item = 
                     newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
                     codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
                     newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
+
+            # time converters
+            if CONVERTERS in newProjectWindow.pj:
+                newProjectWindow.converters = newProjectWindow.pj[CONVERTERS]
+                newProjectWindow.load_converters_in_table()
+
 
         newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
 
         if mode == NEW:
 
-            newProjectWindow.pj = {"time_format": HHMMSS,
+            newProjectWindow.pj = dict(EMPTY_PROJECT)
+            '''
+            {"time_format": HHMMSS,
                        "project_date": "",
                        "project_name": "",
                        "project_description": "",
@@ -7100,10 +7062,12 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
                        BEHAVIORAL_CATEGORIES: [],
                        INDEPENDENT_VARIABLES: {},
                        CODING_MAP: {},
-                       BEHAVIORS_CODING_MAP: []}
+                       BEHAVIORS_CODING_MAP: [],
+                       CONVERTERS: {}}
+            '''
 
 
-        if newProjectWindow.exec_():  # button OK
+        if newProjectWindow.exec_():  # button OK returns True
 
             if mode == NEW:
                 self.projectFileName = ""

@@ -70,10 +70,11 @@ class Converters(QDialog, Ui_converters):
         self.row_in_modification = -1
         self.flag_modified = False
 
-        for w in [self.leName, self.leDescription, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(False)
             
         self.load_converters_in_table()
+
 
     def pb_code_help_clicked(self):
         """
@@ -84,9 +85,9 @@ class Converters(QDialog, Ui_converters):
         msg.setWindowTitle("Help for writing converters")
 
         msg.setText(("A converter is a function that will convert a time value from external data into seconds.<br>"
-"A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
-"For this you can use BORIS native converters or write your own converter.<br>"
-"A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"
+                     "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
+                     "For this you can use BORIS native converters or write your own converter.<br>"
+                     "A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"
 
 ))
 
@@ -98,7 +99,7 @@ class Converters(QDialog, Ui_converters):
     def add_converter(self):
         """Add a new converter"""
 
-        for w in [self.leName, self.leDescription, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(True)
         self.tw_converters.setEnabled(False)
 
@@ -110,12 +111,12 @@ class Converters(QDialog, Ui_converters):
             QMessageBox.warning(self, programName, "Select a converter in the table")
             return
 
-        for w in [self.leName, self.leDescription, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(True)
         self.tw_converters.setEnabled(False)
 
-        self.leName.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
-        self.leDescription.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
+        self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
+        self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
         self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
         
         self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
@@ -145,12 +146,12 @@ class Converters(QDialog, Ui_converters):
         """Save converter"""
 
         # check if name
-        self.leName.setText(self.leName.text().strip())
-        if not self.leName.text():
+        self.le_converter_name.setText(self.le_converter_name.text().strip())
+        if not self.le_converter_name.text():
             QMessageBox.critical(self, "BORIS", "The converter must have a name")
             return
 
-        if not self.leName.text().replace("_", "a").isalnum():
+        if not self.le_converter_name.text().replace("_", "a").isalnum():
             QMessageBox.critical(self, "BORIS", "Forbidden characters are used in converter name.<br>Use a..z, A..Z, 0..9 _")
             return
 
@@ -160,7 +161,7 @@ class Converters(QDialog, Ui_converters):
             QMessageBox.critical(self, "BORIS", "The converter must have Python code")
             return
 
-        function = self.code_2_func(self.leName.text(), code)
+        function = self.code_2_func(self.le_converter_name.text(), code)
 
         try:
             exec(function)
@@ -175,13 +176,13 @@ class Converters(QDialog, Ui_converters):
         else:
             row = self.row_in_modification
 
-        self.tw_converters.setItem(row, 0, QTableWidgetItem(self.leName.text()))
-        self.tw_converters.setItem(row, 1, QTableWidgetItem(self.leDescription.text()))
+        self.tw_converters.setItem(row, 0, QTableWidgetItem(self.le_converter_name.text()))
+        self.tw_converters.setItem(row, 1, QTableWidgetItem(self.le_converter_description.text()))
         self.tw_converters.setItem(row, 2, QTableWidgetItem(self.pteCode.toPlainText().replace("\n", "@")))
 
         self.row_in_modification = -1
 
-        for w in [self.leName, self.leDescription, self.pteCode]:
+        for w in [self.le_converter_name, self.le_converter_description, self.pteCode]:
             w.setEnabled(False)
             w.clear()
         self.pb_save_converter.setEnabled(False)
@@ -194,7 +195,7 @@ class Converters(QDialog, Ui_converters):
     def cancel_converter(self):
         """Cancel converter"""
 
-        for w in [self.leName, self.leDescription, self.pteCode]:
+        for w in [self.le_converter_name, self.le_converter_description, self.pteCode]:
             w.setEnabled(False)
             w.clear()
         self.pb_save_converter.setEnabled(False)

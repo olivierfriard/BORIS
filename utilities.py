@@ -36,7 +36,6 @@ import urllib.parse
 import sys
 import os
 import logging
-from config import *
 import subprocess
 from decimal import *
 import math
@@ -44,17 +43,17 @@ import datetime
 import socket
 import numpy as np
 
-#import importlib
+from config import *
 
-
-def txt2np_array(file_name, columns_str, substract_first_value, converters_str=""):
+def txt2np_array(file_name, columns_str, substract_first_value, converters = {}, column_converter={}):
     """read a txt file (tsv or csv) and return np array with passed columns
     
     Args:
         file_name (str): path of the file to load in numpy array
         columns_str (str): indexes of columns to be loaded. First columns must be the timestamp. Example: "4,5"
         substract_first_value (str): "True" or "False"
-        converters_str (str): not currently used
+        converters (dict): dictionary containing converters
+        column_converter (dict): dcitionary key: column index, value: converter name
 
     Returns:
         bool: True if data successfullly loaded, False if case of error
@@ -69,24 +68,31 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters_str="
         return False, "Problem with columns {}".format(columns_str), np.array([])
     
     # check converters
-    converters, plugins = {}, []
-    
-    '''
-    if converters_str:
-        for converter in converters_str.split(","):
+    np_converters = {}
+    for column_idx in column_converter:
+        if column_converter[column_idx] in converters:
+            
+            conv_name = column_converter[column_idx]
+            
+            function = """def {}(INPUT):\n""".format(conv_name)
+            function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT"""
+            for line in converters[conv_name]["code"].split("\n"):
+                function += "    {}\n".format(line)
+            function += """    return OUTPUT"""
+            
+            #print(function)
+            
             try:
-                column_idx = int(converter.split(":")[0]) - 1
-                plugin_name = converter.split(":")[-1]
+                exec(function)
             except:
-                return False, "Problem with converter {}".format(converter), np.array([])
-            try:
-                plugin = importlib.import_module(plugin_name)
-            except ModuleNotFoundError:
-                return False, "Plugin {} not found".format(plugin_name), np.array([])
+                #print(sys.exc_info()[1])
+                return False, "error in converter", np.array([]) 
+            
+            np_converters[column_idx - 1] = locals()[conv_name]
 
-            plugins.append(plugin)
-            converters[column_idx] = plugins[-1].convert
-    '''
+        else:
+            print("converter {} not found".format(converters_param[column_idx]))
+            return False, "converter not found", np.array([]) 
 
     # snif txt file
     with open(file_name) as csvfile:
@@ -100,7 +106,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters_str="
                           delimiter=dialect.delimiter,
                           usecols=columns,
                           skiprows=has_header,
-                          converters=converters)
+                          converters=np_converters)
     except:
         return False, sys.exc_info()[1], np.array([])
 
@@ -172,6 +178,9 @@ def check_txt_file(file_name):
                 rows_len.append(len(row))
                 if len(rows_len) > 1:
                     break
+    # test if file empty
+    if not len(rows_len):
+        return {"error": "The file is empty"}
     if len(rows_len) == 1 and rows_len[0] >= 2:
         return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t"}
     

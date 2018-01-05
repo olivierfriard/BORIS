@@ -56,10 +56,14 @@ fps = 0
 
 class Observation(QDialog, Ui_Form):
 
-    def __init__(self, log_level, parent=None):
+    def __init__(self, converters={}, log_level="", parent=None):
 
         super(Observation, self).__init__(parent)
-        logging.basicConfig(level=log_level)
+        
+        self.converters = converters
+        
+        if log_level:
+            logging.basicConfig(level=log_level)
 
         self.setupUi(self)
 
@@ -108,6 +112,9 @@ class Observation(QDialog, Ui_Form):
 
 
     def check_data_file(self):
+        """
+        check if data can be plotted
+        """
 
         if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
 
@@ -119,6 +126,10 @@ class Observation(QDialog, Ui_Form):
             filename = self.tw_data_files.item(row_idx, PLOT_DATA_FILEPATH_IDX).text()
             columns_to_plot = self.tw_data_files.item(row_idx, PLOT_DATA_COLUMNS_IDX).text()
             plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
+
+            # TODO: fix eval
+            column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_TIME_CONVERTER_IDX).text())
+
             variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
             time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
             time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
@@ -134,7 +145,9 @@ class Observation(QDialog, Ui_Form):
                                               plot_title, # plot title
                                               variable_name, 
                                               columns_to_plot,
-                                              substract_first_value
+                                              substract_first_value,
+                                              self.converters,
+                                              column_converter
                                               )
 
             if test.error_msg:
@@ -163,22 +176,19 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = "1,2" # columns to plot by default
 
             # check data file
-            r = check_txt_file(file_name)
+            r = check_txt_file(file_name) # check_txt_file defined in utilities
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
                 return
-            
-            
 
-            if not r["homogeneous"]: # not all rows have 2 fields
-                QMessageBox.critical(self, programName , "This file does not contain a constant number of fields")
+            if not r["homogeneous"]: # not all rows have 2 columns
+                QMessageBox.critical(self, programName , "This file does not contain a constant number of columns")
                 return
-
 
             header = self.return_file_header(file_name)
             if header:
                 text, ok = QInputDialog.getText(self, "Data file: {}".format(os.path.basename(file_name)),
-                                                ("This file contains {} fields. 2 are required for the plot.<br>"
+                                                ("This file contains {} columns. 2 are required for the plot.<br>"
                                                  "<pre>{}</pre><br>"
                                                  "Enter the column indices to plot (time,value) separated by comma").format(r["fields number"], header))
                 if ok:
@@ -197,16 +207,24 @@ class Observation(QDialog, Ui_Form):
                             return
                 else:
                     return
+            else:
+                return # problem with header
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
             
-            for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX, PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX, PLOT_DATA_TIMEINTERVAL_IDX, PLOT_DATA_TIMEOFFSET_IDX],
-                                      [file_name, columns_to_plot, "", "", "60", "0"]):
+            for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX,
+                                       PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX,
+                                       PLOT_DATA_TIME_CONVERTER_IDX, PLOT_DATA_TIMEINTERVAL_IDX,
+                                       PLOT_DATA_TIMEOFFSET_IDX],
+                                      [file_name, columns_to_plot,
+                                       "", "",
+                                       "", "60",
+                                       "0"]):
                 self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, QTableWidgetItem(value))
 
             # substract first value
             combobox = QComboBox()
-            combobox.addItems(["False", "True"])
+            combobox.addItems(["True", "False"])
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
 
             # plot line color  
@@ -215,9 +233,16 @@ class Observation(QDialog, Ui_Form):
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
 
 
+
     def return_file_header(self, file_name):
         """
         return file header
+        
+        Args:
+            file_name (str): path of file
+            
+        Returns:
+            str: 5 first rows of file
         """
         header = ""
         try:
@@ -437,12 +462,9 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, programName, "Add the first media file to Player #1")
             return False
 
-        if self.twVideo1.rowCount() and self.twVideo2.rowCount():
-            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
-            return False
-
-        if self.twVideo2.rowCount() > 1:
-            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player")
+        if (self.twVideo1.rowCount() and self.twVideo2.rowCount()) or (self.twVideo2.rowCount() > 1):
+            QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
+                                                     "when more media are loaded in the first media player"))
             return False
 
         if nPlayer == PLAYER1:
@@ -455,14 +477,6 @@ class Observation(QDialog, Ui_Form):
         for idx, s in enumerate([fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
                                 self.mediaHasAudio[fileName]]):
             twVideo.setItem(twVideo.rowCount()-1, idx, QTableWidgetItem("{}".format(s)))
-        
-        '''
-        twVideo.setItem(twVideo.rowCount()-1, 0, QTableWidgetItem(fileName))
-        twVideo.setItem(twVideo.rowCount()-1, 1, QTableWidgetItem("{}".format( seconds2time(self.mediaDurations[fileName])  )))
-        twVideo.setItem(twVideo.rowCount()-1, 2, QTableWidgetItem("{}".format( self.mediaFPS[fileName] )))
-        twVideo.setItem(twVideo.rowCount()-1, 3, QTableWidgetItem("{}".format(self.mediaHasVideo[fileName])))
-        twVideo.setItem(twVideo.rowCount()-1, 4, QTableWidgetItem("{}".format(self.mediaHasAudio[fileName])))
-        '''
 
 
     def remove_data_file(self):
@@ -512,3 +526,27 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+
+if __name__ == '__main__':
+
+    import sys
+    
+    converters = {
+  "convert_time_ecg":{
+   "name":"convert_time_ecg",
+   "description":"convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+   "code":"\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
+  },
+  "hhmmss_2_seconds":{
+   "name":"hhmmss_2_seconds",
+   "description":"convert HH:MM:SS in seconds",
+   "code":"\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
+  }
+ }
+    
+    app = QApplication(sys.argv)
+    w = Observation(converters)
+    w.show()
+    w.exec_()
+    sys.exit()
+
