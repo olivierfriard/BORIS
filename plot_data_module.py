@@ -38,6 +38,12 @@ class Plot_data(QWidget):
                        substract_first_value, converters, column_converter):
         super(Plot_data, self).__init__()
 
+        d = {}
+        # convert dict keys in int:
+        for k in column_converter:
+            d[int(k)] = column_converter[k]
+        column_converter = dict(d)
+        
         self.myplot = MyMplCanvas(self)
 
         self.button_plus = QPushButton("+", self)
@@ -84,6 +90,7 @@ class Plot_data(QWidget):
 
         print(data)
         print(data.shape)
+        print("data[:,0]",data[:,0])
 
         if data.shape == (0,):
             self.error_msg = "Empty input file"
@@ -100,6 +107,7 @@ class Plot_data(QWidget):
             self.error_msg = "more values for same time"
             return
 
+        print("diff", diff)
         min_time_step = min(diff)
 
 
@@ -114,6 +122,9 @@ class Plot_data(QWidget):
             y2 = np.interp(x2, data[:,0], data[:,1])
 
             data = np.array((x2, y2)).T
+            
+            
+            print("data[:,0]",data[:,0])
             del x2, y2
 
             # time

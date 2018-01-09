@@ -555,7 +555,7 @@
                      </column>
                      <column>
                       <property name="text">
-                       <string>Time converter</string>
+                       <string>Converters</string>
                       </property>
                      </column>
                      <column>

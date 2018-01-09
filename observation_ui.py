@@ -435,7 +435,7 @@ class Ui_Form(object):
         item = self.tw_data_files.horizontalHeaderItem(3)
         item.setText(_translate("Form", "Variable name", None))
         item = self.tw_data_files.horizontalHeaderItem(4)
-        item.setText(_translate("Form", "Time converter", None))
+        item.setText(_translate("Form", "Converters", None))
         item = self.tw_data_files.horizontalHeaderItem(5)
         item.setText(_translate("Form", "Time interval (s)", None))
         item = self.tw_data_files.horizontalHeaderItem(6)

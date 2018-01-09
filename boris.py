@@ -3551,7 +3551,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"]
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
+                                                                 self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"]
+                                                                 
                                                                  )
                                      )
                 # print("Error msg", self.plot_data[-1].error_msg)
@@ -3992,6 +3995,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
                                                                               PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox2)
+                            elif idx3 == PLOT_DATA_CONVERTERS_IDX:
+                                # convert dict to str
+                                '''
+                                s = ""
+                                for conv in self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]:
+                                    s += "," if s else ""
+                                    s += "{}:{}".format(conv, self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]][conv])
+                                '''
+                                observationWindow.tw_data_files.setItem(observationWindow.tw_data_files.rowCount() - 1, idx3, 
+                                                                        QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]])))
+
                             else:
                                 observationWindow.tw_data_files.setItem(observationWindow.tw_data_files.rowCount() - 1, idx3,
                                     QTableWidgetItem(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
@@ -4074,6 +4088,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for idx2 in DATA_PLOT_FIELDS:
                         if idx2 in [PLOT_DATA_PLOTCOLOR_IDX, PLOT_DATA_SUBSTRACT1STVALUE_IDX]:
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
+
+                        elif idx2 == PLOT_DATA_CONVERTERS_IDX:
+                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = eval(observationWindow.tw_data_files.item(row, idx2).text())
+
                         else:
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.item(row, idx2).text()
 

@@ -167,7 +167,6 @@ class BehavioralCategories(QDialog):
 
         self.setLayout(self.vbox)
 
-
     def pbAddCategory_clicked(self):
         category, ok = QInputDialog.getText(self, "New behavioral category", "Category name:")
         if ok:
@@ -1283,7 +1282,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         add new behavior to ethogram
         """
 
-        response = "Point event"
+        response = "Point event" # default behavior type
 
         # Add behavior to table
         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)

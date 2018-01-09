@@ -152,6 +152,34 @@ def check_txt_file(file_name):
         dict: 
     """
 
+    # snif txt file
+    with open(file_name) as csvfile:
+        '''
+        dialect = csv.Sniffer().sniff(csvfile.read(1024))
+
+        print("dialect.lineterminator", dialect.lineterminator, len(dialect.lineterminator))
+        '''
+
+        buff = csvfile.read(1024)
+        snif = csv.Sniffer()
+        dialect = snif.sniff(buff)
+
+        has_header = snif.has_header(buff)
+
+
+        print("dialect.delimiter", dialect.delimiter)
+
+    '''data = np.loadtxt(file_name,
+                          delimiter=dialect.delimiter,
+       #                          usecols=columns,
+                          skiprows=has_header  #,
+                          #converters=np_converters,
+                          )
+        
+
+    '''
+    
+    '''
     # test CSV
     rows_len = []
     with open(file_name, "r") as f:
@@ -167,17 +195,22 @@ def check_txt_file(file_name):
 
     if len(rows_len) == 1 and rows_len[0] >= 2:
         return {"homogeneous": True, "fields number": rows_len[0], "separator": ","}
+    '''
     
-    # TSV
-    csv.register_dialect("tab", delimiter="\t")
+
+    csv.register_dialect("dialect", dialect)
     rows_len = []
     with open(file_name, "r") as f:
-        reader = csv.reader(f, dialect="tab")
+        reader = csv.reader(f, dialect="dialect")
         for row in reader:
+            print(row)
+            if not row:
+                continue
             if len(row) not in rows_len:
                 rows_len.append(len(row))
                 if len(rows_len) > 1:
                     break
+
     # test if file empty
     if not len(rows_len):
         return {"error": "The file is empty"}

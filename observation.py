@@ -54,6 +54,51 @@ else:
 out = ""
 fps = 0
 
+
+class AssignConverter(QDialog):
+    """
+    dialog for assigning converter to selected column
+    """
+
+    def __init__(self, columns, converters, col_conv):
+        super(AssignConverter, self).__init__()
+
+        self.setWindowTitle("Converters")
+
+        self.vbox = QVBoxLayout(self)
+
+        self.label = QLabel()
+        self.label.setText("Assign converter to column")
+        self.vbox.addWidget(self.label)
+
+        self.cbb = []
+        for column_idx in columns.split(","):
+            hbox = QHBoxLayout(self)
+            hbox.addWidget(QLabel("Column #{}:".format(column_idx)))
+            self.cbb.append(QComboBox())
+            self.cbb[-1].addItems(["None"] + sorted(converters.keys()))
+
+            if column_idx in col_conv:
+                self.cbb[-1].setCurrentIndex((["None"] + sorted(converters.keys())).index(col_conv[column_idx]))
+            else:
+                self.cbb[-1].setCurrentIndex(0)
+            hbox.addWidget(self.cbb[-1])
+            self.vbox.addLayout(hbox)
+
+        hbox1 = QHBoxLayout(self)
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.accept)
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        hbox1.addItem(spacerItem)
+        hbox1.addWidget(self.pbCancel)
+        hbox1.addWidget(self.pbOK)
+        self.vbox.addLayout(hbox1)
+
+        self.setLayout(self.vbox)
+
+
 class Observation(QDialog, Ui_Form):
 
     def __init__(self, converters={}, log_level="", parent=None):
@@ -84,6 +129,8 @@ class Observation(QDialog, Ui_Form):
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
+        
+        self.tw_data_files.cellDoubleClicked[int, int].connect(self.tw_data_files_cellDoubleClicked)
 
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
 
@@ -110,6 +157,24 @@ class Observation(QDialog, Ui_Form):
         self.PlayPause()
     """
 
+    def tw_data_files_cellDoubleClicked(self, row, column):
+        """
+        double click on "Converters column"
+        """
+        if column == PLOT_DATA_CONVERTERS_IDX:
+            if self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text():
+                w = AssignConverter(self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text(), self.converters,
+                                    eval(self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).text()) if self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).text() else "")
+
+                if w.exec_():
+                    d = {}
+                    for col_idx, cb in zip(self.tw_data_files.item(row, PLOT_DATA_COLUMNS_IDX).text().split(","), w.cbb):
+                        if cb.currentText() != "None":
+                            d[col_idx] = cb.currentText()
+                    self.tw_data_files.item(row, PLOT_DATA_CONVERTERS_IDX).setText(str(d))
+            else:
+                QMessageBox.critical(self, programName, "Select the columns to plot (time,value)")
+
 
     def check_data_file(self):
         """
@@ -127,8 +192,20 @@ class Observation(QDialog, Ui_Form):
             columns_to_plot = self.tw_data_files.item(row_idx, PLOT_DATA_COLUMNS_IDX).text()
             plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
 
-            # TODO: fix eval
-            column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_TIME_CONVERTER_IDX).text())
+            # load converters in dictionary
+            
+            if self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text():
+                column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text())
+                '''
+                for idx_conv in self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text().split(","):
+                    idx, conv = idx_conv.split(":")
+                    column_converter[int(idx)] = conv
+                '''
+
+            else:
+                column_converter = {}
+            
+
 
             variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
             time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
@@ -177,6 +254,9 @@ class Observation(QDialog, Ui_Form):
 
             # check data file
             r = check_txt_file(file_name) # check_txt_file defined in utilities
+            
+            print("r",r)
+            
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
                 return
@@ -214,13 +294,16 @@ class Observation(QDialog, Ui_Form):
             
             for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX,
                                        PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX,
-                                       PLOT_DATA_TIME_CONVERTER_IDX, PLOT_DATA_TIMEINTERVAL_IDX,
+                                       PLOT_DATA_CONVERTERS_IDX, PLOT_DATA_TIMEINTERVAL_IDX,
                                        PLOT_DATA_TIMEOFFSET_IDX],
                                       [file_name, columns_to_plot,
                                        "", "",
                                        "", "60",
                                        "0"]):
-                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, QTableWidgetItem(value))
+                item = QTableWidgetItem(value)
+                if col_idx == PLOT_DATA_CONVERTERS_IDX:
+                    item.setFlags(Qt.ItemIsEnabled)
+                self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
 
             # substract first value
             combobox = QComboBox()
