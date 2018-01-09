@@ -830,7 +830,7 @@ from a BORIS project</string>
        </widget>
        <widget class="QWidget" name="tab_time_converters">
         <attribute name="title">
-         <string>Time converters</string>
+         <string>Converters</string>
         </attribute>
         <layout class="QVBoxLayout" name="verticalLayout_18">
          <item>

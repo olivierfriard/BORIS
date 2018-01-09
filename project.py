@@ -1716,12 +1716,15 @@ class projectDialog(QDialog, Ui_dlgProject):
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
 
+
     def add_converter(self):
         """Add a new converter"""
 
         for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(True)
-        self.tw_converters.setEnabled(False)
+        # disable buttons
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+            w.setEnabled(False)
 
 
     def modify_converter(self):
@@ -1733,7 +1736,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(True)
-        self.tw_converters.setEnabled(False)
+            
+        # disable buttons
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+            w.setEnabled(False)
 
         self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
         self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
@@ -1810,6 +1816,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.tw_converters.setEnabled(True)
         
         self.flag_modified = True
+        
+        # enable buttons
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+            w.setEnabled(True)
+
 
 
     def cancel_converter(self):
@@ -1820,7 +1831,11 @@ class projectDialog(QDialog, Ui_dlgProject):
             w.clear()
         self.pb_save_converter.setEnabled(False)
         self.pb_cancel_converter.setEnabled(False)
-        self.tw_converters.setEnabled(True)
+
+        # enable buttons
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+            w.setEnabled(True)
+        
 
 
     def delete_converter(self):

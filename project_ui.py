@@ -607,7 +607,7 @@ class Ui_dlgProject(object):
         self.pb_code_help.setText(_translate("dlgProject", "Help", None))
         self.pb_save_converter.setText(_translate("dlgProject", "Save converter", None))
         self.pb_cancel_converter.setText(_translate("dlgProject", "Cancel", None))
-        self.tabProject.setTabText(self.tabProject.indexOf(self.tab_time_converters), _translate("dlgProject", "Time converters", None))
+        self.tabProject.setTabText(self.tabProject.indexOf(self.tab_time_converters), _translate("dlgProject", "Converters", None))
         self.pbCancel.setText(_translate("dlgProject", "Cancel", None))
         self.pbOK.setText(_translate("dlgProject", "OK", None))
 
