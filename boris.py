@@ -3553,8 +3553,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
                                                                  self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"]
-                                                                 
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
+                                                                 log_level=logging.getLogger().getEffectiveLevel()
                                                                  )
                                      )
                 # print("Error msg", self.plot_data[-1].error_msg)
@@ -4090,7 +4090,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.cellWidget(row, idx2).currentText()
 
                         elif idx2 == PLOT_DATA_CONVERTERS_IDX:
-                            self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = eval(observationWindow.tw_data_files.item(row, idx2).text())
+                            if observationWindow.tw_data_files.item(row, idx2).text():
+                                self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = eval(observationWindow.tw_data_files.item(row, idx2).text())
+                            else:
+                                self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = {}
 
                         else:
                             self.pj[OBSERVATIONS][new_obs_id][PLOT_DATA][str(row)][DATA_PLOT_FIELDS[idx2]] = observationWindow.tw_data_files.item(row, idx2).text()

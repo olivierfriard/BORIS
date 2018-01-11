@@ -224,7 +224,8 @@ class Observation(QDialog, Ui_Form):
                                               columns_to_plot,
                                               substract_first_value,
                                               self.converters,
-                                              column_converter
+                                              column_converter,
+                                              log_level=logging.getLogger().getEffectiveLevel()
                                               )
 
             if test.error_msg:
