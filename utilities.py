@@ -167,7 +167,7 @@ def check_txt_file(file_name):
         has_header = snif.has_header(buff)
 
 
-        print("dialect.delimiter", dialect.delimiter)
+        logging.debug("dialect.delimiter: {}".format(dialect.delimiter))
 
     '''data = np.loadtxt(file_name,
                           delimiter=dialect.delimiter,
@@ -203,7 +203,7 @@ def check_txt_file(file_name):
     with open(file_name, "r") as f:
         reader = csv.reader(f, dialect="dialect")
         for row in reader:
-            print(row)
+            logging.debug("row: {}".format(row))
             if not row:
                 continue
             if len(row) not in rows_len:

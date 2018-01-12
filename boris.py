@@ -3566,7 +3566,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.plot_data[-1].show()
 
-            self.plot_data_timer.start(200)
+            self.plot_data_timer.start(40)
 
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:

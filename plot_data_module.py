@@ -69,7 +69,7 @@ class Plot_data(QWidget):
         self.hlayout1.addWidget(self.button_plus)
         self.hlayout1.addWidget(self.button_minus)
         self.hlayout1.addItem( QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        
+
         self.hlayout2 = QHBoxLayout()
         self.hlayout2.addWidget(QLabel("Value"))
         self.lb_value = QLabel("")
@@ -79,7 +79,7 @@ class Plot_data(QWidget):
         self.layout.addLayout(self.hlayout1)
         self.layout.addLayout(self.hlayout2)
         self.layout.addWidget(self.myplot)
-
+        
         self.setLayout(self.layout)
 
         self.color = color
@@ -94,6 +94,7 @@ class Plot_data(QWidget):
                                                converters=converters,
                                                column_converter=column_converter,
                                                ) # txt2np_array defined in utilities.py
+
         if not result:
             self.error_msg = error_msg
             return
@@ -104,6 +105,7 @@ class Plot_data(QWidget):
         if data.shape == (0,):
             self.error_msg = "Empty input file"
             return
+
         # time
         min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
 
@@ -118,15 +120,19 @@ class Plot_data(QWidget):
 
         logging.debug("diff: {}".format(diff))
         min_time_step = min(diff)
+        logging.debug("min_time_step: {}".format(min_time_step))
 
 
         # check if sample rate is not constant
         if len(diff) != 1:
+            logging.debug("len diff != 1")
             min_time_step = min(diff)
+            logging.debug("min_time_step: {}".format(min_time_step))
 
             # increase display speed
             if min_time_step > 0.1:
                 min_time_step = 0.1
+            
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             y2 = np.interp(x2, data[:,0], data[:,1])
 
@@ -173,7 +179,7 @@ class Plot_data(QWidget):
         self.plotter.data = data
         self.plotter.max_frequency = max_frequency
 
-        #self.plotter.time_interval = self.time_interval
+        #self.plotter.time_interval = time_interval
         self.plotter.min_value = min_var_value
         self.plotter.max_value = max_var_value
 
@@ -182,6 +188,9 @@ class Plot_data(QWidget):
 
         
         self.plotter.min_time_step = min_time_step
+        
+        # interval must be even
+        interval += 1 if interval % 2 else 0
         self.plotter.interval = interval
 
 
@@ -244,41 +253,59 @@ class Plot_data(QWidget):
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end):
 
+        logging.debug("len x (plot): {}".format(len(x)))
+        logging.debug("len y (plot): {}".format(len(y)))
+
         # print current value
         if x[0] == 0:
             self.lb_value.setText(str(round(y[position_data], 3)))
         else:
             self.lb_value.setText(str(round(y[len(y) // 2], 3)))
 
-        self.myplot.axes.clear()
-        self.myplot.axes.set_xlim(position_start , position_end)
-
-        self.myplot.axes.set_ylim((min_value, max_value))
-
-        self.myplot.axes.plot(x, y)
-        self.myplot.axes.axvline(x=position_data, color="red", linestyle='-')
-
-        self.myplot.draw()
+        try:
+            self.myplot.axes.clear()
+            self.myplot.axes.set_xlim(position_start , position_end)
+    
+            self.myplot.axes.set_ylim((min_value, max_value))
+    
+            self.myplot.axes.plot(x, y)
+            self.myplot.axes.axvline(x=position_data, color="red", linestyle='-')
+    
+            self.myplot.draw()
+        except:
+            logging.debug("error")
+            pass # only for protection agains crash
 
 
 class Plotter(QObject):
-    return_fig = pyqtSignal(object, object, float, float, float, float, float)
+    return_fig = pyqtSignal(np.ndarray, # x array
+                            np.ndarray, #y array
+                            float, # position_data
+                            float, #position start
+                            float, #min value
+                            float, #max value
+                            float # position end
+                            )
 
     @pyqtSlot(float)
     def replot(self, time_): # time_ in s
 
         current_time = time_
+        
+        logging.debug("============================================")
+        
         '''
         print("============================================")
         print("current time", current_time)
         print("self.min_time_value <= current_time <= self.max_time_value", self.min_time_value <= current_time <= self.max_time_value)
         '''
 
+        logging.debug("current_time: {}".format(current_time))
+
         current_discrete_time = round(round( current_time / self.min_time_step ) * self.min_time_step, 2)
-        '''
-        print("current_discrete_time", current_discrete_time)
-        print("self.interval", self.interval)
-        '''
+        logging.debug("current_discrete_time: {}".format(current_discrete_time))
+        logging.debug("self.interval: {}".format(self.interval))
+
 
         freq_interval = int(round(self.interval / self.min_time_step))
         '''
@@ -286,6 +313,8 @@ class Plotter(QObject):
         '''
 
         if self.min_time_value <= current_discrete_time <= self.max_time_value:
+            
+                logging.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
 
                 idx = np.where(self.data[:,0] == current_discrete_time)[0]
                 '''
@@ -301,8 +330,10 @@ class Plotter(QObject):
                 if len(idx):
 
                     position_data = idx[0]
-                        
-                    print(current_discrete_time, position_data, self.data[position_data:position_data+1][:,1])
+                    
+                    logging.debug("position data: {}".format(position_data))
+                    
+                    #print(current_discrete_time, position_data, self.data[position_data:position_data+1][:,1])
 
                     position_start = int(position_data - freq_interval // 2)
                     '''
@@ -314,7 +345,9 @@ class Plotter(QObject):
                     if position_start < 0:
                         i = np.array([np.nan]*abs(position_start)).T
                         flag_i = True
-                        '''print("len(i)", len(i))'''
+
+                        logging.debug("len(i): {}".format(len(i)))
+
                         position_start =0
 
                     position_end = int(position_data + freq_interval // 2)
@@ -341,35 +374,35 @@ class Plotter(QObject):
                     '''
                     print("len d", len(d))
                     '''
-                    
+                else:
+                    # not known problem
+                    #return nan data
+                    d = np.array([np.nan] * int(self.interval /self.min_time_step)).T
+
                     
         elif current_time > self.max_time_value:
 
-            print(self.interval/self.min_time_step/2)
+            logging.debug("self.interval/self.min_time_step/2: {}".format(self.interval/self.min_time_step/2))
+
             
-            print((current_time - self.max_time_value)/self.min_time_step)
+            #print((current_time - self.max_time_value)/self.min_time_step)
             
             #dim_footer = int((current_time - self.max_time_value)/self.min_time_step +  self.interval/self.min_time_step/2)
             dim_footer = int(round((current_time - self.max_time_value)/self.min_time_step +  self.interval / self.min_time_step / 2))
 
             footer = np.array([np.nan] * dim_footer ).T
-            '''
-            print("footer", len(footer))
-            '''
+            logging.debug("len footer: {}".format(len(footer)))
 
             a = (self.interval/2 - (current_time - self.max_time_value)) / self.min_time_step
-            
-            '''
-            print("a", a)
-            '''
+            logging.debug("a: {}".format(a)) 
 
             if a >= 0:
+                
+                logging.debug("a>=0")
 
                 st = int(round(len(self.data) - a))
+                logging.debug("st: {}".format(st))
 
-                '''
-                print("st", st)
-                '''
                 flag_i = False
                 if st < 0:
                     i = np.array([np.nan] * abs(st)).T
@@ -381,12 +414,13 @@ class Plotter(QObject):
                 if flag_i:
                     d = np.append(i, d, axis=0)
 
+                logging.debug("len d a>=0: {}".format(len(d)))
+
             else: # a <0
+                logging.debug("a<0")
                 d = np.array([np.nan] * int(self.interval /self.min_time_step)).T
             
-            '''
-            print("len d*",len(d))
-            '''
+                logging.debug("len d a<0: {}".format(len(d)))
 
         elif current_time < self.min_time_value:
 
@@ -405,24 +439,29 @@ class Plotter(QObject):
 
             if b >= 0:
                 d = np.append(header, self.data[0:b][:,1],  axis=0)
+                if len(d) < freq_interval:
+                    d = np.append(d, np.array([np.nan] * int(freq_interval - len(d))).T,  axis=0)
+
             else:
                 d = np.array([np.nan] * int(self.interval /self.min_time_step)).T
 
         y = d
-        #x = np.arange(int(position_data - self.time_interval // 2), int(position_data + self.time_interval // 2), 1)
+        logging.debug("len y: {}".format(len(y)))
+
+        
+        logging.debug("self.min_time_step: {}".format(self.min_time_step))
         
         x = np.arange(current_time - self.interval//2, current_time + self.interval//2, self.min_time_step)
+        #x = np.arange(round(current_discrete_time - self.interval//2,2), round(current_discrete_time + self.interval//2, 2), self.min_time_step)
 
-        '''
-        print("len x", len(x))
-        '''
+        logging.debug("len x 1: {}".format(len(x)))
 
         self.return_fig.emit(x, y,
-                             current_time, #position_data
-                             current_time - self.interval//2, #position_start
+                             current_discrete_time, #position_data
+                             current_discrete_time - self.interval//2, #position_start
                              self.min_value,
                              self.max_value,
-                             current_time + self.interval//2 #position_end,
+                             current_discrete_time + self.interval//2 #position_end,
                              )
 
 
