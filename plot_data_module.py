@@ -6,14 +6,6 @@ https://stackoverflow.com/questions/41156260/how-to-use-a-qthread-to-update-a-ma
 
 
 
-
-
-
-
-
-
-
-
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -43,7 +35,7 @@ class Plot_data(QWidget):
 
     def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot,
                        substract_first_value, converters, column_converter, log_level="",):
-        super(Plot_data, self).__init__()
+        super().__init__()
 
         if log_level:
             logging.basicConfig(level=log_level)
@@ -106,6 +98,13 @@ class Plot_data(QWidget):
             self.error_msg = "Empty input file"
             return
 
+        # sort data by time ascending
+        data = data[data[:,0].argsort()]
+        
+        # unique
+        u, idx = np.unique(data[:,0], return_index=True)
+        data = data[idx]
+
         # time
         min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
 
@@ -130,8 +129,8 @@ class Plot_data(QWidget):
             logging.debug("min_time_step: {}".format(min_time_step))
 
             # increase display speed
-            if min_time_step > 0.1:
-                min_time_step = 0.1
+            #if min_time_step > 0.1:
+            #    min_time_step = 0.1
             
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             y2 = np.interp(x2, data[:,0], data[:,1])
@@ -151,9 +150,10 @@ class Plot_data(QWidget):
 
 
         # subsampling
-        data = data[0::int(0.04 / min_time_step)]
+        if min_time_step < 0.04:
+            data = data[0::int(round(0.04 / min_time_step, 2))]
+            min_time_step = 0.04
         
-        min_time_step = 0.04
 
         logging.debug("new data after subsampling: {}".format(data[:50]))
 
@@ -162,16 +162,6 @@ class Plot_data(QWidget):
         max_frequency = 1 / min_time_step
 
         self.time_interval = interval * max_frequency
-
-
-
-
-
-
-
-
-
-
 
 
         # plotter and thread are none at the beginning
@@ -186,15 +176,11 @@ class Plot_data(QWidget):
         self.plotter.min_time_value = min_time_value
         self.plotter.max_time_value = max_time_value
 
-        
         self.plotter.min_time_step = min_time_step
         
         # interval must be even
         interval += 1 if interval % 2 else 0
         self.plotter.interval = interval
-
-
-
 
         self.thread = QThread()
 
@@ -204,6 +190,13 @@ class Plot_data(QWidget):
         #move to thread and start
         self.plotter.moveToThread(self.thread)
         self.thread.start()
+        
+        if min_time_step < .2:
+            self.time_out = 200
+        else:
+            self.time_out = min_time_step * 1000
+        
+
 
 
     def zoom(self, z):
@@ -230,23 +223,6 @@ class Plot_data(QWidget):
         self.thread.quit()
         self.thread.wait()
         self.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -288,10 +264,8 @@ class Plotter(QObject):
                             )
 
     @pyqtSlot(float)
-    def replot(self, time_): # time_ in s
+    def replot(self, current_time): # time_ in s
 
-        current_time = time_
-        
         logging.debug("============================================")
         
         '''
@@ -464,5 +438,86 @@ class Plotter(QObject):
                              current_discrete_time + self.interval//2 #position_end,
                              )
 
+
+
+if __name__ == '__main__':
+
+    """
+    arguments:
+    1     file_name
+    2 columns_to_plot (example: 1,2)
+    3 substract_first_value:True/False
+    4 interval (in seconds)
+    5 column_converter
+
+    examples:
+    python3.6 plot_data_module.py /home/olivier/src/python/pyobserver/dev/data_txt/kara/161007_BATHY_2_n.csv 4,6 True 60 "{4:'hhmmss_2_seconds'}"
+    python3.6 plot_data_module.py /home/olivier/src/python/pyobserver/dev/data_txt/ecg/2017_11_24__10_39_59_ECG.csv 1,2 True 60 "{1:'convert_time_ecg'}"
+
+    """
+
+
+    file_name = sys.argv[1]
+    columns_to_plot = sys.argv[2]
+    substract_first_value = sys.argv[3]
+    interval = int(sys.argv[4])
+    column_converter = eval(sys.argv[5])
+
+    time_offset = 0
+    color = "b-"
+    plot_title = "test"
+    y_label = "TEST"
+
+
+    converters = {
+  "convert_time_ecg":{
+   "name":"convert_time_ecg",
+   "description":"convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+   "code":"\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
+  },
+  "hhmmss_2_seconds":{
+   "name":"hhmmss_2_seconds",
+   "description":"convert HH:MM:SS in seconds",
+   "code":"\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
+  },
+  "invert":{
+   "name":"invert value",
+   "description":"invert the value",
+   "code":"\nOUTPUT = -float(INPUT)\n\n"
+  }
+ }
+
+    app = QApplication(sys.argv)
+
+    win = Plot_data(file_name,
+                    interval,
+                    time_offset,
+                    color,
+                    plot_title,
+                    y_label,
+                    columns_to_plot,
+                    substract_first_value,
+                    converters,
+                    column_converter)
+
+    if win.error_msg:
+        print(win.error_msg)
+        sys.exit()
+
+    win.show()
+    
+    timer_started_at = time.time()
+    
+    def timer_plot_data_out():
+        win.update_plot(time.time() - timer_started_at)
+    
+    app.plot_data_timer = QTimer()
+    app.plot_data_timer.setInterval(win.time_out)
+    app.plot_data_timer.timeout.connect(timer_plot_data_out)
+    
+    
+    app.plot_data_timer.start()
+
+    sys.exit(app.exec_())
 
 

@@ -45,6 +45,7 @@ import numpy as np
 
 from config import *
 
+
 def txt2np_array(file_name, columns_str, substract_first_value, converters = {}, column_converter={}):
     """read a txt file (tsv or csv) and return np array with passed columns
     
