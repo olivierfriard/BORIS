@@ -123,7 +123,7 @@ class Plot_data(QWidget):
         logging.debug("min_time_step: {}".format(min_time_step))
 
 
-        # check if sample rate is not constant
+        # check if sampling rate is not constant
         if len(diff) != 1:
             logging.debug("len diff != 1")
             min_time_step = min(diff)
@@ -163,17 +163,6 @@ class Plot_data(QWidget):
 
         self.time_interval = interval * max_frequency
 
-
-
-
-
-
-
-
-
-
-
-
         # plotter and thread are none at the beginning
         self.plotter = Plotter()
         self.plotter.data = data
@@ -192,8 +181,6 @@ class Plot_data(QWidget):
         # interval must be even
         interval += 1 if interval % 2 else 0
         self.plotter.interval = interval
-
-
 
 
         self.thread = QThread()
