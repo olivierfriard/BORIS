@@ -3542,11 +3542,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
-            plot_data = {}
+            self.plot_data = {}
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
-                plot_data[idx] = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                self.plot_data[idx] = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
@@ -3561,27 +3561,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                 # print("Error msg", self.plot_data[-1].error_msg)
-                if plot_data[idx].error_msg:
+                if self.plot_data[idx].error_msg:
                     QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
                                                                                                          self.plot_data[idx].error_msg))
                     del self.plot_data[idx]
                     continue
 
-                print("self.plot_data", plot_data)
-                plot_data[idx].show()
+                print("self.plot_data", self.plot_data)
+                self.plot_data[idx].show()
 
-                plot_data[idx].plot_data_timer = QTimer()
-                plot_data[idx].plot_data_timer.setInterval(plot_data[idx].time_out)
-                print( "time out", plot_data[idx].time_out )
-                print( "plot_title", plot_data[idx].plot_title )
+                self.plot_data[idx].plot_data_timer = QTimer()
+                self.plot_data[idx].plot_data_timer.setInterval(self.plot_data[idx].time_out)
+                print( "time out", self.plot_data[idx].time_out )
+                print( "plot_title", self.plot_data[idx].plot_title )
                 
-                plot_data[idx].plot_data_timer.timeout.connect(lambda: plot_data[idx].timer_plot_data_out(self.getLaps()))
+                self.plot_data[idx].plot_data_timer.timeout.connect(lambda: self.plot_data[idx].timer_plot_data_out(self.getLaps()))
                 #self.plot_data[idx].plot_data_timer.timeout.connect(lambda: self.plot_data[idx].timer_plot_data_out(get_time()))
-                plot_data[idx].plot_data_timer.start()
+                self.plot_data[idx].plot_data_timer.start()
 
             
-            print(plot_data["0"].plot_title)
-            print(plot_data["1"].plot_title)
+            print(self.plot_data["0"].plot_title)
+            print(self.plot_data["1"].plot_title)
             
             
             #self.plot_data[1].plot_data_timer.start()
