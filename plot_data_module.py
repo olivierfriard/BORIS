@@ -211,6 +211,11 @@ class Plot_data(QWidget):
         self.plotter.interval = new_interval
 
 
+    def timer_plot_data_out(self, time_):
+        print(self.plot_title, time_)
+        self.update_plot(time_)
+
+
     def update_plot(self, time_):
         """
         update plot by signal
@@ -239,8 +244,12 @@ class Plot_data(QWidget):
 
         try:
             self.myplot.axes.clear()
+            
+            self.myplot.axes.set_title(self.plot_title)
+            
             self.myplot.axes.set_xlim(position_start , position_end)
     
+            self.myplot.axes.set_ylabel(self.y_label, rotation=90, labelpad=10)
             self.myplot.axes.set_ylim((min_value, max_value))
     
             self.myplot.axes.plot(x, y)
@@ -479,7 +488,7 @@ if __name__ == '__main__':
    "description":"convert HH:MM:SS in seconds",
    "code":"\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
   },
-  "invert":{
+  "invert_value":{
    "name":"invert value",
    "description":"invert the value",
    "code":"\nOUTPUT = -float(INPUT)\n\n"
@@ -507,15 +516,23 @@ if __name__ == '__main__':
     
     timer_started_at = time.time()
     
-    def timer_plot_data_out():
-        win.update_plot(time.time() - timer_started_at)
+    #def timer_plot_data_out():
+    #    win.update_plot(time.time() - timer_started_at)
     
+    def get_time():
+        return time.time() - timer_started_at
+    
+    win.plot_data_timer = QTimer()
+    win.plot_data_timer.setInterval(win.time_out)
+    win.plot_data_timer.timeout.connect(lambda: win.timer_plot_data_out(get_time()))
+    win.plot_data_timer.start()
+    
+    '''
     app.plot_data_timer = QTimer()
     app.plot_data_timer.setInterval(win.time_out)
     app.plot_data_timer.timeout.connect(timer_plot_data_out)
-    
-    
     app.plot_data_timer.start()
+    '''
 
     sys.exit(app.exec_())
 

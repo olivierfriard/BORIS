@@ -1889,7 +1889,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if mode == "repo":
 
-            converters_repo_URL = "http://www.boris.unito.it/static/converters.json"
+            converters_repo_URL = "http://www.boris.unito.it/archive/converters.json"
             try:
                 converters_from_repo = urllib.request.urlopen(converters_repo_URL).read().strip().decode("utf-8")
             except:

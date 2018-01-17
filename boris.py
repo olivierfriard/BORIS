@@ -898,7 +898,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # timer for data files visualization
         self.plot_data_timer = QTimer(self)
         self.plot_data_timer.setInterval(200)
-        self.plot_data_timer.timeout.connect(self.timer_plot_data_out)
+        
+        '''self.plot_data_timer.timeout.connect(self.timer_plot_data_out)'''
 
 
         # timer for timing the live observation
@@ -2267,7 +2268,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.timer_out()
                     self.timer_spectro_out()
-                    self.timer_plot_data_out()
+                    #self.timer_plot_data_out()
 
 
     def previous_media_file(self):
@@ -2314,7 +2315,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
@@ -2367,7 +2368,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
 
@@ -2701,7 +2702,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer_spectro_out()
 
         # plot external data files
-        self.timer_plot_data_out()
+        #self.timer_plot_data_out()
 
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
@@ -3537,14 +3538,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.timer_spectro.start()
 
 
+
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
-            self.plot_data = []
+            plot_data = {}
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
-                self.plot_data.append(plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                plot_data[idx] = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
@@ -3556,17 +3558,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
                                                                  log_level=logging.getLogger().getEffectiveLevel()
                                                                  )
-                                     )
+
+
                 # print("Error msg", self.plot_data[-1].error_msg)
-                if self.plot_data[-1].error_msg:
+                if plot_data[idx].error_msg:
                     QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
-                                                                                                         self.plot_data[-1].error_msg))
-                    del self.plot_data[-1]
+                                                                                                         self.plot_data[idx].error_msg))
+                    del self.plot_data[idx]
                     continue
 
-                self.plot_data[-1].show()
+                print("self.plot_data", plot_data)
+                plot_data[idx].show()
 
-            self.plot_data_timer.start(40)
+                plot_data[idx].plot_data_timer = QTimer()
+                plot_data[idx].plot_data_timer.setInterval(plot_data[idx].time_out)
+                print( "time out", plot_data[idx].time_out )
+                print( "plot_title", plot_data[idx].plot_title )
+                
+                plot_data[idx].plot_data_timer.timeout.connect(lambda: plot_data[idx].timer_plot_data_out(self.getLaps()))
+                #self.plot_data[idx].plot_data_timer.timeout.connect(lambda: self.plot_data[idx].timer_plot_data_out(get_time()))
+                plot_data[idx].plot_data_timer.start()
+
+            
+            print(plot_data["0"].plot_title)
+            print(plot_data["1"].plot_title)
+            
+            
+            #self.plot_data[1].plot_data_timer.start()
+            #self.plot_data_timer.start(40)
+            #print(len(self.plot_data))
 
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
@@ -3575,17 +3595,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
 
+    '''
     def timer_plot_data_out(self):
         """
         timer for plotting data from txt file
         """
         for pd in self.plot_data:
-            '''
-            currentMediaTime = self.mediaplayer.get_time()
-            pd.update_plot(currentMediaTime / 1000)
-            '''
-
             pd.update_plot(self.getLaps())
+    '''
 
 
     def signal_from_spectrogram(self, event):
@@ -4191,11 +4208,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
         '''
-
+        try:
+            for pd in self.plot_data :
+                pd.plot_data_timer.stop()
+                pd.close_plot()
+        except:
+            pass
+            
+        '''
         while self.plot_data:
             self.plot_data[0].close_plot()
             time.sleep(1)
             del self.plot_data[0]
+        '''
         
         if hasattr(self, "measurement_w"):
             try:
@@ -4268,6 +4293,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("Close observation {}".format(self.playerType))
 
+        logging.debug("del self.plot_data")
+        
+        if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+
+            for pd in self.plot_data :
+                pd.plot_data_timer.stop()
+                pd.close_plot()
+                #pd.hide()
+
+            del self.plot_data
+
+
         self.observationId = ""
 
         self.close_tool_windows()
@@ -4330,12 +4367,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpegLayout.deleteLater()
                 self.lbFFmpeg.deleteLater()
                 self.ffmpegTab.deleteLater()
-
                 self.FFmpegTimer.stop()
                 self.FFmpegGlobalFrame = 0
                 self.imagesList = set()
             except:
                 pass
+
 
         self.statusbar.showMessage("", 0)
 
@@ -8735,7 +8772,7 @@ item []:
                 self.timer_out(scrollSlider=False)
 
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
 
 
     def get_events_current_row(self):
@@ -9701,7 +9738,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
 
 
             if self.playMode == FFMPEG:
@@ -10699,7 +10736,8 @@ item []:
                 time.sleep(1)
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
+
 
     def play_activated(self):
         """
@@ -10707,6 +10745,7 @@ item []:
         """
         if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
             self.play_video()
+
 
     def jumpBackward_activated(self):
         '''
@@ -10776,10 +10815,11 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
+
 
     def jumpForward_activated(self):
         """
@@ -10856,7 +10896,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
 
                 # no subtitles
                 '''
@@ -10892,7 +10932,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                self.timer_plot_data_out()
+                #self.timer_plot_data_out()
 
     def changedFocusSlot(self, old, now):
         """
