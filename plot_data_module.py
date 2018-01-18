@@ -1,8 +1,26 @@
-'''
 
-https://stackoverflow.com/questions/41156260/how-to-use-a-qthread-to-update-a-matplotlib-figure-with-pyqt
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2018 Olivier Friard
 
-'''
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+
+"""
 
 
 
@@ -32,13 +50,20 @@ class MyMplCanvas(FigureCanvas):
 
 class Plot_data(QWidget):
     send_fig = pyqtSignal(float)
+    
+    # send keypress event to mainwindow
+    sendEvent = pyqtSignal(QEvent)
 
-    def __init__(self, file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot,
+    def __init__(self, file_name, interval, time_offset, plot_style, plot_title, y_label, columns_to_plot,
                        substract_first_value, converters, column_converter, log_level="",):
         super().__init__()
 
         if log_level:
             logging.basicConfig(level=log_level)
+
+        self.installEventFilter(self)
+        
+        self.setWindowTitle("External data: " + plot_title)
 
         d = {}
         # convert dict keys in int:
@@ -74,7 +99,7 @@ class Plot_data(QWidget):
         
         self.setLayout(self.layout)
 
-        self.color = color
+        self.plot_style = plot_style
         self.plot_title = plot_title
         self.time_offset = time_offset
         self.y_label = y_label
@@ -198,6 +223,18 @@ class Plot_data(QWidget):
 
 
 
+
+    def eventFilter(self, receiver, event):
+        """
+        send event (if keypress) to main window
+        """
+        if(event.type() == QEvent.KeyPress):
+            self.sendEvent.emit(event)
+            return True
+        else:
+            return False
+
+
     def zoom(self, z):
         if z == -1 and self.plotter.interval <= 10:
             return
@@ -212,7 +249,7 @@ class Plot_data(QWidget):
 
 
     def timer_plot_data_out(self, time_):
-        print(self.plot_title, time_)
+        #print(self.plot_title, time_)
         self.update_plot(time_)
 
 
@@ -252,7 +289,7 @@ class Plot_data(QWidget):
             self.myplot.axes.set_ylabel(self.y_label, rotation=90, labelpad=10)
             self.myplot.axes.set_ylim((min_value, max_value))
     
-            self.myplot.axes.plot(x, y)
+            self.myplot.axes.plot(x, y, self.plot_style)
             self.myplot.axes.axvline(x=position_data, color="red", linestyle='-')
     
             self.myplot.draw()
@@ -472,7 +509,7 @@ if __name__ == '__main__':
     column_converter = eval(sys.argv[5])
 
     time_offset = 0
-    color = "b-"
+    color = "g-"
     plot_title = "test"
     y_label = "TEST"
 

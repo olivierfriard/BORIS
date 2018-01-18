@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2017 Olivier Friard
+Copyright 2012-2018 Olivier Friard
 
 This file is part of BORIS.
 
@@ -95,7 +95,7 @@ DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
                     PLOT_DATA_SUBSTRACT1STVALUE_IDX: "substract_first_value",
                     PLOT_DATA_PLOTCOLOR_IDX: "color"
                     }
-DATA_PLOT_STYLES = ["b-", "r-", "g-"]
+DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
 
@@ -197,16 +197,15 @@ OPENCV = 'opencv'
 VLC = 'vlc'
 FFMPEG = 'ffmpeg'
 
-MEDIA_FILE_INFO = 'media_file_info'
+MEDIA_FILE_INFO = "media_file_info"
 
-STATE = 'STATE'
-POINT = 'POINT'
+STATE = "STATE"
+POINT = "POINT"
 
 START = "START"
 STOP = "STOP"
 
-PLAYER1 = '1'
-PLAYER2 = '2'
+PLAYER1, PLAYER2 = "1", "2"
 
 VIDEO_TAB = 0
 FRAME_TAB = 1

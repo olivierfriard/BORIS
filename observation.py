@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2017 Olivier Friard
+Copyright 2012-2018 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,8 @@ import hashlib
 import tempfile
 import glob
 import logging
+from pathlib import Path
+import numpy
 
 from config import *
 from utilities import *
@@ -61,11 +63,11 @@ class AssignConverter(QDialog):
     """
 
     def __init__(self, columns, converters, col_conv):
-        super(AssignConverter, self).__init__()
+        super().__init__()
 
         self.setWindowTitle("Converters")
 
-        self.vbox = QVBoxLayout(self)
+        self.vbox = QVBoxLayout()
 
         self.label = QLabel()
         self.label.setText("Assign converter to column")
@@ -73,7 +75,7 @@ class AssignConverter(QDialog):
 
         self.cbb = []
         for column_idx in columns.split(","):
-            hbox = QHBoxLayout(self)
+            hbox = QHBoxLayout()
             hbox.addWidget(QLabel("Column #{}:".format(column_idx)))
             self.cbb.append(QComboBox())
             self.cbb[-1].addItems(["None"] + sorted(converters.keys()))
@@ -85,7 +87,7 @@ class AssignConverter(QDialog):
             hbox.addWidget(self.cbb[-1])
             self.vbox.addLayout(hbox)
 
-        hbox1 = QHBoxLayout(self)
+        hbox1 = QHBoxLayout()
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel = QPushButton("Cancel")
@@ -101,11 +103,12 @@ class AssignConverter(QDialog):
 
 class Observation(QDialog, Ui_Form):
 
-    def __init__(self, converters={}, log_level="", parent=None):
+    def __init__(self, tmp_dir, converters={}, log_level="", parent=None):
 
         super(Observation, self).__init__(parent)
         
         self.converters = converters
+        self.tmp_dir = tmp_dir
         
         if log_level:
             logging.basicConfig(level=log_level)
@@ -193,7 +196,6 @@ class Observation(QDialog, Ui_Form):
             plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
 
             # load converters in dictionary
-            
             if self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text():
                 column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text())
                 '''
@@ -201,11 +203,8 @@ class Observation(QDialog, Ui_Form):
                     idx, conv = idx_conv.split(":")
                     column_converter[int(idx)] = conv
                 '''
-
             else:
                 column_converter = {}
-            
-
 
             variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
             time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
@@ -217,9 +216,9 @@ class Observation(QDialog, Ui_Form):
 
             test = plot_data_module.Plot_data(filename,
                                               time_interval, # time interval
-                                              time_offset,  # time offset
-                                              plot_color,
-                                              plot_title, # plot title
+                                              time_offset,   # time offset
+                                              plot_color,    # plot style
+                                              plot_title,    # plot title
                                               variable_name, 
                                               columns_to_plot,
                                               substract_first_value,
@@ -233,6 +232,13 @@ class Observation(QDialog, Ui_Form):
                 del test
                 return
 
+            '''
+            print(test.plotter.data)
+
+            print(Path(self.tmp_dir).joinpath(file_content_md5(filename)))
+            numpy.save(Path(self.tmp_dir).joinpath(file_content_md5(filename)), test.plotter.data)
+            '''
+            
             test.setWindowFlags(Qt.WindowStaysOnTopHint)
             test.show()
             test.update_plot(0)
@@ -245,6 +251,14 @@ class Observation(QDialog, Ui_Form):
         """
         user select a data file to be plotted synchronously with media file
         """
+        
+        # limit to 2 files
+        if self.tw_data_files.rowCount() >= 2:
+            QMessageBox.warning(self, programName , ("It is not yet possible to plot more than 2 external data"
+                                                     "This limitation will be removed in future"))
+            return
+        
+        
         os.chdir(os.path.expanduser("~"))
         fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
@@ -255,9 +269,7 @@ class Observation(QDialog, Ui_Form):
 
             # check data file
             r = check_txt_file(file_name) # check_txt_file defined in utilities
-            
-            print("r",r)
-            
+
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
                 return
@@ -629,7 +641,7 @@ if __name__ == '__main__':
  }
     
     app = QApplication(sys.argv)
-    w = Observation(converters)
+    w = Observation("/tmp", converters)
     w.show()
     w.exec_()
     sys.exit()

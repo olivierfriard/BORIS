@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2017 Olivier Friard
+Copyright 2012-2018 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -208,6 +208,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
 def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map="gray_r"):
     """
     create and start process in multiprocessing mode for creation of spectrogram
+    for windows exe (created with pyinstaller) multiprocessing can not be used
     """
 
     if sys.platform.startswith("win") and getattr(sys, "frozen", False):

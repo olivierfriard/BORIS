@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2017 Olivier Friard
+Copyright 2012-2018 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ import math
 import csv
 import re
 import subprocess
+import hashlib
 import urllib.parse
 import sys
 import os
@@ -45,6 +46,12 @@ import numpy as np
 
 from config import *
 
+def file_content_md5(file_name):
+    hash_md5 = hashlib.md5()
+    with open(file_name, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
 
 def txt2np_array(file_name, columns_str, substract_first_value, converters = {}, column_converter={}):
     """read a txt file (tsv or csv) and return np array with passed columns

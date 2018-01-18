@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2017 Olivier Friard
+Copyright 2012-2018 Olivier Friard
 
 This file is part of BORIS.
 
@@ -97,8 +97,8 @@ import project_functions
 import plot_data_module
 #import converters
 
-__version__ = "5.1.900"
-__version_date__ = "2017-12-07"
+__version__ = "6.0.0"
+__version_date__ = "2018-01-18"
 
 # BITMAP_EXT = "jpg"
 
@@ -346,7 +346,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     liveObservationStarted = False
     
-    plot_data = []
+    # data structures for external data plot
+    plot_data = {}
+    ext_data_timer_list = []
 
     frame_viewer1_mem_geometry = None
     frame_viewer2_mem_geometry = None
@@ -892,14 +894,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # timer for spectrogram visualization
         self.timer_spectro = QTimer(self)
         # TODO check value of interval
-        self.timer_spectro.setInterval(50)
+        self.timer_spectro.setInterval(200)
         self.timer_spectro.timeout.connect(self.timer_spectro_out)
-
-        # timer for data files visualization
-        self.plot_data_timer = QTimer(self)
-        self.plot_data_timer.setInterval(200)
-        
-        '''self.plot_data_timer.timeout.connect(self.timer_plot_data_out)'''
 
 
         # timer for timing the live observation
@@ -1349,18 +1345,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(q)
 
 
-    def signal_from_coding_pad(self, event):
-        """
-        receive signal from coding pad
-        """
-        self.keyPressEvent(event)
-
     def close_signal_from_coding_pad(self, geom):
         """
         save coding pad geometry after close
         """
         self.codingpad_geometry_memory = geom
-        print(geom)
 
 
     def click_signal_from_subjects_pad(self, subject):
@@ -1406,7 +1395,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
             self.codingpad = coding_pad.CodingPad(self.pj, filtered_behaviors)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.codingpad.sendEventSignal.connect(self.signal_from_coding_pad)
+            #self.codingpad.sendEventSignal.connect(self.signal_from_coding_pad)
+            self.codingpad.sendEventSignal.connect(self.signal_from_widget)
             self.codingpad.clickSignal.connect(self.click_signal_from_coding_pad)
             self.codingpad.close_signal.connect(self.close_signal_from_coding_pad)
             self.codingpad.show()
@@ -1721,6 +1711,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.statusbar.showMessage("Sequences extracted to {} directory".format(exportDir), 0)
 
+
     def generate_spectrogram(self):
         """
         generate spectrogram of all media files loaded in player #1
@@ -1758,6 +1749,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             else:
                 QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media))
+
 
     def show_spectrogram(self):
         """
@@ -1808,7 +1800,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # connect signal from spectrogram class to testsignal function to receive keypress events
                 self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.spectro.sendEvent.connect(self.signal_from_spectrogram)
+                self.spectro.sendEvent.connect(self.signal_from_widget)
                 self.spectro.show()
                 self.timer_spectro.start()
 
@@ -1900,8 +1892,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show plot of data files (if any)
         """
-        for pd in self.plot_data:
-            pd.show()
+        for idx in self.plot_data:
+            self.plot_data[idx].show()
         
 
 
@@ -2702,7 +2694,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer_spectro_out()
 
         # plot external data files
-        #self.timer_plot_data_out()
 
         md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
 
@@ -3533,7 +3524,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                                    self.spectrogramHeight))
             # connect signal from spectrogram class to testsignal function to receive keypress events
             self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.spectro.sendEvent.connect(self.signal_from_spectrogram)
+            self.spectro.sendEvent.connect(self.signal_from_widget)
             self.spectro.show()
             self.timer_spectro.start()
 
@@ -3543,10 +3534,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
             self.plot_data = {}
+            self.ext_data_timer_list = []
+
+            count = 0
 
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-
-                self.plot_data[idx] = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                
+                if count == 0:
+                    
+                    w1 = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
                                                                  int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
                                                                  self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
@@ -3559,34 +3555,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                  log_level=logging.getLogger().getEffectiveLevel()
                                                                  )
 
+                    if w1.error_msg:
+                        QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
+                                                                                                             w1.error_msg))
+                        del w1
+                        return False
 
-                # print("Error msg", self.plot_data[-1].error_msg)
-                if self.plot_data[idx].error_msg:
-                    QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
-                                                                                                         self.plot_data[idx].error_msg))
-                    del self.plot_data[idx]
-                    continue
+                    w1.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    w1.sendEvent.connect(self.signal_from_widget)
 
-                print("self.plot_data", self.plot_data)
-                self.plot_data[idx].show()
+                    w1.show()
 
-                self.plot_data[idx].plot_data_timer = QTimer()
-                self.plot_data[idx].plot_data_timer.setInterval(self.plot_data[idx].time_out)
-                print( "time out", self.plot_data[idx].time_out )
-                print( "plot_title", self.plot_data[idx].plot_title )
+                    self.ext_data_timer_list.append(QTimer())
+                    self.ext_data_timer_list[-1].setInterval(w1.time_out)
+                    self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w1))
+                    self.ext_data_timer_list[-1].start()
+                    
+                    self.plot_data[count] = w1
+
                 
-                self.plot_data[idx].plot_data_timer.timeout.connect(lambda: self.plot_data[idx].timer_plot_data_out(self.getLaps()))
-                #self.plot_data[idx].plot_data_timer.timeout.connect(lambda: self.plot_data[idx].timer_plot_data_out(get_time()))
-                self.plot_data[idx].plot_data_timer.start()
+                if count == 1:
+                    w2 = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
+                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
+                                                                 self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
+                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
+                                                                 log_level=logging.getLogger().getEffectiveLevel()
+                                                                 )
 
-            
-            print(self.plot_data["0"].plot_title)
-            print(self.plot_data["1"].plot_title)
-            
-            
-            #self.plot_data[1].plot_data_timer.start()
-            #self.plot_data_timer.start(40)
-            #print(len(self.plot_data))
+                    if w2.error_msg:
+                        QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
+                                                                                                             w2.error_msg))
+                        del w2
+                        return False
+
+                    w2.setWindowFlags(Qt.WindowStaysOnTopHint)
+                    w2.sendEvent.connect(self.signal_from_widget)
+
+                    w2.show()
+                    self.ext_data_timer_list.append(QTimer())
+                    self.ext_data_timer_list[-1].setInterval(w2.time_out)
+                    self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w2))
+                    self.ext_data_timer_list[-1].start()
+                    
+                    self.plot_data[count] = w2
+
+
+                count += 1
 
         # check if "filtered behaviors"
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
@@ -3595,19 +3615,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return True
 
 
-    '''
-    def timer_plot_data_out(self):
+    def timer_plot_data_out(self, w):
         """
-        timer for plotting data from txt file
+        update plot in w (Plot_data class)
+        triggered by timers in self.ext_data_timer_list
         """
-        for pd in self.plot_data:
-            pd.update_plot(self.getLaps())
-    '''
+        w.update_plot(self.getLaps())
 
 
-    def signal_from_spectrogram(self, event):
+
+    def signal_from_widget(self, event):
         """
-        receive signal from spectrogram widget
+        receive signal from widget
         """
         self.keyPressEvent(event)
 
@@ -3819,7 +3838,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        observationWindow = observation.Observation(converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
+
+        observationWindow = observation.Observation(self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir(),
+                                                    converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
                                                     log_level=logging.getLogger().getEffectiveLevel())
 
         observationWindow.pj = self.pj
@@ -4209,9 +4230,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
         '''
         try:
-            for pd in self.plot_data :
-                pd.plot_data_timer.stop()
-                pd.close_plot()
+
+            for x in self.ext_data_timer_list:
+                x.stop()
+        except:
+            pass
+
+        try:
+            for pd in self.plot_data:
+                #pd.plot_data_timer.stop()
+                self.plot_data[pd].close_plot()
+                #pd.hide()
+
         except:
             pass
             
@@ -4297,9 +4327,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
-            for pd in self.plot_data :
-                pd.plot_data_timer.stop()
-                pd.close_plot()
+            for x in self.ext_data_timer_list:
+                x.stop()
+
+            for pd in self.plot_data:
+                #pd.plot_data_timer.stop()
+                self.plot_data[pd].close_plot()
                 #pd.hide()
 
             del self.plot_data
@@ -4321,7 +4354,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.timer.stop()
             self.timer_spectro.stop()
-            self.plot_data_timer.stop()
 
             self.mediaplayer.stop()
             del self.mediaplayer
@@ -4405,10 +4437,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("read config file")
 
-        if __version__ == 'DEV':
-            iniFilePath = os.path.expanduser('~') + os.sep + '.boris_dev'
-        else:
-            iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
 
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
@@ -10694,9 +10723,7 @@ item []:
 
                 self.timer.start(200)
                 self.timer_spectro.start()
-                self.plot_data_timer.start()
-                
-                
+
 
     def pause_video(self):
         """
@@ -10714,7 +10741,7 @@ item []:
 
                     self.timer.stop()
                     self.timer_spectro.stop()
-                    self.plot_data_timer.stop()
+
                     self.mediaListPlayer.pause()
                     # wait for pause
 
