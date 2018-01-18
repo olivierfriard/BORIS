@@ -363,7 +363,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -442,7 +442,7 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Color"))
         self.pb_add_data_file.setText(_translate("Form", "Add data file"))
         self.pb_view_data_head.setText(_translate("Form", "View first rows"))
-        self.pb_plot_data.setText(_translate("Form", "Check data"))
+        self.pb_plot_data.setText(_translate("Form", "Show plot"))
         self.pb_remove_data_file.setText(_translate("Form", "Remove data file"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_data_files), _translate("Form", "Data files"))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabVideo), _translate("Form", "Media"))

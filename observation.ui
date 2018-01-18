@@ -218,7 +218,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>1</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -603,7 +603,7 @@
                      <item>
                       <widget class="QPushButton" name="pb_plot_data">
                        <property name="text">
-                        <string>Check data</string>
+                        <string>Show plot</string>
                        </property>
                       </widget>
                      </item>

@@ -105,7 +105,7 @@ class Observation(QDialog, Ui_Form):
 
     def __init__(self, tmp_dir, converters={}, log_level="", parent=None):
 
-        super(Observation, self).__init__(parent)
+        super().__init__(parent)
         
         self.converters = converters
         self.tmp_dir = tmp_dir
@@ -184,68 +184,74 @@ class Observation(QDialog, Ui_Form):
         check if data can be plotted
         """
 
-        if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
+        if self.pb_plot_data.text() == "Show plot":
 
-            if self.tw_data_files.rowCount() == 1:
-                row_idx = 0
-            else:
-                row_idx = self.tw_data_files.selectedIndexes()[0].row()
-
-            filename = self.tw_data_files.item(row_idx, PLOT_DATA_FILEPATH_IDX).text()
-            columns_to_plot = self.tw_data_files.item(row_idx, PLOT_DATA_COLUMNS_IDX).text()
-            plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
-
-            # load converters in dictionary
-            if self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text():
-                column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text())
+            if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
+    
+                if self.tw_data_files.rowCount() == 1:
+                    row_idx = 0
+                else:
+                    row_idx = self.tw_data_files.selectedIndexes()[0].row()
+    
+                filename = self.tw_data_files.item(row_idx, PLOT_DATA_FILEPATH_IDX).text()
+                columns_to_plot = self.tw_data_files.item(row_idx, PLOT_DATA_COLUMNS_IDX).text()
+                plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
+    
+                # load converters in dictionary
+                if self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text():
+                    column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text())
+                    '''
+                    for idx_conv in self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text().split(","):
+                        idx, conv = idx_conv.split(":")
+                        column_converter[int(idx)] = conv
+                    '''
+                else:
+                    column_converter = {}
+    
+                variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
+                time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
+                time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
+    
+                substract_first_value = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
+                
+                plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
+    
+                self.test = plot_data_module.Plot_data(filename,
+                                                  time_interval, # time interval
+                                                  time_offset,   # time offset
+                                                  plot_color,    # plot style
+                                                  plot_title,    # plot title
+                                                  variable_name, 
+                                                  columns_to_plot,
+                                                  substract_first_value,
+                                                  self.converters,
+                                                  column_converter,
+                                                  log_level=logging.getLogger().getEffectiveLevel()
+                                                  )
+    
+                if self.test.error_msg:
+                    QMessageBox.critical(self, programName, "Impossibile to plot data:\n{}".format(self.test.error_msg))
+                    del self.test
+                    return
+    
                 '''
-                for idx_conv in self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text().split(","):
-                    idx, conv = idx_conv.split(":")
-                    column_converter[int(idx)] = conv
+                print(test.plotter.data)
+    
+                print(Path(self.tmp_dir).joinpath(file_content_md5(filename)))
+                numpy.save(Path(self.tmp_dir).joinpath(file_content_md5(filename)), test.plotter.data)
                 '''
+                
+                self.test.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.test.show()
+                self.test.update_plot(0)
+                self.pb_plot_data.setText("Close plot")
+    
             else:
-                column_converter = {}
-
-            variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
-            time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
-            time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
-
-            substract_first_value = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
-            
-            plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
-
-            test = plot_data_module.Plot_data(filename,
-                                              time_interval, # time interval
-                                              time_offset,   # time offset
-                                              plot_color,    # plot style
-                                              plot_title,    # plot title
-                                              variable_name, 
-                                              columns_to_plot,
-                                              substract_first_value,
-                                              self.converters,
-                                              column_converter,
-                                              log_level=logging.getLogger().getEffectiveLevel()
-                                              )
-
-            if test.error_msg:
-                QMessageBox.critical(self, programName, "Impossibile to plot data:\n{}".format(test.error_msg))
-                del test
-                return
-
-            '''
-            print(test.plotter.data)
-
-            print(Path(self.tmp_dir).joinpath(file_content_md5(filename)))
-            numpy.save(Path(self.tmp_dir).joinpath(file_content_md5(filename)), test.plotter.data)
-            '''
-            
-            test.setWindowFlags(Qt.WindowStaysOnTopHint)
-            test.show()
-            test.update_plot(0)
-
-        else:
-            QMessageBox.warning(self, programName, "Select a data file")
-
+                QMessageBox.warning(self, programName, "Select a data file")
+        
+        else: # close plot
+            self.test.close_plot()
+            self.pb_plot_data.setText("Show plot")
 
     def add_data_file(self):
         """

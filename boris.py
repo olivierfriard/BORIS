@@ -97,7 +97,7 @@ import project_functions
 import plot_data_module
 #import converters
 
-__version__ = "6.0.0"
+__version__ = "6.0.1"
 __version_date__ = "2018-01-18"
 
 # BITMAP_EXT = "jpg"
