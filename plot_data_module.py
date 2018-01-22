@@ -153,17 +153,23 @@ class Plot_data(QWidget):
             min_time_step = min(diff)
             logging.debug("min_time_step: {}".format(min_time_step))
 
-            # increase display speed
-            #if min_time_step > 0.1:
-            #    min_time_step = 0.1
+            # increase value for low sampling rate (> 1 s)
+            if min_time_step > 1:
+                min_time_step = 1
             
+            '''
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             y2 = np.interp(x2, data[:,0], data[:,1])
-
             data = np.array((x2, y2)).T
+            del x2, y2
+            '''
+
+            x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
+            data = np.array((x2, np.interp(x2, data[:,0], data[:,1]))).T
+            del x2
 
             logging.debug("data[:,0]: {}".format(data[:,0]))
-            del x2, y2
+
 
             # time
             min_time_value, max_time_value = min(data[:,0]), max(data[:,0])

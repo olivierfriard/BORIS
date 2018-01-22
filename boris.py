@@ -97,8 +97,8 @@ import project_functions
 import plot_data_module
 #import converters
 
-__version__ = "6.0.1"
-__version_date__ = "2018-01-18"
+__version__ = "6.0.2"
+__version_date__ = "2018-01-21"
 
 # BITMAP_EXT = "jpg"
 
@@ -922,7 +922,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
         if len(selectedObservations) != 2:
-            QMessageBox.information(self, programName, "Select 2 observations for IRR calculation")
+            QMessageBox.information(self, programName, "Select 2 observations for IRR analysis")
             return
 
         obsid1, obsid2 = selectedObservations
@@ -960,7 +960,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             return
 
-        print(selected_subjects)
+        logging.debug("selected_subjects: {}".format(selected_subjects))
+        if not selected_subjects:
+            QMessageBox.warning(self, programName, "No selected subjects")
+            return
+
+        
         subjects_to_analyze = {}
         if NO_FOCAL_SUBJECT in selected_subjects:
             subjects_to_analyze[""] = {"name": ""}
@@ -969,7 +974,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[SUBJECTS][idx]["name"] in selected_subjects:
                 subjects_to_analyze[idx] = dict(self.pj[SUBJECTS][idx])
 
-        print("subjects_to_analyze", subjects_to_analyze)
+        logging.debug("subjects_to_analyze: {}".format(subjects_to_analyze))
 
         # ask for time slice
         i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 10.0, 0.001, 86400, 3)
@@ -981,11 +986,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
 
         last_event = max(self.pj[OBSERVATIONS][obsid1][EVENTS][-1][0], self.pj[OBSERVATIONS][obsid2][EVENTS][-1][0])
-        print(last_event)
+
+        logging.debug("last_event: {}".format(last_event))
 
         total_states = []
 
         all_subjects = dict(self.pj[SUBJECTS], **{"": {"name": NO_FOCAL_SUBJECT}})
+
+        logging.debug("all_subjects: {}".format(all_subjects))
 
         currentTime = Decimal("0")
         while currentTime <= last_event:
@@ -994,12 +1002,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if all_subjects[idx]["name"] not in selected_subjects:
                     continue
 
-                print("subject", all_subjects[idx]["name"])
+                logging.debug("subject: {}".format(all_subjects[idx]["name"]))
 
                 current_states1 = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                                      self.pj[OBSERVATIONS][obsid1][EVENTS],
                                                                      subjects_to_analyze, currentTime)
-                print("current_state1", current_states1)
+                logging.debug("current_state1: {}".format(current_states1))
 
                 if idx in current_states1:
 
@@ -1023,11 +1031,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTime += interval
 
         total_states = sorted(total_states)
-
+        
         logging.debug("total_states: {}".format(total_states))
 
         contingency_table = np.zeros((len(total_states), len(total_states)))
 
+        tot1 = []
+        tot2 = []
         currentTime = Decimal("0")
         while currentTime < last_event:
 
@@ -1055,10 +1065,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if idx in current_states1 and idx in current_states2:
                     contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+                    
+                tot1.append(s1)
+                tot2.append(s2)
 
             currentTime += interval
 
-        logging.debug("contingency_table: {}".format(contingency_table))
+        print(tot1)
+        print(tot2)
+        logging.debug("contingency_table:\n {}".format(contingency_table))
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - Media file information")
@@ -1090,6 +1105,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cols_sums = contingency_table.sum(axis=0)
         rows_sums = contingency_table.sum(axis=1)
         overall_total = contingency_table.sum()
+
         print("overall_total", overall_total)
         agreements = sum(contingency_table.diagonal())
         print("agreements", agreements)
@@ -1107,6 +1123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.results.show()
 
         return
+
 
     def view_behavior(self):
         """
@@ -10965,7 +10982,8 @@ item []:
         """
         connect events filter when app gains focus
         """
-        logging.debug("focus changed")
+        
+        #logging.debug("focus changed")
 
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
