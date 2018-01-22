@@ -46,12 +46,14 @@ import numpy as np
 
 from config import *
 
+
 def file_content_md5(file_name):
     hash_md5 = hashlib.md5()
     with open(file_name, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
+
 
 def txt2np_array(file_name, columns_str, substract_first_value, converters = {}, column_converter={}):
     """read a txt file (tsv or csv) and return np array with passed columns
@@ -135,6 +137,31 @@ def versiontuple(version_str):
         tuple: version in tuple format (for comparison)
     """
     return tuple(map(int, (version_str.split("."))))
+
+
+def get_current_states_by_subject(state_behaviors_codes, events, subjects, time):
+    """
+    get current states for subjects at given time
+    Args:
+        state_behaviors_codes (list): list of behavior codes defined as STATE event
+        events (list): list of events
+        subjects (list): list of subjects
+        time (Decimal): time
+
+    Returns:
+        dict: current states by subject. dict of list
+    """
+    current_states = {}
+    for idx in subjects:
+        current_states[idx] = []
+        for sbc in state_behaviors_codes:
+            if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+                                                   if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                                                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                                                      and x[EVENT_TIME_FIELD_IDX] <= time]) % 2: # test if odd
+                current_states[idx].append(sbc)
+
+    return current_states
 
 
 def get_ip_address():

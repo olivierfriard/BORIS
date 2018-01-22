@@ -976,149 +976,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("subjects_to_analyze: {}".format(subjects_to_analyze))
 
+        # all observed codes
+        observed_codes = set([x[EVENT_BEHAVIOR_FIELD_IDX] for x in self.pj[OBSERVATIONS][obsid1][EVENTS]] + 
+                             [x[EVENT_BEHAVIOR_FIELD_IDX] for x in self.pj[OBSERVATIONS][obsid2][EVENTS]])
+
+        # observed codes defined as state event
+        state_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
+                                 if "STATE" in self.pj[ETHOGRAM][x][TYPE].upper()
+                                    and self.pj[ETHOGRAM][x]["code"] in observed_codes]
+
+        if not state_behaviors_codes:
+            QMessageBox.warning(self, programName, "No state event behaviors")
+            return
+
+        logging.debug("state_behaviors_codes: {}".format(state_behaviors_codes))
+
+
         # ask for time slice
         i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 10.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
 
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM]
-                               if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
+        #state_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM]
+        #                       if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
+                               
+        #logging.debug("state_behaviors_codes: {}".format(state_behaviors_codes))
+
+
 
         last_event = max(self.pj[OBSERVATIONS][obsid1][EVENTS][-1][0], self.pj[OBSERVATIONS][obsid2][EVENTS][-1][0])
 
         logging.debug("last_event: {}".format(last_event))
 
-        total_states = []
 
         all_subjects = dict(self.pj[SUBJECTS], **{"": {"name": NO_FOCAL_SUBJECT}})
 
         logging.debug("all_subjects: {}".format(all_subjects))
 
-        currentTime = Decimal("0")
-        while currentTime <= last_event:
+        import irr
+        out = irr.cohen_kappa(obsid1, obsid2,
+                              self.pj[OBSERVATIONS][obsid1][EVENTS],
+                              self.pj[OBSERVATIONS][obsid2][EVENTS],
+                              interval, last_event,
+                              state_behaviors_codes,
+                              all_subjects,
+                              subjects_to_analyze,
+                              selected_subjects)
 
-            for idx in all_subjects:
-                if all_subjects[idx]["name"] not in selected_subjects:
-                    continue
-
-                logging.debug("subject: {}".format(all_subjects[idx]["name"]))
-
-                current_states1 = self.get_current_states_by_subject(StateBehaviorsCodes,
-                                                                     self.pj[OBSERVATIONS][obsid1][EVENTS],
-                                                                     subjects_to_analyze, currentTime)
-                logging.debug("current_state1: {}".format(current_states1))
-
-                if idx in current_states1:
-
-                    s1 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states1[idx])))
-
-                    if s1 not in total_states:
-                        total_states.append(s1)
-
-                current_states2 = self.get_current_states_by_subject(StateBehaviorsCodes,
-                                                                     self.pj[OBSERVATIONS][obsid2][EVENTS],
-                                                                     subjects_to_analyze,
-                                                                     currentTime)
-
-                if idx in current_states2:
-
-                    s2 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states2[idx])))
-
-                    if s2 not in total_states:
-                        total_states.append(s2)
-
-            currentTime += interval
-
-        total_states = sorted(total_states)
         
-        logging.debug("total_states: {}".format(total_states))
-
-        contingency_table = np.zeros((len(total_states), len(total_states)))
-
-        tot1 = []
-        tot2 = []
-        currentTime = Decimal("0")
-        while currentTime < last_event:
-
-            for idx in all_subjects:
-                if all_subjects[idx]["name"] not in selected_subjects:
-                    continue
-
-                current_states1 = self.get_current_states_by_subject(StateBehaviorsCodes,
-                                                                     self.pj[OBSERVATIONS][obsid1][EVENTS],
-                                                                     subjects_to_analyze,
-                                                                     currentTime)
-
-                if idx in current_states1:
-
-                    s1 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states1[idx])))
-
-                current_states2 = self.get_current_states_by_subject(StateBehaviorsCodes,
-                                                                     self.pj[OBSERVATIONS][obsid2][EVENTS],
-                                                                     subjects_to_analyze,
-                                                                     currentTime)
-
-                if idx in current_states2:
-
-                    s2 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states2[idx])))
-
-                if idx in current_states1 and idx in current_states2:
-                    contingency_table[total_states.index(s1), total_states.index(s2)] += 1
-                    
-                tot1.append(s1)
-                tot2.append(s2)
-
-            currentTime += interval
-
-        print(tot1)
-        print(tot2)
-        logging.debug("contingency_table:\n {}".format(contingency_table))
-
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - Media file information")
         self.results.ptText.setReadOnly(True)
-        out = ""
-        out += "<b>Cohen's Kappa - Index of Inter-rater Reliability</b><br><br>"
-
-        out += "Interval time: <b>{:.3f} s</b><br><br>".format(interval)
-        out += "Selected subjects: <b>{}</b><br><br>".format(", ".join(selected_subjects))
-
-        out += "Observation #1: <b>{}</b><br>".format(obsid1)
-        out += "number of events: <b>{:.0f}</b><br>".format(
-                len([event for event in self.pj[OBSERVATIONS][obsid1][EVENTS]
-                     if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects) or
-                        (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in selected_subjects)]) / 2)
-
-        out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
-        out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid1) / interval)
-
-        out += "Observation #2: <b>{}</b><br>".format(obsid2)
-        out += "number of events: <b>{:.0f}</b><br>".format(
-                len([event for event in self.pj[OBSERVATIONS][obsid2][EVENTS]
-                     if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects) or
-                        (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in selected_subjects)]) / 2)
-
-        out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid2))
-        out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid2) / interval)
-
-        cols_sums = contingency_table.sum(axis=0)
-        rows_sums = contingency_table.sum(axis=1)
-        overall_total = contingency_table.sum()
-
-        print("overall_total", overall_total)
-        agreements = sum(contingency_table.diagonal())
-        print("agreements", agreements)
-
-        sum_ef = 0
-        for idx in range(len(total_states)):
-            sum_ef += rows_sums[idx] * cols_sums[idx] / overall_total
-
-        logging.debug("sum_ef {}".format(sum_ef))
-
-        K = (agreements - sum_ef) / (overall_total - sum_ef)
-
-        out += "K: <b>{:.3f}</b><br>".format(K)
         self.results.ptText.appendHtml(out)
         self.results.show()
 
@@ -8852,7 +8761,14 @@ item []:
     def get_current_states_by_subject(self, stateBehaviorsCodes, events, subjects, time):
         """
         get current states for subjects at given time
+        Args:
+            stateBehaviorsCodes (list): list of behavior codes defined as STATE event
+            events (list): list of events
+            subjects (list): list of subjects
+            time (Decimal): time
 
+        Returns:
+            dict: current states by subject. dict of list
         """
         currentStates = {}
         for idx in subjects:
