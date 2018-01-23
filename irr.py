@@ -65,14 +65,14 @@ def cohen_kappa(obsid1, obsid2,
                 if subject == NO_FOCAL_SUBJECT:
                     subject = ""
     
-                logging.debug("subject: {}".format(subject))
+                #logging.debug("subject: {}".format(subject))
     
                 current_states = utilities.get_current_states_by_subject(state_behaviors_codes,
                                                                           events,
                                                                           {subject: {"name": subject}},
                                                                           currentTime)
     
-                print("subject", subject, "current_states", current_states)
+                #print("subject", subject, "current_states", current_states)
                 
                 s = []
                 if include_modifiers:
@@ -86,7 +86,7 @@ def cohen_kappa(obsid1, obsid2,
                                 if ev[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
                                     cm[behavior] = ev[EVENT_MODIFIER_FIELD_IDX]
 
-                    print("cm", cm)
+                    logging.debug("subject: {}  currentTime: {}  cm: {}".format(subject, currentTime, cm))
 
                     if cm:
                         for behavior in cm:
@@ -109,8 +109,8 @@ def cohen_kappa(obsid1, obsid2,
 
     contingency_table = np.zeros((len(total_states), len(total_states)))
 
-    tot1 = []
-    tot2 = []
+    '''tot1, tot2 = [], []'''
+
     currentTime = Decimal("0")
     while currentTime < last_event:
 
@@ -136,7 +136,7 @@ def cohen_kappa(obsid1, obsid2,
                             if ev[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
                                 cm[behavior] = ev[EVENT_MODIFIER_FIELD_IDX]
                                 
-                print("cm", cm)
+                logging.debug("cm: {}".format(cm))
                 if cm:
                     for behavior in cm:
                         s1.append([subject, behavior, cm[behavior]])
@@ -162,7 +162,7 @@ def cohen_kappa(obsid1, obsid2,
                             if ev[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
                                 cm[behavior] = ev[EVENT_MODIFIER_FIELD_IDX]
     
-                print("cm", cm)
+                logging.debug("cm: {}".format(cm))
                 if cm:
                     for behavior in cm:
                         s2.append([subject, behavior, cm[behavior]])
@@ -172,14 +172,28 @@ def cohen_kappa(obsid1, obsid2,
                 s2.append([subject, current_states2[subject]]) 
 
             '''if idx in current_states1 and idx in current_states2:'''
-            contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+            try:
+                contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+            except:
+                return "Error with contingency table"
+            '''
             tot1.append(s1)
             tot2.append(s2)
+            '''
 
         currentTime += interval
 
+    '''
     print(tot1)
     print(tot2)
+    '''
+    
+    
+    '''
+    taskdata=[[0,str(i),str(tot1[i])] for i in range(0,len(tot1))]+[[1,str(i),str(tot2[i])] for i in range(0,len(tot2))]
+    ratingtask = agreement.AnnotationTask(data=taskdata) 
+    print("kappa " +str(ratingtask.kappa()))
+    '''
 
     logging.debug("contingency_table:\n {}".format(contingency_table))
 
@@ -211,9 +225,11 @@ def cohen_kappa(obsid1, obsid2,
     rows_sums = contingency_table.sum(axis=1)
     overall_total = contingency_table.sum()
 
-    print("overall_total", overall_total)
+    logging.debug("overall_total: {}".format(overall_total))
+    
     agreements = sum(contingency_table.diagonal())
-    print("agreements", agreements)
+    
+    logging.debug("agreements: {}".format(agreements))
 
     sum_ef = 0
     for idx in range(len(total_states)):
@@ -235,28 +251,49 @@ if __name__ == '__main__':
     
     from decimal import Decimal
     
+    from nltk import agreement
+    
     obsid1, obsid2 = "obs #1", "obs #2"
     
     interval = 1
     
-    state_behaviors_codes = ['s']
+    #state_behaviors_codes = ['s']
     
     selected_subjects = ["No focal subject"]
     
     include_modifiers = True
     
     
-    events1 = [[Decimal('1.0'), '', 's', 'xxx', ''], [Decimal('10.0'), '', 's', '', ''], [Decimal('20.0'), '', 's', '', ''], [Decimal('30.0'), '', 's', '', '']]
-    events2 = [[Decimal('1.0'), '', 's', 'xx', ''], [Decimal('10.0'), '', 's', '', ''], [Decimal('20.0'), '', 's', '', ''], [Decimal('30.0'), '', 's', '', '']]
+    events1 = [[Decimal('1.0'), '', 's', 'xx', ''], [Decimal('10.0'), '', 's', '', ''], [Decimal('20.0'), '', 's', '', ''], [Decimal('30.0'), '', 's', '', '']]
+    events2 = [[Decimal('1.0'), '', 's', 'xxx', ''], [Decimal('10.0'), '', 's', '', ''], [Decimal('20.0'), '', 's', '', ''], [Decimal('30.0'), '', 's', '', '']]
+    
+    
+    events1 = [    [     3.743,     "",     "s",     "",     ""    ],
+        [     9.719,     "",     "s",     "",     ""    ],
+    [     11.135,     "",     "a",     "bbb|None",     ""    ],
+    [     22.87,     "",     "a",     "bbb|None",     ""    ],
+    [     22.871,     "",     "a",     "None|None",     ""    ],
+    [     35.759,     "",     "a",     "None|None",     ""    ]
+   ]
+    
+    events2 = [    [     3.743,     "",     "s",     "",     ""    ],
+        [     9.719,     "",     "s",     "",     ""    ],
+    [     11.135,     "",     "a",     "aaa|None",     ""    ],
+    [     22.87,     "",     "a",     "aaa|None",     ""    ],
+    [     22.871,     "",     "a",     "None|None",     ""    ],
+    [     35.759,     "",     "a",     "None|None",     ""    ]
+   ]
+    
+    state_behaviors_codes = list(set([x[2] for x in events1] + [x[2] for x in events2]))
     
     print(cohen_kappa(obsid1, obsid2,
                 events1, events2,
                 interval,
                 state_behaviors_codes,
-                #all_subjects, subjects_to_analyze, 
                 selected_subjects,
                 include_modifiers))
 
+    
     
 
 

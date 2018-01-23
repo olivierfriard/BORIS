@@ -1031,6 +1031,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.results.setWindowTitle(programName + " - Media file information")
         self.results.ptText.setReadOnly(True)
         self.results.ptText.appendHtml(out)
+        self.results.resize(500, 400)
         self.results.show()
 
         return
@@ -5372,7 +5373,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                       by_category=(mode == "by_category"))
 
         if mode == "synthetic":
+            '''
             QMessageBox.warning(self, programName, "This function is experimental.<br>Please check results carefully and report any bug")            
+            '''
             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                                   maxTime=max_obs_length,
                                                                   flagShowExcludeBehaviorsWoEvents=False,

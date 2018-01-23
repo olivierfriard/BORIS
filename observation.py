@@ -264,6 +264,7 @@ class Observation(QDialog, Ui_Form):
                                                      "This limitation will be removed in future"))
             return
         
+        QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")            
         
         os.chdir(os.path.expanduser("~"))
         fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
