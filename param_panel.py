@@ -64,11 +64,13 @@ class Param_panel(QDialog, Ui_Dialog):
         self.rb_limit.clicked.connect(lambda: self.rb_time(TIME_EVENTS))
         self.rb_interval.clicked.connect(lambda: self.rb_time(TIME_ARBITRARY_INTERVAL))
 
+
     def rb_time(self, button):
         """
         time
         """
         self.frm_time_interval.setEnabled(button == TIME_ARBITRARY_INTERVAL)
+
 
     def subjects_button_clicked(self, command):
         for idx in range(self.lwSubjects.count()):
@@ -102,6 +104,7 @@ class Param_panel(QDialog, Ui_Dialog):
 
     def ok(self):
 
+        print(self.lwSubjects.count())
         selectedSubjects = []
         for idx in range(self.lwSubjects.count()):
             cb = self.lwSubjects.itemWidget(self.lwSubjects.item(idx))

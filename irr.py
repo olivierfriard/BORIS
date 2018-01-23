@@ -1,3 +1,27 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2018 Olivier Friard
+
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+
+"""
+
+
 from decimal import Decimal
 import logging
 import utilities
@@ -7,61 +31,77 @@ from config import *
 
 def cohen_kappa(obsid1, obsid2,
                 events1, events2,
-                interval, last_event,
+                interval,
                 state_behaviors_codes,
-                all_subjects, subjects_to_analyze, selected_subjects):
+                selected_subjects,
+                include_modifiers):
     """
     
     Args:
+        obsid1 (str): id of observation #1
+        obsid2 (str): id of observation #1        
         events1 (list): events of obs #1 
         events2 (list): events of obs #2 
-        last_event (Decimal): last event of 2 observations
         state_behaviors_codes (list): list of behavior codes defined as state event
-        all_subjects (list):
-        selected_subjects (list):
+        selected_subjects (list): subjects selected for analysis
+        include_modifiers (bool): true: include modifiers false: do not
     
     Return:
          str: result of analysis
     """
+    
+    last_event = max(events1[-1][0], events2[-1][0])
+    
+    logging.debug("last_event: {}".format(last_event))
     
     total_states = []
 
     currentTime = Decimal("0")
     while currentTime <= last_event:
 
-        for idx in all_subjects:
-            if all_subjects[idx]["name"] not in selected_subjects:
-                continue
+        for events in [events1, events2]:
+            for subject in selected_subjects:
+    
+                if subject == NO_FOCAL_SUBJECT:
+                    subject = ""
+    
+                logging.debug("subject: {}".format(subject))
+    
+                current_states = utilities.get_current_states_by_subject(state_behaviors_codes,
+                                                                          events,
+                                                                          {subject: {"name": subject}},
+                                                                          currentTime)
+    
+                print("subject", subject, "current_states", current_states)
+                
+                s = []
+                if include_modifiers:
+                
+                    cm = {}
+                    for behavior in current_states[subject]:
+                        for ev in events:
+                            if ev[EVENT_TIME_FIELD_IDX] > currentTime:
+                                break
+                            if ev[EVENT_SUBJECT_FIELD_IDX] == subject:
+                                if ev[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
+                                    cm[behavior] = ev[EVENT_MODIFIER_FIELD_IDX]
 
-            logging.debug("subject: {}".format(all_subjects[idx]["name"]))
+                    print("cm", cm)
 
-            current_states1 = utilities.get_current_states_by_subject(state_behaviors_codes,
-                                                                      events1,
-                                                                      subjects_to_analyze,
-                                                                      currentTime)
-
-            logging.debug("current_state1: {}".format(current_states1))
-
-            if idx in current_states1:
-
-                s1 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states1[idx])))
-
-                if s1 not in total_states:
-                    total_states.append(s1)
-
-            current_states2 = utilities.get_current_states_by_subject(state_behaviors_codes,
-                                                                      events2,
-                                                                      subjects_to_analyze,
-                                                                      currentTime)
-
-            if idx in current_states2:
-
-                s2 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states2[idx])))
-
-                if s2 not in total_states:
-                    total_states.append(s2)
+                    if cm:
+                        for behavior in cm:
+                            s.append([subject, behavior, cm[behavior]])
+                    else:
+                        s.append([subject])
+                
+                else:
+                    s.append([subject, current_states[subject]]) 
+    
+                if s not in total_states:
+                    total_states.append(s)
 
         currentTime += interval
+        
 
     total_states = sorted(total_states)
     
@@ -74,31 +114,65 @@ def cohen_kappa(obsid1, obsid2,
     currentTime = Decimal("0")
     while currentTime < last_event:
 
-        for idx in all_subjects:
-            if all_subjects[idx]["name"] not in selected_subjects:
-                continue
+        for subject in selected_subjects:
+
+            if subject == NO_FOCAL_SUBJECT:
+                subject = ""
+
 
             current_states1 = utilities.get_current_states_by_subject(state_behaviors_codes,
                                                                  events1,
-                                                                 subjects_to_analyze,
+                                                                 {subject: {"name": subject}},
                                                                  currentTime)
 
-            if idx in current_states1:
-
-                s1 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states1[idx])))
+            s1 = []
+            if include_modifiers:
+                cm = {}
+                for behavior in current_states1[subject]:
+                    for ev in events1:
+                        if ev[EVENT_TIME_FIELD_IDX] > currentTime:
+                            break
+                        if ev[EVENT_SUBJECT_FIELD_IDX] == subject:
+                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
+                                cm[behavior] = ev[EVENT_MODIFIER_FIELD_IDX]
+                                
+                print("cm", cm)
+                if cm:
+                    for behavior in cm:
+                        s1.append([subject, behavior, cm[behavior]])
+                else:
+                    s1.append([subject])
+            else:
+                s1.append([subject, current_states1[subject]]) 
 
             current_states2 = utilities.get_current_states_by_subject(state_behaviors_codes,
                                                                  events2,
-                                                                 subjects_to_analyze,
+                                                                 {subject: {"name": subject}},
                                                                  currentTime)
 
-            if idx in current_states2:
+            s2 = []
+            if include_modifiers:
 
-                s2 = all_subjects[idx]["name"] + ":" + ("+".join(sorted(current_states2[idx])))
+                cm = {}
+                for behavior in current_states2[subject]:
+                    for ev in events2:
+                        if ev[EVENT_TIME_FIELD_IDX] > currentTime:
+                            break
+                        if ev[EVENT_SUBJECT_FIELD_IDX] == subject:
+                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
+                                cm[behavior] = ev[EVENT_MODIFIER_FIELD_IDX]
+    
+                print("cm", cm)
+                if cm:
+                    for behavior in cm:
+                        s2.append([subject, behavior, cm[behavior]])
+                else:
+                    s2.append([subject])
+            else:
+                s2.append([subject, current_states2[subject]]) 
 
-            if idx in current_states1 and idx in current_states2:
-                contingency_table[total_states.index(s1), total_states.index(s2)] += 1
-                
+            '''if idx in current_states1 and idx in current_states2:'''
+            contingency_table[total_states.index(s1), total_states.index(s2)] += 1
             tot1.append(s1)
             tot2.append(s2)
 
@@ -147,8 +221,42 @@ def cohen_kappa(obsid1, obsid2,
 
     logging.debug("sum_ef {}".format(sum_ef))
 
-    K = (agreements - sum_ef) / (overall_total - sum_ef)
+    try:
+        K = (agreements - sum_ef) / (overall_total - sum_ef)
+    except:
+        K = 1
 
     out += "K: <b>{:.3f}</b><br>".format(K)
     
     return out
+
+
+if __name__ == '__main__':
+    
+    from decimal import Decimal
+    
+    obsid1, obsid2 = "obs #1", "obs #2"
+    
+    interval = 1
+    
+    state_behaviors_codes = ['s']
+    
+    selected_subjects = ["No focal subject"]
+    
+    include_modifiers = True
+    
+    
+    events1 = [[Decimal('1.0'), '', 's', 'xxx', ''], [Decimal('10.0'), '', 's', '', ''], [Decimal('20.0'), '', 's', '', ''], [Decimal('30.0'), '', 's', '', '']]
+    events2 = [[Decimal('1.0'), '', 's', 'xx', ''], [Decimal('10.0'), '', 's', '', ''], [Decimal('20.0'), '', 's', '', ''], [Decimal('30.0'), '', 's', '', '']]
+    
+    print(cohen_kappa(obsid1, obsid2,
+                events1, events2,
+                interval,
+                state_behaviors_codes,
+                #all_subjects, subjects_to_analyze, 
+                selected_subjects,
+                include_modifiers))
+
+    
+
+

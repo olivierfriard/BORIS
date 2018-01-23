@@ -937,26 +937,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # ask for subjects to analyze
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle("Select the subjects to analyze")
-        paramPanelWindow.lbBehaviors.setText("Subjects")
+        paramPanelWindow.lbSubjects.setText("Subjects")
 
-        for w in [paramPanelWindow.lwSubjects,
-                  paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
-                  paramPanelWindow.pbReverseSubjectsSelection,
-                  paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers, paramPanelWindow.cbExcludeBehaviors]:
+        for w in [paramPanelWindow.lwBehaviors,
+                  paramPanelWindow.pbSelectAllBehaviors, paramPanelWindow.pbUnselectAllBehaviors,
+                  paramPanelWindow.pbReverseBehaviorsSelection,
+                  paramPanelWindow.lbBehaviors, paramPanelWindow.cbExcludeBehaviors,
+                  paramPanelWindow.frm_time]:
             w.setVisible(False)
-        paramPanelWindow.frm_time.setVisible(False)
 
+        # no focal subject
+        item = QListWidgetItem(paramPanelWindow.lwSubjects)
+        cb = QCheckBox()
+        cb.setText(NO_FOCAL_SUBJECT)
+        cb.setChecked(False)
+        paramPanelWindow.lwSubjects.setItemWidget(item, cb)
+
+        '''
+        # no focal subject
         paramPanelWindow.item = QListWidgetItem(NO_FOCAL_SUBJECT)
         paramPanelWindow.item.setCheckState(Qt.Unchecked)
-        paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+        paramPanelWindow.lwSubjects.addItem(paramPanelWindow.item)
+        '''
 
         for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
-            paramPanelWindow.item = QListWidgetItem(subject)
-            paramPanelWindow.item.setCheckState(Qt.Unchecked)
-            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+            item = QListWidgetItem(paramPanelWindow.lwSubjects)
+            cb = QCheckBox()
+            cb.setText(subject)
+            cb.setChecked(False)
+            paramPanelWindow.lwSubjects.setItemWidget(item, cb)
+            #paramPanelWindow.item.setCheckState(Qt.Unchecked)
+            #paramPanelWindow.lwSubjects.addItem(paramPanelWindow.item)
 
         if paramPanelWindow.exec_():
-            selected_subjects = paramPanelWindow.selectedBehaviors
+            selected_subjects = paramPanelWindow.selectedSubjects
+            include_modifiers = paramPanelWindow.cbIncludeModifiers.isChecked()
         else:
             return
 
@@ -998,18 +1013,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         interval = float2decimal(i)
 
-        #state_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM]
-        #                       if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
-                               
-        #logging.debug("state_behaviors_codes: {}".format(state_behaviors_codes))
-
-
-
-        last_event = max(self.pj[OBSERVATIONS][obsid1][EVENTS][-1][0], self.pj[OBSERVATIONS][obsid2][EVENTS][-1][0])
-
-        logging.debug("last_event: {}".format(last_event))
-
-
         all_subjects = dict(self.pj[SUBJECTS], **{"": {"name": NO_FOCAL_SUBJECT}})
 
         logging.debug("all_subjects: {}".format(all_subjects))
@@ -1018,11 +1021,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = irr.cohen_kappa(obsid1, obsid2,
                               self.pj[OBSERVATIONS][obsid1][EVENTS],
                               self.pj[OBSERVATIONS][obsid2][EVENTS],
-                              interval, last_event,
+                              interval,
                               state_behaviors_codes,
-                              all_subjects,
-                              subjects_to_analyze,
-                              selected_subjects)
+                              selected_subjects,
+                              include_modifiers)
 
         
         self.results = dialog.ResultsWidget()
@@ -1079,6 +1081,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.results.ptText.appendHtml(txt)
                 self.results.show()
+
 
     def send_project_via_socket(self):
         """
@@ -8893,13 +8896,19 @@ item []:
                 '''
                 # current state(s)
                 # extract State events
+                '''
                 StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
+                '''
+                StateBehaviorsCodes = state_behavior_codes()
 
                 self.currentStates = {}
 
                 # add current states for all subject and for "no focal subject"
 
-                self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes, self.pj[OBSERVATIONS][self.observationId][EVENTS], dict(self.pj[SUBJECTS], **{"": {"name": ""}}), currentTimeOffset)
+                self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes,
+                                                                        self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                        dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                        currentTimeOffset)
 
                 # show current subject
                 cm = {}
