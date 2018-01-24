@@ -98,7 +98,7 @@ import plot_data_module
 #import converters
 
 __version__ = "6.0.2"
-__version_date__ = "2018-01-21"
+__version_date__ = "2018-01-24"
 
 # BITMAP_EXT = "jpg"
 
@@ -1008,7 +1008,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         # ask for time slice
-        i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 10.0, 0.001, 86400, 3)
+        i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
@@ -6890,7 +6890,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def edit_project(self, mode):
         """
         project management
-        mode: new/edit
+        
+        Args:
+            mode (str): new/edit 
+
         """
 
         logging.debug("self.projectChanged: {}".format(self.projectChanged))
@@ -6922,6 +6925,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.projectWindowGeometry:
             newProjectWindow.restoreGeometry(self.projectWindowGeometry)
+        else:
+            newProjectWindow.resize(800, 400)
 
         newProjectWindow.setWindowTitle(mode + " project")
         newProjectWindow.tabProject.setCurrentIndex(0)   # project information
