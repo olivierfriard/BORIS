@@ -998,11 +998,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # observed codes defined as state event
         state_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
-                                 if "STATE" in self.pj[ETHOGRAM][x][TYPE].upper()
+                                 if STATE in self.pj[ETHOGRAM][x][TYPE].upper()
                                     and self.pj[ETHOGRAM][x]["code"] in observed_codes]
 
         point_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
-                                 if "POINT" in self.pj[ETHOGRAM][x][TYPE].upper()
+                                 if POINT in self.pj[ETHOGRAM][x][TYPE].upper()
                                     and self.pj[ETHOGRAM][x]["code"] in observed_codes]
 
 
