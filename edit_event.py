@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2017 Olivier Friard
+Copyright 2012-2018 Olivier Friard
 
 This file is part of BORIS.
 
@@ -35,16 +35,18 @@ except:
 
 from config import *
 
+
 if QT_VERSION_STR[0] == "4":
     from edit_event_ui import Ui_Form
-else:
+if QT_VERSION_STR[0] == "5":
     from edit_event_ui5 import Ui_Form
+
 
 class DlgEditEvent(QDialog, Ui_Form):
 
     def __init__(self, log_level, parent=None):
 
-        super(DlgEditEvent, self).__init__(parent)
+        super().__init__(parent)
         logging.basicConfig(level=log_level)
         self.setupUi(self)
 

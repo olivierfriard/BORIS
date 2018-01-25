@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'edit_event.ui'
 #
-# Created: Tue Dec 15 12:51:27 2015
-#      by: PyQt4 UI code generator 4.11.2
+# Created by: PyQt4 UI code generator 4.11.4
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -84,6 +83,7 @@ class Ui_Form(object):
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout.addWidget(self.pbCancel)
         self.pbOK = QtGui.QPushButton(Form)
+        self.pbOK.setDefault(True)
         self.pbOK.setObjectName(_fromUtf8("pbOK"))
         self.horizontalLayout.addWidget(self.pbOK)
         self.verticalLayout.addLayout(self.horizontalLayout)

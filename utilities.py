@@ -178,10 +178,37 @@ def get_current_states_by_subject(state_behaviors_codes, events, subjects, time)
     return current_states
 
 
+def get_current_points_by_subject(point_behaviors_codes, events, subjects, time, distance):
+    """
+    get near point events for subjects at given time
+    Args:
+        point_behaviors_codes (list): list of behavior codes defined as POINT event
+        events (list): list of events
+        subjects (dict): dictionary of subjects
+        time (Decimal): time
+        distance (Decimal): distance from time
 
+    Returns:
+        dict: current states by subject. dict of list
+    """
+    current_points = {}
+    for idx in subjects:
+        current_points[idx] = []
+        for sbc in point_behaviors_codes:
+            events = [[x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]] for x in events
+                                                   if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                                                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                                                      and abs(x[EVENT_TIME_FIELD_IDX] - time) <= distance]
+            
+            for event in events:
+                current_points[idx].append(event)
+
+    return current_points
+
+'''
 def get_current_states_modifiers_by_subject(state_behaviors_codes, events, subjects, time):
     """
-    get current states for subjects at given time
+    get current states and modifiers for subjects at given time
     Args:
         state_behaviors_codes (list): list of behavior codes defined as STATE event
         events (list): list of events
@@ -191,24 +218,20 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes, events, subje
     Returns:
         dict: current state(s) and modifier(s) by subject. dict of list
     """
-    current_states = {}
-    for idx in subjects:
-        current_states[idx] = []
-        for sbc in state_behaviors_codes:
-            
-            event_list = [x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                                                   if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                                      and x[EVENT_TIME_FIELD_IDX] <= time]
-            
-            if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                                                   if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                                      and x[EVENT_TIME_FIELD_IDX] <= time]) % 2: # test if odd
-                current_states[idx].append(sbc)
+
+    current_states = get_current_states_by_subject(state_behaviors_codes, events, subjects, time)
+    cm = {}
+    for behavior in current_states[subject]:
+        for event in events:
+            if event[EVENT_TIME_FIELD_IDX] > currentTime:
+                break
+            if event[EVENT_SUBJECT_FIELD_IDX] == subject:
+                if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
+                    cm[behavior] = event[EVENT_MODIFIER_FIELD_IDX]
+
 
     return current_states
-
+'''
 
 
 def get_ip_address():

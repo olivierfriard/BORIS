@@ -969,6 +969,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             #paramPanelWindow.item.setCheckState(Qt.Unchecked)
             #paramPanelWindow.lwSubjects.addItem(paramPanelWindow.item)
 
+        paramPanelWindow.resize(500, 400)
         if paramPanelWindow.exec_():
             selected_subjects = paramPanelWindow.selectedSubjects
             include_modifiers = paramPanelWindow.cbIncludeModifiers.isChecked()
@@ -1000,6 +1001,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  if "STATE" in self.pj[ETHOGRAM][x][TYPE].upper()
                                     and self.pj[ETHOGRAM][x]["code"] in observed_codes]
 
+        point_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
+                                 if "POINT" in self.pj[ETHOGRAM][x][TYPE].upper()
+                                    and self.pj[ETHOGRAM][x]["code"] in observed_codes]
+
+
         if not state_behaviors_codes:
             QMessageBox.warning(self, programName, "No state event behaviors")
             return
@@ -1023,6 +1029,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                               self.pj[OBSERVATIONS][obsid2][EVENTS],
                               interval,
                               state_behaviors_codes,
+                              point_behaviors_codes,
                               selected_subjects,
                               include_modifiers)
 
@@ -1962,7 +1969,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def check_state_events_obs(self, obsId):
-
+        """
+        check state events
+        if no current observation check all observations
+        check if number is odd
+        
+        Args:
+            obsId (str): id of observation to check
+            
+        Returns:
+            set (bool, str): True/False, message
+        """
+        
         # check if behaviors are defined as "state event"
         event_types = {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]}
 
@@ -1981,15 +1999,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for behavior in sorted(set(behaviors)):
                 if behavior not in ethogram_behaviors:
-                    return (False, "The behaviour <b>{}</b> does not exist more in the ethogram.<br>".format(behavior))
+                    return (False, "The behaviour <b>{}</b> not found in the ethogram.<br>".format(behavior))
                 else:
-                    if "STATE" in self.eventType(behavior).upper():
+                    if STATE in self.eventType(behavior).upper():
                         flagStateEvent = True
                         lst, memTime = [], {}
                         for event in [event for event in self.pj[OBSERVATIONS][obsId][EVENTS]
                                       if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and
                                       event[EVENT_SUBJECT_FIELD_IDX] == subject]:
+
                             behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+
                             if behav_modif in lst:
                                 lst.remove(behav_modif)
                                 del memTime[str(behav_modif)]
@@ -1998,7 +2018,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
     
                         for event in lst:
-                            out += ("""The behavior <b>{behavior}</b> {modifier}is not PAIRED for subject"""
+                            out += ("""The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
                                     """ "<b>{subject}</b>" at <b>{time}</b><br>""").format(
                                           behavior=behavior,
                                           modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
@@ -2010,9 +2030,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def check_state_events(self, mode="all"):
         """
-        check state events for each subject in current observation
-        if no current observation check all observations
-        check if number is odd
+        check state events for each subject
+        use check_state_events_obs function
+        
+        Args:
+            mode (str): current: check current observation / all: ask user to select observations
         """
 
         tot_out = ""
@@ -4633,19 +4655,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
         """
-        populate the db databse with events from selectedObservations, selectedSubjects and selectedBehaviors
-        selectedObservations: list
-        selectedSubjects: list
-        selectedBehaviors: list
+        populate an memory sqlite database with events from selectedObservations, selectedSubjects and selectedBehaviors
+        
+        Args:
+            selectedObservations (list):
+            selectedSubjects (list):
+            selectedBehaviors (list):
+            
+        Returns:
+            database cursor:
+
         """
         db = sqlite3.connect(":memory:")
-        
+ 
         '''
         if os.path.isfile("/tmp/boris_debug.sqlite"):
             os.system("rm /tmp/boris_debug.sqlite")
         db = sqlite3.connect("/tmp/boris_debug.sqlite")
         '''
-        
+
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute("""CREATE TABLE events (observation TEXT,
@@ -7546,12 +7574,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if "media_info" in self.pj[OBSERVATIONS][obsId]:
                             duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
                         else:
-                            #if "media_file_info" in
-                            print("no media_info tag")
+                            logging.info("no media_info tag for {} in observation {}" .format(mediaFile, obsId))
                 except:
-                    print("error")
-                    pass
-            
+                    logging.critical(sys.exc_info()[1])
+                    QMessageBox.critical(None, programName, str(sys.exc_info()[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))
             logging.debug("media length for {0}: {1}".format(obsId, total_length))
@@ -8685,7 +8711,7 @@ item []:
         about_dialog.setEscapeButton(QMessageBox.Ok)
 
         about_dialog.setInformativeText(("<b>{prog_name}</b> {ver} - {date}"
-        "<p>Copyright &copy; 2012-2017 Olivier Friard - Marco Gamba<br>"
+        "<p>Copyright &copy; 2012-2018 Olivier Friard - Marco Gamba<br>"
         "Department of Life Sciences and Systems Biology<br>"
         "University of Torino - Italy<br>"
         "<br>"
@@ -11049,6 +11075,7 @@ if __name__ == "__main__":
             
             print(window.check_state_events_obs(observation_to_open)[1])
             sys.exit()
+
 
     if observation_to_open:
         r = window.load_observation(observation_to_open)
