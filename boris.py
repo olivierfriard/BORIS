@@ -97,8 +97,8 @@ import project_functions
 import plot_data_module
 #import converters
 
-__version__ = "6.0.2"
-__version_date__ = "2018-01-24"
+__version__ = "6.0.3"
+__version_date__ = "2018-01-27"
 
 # BITMAP_EXT = "jpg"
 
@@ -8928,7 +8928,7 @@ item []:
                 '''
                 StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
                 '''
-                StateBehaviorsCodes = state_behavior_codes()
+                StateBehaviorsCodes = state_behavior_codes(self.pj[ETHOGRAM])
 
                 self.currentStates = {}
 

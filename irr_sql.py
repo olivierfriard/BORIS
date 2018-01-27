@@ -81,6 +81,10 @@ def cohen_kappa(cursor,
 
         return s
 
+    first_event = cursor.execute("""SELECT min(start) FROM events WHERE observation in (?, ?) AND subject in ('{}') """.format("','".join(selected_subjects)),
+                                               (obsid1, obsid2)).fetchone()[0]
+
+    logging.debug("first_event: {}".format(first_event))
     last_event = cursor.execute("""SELECT max(stop) FROM events WHERE observation in (?, ?) AND subject in ('{}') """.format("','".join(selected_subjects)),
                                                (obsid1, obsid2)).fetchone()[0]
 
@@ -93,7 +97,7 @@ def cohen_kappa(cursor,
 
     total_states = []
 
-    currentTime = Decimal("0")
+    currentTime = Decimal(str(first_event))
     while currentTime <= last_event:
 
         for obsid in [obsid1, obsid2]:
