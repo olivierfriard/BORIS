@@ -934,6 +934,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.information(self, programName, "Observation: <b>{obsId}</b><br>{msg}".format(obsId=obsId, msg=msg))
                 return
 
+
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0,
+                                                              flagShowIncludeModifiers=True,
+                                                              flagShowExcludeBehaviorsWoEvents=False)
+
+        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+            return
+
+        '''
         # ask for subjects to analyze
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.setWindowTitle("Select the subjects to analyze")
@@ -952,6 +961,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         cb.setText(NO_FOCAL_SUBJECT)
         cb.setChecked(False)
         paramPanelWindow.lwSubjects.setItemWidget(item, cb)
+        '''
 
         '''
         # no focal subject
@@ -960,6 +970,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.lwSubjects.addItem(paramPanelWindow.item)
         '''
 
+        '''
         for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
             item = QListWidgetItem(paramPanelWindow.lwSubjects)
             cb = QCheckBox()
@@ -980,37 +991,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_subjects:
             QMessageBox.warning(self, programName, "No selected subjects")
             return
-
-        
-        subjects_to_analyze = {}
-        if NO_FOCAL_SUBJECT in selected_subjects:
-            subjects_to_analyze[""] = {"name": ""}
-
-        for idx in self.pj[SUBJECTS]:
-            if self.pj[SUBJECTS][idx]["name"] in selected_subjects:
-                subjects_to_analyze[idx] = dict(self.pj[SUBJECTS][idx])
-
-        logging.debug("subjects_to_analyze: {}".format(subjects_to_analyze))
-
-        # all observed codes
-        observed_codes = set([x[EVENT_BEHAVIOR_FIELD_IDX] for x in self.pj[OBSERVATIONS][obsid1][EVENTS]] + 
-                             [x[EVENT_BEHAVIOR_FIELD_IDX] for x in self.pj[OBSERVATIONS][obsid2][EVENTS]])
-
-        # observed codes defined as state event
-        state_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
-                                 if STATE in self.pj[ETHOGRAM][x][TYPE].upper()
-                                    and self.pj[ETHOGRAM][x]["code"] in observed_codes]
-
-        point_behaviors_codes = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
-                                 if POINT in self.pj[ETHOGRAM][x][TYPE].upper()
-                                    and self.pj[ETHOGRAM][x]["code"] in observed_codes]
-
-
-        if not state_behaviors_codes:
-            QMessageBox.warning(self, programName, "No state event behaviors")
-            return
-
-        logging.debug("state_behaviors_codes: {}".format(state_behaviors_codes))
+        '''
 
 
         # ask for time slice
@@ -1023,7 +1004,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("all_subjects: {}".format(all_subjects))
 
-        import irr
+        import irr_sql
+        import db_functions
+        
+        cursor = db_functions.load_aggregated_events_in_db(self.pj, plot_parameters["selected subjects"],
+                                                       selectedObservations,
+                                                       plot_parameters["selected behaviors"])
+        
+        out = irr_sql.cohen_kappa(cursor,
+                obsid1, obsid2,
+                interval,
+                plot_parameters["selected subjects"],
+                plot_parameters["include modifiers"]
+                )
+        '''
         out = irr.cohen_kappa(obsid1, obsid2,
                               self.pj[OBSERVATIONS][obsid1][EVENTS],
                               self.pj[OBSERVATIONS][obsid2][EVENTS],
@@ -1032,12 +1026,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                               point_behaviors_codes,
                               selected_subjects,
                               include_modifiers)
+        '''
 
         
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - Media file information")
         self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out)
+        self.results.ptText.appendHtml(out.replace("\n", "<br>"))
         self.results.resize(500, 400)
         self.results.show()
 
@@ -4764,7 +4759,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.setMaximumHeight(800)
+        paramPanelWindow.resize(600,500)
         paramPanelWindow.setWindowTitle("Select subjects and behaviors")
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj

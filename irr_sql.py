@@ -30,8 +30,6 @@ from config import *
 def cohen_kappa(cursor,
                 obsid1, obsid2,
                 interval,
-                state_behaviors_codes,
-                point_behaviors_codes,
                 selected_subjects,
                 include_modifiers):
     """
@@ -40,24 +38,56 @@ def cohen_kappa(cursor,
         cursor (sqlite3.cursor): cursor to aggregated events db
         obsid1 (str): id of observation #1
         obsid2 (str): id of observation #2
-        state_behaviors_codes (list): list of behavior codes defined as state event
-        point_behaviors_codes (list): list of behavior codes defined as point event
         selected_subjects (list): subjects selected for analysis
         include_modifiers (bool): True: include modifiers False: do not
     
     Return:
          str: result of analysis
     """
+    
+    def subj_behav_modif(cursor, obsid, time, include_modifiers):
+        s = []
+        # state behaviors
+        rows = cursor.execute("""SELECT behavior, modifiers FROM events
+                  WHERE
+                   observation = ?
+                   AND subject = ?
+                   AND type = 'STATE'
+                   AND (? BETWEEN start AND STOP)
+                   """ ,
+                (obsid, subject, float(currentTime),)).fetchall()
+
+        for row in rows:
+            if include_modifiers:
+                s.append([subject, row[0], row[1]])
+            else:
+                s.append([subject, row[0]])
+
+        # point behaviors
+        rows = cursor.execute("""SELECT behavior, modifiers FROM events
+                  WHERE
+                   observation = ?
+                   AND subject = ?
+                   AND type = 'POINT'
+                   AND abs(start - ?) <= ? 
+                   """ ,
+                (obsid, subject, float(currentTime), float(interval/2),)).fetchall()
+
+        for row in rows:
+            if include_modifiers:
+                s.append([subject, row[0], row[1]])
+            else:
+                s.append([subject, row[0]])
+
+        return s
+
     last_event = cursor.execute("""SELECT max(stop) FROM events WHERE observation in (?, ?) AND subject in ('{}') """.format("','".join(selected_subjects)),
                                                (obsid1, obsid2)).fetchone()[0]
 
     logging.debug("last_event: {}".format(last_event))
     
-    print(obsid1)
-    print(selected_subjects)
     nb_events1 = cursor.execute("""SELECT COUNT(*) FROM events WHERE observation = ? AND subject in ('{}') """.format("','".join(selected_subjects)),
                                                (obsid1,)).fetchone()[0]
-    
     nb_events2 = cursor.execute("""SELECT COUNT(*) FROM events WHERE observation = ? AND subject in ('{}') """.format("','".join(selected_subjects)),
                                                (obsid2,)).fetchone()[0]
 
@@ -68,26 +98,13 @@ def cohen_kappa(cursor,
 
         for obsid in [obsid1, obsid2]:
             for subject in selected_subjects:
-                
-                print(subject, currentTime)
-            
-                rows = cursor.execute("""SELECT behavior, modifiers FROM events
-                          WHERE
-                           observation = ?
-                           AND subject = ?
-                           AND type = 'STATE'
-                           AND ( ? BETWEEN start AND STOP)
-                           """ ,
-                        (obsid, subject, float(currentTime),)).fetchall()
 
-                s = []
-                for row in rows:
-                    s.append([subject, row[0], row[1]])
-                    
+                s = subj_behav_modif(cursor, obsid, currentTime, include_modifiers)
+
                 if s not in total_states:
                     total_states.append(s)
         
-        print("currentTime ", currentTime, )
+                logging.debug("{} {} {} {}".format(obsid, subject, currentTime, s))
 
         currentTime += interval
 
@@ -96,8 +113,6 @@ def cohen_kappa(cursor,
     
     logging.debug("total_states: {}".format(total_states))
     
-    print(total_states)
-
     contingency_table = np.zeros((len(total_states), len(total_states)))
 
     '''tot1, tot2 = [], []'''
@@ -107,31 +122,8 @@ def cohen_kappa(cursor,
 
         for subject in selected_subjects:
             
-            rows = cursor.execute("""SELECT behavior, modifiers FROM events
-                      WHERE
-                       observation = ?
-                       AND subject = ?
-                       AND type = 'STATE'
-                       AND ( ? BETWEEN start AND STOP)
-                       """ ,
-                    (obsid1, subject, float(currentTime),)).fetchall()
-
-            s1 = []
-            for row in rows:
-                s1.append([subject, row[0], row[1]])
-
-            rows = cursor.execute("""SELECT behavior, modifiers FROM events
-                      WHERE
-                       observation = ?
-                       AND subject = ?
-                       AND type = 'STATE'
-                       AND ( ? BETWEEN start AND STOP)
-                       """ ,
-                    (obsid2, subject, float(currentTime),)).fetchall()
-
-            s2 = []
-            for row in rows:
-                s2.append([subject, row[0], row[1]])
+            s1 = subj_behav_modif(cursor, obsid1, currentTime, include_modifiers)
+            s2 = subj_behav_modif(cursor, obsid2, currentTime, include_modifiers)
 
             try:
                 contingency_table[total_states.index(s1), total_states.index(s2)] += 1
@@ -140,33 +132,19 @@ def cohen_kappa(cursor,
 
         currentTime += interval
 
-    '''
-    print(tot1)
-    print(tot2)
-    '''
-
-    '''
-    taskdata=[[0,str(i),str(tot1[i])] for i in range(0,len(tot1))]+[[1,str(i),str(tot2[i])] for i in range(0,len(tot2))]
-    ratingtask = agreement.AnnotationTask(data=taskdata) 
-    print("kappa " +str(ratingtask.kappa()))
-    '''
-
     logging.debug("contingency_table:\n {}".format(contingency_table))
 
-    out = ""
-    out += "<b>Cohen's Kappa - Index of Inter-rater Reliability</b><br><br>"
-
-    out += "Interval time: <b>{:.3f} s</b><br><br>".format(interval)
-    out += "Selected subjects: <b>{}</b><br><br>".format(", ".join(selected_subjects))
-
-    out += "Observation #1: <b>{}</b><br>".format(obsid1)
-    out += "number of events: <b>{:.0f}</b><br>".format(nb_events1)
+    template = ("Cohen's Kappa - Index of Inter-rater Reliability\n\n"
+                "Interval time: {interval:.3f} s\n\n"
+                "Selected subjects: {selected_subjects}\n\n"
+                "Observation #1: {obsid1}\n"
+                "number of events: {nb_events1}\n\n"
+                "Observation #2: {obsid2}\n"
+                "number of events: {nb_events2:.0f}\n\n"
+                "K = {K:.3f}")
 
     #out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
     #out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid1) / interval)
-
-    out += "Observation #2: <b>{}</b><br>".format(obsid2)
-    out += "number of events: <b>{:.0f}</b><br>".format(nb_events2)
 
     #out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid2))
     #out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid2) / interval)
@@ -186,61 +164,50 @@ def cohen_kappa(cursor,
         sum_ef += rows_sums[idx] * cols_sums[idx] / overall_total
 
     logging.debug("sum_ef {}".format(sum_ef))
-
-    try:
-        K = (agreements - sum_ef) / (overall_total - sum_ef)
-    except:
-        K = 1
-
-    out += "K: <b>{:.3f}</b><br>".format(K)
     
+    if not (overall_total - sum_ef):
+        K = 1
+    else:
+        try:
+            K = (agreements - sum_ef) / (overall_total - sum_ef)
+        except:
+            K = nan
+
+    out = template.format(interval=interval,
+                          selected_subjects=", ".join(selected_subjects),
+                          obsid1=obsid1, obsid2=obsid2,
+                          nb_events1=nb_events1, nb_events2=nb_events2,
+                          K=K
+                          )
+ 
     return out
 
 
 if __name__ == '__main__':
     
     from decimal import Decimal
-    
-    from nltk import agreement
-    
-    
-    logging.basicConfig(level=logging.INFO)
-    
-    
+
+    logging.basicConfig(level=logging.DEBUG)
+
     obsid1, obsid2 = "live1", "live2"
-    obsid1, obsid2 = "live #1 no subj no modif", "live #2 no subj no modif"
-    
+
     interval = 1
-    
-    #state_behaviors_codes = ['s']
-    
+
     selected_subjects = ["No focal subject"]
-    
+
     include_modifiers = True
-    
- 
-   
-    state_behaviors_codes = ['s']
-    point_behaviors_codes = ['p']
-    
+
+    selected_behaviors = ['s','p']
     
     import db_functions
     
     import test_sample_project
-    
-    print
-    
+
     cursor = db_functions.load_aggregated_events_in_db(test_sample_project.p, [], [], [])
-    #print(cursor)
-    
-    #import sys
-    #sys.exit()
     
     print(cohen_kappa(cursor,
                 obsid1, obsid2,
                 interval,
-                state_behaviors_codes,
-                point_behaviors_codes,
                 selected_subjects,
                 True #include_modifiers
                 ))
