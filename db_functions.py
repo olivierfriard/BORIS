@@ -115,9 +115,7 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
 
     cursor1 = load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors)
     
-    #db = sqlite3.connect(":memory:")
-    os.system("rm /tmp/1.sqlite")
-    db = sqlite3.connect("/tmp/1.sqlite")
+    db = sqlite3.connect(":memory:")
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()
     cursor2.execute("""CREATE TABLE events (id INTEGER PRIMARY KEY ASC,
