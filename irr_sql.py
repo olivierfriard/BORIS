@@ -27,6 +27,7 @@ import utilities
 import numpy as np
 from config import *
 
+
 def cohen_kappa(cursor,
                 obsid1, obsid2,
                 interval,
@@ -45,7 +46,22 @@ def cohen_kappa(cursor,
          str: result of analysis
     """
     
-    def subj_behav_modif(cursor, obsid, time, include_modifiers):
+    def subj_behav_modif(cursor, obsid, subject, time, include_modifiers):
+        """
+        current behaviors for observation obsId at time
+        
+        Args:
+            cursor (sqlite3.cursor): cursor to aggregated events db
+            obsid (str): id of observation
+            subject (str): name of subject
+            time (Decimal): time
+            include_modifiers (bool): True: include modifiers False: do not
+            
+        Returns:
+            list: list of lists [subject, behavior, modifiers]
+        """
+        
+        
         s = []
         # state behaviors
         rows = cursor.execute("""SELECT behavior, modifiers FROM events
@@ -71,7 +87,7 @@ def cohen_kappa(cursor,
                    AND type = 'POINT'
                    AND abs(start - ?) <= ? 
                    """ ,
-                (obsid, subject, float(currentTime), float(interval/2),)).fetchall()
+                (obsid, subject, float(currentTime), float(interval / 2),)).fetchall()
 
         for row in rows:
             if include_modifiers:
@@ -103,7 +119,7 @@ def cohen_kappa(cursor,
         for obsid in [obsid1, obsid2]:
             for subject in selected_subjects:
 
-                s = subj_behav_modif(cursor, obsid, currentTime, include_modifiers)
+                s = subj_behav_modif(cursor, obsid, subject, currentTime, include_modifiers)
 
                 if s not in total_states:
                     total_states.append(s)
@@ -115,24 +131,30 @@ def cohen_kappa(cursor,
 
     total_states = sorted(total_states)
     
-    logging.debug("total_states: {}".format(total_states))
+    logging.debug("total_states: {} len:{}".format(total_states, len(total_states)))
     
     contingency_table = np.zeros((len(total_states), len(total_states)))
 
     '''tot1, tot2 = [], []'''
 
-    currentTime = Decimal("0")
+    currentTime = Decimal(str(first_event))
     while currentTime < last_event:
 
         for subject in selected_subjects:
             
-            s1 = subj_behav_modif(cursor, obsid1, currentTime, include_modifiers)
-            s2 = subj_behav_modif(cursor, obsid2, currentTime, include_modifiers)
+            s1 = subj_behav_modif(cursor, obsid1, subject, currentTime, include_modifiers)
+            s2 = subj_behav_modif(cursor, obsid2, subject, currentTime, include_modifiers)
 
+            logging.debug("currentTime: {} s1:{} s2:{}".format(currentTime, s1, s2))
+
+            contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+
+            '''
             try:
                 contingency_table[total_states.index(s1), total_states.index(s2)] += 1
             except:
                 return "Error with contingency table"
+            '''
 
         currentTime += interval
 
@@ -201,7 +223,7 @@ if __name__ == '__main__':
 
     include_modifiers = True
 
-    selected_behaviors = ['s','p']
+    selected_behaviors = ['s', 'p']
     
     import db_functions
     

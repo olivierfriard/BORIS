@@ -431,7 +431,7 @@ class ResultsWidget(QWidget):
     widget for visualizing text output
     """
     def __init__(self):
-        super(ResultsWidget, self).__init__()
+        super().__init__()
 
         self.setWindowTitle("")
 
@@ -444,18 +444,36 @@ class ResultsWidget(QWidget):
         hbox.addWidget(self.ptText)
 
         hbox2 = QHBoxLayout()
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.pbOK_clicked)
+        self.pbSave = QPushButton("Save results")
+        self.pbSave.clicked.connect(self.save_results)
+        hbox2.addWidget(self.pbSave)
 
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.close)
         hbox2.addWidget(self.pbOK)
+
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
+        
+        self.resize(500, 400)
 
 
-    def pbOK_clicked(self):
-        print("close")
-        self.close()
+    def save_results(self):
+        """
+        save content of self.ptText
+        """
+        
+        fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        
+        if file_name:
+            try:
+                with open(file_name, "w") as f:
+                    f.write(self.ptText.toPlainText())
+            except:
+                QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
+
 
 
 class FrameViewer(QWidget):

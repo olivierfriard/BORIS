@@ -45,6 +45,9 @@ import datetime
 import multiprocessing
 import socket
 import copy
+import irr_sql
+import db_functions
+
 
 try:
     from PyQt5.QtCore import *
@@ -95,10 +98,9 @@ import behaviors_coding_map
 import plot_events
 import project_functions
 import plot_data_module
-#import converters
 
-__version__ = "6.0.3"
-__version_date__ = "2018-01-27"
+__version__ = "6.0.4"
+__version_date__ = "2018-01-28"
 
 # BITMAP_EXT = "jpg"
 
@@ -928,11 +930,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         obsid1, obsid2 = selectedObservations
 
         # check if state events are paired
+        tot_out = ""
         for obsId in [obsid1, obsid2]:
             r, msg = self.check_state_events_obs(obsId)
             if not r:
-                QMessageBox.information(self, programName, "Observation: <b>{obsId}</b><br>{msg}".format(obsId=obsId, msg=msg))
-                return
+                tot_out += "Observation: <strong>{}</strong><br>{}<br>".format(obsId, msg)
+        if tot_out:
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle("Check state events")
+            self.results.ptText.clear()
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(tot_out)
+            self.results.show()
+            return
 
 
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0,
@@ -942,74 +952,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        '''
-        # ask for subjects to analyze
-        paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.setWindowTitle("Select the subjects to analyze")
-        paramPanelWindow.lbSubjects.setText("Subjects")
-
-        for w in [paramPanelWindow.lwBehaviors,
-                  paramPanelWindow.pbSelectAllBehaviors, paramPanelWindow.pbUnselectAllBehaviors,
-                  paramPanelWindow.pbReverseBehaviorsSelection,
-                  paramPanelWindow.lbBehaviors, paramPanelWindow.cbExcludeBehaviors,
-                  paramPanelWindow.frm_time]:
-            w.setVisible(False)
-
-        # no focal subject
-        item = QListWidgetItem(paramPanelWindow.lwSubjects)
-        cb = QCheckBox()
-        cb.setText(NO_FOCAL_SUBJECT)
-        cb.setChecked(False)
-        paramPanelWindow.lwSubjects.setItemWidget(item, cb)
-        '''
-
-        '''
-        # no focal subject
-        paramPanelWindow.item = QListWidgetItem(NO_FOCAL_SUBJECT)
-        paramPanelWindow.item.setCheckState(Qt.Unchecked)
-        paramPanelWindow.lwSubjects.addItem(paramPanelWindow.item)
-        '''
-
-        '''
-        for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
-            item = QListWidgetItem(paramPanelWindow.lwSubjects)
-            cb = QCheckBox()
-            cb.setText(subject)
-            cb.setChecked(False)
-            paramPanelWindow.lwSubjects.setItemWidget(item, cb)
-            #paramPanelWindow.item.setCheckState(Qt.Unchecked)
-            #paramPanelWindow.lwSubjects.addItem(paramPanelWindow.item)
-
-        paramPanelWindow.resize(500, 400)
-        if paramPanelWindow.exec_():
-            selected_subjects = paramPanelWindow.selectedSubjects
-            include_modifiers = paramPanelWindow.cbIncludeModifiers.isChecked()
-        else:
-            return
-
-        logging.debug("selected_subjects: {}".format(selected_subjects))
-        if not selected_subjects:
-            QMessageBox.warning(self, programName, "No selected subjects")
-            return
-        '''
-
-
         # ask for time slice
         i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
 
-        all_subjects = dict(self.pj[SUBJECTS], **{"": {"name": NO_FOCAL_SUBJECT}})
-
         logging.debug("all_subjects: {}".format(all_subjects))
 
-        import irr_sql
-        import db_functions
-        
         cursor = db_functions.load_aggregated_events_in_db(self.pj, plot_parameters["selected subjects"],
-                                                       selectedObservations,
-                                                       plot_parameters["selected behaviors"])
+                                                           selectedObservations,
+                                                           plot_parameters["selected behaviors"])
         
         out = irr_sql.cohen_kappa(cursor,
                 obsid1, obsid2,
@@ -1017,23 +970,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 plot_parameters["selected subjects"],
                 plot_parameters["include modifiers"]
                 )
-        '''
-        out = irr.cohen_kappa(obsid1, obsid2,
-                              self.pj[OBSERVATIONS][obsid1][EVENTS],
-                              self.pj[OBSERVATIONS][obsid2][EVENTS],
-                              interval,
-                              state_behaviors_codes,
-                              point_behaviors_codes,
-                              selected_subjects,
-                              include_modifiers)
-        '''
 
-        
         self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle(programName + " - Media file information")
+        self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa analysis results")
         self.results.ptText.setReadOnly(True)
         self.results.ptText.appendHtml(out.replace("\n", "<br>"))
-        self.results.resize(500, 400)
         self.results.show()
 
         return
@@ -2036,7 +1977,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == "current":
             if self.observationId:
                 r, msg = self.check_state_events_obs(self.observationId)
-                tot_out = "<strong>{}</strong><br>{}<br><br>".format(self.observationId, msg)
+                tot_out = "Observation: <strong>{}</strong><br>{}<br><br>".format(self.observationId, msg)
 
         if mode == "all":
             if not self.pj[OBSERVATIONS]:
@@ -5329,9 +5270,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             r, msg = self.check_state_events_obs(obsId)
             if not r:
-                out += "<strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
 
         if out:
+            '''
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle("Check state events")
+            self.results.ptText.clear()
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.setWindowModality(Qt.ApplicationModal)
+            self.results.show()
+            '''
+
+            
             d = QDialog()
             d.setWindowTitle("Check selected observations")
             hbox = QVBoxLayout()
@@ -5354,7 +5306,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             d.setLayout(hbox)
 
             d.setWindowModality(Qt.ApplicationModal)
+            d.resize(500, 400)
             d.exec_()
+            
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -6369,7 +6323,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             r, msg = self.check_state_events_obs(obsId)
             if not r:
-                out += "<strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
 
         if out:
@@ -6395,6 +6349,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             d.setLayout(hbox)
 
             d.setWindowModality(Qt.ApplicationModal)
+            d.resize(500, 400)
             d.exec_()
 
         '''
@@ -7448,7 +7403,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             r, msg = self.check_state_events_obs(obsId)
             if not r:
-                out += "<strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
 
         if out:
@@ -7474,6 +7429,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             d.setLayout(hbox)
 
             d.setWindowModality(Qt.ApplicationModal)
+            d.resize(500, 400)
             d.exec_()
 
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
