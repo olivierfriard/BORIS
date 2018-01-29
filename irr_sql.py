@@ -147,14 +147,12 @@ def cohen_kappa(cursor,
 
             logging.debug("currentTime: {} s1:{} s2:{}".format(currentTime, s1, s2))
 
-            contingency_table[total_states.index(s1), total_states.index(s2)] += 1
+            #contingency_table[total_states.index(s1), total_states.index(s2)] += 1
 
-            '''
             try:
                 contingency_table[total_states.index(s1), total_states.index(s2)] += 1
             except:
                 return "Error with contingency table"
-            '''
 
         currentTime += interval
 
