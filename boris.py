@@ -99,8 +99,8 @@ import plot_events
 import project_functions
 import plot_data_module
 
-__version__ = "6.0.4"
-__version_date__ = "2018-01-28"
+__version__ = "6.0.5"
+__version_date__ = "2018-01-29"
 
 # BITMAP_EXT = "jpg"
 
@@ -958,7 +958,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         interval = float2decimal(i)
 
-        logging.debug("all_subjects: {}".format(all_subjects))
 
         cursor = db_functions.load_aggregated_events_in_db(self.pj, plot_parameters["selected subjects"],
                                                            selectedObservations,
