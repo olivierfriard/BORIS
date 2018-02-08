@@ -5438,7 +5438,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 total_observation_time += (max_time - min_time)
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time, max_time))
-                cursor.execute("commit")
+#                cursor.execute("commit")
 
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
@@ -5721,7 +5721,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 pass
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
-                cursor.execute("commit")
+ #               cursor.execute("commit")
 
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
