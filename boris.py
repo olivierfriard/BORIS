@@ -99,8 +99,8 @@ import plot_events
 import project_functions
 import plot_data_module
 
-__version__ = "6.0.5"
-__version_date__ = "2018-01-29"
+__version__ = "6.0.6"
+__version_date__ = "2018-02-09"
 
 # BITMAP_EXT = "jpg"
 
@@ -5425,7 +5425,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 total_observation_time += (max_time - min_time)
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time, max_time))
-                cursor.execute("commit")
+#                cursor.execute("commit")
 
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
@@ -5705,8 +5705,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 pass
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
-                print("commit")
-                cursor.execute("commit")
 
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
