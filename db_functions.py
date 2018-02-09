@@ -28,9 +28,11 @@ from config import *
 
 def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors):
     """
-    populate a memory sqlite database with events from selectedObservations, selectedSubjects and selectedBehaviors
+    populate a memory sqlite database with events from selectedObservations, 
+    selectedSubjects and selectedBehaviors
     
     Args:
+        pj (dict): project dictionary
         selectedObservations (list):
         selectedSubjects (list):
         selectedBehaviors (list):
@@ -95,6 +97,7 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
     populate a memory sqlite database with aggregated events from selectedObservations, selectedSubjects and selectedBehaviors
     
     Args:
+        pj (dict): project dictionary
         selectedObservations (list):
         selectedSubjects (list):
         selectedBehaviors (list):

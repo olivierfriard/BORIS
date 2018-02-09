@@ -1477,8 +1477,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         flagUnpairedEventFound = False
 
+        '''
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations,
                                      plot_parameters["selected behaviors"])
+        '''
+        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
         for obsId in selectedObservations:
 
@@ -4590,7 +4593,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
         """
-        populate an memory sqlite database with events from selectedObservations, selectedSubjects and selectedBehaviors
+        populate an memory sqlite database with events from selectedObservations,
+         selectedSubjects and selectedBehaviors
         
         Args:
             selectedObservations (list):
@@ -5350,7 +5354,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
 
+            '''
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            '''
+            cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
             total_observation_time = 0
             for obsId in selectedObservations:
@@ -5591,7 +5598,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 
                 parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
                 
+                '''
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+                '''
+
+                cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+                
                 cursor.execute("SELECT distinct code, modifiers FROM events WHERE subject in ({})".format(",".join("?" * len(plot_parameters["selected subjects"]))),
                                (plot_parameters["selected subjects"]))
                 
@@ -5638,9 +5650,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             for obsId in selectedObservations:
-                
+
+                '''
                 cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
-                
+                '''
+                cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
+
                 obs_length = self.observationTotalMediaLength(obsId)
                 if obs_length == -1:
                     obs_length = 0
@@ -6205,7 +6220,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
+        '''
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+        '''
+        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
         o = {}
 
@@ -6392,8 +6410,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         totalMediaLength = int(totalMediaLength)
-        
+
+        '''
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+        '''
+        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+
+
 
         for obsId in selectedObservations:
 
@@ -7297,7 +7320,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not exportDir:
             return
 
+        '''
         cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+        '''
+        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
         flagUnpairedEventFound = False
 
@@ -7523,7 +7549,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     break
             '''
 
+            '''
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            '''
+            cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
             for subject in plot_parameters["selected subjects"]:
 
@@ -7755,7 +7784,12 @@ item []:
 
             flagUnpairedEventFound = False
             totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)
+            '''
             cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            '''
+            cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            
+            
             cursor.execute("SELECT count(distinct subject) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(plot_parameters["selected subjects"])))
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
