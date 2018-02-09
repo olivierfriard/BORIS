@@ -382,6 +382,9 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
                     extension=extension,
                     frame_resize=frame_resize
                     )
+                    
+    print(ffmpeg_command)
+                    
     logging.debug("ffmpeg command: {}".format(ffmpeg_command))
 
     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)

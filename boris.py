@@ -4590,7 +4590,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return self.pj[ETHOGRAM][idx][TYPE]
         return None
 
-
+    '''
     def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
         """
         populate an memory sqlite database with events from selectedObservations,
@@ -4605,14 +4605,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             database cursor:
 
         """
-        db = sqlite3.connect(":memory:")
+        db = sqlite3.connect(":memory:", )
  
-        '''
-        if os.path.isfile("/tmp/boris_debug.sqlite"):
-            os.system("rm /tmp/boris_debug.sqlite")
-        db = sqlite3.connect("/tmp/boris_debug.sqlite")
-        '''
-
         db.row_factory = sqlite3.Row
         cursor = db.cursor()
         cursor.execute("""CREATE TABLE events (observation TEXT,
@@ -4648,6 +4642,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         db.commit()
         return cursor
+    '''
 
 
     def extract_observed_behaviors(self, selected_observations, selectedSubjects):
