@@ -52,7 +52,7 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
                                  if POINT in pj[ETHOGRAM][x][TYPE].upper()
                                     and pj[ETHOGRAM][x]["code"] in selectedBehaviors]
     
-    db = sqlite3.connect(":memory:")
+    db = sqlite3.connect(":memory:", isolation_level=None)
 
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
