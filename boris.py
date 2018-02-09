@@ -5272,17 +5272,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
 
         if out:
-            '''
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle("Check state events")
-            self.results.ptText.clear()
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.setWindowModality(Qt.ApplicationModal)
-            self.results.show()
-            '''
 
-            
             d = QDialog()
             d.setWindowTitle("Check selected observations")
             hbox = QVBoxLayout()
@@ -5307,7 +5297,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             d.setWindowModality(Qt.ApplicationModal)
             d.resize(500, 400)
             d.exec_()
-            
+
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -5349,9 +5339,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                       by_category=(mode == "by_category"))
 
         if mode == "synthetic":
-            '''
-            QMessageBox.warning(self, programName, "This function is experimental.<br>Please check results carefully and report any bug")            
-            '''
             plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                                   maxTime=max_obs_length,
                                                                   flagShowExcludeBehaviorsWoEvents=False,
@@ -5535,21 +5522,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                      "Microsoft Excel Spreadsheet (*.xlsx)",
                      "Microsoft Excel Workbook (*.xlsx)",
                      "HTML (*.html)",
-                     #"Pandas dataframe (*.df)",
                      "Legacy Microsoft Excel Spreadsheet (*.xls)")
 
-                #formats = ["tsv", "csv", "od spreadsheet", "od workbook", "xlsx spreadsheet", "xlsx workbook", "html", "pd dataframe", "xls legacy"]
                 formats = ["tsv", "csv", "od spreadsheet", "od workbook", "xlsx spreadsheet", "xlsx workbook", "html", "xls legacy"]
 
                 item, ok = QInputDialog.getItem(self, "Time budget analysis format", "Available formats", items, 0, False)
                 if not ok:
                     return
-                    
+
                 outputFormat = formats[items.index(item)]
                 extension = re.sub(".* \(\*\.", "", item)[:-1]
 
             flagWorkBook = False
-            
+
             if mode in ["by_behavior", "by_category"] and "workbook" in outputFormat:
                 workbook = tablib.Databook()
                 flagWorkBook = True
@@ -5637,7 +5622,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     modif_header.append(modif)
                                     param_header.append(param[1])
     
-                print(len(subj_header))
                 data_report.append(subj_header)
                 data_report.append(behav_header)
                 if plot_parameters["include modifiers"]:
@@ -5706,6 +5690,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 pass
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time,max_time))
+                print("commit")
                 cursor.execute("commit")
 
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))

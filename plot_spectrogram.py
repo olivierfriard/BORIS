@@ -140,6 +140,16 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
 
 
     def get_wav_info(wav_file):
+        """
+        fetch information from wav file
+        
+        Args:
+            wav_file (str): path of wav file
+            
+        Returns:
+            : info on sound
+           int: frame_rate
+        """
 
         wav = wave.open(wav_file, "r")
         frames = wav.readframes(-1)
