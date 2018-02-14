@@ -45,7 +45,7 @@ import datetime
 import multiprocessing
 import socket
 import copy
-import irr_sql
+import irr
 import db_functions
 
 
@@ -99,7 +99,7 @@ import plot_events
 import project_functions
 import plot_data_module
 
-__version__ = "6.0.6"
+__version__ = "6.1"
 __version_date__ = "2018-02-09"
 
 # BITMAP_EXT = "jpg"
@@ -913,25 +913,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
+
     def irr_cohen_kappa(self):
         """
-        calculate the Inter-rater Reliability index - Cohen's Kappa of 2 observations
+        calculate the Inter-Rater Reliability index - Cohen's Kappa of 2 observations
         https://en.wikipedia.org/wiki/Cohen%27s_kappa
         """
 
         # ask user observations to analyze
-        result, selectedObservations = self.selectObservations(MULTIPLE)
-        if not selectedObservations:
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
             return
-        if len(selectedObservations) != 2:
-            QMessageBox.information(self, programName, "Select 2 observations for IRR analysis")
+        if len(selected_observations) < 2:
+            QMessageBox.information(self, programName, "Select almost 2 observations for IRR analysis")
             return
 
-        obsid1, obsid2 = selectedObservations
 
         # check if state events are paired
         tot_out = ""
-        for obsId in [obsid1, obsid2]:
+        for obsId in selected_observations:
             r, msg = self.check_state_events_obs(obsId)
             if not r:
                 tot_out += "Observation: <strong>{}</strong><br>{}<br>".format(obsId, msg)
@@ -944,8 +944,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.show()
             return
 
-
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0,
+        plot_parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                              maxTime=0,
                                                               flagShowIncludeModifiers=True,
                                                               flagShowExcludeBehaviorsWoEvents=False)
 
@@ -958,17 +958,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         interval = float2decimal(i)
 
+        cursor = db_functions.load_aggregated_events_in_db(self.pj,
+                                                           plot_parameters["selected subjects"],
+                                                           selected_observations,
+                                                           plot_parameters["selected behaviors"]).cursor()
 
-        cursor = db_functions.load_aggregated_events_in_db(self.pj, plot_parameters["selected subjects"],
-                                                           selectedObservations,
-                                                           plot_parameters["selected behaviors"])
-        
-        out = irr_sql.cohen_kappa(cursor,
-                obsid1, obsid2,
-                interval,
-                plot_parameters["selected subjects"],
-                plot_parameters["include modifiers"]
-                )
+        out = ""
+        mem_done = []
+        for obs_id1 in selected_observations:
+            for obs_id2 in selected_observations:
+                if obs_id1 == obs_id2:
+                    continue
+                if set([obs_id1, obs_id2]) not in mem_done:
+                    out += irr.cohen_kappa(cursor,
+                                           obs_id1, obs_id2,
+                                           interval,
+                                           plot_parameters["selected subjects"],
+                                           plot_parameters["include modifiers"])
+                    out += "\n=============\n"
+                    mem_done.append(set([obs_id1, obs_id2]))
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa analysis results")
@@ -1139,6 +1147,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     break
                 received += data
             s.close
+
 
     def recode_resize_video(self):
         """
@@ -1909,7 +1918,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def check_state_events_obs(self, obsId):
         """
         check state events
-        if no current observation check all observations
         check if number is odd
         
         Args:
@@ -6213,9 +6221,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        '''
-        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-        '''
         cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
         o = {}
@@ -6527,6 +6532,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(self, programName, ret["msg"])
 
 
+    '''
     def convert_time_to_decimal(self, pj):
         """
         convert time from float to decimal
@@ -6539,8 +6545,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
 
         return pj
+    '''
 
-
+    '''
     def open_project_json(self, projectFileName):
         """
         open project json
@@ -6616,7 +6623,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         "Choose a new file name for saving it.").format(project_format_version))
             projectFileName = ''
 
-        '''
+        """
         if not 'project_media_file_info' in self.pj:
             self.pj['project_media_file_info'] = {}
             self.projectChanged = True
@@ -6627,7 +6634,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
                         self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
                         self.projectChanged = True
-        '''
+        """
 
         for obs in self.pj[OBSERVATIONS]:
             if not "time offset second player" in self.pj[OBSERVATIONS][obs]:
@@ -6717,7 +6724,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path: 0}
 
 
-        '''
+        """
             try:
                 if (not "media_info" in self.pj[OBSERVATIONS][obs]
                     and len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
@@ -6737,11 +6744,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             except:
                 pass
-        '''
+        """
         if project_updated:
             QMessageBox.information(self, programName, "The media files information was updated to the new project format.")
-
-
 
 
         # check program version
@@ -6754,6 +6759,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectFileName = projectFileName
         self.project = True
         self.menu_options()
+    '''
+    
 
 
     def open_project_activated(self):
@@ -6779,7 +6786,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
-            self.open_project_json(fileName)
+            project_path, project_changed, pj, msg = project_functions.open_project_json(fileName)
+            
+            if "error" in pj:
+                logging.debug(pj["error"])
+                QMessageBox.critical(self, programName, pj["error"])
+            else:
+                if msg:
+                    QMessageBox.information(self, programName, msg)
+
+                self.pj = copy.deepcopy(pj)
+                memProjectChanged = project_changed
+                self.initialize_new_project()
+                self.projectChanged = True
+                self.projectChanged = memProjectChanged
+                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+                self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+                self.projectFileName = project_path
+                self.project = True
+                self.menu_options()
+
 
 
     def initialize_new_project(self):
@@ -7453,7 +7479,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        "Legacy Microsoft Excel Spreadsheet XLS (*.xls);;"
                        "HTML (*.html);;"
                        "SDIS (*.sds);;"
-                       "SQL dump file file (*.sql);;"
+                       "SQL dump file (*.sql);;"
                        "All files (*)")
         while True:
             if QT_VERSION_STR[0] == "4":
@@ -7476,15 +7502,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
 
         if not outputFormat:
-            QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)),
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        if outputFormat == "sql":
+        if outputFormat != "sql":
+            
+            '''
             out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, media_file TEXT, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + "\n"
             out += "BEGIN TRANSACTION;\n"
             template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");\n"""
+            '''
 
-        else:
             data = tablib.Dataset()
             data.title = "Aggregated events"
             header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
@@ -7531,7 +7560,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             logging.info("no media_info tag for {} in observation {}" .format(mediaFile, obsId))
                 except:
                     logging.critical(sys.exc_info()[1])
-                    QMessageBox.critical(None, programName, str(sys.exc_info()[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    QMessageBox.critical(None, programName, str(sys.exc_info()[1]),
+                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))
             logging.debug("media length for {0}: {1}".format(obsId, total_length))
@@ -7542,10 +7572,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     break
             '''
 
-            '''
-            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            '''
-            cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            if outputFormat == "sql":
+                conn = db_functions.load_aggregated_events_in_db(self.pj,
+                                                                 plot_parameters["selected subjects"],
+                                                                 selectedObservations,
+                                                                 plot_parameters["selected behaviors"])
+
+                try:
+                    with open(fileName, "w") as f:
+                        for line in conn.iterdump():
+                            f.write("{}\n".format(line))
+                except:
+                    errorMsg = sys.exc_info()[1]
+                    logging.critical(errorMsg)
+                    QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
+
+
+            cursor = db_functions.load_events_in_db(self.pj,
+                                                    plot_parameters["selected subjects"],
+                                                    selectedObservations,
+                                                    plot_parameters["selected behaviors"])
 
             for subject in plot_parameters["selected subjects"]:
 
@@ -7572,6 +7619,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if POINT in self.eventType(behavior).upper():
 
+                            '''
                             if outputFormat == "sql":
                                 out += template.format(observation=obsId,
                                                     date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
@@ -7586,7 +7634,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     stop=0,
                                                     comment_start=row["comment"],
                                                     comment_stop="")
-                            else:
+                            '''
+                            if outputFormat != "sql":
                                 row_data = []
                                 row_data.extend([obsId,
                                             self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
@@ -7617,6 +7666,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
+                                '''
                                 if outputFormat == "sql":
                                     out += template.format(observation=obsId,
                                                         date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
@@ -7631,8 +7681,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                         stop="{0:.3f}".format(rows[idx + 1]["occurence"]),
                                                         comment_start=row["comment"],
                                                         comment_stop=rows[idx + 1]["comment"])
+                                '''
 
-                                else:
+                                if outputFormat != "sql":
                                     row_data = []
 
                                     row_data.extend([obsId,
@@ -7662,6 +7713,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                     data.append(row_data)
 
+        '''
         if outputFormat == "sql":
             out += "END TRANSACTION;\n"
             try:
@@ -7671,8 +7723,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-        elif outputFormat == "sds": # SDIS format
+        '''
+        if outputFormat == "sds": # SDIS format
 
             out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
 
@@ -7741,12 +7793,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False,
+                                                              flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as TextGrid", os.path.expanduser('~'), options=QFileDialog(self).ShowDirsOnly)
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as TextGrid", os.path.expanduser('~'),
+                                                           options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
             return
 
@@ -7777,12 +7831,9 @@ item []:
 
             flagUnpairedEventFound = False
             totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)
-            '''
-            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            '''
+
             cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            
-            
+
             cursor.execute("SELECT count(distinct subject) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(plot_parameters["selected subjects"])))
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
@@ -7855,7 +7906,6 @@ item []:
 
                 # add info
                 out = out.format(subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
-
 
             try:
                 with open("{exportDir}{sep}{obsId}.textGrid".format(exportDir=exportDir, sep=os.sep, obsId=obsId), "w") as f:
@@ -7971,6 +8021,7 @@ item []:
                     self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
                         format(filePath, self.convertTime(duration), fps, hasVideo, hasAudio))
                 self.results.show()
+
 
     def switch_playing_mode(self):
         """
@@ -10220,7 +10271,6 @@ item []:
                                          "The limit on worksheet name length is 31 characters").format(obsId),
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-
             for row in rows:
                 data.append(complete(row, maxLen))
 
@@ -10253,6 +10303,7 @@ item []:
             del data
 
         self.statusbar.showMessage("Events exported", 0)
+
 
     def create_behavioral_strings(self, obsId, subj, plot_parameters):
         """
@@ -10576,7 +10627,7 @@ item []:
                 return
 
             # transform time to decimal
-            fromProject = self.convert_time_to_decimal(fromProject)
+            fromProject = convert_time_to_decimal(fromProject)  # function in utilities.py
 
             dbc = dialog.ChooseObservationsToImport("Choose the observations to import:", sorted(list(fromProject[OBSERVATIONS].keys())))
 
@@ -10955,9 +11006,12 @@ if __name__ == "__main__":
         sys.exit(2)
 
     # check FFmpeg
-    ffmpeg_bin = check_ffmpeg_path()
-    if not ffmpeg_bin:
+    ret, msg = check_ffmpeg_path()
+    if not ret:
+        QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(3)
+    else:
+        ffmpeg_bin = msg
 
     # check matplotlib
     if not FLAG_MATPLOTLIB_INSTALLED:
@@ -10993,7 +11047,28 @@ if __name__ == "__main__":
         observation_to_open = args[1]
 
     if project_to_open:
-        window.open_project_json(os.path.abspath(project_to_open))
+
+        project_path, project_changed, pj, msg = project_functions.open_project_json(project_to_open)
+
+        if "error" in pj:
+            logging.debug(pj["error"])
+            QMessageBox.critical(window, programName, pj["error"])
+        else:
+            if msg:
+                QMessageBox.information(window, programName, msg)
+
+            window.pj = copy.deepcopy(pj)
+            memProjectChanged = project_changed
+            window.initialize_new_project()
+            window.projectChanged = True
+            window.projectChanged = memProjectChanged
+            window.load_behaviors_in_twEthogram([window.pj[ETHOGRAM][x]["code"] for x in window.pj[ETHOGRAM]])
+            window.load_subjects_in_twSubjects([window.pj[SUBJECTS][x]["name"] for x in window.pj[SUBJECTS]])
+            window.projectFileName = project_path
+            window.project = True
+            window.menu_options()
+
+        #window.open_project_json(os.path.abspath(project_to_open))
 
     if options.project_info:
         if not project_to_open:

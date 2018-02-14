@@ -47,6 +47,26 @@ import numpy as np
 from config import *
 
 
+def convert_time_to_decimal(pj):
+    """
+    convert time from float to decimal
+    
+    Args:
+        pj (dict): BORIS project
+        
+    Returns:
+        dict: BORIS project
+    """
+
+    for obsId in pj[OBSERVATIONS]:
+        if "time offset" in pj[OBSERVATIONS][obsId]:
+            pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
+        for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
+            pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
+
+    return pj
+
+
 def file_content_md5(file_name):
     hash_md5 = hashlib.md5()
     with open(file_name, "rb") as f:
@@ -588,6 +608,13 @@ def eol2space(s):
 def test_ffmpeg_path(FFmpegPath):
     """
     test if ffmpeg has valid path
+    
+    Args:
+        FFmpegPath (str): ffmepg path to test
+        
+    Returns:
+        bool: True: path found
+        str: message
     """
 
     out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
@@ -640,13 +667,18 @@ def playWithVLC(fileName):
 
 def check_ffmpeg_path():
     """
-    check ffmpeg path
+    check for ffmpeg path
+    
+    Returns:
+        bool: True if ffmpeg path found else False
+        str: if bool True returns ffmpegpath else returns error message
     """
 
     if os.path.isfile(sys.path[0]):  # pyinstaller
         syspath = os.path.dirname(sys.path[0])
     else:
         syspath = sys.path[0]
+
 
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
@@ -655,24 +687,25 @@ def check_ffmpeg_path():
             ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
-                return ffmpeg_bin
+                return True, ffmpeg_bin
 
         # check if ffmpeg in same directory than boris.py
         if os.path.exists(syspath + "/ffmpeg"):
             ffmpeg_bin = syspath + "/ffmpeg"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
-                return ffmpeg_bin
+                return True, ffmpeg_bin
 
         # check for ffmpeg in system path
         ffmpeg_bin = "ffmpeg"
         r, msg = test_ffmpeg_path(ffmpeg_bin)
         if r:
-            return ffmpeg_bin
+            return True, ffmpeg_bin
         else:
             logging.critical("FFmpeg is not available")
-            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return False
+            #QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return False, "FFmpeg is not available"
+
 
     if sys.platform.startswith("win"):
 
@@ -681,19 +714,19 @@ def check_ffmpeg_path():
             ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "\\FFmpeg\\ffmpeg.exe"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
-                return ffmpeg_bin
+                return True, ffmpeg_bin
 
         if os.path.exists(syspath + "\\ffmpeg.exe"):
             ffmpeg_bin = syspath + "\\ffmpeg.exe"
             r, msg = test_ffmpeg_path(ffmpeg_bin)
             if r:
-                return ffmpeg_bin
+                return True, ffmpeg_bin
             else:
                 logging.critical("FFmpeg is not available")
-                QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return False
+                # QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return False, "FFmpeg is not available"
 
-    return False
+    return False, "FFmpeg is not available"
 
 
 def accurate_media_analysis(ffmpeg_bin, fileName):

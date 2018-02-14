@@ -103,7 +103,7 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
         selectedBehaviors (list):
         
     Returns:
-        database cursor:
+        database connector:
 
     """
 
@@ -173,10 +173,14 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                                                             (obsId, subject, behavior, STATE, row["modifiers"].strip(), row["occurence"], rows[idx + 1]["occurence"]))
 
     db.commit()
-    return cursor2
+    return db
 
 
 if __name__ == '__main__':
 
     import test_sample_project    
-    load_aggregated_events_in_db(test_sample_project.p, [], [], [])
+    db = load_aggregated_events_in_db(test_sample_project.p, [], [], [])
+    print(db)
+
+    for line in db.iterdump():
+        print('%s\n' % line)
