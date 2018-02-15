@@ -67,7 +67,7 @@ def open_project_json(projectFileName):
     msg = ""
 
     if not os.path.isfile(projectFileName):
-        return projectFileName, projectChanged, {"error": "File not found"}, msg
+        return projectFileName, projectChanged, {"error": "File {} not found".format(projectFileName)}, msg
 
     s = open(projectFileName, "r").read()
 

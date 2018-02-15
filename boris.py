@@ -11075,22 +11075,7 @@ if __name__ == "__main__":
         else:
             if msg:
                 QMessageBox.information(window, programName, msg)
-                
             window.load_project(project_path, project_changed, pj)
-
-            '''window.pj = copy.deepcopy(pj)
-            memProjectChanged = project_changed
-            window.initialize_new_project()
-            window.projectChanged = True
-            window.projectChanged = memProjectChanged
-            window.load_behaviors_in_twEthogram([window.pj[ETHOGRAM][x]["code"] for x in window.pj[ETHOGRAM]])
-            window.load_subjects_in_twSubjects([window.pj[SUBJECTS][x]["name"] for x in window.pj[SUBJECTS]])
-            window.projectFileName = project_path
-            window.project = True
-            window.menu_options()
-            '''
-
-        #window.open_project_json(os.path.abspath(project_to_open))
 
     if options.project_info:
         if not project_to_open:
