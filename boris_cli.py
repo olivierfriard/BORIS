@@ -74,16 +74,21 @@ if args.observation_id:
 
 if args.project_info:
     if pj:
-
         print("Project name: {}".format(pj[PROJECT_NAME]))
         print("Project date: {}".format(pj[PROJECT_DATE]))
         print("Project description: {}".format(pj[PROJECT_DESCRIPTION]))
+        print()
 
         if not observations_id_list:
+            print("Ethogram\n========")
             print("Number of behaviors in ethogram: {}".format(len(pj[ETHOGRAM])))
             print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))
+            print()
             print("Number of subjects: {}".format(len(pj[SUBJECTS])))
-            print("Subjects: {}".format(",".join([pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])])))
+            for idx in utilities.sorted_keys(pj[SUBJECTS]):
+                print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
+            #print("Subjects: {}".format(",".join([pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])])))
+            print()
             print("Number of observations: {}".format(len(pj[OBSERVATIONS])))
             print("List of observations:")
             for observation_id in sorted(pj[OBSERVATIONS].keys()):

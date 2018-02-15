@@ -45,9 +45,7 @@ import datetime
 import multiprocessing
 import socket
 import copy
-import irr
-import db_functions
-
+import pathlib
 
 try:
     from PyQt5.QtCore import *
@@ -99,6 +97,9 @@ import plot_events
 import project_functions
 import plot_data_module
 import measurement_widget
+import irr
+import db_functions
+
 
 __version__ = "6.1"
 __version_date__ = "2018-02-09"
@@ -423,6 +424,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     cleaningThread = TempDirCleanerThread()
 
     bcm_dict = {}
+    
+    recent_projects = []
 
 
     def __init__(self, availablePlayers, ffmpeg_bin, parent=None):
@@ -768,20 +771,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Tools
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
-        
-        # TODO: remove when behaviors coding map ready
-        #self.action_create_behaviors_coding_map.setVisible(False)
-        
 
         self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
         self.actionShow_data_files.triggered.connect(self.show_data_files)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
-        
-        # TODO: remove when behav coding map ready
-        #self.actionBehaviors_coding_map.setVisible(False)
-        
-        
+
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
         
@@ -989,7 +984,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.results.ptText.appendHtml(out.replace("\n", "<br>"))
         self.results.show()
 
-        return
 
     # TODO: externalize function
     def view_behavior(self):
@@ -2456,7 +2450,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playMode == FFMPEG:
 
-                print("self.detachFrameViewer", self.detachFrameViewer)
                 if self.detachFrameViewer:
                     if hasattr(self, "measurement_w") and self.measurement_w.isVisible():
                         QMessageBox.warning(self, programName, "The frame viewer can not be detached when geometric measurements are active")
@@ -2741,9 +2734,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
 
         # redraw measurements from previous frames
-        print("self.measurement_w", self.measurement_w)
+
         if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
-        #if self.measurement_w:
             if self.measurement_w.cbPersistentMeasurements.isChecked():
                 for frame in self.measurement_w.draw_mem:
 
@@ -2844,17 +2836,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def close_measurement_widget(self):
         self.measurement_w.close()
-        #self.measurement_w = None
-        #del self.measurement_w
-        #self.measurement_w.setParent(None)
-
-        '''
-        import sip
-        sip.delete(self.measurement_w)
-        '''
-        #del self.measurement_w 
-        
-        #self.measurement_w.deleteLater()
 
 
     def clear_measurements(self):
@@ -4375,6 +4356,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_options()
 
 
+    def set_recent_projects_menu(self):
+        """
+        set the recent projects submenu
+        """
+        self.menuRecent_projects.clear()
+        for project_file_path in self.recent_projects:
+            action = QAction(self, visible=False, triggered=self.open_project_activated)
+            action.setText(project_file_path)
+            action.setVisible(True)
+            self.menuRecent_projects.addAction(action)
+
 
     def readConfigFile(self):
         """
@@ -4383,7 +4375,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("read config file")
 
-        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
 
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
@@ -4570,6 +4562,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                           " Preferences (File > Preferences)"),
                                                             [NO, YES]) == YES)
 
+        # recent projects
+        logging.info("read recent projects")
+        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
+        if os.path.isfile(iniFilePath):
+            settings = QSettings(iniFilePath, QSettings.IniFormat)
+            self.recent_projects = settings.value("recent_projects").split("|||")
+            self.set_recent_projects_menu()
+
+
+
     def saveConfigFile(self, lastCheckForNewVersion=0):
         """
         save config file
@@ -4577,7 +4579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("save config file")
 
-        iniFilePath = os.path.expanduser("~") + os.sep + ".boris"
+        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
 
         settings = QSettings(iniFilePath, QSettings.IniFormat)
         settings.setValue("MainWindow/Size", self.size())
@@ -4613,6 +4615,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # plot colors
         settings.setValue("plot_colors", "|".join(self.plot_colors))
 
+        # recent projects
+        logging.info("save recent projects")
+        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
+        settings = QSettings(iniFilePath, QSettings.IniFormat)
+        settings.setValue("recent_projects", "|||".join(self.recent_projects))
 
 
     def edit_project_activated(self):
@@ -6808,14 +6815,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.project = True
         self.menu_options()
     '''
-    
+    def load_project(self, project_path, project_changed, pj):
+        """
+        load specified project
+        """
+        self.pj = copy.deepcopy(pj)
+        memProjectChanged = project_changed
+        self.initialize_new_project()
+        self.projectChanged = True
+        self.projectChanged = memProjectChanged
+        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+        self.projectFileName = project_path
+        self.project = True
+        if self.projectFileName not in self.recent_projects:
+            self.recent_projects = [self.projectFileName] + self.recent_projects
+            self.recent_projects = self.recent_projects[:10]
+            self.set_recent_projects_menu()
+        self.menu_options()
+
 
 
     def open_project_activated(self):
+        """
+        open a project
+        triggered by Open project menu and recent projects submenu
+        """
+
+        action = self.sender()
 
         # check if current observation
         if self.observationId:
-            if dialog.MessageDialog(programName, "There is a current observation. What do you want to do?", ["Close observation", "Continue observation"]) == "Close observation":
+            if dialog.MessageDialog(programName, "There is a current observation. What do you want to do?",
+                                    ["Close observation", "Continue observation"]) == "Close observation":
                 self.close_observation()
             else:
                 return
@@ -6830,8 +6862,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
-        fn = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
+        if action.text() == "Open project":
+            fn = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
+            fileName = fn[0] if type(fn) is tuple else fn
+
+        else: # recent project
+            fileName = action.text()
 
         if fileName:
             project_path, project_changed, pj, msg = project_functions.open_project_json(fileName)
@@ -6843,17 +6879,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if msg:
                     QMessageBox.information(self, programName, msg)
 
-                self.pj = copy.deepcopy(pj)
-                memProjectChanged = project_changed
-                self.initialize_new_project()
-                self.projectChanged = True
-                self.projectChanged = memProjectChanged
-                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-                self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-                self.projectFileName = project_path
-                self.project = True
-                self.menu_options()
-
+                self.load_project(project_path, project_changed, pj)
 
 
     def initialize_new_project(self):
@@ -8675,7 +8701,6 @@ item []:
             self.bcm_dict[coding_map_name].resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
             self.bcm_dict[coding_map_name].setWindowFlags(Qt.WindowStaysOnTopHint)
             self.bcm_dict[coding_map_name].show()
-
 
 
     def actionAbout_activated(self):
@@ -11050,8 +11075,10 @@ if __name__ == "__main__":
         else:
             if msg:
                 QMessageBox.information(window, programName, msg)
+                
+            window.load_project(project_path, project_changed, pj)
 
-            window.pj = copy.deepcopy(pj)
+            '''window.pj = copy.deepcopy(pj)
             memProjectChanged = project_changed
             window.initialize_new_project()
             window.projectChanged = True
@@ -11061,6 +11088,7 @@ if __name__ == "__main__":
             window.projectFileName = project_path
             window.project = True
             window.menu_options()
+            '''
 
         #window.open_project_json(os.path.abspath(project_to_open))
 

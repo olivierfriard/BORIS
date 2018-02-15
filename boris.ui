@@ -120,8 +120,15 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuRecent_projects">
+     <property name="title">
+      <string>Recent projects</string>
+     </property>
+     <addaction name="separator"/>
+    </widget>
     <addaction name="actionNew_project"/>
     <addaction name="actionOpen_project"/>
+    <addaction name="menuRecent_projects"/>
     <addaction name="actionEdit_project"/>
     <addaction name="actionSave_project"/>
     <addaction name="actionSave_project_as"/>
