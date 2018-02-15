@@ -6587,234 +6587,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(self, programName, ret["msg"])
 
 
-    '''
-    def convert_time_to_decimal(self, pj):
-        """
-        convert time from float to decimal
-        """
-
-        for obsId in pj[OBSERVATIONS]:
-            if "time offset" in pj[OBSERVATIONS][obsId]:
-                pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
-            for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
-                pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
-
-        return pj
-    '''
-
-    '''
-    def open_project_json(self, projectFileName):
-        """
-        open project json
-        """
-        logging.debug("open project: {0}".format(projectFileName))
-
-        if not os.path.isfile(projectFileName):
-            QMessageBox.warning(self, programName, "File not found")
-            return
-
-        s = open(projectFileName, "r").read()
-
-        try:
-            self.pj = json.loads(s)
-        except:
-            QMessageBox.critical(self, programName, "This project file seems corrupted")
-            return
-
-        self.projectChanged = False
-
-        # transform time to decimal
-        self.pj = self.convert_time_to_decimal(self.pj)
-
-        # add coding_map key to old project files
-        if not "coding_map" in self.pj:
-            self.pj["coding_map"] = {}
-            self.projectChanged = True
-
-        # add subject description
-        if "project_format_version" in self.pj:
-            for idx in [x for x in self.pj[SUBJECTS]]:
-                if not "description" in self.pj[SUBJECTS][idx]:
-                    self.pj[SUBJECTS][idx]["description"] = ""
-                    self.projectChanged = True
-
-        # check if project file version is newer than current BORIS project file version
-        if "project_format_version" in self.pj and Decimal(self.pj["project_format_version"]) > Decimal(project_format_version):
-            QMessageBox.critical(self, programName, ("This project file was created with a more recent version of BORIS.\n"
-                                                     "You must update BORIS to open it"))
-            return
-
-
-        # check if old version  v. 0 *.obs
-        if "project_format_version" not in self.pj:
-
-            # convert VIDEO, AUDIO -> MEDIA
-            self.pj['project_format_version'] = project_format_version
-            self.projectChanged = True
-
-            for obs in [x for x in self.pj[OBSERVATIONS]]:
-
-                # remove 'replace audio' key
-                if "replace audio" in self.pj[OBSERVATIONS][obs]:
-                    del self.pj[OBSERVATIONS][obs]['replace audio']
-
-                if self.pj[OBSERVATIONS][obs][TYPE] in ['VIDEO', 'AUDIO']:
-                    self.pj[OBSERVATIONS][obs][TYPE] = MEDIA
-
-                # convert old media list in new one
-                if len(self.pj[OBSERVATIONS][obs][FILE]):
-                    d1 = {PLAYER1: [self.pj[OBSERVATIONS][obs][FILE][0]]}
-
-                if len(self.pj[OBSERVATIONS][obs][FILE]) == 2:
-                    d1[PLAYER2] = [self.pj[OBSERVATIONS][obs][FILE][1]]
-
-                self.pj[OBSERVATIONS][obs][FILE] = d1
-
-            # convert VIDEO, AUDIO -> MEDIA
-            for idx in [x for x in self.pj[SUBJECTS]]:
-                key, name = self.pj[SUBJECTS][idx]
-                self.pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
-            QMessageBox.information(self, programName, ("The project file was converted to the new format (v. {}) in use with your version of BORIS.<br>"
-                                                        "Choose a new file name for saving it.").format(project_format_version))
-            projectFileName = ''
-
-        """
-        if not 'project_media_file_info' in self.pj:
-            self.pj['project_media_file_info'] = {}
-            self.projectChanged = True
-
-        if not 'project_media_file_info' in self.pj:
-            for obs in self.pj[OBSERVATIONS]:
-                if 'media_file_info' in self.pj[OBSERVATIONS][obs]:
-                    for h in self.pj[OBSERVATIONS][obs]['media_file_info']:
-                        self.pj['project_media_file_info'][h] = self.pj[OBSERVATIONS][obs]['media_file_info'][h]
-                        self.projectChanged = True
-        """
-
-        for obs in self.pj[OBSERVATIONS]:
-            if not "time offset second player" in self.pj[OBSERVATIONS][obs]:
-                self.pj[OBSERVATIONS][obs]["time offset second player"] = Decimal("0.0")
-                self.projectChanged = True
-
-        # update modifiers to JSON format
-
-        project_lowerthan4 = False
-
-        logging.debug("project_format_version: {}".format(versiontuple(self.pj["project_format_version"])))
-
-        if "project_format_version" in self.pj and versiontuple(self.pj["project_format_version"]) < versiontuple("4.0"):
-
-            for idx in self.pj[ETHOGRAM]:
-                if self.pj[ETHOGRAM][idx]["modifiers"]:
-                    if isinstance(self.pj[ETHOGRAM][idx]["modifiers"], str):
-                        project_lowerthan4 = True
-                        modif_set_list = self.pj[ETHOGRAM][idx]["modifiers"].split("|")
-                        modif_set_dict = {}
-                        for modif_set in modif_set_list:
-                            modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": modif_set.split(",")}
-                        self.pj[ETHOGRAM][idx]["modifiers"] = dict(modif_set_dict)
-                else:
-                    self.pj[ETHOGRAM][idx]["modifiers"] = {}
-
-            if not project_lowerthan4:
-                QMessageBox.information(self, programName, "The project version was updated from {} to {}".format(self.pj["project_format_version"], project_format_version))
-                self.pj["project_format_version"] = project_format_version
-                self.projectChanged = True
-
-
-        # add category key if not found
-        for idx in self.pj[ETHOGRAM]:
-            if "category" not in self.pj[ETHOGRAM][idx]:
-                self.pj[ETHOGRAM][idx]["category"] = ""
-
-        logging.debug("project_lowerthan4: {}".format(project_lowerthan4))
-
-        if project_lowerthan4:
-
-            from shutil import copyfile
-            copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
-
-            QMessageBox.information(self, programName, ("The project was updated to the current project version ({project_format_version}).\n\n"
-                                                        "The old file project was saved as {project_file_name}").format(project_format_version=project_format_version,
-                                                                                                                         project_file_name=projectFileName.replace(".boris", "_old_version.boris")))
-
-
-        # if one file is present in player #1 -> set "media_info" key with value of media_file_info
-        project_updated = False
-
-        for obs in self.pj[OBSERVATIONS]:
-            if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and "media_info" not in self.pj[OBSERVATIONS][obs]:
-                self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
-                for player in [PLAYER1, PLAYER2]:
-                    # fix bug Anne Maijer 2017-07-17
-                    if self.pj[OBSERVATIONS][obs]["file"] == []:
-                        self.pj[OBSERVATIONS][obs]["file"] = {"1": [], "2": []}
-
-                    for media_file_path in self.pj[OBSERVATIONS][obs]["file"][player]:
-                        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_file_path)
-
-                        if videoDuration:
-                            self.pj[OBSERVATIONS][obs]['media_info']["length"][media_file_path] = videoDuration
-                            self.pj[OBSERVATIONS][obs]['media_info']["fps"][media_file_path] = fps
-                            self.pj[OBSERVATIONS][obs]['media_info']["hasVideo"][media_file_path] = hasVideo
-                            self.pj[OBSERVATIONS][obs]['media_info']["hasAudio"][media_file_path] = hasAudio
-                            project_updated, self.projectChanged = True, True
-                        else:  # file path not found
-                            if ("media_file_info" in self.pj[OBSERVATIONS][obs]
-                                and len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
-                                and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
-                                and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
-                                    media_md5_key = list(self.pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]
-                                    # duration
-                                    self.pj[OBSERVATIONS][obs]["media_info"] = {"length": {media_file_path:
-                                             self.pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"]/1000}}
-                                    project_updated, self.projectChanged = True, True
-
-                                    # FPS
-                                    if "nframe" in self.pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
-                                        self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path:
-                                             self.pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['nframe']
-                                             / (self.pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['video_length']/1000)}
-                                    else:
-                                        self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path: 0}
-
-
-        """
-            try:
-                if (not "media_info" in self.pj[OBSERVATIONS][obs]
-                    and len(self.pj[OBSERVATIONS][obs]["media_file_info"]) == 1
-                    and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
-                    and len(self.pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
-                        self.pj[OBSERVATIONS][obs]['media_info'] = {"length": {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
-                               self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000}}
-                        # FPS
-                        if "nframe" in self.pj[OBSERVATIONS][obs]["media_file_info"][list(self.pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]]:
-                            self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]:
-                                self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['nframe'] / ( self.pj[OBSERVATIONS][obs]['media_file_info'][list(self.pj[OBSERVATIONS][obs]['media_file_info'].keys())[0]]['video_length']/1000)
-                                 }
-                        else:
-                            self.pj[OBSERVATIONS][obs]['media_info']['fps'] = {self.pj[OBSERVATIONS][obs]['file'][PLAYER1][0]: 0}
-                        self.projectChanged = True
-
-
-            except:
-                pass
-        """
-        if project_updated:
-            QMessageBox.information(self, programName, "The media files information was updated to the new project format.")
-
-
-        # check program version
-        memProjectChanged = self.projectChanged
-        self.initialize_new_project()
-        self.projectChanged = True
-        self.projectChanged = memProjectChanged
-        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-        self.projectFileName = projectFileName
-        self.project = True
-        self.menu_options()
-    '''
     def load_project(self, project_path, project_changed, pj):
         """
         load specified project
@@ -6882,17 +6654,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.load_project(project_path, project_changed, pj)
 
 
-    def initialize_new_project(self):
+    def initialize_new_project(self, flag_new=True):
         """
         initialize interface and variables for a new or edited project
         """
         logging.debug("initialize new project...")
 
-        self.lbLogoUnito.setVisible(False)
-        self.lbLogoBoris.setVisible(False)
-
-        self.dwEthogram.setVisible(True)
-        self.dwSubjects.setVisible(True)
+        self.lbLogoUnito.setVisible(not flag_new)
+        self.lbLogoBoris.setVisible(not flag_new)
+        self.dwEthogram.setVisible(flag_new)
+        self.dwSubjects.setVisible(flag_new)
 
 
     def close_project(self):
@@ -6902,7 +6673,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if current observation
         if self.observationId:
-            response = dialog.MessageDialog(programName, "There is a current observation. What do you want to do?", ["Close observation", "Continue observation"])
+            response = dialog.MessageDialog(programName, "There is a current observation. What do you want to do?",
+                                            ["Close observation", "Continue observation"])
             if response == "Close observation":
                 self.close_observation()
             if response == "Continue observation":
@@ -6918,35 +6690,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if response == CANCEL:
                 return
 
-        self.dwEthogram.setVisible(False)
-        self.dwSubjects.setVisible(False)
 
         self.projectChanged = False
         self.setWindowTitle(programName)
 
         self.pj = dict(EMPTY_PROJECT)
-        '''
-        {"time_format": self.timeFormat,
-                   "project_date": "",
-                   "project_name": "",
-                   "project_description": "",
-                   SUBJECTS: {},
-                   ETHOGRAM: {},
-                   OBSERVATIONS: {},
-                   BEHAVIORAL_CATEGORIES: [],
-                   INDEPENDENT_VARIABLES: {},
-                   CONVERTERS: {},
-                   "coding_map": {}}
-        '''
 
         self.project = False
-
         self.readConfigFile()
-
         self.menu_options()
-
-        self.lbLogoUnito.setVisible(True)
-        self.lbLogoBoris.setVisible(True)
+        
+        self.initialize_new_project(flag_new=False)
 
         self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
@@ -6977,7 +6731,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         Args:
             mode (str): new/edit 
-
         """
 
         logging.debug("self.projectChanged: {}".format(self.projectChanged))
@@ -8205,8 +7958,16 @@ item []:
 
                     for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                         if self.FFmpegGlobalFrame < sum(self.duration[0:idx + 1]):
+
+                            '''
                             dirName, fileName = os.path.split(media)
                             snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame) + ".png"
+                            print("1", snapshotFilePath)
+                            '''
+
+                            p = pathlib.Path(media)
+                            snapshotFilePath = str(p.parent / "{}_{}.png".format(p.stem, self.FFmpegGlobalFrame))
+
                             if self.detachFrameViewer or self.second_player():
                                 self.frame_viewer1.lbFrame.pixmap().save(snapshotFilePath)
                             elif not self.detachFrameViewer:
@@ -8217,8 +7978,16 @@ item []:
                     if self.second_player():
                         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
                             if self.FFmpegGlobalFrame2 < sum(self.duration2[0:idx + 1]):
+
+                                '''
                                 dirName, fileName = os.path.split(media)
                                 snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame2) + ".png"
+                                '''
+
+                                p = pathlib.Path(media)
+                                snapshotFilePath = str(p.parent / "{}_{}.png".format(p.stem, self.FFmpegGlobalFrame2))
+
+
                                 self.frame_viewer2.lbFrame.pixmap().save(snapshotFilePath)
                                 self.statusbar.showMessage("Snapshot player #2 saved in {}".format(snapshotFilePath), 0)
                                 break
@@ -8226,6 +7995,7 @@ item []:
                 else:  # VLC
 
                     current_media_path = url2path(self.mediaplayer.get_media().get_mrl())
+                    # TODO: replace with pathlib
                     dirName, fileName = os.path.split(current_media_path)
                     self.mediaplayer.video_take_snapshot(0, "{dirName}{sep}{fileNameWOExt}_{time}.png".format(
                                                               dirName=dirName,
