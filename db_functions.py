@@ -128,17 +128,14 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                                  if POINT in pj[ETHOGRAM][x][TYPE].upper()
                                     and pj[ETHOGRAM][x]["code"] in selectedBehaviors]
 
-    
-    out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, media_file TEXT, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + "\n"
-    out += "BEGIN TRANSACTION;\n"
-    template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");\n"""
 
     cursor1 = load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors)
-    
+
     db = sqlite3.connect(":memory:")
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()
-    cursor2.execute("""CREATE TABLE events (id INTEGER PRIMARY KEY ASC,
+    cursor2.execute("""CREATE TABLE aggregated_events
+                              (id INTEGER PRIMARY KEY ASC,
                                observation TEXT,
                                subject TEXT,
                                behavior TEXT,
@@ -147,30 +144,31 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                                start FLOAT,
                                stop FLOAT,
                                comment TEXT)""")
-                               
 
     for obsId in selectedObservations:
-    
         for subject in selectedSubjects:
-    
             for behavior in selectedBehaviors:
     
-                cursor1.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence", (obsId, subject, behavior))
+                cursor1.execute(("SELECT occurence, modifiers, comment FROM events "
+                                 "WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence"), (obsId, subject, behavior))
                 rows = list(cursor1.fetchall())
-    
+
                 for idx, row in enumerate(rows):
     
                     if behavior in point_behaviors_codes:
                         
-                        cursor2.execute("INSERT INTO events (observation, subject, behavior, type, modifiers, start, stop) VALUES (?,?,?,?,?,?,?)",
-                                                            (obsId, subject, behavior, POINT, row["modifiers"].strip(), row["occurence"], row["occurence"]))
+                        cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, start, stop) "
+                                        "VALUES (?,?,?,?,?,?,?)"),
+                                        (obsId, subject, behavior, POINT, row["modifiers"].strip(), row["occurence"], row["occurence"]))
     
     
                     if behavior in state_behaviors_codes:
                         if idx % 2 == 0:
                             
-                            cursor2.execute("INSERT INTO events (observation, subject, behavior, type, modifiers, start, stop) VALUES (?,?,?,?,?,?,?)",
-                                                            (obsId, subject, behavior, STATE, row["modifiers"].strip(), row["occurence"], rows[idx + 1]["occurence"]))
+                            cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, start, stop) "
+                                            "VALUES (?,?,?,?,?,?,?)"),
+                                            (obsId, subject, behavior, STATE, row["modifiers"].strip(),
+                                             row["occurence"], rows[idx + 1]["occurence"]))
 
     db.commit()
     return db
@@ -178,9 +176,12 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
 
 if __name__ == '__main__':
 
-    import test_sample_project    
-    db = load_aggregated_events_in_db(test_sample_project.p, [], [], [])
-    print(db)
+    import project_functions
+    _, _, pj, _ = project_functions.open_project_json("test.boris")
+    
 
+    db = load_aggregated_events_in_db(pj, [], [], [])
+    print("database:", db)
     for line in db.iterdump():
         print('%s\n' % line)
+

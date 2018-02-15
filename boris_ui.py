@@ -47,6 +47,9 @@ class Ui_MainWindow(object):
         self.lbLogoUnito.setWordWrap(True)
         self.lbLogoUnito.setObjectName(_fromUtf8("lbLogoUnito"))
         self.verticalLayout_3.addWidget(self.lbLogoUnito)
+        self.lb_current_media_time = QtGui.QLabel(self.centralwidget)
+        self.lb_current_media_time.setObjectName(_fromUtf8("lb_current_media_time"))
+        self.verticalLayout_3.addWidget(self.lb_current_media_time)
         self.lbFocalSubject = QtGui.QLabel(self.centralwidget)
         self.lbFocalSubject.setObjectName(_fromUtf8("lbFocalSubject"))
         self.verticalLayout_3.addWidget(self.lbFocalSubject)
@@ -57,7 +60,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 522, 383))
+        self.page.setGeometry(QtCore.QRect(0, 0, 532, 360))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -554,6 +557,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "BORIS", None))
+        self.lb_current_media_time.setText(_translate("MainWindow", "TextLabel", None))
         self.lbFocalSubject.setText(_translate("MainWindow", "lbFocalSubject", None))
         self.lbCurrentStates.setText(_translate("MainWindow", "lbCurrentStates", None))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page), _translate("MainWindow", "Page", None))

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -33,6 +33,9 @@ class Ui_MainWindow(object):
         self.lbLogoUnito.setWordWrap(True)
         self.lbLogoUnito.setObjectName("lbLogoUnito")
         self.verticalLayout_3.addWidget(self.lbLogoUnito)
+        self.lb_current_media_time = QtWidgets.QLabel(self.centralwidget)
+        self.lb_current_media_time.setObjectName("lb_current_media_time")
+        self.verticalLayout_3.addWidget(self.lb_current_media_time)
         self.lbFocalSubject = QtWidgets.QLabel(self.centralwidget)
         self.lbFocalSubject.setObjectName("lbFocalSubject")
         self.verticalLayout_3.addWidget(self.lbFocalSubject)
@@ -43,7 +46,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtWidgets.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 522, 383))
+        self.page.setGeometry(QtCore.QRect(0, 0, 532, 360))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -92,7 +95,6 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_3 = QtWidgets.QWidget()
         self.dockWidgetContents_3.setObjectName("dockWidgetContents_3")
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(self.dockWidgetContents_3)
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -135,7 +137,6 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_2 = QtWidgets.QWidget()
         self.dockWidgetContents_2.setObjectName("dockWidgetContents_2")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.dockWidgetContents_2)
-        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
@@ -163,7 +164,6 @@ class Ui_MainWindow(object):
         self.dockWidgetContents = QtWidgets.QWidget()
         self.dockWidgetContents.setObjectName("dockWidgetContents")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.dockWidgetContents)
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.twSubjects = QtWidgets.QTableWidget(self.dockWidgetContents)
         self.twSubjects.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -544,6 +544,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "BORIS"))
+        self.lb_current_media_time.setText(_translate("MainWindow", "TextLabel"))
         self.lbFocalSubject.setText(_translate("MainWindow", "lbFocalSubject"))
         self.lbCurrentStates.setText(_translate("MainWindow", "lbCurrentStates"))
         self.toolBox.setItemText(self.toolBox.indexOf(self.page), _translate("MainWindow", "Page"))

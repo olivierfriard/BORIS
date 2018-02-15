@@ -34,7 +34,8 @@ def cohen_kappa(cursor,
                 selected_subjects,
                 include_modifiers):
     """
-    
+    Inter-rater reliability Cohen's kappa coefficient
+
     Args:
         cursor (sqlite3.cursor): cursor to aggregated events db
         obsid1 (str): id of observation #1
@@ -49,22 +50,21 @@ def cohen_kappa(cursor,
     def subj_behav_modif(cursor, obsid, subject, time, include_modifiers):
         """
         current behaviors for observation obsId at time
-        
+
         Args:
             cursor (sqlite3.cursor): cursor to aggregated events db
             obsid (str): id of observation
             subject (str): name of subject
             time (Decimal): time
             include_modifiers (bool): True: include modifiers False: do not
-            
+
         Returns:
             list: list of lists [subject, behavior, modifiers]
         """
-        
-        
+
         s = []
         # state behaviors
-        rows = cursor.execute("""SELECT behavior, modifiers FROM events
+        rows = cursor.execute("""SELECT behavior, modifiers FROM aggregated_events
                   WHERE
                    observation = ?
                    AND subject = ?
@@ -80,7 +80,7 @@ def cohen_kappa(cursor,
                 s.append([subject, row[0]])
 
         # point behaviors
-        rows = cursor.execute("""SELECT behavior, modifiers FROM events
+        rows = cursor.execute("""SELECT behavior, modifiers FROM aggregated_events
                   WHERE
                    observation = ?
                    AND subject = ?
@@ -97,19 +97,27 @@ def cohen_kappa(cursor,
 
         return s
 
-    first_event = cursor.execute("""SELECT min(start) FROM events WHERE observation in (?, ?) AND subject in ('{}') """.format("','".join(selected_subjects)),
-                                               (obsid1, obsid2)).fetchone()[0]
+    first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
+                                  "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
+                                                                                               (obsid1, obsid2)).fetchone()[0]
+
+    if first_event is None:
+        logging.debug("An observation has no recorded events: {} or {}".format(obsid1, obsid2))
+        return "An observation has no recorded events: {} {}".format(obsid1, obsid2)
 
     logging.debug("first_event: {}".format(first_event))
-    last_event = cursor.execute("""SELECT max(stop) FROM events WHERE observation in (?, ?) AND subject in ('{}') """.format("','".join(selected_subjects)),
-                                               (obsid1, obsid2)).fetchone()[0]
+    last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
+                                 "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
+                                                                                             (obsid1, obsid2)).fetchone()[0]
 
     logging.debug("last_event: {}".format(last_event))
     
-    nb_events1 = cursor.execute("""SELECT COUNT(*) FROM events WHERE observation = ? AND subject in ('{}') """.format("','".join(selected_subjects)),
-                                               (obsid1,)).fetchone()[0]
-    nb_events2 = cursor.execute("""SELECT COUNT(*) FROM events WHERE observation = ? AND subject in ('{}') """.format("','".join(selected_subjects)),
-                                               (obsid2,)).fetchone()[0]
+    nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
+                                 "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
+                                                                                        (obsid1,)).fetchone()[0]
+    nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
+                                 "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
+                                                                                       (obsid2,)).fetchone()[0]
 
     total_states = []
 
@@ -208,7 +216,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
 
-    obsid1, obsid2 = "live1", "live2"
+    obsid1, obsid2 = "obs1", "2"
 
     interval = 1
 
@@ -220,9 +228,10 @@ if __name__ == '__main__':
     
     import db_functions
     
-    import test_sample_project
+    import project_functions
+    _, _, pj, _ = project_functions.open_project_json("test.boris")
 
-    cursor = db_functions.load_aggregated_events_in_db(test_sample_project.p, [], [], []).cursor()
+    cursor = db_functions.load_aggregated_events_in_db(pj, [], [], []).cursor()
     
     print(cohen_kappa(cursor,
                 obsid1, obsid2,

@@ -49,6 +49,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="lb_current_media_time">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="lbFocalSubject">
           <property name="text">
            <string>lbFocalSubject</string>
@@ -75,8 +82,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>522</width>
-             <height>383</height>
+             <width>532</width>
+             <height>360</height>
             </rect>
            </property>
            <attribute name="label">

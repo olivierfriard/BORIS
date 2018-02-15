@@ -43,7 +43,7 @@ class wgMeasurement(QWidget):
     draw_mem = []
 
     def __init__(self, log_level):
-        super(wgMeasurement, self).__init__()
+        super().__init__()
 
         logging.basicConfig(level=log_level)
 
@@ -62,7 +62,7 @@ class wgMeasurement(QWidget):
 
         vbox.addWidget(QLabel("<b>Scale</b>"))
 
-        hbox1 = QHBoxLayout(self)
+        hbox1 = QHBoxLayout()
 
         self.lbRef = QLabel("Reference")
         hbox1.addWidget(self.lbRef)
@@ -72,17 +72,17 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox1)
 
-        hbox1 = QHBoxLayout(self)
+        hbox2 = QHBoxLayout()
 
         self.leRef = QLineEdit()
         self.leRef.setText("1")
-        hbox1.addWidget(self.leRef)
+        hbox2.addWidget(self.leRef)
 
         self.lePx = QLineEdit()
         self.lePx.setText("1")
-        hbox1.addWidget(self.lePx)
+        hbox2.addWidget(self.lePx)
 
-        vbox.addLayout(hbox1)
+        vbox.addLayout(hbox2)
 
         self.pte = QPlainTextEdit()
         vbox.addWidget(self.pte)
@@ -91,18 +91,18 @@ class wgMeasurement(QWidget):
         self.cbPersistentMeasurements.setChecked(True)
         vbox.addWidget(self.cbPersistentMeasurements)
 
-        hbox2 = QHBoxLayout(self)
+        hbox3 = QHBoxLayout()
 
         self.pbClear = QPushButton("Clear measurements")
-        hbox2.addWidget(self.pbClear)
+        hbox3.addWidget(self.pbClear)
 
         self.pbSave = QPushButton("Save results")
-        hbox2.addWidget(self.pbSave)
+        hbox3.addWidget(self.pbSave)
 
         self.pbClose = QPushButton("Close")
-        hbox2.addWidget(self.pbClose)
+        hbox3.addWidget(self.pbClose)
 
-        vbox.addLayout(hbox2)
+        vbox.addLayout(hbox3)
 
         self.pbClear.clicked.connect(self.pbClear_clicked)
         self.pbClose.clicked.connect(self.pbClose_clicked)
@@ -142,3 +142,14 @@ class wgMeasurement(QWidget):
                 self.flagSaved = True
         else:
             QMessageBox.information(self, programName, "There are no results to save")
+
+
+if __name__ == '__main__':
+
+    import sys
+    app = QApplication(sys.argv)
+    w = wgMeasurement(logging.getLogger().getEffectiveLevel())
+    w.show()
+
+    sys.exit(app.exec_())
+

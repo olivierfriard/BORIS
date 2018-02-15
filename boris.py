@@ -98,6 +98,7 @@ import behaviors_coding_map
 import plot_events
 import project_functions
 import plot_data_module
+import measurement_widget
 
 __version__ = "6.1"
 __version_date__ = "2018-02-09"
@@ -483,9 +484,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dwObservations.setVisible(False)
         self.dwEthogram.setVisible(False)
         self.dwSubjects.setVisible(False)
+        self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
 
+        self.lb_current_media_time.setText("")
         self.lbFocalSubject.setText("")
         self.lbCurrentStates.setText("")
 
@@ -493,9 +496,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         font = QFont()
         font.setPointSize(15)
+        self.lb_current_media_time.setFont(font)
         self.lbFocalSubject.setFont(font)
         self.lbCurrentStates.setFont(font)
 
+        # Statusbar initialisation
         # add label to status bar
         self.lbTime = QLabel()
         self.lbTime.setFrameStyle(QFrame.StyledPanel)
@@ -986,7 +991,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return
 
-
+    # TODO: externalize function
     def view_behavior(self):
         """
         show details of selected behavior
@@ -2272,12 +2277,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.mediaplayer.audio_set_volume(self.volumeslider.value())
 
+
     def setVolume2(self):
         """
         set volume for player #2
         """
 
         self.mediaplayer2.audio_set_volume(self.volumeslider2.value())
+
 
     def automatic_backup(self):
         """
@@ -2287,6 +2294,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.observationId:
             logging.info("automatic backup")
             self.save_project_activated()
+
 
     def update_subject(self, subject):
         """
@@ -2447,14 +2455,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
 
             if self.playMode == FFMPEG:
+
+                print("self.detachFrameViewer", self.detachFrameViewer)
                 if self.detachFrameViewer:
-                    if hasattr(self, "lbFFmpeg"):
-                        self.lbFFmpeg.clear()
-                    if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
-                        self.create_frame_viewer()
-                        self.FFmpegGlobalFrame -= 1
-                        self.ffmpegTimerOut()
-                else:
+                    if hasattr(self, "measurement_w") and self.measurement_w.isVisible():
+                        QMessageBox.warning(self, programName, "The frame viewer can not be detached when geometric measurements are active")
+                        self.detachFrameViewer = False
+                    else:
+                        print(hasattr(self, "lbFFmpeg"))
+                        if hasattr(self, "lbFFmpeg"):
+                            self.lbFFmpeg.clear()
+                        if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
+                            print("1")
+                            self.create_frame_viewer()
+                            print("2")
+                            self.FFmpegGlobalFrame -= 1
+                            self.ffmpegTimerOut()
+                            print("3")
+                else: # attach frame viewer
                     if hasattr(self, "frame_viewer1"):
                         self.frame_viewer1_mem_geometry = self.frame_viewer1.geometry()
                         del self.frame_viewer1
@@ -2723,7 +2741,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.lbFFmpeg.setPixmap(self.pixmap.scaled(self.lbFFmpeg.size(), Qt.KeepAspectRatio))
 
         # redraw measurements from previous frames
-        if self.measurement_w:
+        print("self.measurement_w", self.measurement_w)
+        if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
+        #if self.measurement_w:
             if self.measurement_w.cbPersistentMeasurements.isChecked():
                 for frame in self.measurement_w.draw_mem:
 
@@ -2766,12 +2786,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentTime = self.getLaps() * 1000
 
-        self.lbTime.setText("{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
+
+        time_str = "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
                              currentMediaName=os.path.basename(currentMedia),
                              currentTime=self.convertTime(currentTime / 1000),
                              totalTime=self.convertTime(Decimal(self.mediaplayer.get_length() / 1000)),
                              currentFrame=round(self.FFmpegGlobalFrame)
-                             ))
+                             )
+        self.lbTime.setText(time_str)
+        self.lb_current_media_time.setText(time_str)
 
         # extract State events
         StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM]
@@ -2803,7 +2826,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show current states
         if self.currentSubject:
             # get index of focal subject (by name)
-            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
+            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[idx])))
         else:
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
@@ -2818,20 +2841,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show tracking cursor
         self.get_events_current_row()
 
+
     def close_measurement_widget(self):
         self.measurement_w.close()
-        self.measurement_w = None
+        #self.measurement_w = None
+        #del self.measurement_w
+        #self.measurement_w.setParent(None)
+
+        '''
+        import sip
+        sip.delete(self.measurement_w)
+        '''
+        #del self.measurement_w 
+        
+        #self.measurement_w.deleteLater()
+
 
     def clear_measurements(self):
         if self.FFmpegGlobalFrame > 1:
             self.FFmpegGlobalFrame -= 1
             self.ffmpegTimerOut()
 
+
     def distance(self):
         """
         active the geometric measurement window
         """
-        import measurement_widget
+        
+        if self.detachFrameViewer:
+            QMessageBox.warning(self, programName, ("The geometric measurement is only available when the frames viewer is not detached\n"
+                                                    "See Preferences > Frame-by-frame mode > Detach frame viewer") )
+            return
+
         self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
         self.measurement_w.draw_mem = {}
         self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -2855,6 +2896,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         painter.end()
         self.lbFFmpeg.update()
 
+
     def draw_line(self, x1, y1, x2, y2, color):
         """
         draw line on frame-by-frame image
@@ -2866,11 +2908,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         painter.end()
         self.lbFFmpeg.update()
 
+
     def getPoslbFFmpeg(self, event):
         """
         return click position on frame and distance between 2 last clicks
         """
-        if self.measurement_w:
+        #if self.measurement_w:
+
+        if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
             x = event.pos().x()
             y = event.pos().y()
 
@@ -3174,6 +3219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(True)
         self.toolBox.setVisible(True)
+        self.lb_current_media_time.setVisible(True)
         self.lbFocalSubject.setVisible(True)
         self.lbCurrentStates.setVisible(True)
 
@@ -4310,12 +4356,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(False)
         self.toolBox.setVisible(False)
+        self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
 
         self.twEvents.setRowCount(0)
 
         self.lbTime.clear()
+        self.lb_current_media_time.clear()
         self.lbSubject.clear()
         self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
 
@@ -6874,6 +6922,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbLogoUnito.setVisible(True)
         self.lbLogoBoris.setVisible(True)
 
+        self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
 
@@ -6881,7 +6930,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def convertTime(self, sec):
         """
         convert time in base of current format
-        return string
+        
+        Args:
+            sec: time in seconds
+
+        Returns:
+            string: time in base of current format (self.timeFormat S or HHMMSS)
         """
 
         if self.timeFormat == S:
@@ -7077,23 +7131,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == NEW:
 
-            newProjectWindow.pj = dict(EMPTY_PROJECT)
-            '''
-            {"time_format": HHMMSS,
-                       "project_date": "",
-                       "project_name": "",
-                       "project_description": "",
-                       "project_format_version": project_format_version,
-                       SUBJECTS: {},
-                       ETHOGRAM: {},
-                       OBSERVATIONS: {},
-                       BEHAVIORAL_CATEGORIES: [],
-                       INDEPENDENT_VARIABLES: {},
-                       CODING_MAP: {},
-                       BEHAVIORS_CODING_MAP: [],
-                       CONVERTERS: {}}
-            '''
-
+            newProjectWindow.pj = copy.deepcopy(EMPTY_PROJECT)
 
         if newProjectWindow.exec_():  # button OK returns True
 
@@ -7619,22 +7657,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if POINT in self.eventType(behavior).upper():
 
-                            '''
-                            if outputFormat == "sql":
-                                out += template.format(observation=obsId,
-                                                    date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
-                                                    media_file=mediaFileString,
-                                                    total_length=total_length,
-                                                    fps=fpsString,
-                                                    subject=subject,
-                                                    behavior=behavior,
-                                                    modifiers=row["modifiers"].strip(),
-                                                    event_type=POINT,
-                                                    start="{0:.3f}".format(row["occurence"]),
-                                                    stop=0,
-                                                    comment_start=row["comment"],
-                                                    comment_stop="")
-                            '''
                             if outputFormat != "sql":
                                 row_data = []
                                 row_data.extend([obsId,
@@ -7666,22 +7688,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if STATE in self.eventType(behavior).upper():
                             if idx % 2 == 0:
-                                '''
-                                if outputFormat == "sql":
-                                    out += template.format(observation=obsId,
-                                                        date=self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
-                                                        media_file=mediaFileString,
-                                                        total_length=total_length,
-                                                        fps=fpsString,
-                                                        subject=subject,
-                                                        behavior=behavior,
-                                                        modifiers=row["modifiers"].strip(),
-                                                        event_type=STATE,
-                                                        start="{0:.3f}".format(row["occurence"]),
-                                                        stop="{0:.3f}".format(rows[idx + 1]["occurence"]),
-                                                        comment_start=row["comment"],
-                                                        comment_stop=rows[idx + 1]["comment"])
-                                '''
 
                                 if outputFormat != "sql":
                                     row_data = []
@@ -7713,17 +7719,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                     data.append(row_data)
 
-        '''
-        if outputFormat == "sql":
-            out += "END TRANSACTION;\n"
-            try:
-                with open(fileName, "w") as f:
-                    f.write(out)
-            except:
-                errorMsg = sys.exc_info()[1]
-                logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        '''
         if outputFormat == "sds": # SDIS format
 
             out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
@@ -7779,8 +7774,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if outputFormat == "xls":
                 with open(fileName, "wb") as f:
                     f.write(data.xls)
-
-
 
 
     def export_state_events_as_textgrid(self):
@@ -9000,8 +8993,9 @@ item []:
                         msg += " (paused)"
 
                 if msg:
-                    # show time on status bar
+                    # show time
                     self.lbTime.setText(msg)
+                    self.lb_current_media_time.setText(msg)
 
                     # set video scroll bar
                     if scrollSlider:

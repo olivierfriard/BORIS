@@ -92,7 +92,10 @@ if args.project_info:
         else:
             for observation_id in observations_id_list:
                 print("Observation id: {}".format(observation_id))
-                print("\n".join([str(x) for x in pj[OBSERVATIONS][observation_id][EVENTS]]))
+                if pj[OBSERVATIONS][observation_id][EVENTS]:
+                    print("\n".join([str(x) for x in pj[OBSERVATIONS][observation_id][EVENTS]]))
+                else:
+                    print("No events recorded")
     else:
         print("No project")
     sys.exit()
