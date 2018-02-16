@@ -2451,7 +2451,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.playMode == FFMPEG:
 
                 if self.detachFrameViewer:
-                    if hasattr(self, "measurement_w") and self.measurement_w.isVisible():
+                    if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
                         QMessageBox.warning(self, programName, "The frame viewer can not be detached when geometric measurements are active")
                         self.detachFrameViewer = False
                     else:
@@ -4568,7 +4568,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
             self.recent_projects = settings.value("recent_projects").split("|||")
+            while "" in self.recent_projects:
+                self.recent_projects.remove("")
             self.set_recent_projects_menu()
+        else:
+            self.recent_projects = []
 
 
 
@@ -4617,6 +4621,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # recent projects
         logging.info("save recent projects")
+        print(self.recent_projects)
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
         settings = QSettings(iniFilePath, QSettings.IniFormat)
         settings.setValue("recent_projects", "|||".join(self.recent_projects))
@@ -6598,14 +6603,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-        self.projectFileName = project_path
+        self.projectFileName = pathlib.Path(project_path).absolute()
         self.project = True
-        if self.projectFileName not in self.recent_projects:
-            self.recent_projects = [self.projectFileName] + self.recent_projects
+        if str(self.projectFileName) not in self.recent_projects:
+            self.recent_projects = [str(self.projectFileName)] + self.recent_projects
             self.recent_projects = self.recent_projects[:10]
             self.set_recent_projects_menu()
         self.menu_options()
-
 
 
     def open_project_activated(self):

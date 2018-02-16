@@ -490,15 +490,6 @@ class FrameViewer(QWidget):
         self.lbFrame = QLabel("")
         hbox.addWidget(self.lbFrame)
 
-        '''
-        hbox2 = QHBoxLayout()
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-
-        hbox2.addWidget(self.pbOK)
-        hbox.addLayout(hbox2)
-        '''
-
         self.setLayout(hbox)
 
     def pbOK_clicked(self):
