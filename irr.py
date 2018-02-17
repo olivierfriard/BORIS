@@ -44,7 +44,8 @@ def cohen_kappa(cursor,
         include_modifiers (bool): True: include modifiers False: do not
     
     Return:
-         str: result of analysis
+        float: K
+        str: result of analysis
     """
     
     def subj_behav_modif(cursor, obsid, subject, time, include_modifiers):
@@ -103,7 +104,7 @@ def cohen_kappa(cursor,
 
     if first_event is None:
         logging.debug("An observation has no recorded events: {} or {}".format(obsid1, obsid2))
-        return "An observation has no recorded events: {} {}".format(obsid1, obsid2)
+        return -100, "An observation has no recorded events: {} {}".format(obsid1, obsid2)
 
     logging.debug("first_event: {}".format(first_event))
     last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
@@ -156,18 +157,15 @@ def cohen_kappa(cursor,
             try:
                 contingency_table[total_states.index(s1), total_states.index(s2)] += 1
             except:
-                return "Error with contingency table"
+                return -100, "Error with contingency table"
 
         currentTime += interval
 
     logging.debug("contingency_table:\n {}".format(contingency_table))
 
-    template = ("Cohen's Kappa - Index of Inter-rater Reliability\n\n"
-                "Interval time: {interval:.3f} s\n\n"
-                "Selected subjects: {selected_subjects}\n\n"
-                "Observation #1: {obsid1}\n"
+    template = ("Observation: {obsid1}\n"
                 "number of events: {nb_events1}\n\n"
-                "Observation #2: {obsid2}\n"
+                "Observation: {obsid2}\n"
                 "number of events: {nb_events2:.0f}\n\n"
                 "K = {K:.3f}")
 
@@ -197,18 +195,16 @@ def cohen_kappa(cursor,
         K = 1
     else:
         try:
-            K = (agreements - sum_ef) / (overall_total - sum_ef)
+            K = round((agreements - sum_ef) / (overall_total - sum_ef), 3)
         except:
             K = nan
 
-    out = template.format(interval=interval,
-                          selected_subjects=", ".join(selected_subjects),
-                          obsid1=obsid1, obsid2=obsid2,
+    out = template.format(obsid1=obsid1, obsid2=obsid2,
                           nb_events1=nb_events1, nb_events2=nb_events2,
                           K=K
                           )
  
-    return out
+    return K, out
 
 
 if __name__ == '__main__':

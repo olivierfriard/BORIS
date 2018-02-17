@@ -146,7 +146,7 @@ if args.command:
         if len(args.command) > 2:
             include_modifiers =  "TRUE" in args.command[2].upper()
 
-        out = irr.cohen_kappa(cursor,
+        K, out = irr.cohen_kappa(cursor,
                                   observations_id_list[0], observations_id_list[1],
                                   interval,
                                   subjects,

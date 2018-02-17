@@ -963,25 +963,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                            selected_observations,
                                                            plot_parameters["selected behaviors"]).cursor()
 
-        out = ""
+        out = ("Cohen's Kappa - Index of Inter-rater Reliability\n\n"
+               "Interval time: {interval:.3f} s\n"
+               "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
+                                                                    selected_subjects=", ".join(plot_parameters["selected subjects"]))
         mem_done = []
+        irr_results = np.ones((len(selected_observations), len(selected_observations)))
+        
         for obs_id1 in selected_observations:
             for obs_id2 in selected_observations:
                 if obs_id1 == obs_id2:
                     continue
                 if set([obs_id1, obs_id2]) not in mem_done:
-                    out += irr.cohen_kappa(cursor,
-                                           obs_id1, obs_id2,
-                                           interval,
-                                           plot_parameters["selected subjects"],
-                                           plot_parameters["include modifiers"])
-                    out += "\n=============\n"
+                    K, msg = irr.cohen_kappa(cursor,
+                                             obs_id1, obs_id2,
+                                             interval,
+                                             plot_parameters["selected subjects"],
+                                             plot_parameters["include modifiers"])
+                    irr_results[selected_observations.index(obs_id1), selected_observations.index(obs_id2)] = K
+                    irr_results[selected_observations.index(obs_id2), selected_observations.index(obs_id1)] = K
+                    out += msg + "\n=============\n"
                     mem_done.append(set([obs_id1, obs_id2]))
+
+        out2 = "\t{}\n".format("\t".join(list(selected_observations)))
+        for r in range(irr_results.shape[0]):
+            out2 += "{}\t".format(selected_observations[r])
+            out2 += "\t".join(["%8.6f" % x for x in irr_results[r,:]]) + "\n"
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa analysis results")
         self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(out.replace("\n", "<br>"))
+        if len(selected_observations) == 2:
+            self.results.ptText.appendPlainText(out)
+        else:
+            self.results.ptText.appendPlainText(out2)
         self.results.show()
 
 
@@ -4621,7 +4636,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # recent projects
         logging.info("save recent projects")
-        print(self.recent_projects)
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
         settings = QSettings(iniFilePath, QSettings.IniFormat)
         settings.setValue("recent_projects", "|||".join(self.recent_projects))
