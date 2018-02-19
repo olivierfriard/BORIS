@@ -7204,12 +7204,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if outputFormat != "sql":
-            
-            '''
-            out = "CREATE TABLE events (id INTEGER PRIMARY KEY ASC, observation TEXT, date DATE, media_file TEXT, subject TEXT, behavior TEXT, modifiers TEXT, event_type TEXT, start FLOAT, stop FLOAT, comment_start TEXT, comment_stop TEXT);" + "\n"
-            out += "BEGIN TRANSACTION;\n"
-            template = """INSERT INTO events (observation, date, media_file, subject, behavior, modifiers, event_type, start, stop, comment_start, comment_stop) VALUES ("{observation}","{date}", "{media_file}", "{subject}", "{behavior}","{modifiers}","{event_type}",{start},{stop},"{comment_start}","{comment_stop}");\n"""
-            '''
 
             data = tablib.Dataset()
             data.title = "Aggregated events"
@@ -7222,23 +7216,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             header.extend(["Subject", "Behavior"])
 
-            # check max number of modifiers
-            '''
-            eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
-            
-            max_modifiers = 0
-            for event in eventsWithStatus:
-                for c in pj_events_fields:
-                    if c == "modifier" and event[pj_obs_fields[c]]:
-                        max_modifiers = max(max_modifiers, len(event[pj_obs_fields[c]].split('|')))
-
-            
-            for x in range(1, max_modifiers + 1):
-                header.append("Modifier {}".format(x))
-            '''
-            
             header.extend(["Modifiers"]) 
-            
+
             header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
 
             data.append(header)
@@ -7262,12 +7241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))
             logging.debug("media length for {0}: {1}".format(obsId, total_length))
-                
-            '''
-            if totalMediaLength in [0, -1]:
-                    selectedObsTotalMediaLength = -1
-                    break
-            '''
+
 
             if outputFormat == "sql":
                 conn = db_functions.load_aggregated_events_in_db(self.pj,
@@ -9802,27 +9776,9 @@ item []:
             if not fileName:
                 return
 
-            print("filter", filter_)
             outputFormat = file_formats[extended_file_formats.index(filter_)]
-            print(outputFormat)
             if pathlib.Path(fileName).suffix != "." + outputFormat:
                 fileName = str(pathlib.Path(fileName)) + "." + outputFormat
-
-                '''
-                outputFormat = ""
-                availableFormats = ("tsv", "csv", "xlsx)", "ods", "xls)", "html")  # ) allows to distinguish between xls and xlsx
-                for fileExtension in availableFormats:
-                    if fileExtension in filter_:
-                        outputFormat = fileExtension.replace(")", "")
-                        
-                print(outputFormat)
-                if not outputFormat:
-                    QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default,
-                                        QMessageBox.NoButton)
-                else:
-                    print("not output format!")
-                '''
-
 
         for obsId in selectedObservations:
             
