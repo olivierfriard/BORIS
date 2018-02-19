@@ -6617,7 +6617,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
-        self.projectFileName = pathlib.Path(project_path).absolute()
+        self.projectFileName = str(pathlib.Path(project_path).absolute())
         self.project = True
         if str(self.projectFileName) not in self.recent_projects:
             self.recent_projects = [str(self.projectFileName)] + self.recent_projects
