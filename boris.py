@@ -70,6 +70,7 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 from matplotlib import dates
 
+import select_observations
 import dialog
 from edit_event import *
 from project import *
@@ -2474,12 +2475,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if hasattr(self, "lbFFmpeg"):
                             self.lbFFmpeg.clear()
                         if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
-                            print("1")
                             self.create_frame_viewer()
-                            print("2")
                             self.FFmpegGlobalFrame -= 1
                             self.ffmpegTimerOut()
-                            print("3")
                 else: # attach frame viewer
                     if hasattr(self, "frame_viewer1"):
                         self.frame_viewer1_mem_geometry = self.frame_viewer1.geometry()
@@ -3618,112 +3616,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         """
-        import select_observations
-        
         resultStr, selectedObs = select_observations.select_observations(self.pj, mode)
         
         return resultStr, selectedObs
-        '''
-        obsListFields = ["id", "date", "description", "subjects", "media"]
-        indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
-
-        if INDEPENDENT_VARIABLES in self.pj:
-            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
-                indepVarHeader.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
-                column_type.append(self.pj[INDEPENDENT_VARIABLES][idx]["type"])
-
-        data = []
-        for obs in sorted(list(self.pj[OBSERVATIONS].keys())):
-            date = self.pj[OBSERVATIONS][obs]["date"].replace("T", " ")
-            descr = self.pj[OBSERVATIONS][obs]["description"]
-
-            # subjects
-            observedSubjects = self.extract_observed_subjects([obs])
-
-            # remove when No focal subject
-            if "" in observedSubjects:
-                observedSubjects.remove("")
-            subjectsList = ", ".join(observedSubjects)
-
-            mediaList = []
-            if self.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
-                if self.pj[OBSERVATIONS][obs][FILE]:
-                    for player in sorted(self.pj[OBSERVATIONS][obs][FILE].keys()):
-                        for media in self.pj[OBSERVATIONS][obs][FILE][player]:
-                            mediaList.append("#{0}: {1}".format(player, media))
-
-                media = os.linesep.join(mediaList)
-            elif self.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
-                media = LIVE
-
-            # independent variables
-            indepvar = []
-            if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obs]:
-                for var_label in indepVarHeader:
-                    if var_label in self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES]:
-                        indepvar.append(self.pj[OBSERVATIONS][obs][INDEPENDENT_VARIABLES][var_label])
-                    else:
-                        indepvar.append("")
-
-            data.append([obs, date, descr, subjectsList, media] + indepvar)
-
-        obsList = observations_list.observationsList_widget(data, header=obsListFields + indepVarHeader, column_type=column_type)
-
-        obsList.pbOpen.setVisible(False)
-        obsList.pbEdit.setVisible(False)
-        obsList.pbOk.setVisible(False)
-        obsList.pbSelectAll.setVisible(False)
-        obsList.pbUnSelectAll.setVisible(False)
-        obsList.mode = mode
-
-        if mode == OPEN:
-            obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
-            obsList.pbOpen.setVisible(True)
-
-        if mode == EDIT:
-            obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
-            obsList.pbEdit.setVisible(True)
-
-        if mode == SINGLE:
-            obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
-            obsList.pbOpen.setVisible(True)
-            obsList.pbEdit.setVisible(True)
-
-        if mode == MULTIPLE:
-            obsList.view.setSelectionMode(QAbstractItemView.MultiSelection)
-            obsList.pbOk.setVisible(True)
-            obsList.pbSelectAll.setVisible(True)
-            obsList.pbUnSelectAll.setVisible(True)
-
-        if mode == SELECT1:
-            obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
-            obsList.pbOk.setVisible(True)
-
-        obsList.resize(900, 600)
-
-        obsList.view.sortItems(0, Qt.AscendingOrder)
-
-        selectedObs = []
-
-        result = obsList.exec_()
-
-        if result:
-            if obsList.view.selectedIndexes():
-                for idx in obsList.view.selectedIndexes():
-                    if idx.column() == 0:   # first column
-                        selectedObs.append(idx.data())
-
-        if result == 0:  # cancel
-            resultStr = ""
-        if result == 1:   # select
-            resultStr = "ok"
-        if result == 2:   # open
-            resultStr = OPEN
-        if result == 3:   # edit
-            resultStr = EDIT
-
-        return resultStr, selectedObs
-    '''
 
 
     def initialize_new_live_observation(self):
@@ -4780,7 +4675,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.resize(600,500)
+        paramPanelWindow.resize(600, 500)
         paramPanelWindow.setWindowTitle("Select subjects and behaviors")
         paramPanelWindow.selectedObservations = selectedObservations
         paramPanelWindow.pj = self.pj
@@ -4808,43 +4703,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.teStartTime.setVisible(False)
             paramPanelWindow.teEndTime.setVisible(False)
 
-
         # hide max time
         if not maxTime:
             paramPanelWindow.frm_time.setVisible(False)
-        """
-        if maxTime:
-            if self.timeFormat == HHMMSS:
-                paramPanelWindow.teStartTime.setTime(QtCore.QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
-                paramPanelWindow.teEndTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
-                paramPanelWindow.dsbStartTime.setVisible(False)
-                paramPanelWindow.dsbEndTime.setVisible(False)
 
-            if self.timeFormat == S:
-                paramPanelWindow.dsbStartTime.setValue(0.0)
-                paramPanelWindow.dsbEndTime.setValue(maxTime)
-                paramPanelWindow.teStartTime.setVisible(False)
-                paramPanelWindow.teEndTime.setVisible(False)
-
-        else:
-            '''
-            paramPanelWindow.lbStartTime.setVisible(False)
-            paramPanelWindow.lbEndTime.setVisible(False)
-
-            paramPanelWindow.teStartTime.setVisible(False)
-            paramPanelWindow.teEndTime.setVisible(False)
-
-            paramPanelWindow.dsbStartTime.setVisible(False)
-            paramPanelWindow.dsbEndTime.setVisible(False)
-            '''
-            paramPanelWindow.frm_time_interval.setEnabled(False)
-        """
-
-        # extract subjects present in observations
-        '''observedSubjects = self.extract_observed_subjects(selectedObservations)'''
-        
         observedSubjects = project_functions.extract_observed_subjects(self.pj, selectedObservations)
-        
         selectedSubjects = []
 
         # add 'No focal subject'
@@ -4900,7 +4763,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 font = QFont()
                 font.setBold(True)
-                #paramPanelWindow.item.setFont(QFont('', 8, QFont.Bold))
                 paramPanelWindow.item.setFont(font)
                 paramPanelWindow.item.setData(33, "category")
                 paramPanelWindow.item.setData(35, False)
@@ -6661,7 +6523,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if fileName:
             project_path, project_changed, pj, msg = project_functions.open_project_json(fileName)
-            
+
             if "error" in pj:
                 logging.debug(pj["error"])
                 QMessageBox.critical(self, programName, pj["error"])
@@ -8480,7 +8342,8 @@ item []:
             self.bcm_dict[coding_map_name].show()
         else:
             self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(
-                                                   self.pj[BEHAVIORS_CODING_MAP][items.index(coding_map_name)], idx=items.index(coding_map_name))
+                                                        self.pj[BEHAVIORS_CODING_MAP][items.index(coding_map_name)],
+                                                        idx=items.index(coding_map_name))
 
             self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)
 
@@ -8749,9 +8612,6 @@ item []:
                 '''
                 # current state(s)
                 # extract State events
-                '''
-                StateBehaviorsCodes = [self.pj[ETHOGRAM][x]["code"] for x in [y for y in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][y][TYPE].upper()]]
-                '''
                 StateBehaviorsCodes = state_behavior_codes(self.pj[ETHOGRAM])
 
                 self.currentStates = {}
@@ -8928,13 +8788,25 @@ item []:
                 else:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
 
+
     def update_events_start_stop2(self, events):
         """
         returns events with status (START/STOP or POINT)
         take consideration of subject
+        
+        Args:
+            events (list): list of events
+
+        Returns:
+            list: list of events with type (POINT or STATE)
         """
 
-        stateEventsList = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
+        stateEventsList1 = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
+        print("stateEventsList1", stateEventsList1)
+        
+        stateEventsList = state_behavior_codes(self.pj[ETHOGRAM])
+        print("stateEventsList", stateEventsList)
+        
         eventsFlagged = []
         for event in events:
             time, subject, code, modifier = event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]
@@ -8955,6 +8827,7 @@ item []:
             eventsFlagged.append(event + [flag])
 
         return eventsFlagged
+
 
     def checkSameEvent(self, obsId, time, subject, code):
         """
@@ -9295,7 +9168,8 @@ item []:
             return
 
         if self.playerType == VIEWER:
-            QMessageBox.critical(self, programName, "The current observation is opened in VIEW mode.\nIt is not allowed to log events in this mode.")
+            QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
+                                                     "It is not allowed to log events in this mode."))
             return
 
         if ek == Qt.Key_Escape:
@@ -9766,7 +9640,8 @@ item []:
                         self.twEvents.selectRow(event_idx)
                         return
 
-        if dialog.MessageDialog(programName, "<b>{}</b> not found! Search from beginning?".format(self.find_dialog.findText.text()), [YES, NO]) == YES:
+        if dialog.MessageDialog(programName, "<b>{}</b> not found! Search from beginning?".format(self.find_dialog.findText.text()),
+                                [YES, NO]) == YES:
             self.find_dialog.currentIdx = -1
             self.click_signal_find_in_events("FIND")
         else:
@@ -9784,6 +9659,7 @@ item []:
         self.find_dialog.clickSignal.connect(self.click_signal_find_in_events)
         self.find_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.find_dialog.show()
+
 
     def click_signal_find_replace_in_events(self, msg):
         """
@@ -9838,13 +9714,15 @@ item []:
                 self.find_replace_dialog.currentIdx_idx = -1
 
         if msg == "FIND_REPLACE":
-            if dialog.MessageDialog(programName, "{} not found.\nRestart find/replace from the beginning?".format(self.find_replace_dialog.findText.text()), [YES, NO]) == YES:
+            if dialog.MessageDialog(programName, "{} not found.\nRestart find/replace from the beginning?".format(self.find_replace_dialog.findText.text()),
+                                    [YES, NO]) == YES:
                 self.find_replace_dialog.currentIdx = -1
             else:
                 self.find_replace_dialog.close()
         if msg == "FIND_REPLACE_ALL":
             dialog.MessageDialog(programName, "{} substitution(s).".format(number_replacement), [OK])
             self.find_replace_dialog.close()
+
 
     def find_replace_events(self):
         """
@@ -9862,9 +9740,10 @@ item []:
 
     def export_tabular_events(self):
         """
-        export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS
+        export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
         """
 
+        print("tabular")
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
@@ -9887,7 +9766,7 @@ item []:
                 break
         '''
 
-        if len(selectedObservations) > 1:  # choose directory for exporting more observations
+        if len(selectedObservations) > 1:  # choose directory for exporting observations
 
             items = ("Tab Separated Values (*.tsv)",
                      "Comma separated values (*.csv)",
@@ -9900,45 +9779,60 @@ item []:
                 return
             outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
-            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"), options=QFileDialog.ShowDirsOnly)
+            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
+                                                               options=QFileDialog.ShowDirsOnly)
             if not exportDir:
                 return
+
+        if len(selectedObservations) == 1:
+            extended_file_formats = ["Tab Separated Values (*.tsv)",
+                           "Comma Separated Values (*.csv)",
+                           "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                           "Open Document Spreadsheet ODS (*.ods)",
+                           "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                           "HTML (*.html)"]
+            file_formats = ["tsv", "csv", "xlsx", "ods", "xls", "html"]
+
+            #while True:
+            if QT_VERSION_STR[0] == "4":
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export events", "", ";;".join(extended_file_formats))
+            else:
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export events", "", ";;".join(extended_file_formats))
+
+            if not fileName:
+                return
+
+            print("filter", filter_)
+            outputFormat = file_formats[extended_file_formats.index(filter_)]
+            print(outputFormat)
+            if pathlib.Path(fileName).suffix != "." + outputFormat:
+                fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+
+                '''
+                outputFormat = ""
+                availableFormats = ("tsv", "csv", "xlsx)", "ods", "xls)", "html")  # ) allows to distinguish between xls and xlsx
+                for fileExtension in availableFormats:
+                    if fileExtension in filter_:
+                        outputFormat = fileExtension.replace(")", "")
+                        
+                print(outputFormat)
+                if not outputFormat:
+                    QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default,
+                                        QMessageBox.NoButton)
+                else:
+                    print("not output format!")
+                '''
+
 
         for obsId in selectedObservations:
             
             total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))
-            
-            if len(selectedObservations) == 1:
-                fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
-                               "Comma Separated Values (*.txt *.csv);;"
-                               "Microsoft Excel Spreadsheet XLSX (*.xlsx);;"
-                               "Open Document Spreadsheet ODS (*.ods);;"
-                               "Legacy Microsoft Excel Spreadsheet XLS (*.xls);;"
-                               "HTML (*.html);;"
-                               "All files (*)")
-                while True:
-                    if QT_VERSION_STR[0] == "4":
-                        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export events", "", fileFormats)
-                    else:
-                        fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export events", "", fileFormats)
 
-                    if not fileName:
-                        return
+            if len(selectedObservations) > 1:
+                #fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
+                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
 
-                    outputFormat = ""
-                    availableFormats = ("tsv", "csv", "xlsx)", "ods", "xls)", "html")  # ) allows to distinguish between xls and xlsx
-                    for fileExtension in availableFormats:
-                        if fileExtension in filter_:
-                            outputFormat = fileExtension.replace(")", "")
-                    if not outputFormat:
-                        QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                    else:
-                        break
-
-            else:
-
-                fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
-
+            print("eventwithstatus")
             eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
 
             # check max number of modifiers
@@ -10815,7 +10709,8 @@ if __name__ == "__main__":
     # check FFmpeg
     ret, msg = check_ffmpeg_path()
     if not ret:
-        QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it",
+                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         sys.exit(3)
     else:
         ffmpeg_bin = msg

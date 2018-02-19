@@ -109,9 +109,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters = {},
             for line in converters[conv_name]["code"].split("\n"):
                 function += "    {}\n".format(line)
             function += """    return OUTPUT"""
-            
-            #print(function)
-            
+
             try:
                 exec(function)
             except:
@@ -170,7 +168,7 @@ def state_behavior_codes(ethogram):
         list: list of behavior codes defined as STATE event
     
     """
-    return [ethogram[x]["code"] for x in ethogram if "STATE" in ethogram[x][TYPE].upper()]
+    return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if "STATE" in ethogram[x][TYPE].upper()]
 
 
 def get_current_states_by_subject(state_behaviors_codes, events, subjects, time):
@@ -279,12 +277,6 @@ def check_txt_file(file_name):
 
     # snif txt file
     with open(file_name) as csvfile:
-        '''
-        dialect = csv.Sniffer().sniff(csvfile.read(1024))
-
-        print("dialect.lineterminator", dialect.lineterminator, len(dialect.lineterminator))
-        '''
-
         buff = csvfile.read(1024)
         snif = csv.Sniffer()
         dialect = snif.sniff(buff)
@@ -402,9 +394,7 @@ def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName,
                     extension=extension,
                     frame_resize=frame_resize
                     )
-                    
-    print(ffmpeg_command)
-                    
+
     logging.debug("ffmpeg command: {}".format(ffmpeg_command))
 
     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)

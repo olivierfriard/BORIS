@@ -63,54 +63,58 @@ if args.project_file:
         print(msg)
 
 if args.observation_id:
-    print("\nObservations id:")
     observations_id_list = args.observation_id
-    for observation_id in observations_id_list:
-        if observation_id in pj[OBSERVATIONS]:
-            print("{}".format(observation_id))
-        else:
-            print("{}: NOT FOUND in project".format(observation_id))
-    print()
 
-if args.project_info:
-    if pj:
-        print("Project name: {}".format(pj[PROJECT_NAME]))
-        print("Project date: {}".format(pj[PROJECT_DATE]))
-        print("Project description: {}".format(pj[PROJECT_DESCRIPTION]))
+    if not args.command:
+        print("\nObservations:")
+        for observation_id in observations_id_list:
+            if observation_id in pj[OBSERVATIONS]:
+                print("Id: {}".format(observation_id))
+            else:
+                print("{}: NOT FOUND in project".format(observation_id))
         print()
 
-        if not observations_id_list:
-            print("Ethogram\n========")
-            print("Number of behaviors in ethogram: {}".format(len(pj[ETHOGRAM])))
-            print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))
+if args.project_info:
+    if not args.command:
+        if pj:
+            print("Project name: {}".format(pj[PROJECT_NAME]))
+            print("Project date: {}".format(pj[PROJECT_DATE]))
+            print("Project description: {}".format(pj[PROJECT_DESCRIPTION]))
             print()
-            print("Number of subjects: {}".format(len(pj[SUBJECTS])))
-            for idx in utilities.sorted_keys(pj[SUBJECTS]):
-                print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
-            #print("Subjects: {}".format(",".join([pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])])))
-            print()
-            print("Number of observations: {}".format(len(pj[OBSERVATIONS])))
-            print("List of observations:")
-            for observation_id in sorted(pj[OBSERVATIONS].keys()):
-                print(observation_id)
-            #print("Observations' id: {}".format(",".join(sorted(pj[OBSERVATIONS].keys()))))
+    
+            if not observations_id_list:
+                print("Ethogram\n========")
+                print("Number of behaviors in ethogram: {}".format(len(pj[ETHOGRAM])))
+                print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))
+                print()
+                print("Subjects\n========")
+                print("Number of subjects: {}".format(len(pj[SUBJECTS])))
+                for idx in utilities.sorted_keys(pj[SUBJECTS]):
+                    print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
+                print()
+                print("Observations\n============")
+                print("Number of observations: {}".format(len(pj[OBSERVATIONS])))
+                print("List of observations:")
+                for observation_id in sorted(pj[OBSERVATIONS].keys()):
+                    print("Id: {}\tDate: {}".format(observation_id, pj[OBSERVATIONS][observation_id]["date"]))
+                #print("Observations' id: {}".format(",".join(sorted(pj[OBSERVATIONS].keys()))))
+            else:
+                for observation_id in observations_id_list:
+                    print("Observation id: {}".format(observation_id))
+                    if pj[OBSERVATIONS][observation_id][EVENTS]:
+                        print("\n".join([str(x) for x in pj[OBSERVATIONS][observation_id][EVENTS]]))
+                    else:
+                        print("No events recorded")
         else:
-            for observation_id in observations_id_list:
-                print("Observation id: {}".format(observation_id))
-                if pj[OBSERVATIONS][observation_id][EVENTS]:
-                    print("\n".join([str(x) for x in pj[OBSERVATIONS][observation_id][EVENTS]]))
-                else:
-                    print("No events recorded")
-    else:
-        print("No project")
-    sys.exit()
+            print("No project")
+        sys.exit()
 
 
 
 
 if args.command:
-    
-    print("Command: {}\n".format(args.command))
+
+    print("Command: {}\n".format(" ".join(args.command)))
     
     if not pj:
         print("No project")
@@ -132,6 +136,7 @@ if args.command:
             print("select 2 observations")
             sys.exit()
 
+        
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
         
@@ -139,6 +144,7 @@ if args.command:
                                                            subjects,
                                                            observations_id_list,
                                                            behaviors).cursor()
+        interval = 1
         if len(args.command) > 1:
             interval = utilities.float2decimal(args.command[1])
 
@@ -151,5 +157,9 @@ if args.command:
                                   interval,
                                   subjects,
                                   include_modifiers)
+
+        print(("Cohen's Kappa - Index of Inter-Rater Reliability\n\n"
+              "Interval time: {interval:.3f} s\n").format(interval=interval))
+
         print(out)
         sys.exit()

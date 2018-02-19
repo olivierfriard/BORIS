@@ -6,8 +6,13 @@ import project_functions
 
 def select_observations(pj, mode):
     """
-    show observations list window
+    allow user to select observations
     mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
+
+    Args:
+        pj (dict): BORIS project dictionary
+        mode (str): mode foe selection: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
+
     """
 
     obsListFields = ["id", "date", "description", "subjects", "media"]
@@ -20,9 +25,6 @@ def select_observations(pj, mode):
 
     data = []
     for obs in sorted(list(pj[OBSERVATIONS].keys())):
-        
-        print("observation id", obs)
-        
         date = pj[OBSERVATIONS][obs]["date"].replace("T", " ")
         descr = pj[OBSERVATIONS][obs]["description"]
 
