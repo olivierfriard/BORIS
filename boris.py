@@ -145,40 +145,6 @@ video, live = 0, 1
 FLAG_MATPLOTLIB_INSTALLED = True
 
 
-def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
-    """
-    recode one or more video with ffmpeg
-    video_paths: list of video paths
-    horiz_resol: horizontal resolution (in pixels)
-    ffmpeg_bin: path of ffmpeg program
-    """
-
-    for video_path in video_paths:
-        ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                          '-vf scale={horiz_resol}:-1 -b 2000k '
-                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                               input_=video_path,
-                                                                               horiz_resol=horiz_resol)
-        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        p.communicate()
-
-    return True
-
-
-def bytes_to_str(b):
-    """
-    Translate bytes to string.
-    """
-    if isinstance(b, bytes):
-        fileSystemEncoding = sys.getfilesystemencoding()
-        # hack for PyInstaller
-        if fileSystemEncoding is None:
-            fileSystemEncoding = "UTF-8"
-        return b.decode(fileSystemEncoding)
-    else:
-        return b
-
-
 class ProjectServerThread(QThread):
     """
     thread for serving project to BORIS mobile app
@@ -306,30 +272,10 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     pj = dict(EMPTY_PROJECT)
-    '''
-    {"time_format": HHMMSS,
-          "project_date": "",
-          "project_name": "",
-          "project_description": "",
-          "project_format_version": project_format_version,
-          SUBJECTS: {},
-          ETHOGRAM: {},
-          OBSERVATIONS: {},
-          BEHAVIORAL_CATEGORIES: [],
-          INDEPENDENT_VARIABLES: {},
-          CODING_MAP: {},
-          CONVERTERS: {},
-          "coding_map": {}}
-    '''
-
     project = False
-
     ffmpeg_recode_process = None
-
-    observationId = ''   # current observation id
-
+    observationId = ""   # current observation id
     timeOffset = 0.0
-
     wrongTimeResponse = ""
 
     confirmSound = False               # if True each keypress will be confirmed by a beep
@@ -349,7 +295,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     automaticBackup = 0                # automatic backup interval (0 no backup)
 
     projectChanged = False
-
     liveObservationStarted = False
     
     # data structures for external data plot
@@ -399,12 +344,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     # FFmpeg
     allowFrameByFrame = False
-
     memx, memy = -1, -1
 
     # path for ffmpeg/ffmpeg.exe program
-    ffmpeg_bin = ''
-    ffmpeg_cache_dir = ''
+    ffmpeg_bin = ""
+    ffmpeg_cache_dir = ""
     ffmpeg_cache_dir_max_size = 0
     frame_resize = 0
 
@@ -418,15 +362,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     chunk_length = 60  # spectrogram chunk length in seconds
 
     memMedia = ""
-
     close_the_same_current_event = False
-
     tcp_port = 0
-
     cleaningThread = TempDirCleanerThread()
-
     bcm_dict = {}
-    
     recent_projects = []
 
 
@@ -459,13 +398,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
 
         self.setWindowTitle("{} ({})".format(programName, __version__))
-
-        '''
-        try:
-            datadir = sys._MEIPASS
-        except Exception:
-            datadir = os.path.dirname(os.path.realpath(__file__))
-        '''
 
         if os.path.isfile(sys.path[0]):  # for pyinstaller
             datadir = os.path.dirname(sys.path[0])
@@ -591,7 +523,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     pn = "Unnamed project"
 
         self.setWindowTitle("{}{}{}".format(self.observationId + " - " * (self.observationId != ""),
-                                            pn + (" - "*(pn != "")), programName))
+                                            pn + (" - " * (pn != "")), programName))
 
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionClose_project, self.actionSend_project,
@@ -751,11 +683,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
         self.actionExportEvents.triggered.connect(self.export_tabular_events)
-
         self.actionExportEventString.triggered.connect(self.export_string_events)
-
         self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
-
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
@@ -1502,10 +1431,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         flagUnpairedEventFound = False
 
-        '''
-        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations,
-                                     plot_parameters["selected behaviors"])
-        '''
         cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
         for obsId in selectedObservations:
@@ -1609,8 +1534,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                          shell=True)
                                     out, error = p.communicate()
 
-        self.statusbar.showMessage("Sequences extracted to {} directory".format(exportDir), 0)
-
 
     def generate_spectrogram(self):
         """
@@ -1618,10 +1541,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         # check temp dir for images from ffmpeg
-        if not self.ffmpeg_cache_dir:
-            tmp_dir = tempfile.gettempdir()
-        else:
-            tmp_dir = self.ffmpeg_cache_dir
+        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
 
         w = recode_widget.Info_widget()
         w.lwi.setVisible(False)
@@ -1780,7 +1700,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.item = QGraphicsPixmapItem(self.spectro.pixmap)
 
             self.spectro.scene.addItem(self.spectro.item)
-            self.spectro.item.setPos(self.spectro.scene.width()//2, 0)
+            self.spectro.item.setPos(self.spectro.scene.width() // 2, 0)
 
         get_time = (currentMediaTime % (self.chunk_length * 1000) / (self.chunk_length*1000))
 
@@ -1788,13 +1708,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.spectro.memChunk = currentChunk
 
+
     def show_data_files(self):
         """
         show plot of data files (if any)
         """
         for idx in self.plot_data:
             self.plot_data[idx].show()
-        
 
 
     def modifiers_coding_map_creator(self):
@@ -1809,9 +1729,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def behaviors_coding_map_creator_signal_addtoproject(self, behav_coding_map):
         """
-        input:
-        behav_coding_map (dict)
         add the behav coding map received from behav_coding_map_creator to current project
+        
+        Args:
+            behav_coding_map (dict): 
         """
 
         if not self.project:
@@ -2229,6 +2150,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
 
+
     def next_media_file(self):
         """
         go to next media file (if any)
@@ -2280,6 +2202,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
+
 
     def setVolume(self):
         """
@@ -9730,7 +9653,6 @@ item []:
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
-
         if len(selectedObservations) > 1:  # choose directory for exporting observations
 
             items = ("Tab Separated Values (*.tsv)",
@@ -9771,193 +9693,12 @@ item []:
                 fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
         for obsId in selectedObservations:
-
             if len(selectedObservations) > 1:
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
 
-            
-            export_observation.export_events(parameters, obsId, self.pj[OBSERVATIONS][obsId], self.pj[ETHOGRAM], fileName, outputFormat)
-
-            '''TO BE REMOVED total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))'''
-
-            '''
-            total_length = "{0:.3f}".format(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]))
-
-            if len(selectedObservations) > 1:
-                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
-
-            eventsWithStatus = project_function.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
-
-            # check max number of modifiers
-            max_modifiers = 0
-            for event in eventsWithStatus:
-                for c in pj_events_fields:
-                    if c == "modifier" and event[pj_obs_fields[c]]:
-                        max_modifiers = max(max_modifiers, len(event[pj_obs_fields[c]].split('|')))
-
-            # media file number
-            mediaNb = 0
-            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                for idx in self.pj[OBSERVATIONS][obsId][FILE]:
-                    for media in self.pj[OBSERVATIONS][obsId][FILE][idx]:
-                        mediaNb += 1
-
-            rows = []
-
-            # observation id
-            rows.append(["Observation id", obsId])
-            rows.append([""])
-
-            # media file name
-            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                rows.append(["Media file(s)"])
-            else:
-                rows.append(["Live observation"])
-            rows.append([""])
-
-            if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
-
-                for idx in self.pj[OBSERVATIONS][obsId][FILE]:
-                    for media in self.pj[OBSERVATIONS][obsId][FILE][idx]:
-                        rows.append(["Player #{0}".format(idx), media])
-            rows.append([""])
-
-            # date
-            if "date" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(["Observation date", self.pj[OBSERVATIONS][obsId]["date"].replace("T", " ")])
-            rows.append([""])
-
-            # description
-            if "description" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(["Description", eol2space(self.pj[OBSERVATIONS][obsId]["description"])])
-            rows.append([""])
-
-            # time offset
-            if "time offset" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(["Time offset (s)", self.pj[OBSERVATIONS][obsId]["time offset"]])
-            rows.append([""])
-
-            # independent variables
-            if "independent_variables" in self.pj[OBSERVATIONS][obsId]:
-                rows.append(["independent variables"])
-
-                rows.append(["variable", "value"])
-
-                for variable in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
-                    rows.append([variable, self.pj[OBSERVATIONS][obsId]["independent_variables"][variable]])
-
-            rows.append([""])
-
-            # write table header
-            col = 0
-            header = ["Time"]
-            header.extend(["Media file path", "Total length", "FPS"])
-
-            header.extend(["Subject", "Behavior"])
-            for x in range(1, max_modifiers + 1):
-                header.append("Modifier {}".format(x))
-            header.extend(["Comment", "Status"])
-
-            rows.append(header)
-
-            duration1 = []   # in seconds
-            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                try:
-                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                        duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
-                except:
-                    pass
-
-            for event in eventsWithStatus:
-                
-                if (((event[SUBJECT_EVENT_FIELD] in plot_parameters["selected subjects"]) or
-                   (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in plot_parameters["selected subjects"])) and
-                   (event[BEHAVIOR_EVENT_FIELD] in plot_parameters["selected behaviors"])):
-
-                    fields = []
-                    fields.append(intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
-
-                    if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-
-                        time_ = event[EVENT_TIME_FIELD_IDX] - self.pj[OBSERVATIONS][obsId][TIME_OFFSET]
-                        if time_ < 0:
-                            time_ = 0
-
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
-                        fields.append(intfloatstr(str(self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx])))
-                        fields.append(total_length)
-                        fields.append(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]])  # fps
-
-                    if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
-                        fields.append(LIVE) # media
-                        fields.append(total_length) # total length
-                        fields.append("NA") # FPS
-
-                    fields.append(event[EVENT_SUBJECT_FIELD_IDX])
-                    fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-
-                    modifiers = event[EVENT_MODIFIER_FIELD_IDX].split("|")
-                    while len(modifiers) < max_modifiers:
-                        modifiers.append("")
-
-                    for m in modifiers:
-                        fields.append(m)
-                    fields.append(event[EVENT_COMMENT_FIELD_IDX].replace(os.linesep, " "))
-                    # status
-                    fields.append(event[-1])
-
-                    rows.append(fields)
-
-            maxLen = max([len(r) for r in rows])
-            data = tablib.Dataset()
-
-            data.title = obsId
-            # check if worksheet name will be > 31 char
-            if outputFormat in ["xls", "xlsx"]:
-                for forbidden_char in r"\/*[]:?":
-                    data.title = data.title.replace(forbidden_char, " ")
-
-            if outputFormat in ["xls"]:
-                if len(data.title) > 31:
-                    data.title = data.title[0:31]
-                    QMessageBox.warning(None, programName,
-                                        ("The worksheet name for {} was shortened due to XLS format limitations.\n"
-                                         "The limit on worksheet name length is 31 characters").format(obsId),
-                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-            for row in rows:
-                data.append(complete(row, maxLen))
-
-            try:
-                if outputFormat == "tsv":
-                    with open(fileName, "wb") as f:
-                        f.write(str.encode(data.tsv))
-                if outputFormat == "csv":
-                    with open(fileName, "wb") as f:
-                        f.write(str.encode(data.csv))
-                if outputFormat == "ods":
-                    with open(fileName, "wb") as f:
-                        f.write(data.ods)
-                if outputFormat == "xlsx":
-                    with open(fileName, "wb") as f:
-                        f.write(data.xlsx)
-                if outputFormat == "xls":
-                    with open(fileName, "wb") as f:
-                        f.write(data.xls)
-                if outputFormat == "html":
-                    with open(fileName, "wb") as f:
-                        f.write(str.encode(data.html))
-
-            except:
-                errorMsg = sys.exc_info()[1]
-
-                logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-            del data
-            '''
-
-        self.statusbar.showMessage("Events exported", 0)
+            r, msg = export_observation.export_events(parameters, obsId, self.pj[OBSERVATIONS][obsId], self.pj[ETHOGRAM], fileName, outputFormat)
+            if not r:
+                QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def create_behavioral_strings(self, obsId, subj, plot_parameters):
@@ -9967,7 +9708,6 @@ item []:
 
         s = ""
         currentStates = []
-        #eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
         eventsWithStatus = project_function.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
 
         for event in eventsWithStatus:
@@ -10014,7 +9754,7 @@ item []:
         """
         export events from selected observations by subject as behavioral strings (plain text file)
         behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
-        for use with BSA (see http://penelope.unito.it/bsa)
+        for use with Behatrix (see http://www.boris.unito.it/pages/behatrix)
         """
 
         # ask user observations to analyze
@@ -10078,6 +9818,7 @@ item []:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
     def transitions_matrix(self, mode):
         """
@@ -10159,6 +9900,7 @@ item []:
                 except:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
+
     def transitions_dot_script(self):
         """
         create dot script (graphviz language) from transitions frequencies matrix
@@ -10186,6 +9928,7 @@ item []:
         if out:
             QMessageBox.information(self, programName,
                                     out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
+
 
     def transitions_flow_diagram(self):
         """
@@ -10229,6 +9972,7 @@ item []:
 
         if out:
             QMessageBox.information(self, programName, out)
+
 
     def closeEvent(self, event):
         """
@@ -10350,6 +10094,7 @@ item []:
 
                     if flagImported:
                         QMessageBox.information(self, programName, "Observations imported successfully")
+
 
     def play_video(self):
         """
@@ -10604,22 +10349,13 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                #self.timer_plot_data_out()
 
     def changedFocusSlot(self, old, now):
         """
         connect events filter when app gains focus
         """
-        
-        #logging.debug("focus changed")
-
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
-
-        '''
-        if app.focusWidget():
-            app.focusWidget().installEventFilter(self)
-        '''
 
 
 if __name__ == "__main__":
@@ -10764,7 +10500,6 @@ if __name__ == "__main__":
         if r:
             QMessageBox.warning(None, programName, "Error opening observation: <b>{}</b><br>{}".format(observation_to_open, r.split(":")[1]),
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
 
     window.show()
     window.raise_()

@@ -22,6 +22,7 @@ Copyright 2012-2018 Olivier Friard
 import tablib
 import logging
 import os
+import sys
 
 from config import *
 import utilities
@@ -208,7 +209,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     except:
         errorMsg = sys.exc_info()[1]
-        logging.critical(errorMsg)
-        QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        return False, str(errorMsg)
 
     del data
+    return True, ""
+
+

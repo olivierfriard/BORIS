@@ -174,14 +174,4 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
     return db
 
 
-if __name__ == '__main__':
-
-    import project_functions
-    _, _, pj, _ = project_functions.open_project_json("test.boris")
-    
-
-    db = load_aggregated_events_in_db(pj, [], [], [])
-    print("database:", db)
-    for line in db.iterdump():
-        print('%s\n' % line)
 

@@ -38,7 +38,6 @@ def observation_total_length(observation):
     live: return last event time
     
     Args:
-        
         obsId (str): observation id
         
     Returns:
@@ -56,53 +55,35 @@ def observation_total_length(observation):
     if observation[TYPE] == MEDIA:
         totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
 
-        for mediaFile in observation[FILE][PLAYER1]:
-            mediaLength = 0
-            try:
-                mediaLength = observation["media_info"]["length"][mediaFile]
-            except:
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
-                if "media_info" not in observation:
-                    observation["media_info"] = {"length": {}, "fps": {}}
-                    if "length" not in observation["media_info"]:
-                        observation["media_info"]["length"] = {}
-                    if "fps" not in observation["media_info"]:
-                        observation["media_info"]["fps"] = {}
+        total_media_length = {}
 
-                observation["media_info"]["length"][mediaFile] = videoDuration
-                observation["media_info"]["fps"][mediaFile] = fps
+        for player in [PLAYER1, PLAYER2]:
+            total_media_length[player] = Decimal("0.0")
+            for mediaFile in observation[FILE][player]:
+                mediaLength = 0
+                try:
+                    mediaLength = observation["media_info"]["length"][mediaFile]
+                except:
+                    nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                    if "media_info" not in observation:
+                        observation["media_info"] = {"length": {}, "fps": {}}
+                        if "length" not in observation["media_info"]:
+                            observation["media_info"]["length"] = {}
+                        if "fps" not in observation["media_info"]:
+                            observation["media_info"]["fps"] = {}
+    
+                    observation["media_info"]["length"][mediaFile] = videoDuration
+                    observation["media_info"]["fps"][mediaFile] = fps
+    
+                    mediaLength = videoDuration
+    
+                total_media_length[player] += Decimal(mediaLength)
+        
+        if -1 in [total_media_length[x] for x in total_media_length]:
+            return -1
 
-                mediaLength = videoDuration
+        totalMediaLength = max([total_media_length[x] for x in total_media_length])
 
-            totalMediaLength1 += Decimal(mediaLength)
-
-        for mediaFile in observation[FILE][PLAYER2]:
-            mediaLength = 0
-            try:
-                mediaLength = observation["media_info"]["length"][mediaFile]
-            except:
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
-                if "media_info" not in observation:
-                    observation["media_info"] = {"length": {}, "fps": {}}
-                    if "length" not in observation["media_info"]:
-                        observation["media_info"]["length"] = {}
-                    if "fps" not in observation["media_info"]:
-                        observation["media_info"]["fps"] = {}
-
-                observation["media_info"]["length"][mediaFile] = videoDuration
-                observation["media_info"]["fps"][mediaFile] = fps
-
-                mediaLength = videoDuration
-
-            totalMediaLength2 += Decimal(mediaLength)
-
-        if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
-            totalMediaLength = -1
-            return totalMediaLength
-        else:
-            totalMediaLength = max(totalMediaLength1, totalMediaLength2)
-
-        # check if events are recorded after totalmedialength
         if observation[EVENTS]:
             if max(observation[EVENTS])[EVENT_TIME_FIELD_IDX] > totalMediaLength:
                 totalMediaLength = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
@@ -297,8 +278,8 @@ def open_project_json(projectFileName):
         copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
         
         msg = ("The project was updated to the current project version ({project_format_version}).\n\n"
-                                                    "The old file project was saved as {project_file_name}").format(project_format_version=project_format_version,
-                                                                                                                     project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
+               "The old file project was saved as {project_file_name}").format(project_format_version=project_format_version,
+                                                                               project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
 
 
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info

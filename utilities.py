@@ -47,7 +47,50 @@ import numpy as np
 from config import *
 
 
+def bytes_to_str(b):
+    """
+    Translate bytes to string.
+    
+    Args:
+        b (bytes): byte to convert
+    
+    Returns:
+        str: converted byte
+    """
 
+    if isinstance(b, bytes):
+        fileSystemEncoding = sys.getfilesystemencoding()
+        # hack for PyInstaller
+        if fileSystemEncoding is None:
+            fileSystemEncoding = "UTF-8"
+        return b.decode(fileSystemEncoding)
+    else:
+        return b
+
+
+def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
+    """
+    recode one or more video with ffmpeg
+    
+    Args:
+        video_paths (list): list of video paths
+        horiz_resol (int): horizontal resolution (in pixels)
+        ffmpeg_bin (str): path of ffmpeg program
+    
+    Returns:
+        bool: True
+    """
+
+    for video_path in video_paths:
+        ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                          '-vf scale={horiz_resol}:-1 -b 2000k '
+                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                               input_=video_path,
+                                                                               horiz_resol=horiz_resol)
+        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        p.communicate()
+
+    return True
 
 
 def convert_time_to_decimal(pj):
