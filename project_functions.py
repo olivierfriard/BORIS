@@ -28,6 +28,126 @@ from shutil import copyfile
 from decimal import *
 
 
+def observation_total_length(observation):
+    """
+    Total length of observation
+    
+    media: if media length not available return 0
+            if more media are queued, return sum of media length
+    
+    live: return last event time
+    
+    Args:
+        
+        obsId (str): observation id
+        
+    Returns:
+        Decimal: total length in seconds
+
+    """
+
+    if observation[TYPE] == LIVE:
+        if observation[EVENTS]:
+            totalMediaLength = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
+        else:
+            totalMediaLength = Decimal("0.0")
+        return totalMediaLength
+
+    if observation[TYPE] == MEDIA:
+        totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
+
+        for mediaFile in observation[FILE][PLAYER1]:
+            mediaLength = 0
+            try:
+                mediaLength = observation["media_info"]["length"][mediaFile]
+            except:
+                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                if "media_info" not in observation:
+                    observation["media_info"] = {"length": {}, "fps": {}}
+                    if "length" not in observation["media_info"]:
+                        observation["media_info"]["length"] = {}
+                    if "fps" not in observation["media_info"]:
+                        observation["media_info"]["fps"] = {}
+
+                observation["media_info"]["length"][mediaFile] = videoDuration
+                observation["media_info"]["fps"][mediaFile] = fps
+
+                mediaLength = videoDuration
+
+            totalMediaLength1 += Decimal(mediaLength)
+
+        for mediaFile in observation[FILE][PLAYER2]:
+            mediaLength = 0
+            try:
+                mediaLength = observation["media_info"]["length"][mediaFile]
+            except:
+                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                if "media_info" not in observation:
+                    observation["media_info"] = {"length": {}, "fps": {}}
+                    if "length" not in observation["media_info"]:
+                        observation["media_info"]["length"] = {}
+                    if "fps" not in observation["media_info"]:
+                        observation["media_info"]["fps"] = {}
+
+                observation["media_info"]["length"][mediaFile] = videoDuration
+                observation["media_info"]["fps"][mediaFile] = fps
+
+                mediaLength = videoDuration
+
+            totalMediaLength2 += Decimal(mediaLength)
+
+        if  totalMediaLength1  == -1 or totalMediaLength2 == -1:
+            totalMediaLength = -1
+            return totalMediaLength
+        else:
+            totalMediaLength = max(totalMediaLength1, totalMediaLength2)
+
+        # check if events are recorded after totalmedialength
+        if observation[EVENTS]:
+            if max(observation[EVENTS])[EVENT_TIME_FIELD_IDX] > totalMediaLength:
+                totalMediaLength = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
+
+        return totalMediaLength
+
+    return Decimal("0.0")
+
+
+def events_start_stop(ethogram, events):
+    """
+    returns events with status (START/STOP or POINT)
+    take consideration of subject
+    
+    Args:
+        events (list): list of events
+
+    Returns:
+        list: list of events with type (POINT or STATE)
+    """
+
+    state_events_list = utilities.state_behavior_codes(ethogram) # from utilities
+
+    events_flagged = []
+    for event in events:
+        time, subject, code, modifier = event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]
+        # check if code is state
+        if code in state_events_list:
+            # how many code before with same subject?
+            if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+                                                 if x[EVENT_BEHAVIOR_FIELD_IDX] == code
+                                                    and x[EVENT_TIME_FIELD_IDX] < time
+                                                    and x[EVENT_SUBJECT_FIELD_IDX] == subject
+                                                    and x[EVENT_MODIFIER_FIELD_IDX] == modifier]) % 2: # test if odd
+                flag = STOP
+            else:
+                flag = START
+        else:
+            flag = POINT
+
+        events_flagged.append(event + [flag])
+
+    return events_flagged
+
+
 def extract_observed_subjects(pj, selected_observations):
     """
     extract unique subjects present in observations list

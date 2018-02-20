@@ -100,6 +100,7 @@ import plot_data_module
 import measurement_widget
 import irr
 import db_functions
+import export_observation
 
 
 __version__ = "6.1"
@@ -5245,7 +5246,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
         for obsId in selectedObservations:
-            obs_length = self.observationTotalMediaLength(obsId)
+            '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
+            
+            obs_length =project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+            
             logging.debug("media length for {0}: {1}".format(obsId, obs_length))
 
             if obs_length in [0, -1]:
@@ -5301,7 +5305,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             total_observation_time = 0
             for obsId in selectedObservations:
 
-                obs_length = self.observationTotalMediaLength(obsId)
+                '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
+                
+                obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+                
                 if obs_length == -1:
                     obs_length = 0
 
@@ -5590,12 +5597,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for obsId in selectedObservations:
 
-                '''
-                cursor = self.loadEventsInDB(plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
-                '''
                 cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
 
-                obs_length = self.observationTotalMediaLength(obsId)
+                '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
+                
+                obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+                
                 if obs_length == -1:
                     obs_length = 0
 
@@ -5838,17 +5845,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         f.write(workbook.ods)
 
 
-
+    '''
+    MOVED in project_functions
+    
     def observationTotalMediaLength(self, obsId):
         """
-        total length for observation
+        Total length of observation
         
         media: if media length not available return 0
                 if more media are queued, return sum of media length
         
         live: return last event time
         
-        return total length in s (Decimal type)
+        Args:
+            obsId (str): observation id
+            
+        Returns:
+            Decimal: total length in seconds
+
         """
 
         if self.pj[OBSERVATIONS][obsId][TYPE] == LIVE:
@@ -5915,6 +5929,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return totalMediaLength
 
         return Decimal("0.0")
+    '''
 
     
 
@@ -6136,16 +6151,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         for obsId in selectedObservations:
-            totalMediaLength = self.observationTotalMediaLength(obsId)
-            '''
-            if self.pj[OBSERVATIONS][obsId][TYPE] == MEDIA:
-                totalMediaLength = self.observationTotalMediaLength(obsId)
-            else: # LIVE
-                if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                    totalMediaLength = max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                else:
-                    totalMediaLength = Decimal("0.0")
-            '''
+            '''TO BE REMOVED  totalMediaLength = self.observationTotalMediaLength(obsId)'''
+
+            totalMediaLength = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
 
         if totalMediaLength == -1:
             totalMediaLength = 0
@@ -6313,7 +6321,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         max_obs_length = -1
         for obsId in selectedObservations:
-            totalMediaLength = self.observationTotalMediaLength(obsId)
+            '''TO BE REMOVED  totalMediaLength = self.observationTotalMediaLength(obsId)'''
+            
+            totalMediaLength = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+            
             if totalMediaLength == -1:
                 totalMediaLength = 0
 
@@ -6345,16 +6356,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         totalMediaLength = int(totalMediaLength)
 
-        '''
-        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-        '''
         cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
 
 
         for obsId in selectedObservations:
 
-            obs_length = self.observationTotalMediaLength(obsId)
+            '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
+            
+            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+            
             if obs_length == -1:
                 obs_length = 0
 
@@ -7163,45 +7174,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        includeMediaInfo = None
-        for obsId in selectedObservations:
-            if self.pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
-                includeMediaInfo = YES
-                break
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                       "Comma Separated Values (*.csv)",
+                       "Open Document Spreadsheet ODS (*.ods)",
+                       "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                       "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                       "HTML (*.html)",
+                       "SDIS (*.sds)"
+                       "SQL dump file (*.sql)"]
 
-        fileFormats = ("Tab Separated Values (*.txt *.tsv);;"
-                       "Comma Separated Values (*.txt *.csv);;"
-                       "Open Document Spreadsheet ODS (*.ods);;"
-                       "Microsoft Excel Spreadsheet XLSX (*.xlsx);;"
-                       "Legacy Microsoft Excel Spreadsheet XLS (*.xls);;"
-                       "HTML (*.html);;"
-                       "SDIS (*.sds);;"
-                       "SQL dump file (*.sql);;"
-                       "All files (*)")
-        while True:
-            if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export aggregated events", "", fileFormats)
-            else:
-                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", fileFormats)
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"] # must be in same order than extended_file_formats
 
-            if not fileName:
-                return
+        if QT_VERSION_STR[0] == "4":
+            fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export aggregated events", "", ";;".join(extended_file_formats))
+        else:
+            fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ";;".join(extended_file_formats))
 
-            outputFormat = ""
-            availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html", "sql", "sds")
-            for fileExtension in availableFormats:
-                if fileExtension in filter_:
-                    outputFormat = fileExtension.replace(")", "")
-
-            if not outputFormat:
-                QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            else:
-                break
-
-        if not outputFormat:
-            QMessageBox.warning(self, programName, "The file extension must be in {}".format(" ".join(availableFormats)),
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        if not fileName:
             return
+
+        outputFormat = file_formats[extended_file_formats.index(filter_)]
+        if pathlib.Path(fileName).suffix != "." + outputFormat:
+            fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+
 
         if outputFormat != "sql":
 
@@ -7239,7 +7234,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.critical(None, programName, str(sys.exc_info()[1]),
                                          QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-            total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))
+            '''TO BE REMOVED  total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))'''
+            
+            total_length = "{0:.3f}".format(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]))
+            
             logging.debug("media length for {0}: {1}".format(obsId, total_length))
 
 
@@ -7456,7 +7454,8 @@ item []:
 """
 
             flagUnpairedEventFound = False
-            totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)
+            '''TO BE REMOVED  totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)'''
+            totalMediaDuration = round(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]), 3)
 
             cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
@@ -7526,7 +7525,8 @@ item []:
                                 logging.debug("difference after: {} - {} = {}".format(rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
 
                 # check if last event ends at the end of media file
-                if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):
+                '''TO BE REMOVED  if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):'''
+                if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]):
                     count += 1
                     out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
 
@@ -8762,7 +8762,9 @@ item []:
                 else:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
 
-
+    '''
+    MOVED in project_functions
+    
     def update_events_start_stop2(self, events):
         """
         returns events with status (START/STOP or POINT)
@@ -8775,12 +8777,8 @@ item []:
             list: list of events with type (POINT or STATE)
         """
 
-        stateEventsList1 = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM] if STATE in self.pj[ETHOGRAM][x][TYPE].upper()]
-        print("stateEventsList1", stateEventsList1)
-        
-        stateEventsList = state_behavior_codes(self.pj[ETHOGRAM])
-        print("stateEventsList", stateEventsList)
-        
+        stateEventsList = state_behavior_codes(self.pj[ETHOGRAM]) # from utilities
+
         eventsFlagged = []
         for event in events:
             time, subject, code, modifier = event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]
@@ -8801,6 +8799,7 @@ item []:
             eventsFlagged.append(event + [flag])
 
         return eventsFlagged
+    '''
 
 
     def checkSameEvent(self, obsId, time, subject, code):
@@ -9717,28 +9716,20 @@ item []:
         export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
         """
 
-        print("tabular")
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
 
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
-                                                              maxTime=0,
-                                                              flagShowIncludeModifiers=False,
-                                                              flagShowExcludeBehaviorsWoEvents=False)
+        parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                         maxTime=0,
+                                                         flagShowIncludeModifiers=False,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
 
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
-        '''
-        includeMediaInfo = None
-        for obsId in selectedObservations:
-            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                includeMediaInfo = YES
-                break
-        '''
 
         if len(selectedObservations) > 1:  # choose directory for exporting observations
 
@@ -9761,13 +9752,12 @@ item []:
         if len(selectedObservations) == 1:
             extended_file_formats = ["Tab Separated Values (*.tsv)",
                            "Comma Separated Values (*.csv)",
-                           "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
                            "Open Document Spreadsheet ODS (*.ods)",
+                           "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
                            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                            "HTML (*.html)"]
-            file_formats = ["tsv", "csv", "xlsx", "ods", "xls", "html"]
+            file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-            #while True:
             if QT_VERSION_STR[0] == "4":
                 fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export events", "", ";;".join(extended_file_formats))
             else:
@@ -9781,15 +9771,22 @@ item []:
                 fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
         for obsId in selectedObservations:
-            
-            total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))
 
             if len(selectedObservations) > 1:
-                #fileName = exportDir + os.sep + safeFileName(obsId) + "." + outputFormat
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
 
-            print("eventwithstatus")
-            eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+            
+            export_observation.export_events(parameters, obsId, self.pj[OBSERVATIONS][obsId], self.pj[ETHOGRAM], fileName, outputFormat)
+
+            '''TO BE REMOVED total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))'''
+
+            '''
+            total_length = "{0:.3f}".format(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]))
+
+            if len(selectedObservations) > 1:
+                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+
+            eventsWithStatus = project_function.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
 
             # check max number of modifiers
             max_modifiers = 0
@@ -9958,6 +9955,7 @@ item []:
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             del data
+            '''
 
         self.statusbar.showMessage("Events exported", 0)
 
@@ -9969,7 +9967,8 @@ item []:
 
         s = ""
         currentStates = []
-        eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+        #eventsWithStatus = self.update_events_start_stop2(self.pj[OBSERVATIONS][obsId][EVENTS])
+        eventsWithStatus = project_function.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
 
         for event in eventsWithStatus:
             if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
