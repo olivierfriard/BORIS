@@ -2423,16 +2423,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.saveConfigFile()
 
+
     def getCurrentMediaByFrame(self, player, requiredFrame, fps):
         """
-        get:
-        player
-        required frame
-        fps
+        Args:
+            player (str): player
+            requiredFrame (int): required frame
+            fps (float): FPS
 
         returns:
-        currentMedia
-        frameCurrentMedia
+            currentMedia
+            frameCurrentMedia
         """
         currentMedia, frameCurrentMedia = "", 0
         frameMs = 1000 / fps
@@ -2442,6 +2443,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 frameCurrentMedia = requiredFrame - sum(self.duration[0:idx]) / frameMs
                 break
         return currentMedia, round(frameCurrentMedia)
+
 
     def getCurrentMediaByTime(self, player, obsId, globalTime):
         """
@@ -2464,10 +2466,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return currentMedia, round(currentMediaTime/1000, 3)
 
+
     def second_player(self):
         """
 
-        :return: True if second player else False
+        Returns:
+            bool: True if second player else False
         """
         if not self.observationId:
             return False
@@ -2476,6 +2480,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return True
         else:
             return False
+
 
     def create_frame_viewer(self):
         """
@@ -2530,11 +2535,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, requiredFrame, fps)
         logging.debug("frame current media 1: {}".format(frameCurrentMedia))
-
-        '''
-        if ("visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and
-                self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]):
-        '''
 
         # plot spectro
         self.timer_spectro_out()
@@ -4491,60 +4491,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return self.pj[ETHOGRAM][idx][TYPE]
         return None
 
-    '''
-    def loadEventsInDB(self, selectedSubjects, selectedObservations, selectedBehaviors):
-        """
-        populate an memory sqlite database with events from selectedObservations,
-         selectedSubjects and selectedBehaviors
-        
-        Args:
-            selectedObservations (list):
-            selectedSubjects (list):
-            selectedBehaviors (list):
-            
-        Returns:
-            database cursor:
-
-        """
-        db = sqlite3.connect(":memory:", )
- 
-        db.row_factory = sqlite3.Row
-        cursor = db.cursor()
-        cursor.execute("""CREATE TABLE events (observation TEXT,
-                                               subject TEXT,
-                                               code TEXT,
-                                               type TEXT,
-                                               modifiers TEXT,
-                                               occurence FLOAT,
-                                               comment TEXT)""")
-
-        for subject_to_analyze in selectedSubjects:
-
-            for obsId in selectedObservations:
-
-                for event in self.pj[OBSERVATIONS][obsId][EVENTS]:
-
-                    if event[EVENT_BEHAVIOR_FIELD_IDX] in selectedBehaviors:
-
-                        # extract time, code, modifier and comment (time:0, subject:1, code:2, modifier:3, comment:4)
-                        if ((subject_to_analyze == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == "") or
-                                (event[EVENT_SUBJECT_FIELD_IDX] == subject_to_analyze)):
-
-                            r = cursor.execute("""INSERT INTO events
-                                                   (observation, subject, code, type, modifiers, occurence, comment)
-                                                    VALUES (?,?,?,?,?,?,?)""",
-                            (obsId,
-                             NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else event[EVENT_SUBJECT_FIELD_IDX],
-                             event[EVENT_BEHAVIOR_FIELD_IDX],
-                             STATE if STATE in self.eventType(event[EVENT_BEHAVIOR_FIELD_IDX]).upper() else POINT,
-                             event[EVENT_MODIFIER_FIELD_IDX], 
-                             str(event[EVENT_TIME_FIELD_IDX]),
-                             event[EVENT_COMMENT_FIELD_IDX]))
-
-        db.commit()
-        return cursor
-    '''
-
 
     def extract_observed_behaviors(self, selected_observations, selectedSubjects):
         """
@@ -4584,9 +4530,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         - inclusion/exclusion of modifiers
         - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
 
-        returns dict:
-
-        {"selected subjects": selectedSubjects,
+        Returns:
+            dict: {"selected subjects": selectedSubjects,
                 "selected behaviors": selectedBehaviors,
                 "include modifiers": True/False,
                 "exclude behaviors": True/False,
@@ -7058,53 +7003,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if state events are paired
-        out = ""
-        not_paired_obs_list = []
+        out, not_paired_obs_list = "", []
         for obsId in selectedObservations:
             r, msg = self.check_state_events_obs(obsId)
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
-
         if out:
-            d = QDialog()
-            d.setWindowTitle("Check selected observations")
-            hbox = QVBoxLayout()
+            self.results = dialog.ResultsWidget()
+            self.results.resize(540, 640)
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.show()
+            return
 
-            d.lb = QLabel("The following observations have some problems")
-            hbox.addWidget(d.lb)
+        parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
 
-            d.ptText = QPlainTextEdit()
-            d.ptText.setReadOnly(True)
-            d.ptText.appendHtml(out)
-            hbox.addWidget(d.ptText)
-
-            hbox2 = QHBoxLayout()
-            d.pbOK = QPushButton("OK")
-            d.pbOK.clicked.connect(d.close)
-
-            hbox2.addWidget(d.pbOK)
-            hbox.addLayout(hbox2)
-
-            d.setLayout(hbox)
-
-            d.setWindowModality(Qt.ApplicationModal)
-            d.resize(500, 400)
-            d.exec_()
-
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
-
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
         extended_file_formats = ["Tab Separated Values (*.tsv)",
-                       "Comma Separated Values (*.csv)",
-                       "Open Document Spreadsheet ODS (*.ods)",
-                       "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                       "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                       "HTML (*.html)",
-                       "SDIS (*.sds)"
-                       "SQL dump file (*.sql)"]
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)",
+                                 "SDIS (*.sds)",
+                                 "SQL dump file (*.sql)"]
 
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"] # must be in same order than extended_file_formats
 
@@ -7120,214 +7046,81 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if pathlib.Path(fileName).suffix != "." + outputFormat:
             fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
+        if outputFormat == "sql":
+            conn = db_functions.load_aggregated_events_in_db(self.pj,
+                                                             plot_parameters["selected subjects"],
+                                                             selectedObservations,
+                                                             plot_parameters["selected behaviors"])
+            try:
+                with open(fileName, "w") as f:
+                    for line in conn.iterdump():
+                        f.write("{}\n".format(line))
+            except:
+                errorMsg = sys.exc_info()[1]
+                logging.critical(errorMsg)
+                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
 
-        if outputFormat != "sql":
-
-            data = tablib.Dataset()
-            data.title = "Aggregated events"
-            header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
-
-            # independent variables
-            if "independent_variables" in self.pj:
-                for idx in sorted_keys(self.pj["independent_variables"]):
-                    header.append(self.pj["independent_variables"][idx]["label"])
-
-            header.extend(["Subject", "Behavior"])
-
-            header.extend(["Modifiers"]) 
-
-            header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
-
-            data.append(header)
-
-        flagUnpairedEventFound = False
+        data = tablib.Dataset()
+        data.title = "Aggregated events"
+        header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
+        if INDEPENDENT_VARIABLES in self.pj:
+            for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
+                header.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+        header.extend(["Subject", "Behavior"])
+        header.extend(["Modifiers"]) 
+        header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
+        data.append(header)
 
         for obsId in selectedObservations:
+            d = export_observation.export_aggregated_events(self.pj, parameters, obsId, fileName, outputFormat)
+            data.extend(d)
 
-            duration1 = []   # in seconds
-            if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                try:
-                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][PLAYER1]:
-                        if "media_info" in self.pj[OBSERVATIONS][obsId]:
-                            duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
-                        else:
-                            logging.info("no media_info tag for {} in observation {}" .format(mediaFile, obsId))
-                except:
-                    logging.critical(sys.exc_info()[1])
-                    QMessageBox.critical(None, programName, str(sys.exc_info()[1]),
-                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-            '''TO BE REMOVED  total_length = "{0:.3f}".format(self.observationTotalMediaLength(obsId))'''
-            
-            total_length = "{0:.3f}".format(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]))
-            
-            logging.debug("media length for {0}: {1}".format(obsId, total_length))
-
-
-            if outputFormat == "sql":
-                conn = db_functions.load_aggregated_events_in_db(self.pj,
-                                                                 plot_parameters["selected subjects"],
-                                                                 selectedObservations,
-                                                                 plot_parameters["selected behaviors"])
-
-                try:
-                    with open(fileName, "w") as f:
-                        for line in conn.iterdump():
-                            f.write("{}\n".format(line))
-                except:
-                    errorMsg = sys.exc_info()[1]
-                    logging.critical(errorMsg)
-                    QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return
-
-
-            cursor = db_functions.load_events_in_db(self.pj,
-                                                    plot_parameters["selected subjects"],
-                                                    selectedObservations,
-                                                    plot_parameters["selected behaviors"])
-
-            for subject in plot_parameters["selected subjects"]:
-
-                for behavior in plot_parameters["selected behaviors"]:
-
-                    cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence", (obsId, subject, behavior))
-                    rows = list(cursor.fetchall())
-
-                    if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
-                        flagUnpairedEventFound = True
-                        continue
-
-                    for idx, row in enumerate(rows):
-
-                        if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-
-                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
-                            mediaFileString = self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]
-                            fpsString = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][self.pj[OBSERVATIONS][obsId][FILE][PLAYER1][mediaFileIdx]]
-
-                        if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
-                            mediaFileString = "LIVE"
-                            fpsString = "NA"
-
-                        if POINT in self.eventType(behavior).upper():
-
-                            if outputFormat != "sql":
-                                row_data = []
-                                row_data.extend([obsId,
-                                            self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
-                                            mediaFileString,
-                                            total_length,
-                                            fpsString])
-
-                                # independent variables
-                                if "independent_variables" in self.pj:
-                                    for idx_var in sorted_keys(self.pj["independent_variables"]):
-                                        if self.pj["independent_variables"][idx_var]["label"] in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
-                                           row_data.append(self.pj[OBSERVATIONS][obsId]["independent_variables"][self.pj["independent_variables"][idx_var]["label"]])
-                                        else:
-                                            row_data.append("")
-
-                                row_data.extend([subject,
-                                            behavior,
-                                            row["modifiers"].strip(),
-                                            POINT,
-                                            "{0:.3f}".format(row["occurence"]), # start
-                                            "NA", # stop
-                                            "NA", # duration
-                                            row["comment"],
-                                            ""
-                                            ])
-                                data.append(row_data)
-
-
-                        if STATE in self.eventType(behavior).upper():
-                            if idx % 2 == 0:
-
-                                if outputFormat != "sql":
-                                    row_data = []
-
-                                    row_data.extend([obsId,
-                                            self.pj[OBSERVATIONS][obsId]["date"].replace("T", " "),
-                                            mediaFileString,
-                                            total_length,
-                                            fpsString])
-
-                                    # independent variables
-                                    if "independent_variables" in self.pj:
-                                        for idx_var in sorted_keys(self.pj["independent_variables"]):
-                                            if self.pj["independent_variables"][idx_var]["label"] in self.pj[OBSERVATIONS][obsId]["independent_variables"]:
-                                               row_data.append(self.pj[OBSERVATIONS][obsId]["independent_variables"][self.pj["independent_variables"][idx_var]["label"]])
-                                            else:
-                                                row_data.append("")
-
-                                    row_data.extend([subject,
-                                            behavior,
-                                            row["modifiers"].strip(),
-                                            STATE,
-                                            "{0:.3f}".format(row["occurence"]),
-                                            "{0:.3f}".format(rows[idx + 1]["occurence"]),
-                                            "{0:.3f}".format(rows[idx + 1]["occurence"] - row["occurence"]),
-                                            row["comment"],
-                                            rows[idx + 1]["comment"]
-                                            ])
-
-                                    data.append(row_data)
 
         if outputFormat == "sds": # SDIS format
-
             out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
-
             for obsId in selectedObservations:
                 # observation id
                 out += "\n<{}>\n".format(obsId)
-
                 dataList = list(data[1:])
                 for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
-
                     if event[0] == obsId:
-
                         behavior = event[-7]
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             behavior = behavior.replace(char, "_")
-
                         subject = event[-8]
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             subject = subject.replace(char, "_")
-
                         event_start = "{0:.3f}".format(round(event[-4], 3))  # start event (from end for independent variables)
-
                         if not event[-3]:  # stop event (from end)
                             event_stop = "{0:.3f}".format(round(event[-4] + 0.001, 3))
                         else:
                             event_stop = "{0:.3f}".format(round(event[-3], 3))
                         out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject, behavior=behavior, start=event_start, stop=event_stop)
-
                 out += "/\n\n"
-
             with open(fileName, "wb") as f:
                 f.write(str.encode(out))
 
-        else:
-            if outputFormat == "tsv":
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(data.tsv))
-            if outputFormat == "csv":
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(data.csv))
-            if outputFormat == "html":
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(data.html))
-            if outputFormat == "ods":
-                with open(fileName, "wb") as f:
-                    f.write(data.ods)
-            if outputFormat == "xlsx":
-                with open(fileName, "wb") as f:
-                    f.write(data.xlsx)
-            if outputFormat == "xls":
-                with open(fileName, "wb") as f:
-                    f.write(data.xls)
+        if outputFormat == "tsv":
+            with open(fileName, "wb") as f:
+                f.write(str.encode(data.tsv))
+        if outputFormat == "csv":
+            with open(fileName, "wb") as f:
+                f.write(str.encode(data.csv))
+        if outputFormat == "html":
+            with open(fileName, "wb") as f:
+                f.write(str.encode(data.html))
+        if outputFormat == "ods":
+            with open(fileName, "wb") as f:
+                f.write(data.ods)
+        if outputFormat == "xlsx":
+            with open(fileName, "wb") as f:
+                f.write(data.xlsx)
+        if outputFormat == "xls":
+            with open(fileName, "wb") as f:
+                f.write(data.xls)
 
 
     def export_state_events_as_textgrid(self):
@@ -8685,45 +8478,6 @@ item []:
                 else:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
 
-    '''
-    MOVED in project_functions
-    
-    def update_events_start_stop2(self, events):
-        """
-        returns events with status (START/STOP or POINT)
-        take consideration of subject
-        
-        Args:
-            events (list): list of events
-
-        Returns:
-            list: list of events with type (POINT or STATE)
-        """
-
-        stateEventsList = state_behavior_codes(self.pj[ETHOGRAM]) # from utilities
-
-        eventsFlagged = []
-        for event in events:
-            time, subject, code, modifier = event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]
-            # check if code is state
-            if code in stateEventsList:
-                # how many code before with same subject?
-                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                                                     if x[EVENT_BEHAVIOR_FIELD_IDX] == code
-                                                        and x[EVENT_TIME_FIELD_IDX] < time
-                                                        and x[EVENT_SUBJECT_FIELD_IDX] == subject
-                                                        and x[EVENT_MODIFIER_FIELD_IDX] == modifier]) % 2: # test if odd
-                    flag = STOP
-                else:
-                    flag = START
-            else:
-                flag = POINT
-
-            eventsFlagged.append(event + [flag])
-
-        return eventsFlagged
-    '''
-
 
     def checkSameEvent(self, obsId, time, subject, code):
         """
@@ -8731,6 +8485,7 @@ item []:
         """
         return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]]
                                             for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
+
 
     def writeEvent(self, event, memTime):
         """

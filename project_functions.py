@@ -28,6 +28,7 @@ from shutil import copyfile
 from decimal import *
 
 
+
 def observation_total_length(observation):
     """
     Total length of observation
@@ -339,10 +340,18 @@ def open_project_json(projectFileName):
 def event_type(code, ethogram):
     """
     returns type of event for code
+
+    Args:
+        ethogram (dict); etogram of project
+        code (str): behavior code
+
+    Returns:
+        str: STATE, POINT or None if code not found in ethogram
     """
+
     for idx in ethogram:
-        if ethogram[idx]['code'] == code:
-            return ethogram[idx][TYPE]
+        if ethogram[idx][BEHAVIOR_CODE] == code:
+            return ethogram[idx][TYPE].upper()
     return None
 
     
