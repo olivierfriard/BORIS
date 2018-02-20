@@ -7072,6 +7072,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
         data.append(header)
 
+
+        if len(selectedObservations) > 1:
+            flag_group = dialog.MessageDialog(programName, "Group events from selected observations in one file?", [YES, NO]) == YES
+
+
         for obsId in selectedObservations:
             d = export_observation.export_aggregated_events(self.pj, parameters, obsId, fileName, outputFormat)
             data.extend(d)
