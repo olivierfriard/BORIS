@@ -863,7 +863,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if state events are paired
         tot_out = ""
         for obsId in selected_observations:
-            r, msg = self.check_state_events_obs(obsId)
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
             if not r:
                 tot_out += "Observation: <strong>{}</strong><br>{}<br>".format(obsId, msg)
         if tot_out:
@@ -1852,65 +1854,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.new_observation(mode=EDIT, obsId=selectedObs[0])
 
 
-    def check_state_events_obs(self, obsId):
-        """
-        check state events
-        check if number is odd
-        
-        Args:
-            obsId (str): id of observation to check
-            
-        Returns:
-            set (bool, str): True/False, message
-        """
-        
-        # check if behaviors are defined as "state event"
-        event_types = {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]}
-
-        if not event_types or event_types == {"Point event"}:
-            return (True, "No behavior is defined as `State event`")
-
-        out = ""
-        flagStateEvent = False
-        subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS]]
-        ethogram_behaviors = {self.pj[ETHOGRAM][idx]["code"] for idx in self.pj[ETHOGRAM]}
-
-        for subject in sorted(set(subjects)):
-
-            behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][obsId][EVENTS]
-                         if event[EVENT_SUBJECT_FIELD_IDX] == subject]
-
-            for behavior in sorted(set(behaviors)):
-                if behavior not in ethogram_behaviors:
-                    return (False, "The behaviour <b>{}</b> not found in the ethogram.<br>".format(behavior))
-                else:
-                    if STATE in self.eventType(behavior).upper():
-                        flagStateEvent = True
-                        lst, memTime = [], {}
-                        for event in [event for event in self.pj[OBSERVATIONS][obsId][EVENTS]
-                                      if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and
-                                      event[EVENT_SUBJECT_FIELD_IDX] == subject]:
-
-                            behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
-
-                            if behav_modif in lst:
-                                lst.remove(behav_modif)
-                                del memTime[str(behav_modif)]
-                            else:
-                                lst.append(behav_modif)
-                                memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
-    
-                        for event in lst:
-                            out += ("""The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
-                                    """ "<b>{subject}</b>" at <b>{time}</b><br>""").format(
-                                          behavior=behavior,
-                                          modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
-                                          subject=subject if subject else NO_FOCAL_SUBJECT,
-                                          time=memTime[str(event)] if self.timeFormat == S else seconds2time(memTime[str(event)]))
-
-        return (False, out) if out else (True, "All state events are PAIRED<br>")
-
-
     def check_state_events(self, mode="all"):
         """
         check state events for each subject
@@ -1923,7 +1866,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         tot_out = ""
         if mode == "current":
             if self.observationId:
-                r, msg = self.check_state_events_obs(self.observationId)
+                r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
+                                                                  self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
+                
                 tot_out = "Observation: <strong>{}</strong><br>{}<br><br>".format(self.observationId, msg)
 
         if mode == "all":
@@ -1939,7 +1884,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
     
             for obsId in sorted(selectedObservations):
-                r, msg = self.check_state_events_obs(obsId)
+                r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                                  self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
                 tot_out += "<strong>{}</strong><br>{}<br>".format(obsId, msg)
 
         self.results = dialog.ResultsWidget()
@@ -5079,45 +5026,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if state events are paired
         out = ""
         for obsId in selectedObservations:
-            r, msg = self.check_state_events_obs(obsId)
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
 
         if out:
-
-            d = QDialog()
-            d.setWindowTitle("Check selected observations")
-            hbox = QVBoxLayout()
-
-            d.lb = QLabel("The following observations have some problems")
-            hbox.addWidget(d.lb)
-
-            d.ptText = QPlainTextEdit()
-            d.ptText.setReadOnly(True)
-            d.ptText.appendHtml(out)
-            hbox.addWidget(d.ptText)
-
-            hbox2 = QHBoxLayout()
-            d.pbOK = QPushButton("OK")
-            d.pbOK.clicked.connect(d.close)
-
-            hbox2.addWidget(d.pbOK)
-            hbox.addLayout(hbox2)
-
-            d.setLayout(hbox)
-
-            d.setWindowModality(Qt.ApplicationModal)
-            d.resize(500, 400)
-            d.exec_()
+            self.results = dialog.ResultsWidget()
+            
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.show()
 
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
         for obsId in selectedObservations:
-            '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
-            
             obs_length =project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
-            
+
             logging.debug("media length for {0}: {1}".format(obsId, obs_length))
 
             if obs_length in [0, -1]:
@@ -6133,46 +6061,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = ""
         not_paired_obs_list = []
         for obsId in selectedObservations:
-            r, msg = self.check_state_events_obs(obsId)
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
 
         if out:
-            d = QDialog()
-            d.setWindowTitle("Check selected observations")
-            hbox = QVBoxLayout()
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.show()
 
-            d.lb = QLabel("The following observations have some problems")
-            hbox.addWidget(d.lb)
-
-            d.ptText = QPlainTextEdit()
-            d.ptText.setReadOnly(True)
-            d.ptText.appendHtml(out)
-            hbox.addWidget(d.ptText)
-
-            hbox2 = QHBoxLayout()
-            d.pbOK = QPushButton("OK")
-            d.pbOK.clicked.connect(d.close)
-
-            hbox2.addWidget(d.pbOK)
-            hbox.addLayout(hbox2)
-
-            d.setLayout(hbox)
-
-            d.setWindowModality(Qt.ApplicationModal)
-            d.resize(500, 400)
-            d.exec_()
-
-        '''
-        not_paired_obs_list = []
-        for obsId in selectedObservations:
-            if not self.check_state_events_obs(obsId)[0]:
-                not_paired_obs_list.append(obsId)
-
-        if not_paired_obs_list:
-            QMessageBox.warning(self, programName, "Some observations have unpaired state events:<br><b>{}</b>".format("</b>, <b>".join(not_paired_obs_list)))
-        '''        
         selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
         if not selectedObservations:
             return
@@ -6993,35 +6895,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def export_aggregated_events(self):
         """
-        export aggregated events in SQL (sql) or Tabular format (tsv, csv, ods, xlsx, xls, html)
+        export aggregated events.
+        Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
         format is selected using the filename extension
         """
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
-
         if not selectedObservations:
             return
 
         # check if state events are paired
         out, not_paired_obs_list = "", []
         for obsId in selectedObservations:
-            r, msg = self.check_state_events_obs(obsId)
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
         if out:
             self.results = dialog.ResultsWidget()
-            self.results.resize(540, 640)
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.show()
             return
 
-        parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False, flagShowExcludeBehaviorsWoEvents=False)
+        parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
 
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
+
+        # check for grouping results
+        flag_group = True
+        if len(selectedObservations) > 1:
+            flag_group = dialog.MessageDialog(programName, "Group events from selected observations in one file?", [YES, NO]) == YES
 
         extended_file_formats = ["Tab Separated Values (*.tsv)",
                                  "Comma Separated Values (*.csv)",
@@ -7032,19 +6941,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "SDIS (*.sds)",
                                  "SQL dump file (*.sql)"]
 
-        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"] # must be in same order than extended_file_formats
+        if flag_group:
+            file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"] # must be in same order than extended_file_formats
+    
+            if QT_VERSION_STR[0] == "4":
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export aggregated events", "", ";;".join(extended_file_formats))
+            else:
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ";;".join(extended_file_formats))
+    
+            if not fileName:
+                return
+    
+            outputFormat = file_formats[extended_file_formats.index(filter_)]
+            if pathlib.Path(fileName).suffix != "." + outputFormat:
+                fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
-        if QT_VERSION_STR[0] == "4":
-            fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export aggregated events", "", ";;".join(extended_file_formats))
-        else:
-            fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ";;".join(extended_file_formats))
+        else: # not grouping
 
-        if not fileName:
-            return
+            items = ("Tab Separated Values (*.tsv)",
+                     "Comma Separated values (*.csv)",
+                     "Open Document Spreadsheet (*.ods)",
+                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                     "HTML (*.html)")
+            item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
+            if not ok:
+                return
+            outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
-        outputFormat = file_formats[extended_file_formats.index(filter_)]
-        if pathlib.Path(fileName).suffix != "." + outputFormat:
-            fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
+                                                               options=QFileDialog.ShowDirsOnly)
+            if not exportDir:
+                return
+
 
         if outputFormat == "sql":
             conn = db_functions.load_aggregated_events_in_db(self.pj,
@@ -7061,8 +6990,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        data = tablib.Dataset()
-        data.title = "Aggregated events"
+        data_header = tablib.Dataset()
+        data_header.title = "Aggregated events"
         header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
@@ -7070,16 +6999,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         header.extend(["Subject", "Behavior"])
         header.extend(["Modifiers"]) 
         header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
-        data.append(header)
+        data_header.append(header)
 
-
-        if len(selectedObservations) > 1:
-            flag_group = dialog.MessageDialog(programName, "Group events from selected observations in one file?", [YES, NO]) == YES
-
-
+        data = copy.deepcopy(data_header)
         for obsId in selectedObservations:
-            d = export_observation.export_aggregated_events(self.pj, parameters, obsId, fileName, outputFormat)
+            print(obsId)
+            
+            d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
             data.extend(d)
+
+            if not flag_group:
+                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                r, msg = export_observation.dataset_write(data, fileName, outputFormat)
+                if not r:
+                    QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                data = copy.deepcopy(data_header)
 
 
         if outputFormat == "sds": # SDIS format
@@ -7107,25 +7041,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 out += "/\n\n"
             with open(fileName, "wb") as f:
                 f.write(str.encode(out))
+            return
 
-        if outputFormat == "tsv":
-            with open(fileName, "wb") as f:
-                f.write(str.encode(data.tsv))
-        if outputFormat == "csv":
-            with open(fileName, "wb") as f:
-                f.write(str.encode(data.csv))
-        if outputFormat == "html":
-            with open(fileName, "wb") as f:
-                f.write(str.encode(data.html))
-        if outputFormat == "ods":
-            with open(fileName, "wb") as f:
-                f.write(data.ods)
-        if outputFormat == "xlsx":
-            with open(fileName, "wb") as f:
-                f.write(data.xlsx)
-        if outputFormat == "xls":
-            with open(fileName, "wb") as f:
-                f.write(data.xls)
+        if flag_group:
+            r, msg = export_observation.dataset_write(data, fileName, outputFormat)
+            if not r:
+                QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
 
     def export_state_events_as_textgrid(self):
@@ -7328,7 +7250,6 @@ item []:
                                                      )
 
             self.results = dialog.ResultsWidget()
-            self.results.resize(540, 640)
             self.results.setWindowTitle(programName + " - Media file information")
             self.results.ptText.setReadOnly(True)
 
@@ -7346,7 +7267,7 @@ item []:
                             format(filePath, self.convertTime(duration), fps, hasVideo, hasAudio))
 
             self.results.ptText.appendHtml("Total duration: {} (hh:mm:ss.sss)".
-                format(self.convertTime(sum(self.duration)/1000)))
+                format(self.convertTime(sum(self.duration) / 1000)))
 
             self.results.show()
 
@@ -7357,7 +7278,6 @@ item []:
 
             if filePath:
                 self.results = dialog.ResultsWidget()
-                self.results.resize(540, 640)
                 self.results.setWindowTitle(programName + " - Media file information")
                 self.results.ptText.setReadOnly(True)
                 self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
@@ -9419,7 +9339,7 @@ item []:
                      "Comma separated values (*.csv)",
                      "Open Document Spreadsheet (*.ods)",
                      "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                     "Microsoft Excel Spreadsheet XLS (*.xls)",
+                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                      "HTML (*.html)")
             item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
             if not ok:
@@ -10251,7 +10171,10 @@ if __name__ == "__main__":
                 print("Observation not found in project!")
                 sys.exit()
             
-            print(window.check_state_events_obs(observation_to_open)[1])
+            '''print(window.check_state_events_obs(observation_to_open)[1])'''
+            print(project_functions.check_state_events_obs(observation_to_open, window.pj[ETHOGRAM],
+                                                           window.pj[OBSERVATIONS][observation_to_open], window.timeFormat)[1])
+
             sys.exit()
 
 

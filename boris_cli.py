@@ -27,9 +27,10 @@ import utilities
 import project_functions
 from config import *
 import db_functions
+import export_observation
 import irr
 
-__version__ = "6.0.6"
+__version__ = "6.1"
 
 parser = argparse.ArgumentParser(description="BORIS CLI")
 parser.add_argument("-v", "--version", action="store_true", dest='version', help='BORIS version')
@@ -38,7 +39,7 @@ parser.add_argument("-p", "--project", action="store", dest='project_file', help
 
 parser.add_argument("-o", "--observation", nargs = '*', action="store", default=[], dest='observation_id', help='Observation id')
 
-parser.add_argument("--info", action="store_true", dest='project_info', help='Project information')
+parser.add_argument("-i", "--info", action="store_true", dest='project_info', help='Project information')
 
 parser.add_argument("--command", nargs = '*', action="store", dest='command', help='Command to execute')
 
@@ -53,7 +54,8 @@ if args.version:
 
 if args.project_file:
 
-    print("Project path: {}".format(args.project_file))
+    if not args.command:
+        print("Project path: {}".format(args.project_file))
 
     project_path, project_changed, pj, msg = project_functions.open_project_json(args.project_file)
     if "error" in pj:
@@ -85,13 +87,20 @@ if args.project_info:
             if not observations_id_list:
                 print("Ethogram\n========")
                 print("Number of behaviors in ethogram: {}".format(len(pj[ETHOGRAM])))
-                print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))
+                for idx in utilities.sorted_keys(pj[ETHOGRAM]):
+                    print("Code: {}\tDescription: {}\tType: {}".format(pj[ETHOGRAM][idx][BEHAVIOR_CODE],
+                                                                       pj[ETHOGRAM][idx]["description"],
+                                                                       pj[ETHOGRAM][idx][TYPE]
+                                                                       ))
+                '''print("Behaviors: {}".format(",".join([pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])])))'''
                 print()
+                
                 print("Subjects\n========")
                 print("Number of subjects: {}".format(len(pj[SUBJECTS])))
                 for idx in utilities.sorted_keys(pj[SUBJECTS]):
                     print("Name: {}\tDescription: {}".format(pj[SUBJECTS][idx]["name"], pj[SUBJECTS][idx]["description"]))
                 print()
+
                 print("Observations\n============")
                 print("Number of observations: {}".format(len(pj[OBSERVATIONS])))
                 print("List of observations:")
@@ -111,7 +120,6 @@ if args.project_info:
 
 
 
-
 if args.command:
 
     print("Command: {}\n".format(" ".join(args.command)))
@@ -119,6 +127,7 @@ if args.command:
     if not pj:
         print("No project")
         sys.exit()
+
     if not observations_id_list:
         print("No observation")
         sys.exit()
@@ -126,8 +135,31 @@ if args.command:
     if "check_state_events" in args.command:
         print("Check state events:")
         for observation_id in observations_id_list:
-            ret, msg = project_functions.check_state_events_obs(pj, observation_id)
+            ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
             print("{}: {}".format(observation_id, msg))
+        sys.exit()
+
+    if "export_events" in args.command:
+        print("export events:")
+
+        behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
+        subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
+        
+        output_format = "tsv"
+        if len(args.command) > 1:
+            output_format = args.command[1]
+        
+        for observation_id in observations_id_list:
+            r, msg = export_observation.export_events({"selected subjects": subjects,
+                                              "selected behaviors": behaviors},
+                                              observation_id,
+                                              pj[OBSERVATIONS][observation_id],
+                                              pj[ETHOGRAM],
+                                              utilities.safeFileName(observation_id + "." + output_format),
+                                              output_format)
+            if not r:
+                print(msg)
+            
         sys.exit()
 
 
@@ -136,7 +168,6 @@ if args.command:
             print("select 2 observations")
             sys.exit()
 
-        
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
         

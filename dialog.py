@@ -455,8 +455,8 @@ class ResultsWidget(QWidget):
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
-        
-        self.resize(500, 400)
+
+        self.resize(540, 640)
 
 
     def save_results(self):

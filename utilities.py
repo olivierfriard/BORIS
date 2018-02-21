@@ -467,6 +467,12 @@ def complete(l, max):
 
 
 def datetime_iso8601():
+    """
+    current date time in ISO8601 format
+    
+    Returns:
+        str: date time in ISO8601 format
+    """
     return datetime.datetime.now().isoformat().replace("T", "").split(".")[0]
 
 

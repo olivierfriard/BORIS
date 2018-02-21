@@ -42,6 +42,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
         file_name (str): file name for exporting events
         output_format (str): output for exporting events
 
+    Returns:
+        bool: result: True if OK else False
+        str: error message
     """
 
     total_length = "{0:.3f}".format(project_functions.observation_total_length(observation))
@@ -98,13 +101,13 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append([""])
 
     # independent variables
-    if "independent_variables" in observation:
-        rows.append(["independent variables"])
+    if INDEPENDENT_VARIABLES in observation:
+        rows.append([INDEPENDENT_VARIABLES])
 
         rows.append(["variable", "value"])
 
-        for variable in observation["independent_variables"]:
-            rows.append([variable, observation["independent_variables"][variable]])
+        for variable in observation[INDEPENDENT_VARIABLES]:
+            rows.append([variable, observation[INDEPENDENT_VARIABLES][variable]])
 
     rows.append([""])
 
@@ -180,43 +183,71 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     if output_format in ["xls"]:
         if len(data.title) > 31:
             data.title = data.title[0:31]
+
+            '''
             QMessageBox.warning(None, programName,
                                 ("The worksheet name for {} was shortened due to XLS format limitations.\n"
                                  "The limit on worksheet name length is 31 characters").format(obsId),
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            '''
 
     for row in rows:
         data.append(utilities.complete(row, maxLen))
 
+    r, msg = dataset_write(data, file_name, output_format)
+
+    return r, msg
+
+
+def dataset_write(dataset, file_name, output_format):
+    """
+    write a tablib dataset to file in specified format
+    
+    Args:
+        dataset (tablib.dataset): dataset to write
+        file_name (str): file name
+        output_format (str): format of output
+        
+    Returns:
+        bool: result
+        str: error message
+    """
+
     try:
         if output_format == "tsv":
             with open(file_name, "wb") as f:
-                f.write(str.encode(data.tsv))
+                f.write(str.encode(dataset.tsv))
+            return True, ""
         if output_format == "csv":
             with open(file_name, "wb") as f:
-                f.write(str.encode(data.csv))
+                f.write(str.encode(dataset.csv))
+            return True, ""
         if output_format == "ods":
             with open(file_name, "wb") as f:
-                f.write(data.ods)
+                f.write(dataset.ods)
+            return True, ""
         if output_format == "xlsx":
             with open(file_name, "wb") as f:
-                f.write(data.xlsx)
+                f.write(dataset.xlsx)
+            return True, ""
         if output_format == "xls":
             with open(file_name, "wb") as f:
-                f.write(data.xls)
+                f.write(dataset.xls)
+            return True, ""
         if output_format == "html":
             with open(file_name, "wb") as f:
-                f.write(str.encode(data.html))
+                f.write(str.encode(dataset.html))
+            return True, ""
+
+        return False, "Format {} not found".format(output_format)
 
     except:
         errorMsg = sys.exc_info()[1]
         return False, str(errorMsg)
 
-    del data
-    return True, ""
 
 
-def export_aggregated_events(pj, parameters, obsId, file_name, output_format):
+def export_aggregated_events(pj, parameters, obsId):
     """
     export aggregated events
 
@@ -224,8 +255,6 @@ def export_aggregated_events(pj, parameters, obsId, file_name, output_format):
         pj (dict): BORIS project
         parameters (dict): subjects, behaviors
         obsId (str): observation id
-        file_name (str): file name for exporting events
-        output_format (str): output for exporting events
 
     Returns:
         tablib.Dataset:
@@ -233,7 +262,6 @@ def export_aggregated_events(pj, parameters, obsId, file_name, output_format):
     """
     data = tablib.Dataset()
     observation = pj[OBSERVATIONS][obsId]
-    print(observation)
 
     duration1 = []   # in seconds
     if observation[TYPE] in [MEDIA]:
@@ -333,65 +361,3 @@ def export_aggregated_events(pj, parameters, obsId, file_name, output_format):
 
     return data
 
-
-
-    '''
-    if output_format == "sds": # SDIS format
-
-        out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
-
-        for obsId in selectedObservations:
-            # observation id
-            out += "\n<{}>\n".format(obsId)
-
-            dataList = list(data[1:])
-            for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
-
-                if event[0] == obsId:
-
-                    behavior = event[-7]
-                    # replace various char by _
-                    for char in [" ", "-", "/"]:
-                        behavior = behavior.replace(char, "_")
-
-                    subject = event[-8]
-                    # replace various char by _
-                    for char in [" ", "-", "/"]:
-                        subject = subject.replace(char, "_")
-
-                    event_start = "{0:.3f}".format(round(event[-4], 3))  # start event (from end for independent variables)
-
-                    if not event[-3]:  # stop event (from end)
-                        event_stop = "{0:.3f}".format(round(event[-4] + 0.001, 3))
-                    else:
-                        event_stop = "{0:.3f}".format(round(event[-3], 3))
-                    out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject, behavior=behavior, start=event_start, stop=event_stop)
-
-            out += "/\n\n"
-
-        with open(file_name, "wb") as f:
-            f.write(str.encode(out))
-
-    else:
-        if output_format == "tsv":
-            with open(file_name, "wb") as f:
-                f.write(str.encode(data.tsv))
-        if output_format == "csv":
-            with open(file_name, "wb") as f:
-                f.write(str.encode(data.csv))
-        if output_format == "html":
-            with open(file_name, "wb") as f:
-                f.write(str.encode(data.html))
-        if output_format == "ods":
-            with open(file_name, "wb") as f:
-                f.write(data.ods)
-        if output_format == "xlsx":
-            with open(file_name, "wb") as f:
-                f.write(data.xlsx)
-        if output_format == "xls":
-            with open(file_name, "wb") as f:
-                f.write(data.xls)
-    '''
-    
-    
-    

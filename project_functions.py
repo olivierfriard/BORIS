@@ -354,44 +354,46 @@ def event_type(code, ethogram):
             return ethogram[idx][TYPE].upper()
     return None
 
-    
-def check_state_events_obs(pj, obsId):
+
+def check_state_events_obs(obsId, ethogram, observation, time_format):
     """
     check state events
     check if number is odd
     
     Args:
-        pj (dict): BORIS project
         obsId (str): id of observation to check
+        ethogram (dict): ethogram of project
+        observation (dict): observation to be checked
+        time_firmat (str): time format
         
     Returns:
         set (bool, str): True/False, message
     """
     
     # check if behaviors are defined as "state event"
-    event_types = {pj[ETHOGRAM][idx]["type"] for idx in pj[ETHOGRAM]}
+    event_types = {ethogram[idx]["type"] for idx in ethogram}
 
     if not event_types or event_types == {"Point event"}:
         return (True, "No behavior is defined as `State event`")
 
     out = ""
     flagStateEvent = False
-    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in pj[OBSERVATIONS][obsId][EVENTS]]
-    ethogram_behaviors = {pj[ETHOGRAM][idx]["code"] for idx in pj[ETHOGRAM]}
+    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
+    ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
 
-        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in pj[OBSERVATIONS][obsId][EVENTS]
+        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]
                      if event[EVENT_SUBJECT_FIELD_IDX] == subject]
 
         for behavior in sorted(set(behaviors)):
             if behavior not in ethogram_behaviors:
                 return (False, "The behaviour <b>{}</b> not found in the ethogram.<br>".format(behavior))
             else:
-                if STATE in event_type(behavior, pj[ETHOGRAM]).upper():
+                if STATE in event_type(behavior, ethogram).upper():
                     flagStateEvent = True
                     lst, memTime = [], {}
-                    for event in [event for event in pj[OBSERVATIONS][obsId][EVENTS]
+                    for event in [event for event in observation[EVENTS]
                                   if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and
                                   event[EVENT_SUBJECT_FIELD_IDX] == subject]:
 
@@ -410,6 +412,6 @@ def check_state_events_obs(pj, obsId):
                                       behavior=behavior,
                                       modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
                                       subject=subject if subject else NO_FOCAL_SUBJECT,
-                                      time=memTime[str(event)] if self.timeFormat == S else utilities.seconds2time(memTime[str(event)]))
+                                      time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
 
     return (False, out) if out else (True, "All state events are PAIRED")
