@@ -106,8 +106,6 @@ import export_observation
 __version__ = "6.1"
 __version_date__ = "2018-02-09"
 
-# BITMAP_EXT = "jpg"
-
 if platform.python_version() < "3.4":
     logging.critical("BORIS requires Python 3.4+! You are using v. {}")
     sys.exit()
@@ -1950,17 +1948,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        """http://www.boris.unito.it</a> to install it.""").format(lastVersion)
             else:
                 msg = "The version you are using is the last one: <b>{}</b>".format(__version__)
-
             newsURL = "http://www.boris.unito.it/static/news.dat"
             news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
-
             self.saveConfigFile(lastCheckForNewVersion=int(time.mktime(time.localtime())))
-
             QMessageBox.information(self, programName, msg)
-
             if news:
                 QMessageBox.information(self, programName, news)
-
         except:
             QMessageBox.warning(self, programName, "Can not check for updates...")
 
@@ -6752,9 +6745,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.textButton.setText("Live observation stopped (scan sampling)")
 
 
-
-
-
     def start_live_observation(self):
         """
         activate the live observation mode (without media file)
@@ -6813,14 +6803,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
             return
 
-        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"), options=QFileDialog(self).ShowDirsOnly)
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"),
+                                                           options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
             return
 
-        '''
-        cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-        '''
-        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations,
+                                                plot_parameters["selected behaviors"])
 
         flagUnpairedEventFound = False
 
@@ -6890,9 +6879,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-        self.statusbar.showMessage("Subtitles file(s) created in {} directory".format(exportDir), 0)
-
-
     def export_aggregated_events(self):
         """
         export aggregated events.
@@ -6909,7 +6895,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selectedObservations:
             r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
                                                               self.pj[OBSERVATIONS][obsId], self.timeFormat)
-
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
@@ -7047,7 +7032,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             r, msg = export_observation.dataset_write(data, fileName, outputFormat)
             if not r:
                 QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
 
 
     def export_state_events_as_textgrid(self):
@@ -7190,7 +7174,6 @@ item []:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
 
 
     def media_file_info(self):
@@ -7454,12 +7437,6 @@ item []:
                     for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]):
                         if self.FFmpegGlobalFrame < sum(self.duration[0:idx + 1]):
 
-                            '''
-                            dirName, fileName = os.path.split(media)
-                            snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame) + ".png"
-                            print("1", snapshotFilePath)
-                            '''
-
                             p = pathlib.Path(media)
                             snapshotFilePath = str(p.parent / "{}_{}.png".format(p.stem, self.FFmpegGlobalFrame))
 
@@ -7474,14 +7451,8 @@ item []:
                         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
                             if self.FFmpegGlobalFrame2 < sum(self.duration2[0:idx + 1]):
 
-                                '''
-                                dirName, fileName = os.path.split(media)
-                                snapshotFilePath = dirName + os.sep + os.path.splitext(fileName)[0] + "_" + str(self.FFmpegGlobalFrame2) + ".png"
-                                '''
-
                                 p = pathlib.Path(media)
                                 snapshotFilePath = str(p.parent / "{}_{}.png".format(p.stem, self.FFmpegGlobalFrame2))
-
 
                                 self.frame_viewer2.lbFrame.pixmap().save(snapshotFilePath)
                                 self.statusbar.showMessage("Snapshot player #2 saved in {}".format(snapshotFilePath), 0)
@@ -7546,8 +7517,6 @@ item []:
             pass
 
 
-
-
     def video_normalspeed_activated(self):
         """
         set playing speed at normal speed
@@ -7581,6 +7550,7 @@ item []:
 
             logging.info('play rate: {:.3f}'.format(self.play_rate))
 
+
     def video_slower_activated(self):
         """
         decrease playing speed by play_rate_step value
@@ -7599,8 +7569,6 @@ item []:
                 self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
 
             logging.info('play rate: {:.3f}'.format(self.play_rate))
-
-
 
 
     def add_event(self):
@@ -7850,14 +7818,18 @@ item []:
         else:
             QMessageBox.warning(self, programName, "Select an event to edit")
 
+
     def no_media(self):
         QMessageBox.warning(self, programName, "There is no media available")
+
 
     def no_project(self):
         QMessageBox.warning(self, programName, "There is no project")
 
+
     def no_observation(self):
         QMessageBox.warning(self, programName, "There is no current observation")
+
 
     def twEthogram_doubleClicked(self):
         """
@@ -7930,7 +7902,7 @@ item []:
             self.bcm.deleteLater()
             #del self.bcm
             '''
-            
+            """TO DO: fix this"""
             print('hasattr(self, "bcm")', hasattr(self, "bcm"))
 
 
@@ -8061,7 +8033,6 @@ item []:
                 self.timer_out(scrollSlider=False)
 
                 self.timer_spectro_out()
-                #self.timer_plot_data_out()
 
 
     def get_events_current_row(self):
@@ -9993,14 +9964,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                #self.timer_plot_data_out()
 
-                # no subtitles
-                '''
-                logging.debug('no subtitle')
-                self.mediaplayer.video_set_spu(0)
-                logging.debug('no subtitle done')
-                '''
 
     def reset_activated(self):
         """
@@ -10029,6 +9993,7 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
+
 
     def changedFocusSlot(self, old, now):
         """
@@ -10151,7 +10116,6 @@ if __name__ == "__main__":
         if not project_to_open:
             print("No project file!")
             sys.exit()
-
         print("List of observation(s) in {} project file:".format(os.path.abspath(project_to_open)))
         print(os.linesep.join(sorted(window.pj[OBSERVATIONS].keys())))
         sys.exit(0)
@@ -10170,13 +10134,11 @@ if __name__ == "__main__":
             if observation_to_open not in window.pj[OBSERVATIONS]:
                 print("Observation not found in project!")
                 sys.exit()
-            
-            '''print(window.check_state_events_obs(observation_to_open)[1])'''
+
             print(project_functions.check_state_events_obs(observation_to_open, window.pj[ETHOGRAM],
                                                            window.pj[OBSERVATIONS][observation_to_open], window.timeFormat)[1])
 
             sys.exit()
-
 
     if observation_to_open:
         r = window.load_observation(observation_to_open)
