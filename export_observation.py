@@ -226,14 +226,24 @@ def dataset_write(dataset, file_name, output_format):
             with open(file_name, "wb") as f:
                 f.write(dataset.ods)
             return True, ""
+
+        if output_format in ["xls", "xlsx"]:
+            # check worksheet title
+            for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
+                dataset.title = dataset.title.replace(forbidden_char, " ")
+
         if output_format == "xlsx":
             with open(file_name, "wb") as f:
                 f.write(dataset.xlsx)
             return True, ""
+
         if output_format == "xls":
+            if len(dataset.title) > 31:
+                dataset.title = dataset.title[:31]
             with open(file_name, "wb") as f:
                 f.write(dataset.xls)
             return True, ""
+
         if output_format == "html":
             with open(file_name, "wb") as f:
                 f.write(str.encode(dataset.html))

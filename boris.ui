@@ -272,7 +272,6 @@
     <addaction name="actionRecode_resize_video"/>
     <addaction name="actionMedia_file_information_2"/>
     <addaction name="menuTransitions_flow_diagram"/>
-    <addaction name="actionConverters_manager"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuObservations"/>

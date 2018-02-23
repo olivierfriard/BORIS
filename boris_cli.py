@@ -31,6 +31,10 @@ import export_observation
 import irr
 
 __version__ = "6.1"
+__version_date__ = "2018-02-23"
+
+
+commands_list = ["check_state_events", "export_events", "irr"]
 
 parser = argparse.ArgumentParser(description="BORIS CLI")
 parser.add_argument("-v", "--version", action="store_true", dest='version', help='BORIS version')
@@ -111,9 +115,12 @@ if args.project_info:
                 for observation_id in observations_id_list:
                     print("Observation id: {}".format(observation_id))
                     if pj[OBSERVATIONS][observation_id][EVENTS]:
-                        print("\n".join([str(x) for x in pj[OBSERVATIONS][observation_id][EVENTS]]))
+                        
+                        for event in pj[OBSERVATIONS][observation_id][EVENTS]:
+                            print("\t".join([str(x) for x in event]))
                     else:
                         print("No events recorded")
+                    print()
         else:
             print("No project")
         sys.exit()
@@ -194,3 +201,12 @@ if args.command:
 
         print(out)
         sys.exit()
+    
+    if "list" in args.command:
+        print("Available commands: {}".format(", ".join(commands_list)))
+        sys.exit()
+
+    print("Command not found")
+    
+    
+    

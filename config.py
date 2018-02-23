@@ -114,6 +114,8 @@ behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'category'
 
 BEHAVIOR_TYPES = ["Point event", "State event", "Point event with coding map", "State event with coding map"]
 
+DEFAULT_BEHAVIOR_TYPE = "Point event"
+
 # fields for events table
 tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
 
@@ -124,7 +126,7 @@ tw_indVarFields = ["label", "description", "type", "default value", "possible va
 
 BEHAV_CODING_MAP_FIELDS = ["name", "Behavior codes"]
 
-
+EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 
 # create dictionaries
 tw_obs_fields, pj_obs_fields = {}, {}

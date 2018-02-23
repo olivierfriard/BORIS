@@ -533,7 +533,6 @@ class Ui_MainWindow(object):
         self.menuTools.addAction(self.actionRecode_resize_video)
         self.menuTools.addAction(self.actionMedia_file_information_2)
         self.menuTools.addAction(self.menuTransitions_flow_diagram.menuAction())
-        self.menuTools.addAction(self.actionConverters_manager)
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuObservations.menuAction())
         self.menubar.addAction(self.menuPlayback.menuAction())

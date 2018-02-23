@@ -104,7 +104,7 @@ import export_observation
 
 
 __version__ = "6.1"
-__version_date__ = "2018-02-09"
+__version_date__ = "2018-02-23"
 
 if platform.python_version() < "3.4":
     logging.critical("BORIS requires Python 3.4+! You are using v. {}")
@@ -122,9 +122,11 @@ parser.add_option("-v", "--version", action="store_true", default=False, dest="v
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 parser.add_option("-p", "--project", action="store", help="Project file")
 parser.add_option("-o", "--observation", action="store",  help="Observation id")
+'''
 parser.add_option("-i", "--project-info", action="store_true", default=False, help="Project information")
 parser.add_option("-l", "--observations-list", action="store_true", default=False, help="List of observations")
 parser.add_option("-a", "--action", action="store",  help="action")
+'''
 
 (options, args) = parser.parse_args()
 
@@ -2335,7 +2337,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         QMessageBox.warning(self, programName, "The frame viewer can not be detached when geometric measurements are active")
                         self.detachFrameViewer = False
                     else:
-                        print(hasattr(self, "lbFFmpeg"))
                         if hasattr(self, "lbFFmpeg"):
                             self.lbFFmpeg.clear()
                         if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
@@ -5118,9 +5119,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
                     min_time = float(plot_parameters["start time"])
                     max_time = float(plot_parameters["end time"])
-                    
-                    #print("min_time, max_time", min_time, max_time)
-                    
+
                     # check intervals
                     for subj in plot_parameters["selected subjects"]:
                         for behav in plot_parameters["selected behaviors"]:
@@ -5475,7 +5474,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     for param in parameters:
                                         columns.append(behaviors[subj][behav][modif][param[0]])
 
-                    print(len(columns))
                     data_report.append(columns)
 
                 if mode in ["by_behavior", "by_category"]:
@@ -5555,16 +5553,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     data.title = obsId
                     for row in rows:
                         data.append(complete(row, max([len(r) for r in rows])))
-    
+
                     if "xls" in outputFormat:
-                        for forbidden_char in r"\/*[]:?":
+                        for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
                             data.title = data.title.replace(forbidden_char, " ")
     
                     if flagWorkBook:
-    
-                        for forbidden_char in r"\/*[]:?":
+                        for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
                             data.title = data.title.replace(forbidden_char, " ")
-    
                         if "xls" in outputFormat:
                             if len(data.title) > 31:
                                 data.title = data.title[:31]
@@ -5586,11 +5582,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if outputFormat == "xlsx spreadsheet":
                             with open(fileName, "wb") as f:
                                 f.write(data.xlsx)
-                        '''
-                        if outputFormat == "pd dataframe":
-                            with open(fileName, "wb") as f:
-                                f.write(str.encode(data.df))
-                        '''
                         if outputFormat == "html":
                             with open(fileName, "wb") as f:
                                 f.write(str.encode(data.html))
@@ -6495,41 +6486,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # configuration of behaviours
             if newProjectWindow.pj[ETHOGRAM]:
 
-                newProjectWindow.signalMapper = QSignalMapper(self)
-                newProjectWindow.comboBoxes = []
-
                 for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):
-
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
-
                     for field in behavioursFields:
-
                         item = QTableWidgetItem()
-
                         if field == TYPE:
-
-                            # add combobox with event type
-                            newProjectWindow.comboBoxes.append(QComboBox())
-                            newProjectWindow.comboBoxes[-1].addItems(BEHAVIOR_TYPES)
-                            newProjectWindow.comboBoxes[-1].setCurrentIndex(BEHAVIOR_TYPES.index(newProjectWindow.pj[ETHOGRAM][i][field]))
-
-                            newProjectWindow.signalMapper.setMapping(newProjectWindow.comboBoxes[-1], newProjectWindow.twBehaviors.rowCount() - 1)
-                            newProjectWindow.comboBoxes[-1].currentIndexChanged["int"].connect(newProjectWindow.signalMapper.map)
-
-                            newProjectWindow.twBehaviors.setCellWidget(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], newProjectWindow.comboBoxes[-1])
-
+                            item.setText(DEFAULT_BEHAVIOR_TYPE)
+                        if field in newProjectWindow.pj[ETHOGRAM][i]:
+                            item.setText(str(newProjectWindow.pj[ETHOGRAM][i][field]))  # str for modifiers dict
                         else:
-                            if field in newProjectWindow.pj[ETHOGRAM][i]:
-                                item.setText(str(newProjectWindow.pj[ETHOGRAM][i][field]))  # str for modifiers dict
-                            else:
-                                item.setText("")
+                            item.setText("")
+                        if field in [TYPE, "category", "excluded", "coding map", "modifiers"]:
+                            item.setFlags(Qt.ItemIsEnabled)
+                            item.setBackground(QColor(230, 230, 230))
 
-                            if field in ["category", "excluded", "coding map", "modifiers"]:
-                                item.setFlags(Qt.ItemIsEnabled)
-
-                            newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
-
-                newProjectWindow.signalMapper.mapped["int"].connect(newProjectWindow.behaviorTypeChanged)
+                        newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
                 newProjectWindow.twBehaviors.resizeColumnsToContents()
 
@@ -6559,11 +6530,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.converters = newProjectWindow.pj[CONVERTERS]
                 newProjectWindow.load_converters_in_table()
 
-
         newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
 
         if mode == NEW:
-
             newProjectWindow.pj = copy.deepcopy(EMPTY_PROJECT)
 
         if newProjectWindow.exec_():  # button OK returns True
@@ -6577,7 +6546,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # retrieve project dict from window
             self.pj = copy.deepcopy(newProjectWindow.pj)
-
             self.project = True
 
             # time format
@@ -6988,8 +6956,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         data = copy.deepcopy(data_header)
         for obsId in selectedObservations:
-            print(obsId)
-            
             d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
             data.extend(d)
 
@@ -7863,11 +7829,6 @@ item []:
         handle click signal from BehaviorsCodingMapWindowClass widget
         """
 
-        #sendEventSignal = pyqtSignal(QEvent)
-        print("sender", self.sender())
-        print("bcm_name", bcm_name )
-        print("behavior_codes_list", bcm_name, behavior_codes_list)
-        
         for code in behavior_codes_list:
             try:
                 behavior_idx = [key for key in  self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key]["code"] == code][0]
@@ -7888,7 +7849,6 @@ item []:
 
     def close_behaviors_coding_map(self, coding_map_name):
         
-        print("signal close received ",coding_map_name)
         del self.bcm_dict[coding_map_name]
         
         if hasattr(self, "bcm"):
@@ -8816,7 +8776,6 @@ item []:
                 ek_unichr = ""
 
                 if "#subject#" in event.text():
-                    print("event.text()", event.text(), event.text().replace("#subject#", ""))
                     for idx in self.pj[SUBJECTS]:
                         if self.pj[SUBJECTS][idx]["name"] == event.text().replace("#subject#", ""):
                             subj_idx = idx
@@ -9331,10 +9290,19 @@ item []:
                            "HTML (*.html)"]
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
+
+            if QT_VERSION_STR[0] == "4":
+                filediag_func = QFileDialog(self).getSaveFileNameAndFilter
+            else:
+                filediag_func = QFileDialog(self).getSaveFileName
+
+            fileName, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
+            '''
             if QT_VERSION_STR[0] == "4":
                 fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export events", "", ";;".join(extended_file_formats))
             else:
                 fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export events", "", ";;".join(extended_file_formats))
+            '''
 
             if not fileName:
                 return
@@ -10008,10 +9976,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # splashscreen
-    if (not options.nosplashscreen
-        and not options.observations_list
-        and not options.project_info
-        and not options.action):
+    if (not options.nosplashscreen):
         start = time.time()
         splash = QSplashScreen(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
         splash.show()
@@ -10038,7 +10003,7 @@ if __name__ == "__main__":
                                                  "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version()),
                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-        logging.critical(("The VLC media player seems old ({})."
+        logging.critical(("The VLC media player seems a little bit old... ({})."
                           "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version()))
         sys.exit(2)
 
@@ -10066,8 +10031,7 @@ if __name__ == "__main__":
     observation_to_open = ""
     if options.project:
         project_to_open = options.project
-    
-    
+
     logging.debug("args: {}".format(args))
     if args and len(args) > 0:
        project_to_open = args[0]
@@ -10095,50 +10059,6 @@ if __name__ == "__main__":
             if msg:
                 QMessageBox.information(window, programName, msg)
             window.load_project(project_path, project_changed, pj)
-
-    if options.project_info:
-        if not project_to_open:
-            print("No project file!")
-            sys.exit()
-        print("Summary of {} project file:".format(os.path.abspath(project_to_open)))
-        print("Project name: {}".format(window.pj[PROJECT_NAME]))
-        print("Project date: {}".format(window.pj[PROJECT_DATE]))
-        print("Project description: {}".format(window.pj[PROJECT_DESCRIPTION]))
-        print("Number of behaviors in ethogram: {}".format(len(window.pj[ETHOGRAM])))
-        print("Behaviors: {}".format(",".join([window.pj[ETHOGRAM][k]["code"] for k in sorted_keys(window.pj[ETHOGRAM])])))
-        print("Number of subjects: {}".format(len(window.pj[SUBJECTS])))
-        print("Subjects: {}".format(",".join([window.pj[SUBJECTS][k]["name"] for k in sorted_keys(window.pj[SUBJECTS])])))
-        print("Number of observations: {}".format(len(window.pj[OBSERVATIONS])))
-        print("Observations: {}".format(",".join(sorted(window.pj[OBSERVATIONS].keys()))))
-        sys.exit(0)
-
-    if options.observations_list:
-        if not project_to_open:
-            print("No project file!")
-            sys.exit()
-        print("List of observation(s) in {} project file:".format(os.path.abspath(project_to_open)))
-        print(os.linesep.join(sorted(window.pj[OBSERVATIONS].keys())))
-        sys.exit(0)
-
-    if options.action:
-        if not project_to_open:
-            print("No project file!")
-            sys.exit()
-
-        if options.action == "check_state_events_obs":
-            
-            if not observation_to_open:
-                print("No observation!")
-                sys.exit()
-                
-            if observation_to_open not in window.pj[OBSERVATIONS]:
-                print("Observation not found in project!")
-                sys.exit()
-
-            print(project_functions.check_state_events_obs(observation_to_open, window.pj[ETHOGRAM],
-                                                           window.pj[OBSERVATIONS][observation_to_open], window.timeFormat)[1])
-
-            sys.exit()
 
     if observation_to_open:
         r = window.load_observation(observation_to_open)

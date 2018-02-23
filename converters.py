@@ -386,21 +386,12 @@ OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
 
 
     import sys
-    
-    '''
-    f = open("1test_conv.json", "w")
-    f.write(json.dumps(CONVERTERS, indent=1, separators=(',', ':')))
-    f.close()
-    
-    sys.exit()
-    '''
-    
-    
+
     app = QApplication(sys.argv)
 
     class_ = Converters(CONVERTERS["BORIS converters"])
     class_.show()
-    
+
     r = class_.exec_()
     print(r)
     if r:
