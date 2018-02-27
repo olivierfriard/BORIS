@@ -6759,92 +6759,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         create subtitles for selected observations, subjects and behaviors
         """
 
-        result, selectedObservations = self.selectObservations(MULTIPLE)
-
-        logging.debug("Selected observations: {0}".format(selectedObservations))
-
-        if not selectedObservations:
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+            
+        # check if state events are paired
+        out, not_paired_obs_list = "", []
+        for obsId in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+        if out:
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.show()
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, 0)
-
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        parameters = self.choose_obs_subj_behav_category(selected_observations, 0)
+        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
-
-        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"),
-                                                           options=QFileDialog(self).ShowDirsOnly)
-        if not exportDir:
+        export_dir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"),
+                                                            options=QFileDialog(self).ShowDirsOnly)
+        if not export_dir:
             return
-
-        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations,
-                                                plot_parameters["selected behaviors"])
-
-        flagUnpairedEventFound = False
-
-        for obsId in selectedObservations:
-
-            for nplayer in [PLAYER1, PLAYER2]:
-
-                if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    continue
-
-                duration1 = []   # in seconds
-                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
-
-                subtitles = {}
-                for subject in plot_parameters["selected subjects"]:
-
-                    for behavior in plot_parameters["selected behaviors"]:
-
-                        cursor.execute("SELECT occurence, modifiers FROM events where observation = ? AND subject = ? AND  code = ? ORDER BY code, occurence",
-                                       (obsId, subject, behavior))
-                        rows = list(cursor.fetchall())
-                        if STATE in self.eventType(behavior).upper() and len(rows) % 2:
-                            #continue
-                            flagUnpairedEventFound = True
-                            continue
-
-                        for idx, row in enumerate(rows):
-
-                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
-                            if mediaFileIdx not in subtitles:
-                                subtitles[mediaFileIdx] = []
-
-                            # subtitle color
-                            if subject == NO_FOCAL_SUBJECT:
-                                col = "white"
-                            else:
-                                col = subtitlesColors[plot_parameters["selected subjects"].index(subject) % len(subtitlesColors)]
-
-                            behaviorStr = behavior
-                            if plot_parameters["include modifiers"] and row[1]:
-                                behaviorStr += " ({0})".format(row[1].replace("|", ", "))
-
-                            if POINT in self.eventType(behavior).upper():
-                                laps =  "{0} --> {1}".format(seconds2time(row["occurence"]).replace(".", ","), seconds2time(row["occurence"] + 0.5).replace(".", ","))
-                                subtitles[mediaFileIdx].append([laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr)])
-
-                            if STATE in self.eventType(behavior).upper():
-                                if idx % 2 == 0:
-
-                                    start = seconds2time(round(row["occurence"] - sum(duration1[0:mediaFileIdx]), 3)).replace(".", ",")
-                                    stop = seconds2time(round(rows[idx + 1]["occurence"] - sum(duration1[0:mediaFileIdx]), 3)).replace(".", ",")
-
-                                    laps =  "{start} --> {stop}".format(start=start, stop=stop)
-                                    subtitles[mediaFileIdx].append([laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr)])
-
-
-                try:
-                    for mediaIdx in subtitles:
-                        subtitles[mediaIdx].sort()
-                        with open("{exportDir}{sep}{fileName}.srt".format(exportDir=exportDir, sep=os.sep, fileName=os.path.basename(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaIdx])), "w") as f:
-                            for idx, sub in enumerate(subtitles[mediaIdx]):
-                                f.write("{0}{3}{1}{3}{2}{3}{3}".format(idx + 1, sub[0], sub[1], "\n"))
-                except:
-                    errorMsg = sys.exc_info()[1]
-                    logging.critical(errorMsg)
-                    QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        ok, msg = project_functions.create_subtitles(self.pj, selected_observations, parameters, export_dir)
+        if not ok:
+            logging.critical(msg)
+            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def export_aggregated_events(self):
@@ -7810,6 +7755,7 @@ item []:
         else:
             self.no_observation()
 
+
     def actionUser_guide_triggered(self):
         """
         open user guide URL if it exists otherwise open user guide URL
@@ -7903,7 +7849,7 @@ item []:
 
     def actionAbout_activated(self):
         """
-        about dialog
+        About dialog
         """
 
         ver = 'v. {0}'.format(__version__)
@@ -7921,7 +7867,7 @@ item []:
         else:
             ffmpeg_true_path = self.ffmpeg_bin
         players.append("Path: {}".format(ffmpeg_true_path))
-        
+
         # matplotlib
         players.append("\nMatplotlib")
         players.append("version {}".format(matplotlib.__version__))
@@ -7991,7 +7937,6 @@ item []:
                     self.mediaplayer2.set_time(int(self.mediaplayer.get_time()
                                    - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
                 self.timer_out(scrollSlider=False)
-
                 self.timer_spectro_out()
 
 

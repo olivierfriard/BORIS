@@ -160,8 +160,7 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                         cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, start, stop) "
                                         "VALUES (?,?,?,?,?,?,?)"),
                                         (obsId, subject, behavior, POINT, row["modifiers"].strip(), row["occurence"], row["occurence"]))
-    
-    
+
                     if behavior in state_behaviors_codes:
                         if idx % 2 == 0:
                             cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, start, stop) "

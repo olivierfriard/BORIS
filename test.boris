@@ -237,11 +237,10 @@
    "date":"2016-12-01T23:01:31",
    "file":{
     "1":[
-     "video1.avi"
+     "video1.avi",
+     "/home/olivier/projects/BORIS/video2.avi"
     ],
-    "2":[
-     "video2.avi"
-    ]
+    "2":[]
    },
    "type":"MEDIA",
    "time offset second player":0.0,
@@ -316,25 +315,160 @@
      "p",
      "",
      ""
+    ],
+    [
+     227.765,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     253.49,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     255.34,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     261.14,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     266.165,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     276.69,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     280.965,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     286.215,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     292.065,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     294.215,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     299.715,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     301.34,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     303.24,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     303.79,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     307.765,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     314.49,
+     "subject2",
+     "p",
+     "",
+     ""
+    ],
+    [
+     316.065,
+     "subject2",
+     "p",
+     "",
+     ""
+    ],
+    [
+     317.39,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     320.365,
+     "subject2",
+     "s",
+     "",
+     ""
     ]
    ],
    "description":"Description of observation #2",
    "media_info":{
     "length":{
      "video1.avi":225.64,
-     "video2.avi":300.0
+     "/home/olivier/projects/BORIS/video2.avi":300.0
     },
     "fps":{
      "video1.avi":25.0,
-     "video2.avi":25.0
+     "/home/olivier/projects/BORIS/video2.avi":25.0
     },
     "hasVideo":{
      "video1.avi":true,
-     "video2.avi":true
+     "video2.avi":true,
+     "/home/olivier/projects/BORIS/video2.avi":true
     },
     "hasAudio":{
      "video1.avi":true,
-     "video2.avi":true
+     "video2.avi":true,
+     "/home/olivier/projects/BORIS/video2.avi":true
     }
    }
   },
@@ -424,6 +558,108 @@
     ],
     [
      26.862,
+     "",
+     "s",
+     "",
+     ""
+    ]
+   ],
+   "independent_variables":{
+    "a":"",
+    "b":"",
+    "c":"111"
+   },
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "scan_sampling_time":0
+  },
+  "live":{
+   "file":[],
+   "type":"LIVE",
+   "date":"2018-02-27T15:39:40",
+   "description":"",
+   "time offset":0.0,
+   "events":[
+    [
+     1.75,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     3.75,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     5.43,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     5.622,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     5.814,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     8.886,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     12.509,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     14.038,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     16.678,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     18.438,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     20.685,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     26.63,
      "",
      "s",
      "",

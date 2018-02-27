@@ -293,7 +293,8 @@ def export_aggregated_events(pj, parameters, obsId):
 
         for behavior in parameters["selected behaviors"]:
 
-            cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence", (obsId, subject, behavior))
+            cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence",
+                           (obsId, subject, behavior))
             rows = list(cursor.fetchall())
 
             for idx, row in enumerate(rows):
