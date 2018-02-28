@@ -675,6 +675,91 @@
    "visualize_spectrogram":false,
    "close_behaviors_between_videos":false,
    "scan_sampling_time":0
+  },
+  "modifiers":{
+   "file":{
+    "1":[
+     "/home/olivier/projects/BORIS/video1.avi"
+    ],
+    "2":[]
+   },
+   "type":"MEDIA",
+   "date":"2018-02-28T15:25:10",
+   "description":"",
+   "time offset":0.0,
+   "events":[
+    [
+     8.475,
+     "",
+     "q",
+     "m1",
+     ""
+    ],
+    [
+     12.35,
+     "",
+     "q",
+     "m2",
+     ""
+    ],
+    [
+     15.65,
+     "",
+     "q",
+     "m3",
+     ""
+    ],
+    [
+     19.175,
+     "",
+     "r",
+     "m1",
+     ""
+    ],
+    [
+     27.95,
+     "",
+     "r",
+     "m1",
+     ""
+    ],
+    [
+     30.425,
+     "",
+     "r",
+     "None",
+     ""
+    ],
+    [
+     40.825,
+     "",
+     "r",
+     "None",
+     ""
+    ]
+   ],
+   "independent_variables":{
+    "a":"",
+    "b":"",
+    "c":"111"
+   },
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "media_info":{
+    "length":{
+     "/home/olivier/projects/BORIS/video1.avi":225.64
+    },
+    "fps":{
+     "/home/olivier/projects/BORIS/video1.avi":25.0
+    },
+    "hasVideo":{
+     "/home/olivier/projects/BORIS/video1.avi":true
+    },
+    "hasAudio":{
+     "/home/olivier/projects/BORIS/video1.avi":true
+    }
+   }
   }
  },
  "independent_variables":{
@@ -705,7 +790,7 @@
    "type":"Point event",
    "key":"P",
    "code":"p",
-   "description":"",
+   "description":"Test point event",
    "category":"",
    "modifiers":{},
    "excluded":"",
@@ -715,9 +800,49 @@
    "type":"State event",
    "key":"S",
    "code":"s",
-   "description":"",
+   "description":"Test state event",
    "category":"",
    "modifiers":{},
+   "excluded":"",
+   "coding map":""
+  },
+  "2":{
+   "type":"Point event",
+   "key":"Q",
+   "code":"q",
+   "description":"point event with 1 set of modifiers",
+   "category":"",
+   "modifiers":{
+    "0":{
+     "name":"modif #1",
+     "type":0,
+     "values":[
+      "m1",
+      "m2",
+      "m3"
+     ]
+    }
+   },
+   "excluded":"",
+   "coding map":""
+  },
+  "3":{
+   "type":"State event",
+   "key":"R",
+   "code":"r",
+   "description":"state event with 1 set of modifiers",
+   "category":"",
+   "modifiers":{
+    "0":{
+     "name":"modif #1",
+     "type":0,
+     "values":[
+      "m1",
+      "m2",
+      "m3"
+     ]
+    }
+   },
    "excluded":"",
    "coding map":""
   }

@@ -23,6 +23,7 @@ Copyright 2012-2018 Olivier Friard
 
 import argparse
 import sys
+import re
 import utilities
 import project_functions
 from config import *
@@ -30,11 +31,18 @@ import db_functions
 import export_observation
 import irr
 
+
+
 __version__ = "6.1"
 __version_date__ = "2018-02-23"
 
+def cleanhtml(raw_html):
+    raw_html = raw_html.replace("<br>", "\n")
+    cleanr = re.compile("<.*?>")
+    cleantext = re.sub(cleanr, "", raw_html)
+    return cleantext
 
-commands_list = ["check_state_events", "export_events", "irr"]
+commands_list = ["check_state_events", "export_events", "irr", "subtitles"]
 
 parser = argparse.ArgumentParser(description="BORIS CLI")
 parser.add_argument("-v", "--version", action="store_true", dest='version', help='BORIS version')
@@ -140,31 +148,28 @@ if args.command:
         sys.exit()
     
     if "check_state_events" in args.command:
-        print("Check state events:")
         for observation_id in observations_id_list:
             ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
-            print("{}: {}".format(observation_id, msg))
+            print("{}: {}".format(observation_id, cleanhtml(msg)))
         sys.exit()
 
     if "export_events" in args.command:
-        print("export events:")
-
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
-        
+
         output_format = "tsv"
         if len(args.command) > 1:
             output_format = args.command[1]
         
         for observation_id in observations_id_list:
-            r, msg = export_observation.export_events({"selected subjects": subjects,
+            ok, msg = export_observation.export_events({"selected subjects": subjects,
                                               "selected behaviors": behaviors},
                                               observation_id,
                                               pj[OBSERVATIONS][observation_id],
                                               pj[ETHOGRAM],
                                               utilities.safeFileName(observation_id + "." + output_format),
                                               output_format)
-            if not r:
+            if not ok:
                 print(msg)
             
         sys.exit()
@@ -178,10 +183,17 @@ if args.command:
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
         
-        cursor = db_functions.load_aggregated_events_in_db(pj,
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                            subjects,
                                                            observations_id_list,
-                                                           behaviors).cursor()
+                                                           behaviors)
+
+        if not ok:
+            print(cleanhtml(msg))
+            sys.exit()
+
+        cursor = db_connector.cursor()
+
         interval = 1
         if len(args.command) > 1:
             interval = utilities.float2decimal(args.command[1])
@@ -201,9 +213,27 @@ if args.command:
 
         print(out)
         sys.exit()
-    
+
+    if "subtitles" in args.command:
+        behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
+        subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
+
+        export_dir = "."
+        if len(args.command) > 1:
+            export_dir = args.command[1]
+
+        ok, msg = project_functions.create_subtitles(pj,
+                                           observations_id_list,
+                                           {"selected subjects": subjects,
+                                           "selected behaviors": behaviors,
+                                           "include modifiers": True},
+                                           export_dir)
+        if not ok:
+            print(cleanhtml(msg))
+        sys.exit()
+
     if "list" in args.command:
-        print("Available commands: {}".format(", ".join(commands_list)))
+        print("Available commands:\n{}".format("\n".join(commands_list)))
         sys.exit()
 
     print("Command not found")

@@ -24,6 +24,7 @@ Copyright 2012-2018 Olivier Friard
 import sqlite3
 import os
 from config import *
+import project_functions
 
 
 def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors):
@@ -103,20 +104,34 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
         selectedBehaviors (list):
         
     Returns:
-        database connector:
+        bool: True if OK else False
+        str: error message
+        database connector: db connector if bool True else None
 
     """
 
+    # if no observation selected select all
     if not selectedObservations:
         selectedObservations = sorted([x for x in pj[OBSERVATIONS]])
 
+    # if no subject selected select all
     if not selectedSubjects:
         selectedSubjects = sorted([pj[SUBJECTS][x]["name"] for x in pj[SUBJECTS]] + [NO_FOCAL_SUBJECT])
 
+    # if no behavior selected select all
     if not selectedBehaviors:
         selectedBehaviors = sorted([pj[ETHOGRAM][x]["code"] for x in pj[ETHOGRAM]])
 
-
+    # check if state events are paired
+    out = ""
+    for obsId in selectedObservations:
+        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM],
+                                                          pj[OBSERVATIONS][obsId],
+                                                          HHMMSS)
+        if not r:
+            out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+    if out:
+        return False, out, None
 
     # selected behaviors defined as state event
     state_behaviors_codes = [pj[ETHOGRAM][x]["code"] for x in pj[ETHOGRAM]
@@ -127,7 +142,6 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
     point_behaviors_codes = [pj[ETHOGRAM][x]["code"] for x in pj[ETHOGRAM]
                                  if POINT in pj[ETHOGRAM][x][TYPE].upper()
                                     and pj[ETHOGRAM][x]["code"] in selectedBehaviors]
-
 
     cursor1 = load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors)
 
@@ -169,7 +183,7 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                                              row["occurence"], rows[idx + 1]["occurence"]))
 
     db.commit()
-    return db
+    return True, "", db
 
 
 

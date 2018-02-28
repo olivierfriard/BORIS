@@ -32,6 +32,47 @@ import db_functions
 import utilities
 
 
+def media_full_path(media_file, project_file_name):
+
+    media_path = pathlib.Path(media_file)
+    if media_path.resolve() == media_path and media_path.exists():
+        return str(media_path)
+    else:
+        project_path = pathlib.Path(project_file_name)
+        p = project_path.parent / media_path.name
+        if p.exists():
+            return str(p)
+        else:
+            return ""
+
+
+
+def check_if_media_available(observation, project_file_name):
+    """
+    check if media files available
+    
+    Args:
+        observation (dict): observation to be checked
+        
+    Returns:
+         bool: True of media files found else False
+    """
+
+    for nplayer in ALL_PLAYERS:
+        if nplayer in observation[FILE]:
+            if not isinstance(observation[FILE][nplayer], list):
+                return False
+            for mediaFile in observation[FILE][nplayer]:
+                media_path = pathlib.Path(mediaFile)
+                if not media_path.exists():
+                    # check project directory for media file
+                    project_path = pathlib.Path(project_file_name)
+                    p = project_path.parent / media_path.name
+                    if not p.exists():
+                        return False
+    return True
+
+'''
 def create_subtitles_old(pj, selected_observations, parameters, export_dir):
     """
     create subtitles for selected observations, subjects and behaviors
@@ -93,18 +134,14 @@ def create_subtitles_old(pj, selected_observations, parameters, export_dir):
                         if parameters["include modifiers"] and row[1]:
                             behaviorStr += " ({0})".format(row[1].replace("|", ", "))
 
-                        #if POINT in self.eventType(behavior).upper():
                         if POINT in event_type(behavior, pj[ETHOGRAM]):
                             laps =  "{0} --> {1}".format(utilities.seconds2time(row["occurence"]).replace(".", ","), utilities.seconds2time(row["occurence"] + 0.5).replace(".", ","))
                             subtitles[mediaFileIdx].append([laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr)])
 
-                        #if STATE in self.eventType(behavior).upper():
                         if STATE in event_type(behavior, pj[ETHOGRAM]):
                             if idx % 2 == 0:
-
                                 start = utilities.seconds2time(round(row["occurence"] - sum(duration1[0:mediaFileIdx]), 3)).replace(".", ",")
                                 stop = utilities.seconds2time(round(rows[idx + 1]["occurence"] - sum(duration1[0:mediaFileIdx]), 3)).replace(".", ",")
-
                                 laps =  "{start} --> {stop}".format(start=start, stop=stop)
                                 subtitles[mediaFileIdx].append([laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr)])
 
@@ -120,7 +157,7 @@ def create_subtitles_old(pj, selected_observations, parameters, export_dir):
                 errorMsg = sys.exc_info()[1]
                 return False, str(errorMsg)
     return True, ""
-
+'''
 
 def create_subtitles(pj, selected_observations, parameters, export_dir):
     """
@@ -137,80 +174,118 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
         str: error message
     """
 
-    cursor = db_functions.load_aggregated_events_in_db(pj,
-                                                       parameters["selected subjects"],
-                                                       selected_observations,
-                                                       parameters["selected behaviors"]).cursor()
+    def subject_color(subject):
+        """
+        subject color
+        
+        Args:
+            subject (str): subject name
 
-    flag_ok = True
-    msg = ""
-    for obsId in selected_observations:
+        Returns:
+            str: HTML tag for color font (beginning)
+            str: HTML tag for color font (closing)
+        """
+        if subject == NO_FOCAL_SUBJECT:
+            return "", ""
+        else:
+            return """<font color="{}">""".format(subtitlesColors[parameters["selected subjects"].index(row["subject"]) % len(subtitlesColors)]), "</font>"
 
-        if pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
-            out = ""
-            cursor.execute(("SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
-                            "WHERE observation = ? AND subject in ({}) "
-                            "AND behavior in ({}) "
-                            "ORDER BY start").format(",".join(["?"] * len(parameters["selected subjects"])),
-                                                     ",".join(["?"] * len(parameters["selected behaviors"]))),
-                            [obsId] + parameters["selected subjects"] + parameters["selected behaviors"])
+    try:
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
+                                                           parameters["selected subjects"],
+                                                           selected_observations,
+                                                           parameters["selected behaviors"])
+        if not ok:
+            return False, msg
 
-            for idx, row in enumerate(cursor.fetchall()):
-                out += ("{idx}\n"
-                     "{start} --> {stop}\n"
-                     "{subject}: {behavior}\n\n").format(idx=idx + 1,
-                                                     start=utilities.seconds2time(row["start"]).replace(".", ","),
-                                                     stop=utilities.seconds2time(row["stop"] if row["type"] == STATE else row["stop"] + POINT_EVENT_ST_DURATION).replace(".", ","),
-                                                     subject=row["subject"],
-                                                     behavior=row["behavior"])
+        cursor = db_connector.cursor()
+        flag_ok = True
+        msg = ""
+        for obsId in selected_observations:
+            if pj[OBSERVATIONS][obsId][TYPE] in [LIVE]:
+                out = ""
+                cursor.execute(("SELECT subject, behavior, start, stop, type, modifiers FROM aggregated_events "
+                                "WHERE observation = ? AND subject in ({}) "
+                                "AND behavior in ({}) "
+                                "ORDER BY start").format(",".join(["?"] * len(parameters["selected subjects"])),
+                                                         ",".join(["?"] * len(parameters["selected behaviors"]))),
+                                [obsId] + parameters["selected subjects"] + parameters["selected behaviors"])
+    
+                for idx, row in enumerate(cursor.fetchall()):
+                    col1, col2 = subject_color(row["subject"])
+                    if parameters["include modifiers"]:
+                        modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
+                    else:
+                        modifiers_str = ""
+                    out += ("{idx}\n"
+                         "{start} --> {stop}\n"
+                         "{col1}{subject}: {behavior}"
+                         "{modifiers}"
+                         "{col2}\n\n").format(idx=idx + 1,
+                                                         start=utilities.seconds2time(row["start"]).replace(".", ","),
+                                                         stop=utilities.seconds2time(row["stop"] if row["type"] == STATE else row["stop"] + POINT_EVENT_ST_DURATION).replace(".", ","),
+                                                         col1=col1, col2=col2,
+                                                         subject=row["subject"],
+                                                         behavior=row["behavior"],
+                                                         modifiers=modifiers_str)
+    
+                file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with_suffix(".srt"))
+                try:
+                    with open(file_name, "w") as f:
+                        f.write(out)
+                except:
+                    flag_ok = False
+                    msg += "observation: {}\ngave the following error:\n{}\n".format(obsId, str(sys.exc_info()[1]))
 
-            file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with_suffix(".srt"))
-            try:
-                with open(file_name, "w") as f:
-                    f.write(out)
-            except:
-                flag_ok = False
-                msg += "observation: {} gave error {}\n".format(obsId, str(sys.exc_info()[1]))
+            elif pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
 
-        elif pj[OBSERVATIONS][obsId][TYPE] in [MEDIA]:
+                for nplayer in ALL_PLAYERS:
+                    if not pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                        continue
+                    init = 0
+                    for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                        end = init + pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
+                        out = ""
+                        cursor.execute(("SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
+                                        "WHERE observation = ? AND start BETWEEN ? and ? "
+                                        "AND subject in ({}) "
+                                        "AND behavior in ({}) "
+                                        "ORDER BY start").format(",".join(["?"] * len(parameters["selected subjects"])),
+                                                                 ",".join(["?"] * len(parameters["selected behaviors"]))),
+                                        [obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"])
 
-            for nplayer in ALL_PLAYERS:
-                if not pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    continue
-                init = 0
-                for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    end = init + pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
-                    out = ""
-                    cursor.execute(("SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
-                                    "WHERE observation = ? AND start BETWEEN ? and ? "
-                                    "AND subject in ({}) "
-                                    "AND behavior in ({}) "
-                                    "ORDER BY start").format(",".join(["?"] * len(parameters["selected subjects"])),
-                                                             ",".join(["?"] * len(parameters["selected behaviors"]))),
-                                    [obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"])
-                    
-                    for idx, row in enumerate(cursor.fetchall()):
-                        print(row["subject"], row["behavior"], row["start"], row["stop"])
-                        out += ("{idx}\n"
-                                "{start} --> {stop}\n"
-                                "{subject}: {behavior}\n\n").format(idx=idx + 1,
-                                                                    start=utilities.seconds2time(row["start"]).replace(".", ","),
-                                                                    stop=utilities.seconds2time(row["stop"] if row["type"] == STATE else row["stop"] + POINT_EVENT_ST_DURATION).replace(".", ","),
-                                                                    subject=row["subject"],
-                                                                    behavior=row["behavior"])
+                        for idx, row in enumerate(cursor.fetchall()):
+                            col1, col2 = subject_color(row["subject"])
+                            if parameters["include modifiers"]:
+                                modifiers_str = "\n{}".format(row["modifiers"].replace("|", ", "))
+                            else:
+                                modifiers_str = ""
 
-                    file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.PurePosixPath(mediaFile).name).with_suffix(".srt"))
-                    try:
-                        with open(file_name, "w") as f:
-                            f.write(out)
-                    except:
-                        flag_ok = False
-                        msg += "observation: {} gave error {}\n".format(obsId, str(sys.exc_info()[1]))
+                            out += ("{idx}\n"
+                                    "{start} --> {stop}\n"
+                                    "{col1}{subject}: {behavior}"
+                                    "{modifiers}"
+                                    "{col2}\n\n").format(idx=idx + 1,
+                                                                        start=utilities.seconds2time(row["start"] - init).replace(".", ","),
+                                                                        stop=utilities.seconds2time((row["stop"] if row["type"] == STATE else row["stop"] + POINT_EVENT_ST_DURATION) - init).replace(".", ","),
+                                                                        col1=col1, col2=col2,
+                                                                        subject=row["subject"],
+                                                                        behavior=row["behavior"],
+                                                                        modifiers=modifiers_str)
+    
+                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.PurePosixPath(mediaFile).name).with_suffix(".srt"))
+                        try:
+                            with open(file_name, "w") as f:
+                                f.write(out)
+                        except:
+                            flag_ok = False
+                            msg += "observation: {}\ngave the following error:\n{}\n".format(obsId, str(sys.exc_info()[1]))
+    
+                        init = end
 
-                    init = end
-
-    return flag_ok, msg
-
+        return flag_ok, msg
+    except:
+        return False, str(sys.exc_info()[1])
 
 
 def observation_total_length(observation):
@@ -330,7 +405,6 @@ def extract_observed_subjects(pj, selected_observations):
 
     # remove duplicate
     return list(set(observed_subjects))
-
 
 
 def open_project_json(projectFileName):
@@ -572,7 +646,7 @@ def check_state_events_obs(obsId, ethogram, observation, time_format):
 
         for behavior in sorted(set(behaviors)):
             if behavior not in ethogram_behaviors:
-                return (False, "The behaviour <b>{}</b> not found in the ethogram.<br>".format(behavior))
+                return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
             else:
                 if STATE in event_type(behavior, ethogram).upper():
                     flagStateEvent = True

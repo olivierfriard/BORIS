@@ -310,7 +310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     saveMediaFilePath = True
 
     beep_every = 0
-    
+
     plot_colors = BEHAVIORS_PLOT_COLORS
 
     measurement_w = None
@@ -332,7 +332,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     play_rate_step = 0.1
 
-    currentSubject = ''  # contains the current subject of observation
+    currentSubject = ""  # contains the current subject of observation
 
     detailedObs = {}
 
@@ -844,7 +844,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
 
-
     def irr_cohen_kappa(self):
         """
         calculate the Inter-Rater Reliability index - Cohen's Kappa of 2 observations
@@ -857,24 +856,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         if len(selected_observations) < 2:
             QMessageBox.information(self, programName, "Select almost 2 observations for IRR analysis")
-            return
-
-
-        # check if state events are paired
-        tot_out = ""
-        for obsId in selected_observations:
-            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
-
-            if not r:
-                tot_out += "Observation: <strong>{}</strong><br>{}<br>".format(obsId, msg)
-        if tot_out:
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle("Check state events")
-            self.results.ptText.clear()
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(tot_out)
-            self.results.show()
             return
 
         plot_parameters = self.choose_obs_subj_behav_category(selected_observations,
@@ -891,11 +872,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         interval = float2decimal(i)
 
-        cursor = db_functions.load_aggregated_events_in_db(self.pj,
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
                                                            plot_parameters["selected subjects"],
                                                            selected_observations,
-                                                           plot_parameters["selected behaviors"]).cursor()
+                                                           plot_parameters["selected behaviors"])
 
+        if not ok:
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle("Check state events")
+            self.results.ptText.clear()
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(msg)
+            self.results.show()
+            return
+
+        cursor = db_connector.cursor()
         out = ("Cohen's Kappa - Index of Inter-rater Reliability\n\n"
                "Interval time: {interval:.3f} s\n"
                "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
@@ -2475,6 +2466,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, requiredFrame, fps)
+
+        current_media_full_path = project_functions.media_full_path(currentMedia, self.projectFileName)
+
+        logging.debug("current media 1: {}".format(currentMedia))
         logging.debug("frame current media 1: {}".format(frameCurrentMedia))
 
         # plot spectro
@@ -2489,7 +2484,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             extract_frames(self.ffmpeg_bin,
                            int((frameCurrentMedia -1) / fps),
-                           currentMedia,
+                           current_media_full_path,
                            str(round(fps) + 1),
                            self.imageDirectory,
                            md5FileName,
@@ -2519,7 +2514,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.warning("image 1 not found: {} {} {}".format(img, frameCurrentMedia, int(frameCurrentMedia / fps)))
             extract_frames(self.ffmpeg_bin,
                            int(frameCurrentMedia / fps),
-                           currentMedia,
+                           current_media_full_path,
                            str(round(fps) + 1),
                            self.imageDirectory,
                            md5FileName,
@@ -2562,10 +2557,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * fps)
 
             currentMedia2, frameCurrentMedia2 = self.getCurrentMediaByFrame(PLAYER2, requiredFrame2, fps)
+            current_media_full_path2 = project_functions.media_full_path(currentMedia2, self.projectFileName)
+            
             md5FileName2 = hashlib.md5(currentMedia2.encode("utf-8")).hexdigest()
             if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName2,
                                                      second=int(frameCurrentMedia2 / fps)) not in self.imagesList:
-                extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), currentMedia2, str(round(fps) + 1),
+                extract_frames(self.ffmpeg_bin, int(frameCurrentMedia2 / fps), current_media_full_path2, str(round(fps) + 1),
                                self.imageDirectory, md5FileName2, self.frame_bitmap_format.lower(), self.frame_resize)
 
                 self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
@@ -2586,7 +2583,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.warning("image 2 not found: {0}".format(img2))
                 extract_frames(self.ffmpeg_bin,
                                int(frameCurrentMedia2 / fps),
-                               currentMedia2,
+                               current_media_full_path2,
                                str(round(fps) + 1),
                                self.imageDirectory,
                                md5FileName2,
@@ -2655,7 +2652,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.FFmpegGlobalFrame2 = requiredFrame2
 
         currentTime = self.getLaps() * 1000
-
 
         time_str = "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
                              currentMediaName=os.path.basename(currentMedia),
@@ -2979,6 +2975,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.vboxlayout.insertLayout(1, self.video2layout)
 
+    '''
     def check_if_media_available(self):
         """
         check if every media available for observationId
@@ -3009,11 +3006,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if not os.path.isfile(mediaFile):
                         return False
         return True
+    '''
 
     def check_if_media_in_project_directory(self):
 
         try:
-            for player in [PLAYER1, PLAYER2]:
+            for player in ALL_PLAYERS:
                 for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][player]:
                     if not os.path.isfile(os.path.dirname(self.projectFileName) + os.sep + os.path.basename(mediaFile)):
                         return False
@@ -3021,6 +3019,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return False
         return True
 
+        
 
     def initialize_new_observation_vlc(self):
         """
@@ -3031,19 +3030,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         useMediaFromProjectDirectory = NO
 
-        if not self.check_if_media_available():
+        #if not self.check_if_media_available():
+        if not project_functions.check_if_media_available(self.pj[OBSERVATIONS][self.observationId],
+                                                          self.projectFileName):
 
             if self.check_if_media_in_project_directory():
 
-                useMediaFromProjectDirectory = dialog.MessageDialog(programName, """Media file was/were not found in its/their original path(s) but in project directory.<br>
-                Do you want to convert media file paths?""", [YES, NO])
+                useMediaFromProjectDirectory = dialog.MessageDialog(programName, ("Media file was/were not found in its/their original path(s) "
+                                                                                  "but in project directory.<br> "
+                                                                                  "Do you want to convert media file paths?"), [YES, NO])
 
                 if useMediaFromProjectDirectory == NO:
-                    QMessageBox.warning(self, programName, ("""The observation will be opened in VIEW mode.<br>"""
-                                                            """It will not be allowed to log events.<br>"""
-                                                            """Modify the media path to point an existing media file"""
-                                                            """ to log events or copy media file in the BORIS project"""
-                                                            """ directory."""),
+                    QMessageBox.warning(self, programName, ("The observation will be opened in VIEW mode.<br>"
+                                                            "It will not be possible to log events.<br>"
+                                                            "Modify the media path to point an existing media file "
+                                                            "to log events or copy media file in the BORIS project "
+                                                            "directory."),
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                     self.playerType = VIEWER
@@ -3054,14 +3056,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 QMessageBox.critical(self, programName, ("A media file was not found!<br>The observation will be"
                                                          " opened in VIEW mode.<br>"
-                                                         "It will not be allowed to log events.<br>"
+                                                         "It will not be possible to log events.<br>"
                                                          "Modify the media path to point an existing media file "
                                                          "to log events or copy media file in the BORIS project directory."),
                                      QMessageBox.Ok | QMessageBox.Default,
                                      QMessageBox.NoButton)
 
                 self.playerType = VIEWER
-                self.playMode = ''
+                self.playMode = ""
                 self.dwObservations.setVisible(True)
                 return True
 
@@ -3105,7 +3107,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except AttributeError:
                 self.initialize_video_tab()
 
-            media = self.instance.media_new(mediaFile)
+            media_full_path = project_functions.media_full_path(mediaFile, self.projectFileName)
+            media = self.instance.media_new(media_full_path)
             media.parse()
 
             # media duration
@@ -3114,7 +3117,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
             except:
                 logging.debug("media_info key not found")
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                 if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
                     self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
                     if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
@@ -3161,7 +3164,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         """
 
-
         # show first frame of video
         logging.debug("playing media #{0}".format(0))
 
@@ -3207,7 +3209,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # add media file
                 for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]:
-                    media = self.instance.media_new(mediaFile)
+
+                    media_full_path = project_functions.media_full_path(mediaFile, self.projectFileName)
+                    media = self.instance.media_new(media_full_path)
                     media.parse()
 
                     # media duration
@@ -3216,7 +3220,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
                     except:
                         logging.debug("media_info key not found")
-                        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                         if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
                             self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
                             if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
@@ -6762,22 +6766,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
-            
-        # check if state events are paired
-        out, not_paired_obs_list = "", []
-        for obsId in selected_observations:
-            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
-            if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
-                not_paired_obs_list.append(obsId)
-        if out:
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle(programName + " - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.show()
-            return
 
         parameters = self.choose_obs_subj_behav_category(selected_observations, 0)
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
@@ -6874,7 +6862,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if outputFormat == "sql":
-            conn = db_functions.load_aggregated_events_in_db(self.pj,
+            _, _, conn = db_functions.load_aggregated_events_in_db(self.pj,
                                                              plot_parameters["selected subjects"],
                                                              selectedObservations,
                                                              plot_parameters["selected behaviors"])
@@ -7151,14 +7139,16 @@ item []:
 
             # FFmpeg analysis
             self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
-            for idx in self.pj[OBSERVATIONS][self.observationId][FILE]:
-                for filePath in self.pj[OBSERVATIONS][self.observationId][FILE][idx]:
-                    nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
+            for nplayer in self.pj[OBSERVATIONS][self.observationId][FILE]:
+                for filePath in self.pj[OBSERVATIONS][self.observationId][FILE][nplayer]:
+                    media_full_path = project_functions.media_full_path(filePath, self.projectFileName)
+                    nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     if nframes == -1:
-                        self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=duration_ms))
+                        self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=media_full_path,
+                                                                                                             error=duration_ms))
                     else:
                         self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
-                            format(filePath, self.convertTime(duration), fps, hasVideo, hasAudio))
+                            format(media_full_path, self.convertTime(duration), fps, hasVideo, hasAudio))
 
             self.results.ptText.appendHtml("Total duration: {} (hh:mm:ss.sss)".
                 format(self.convertTime(sum(self.duration) / 1000)))

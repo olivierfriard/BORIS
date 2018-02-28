@@ -207,36 +207,3 @@ def cohen_kappa(cursor,
     return K, out
 
 
-if __name__ == '__main__':
-    
-
-    logging.basicConfig(level=logging.DEBUG)
-
-    obsid1, obsid2 = "obs1", "2"
-
-    interval = 1
-
-    selected_subjects = ["No focal subject"]
-
-    include_modifiers = True
-
-    selected_behaviors = ['s', 'p']
-    
-    import db_functions
-    
-    import project_functions
-    _, _, pj, _ = project_functions.open_project_json("test.boris")
-
-    cursor = db_functions.load_aggregated_events_in_db(pj, [], [], []).cursor()
-    
-    print(cohen_kappa(cursor,
-                obsid1, obsid2,
-                interval,
-                selected_subjects,
-                True #include_modifiers
-                ))
-
-    
-    
-
-
