@@ -184,13 +184,6 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
         if len(data.title) > 31:
             data.title = data.title[0:31]
 
-            '''
-            QMessageBox.warning(None, programName,
-                                ("The worksheet name for {} was shortened due to XLS format limitations.\n"
-                                 "The limit on worksheet name length is 31 characters").format(obsId),
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            '''
-
     for row in rows:
         data.append(utilities.complete(row, maxLen))
 

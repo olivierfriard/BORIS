@@ -721,7 +721,6 @@ def check_ffmpeg_path():
     else:
         syspath = sys.path[0]
 
-
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
         r = False
@@ -745,9 +744,7 @@ def check_ffmpeg_path():
             return True, ffmpeg_bin
         else:
             logging.critical("FFmpeg is not available")
-            #QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return False, "FFmpeg is not available"
-
 
     if sys.platform.startswith("win"):
 
@@ -765,7 +762,6 @@ def check_ffmpeg_path():
                 return True, ffmpeg_bin
             else:
                 logging.critical("FFmpeg is not available")
-                # QMessageBox.critical(None, programName, "FFmpeg is not available.<br>Go to http://www.ffmpeg.org to download it", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return False, "FFmpeg is not available"
 
     return False, "FFmpeg is not available"

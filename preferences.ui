@@ -22,7 +22,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>4</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -201,6 +201,13 @@
             <widget class="QCheckBox" name="cbCloseSameEvent">
              <property name="text">
               <string>Close the same current event independently of modifiers</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="0">
+            <widget class="QCheckBox" name="cb_pause_before_addevent">
+             <property name="text">
+              <string>Pause media before &quot;Add event&quot; command</string>
              </property>
             </widget>
            </item>

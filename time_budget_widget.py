@@ -33,6 +33,8 @@ except:
 import logging
 import os
 import tablib
+import pathlib
+
 import dialog
 
 from config import *
@@ -99,39 +101,31 @@ class timeBudgetResults(QWidget):
 
         logging.debug("save time budget results to file")
 
-        formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
-                       "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
-                       "Open Document Spreadsheet *.ods (*.ods);;"
-                       "Microsoft Excel Spreadsheet *.xlsx (*.xlsx);;"
-                       "HTML *.html (*.html);;"
-                       #"Pandas dataframe (*.df);;"
-                       "Legacy Microsoft Excel Spreadsheet *.xls (*.xls);;"
-                       "All files (*)")
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                       "Comma Separated Values (*.csv)",
+                       "Open Document Spreadsheet ODS (*.ods)",
+                       "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                       "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                       "HTML (*.html)"]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        while True:
-            if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", formats_str)
-            else:
-                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", formats_str)
 
-            if not fileName:
-                return
+        if QT_VERSION_STR[0] == "4":
+            filediag_func = QFileDialog(self).getSaveFileNameAndFilter
+        else:
+            filediag_func = QFileDialog(self).getSaveFileName
 
-            outputFormat = ""
-            availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html")
-            for fileExtension in availableFormats:
-                if fileExtension in filter_:
-                    outputFormat = fileExtension.replace(")", "")
-                    
-            if not outputFormat:
-                QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            else:
-                break
+        fileName, filter_ = filediag_func(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
+
+        if not fileName:
+            return
+
+        outputFormat = file_formats[extended_file_formats.index(filter_)]
+        if pathlib.Path(fileName).suffix != "." + outputFormat:
+            fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
         if fileName:
-
             rows = []
-
             # observations list
             rows.append(["Observations:"])
             for idx in range(self.lw.count()):
@@ -143,9 +137,7 @@ class timeBudgetResults(QWidget):
                     for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
                         rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
 
-            rows.append([""])
-            rows.append([""])
-            rows.append(["Time budget:"])
+            rows.extend([[""],[""],["Time budget:"]])
 
             # write header
             cols = []
@@ -158,7 +150,6 @@ class timeBudgetResults(QWidget):
             for row in range(self.twTB.rowCount()):
                 values = []
                 for col in range(self.twTB.columnCount()):
-
                     values.append(intfloatstr(self.twTB.item(row,col).text()))
 
                 rows.append(values)
@@ -170,42 +161,12 @@ class timeBudgetResults(QWidget):
             for row in rows:
                 data.append(complete(row, maxLen))
 
-            if outputFormat == "tsv":
+            if outputFormat in ["tsv", "csv", "html"]:
                 with open(fileName, "wb") as f:
-                    f.write(str.encode(data.tsv))
+                    f.write(str.encode(data.export(outputFormat)))
                 return
 
-            if outputFormat == "csv":
+            if outputFormat in ["ods", "xlsx", "xls"]:
                 with open(fileName, "wb") as f:
-                    f.write(str.encode(data.csv))
+                    f.write(data.export(outputFormat))
                 return
-
-            if outputFormat == "ods":
-                with open(fileName, "wb") as f:
-                    f.write(data.ods)
-                return
-
-            if outputFormat == "xlsx":
-                with open(fileName, "wb") as f:
-                    f.write(data.xlsx)
-                return
-
-            if outputFormat == "xls":
-                with open(fileName, "wb") as f:
-                    f.write(data.xls)
-                return
-
-            if outputFormat == "html":
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(data.html))
-                return
-
-            
-            '''
-            if outputFormat == "df":
-                with open(fileName, "wb") as f:
-                    f.write(data.df)
-                return
-            '''
-            
-

@@ -115,16 +115,19 @@ class Observation(QDialog, Ui_Form):
 
         self.setupUi(self)
 
-        self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1))
+        self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=True))
+        self.pb_add_media_without_path.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=False))
         self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
-        self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1))
+        self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=True))
+        self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=False))
         
         self.pb_add_data_file.clicked.connect(self.add_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.check_data_file)
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
-        self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2))
+        self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2, flag_path=True))
+        self.pb_add_media_without_path2.clicked.connect(lambda: self.add_media(PLAYER2, flag_path=False))
         self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
 
         self.cbVisualizeSpectrogram.clicked.connect(self.generate_spectrogram)
@@ -498,59 +501,81 @@ class Observation(QDialog, Ui_Form):
             self.accept()
 
 
-    def check_media(self, filePaths, nPlayer):
+    def check_media(self, n_player, file_path, flag_path):
         """
         check media and add them to list view if duration > 0
         
-        parameters:
-
-        filePaths -- paths of media files
-        nPlayer -- player #
+        Args:
+            file_path (str): media file path to be checked
+            flag_path (bool): True include full path of media else only basename
+            
+        Returns:
+             bool: True if file is media else False
         """
 
-        for filePath in filePaths:
-            nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
-            
-            print(nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio)
+        nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, file_path)
+        if videoDuration_s > 0:
+            if not flag_path:
+                file_path = str(Path(file_path).name)
+    
+            self.mediaDurations[file_path] = videoDuration_s
+            self.mediaFPS[file_path] = fps
+            self.mediaHasVideo[file_path] = hasVideo
+            self.mediaHasAudio[file_path] = hasAudio
+            self.add_media_to_listview(n_player, file_path, "")
 
-            if videoDuration_s > 0:
-                self.mediaDurations[filePath] = videoDuration_s
-                self.mediaFPS[filePath] = fps
-                self.mediaHasVideo[filePath] = hasVideo
-                self.mediaHasAudio[filePath] = hasAudio
-                self.add_media_to_listview(nPlayer, filePath, "")
-            else:
-                QMessageBox.critical(self, programName, "The <b>{filePath}</b> file does not seem to be a media file.".format(filePath=filePath))
+        return (videoDuration_s > 0)
 
 
-    def add_media(self, nPlayer):
+    def add_media(self, n_player, flag_path):
         """
         add media in player nPlayer
+        
+        Args:
+            n_player (str): player
+            flag_path (bool): True include full path of media else only basename
         """
         # check if more media in player1 before adding media to player2
-        if nPlayer == PLAYER2 and self.twVideo1.rowCount() > 1:
-            QMessageBox.critical(self, programName, "It is not yet possible to play a second media when more media are loaded in the first media player" )
+        if n_player == PLAYER2 and self.twVideo1.rowCount() > 1:
+            QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
+                                                     "when more media are loaded in the first media player"))
             return
 
         os.chdir(os.path.expanduser("~"))
         fn = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
-        fileNames = fn[0] if type(fn) is tuple else fn
+        file_paths = fn[0] if type(fn) is tuple else fn
 
-        if fileNames:
-            self.check_media(fileNames, nPlayer)
+        if file_paths:
+            for file_path in file_paths:
+                if not self.check_media(n_player, file_path, flag_path):
+                    QMessageBox.critical(self, programName, "The <b>{file_path}</b> file does not seem to be a media file.".format(
+                                 file_path=file_path))
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
-    def add_media_from_dir(self, nPlayer):
+    def add_media_from_dir(self, n_player, flag_path):
         """
         add all media from a selected directory
+
+        Args:
+            nPlayer (str): player
+            flag_path (bool): True include full path of media else only basename
         """
         dirName = QFileDialog().getExistingDirectory(self, "Select directory")
         if dirName:
-            for fileName in glob.glob(dirName + os.sep + "*"):
-                self.check_media([fileName], nPlayer)
+            r = ""
+            for file_path in glob.glob(dirName + os.sep + "*"):
+                if not self.check_media(n_player, file_path, flag_path):
+                    if r != "Skip all non media files":
+                        r = dialog.MessageDialog(programName,
+                                                 ("The <b>{file_path}</b> file does not seem to be a media file."
+                                                  "").format(file_path=file_path),
+                                                 ["Continue", "Skip all non media files", "Cancel"])
+                        if r == "Cancel":
+                            break
+
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)

@@ -33,6 +33,17 @@ import utilities
 
 
 def media_full_path(media_file, project_file_name):
+    """
+    media full path
+    add path of BORIS project if media without path
+    
+    Args:
+        media_file (str): media file path
+        project_file_name (str): project file name
+    
+    Returns:
+        str: media full path
+    """
 
     media_path = pathlib.Path(media_file)
     if media_path.resolve() == media_path and media_path.exists():
@@ -44,7 +55,6 @@ def media_full_path(media_file, project_file_name):
             return str(p)
         else:
             return ""
-
 
 
 def check_if_media_available(observation, project_file_name):
@@ -61,8 +71,11 @@ def check_if_media_available(observation, project_file_name):
     for nplayer in ALL_PLAYERS:
         if nplayer in observation[FILE]:
             if not isinstance(observation[FILE][nplayer], list):
-                return False
-            for mediaFile in observation[FILE][nplayer]:
+                return False, "error"
+            for media_file in observation[FILE][nplayer]:
+                if not media_full_path(media_file, project_file_name):
+                    return False, "Media file <b>{}</b> not found".format(media_file)
+                '''
                 media_path = pathlib.Path(mediaFile)
                 if not media_path.exists():
                     # check project directory for media file
@@ -70,94 +83,9 @@ def check_if_media_available(observation, project_file_name):
                     p = project_path.parent / media_path.name
                     if not p.exists():
                         return False
-    return True
-
-'''
-def create_subtitles_old(pj, selected_observations, parameters, export_dir):
-    """
-    create subtitles for selected observations, subjects and behaviors
-
-    Args:
-        pj (dict): project 
-        selected_observations (list): list of observations
-        parameters (dict):
-        export_dir (str): directory to save subtitles
-
-    Returns:
-        bool: True if OK else False
-        str: error message
-    """
-
-    cursor = db_functions.load_events_in_db(pj, parameters["selected subjects"], selected_observations,
-                                            parameters["selected behaviors"])
-
-    flagUnpairedEventFound = False
-
-    for obsId in selected_observations:
-
-        for nplayer in ALL_PLAYERS:
-
-            if not pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                continue
-
-            duration1 = []   # in seconds
-            for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                duration1.append(pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
-
-            subtitles = {}
-            for subject in parameters["selected subjects"]:
-
-                for behavior in parameters["selected behaviors"]:
-
-                    cursor.execute("SELECT occurence, modifiers FROM events where observation = ? AND subject = ? AND  code = ? ORDER BY code, occurence",
-                                   (obsId, subject, behavior))
-                    rows = list(cursor.fetchall())
-
-                    #if STATE in self.eventType(behavior).upper() and len(rows) % 2:
-                    if STATE in event_type(behavior, pj[ETHOGRAM]) and len(rows) % 2:
-                        flagUnpairedEventFound = True
-                        continue
-
-                    for idx, row in enumerate(rows):
-
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
-                        if mediaFileIdx not in subtitles:
-                            subtitles[mediaFileIdx] = []
-
-                        # subtitle color
-                        if subject == NO_FOCAL_SUBJECT:
-                            col = "white"
-                        else:
-                            col = subtitlesColors[parameters["selected subjects"].index(subject) % len(subtitlesColors)]
-
-                        behaviorStr = behavior
-                        if parameters["include modifiers"] and row[1]:
-                            behaviorStr += " ({0})".format(row[1].replace("|", ", "))
-
-                        if POINT in event_type(behavior, pj[ETHOGRAM]):
-                            laps =  "{0} --> {1}".format(utilities.seconds2time(row["occurence"]).replace(".", ","), utilities.seconds2time(row["occurence"] + 0.5).replace(".", ","))
-                            subtitles[mediaFileIdx].append([laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr)])
-
-                        if STATE in event_type(behavior, pj[ETHOGRAM]):
-                            if idx % 2 == 0:
-                                start = utilities.seconds2time(round(row["occurence"] - sum(duration1[0:mediaFileIdx]), 3)).replace(".", ",")
-                                stop = utilities.seconds2time(round(rows[idx + 1]["occurence"] - sum(duration1[0:mediaFileIdx]), 3)).replace(".", ",")
-                                laps =  "{start} --> {stop}".format(start=start, stop=stop)
-                                subtitles[mediaFileIdx].append([laps, """<font color="{0}">{1}: {2}</font>""".format(col, subject, behaviorStr)])
-
-            try:
-                for mediaIdx in subtitles:
-                    subtitles[mediaIdx].sort()
-                    with open("{export_dir}{sep}{fileName}.srt".format(export_dir=export_dir,
-                                                                      sep=os.sep,
-                                                                      fileName=os.path.basename(pj[OBSERVATIONS][obsId][FILE][nplayer][mediaIdx])), "w") as f:
-                        for idx, sub in enumerate(subtitles[mediaIdx]):
-                            f.write("{0}{3}{1}{3}{2}{3}{3}".format(idx + 1, sub[0], sub[1], "\n"))
-            except:
-                errorMsg = sys.exc_info()[1]
-                return False, str(errorMsg)
+                '''
     return True, ""
-'''
+
 
 def create_subtitles(pj, selected_observations, parameters, export_dir):
     """

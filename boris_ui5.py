@@ -631,6 +631,7 @@ class Ui_MainWindow(object):
         self.actionEdit_current_observation.setText(_translate("MainWindow", "Edit current observation"))
         self.actionOpen_observation_2.setText(_translate("MainWindow", "Open observation"))
         self.actionAdd_event.setText(_translate("MainWindow", "Add event"))
+        self.actionAdd_event.setShortcut(_translate("MainWindow", "Ctrl+A"))
         self.actionDeselectCurrentSubject.setText(_translate("MainWindow", "Deselect current subject"))
         self.actionNext.setText(_translate("MainWindow", "Next"))
         self.actionNext.setToolTip(_translate("MainWindow", "Next media file"))

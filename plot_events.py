@@ -32,19 +32,220 @@ Inspired from
 import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
+import matplotlib.transforms as mtransforms
 import matplotlib.dates
 from matplotlib.dates import MICROSECONDLY, SECONDLY, MINUTELY, HOURLY, WEEKLY, MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 import numpy as np
 import json
-import config
+from config import *
 import utilities
+
+
+
+def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
+    """
+    create "hlines" matplotlib plot
+    used by plot_event function (legacy)
+    """
+
+    LINE_WIDTH = line_width
+    all_behaviors, observedBehaviors = [], []
+    maxTime = 0  # max time in all events of all subjects
+
+    # all behaviors defined in project without modifiers
+    all_project_behaviors = [pj[ETHOGRAM][idx]["code"] for idx in utilities.sorted_keys(pj[ETHOGRAM])]
+    all_project_subjects = [NO_FOCAL_SUBJECT] + [pj[SUBJECTS][idx]["name"] for idx in utilities.sorted_keys(pj[SUBJECTS])]
+
+    for subject in obs:
+
+        for behavior_modifiers_json in obs[subject]:
+
+            behavior_modifiers = json.loads(behavior_modifiers_json)
+
+            if not excludeBehaviorsWithoutEvents:
+                observedBehaviors.append(behavior_modifiers_json)
+            else:
+                if obs[subject][behavior_modifiers_json]:
+                    observedBehaviors.append(behavior_modifiers_json)
+
+            if not behavior_modifiers_json in all_behaviors:
+                all_behaviors.append(behavior_modifiers_json)
+
+            for t1, t2 in obs[subject][behavior_modifiers_json]:
+                maxTime = max(maxTime, t1, t2)
+
+        observedBehaviors.append("")
+
+    lbl = []
+    if excludeBehaviorsWithoutEvents:
+        for behav_modif_json in observedBehaviors:
+            
+            if not behav_modif_json:
+                lbl.append("")
+                continue
+            
+            behav_modif = json.loads(behav_modif_json)
+            if len(behav_modif) == 2:
+                lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+            else:
+                lbl.append(behav_modif[0])
+
+    else:
+        all_behaviors.append('[""]') # empty json list element
+        for behav_modif_json in all_behaviors:
+            
+            behav_modif = json.loads(behav_modif_json)
+            if len(behav_modif) == 2:
+                lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
+            else:
+                lbl.append(behav_modif[0])
+        lbl = lbl[:] * len(obs)
+
+
+    lbl = lbl[:-1]  # remove last empty line
+
+    fig = plt.figure(figsize=(20, 10))
+    fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
+    ax = fig.add_subplot(111)
+    labels = ax.set_yticklabels(lbl)
+
+    ax.set_ylabel("Behaviors")
+
+    if time_format == HHMMSS:
+        fmtr = dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
+        ax.xaxis.set_major_formatter(fmtr)
+        ax.set_xlabel("Time (hh:mm:ss)")
+    else:
+        ax.set_xlabel("Time (s)")
+
+    plt.ylim(len(lbl), -0.5)
+
+    if not videoLength:
+        videoLength = maxTime
+
+    if pj[OBSERVATIONS][obsId]["time offset"]:
+        t0 = round(pj[OBSERVATIONS][obsId]["time offset"] + minTime)
+        t1 = round(pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
+    else:
+        t0 = round(minTime)
+        t1 = round(videoLength)
+    subjectPosition = t0 + (t1 - t0) * 0.05
+
+    if time_format == HHMMSS:
+        t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600) / 60), int(t0 % 60), round(round(t0 % 1, 3) * 1000000))
+        t1d = datetime.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600) / 60), int(t1 % 60), round(round(t1 % 1, 3) * 1000000))
+        subjectPositiond = datetime.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600) / 60), int(subjectPosition % 60), round(round(subjectPosition % 1, 3) * 1000000))
+
+    if time_format == S:
+        t0d, t1d = t0, t1
+        subjectPositiond = subjectPosition
+
+    plt.xlim(t0d, t1d)
+    plt.yticks(range(len(lbl) + 1), np.array(lbl))
+
+    count = 0
+    flagFirstSubject = True
+
+    for subject in all_project_subjects:
+        if subject not in obs:
+            continue
+
+        if not flagFirstSubject:
+            if excludeBehaviorsWithoutEvents:
+                count += 1
+            ax.axhline(y=(count-1), linewidth=1, color="black")
+            ax.hlines(np.array([count]), np.array([0]), np.array([0]), lw=LINE_WIDTH, color=col)
+        else:
+            flagFirstSubject = False
+
+        ax.text(subjectPositiond, count - 0.5, subject)
+
+        behaviors = obs[subject]
+
+        x1, x2, y, col, pointsx, pointsy, guide = [], [], [], [], [], [], []
+        col_count = 0
+
+        for bm_json in all_behaviors:
+            if bm_json in obs[subject]:
+                if obs[subject][bm_json]:
+                    for t1, t2 in obs[subject][bm_json]:
+                        if t1 == t2:
+                            pointsx.append(t1)
+                            pointsy.append(count)
+                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                        else:
+                            x1.append(t1)
+                            x2.append(t2)
+                            y.append(count)
+
+                            col.append(utilities.behavior_color(plot_colors, all_project_behaviors.index(json.loads(bm_json)[0])))
+                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                    count += 1
+                else:
+                    x1.append(0)
+                    x2.append(0)
+                    y.append(count)
+                    col.append("white")
+                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                    count += 1
+
+            else:
+                if not excludeBehaviorsWithoutEvents:
+                    x1.append(0)
+                    x2.append(0)
+                    y.append(count)
+                    col.append("white")
+                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
+                    count += 1
+
+            col_count += 1
+
+        if time_format == HHMMSS:
+            ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p / 3600),
+                                                               int((p - int(p / 3600) * 3600) / 60),
+                                                               int(p % 60), round(round(p % 1, 3) * 1e6))
+                                            for p in x1]),
+            np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600) / 60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in x2]),
+            lw=LINE_WIDTH, color=col)
+
+        if time_format == S:
+            ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
+
+        if time_format == HHMMSS:
+            ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600)/60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in pointsx]), pointsy, "r^")
+
+        if time_format == S:
+            ax.plot(pointsx, pointsy, "r^")
+
+        #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
+
+    def on_draw(event):
+
+        # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
+        bboxes = []
+        for label in labels:
+            bbox = label.get_window_extent()
+            bboxi = bbox.inverse_transformed(fig.transFigure)
+            bboxes.append(bboxi)
+
+        bbox = mtransforms.Bbox.union(bboxes)
+        if fig.subplotpars.left < bbox.width:
+            fig.subplots_adjust(left=1.1*bbox.width)
+            fig.canvas.draw()
+        return False
+
+    fig.canvas.mpl_connect("draw_event", on_draw)
+    plt.show()
+
+    return True
+
 
 
 def create_events_plot2(events,
                         all_behaviors,
                         all_subjects,
                         exclude_behaviors_wo_events=True, min_time=-1, max_time=-1, output_file_name="",
-                        plot_colors=config.BEHAVIORS_PLOT_COLORS):
+                        plot_colors=BEHAVIORS_PLOT_COLORS):
     """
     Create gantt charts with barh matplotlib function
     """
@@ -118,8 +319,6 @@ def create_events_plot2(events,
             axs[ax_idx].set_ylabel("Behaviors", fontdict={"fontsize": 12})
 
         i = 0
-        #min_time, max_time = 86400, 0
-
         for ylabel in ylabels:
             if ylabel in events[subject]:
                 for interval in events[subject][ylabel]:
@@ -127,38 +326,16 @@ def create_events_plot2(events,
                         start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
                         end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0] + point_event_duration))
                         bar_color = "black"
-                        #min_time = min(min_time, interval[0])
-                        #max_time = max(max_time, interval[0] + point_event_duration)
                     else:
                         start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[0]))
                         end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=interval[1]))
                         bar_color = behav_color(json.loads(ylabel)[0])
-                        #min_time = min(min_time, interval[0])
-                        #max_time = max(max_time, interval[1])
                     try:
                         axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
                                          align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
                     except ValueError:
                         return {"error code": 1, "msg": "Invalid color name: <b>{}</b>".format(bar_color)}
             i += 1
-
-        #print("min_time",min_time)
-        #print("max_time",max_time)
-
-        #axs[ax_idx].axis('tight')
-        '''
-        if min_t == -1:
-            min_time = 0
-        else:
-            min_time = min_t
-
-        if max_t != -1:
-            max_time = max_t
-        '''
-
-        #print("min_time",min_time)
-        #print("max_time",max_time)
-        #print()
 
         axs[ax_idx].set_xlim(xmin = matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
                              xmax = matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
@@ -184,7 +361,6 @@ if __name__ == '__main__':
   
     all_behaviors = ["p","s","a","n"]
     all_subjects = ["No focal subject", "subj 2", "subj 1"]
-    #events = {'No focal subject': {'["p"]': [], '["s"]': [], '["a"]': [[47.187, 56.107]], '["n"]': []}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]], '["a"]': [], '["n"]': []}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a"]': [[15.787, 24.01]], '["n"]': [[11.459, 11.459], [17.611, 17.611]]}}
     events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]]}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a", "None"]': [[15.787, 24.01]], '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
 
     create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=False, min_time=0, max_time=100)

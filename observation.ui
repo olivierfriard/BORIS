@@ -218,7 +218,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>2</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -291,6 +291,13 @@
                       </widget>
                      </item>
                      <item>
+                      <widget class="QPushButton" name="pb_add_media_without_path">
+                       <property name="text">
+                        <string>Add media without path</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
                       <widget class="QPushButton" name="pbRemoveVideo">
                        <property name="text">
                         <string>Remove media</string>
@@ -301,6 +308,13 @@
                       <widget class="QPushButton" name="pbAddMediaFromDir">
                        <property name="text">
                         <string>Add all media from directory</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pb_add_all_media_from_dir_without_path">
+                       <property name="text">
+                        <string>Add all media from dir without path</string>
                        </property>
                       </widget>
                      </item>
@@ -413,6 +427,13 @@
                       <widget class="QPushButton" name="pbAddVideo_2">
                        <property name="text">
                         <string>Add media</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pb_add_media_without_path2">
+                       <property name="text">
+                        <string>Add media without path</string>
                        </property>
                       </widget>
                      </item>

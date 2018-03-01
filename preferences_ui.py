@@ -115,6 +115,9 @@ class Ui_prefDialog(object):
         self.cbCloseSameEvent = QtGui.QCheckBox(self.tab)
         self.cbCloseSameEvent.setObjectName(_fromUtf8("cbCloseSameEvent"))
         self.formLayout.setWidget(6, QtGui.QFormLayout.LabelRole, self.cbCloseSameEvent)
+        self.cb_pause_before_addevent = QtGui.QCheckBox(self.tab)
+        self.cb_pause_before_addevent.setObjectName(_fromUtf8("cb_pause_before_addevent"))
+        self.formLayout.setWidget(13, QtGui.QFormLayout.LabelRole, self.cb_pause_before_addevent)
         self.verticalLayout.addLayout(self.formLayout)
         self.tabWidget.addTab(self.tab, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
@@ -259,7 +262,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(4)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -280,6 +283,7 @@ class Ui_prefDialog(object):
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event", None))
         self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version and news", None))
         self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers", None))
+        self.cb_pause_before_addevent.setText(_translate("prefDialog", "Pause media before \"Add event\" command", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project", None))
         self.lbFFmpegPath.setText(_translate("prefDialog", "FFmpeg path:", None))
         self.lbFFmpegCacheDir.setText(_translate("prefDialog", "FFmpeg cache directory", None))

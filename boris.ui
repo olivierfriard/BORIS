@@ -709,6 +709,9 @@
    <property name="text">
     <string>Add event</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
   </action>
   <action name="actionDeselectCurrentSubject">
    <property name="text">
