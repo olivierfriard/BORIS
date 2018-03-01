@@ -655,7 +655,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # menu observations
         self.actionNew_observation.triggered.connect(self.new_observation_triggered)
-        self.actionOpen_observation.triggered.connect(self.open_observation)
+        self.actionOpen_observation.triggered.connect(lambda: self.open_observation("start"))
+        self.actionView_observation.triggered.connect(lambda: self.open_observation("view"))
         self.actionEdit_observation_2.triggered.connect(self.edit_observation)
         self.actionObservationsList.triggered.connect(self.observations_list)
 
@@ -1770,9 +1771,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mapCreatorWindow.show()
 
 
-    def load_observation(self, obsId):
+    def load_observation(self, obsId, mode="start"):
         """
         load observation obsId
+    
+        Args:
+            obsId (str): observation id
+            mode (str): "start" to start observation
+                        "view"  to start observation
         """
 
         if obsId in self.pj[OBSERVATIONS]:
@@ -1786,11 +1792,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
-                if not self.initialize_new_observation_vlc():
-                    self.observationId = ""
-                    self.twEvents.setRowCount(0)
-                    self.menu_options()
-                    return "Error: loading observation problem"
+                if mode == "start":
+                    if not self.initialize_new_observation_vlc():
+                        self.observationId = ""
+                        self.twEvents.setRowCount(0)
+                        self.menu_options()
+                        return "Error: loading observation problem"
+
+                if mode == "view":
+                    self.playerType = VIEWER
+                    self.playMode = ""
+                    self.dwObservations.setVisible(True)
 
             self.menu_options()
             # title of dock widget  “  ”
@@ -1801,9 +1813,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return "Error: Observation not found"
 
 
-    def open_observation(self):
+    def open_observation(self, mode):
         """
-        satrt an observation
+        start an observation
+        
+        Args:
+            mode (str): "start" to start observation
+                        "view" to start observation
         """
 
         # check if current observation must be closed to open a new one
@@ -1819,7 +1835,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result, selectedObs = self.selectObservations(OPEN)
 
         if selectedObs:
-            return self.load_observation(selectedObs[0])
+            return self.load_observation(selectedObs[0], mode)
         else:
             return ""
 
@@ -7224,7 +7240,6 @@ item []:
                         if memState == vlc.State.Playing:
                             self.play_video()
 
-            
 
     def run_event_outside(self):
         """

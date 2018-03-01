@@ -154,6 +154,7 @@
     </widget>
     <addaction name="actionNew_observation"/>
     <addaction name="actionOpen_observation"/>
+    <addaction name="actionView_observation"/>
     <addaction name="actionEdit_observation_2"/>
     <addaction name="actionObservationsList"/>
     <addaction name="actionOpen_observation_2"/>
@@ -1157,6 +1158,11 @@
   <action name="actionConverters_manager">
    <property name="text">
     <string>Time converters manager</string>
+   </property>
+  </action>
+  <action name="actionView_observation">
+   <property name="text">
+    <string>View observation</string>
    </property>
   </action>
  </widget>

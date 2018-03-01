@@ -423,6 +423,8 @@ class Ui_MainWindow(object):
         self.actionShow_data_files.setObjectName("actionShow_data_files")
         self.actionConverters_manager = QtWidgets.QAction(MainWindow)
         self.actionConverters_manager.setObjectName("actionConverters_manager")
+        self.actionView_observation = QtWidgets.QAction(MainWindow)
+        self.actionView_observation.setObjectName("actionView_observation")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -446,6 +448,7 @@ class Ui_MainWindow(object):
         self.menuCreate_transitions_matrix.addAction(self.actionNumber_of_transitions)
         self.menuObservations.addAction(self.actionNew_observation)
         self.menuObservations.addAction(self.actionOpen_observation)
+        self.menuObservations.addAction(self.actionView_observation)
         self.menuObservations.addAction(self.actionEdit_observation_2)
         self.menuObservations.addAction(self.actionObservationsList)
         self.menuObservations.addAction(self.actionOpen_observation_2)
@@ -717,4 +720,5 @@ class Ui_MainWindow(object):
         self.actionSubjects_pad.setText(_translate("MainWindow", "Subjects pad"))
         self.actionShow_data_files.setText(_translate("MainWindow", "Show data files"))
         self.actionConverters_manager.setText(_translate("MainWindow", "Time converters manager"))
+        self.actionView_observation.setText(_translate("MainWindow", "View observation"))
 
