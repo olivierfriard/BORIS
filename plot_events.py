@@ -48,6 +48,20 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
     used by plot_event function (legacy)
     """
 
+    def on_draw(event):
+        # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
+        bboxes = []
+        for label in labels:
+            bbox = label.get_window_extent()
+            bboxi = bbox.inverse_transformed(fig.transFigure)
+            bboxes.append(bboxi)
+
+        bbox = mtransforms.Bbox.union(bboxes)
+        if fig.subplotpars.left < bbox.width:
+            fig.subplots_adjust(left=1.1*bbox.width)
+            fig.canvas.draw()
+        return False
+
     LINE_WIDTH = line_width
     all_behaviors, observedBehaviors = [], []
     maxTime = 0  # max time in all events of all subjects
@@ -218,21 +232,6 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
             ax.plot(pointsx, pointsy, "r^")
 
         #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
-
-    def on_draw(event):
-
-        # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
-        bboxes = []
-        for label in labels:
-            bbox = label.get_window_extent()
-            bboxi = bbox.inverse_transformed(fig.transFigure)
-            bboxes.append(bboxi)
-
-        bbox = mtransforms.Bbox.union(bboxes)
-        if fig.subplotpars.left < bbox.width:
-            fig.subplots_adjust(left=1.1*bbox.width)
-            fig.canvas.draw()
-        return False
 
     fig.canvas.mpl_connect("draw_event", on_draw)
     plt.show()

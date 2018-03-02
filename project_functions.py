@@ -26,10 +26,41 @@ import json
 import pathlib
 from shutil import copyfile
 from decimal import *
+import copy
 
 from config import *
 import db_functions
 import utilities
+
+
+def remove_media_files_path(pj):
+    """
+    remove path from media files
+    tested
+    
+    Args:
+        pj (dict): project file
+    
+    Returns:
+        dict: project without media file paths
+    """
+
+    for obs_id in pj[OBSERVATIONS]:
+        if pj[OBSERVATIONS][obs_id][TYPE] not in [MEDIA]:
+            continue
+        for n_player in ALL_PLAYERS:
+            if n_player in pj[OBSERVATIONS][obs_id][FILE]:
+                for idx, media_file in enumerate(pj[OBSERVATIONS][obs_id][FILE][n_player]):
+                    p = str(pathlib.Path(media_file).name)
+                    if p != media_file:
+                        pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
+                        if "media_info" in pj[OBSERVATIONS][obs_id]:
+                            for info in ["length", "hasAudio", "hasVideo", "fps"]:
+                                if info in pj[OBSERVATIONS][obs_id]["media_info"] and media_file in pj[OBSERVATIONS][obs_id]["media_info"][info]:
+                                    pj[OBSERVATIONS][obs_id]["media_info"][info][p] = pj[OBSERVATIONS][obs_id]["media_info"][info][media_file]
+                                    del pj[OBSERVATIONS][obs_id]["media_info"][info][media_file]
+
+    return copy.deepcopy(pj)
 
 
 def media_full_path(media_file, project_file_name):
@@ -75,15 +106,6 @@ def check_if_media_available(observation, project_file_name):
             for media_file in observation[FILE][nplayer]:
                 if not media_full_path(media_file, project_file_name):
                     return False, "Media file <b>{}</b> not found".format(media_file)
-                '''
-                media_path = pathlib.Path(mediaFile)
-                if not media_path.exists():
-                    # check project directory for media file
-                    project_path = pathlib.Path(project_file_name)
-                    p = project_path.parent / media_path.name
-                    if not p.exists():
-                        return False
-                '''
     return True, ""
 
 
@@ -219,6 +241,7 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
 def observation_total_length(observation):
     """
     Total length of observation
+    tested
     
     media: if media length not available return 0
             if more media are queued, return sum of media length

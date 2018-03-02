@@ -102,9 +102,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     # independent variables
     if INDEPENDENT_VARIABLES in observation:
-        rows.append([INDEPENDENT_VARIABLES])
-
-        rows.append(["variable", "value"])
+        rows.extend([["independent variables"],["variable", "value"]])
 
         for variable in observation[INDEPENDENT_VARIABLES]:
             rows.append([variable, observation[INDEPENDENT_VARIABLES][variable]])

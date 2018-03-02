@@ -134,6 +134,7 @@
     <addaction name="actionSave_project_as"/>
     <addaction name="actionClose_project"/>
     <addaction name="separator"/>
+    <addaction name="actionRemove_path_from_media_files"/>
     <addaction name="actionSend_project"/>
     <addaction name="separator"/>
     <addaction name="actionPreferences"/>
@@ -1163,6 +1164,11 @@
   <action name="actionView_observation">
    <property name="text">
     <string>View observation</string>
+   </property>
+  </action>
+  <action name="actionRemove_path_from_media_files">
+   <property name="text">
+    <string>Remove path from media files</string>
    </property>
   </action>
  </widget>

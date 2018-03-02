@@ -524,8 +524,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             pn + (" - " * (pn != "")), programName))
 
         # project menu
-        for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionClose_project, self.actionSend_project,
-                  self.actionNew_observation]:
+        for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as,
+                  self.actionClose_project, self.actionSend_project, self.actionNew_observation,
+                  self.actionRemove_path_from_media_files]:
             w.setEnabled(flag)
 
         # observations
@@ -645,6 +646,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSave_project_as.triggered.connect(self.save_project_as_activated)
         self.actionClose_project.triggered.connect(self.close_project)
 
+        self.actionRemove_path_from_media_files.triggered.connect(self.remove_media_files_path)
         self.actionSend_project.triggered.connect(self.send_project_via_socket)
 
         self.menuCreate_subtitles_2.triggered.connect(self.create_subtitles)
@@ -841,6 +843,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+
+    def remove_media_files_path(self):
+        """
+        remove path of media files
+        """
+
+        if dialog.MessageDialog(programName, ("Removing the path of media files from the project file is irreversible.<br>"
+                                              "Are you sure to continue?"),
+                                              [YES, NO]) == NO:
+            return
+
+        self.pj = project_functions.remove_media_files_path(self.pj)
+        self.projectChanged = True
 
 
     def irr_cohen_kappa(self):

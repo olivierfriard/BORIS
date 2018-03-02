@@ -439,6 +439,8 @@ class Ui_MainWindow(object):
         self.actionConverters_manager.setObjectName(_fromUtf8("actionConverters_manager"))
         self.actionView_observation = QtGui.QAction(MainWindow)
         self.actionView_observation.setObjectName(_fromUtf8("actionView_observation"))
+        self.actionRemove_path_from_media_files = QtGui.QAction(MainWindow)
+        self.actionRemove_path_from_media_files.setObjectName(_fromUtf8("actionRemove_path_from_media_files"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -452,6 +454,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionSave_project_as)
         self.menuFile.addAction(self.actionClose_project)
         self.menuFile.addSeparator()
+        self.menuFile.addAction(self.actionRemove_path_from_media_files)
         self.menuFile.addAction(self.actionSend_project)
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionPreferences)
@@ -734,4 +737,5 @@ class Ui_MainWindow(object):
         self.actionShow_data_files.setText(_translate("MainWindow", "Show data files", None))
         self.actionConverters_manager.setText(_translate("MainWindow", "Time converters manager", None))
         self.actionView_observation.setText(_translate("MainWindow", "View observation", None))
+        self.actionRemove_path_from_media_files.setText(_translate("MainWindow", "Remove path from media files", None))
 
