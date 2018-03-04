@@ -845,6 +845,35 @@
    },
    "excluded":"",
    "coding map":""
+  },
+  "4":{
+   "type":"State event",
+   "key":"M",
+   "code":"m",
+   "description":"state event with 2 set of modifiers",
+   "category":"",
+   "modifiers":{
+    "0":{
+     "name":"modif #1",
+     "type":0,
+     "values":[
+      "m1",
+      "m2",
+      "m3"
+     ]
+    },
+    "1":{
+     "name":"modif #2",
+     "type":0,
+     "values":[
+      "n1",
+      "n2",
+      "n3"
+     ]
+    }
+   },
+   "excluded":"",
+   "coding map":""
   }
  },
  "project_format_version":"4.0",

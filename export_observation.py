@@ -243,8 +243,7 @@ def dataset_write(dataset, file_name, output_format):
         return False, "Format {} not found".format(output_format)
 
     except:
-        errorMsg = sys.exc_info()[1]
-        return False, str(errorMsg)
+        return False, str(sys.exc_info()[1])
 
 
 

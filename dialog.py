@@ -174,7 +174,6 @@ class ChooseObservationsToImport(QDialog):
         self.accept()
 
 
-
 class JumpTo(QDialog):
     """
     "jump to" dialog box
@@ -211,7 +210,6 @@ class JumpTo(QDialog):
 
     def pbCancel_clicked(self):
         self.reject()
-
 
 
 class EditSelectedEvents(QDialog):
@@ -315,19 +313,19 @@ class FindInEvents(QWidget):
         hbox = QVBoxLayout()
 
         self.cbSubject = QCheckBox("Subject")
-        self.cbSubject.setChecked(False)
+        self.cbSubject.setChecked(True)
         hbox.addWidget(self.cbSubject)
 
         self.cbBehavior = QCheckBox("Behavior")
-        self.cbBehavior.setChecked(False)
+        self.cbBehavior.setChecked(True)
         hbox.addWidget(self.cbBehavior)
 
         self.cbModifier = QCheckBox("Modifiers")
-        self.cbModifier.setChecked(False)
+        self.cbModifier.setChecked(True)
         hbox.addWidget(self.cbModifier)
 
         self.cbComment = QCheckBox("Comment")
-        self.cbComment.setChecked(False)
+        self.cbComment.setChecked(True)
         hbox.addWidget(self.cbComment)
 
         self.lbFind = QLabel("Find")
@@ -336,10 +334,12 @@ class FindInEvents(QWidget):
         self.findText = QLineEdit()
         hbox.addWidget(self.findText)
 
-
         self.cbFindInSelectedEvents = QCheckBox("Find in selected events")
         self.cbFindInSelectedEvents.setChecked(False)
         hbox.addWidget(self.cbFindInSelectedEvents)
+
+        self.lb_message = QLabel()
+        hbox.addWidget(self.lb_message)
 
         hbox2 = QHBoxLayout()
         self.pbOK = QPushButton("Find")
@@ -351,7 +351,6 @@ class FindInEvents(QWidget):
         hbox.addLayout(hbox2)
 
         self.setLayout(hbox)
-
 
     def click(self, msg):
         self.clickSignal.emit(msg)

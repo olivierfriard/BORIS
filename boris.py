@@ -7881,32 +7881,35 @@ item []:
 
             if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive()):
 
-                if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS]:
+                if (CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] 
+                    and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS]):
 
                     logging.debug("video changed")
                     logging.debug("current states: {}".format(self.currentStates))
 
                     for subjIdx in self.currentStates:
-
                         if subjIdx:
                             subjName = self.pj[SUBJECTS][subjIdx]["name"]
                         else:
                             subjName = ""
-
                         for behav in self.currentStates[subjIdx]:
-
                             cm = ""
                             for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
                                 if ev[EVENT_TIME_FIELD_IDX] > currentTime / 1000:  # time
                                     break
-
                                 if ev[EVENT_SUBJECT_FIELD_IDX] == subjName:  # current subject name
                                     if ev[EVENT_BEHAVIOR_FIELD_IDX] == behav:   # code
                                         cm = ev[EVENT_MODIFIER_FIELD_IDX]
 
-                            event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}
+                            '''event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}'''
 
-                            self.writeEvent(event, currentTime / 1000 - Decimal("0.001"))
+                            end_time = currentTime / 1000 - Decimal("0.001")
+
+                            self.pj[OBSERVATIONS][self.observationId][EVENTS].append([end_time, subjName, behav, cm, ""])
+                            self.loadEventsInTW(self.observationId)
+                            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == end_time][0], 0)
+                            self.twEvents.scrollToItem(item)
+                            self.projectChanged = True
 
             self.memMedia = mediaName
 
@@ -7924,7 +7927,6 @@ item []:
             for idx in sorted_keys(self.pj[ETHOGRAM]):
                 if self.pj[ETHOGRAM][idx]["code"] in behaviorsToShow:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
-                    #for col, field in enumerate(["key", "code", "type", "description", "modifiers", "excluded"]):
                     for col in sorted(behav_fields_in_mainwindow.keys()):
                         field = behav_fields_in_mainwindow[col]
                         self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
@@ -7936,9 +7938,13 @@ item []:
         else:
             self.dwEthogram.setWindowTitle("Ethogram")
 
+
     def load_subjects_in_twSubjects(self, subjects_to_show):
         """
         fill subjects table widget with subjects from subjects_to_show
+        
+        Args:
+            subjects_to_show (list): list of subject to be shown
         """
 
         self.twSubjects.setRowCount(0)
@@ -8007,141 +8013,139 @@ item []:
         ask for modifiers if configured
         load events in tableview
         scroll to active event
+
+        Args:
+            event (dict): event parameters
+            memTime (Decimal): time 
+        
         """
 
         logging.debug("write event - event: {0}  memtime: {1}".format(event, memTime))
-
-        if event is None:
-            return
-
-        # add time offset if not from editing
-        if "row" not in event:
-            memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
-
-        # check if a same event is already in events list (time, subject, code)
-        # "row" present in case of event editing
-
-        if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
-            _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
-            return
-
-        if not "from map" in event:   # modifiers only for behaviors without coding map
-            # check if event has modifiers
-            modifier_str = ""
-
-            if event["modifiers"]:
-
-                # pause media
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-                    if self.playerType == VLC:
-                        if self.playMode == FFMPEG:
-                            memState = self.FFmpegTimer.isActive()
-                            if memState:
-                                self.pause_video()
-                        else:
-                            memState = self.mediaListPlayer.get_state()
-                            if memState == vlc.State.Playing:
-                                self.pause_video()
-
-                # check if editing (original_modifiers key)
-                currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
-
-                modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
-
-                if modifierSelector.exec_():
-                    selected_modifiers = modifierSelector.getModifiers()
-                    
-                    modifier_str = ""
-                    for idx in sorted_keys(selected_modifiers):
-                        if modifier_str:
-                            modifier_str += "|"
-                        if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
-                            modifier_str += ",".join(selected_modifiers[idx]["selected"])
-                        if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
-                            modifier_str += selected_modifiers[idx]["selected"]
-                else:
-                    modifier_str = currentModifiers
-
-                # restart media
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-                    if self.playerType == VLC:
-                        if self.playMode == FFMPEG:
-                            if memState:
-                                self.play_video()
-                        else:
-                            if memState == vlc.State.Playing:
-                                self.play_video()
-
-        else:
-            modifier_str = event["from map"]
-
-        # update current state
-        if "row" not in event: # no editing
-            if self.currentSubject:
-                csj = []
-                for idx in self.currentStates:
-                    if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]["name"] == self.currentSubject:
-                        csj = self.currentStates[idx]
-                        break
-
-            else:  # no focal subject
-                try:
-                    csj = self.currentStates[""]
-                except:
+        try:
+            if event is None:
+                return
+    
+            # add time offset if not from editing
+            if "row" not in event:
+                memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
+    
+            # check if a same event is already in events list (time, subject, code)
+            # "row" present in case of event editing
+    
+            if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
+                _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
+                return
+    
+            if not "from map" in event:   # modifiers only for behaviors without coding map
+                # check if event has modifiers
+                modifier_str = ""
+    
+                if event["modifiers"]:
+                    # pause media
+                    if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                        if self.playerType == VLC:
+                            if self.playMode == FFMPEG:
+                                memState = self.FFmpegTimer.isActive()
+                                if memState:
+                                    self.pause_video()
+                            else:
+                                memState = self.mediaListPlayer.get_state()
+                                if memState == vlc.State.Playing:
+                                    self.pause_video()
+    
+                    # check if editing (original_modifiers key)
+                    currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
+    
+                    modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
+    
+                    if modifierSelector.exec_():
+                        selected_modifiers = modifierSelector.getModifiers()
+    
+                        modifier_str = ""
+                        for idx in sorted_keys(selected_modifiers):
+                            if modifier_str:
+                                modifier_str += "|"
+                            if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
+                                modifier_str += ",".join(selected_modifiers[idx]["selected"])
+                            if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
+                                modifier_str += selected_modifiers[idx]["selected"]
+                    else:
+                        modifier_str = currentModifiers
+    
+                    # restart media
+                    if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                        if self.playerType == VLC:
+                            if self.playMode == FFMPEG:
+                                if memState:
+                                    self.play_video()
+                            else:
+                                if memState == vlc.State.Playing:
+                                    self.play_video()
+    
+            else:
+                modifier_str = event["from map"]
+    
+            # update current state
+            if "row" not in event: # no editing
+                if self.currentSubject:
                     csj = []
+                    for idx in self.currentStates:
+                        if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]["name"] == self.currentSubject:
+                            csj = self.currentStates[idx]
+                            break
+    
+                else:  # no focal subject
+                    try:
+                        csj = self.currentStates[""]
+                    except:
+                        csj = []
+    
+                cm = {} # modifiers for current behaviors
+                for cs in csj:
+                    for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+                        if ev[EVENT_TIME_FIELD_IDX] > memTime:
+                            break
+    
+                        if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
+                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
+                                cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
 
-            cm = {} # modifiers for current behaviors
-            for cs in csj:
-                for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                    if ev[EVENT_TIME_FIELD_IDX] > memTime:
-                        break
+                for cs in csj:
+                    # close state if same state without modifier
+                    if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
+                        modifier_str = cm[cs]
+                        continue
+    
+                    if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and cm[cs] != modifier_str):
+                        # add excluded state event to observations (= STOP them)
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""])
 
-                    if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
-                        if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
-                            cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
+            # remove key code from modifiers
+            modifier_str = re.sub(" \(.*\)", "", modifier_str)
+    
+            comment = event["comment"] if "comment" in event else ""
+            subject = event["subject"] if "subject" in event else ""
+    
+            # add event to pj
+            if "row" in event:
+                # modifying event
+                self.pj[OBSERVATIONS][self.observationId][EVENTS][event["row"]] = [memTime, subject, event["code"], modifier_str, comment]
+            else:
+                # add event
+                self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime, subject, event["code"], modifier_str, comment])
+    
+            # sort events in pj
+            self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
+    
+            # reload all events in tw
+            self.loadEventsInTW(self.observationId)
+            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
+            self.twEvents.scrollToItem(item)
+            self.projectChanged = True
+        except:
+            dialog.MessageDialog(programName, "Even can not be recorded.\nError: {}".format(sys.exc_info()[1]) , [OK])
+            
 
-            for cs in csj:
-
-                # close state if same state without modifier
-                if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
-                    modifier_str = cm[cs]
-                    continue
-
-                if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and cm[cs] != modifier_str):
-                    # add excluded state event to observations (= STOP them)
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""])
-
-
-        # remove key code from modifiers
-        modifier_str = re.sub(" \(.*\)", "", modifier_str)
-
-        if "comment" in event:
-            comment = event["comment"]
-        else:
-            comment = ""
-
-        if "subject" in event:
-            subject = event["subject"]
-        else:
-            subject = self.currentSubject
-
-        # add event to pj
-        if "row" in event:
-            self.pj[OBSERVATIONS][self.observationId][EVENTS][event["row"]] = [memTime, subject, event["code"], modifier_str, comment]
-        else:
-            self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime, subject, event["code"], modifier_str, comment])
-
-        # sort events in pj
-        self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
-
-        # reload all events in tw
-        self.loadEventsInTW(self.observationId)
-
-        item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
-
-        self.twEvents.scrollToItem(item)
-
-        self.projectChanged = True
 
     def fill_lwDetailed(self, obs_key, memLaps):
         """
@@ -8198,21 +8202,16 @@ item []:
                 return Decimal(0)
 
             if self.playerType == VLC:
-
                 if self.playMode == FFMPEG:
                     # cumulative time
-
                     memLaps = Decimal(self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]) / 1000).quantize(Decimal(".001"))
-
                     return memLaps
-
                 else: # playMode == VLC
-
                     # cumulative time
                     memLaps = Decimal(str(round((sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) +
                               self.mediaplayer.get_time()) / 1000, 3)))
-
                     return memLaps
+
 
     def full_event(self, behavior_idx):
         """
@@ -8547,7 +8546,7 @@ item []:
 
             row = self.twEvents.selectedIndexes()[0].row()
 
-            if ':' in self.twEvents.item(row, 0).text():
+            if ":" in self.twEvents.item(row, 0).text():
                 time_ = time2seconds(self.twEvents.item(row, 0).text())
             else:
                 time_  = Decimal(self.twEvents.item(row, 0).text())
@@ -8560,15 +8559,47 @@ item []:
             else:
                 newTime = 0
 
-
             if self.playMode == VLC:
+                
+                print("new time", newTime)
+                
+                flag_pause = (self.mediaListPlayer.get_state() in [vlc.State.Paused]
+                              or self.mediaListPlayer2.get_state() in [vlc.State.Paused])
 
                 if len(self.duration) == 1:
+                    '''print(self.mediaplayer.get_media().get_duration())'''
+                    if self.mediaListPlayer.get_state() == vlc.State.Ended and time_ < self.mediaplayer.get_media().get_duration() / 1000:
+                        #self.play_video()
+                        
+                        self.mediaListPlayer.play()
+                        while True:
+                            if self.mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                break
 
-                    self.mediaplayer.set_time(int(newTime))
+                        if flag_pause:
+                            self.mediaListPlayer.pause()
+                            while True:
+                                if self.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                    break
+
+                        '''self.pause_video()'''
+
+                    if time_ >= self.mediaplayer.get_media().get_duration() / 1000:
+                        
+                    else:
+                        self.mediaplayer.set_time(int(newTime))
 
                     if self.simultaneousMedia:
                         # synchronize 2nd player
+                        '''
+                        if self.mediaListPlayer2.get_state() == vlc.State.Ended and time_ < self.mediaplayer.get_media().get_duration()/1000:
+                            self.play_video()
+                            while True:
+                                if self.mediaListPlayer2.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                    break
+                            self.pause_video()
+                        '''
+    
                         self.mediaplayer2.set_time(int(self.mediaplayer.get_time() -
                                                        self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
@@ -8781,9 +8812,8 @@ item []:
         if msg == "CLOSE":
             self.find_dialog.close()
             return
-        if not self.find_dialog.findText.text():
-            return
 
+        self.find_dialog.lb_message.setText("")
         fields_list = []
         if self.find_dialog.cbSubject.isChecked():
             fields_list.append(EVENT_SUBJECT_FIELD_IDX)
@@ -8793,11 +8823,18 @@ item []:
             fields_list.append(EVENT_MODIFIER_FIELD_IDX)
         if self.find_dialog.cbComment.isChecked():
             fields_list.append(EVENT_COMMENT_FIELD_IDX)
+        if not fields_list:
+            self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
+            return
+        if not self.find_dialog.findText.text():
+            self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
+            return
 
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
-            if (not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind):
+            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() 
+                and event_idx in self.find_dialog.rowsToFind)):
                 for idx in fields_list:
                     if self.find_dialog.findText.text() in event[idx]:
                         self.find_dialog.currentIdx = event_idx
@@ -8805,12 +8842,17 @@ item []:
                         self.twEvents.selectRow(event_idx)
                         return
 
-        if dialog.MessageDialog(programName, "<b>{}</b> not found! Search from beginning?".format(self.find_dialog.findText.text()),
+        if msg != "FIND_FROM_BEGINING":
+            if dialog.MessageDialog(programName, "<b>{}</b> not found. Search from beginning?".format(self.find_dialog.findText.text()),
                                 [YES, NO]) == YES:
-            self.find_dialog.currentIdx = -1
-            self.click_signal_find_in_events("FIND")
+                self.find_dialog.currentIdx = -1
+                self.click_signal_find_in_events("FIND_FROM_BEGINING")
+            else:
+                self.find_dialog.close()
         else:
-            self.find_dialog.close()
+            if self.find_dialog.currentIdx == -1:
+                self.find_dialog.lb_message.setText("<b>{}</b> not found".format(self.find_dialog.findText.text()))
+
 
 
     def find_events(self):
@@ -8840,7 +8882,7 @@ item []:
             return
 
         if self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and not len(self.find_replace_dialog.rowsToFind):
-            dialog.MessageDialog(programName, "There are no selected events", ["OK"])
+            dialog.MessageDialog(programName, "There are no selected events", [OK])
             return
 
         fields_list = []
@@ -9380,7 +9422,6 @@ item []:
                 self.FFmpegTimer.start()
             else:
                 self.mediaListPlayer.play()
-
                 # second video together
                 if self.simultaneousMedia:
                     self.mediaListPlayer2.play()
