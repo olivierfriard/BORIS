@@ -8585,9 +8585,12 @@ item []:
                         '''self.pause_video()'''
 
                     if time_ >= self.mediaplayer.get_media().get_duration() / 1000:
-                        
+                        print("set to ",self.mediaplayer.get_media().get_duration())
+                        self.mediaplayer.set_time(self.mediaplayer.get_media().get_duration()-100)
+                        #self.mediaplayer.stop()
                     else:
                         self.mediaplayer.set_time(int(newTime))
+
 
                     if self.simultaneousMedia:
                         # synchronize 2nd player
@@ -8629,20 +8632,14 @@ item []:
 
                 self.timer_out()
                 self.timer_spectro_out()
-                #self.timer_plot_data_out()
 
 
             if self.playMode == FFMPEG:
-
                 frameDuration = Decimal(1000 / list(self.fps.values())[0])
-
                 currentFrame = round(newTime / frameDuration)
-
                 self.FFmpegGlobalFrame = currentFrame
-
                 if self.FFmpegGlobalFrame > 0:
                     self.FFmpegGlobalFrame -= 1
-
                 self.ffmpegTimerOut()
 
 
