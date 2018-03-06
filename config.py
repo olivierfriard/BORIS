@@ -100,6 +100,7 @@ DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
+BEHAVIOR_CATEGORY = "category"
 
 # fields for event configuration
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}

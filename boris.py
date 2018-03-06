@@ -6529,10 +6529,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"] # must be in same order than extended_file_formats
     
             if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Export aggregated events", "", ";;".join(extended_file_formats))
+                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self,
+                                                                               "Export aggregated events",
+                                                                               "", ";;".join(extended_file_formats))
             else:
-                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "", ";;".join(extended_file_formats))
-    
+                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "",
+                                                                      ";;".join(extended_file_formats))
+
             if not fileName:
                 return
     
@@ -6558,12 +6561,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not exportDir:
                 return
 
-
         if outputFormat == "sql":
             _, _, conn = db_functions.load_aggregated_events_in_db(self.pj,
-                                                             plot_parameters["selected subjects"],
+                                                             parameters["selected subjects"],
                                                              selectedObservations,
-                                                             plot_parameters["selected behaviors"])
+                                                             parameters["selected behaviors"])
             try:
                 with open(fileName, "w") as f:
                     for line in conn.iterdump():
@@ -6683,7 +6685,8 @@ item []:
 
             cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
-            cursor.execute("SELECT count(distinct subject) FROM events WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ".format(obsId, "','".join(plot_parameters["selected subjects"])))
+            cursor.execute(("SELECT count(distinct subject) FROM events "
+                            "WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ").format(obsId, "','".join(plot_parameters["selected subjects"])))
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
             subjectsMin, subjectsMax = 0, totalMediaDuration

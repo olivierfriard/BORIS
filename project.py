@@ -126,9 +126,10 @@ class ExclusionMatrix(QDialog):
 
 class BehavioralCategories(QDialog):
 
-    def __init__(self, behavioralCategories):
+    def __init__(self, pj):
         super(BehavioralCategories, self).__init__()
 
+        self.pj = pj
         self.setWindowTitle("Behavioral categories")
 
         self.vbox = QVBoxLayout(self)
@@ -139,9 +140,9 @@ class BehavioralCategories(QDialog):
 
         self.lw = QListWidget()
 
-        for category in behavioralCategories:
-            item = QListWidgetItem(category)
-            self.lw.addItem(item)
+        if BEHAVIORAL_CATEGORIES in pj:
+            for category in pj[BEHAVIORAL_CATEGORIES]:
+                self.lw.addItem(QListWidgetItem(category))
 
         self.vbox.addWidget(self.lw)
 
@@ -169,14 +170,34 @@ class BehavioralCategories(QDialog):
 
         self.setLayout(self.vbox)
 
+
     def pbAddCategory_clicked(self):
         category, ok = QInputDialog.getText(self, "New behavioral category", "Category name:")
         if ok:
             self.lw.addItem(QListWidgetItem(category))
 
+
     def pbRemoveCategory_clicked(self):
         for SelectedItem in self.lw.selectedItems():
-            self.lw.takeItem(self.lw.row(SelectedItem))
+
+            # check if behavioral category is in use
+            category_to_remove = self.lw.item(self.lw.row(SelectedItem)).text().strip()
+            behaviors_in_category = []
+            for idx in self.pj[ETHOGRAM]:
+                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] == category_to_remove:
+                    behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
+
+            if behaviors_in_category:
+                if dialog.MessageDialog(programName, ("Some behavior belong to the <b>{1}</b>:<br>"
+                                                      "{0}<br>"
+                                                      "<br>Some features may not be available anymore.<br>"
+                                                      "Are you sure to remove this behavioral category ?").format("<br>".join(behaviors_in_category),
+                                                                                                                  category_to_remove),
+                                        [YES, CANCEL]) == YES:
+
+                    self.lw.takeItem(self.lw.row(SelectedItem))
+            else:
+                self.lw.takeItem(self.lw.row(SelectedItem))
 
 
 class projectDialog(QDialog, Ui_dlgProject):
@@ -422,18 +443,29 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def pbBehaviorsCategories_clicked(self):
         """
-
+        behavioral categories manager
         """
 
-        if BEHAVIORAL_CATEGORIES in self.pj:
-            bc = BehavioralCategories(self.pj[BEHAVIORAL_CATEGORIES])
-        else:
-            bc = BehavioralCategories([])
+        bc = BehavioralCategories(self.pj)
 
         if bc.exec_():
             self.pj[BEHAVIORAL_CATEGORIES] = []
             for index in range(bc.lw.count()):
                 self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
+
+            # check if behavior belong to removed category 
+            for row in range(self.twBehaviors.rowCount()):
+                if self.twBehaviors.item(row, behavioursFields["category"]):
+    
+                    if (self.twBehaviors.item(row, behavioursFields["category"]).text()
+                       and self.twBehaviors.item(row, behavioursFields["category"]).text() not in self.pj[BEHAVIORAL_CATEGORIES]):
+                        if dialog.MessageDialog(programName, ("The <b>{}</b> behavior belongs to the behavioral category <b>{}</b>"
+                                                              "that is not in the behavioral categories list.<br><br>"
+                                                              "Remove the behavior from category?").format(self.twBehaviors.item(row, behavioursFields["code"]).text(),
+                                                                                                           self.twBehaviors.item(row, behavioursFields["category"]).text()),
+                                        [YES, CANCEL]) == YES:
+                            self.twBehaviors.item(row, behavioursFields["category"]).setText("")
+
 
 
     def twBehaviors_cellDoubleClicked(self, row, column):
@@ -444,6 +476,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         * exclusion
         * modifiers coding map
 
+        Args:
+            row (int): row double-clicked
+            column (int): column double-clicked
+
         """
 
         # check if double click on excluded column
@@ -453,8 +489,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check if double click on 'coding map' column
         if column == behavioursFields["coding map"]:
-
-            '''combobox = self.twBehaviors.cellWidget(row, behavioursFields["type"])'''
 
             if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
                 self.behaviorTypeChanged(row)
@@ -486,7 +520,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         select type for behavior
         """
 
-        
         if self.twBehaviors.item(row, behavioursFields[TYPE]).text() in BEHAVIOR_TYPES:
             selected = BEHAVIOR_TYPES.index(self.twBehaviors.item(row, behavioursFields[TYPE]).text())
         else:
@@ -598,7 +631,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
                                     self.twVariables.item(row, tw_indVarFields.index("label")).text()))
 
-
+    '''
     def check_indep_var_config_old(self):
         """
         check if default type is compatible with var type
@@ -618,6 +651,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             return False
 
         return True, "OK"
+    '''
 
 
     def check_indep_var_config(self):

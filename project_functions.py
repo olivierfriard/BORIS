@@ -564,28 +564,55 @@ def event_type(code, ethogram):
     return None
 
 
-def check_state_events_obs(obsId, ethogram, observation, time_format):
+def check_events(obsId, ethogram, observation):
     """
-    check state events
-    check if number is odd
+    Check if coded events are in ethogram
     
     Args:
         obsId (str): id of observation to check
         ethogram (dict): ethogram of project
         observation (dict): observation to be checked
-        time_firmat (str): time format
-        
-    Returns:
-        set (bool, str): True/False, message
+
     """
-    
+    coded_behaviors = {event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]}
+    #print("coded_behaviors", coded_behaviors)
+    behaviors_in_ethogram = [ethogram[idx][BEHAVIOR_CODE] for idx in ethogram]
+
+    #print("behaviors_in_ethogram", behaviors_in_ethogram)
+    not_in_ethogram = [coded_behavior for coded_behavior in coded_behaviors if coded_behavior not in behaviors_in_ethogram]
+    return not_in_ethogram
+
+
+def check_state_events_obs(obsId, ethogram, observation, time_format):
+    """
+    check state events
+    check if number is odd
+
+    Args:
+        obsId (str): id of observation to check
+        ethogram (dict): ethogram of project
+        observation (dict): observation to be checked
+        time_firmat (str): time format
+
+    Returns:
+        set (bool, str): if OK True else False , message
+    """
+
+    out = ""
+
+    '''
+    not_in_ethogram = check_events(obsId, ethogram, observation)
+    if not_in_ethogram:
+        out += "The following coded behavior(s) is/are not found in ethogram: <b>{}</b><br><br>".format("</b>, <b>".join(not_in_ethogram))
+    '''
+
+
     # check if behaviors are defined as "state event"
     event_types = {ethogram[idx]["type"] for idx in ethogram}
 
     if not event_types or event_types == {"Point event"}:
         return (True, "No behavior is defined as `State event`")
 
-    out = ""
     flagStateEvent = False
     subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
     ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
