@@ -671,11 +671,16 @@ def check_project_integrity(pj, time_format):
     out = ""
     
     # check for behavior not in ethogram
+    '''
     behav_not_in_ethogram = []
     for obs_id in pj[OBSERVATIONS]:
         behav_not_in_ethogram.extend(check_events(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id]))
-    if behav_not_in_ethogram:
-        out += "The following behaviors are found in observations but not in ethogram:\n{}".format(", ".join(set(behav_not_in_ethogram)))
+    for behav in behav_not_in_ethogram:
+        if out:
+            out += "<br><br>"
+        out += ("The behavior <b>{}</b> is found in observation "
+                "but not is not present in ethogram.").format(behav)
+    '''
 
     # check for unpaired state events
     for obs_id in pj[OBSERVATIONS]:

@@ -102,11 +102,11 @@ import db_functions
 import export_observation
 
 
-__version__ = "6.1.1"
-__version_date__ = "2018-03-01"
+__version__ = "6.1.2"
+__version_date__ = "2018-03-07"
 
-if platform.python_version() < "3.4":
-    logging.critical("BORIS requires Python 3.4+! You are using v. {}")
+if platform.python_version() < "3.5":
+    logging.critical("BORIS requires Python 3.5+! You are using v. {}")
     sys.exit()
 
 if sys.platform == "darwin":  # for MacOS
@@ -524,17 +524,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             pn + (" - " * (pn != "")), programName))
 
         # project menu
-        for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as,
+        for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
                   self.actionClose_project, self.actionSend_project, self.actionNew_observation,
                   self.actionRemove_path_from_media_files]:
             w.setEnabled(flag)
 
         # observations
 
-        # enabled if project
+        # enabled if observations
+        for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation, self.actionObservationsList]:
+            w.setEnabled(self.pj[OBSERVATIONS] != {})
+        
+        '''
         self.actionOpen_observation.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionEdit_observation_2.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.actionView_observation.setEnabled(self.pj[OBSERVATIONS] != {})
         self.actionObservationsList.setEnabled(self.pj[OBSERVATIONS] != {})
+        '''
 
         # enabled if observation
         flagObs = self.observationId != ""
@@ -846,10 +852,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
+
     def check_project_integrity(self):
         msg = project_functions.check_project_integrity(self.pj, self.timeFormat)
         if msg:
-
+            msg = "Some issues were found in the project<br><br>" + msg
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle("Check project integrity")
             self.results.ptText.clear()
