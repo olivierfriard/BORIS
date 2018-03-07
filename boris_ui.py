@@ -441,6 +441,8 @@ class Ui_MainWindow(object):
         self.actionView_observation.setObjectName(_fromUtf8("actionView_observation"))
         self.actionRemove_path_from_media_files = QtGui.QAction(MainWindow)
         self.actionRemove_path_from_media_files.setObjectName(_fromUtf8("actionRemove_path_from_media_files"))
+        self.actionCheck_project = QtGui.QAction(MainWindow)
+        self.actionCheck_project.setObjectName(_fromUtf8("actionCheck_project"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -450,6 +452,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionOpen_project)
         self.menuFile.addAction(self.menuRecent_projects.menuAction())
         self.menuFile.addAction(self.actionEdit_project)
+        self.menuFile.addAction(self.actionCheck_project)
         self.menuFile.addAction(self.actionSave_project)
         self.menuFile.addAction(self.actionSave_project_as)
         self.menuFile.addAction(self.actionClose_project)
@@ -738,4 +741,5 @@ class Ui_MainWindow(object):
         self.actionConverters_manager.setText(_translate("MainWindow", "Time converters manager", None))
         self.actionView_observation.setText(_translate("MainWindow", "View observation", None))
         self.actionRemove_path_from_media_files.setText(_translate("MainWindow", "Remove path from media files", None))
+        self.actionCheck_project.setText(_translate("MainWindow", "Check project integrity", None))
 

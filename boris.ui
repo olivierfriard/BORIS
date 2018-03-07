@@ -130,6 +130,7 @@
     <addaction name="actionOpen_project"/>
     <addaction name="menuRecent_projects"/>
     <addaction name="actionEdit_project"/>
+    <addaction name="actionCheck_project"/>
     <addaction name="actionSave_project"/>
     <addaction name="actionSave_project_as"/>
     <addaction name="actionClose_project"/>
@@ -1169,6 +1170,11 @@
   <action name="actionRemove_path_from_media_files">
    <property name="text">
     <string>Remove path from media files</string>
+   </property>
+  </action>
+  <action name="actionCheck_project">
+   <property name="text">
+    <string>Check project integrity</string>
    </property>
   </action>
  </widget>

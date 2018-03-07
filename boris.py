@@ -636,12 +636,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in [self.lbTime, self.lbSubject, self.lbTimeOffset, self.lbSpeed]:
             w.setVisible(self.playerType == VLC)
 
+
     def connections(self):
 
         # menu file
         self.actionNew_project.triggered.connect(self.new_project_activated)
         self.actionOpen_project.triggered.connect(self.open_project_activated)
         self.actionEdit_project.triggered.connect(self.edit_project_activated)
+        self.actionCheck_project.triggered.connect(self.check_project_integrity)
         self.actionSave_project.triggered.connect(self.save_project_activated)
         self.actionSave_project_as.triggered.connect(self.save_project_as_activated)
         self.actionClose_project.triggered.connect(self.close_project)
@@ -843,6 +845,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+    def check_project_integrity(self):
+        msg = project_functions.check_project_integrity(self.pj, self.timeFormat)
+        if msg:
+
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle("Check project integrity")
+            self.results.ptText.clear()
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(msg)
+            self.results.show()
+        else:
+            QMessageBox.information(self, programName, "The current project has no issues")
 
 
     def remove_media_files_path(self):

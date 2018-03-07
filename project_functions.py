@@ -573,7 +573,10 @@ def check_events(obsId, ethogram, observation):
         ethogram (dict): ethogram of project
         observation (dict): observation to be checked
 
+    Returns:
+        list: list of behaviors found in observations but not in ethogram
     """
+
     coded_behaviors = {event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]}
     #print("coded_behaviors", coded_behaviors)
     behaviors_in_ethogram = [ethogram[idx][BEHAVIOR_CODE] for idx in ethogram]
@@ -651,3 +654,49 @@ def check_state_events_obs(obsId, ethogram, observation, time_format):
                                       time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
 
     return (False, out) if out else (True, "All state events are PAIRED")
+
+
+def check_project_integrity(pj, time_format):
+    """
+    check project integrity
+    
+    check if behaviors in observations are in ethogram
+    
+    Args:
+        pj (dict): BORIS project
+    
+    Returns:
+        str: message
+    """
+    out = ""
+    
+    # check for behavior not in ethogram
+    behav_not_in_ethogram = []
+    for obs_id in pj[OBSERVATIONS]:
+        behav_not_in_ethogram.extend(check_events(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id]))
+    if behav_not_in_ethogram:
+        out += "The following behaviors are found in observations but not in ethogram:\n{}".format(", ".join(set(behav_not_in_ethogram)))
+
+    # check for unpaired state events
+    for obs_id in pj[OBSERVATIONS]:
+        ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
+        if not ok:
+            if out:
+                out += "<br><br>"
+            out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+
+    # check if behavior belong to category that is not in categories list
+    for idx in pj[ETHOGRAM]:
+        if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]:
+            if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]:
+                if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
+                    if out:
+                        out += "<br><br>"
+                    out += ("The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
+                           "that is no more in behavioral categories list.").format(pj[ETHOGRAM][idx][BEHAVIOR_CODE],
+                                                                                    pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
+
+
+
+    return out
+
