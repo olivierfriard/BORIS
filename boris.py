@@ -102,7 +102,7 @@ import db_functions
 import export_observation
 
 
-__version__ = "6.1.2"
+__version__ = "6.1.3"
 __version_date__ = "2018-03-07"
 
 if platform.python_version() < "3.5":
@@ -8149,7 +8149,7 @@ item []:
             modifier_str = re.sub(" \(.*\)", "", modifier_str)
     
             comment = event["comment"] if "comment" in event else ""
-            subject = event["subject"] if "subject" in event else ""
+            subject = event["subject"] if "subject" in event else self.currentSubject
     
             # add event to pj
             if "row" in event:
