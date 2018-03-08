@@ -301,6 +301,9 @@ class Ui_Form(object):
         self.pb_add_data_file = QtWidgets.QPushButton(self.layoutWidget8)
         self.pb_add_data_file.setObjectName("pb_add_data_file")
         self.horizontalLayout_5.addWidget(self.pb_add_data_file)
+        self.pb_add_data_file_wo_path = QtWidgets.QPushButton(self.layoutWidget8)
+        self.pb_add_data_file_wo_path.setObjectName("pb_add_data_file_wo_path")
+        self.horizontalLayout_5.addWidget(self.pb_add_data_file_wo_path)
         self.pb_view_data_head = QtWidgets.QPushButton(self.layoutWidget8)
         self.pb_view_data_head.setObjectName("pb_view_data_head")
         self.horizontalLayout_5.addWidget(self.pb_view_data_head)
@@ -363,7 +366,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -444,6 +447,7 @@ class Ui_Form(object):
         item = self.tw_data_files.horizontalHeaderItem(8)
         item.setText(_translate("Form", "Color"))
         self.pb_add_data_file.setText(_translate("Form", "Add data file"))
+        self.pb_add_data_file_wo_path.setText(_translate("Form", "Add data file without path"))
         self.pb_view_data_head.setText(_translate("Form", "View first rows"))
         self.pb_plot_data.setText(_translate("Form", "Show plot"))
         self.pb_remove_data_file.setText(_translate("Form", "Remove data file"))

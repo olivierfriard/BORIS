@@ -218,7 +218,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>0</number>
+              <number>2</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -611,6 +611,13 @@
                       <widget class="QPushButton" name="pb_add_data_file">
                        <property name="text">
                         <string>Add data file</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pb_add_data_file_wo_path">
+                       <property name="text">
+                        <string>Add data file without path</string>
                        </property>
                       </widget>
                      </item>

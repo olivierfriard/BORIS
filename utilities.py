@@ -169,11 +169,14 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters = {},
             return False, "converter not found", np.array([]) 
 
     # snif txt file
-    with open(file_name) as csvfile:
-        buff = csvfile.read(1024)
-        snif = csv.Sniffer()
-        dialect = snif.sniff(buff)
-        has_header = snif.has_header(buff)
+    try:
+        with open(file_name) as csvfile:
+            buff = csvfile.read(1024)
+            snif = csv.Sniffer()
+            dialect = snif.sniff(buff)
+            has_header = snif.has_header(buff)
+    except:
+        return False, sys.exc_info()[1], np.array([])
 
     try:
         data = np.loadtxt(file_name,
@@ -269,34 +272,6 @@ def get_current_points_by_subject(point_behaviors_codes, events, subjects, time,
 
     return current_points
 
-'''
-def get_current_states_modifiers_by_subject(state_behaviors_codes, events, subjects, time):
-    """
-    get current states and modifiers for subjects at given time
-    Args:
-        state_behaviors_codes (list): list of behavior codes defined as STATE event
-        events (list): list of events
-        subjects (dict): dictionary of subjects
-        time (Decimal): time
-
-    Returns:
-        dict: current state(s) and modifier(s) by subject. dict of list
-    """
-
-    current_states = get_current_states_by_subject(state_behaviors_codes, events, subjects, time)
-    cm = {}
-    for behavior in current_states[subject]:
-        for event in events:
-            if event[EVENT_TIME_FIELD_IDX] > currentTime:
-                break
-            if event[EVENT_SUBJECT_FIELD_IDX] == subject:
-                if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior:
-                    cm[behavior] = event[EVENT_MODIFIER_FIELD_IDX]
-
-
-    return current_states
-'''
-
 
 def get_ip_address():
     """Get current IP address
@@ -320,107 +295,48 @@ def check_txt_file(file_name):
     Returns:
         dict: 
     """
-
-    # snif txt file
-    with open(file_name) as csvfile:
-        buff = csvfile.read(1024)
-        snif = csv.Sniffer()
-        dialect = snif.sniff(buff)
-
-        has_header = snif.has_header(buff)
-
-
-        logging.debug("dialect.delimiter: {}".format(dialect.delimiter))
-
-    '''data = np.loadtxt(file_name,
-                          delimiter=dialect.delimiter,
-       #                          usecols=columns,
-                          skiprows=has_header  #,
-                          #converters=np_converters,
-                          )
-        
-
-    '''
+    try:
+        # snif txt file
+        with open(file_name) as csvfile:
+            buff = csvfile.read(1024)
+            snif = csv.Sniffer()
+            dialect = snif.sniff(buff)
+            has_header = snif.has_header(buff)
+            logging.debug("dialect.delimiter: {}".format(dialect.delimiter))
     
-    '''
-    # test CSV
-    rows_len = []
-    with open(file_name, "r") as f:
-        reader = csv.reader(f)
-        try:
+    
+        csv.register_dialect("dialect", dialect)
+        rows_len = []
+        with open(file_name, "r") as f:
+            reader = csv.reader(f, dialect="dialect")
             for row in reader:
+                logging.debug("row: {}".format(row))
+                if not row:
+                    continue
                 if len(row) not in rows_len:
                     rows_len.append(len(row))
                     if len(rows_len) > 1:
                         break
-        except:
-            return {"error": "Data file error"}
-
-    if len(rows_len) == 1 and rows_len[0] >= 2:
-        return {"homogeneous": True, "fields number": rows_len[0], "separator": ","}
-    '''
     
+        # test if file empty
+        if not len(rows_len):
+            return {"error": "The file is empty"}
+        if len(rows_len) == 1 and rows_len[0] >= 2:
+            return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t"}
+        
+        if len(rows_len) > 1:
+            return {"homogeneous": False}
+        else:
+            return {"homogeneous": True, "fields number": rows_len[0]}
+    except:
+        return {"error": str(sys.exc_info()[1])}
 
-    csv.register_dialect("dialect", dialect)
-    rows_len = []
-    with open(file_name, "r") as f:
-        reader = csv.reader(f, dialect="dialect")
-        for row in reader:
-            logging.debug("row: {}".format(row))
-            if not row:
-                continue
-            if len(row) not in rows_len:
-                rows_len.append(len(row))
-                if len(rows_len) > 1:
-                    break
-
-    # test if file empty
-    if not len(rows_len):
-        return {"error": "The file is empty"}
-    if len(rows_len) == 1 and rows_len[0] >= 2:
-        return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t"}
-    
-    if len(rows_len) > 1:
-        return {"homogeneous": False}
-    else:
-        return {"homogeneous": True, "fields number": rows_len[0]}
-
-
-
-'''
-def get_set_of_modifiers(text):
-    """
-    return set of modifiers
-    """
-
-    pattern = '~(.*)~'
-    match = re.search(pattern, text)
-    if match is None:
-        return []
-
-    return text[match.start()+1:match.end()-1].split("`")
-'''
 
 
 def extract_frames(ffmpeg_bin, second, currentMedia, fps, imageDir, md5FileName, extension, frame_resize):
     """
     extract frames from media file and save them in imageDir directory
     """
-
-    '''
-    ffmpeg_command = '"{ffmpeg_bin}" -ss {second} -loglevel quiet -i "{currentMedia}" -vframes {fps} -qscale:v 2  -vf scale={frame_resize}:-1 "{imageDir}{sep}BORIS@{md5FileName}-{second}_%d.{extension}"'.format(
-                    ffmpeg_bin=ffmpeg_bin,
-                    second=second,
-                    currentMedia=currentMedia,
-                    fps=fps,
-                    imageDir=imageDir,
-                    sep=os.sep,
-                    md5FileName=md5FileName,
-                    extension=extension,
-                    frame_resize=frame_resize
-                    )
-
-    '''
 
     ffmpeg_command = ('"{ffmpeg_bin}" -ss {second_minus1} '
                       '-loglevel quiet '

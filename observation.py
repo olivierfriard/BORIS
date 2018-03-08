@@ -46,6 +46,7 @@ import dialog
 import plot_spectrogram
 import recode_widget
 import plot_data_module
+import project_functions
 
 
 if QT_VERSION_STR[0] == "4":
@@ -103,13 +104,14 @@ class AssignConverter(QDialog):
 
 class Observation(QDialog, Ui_Form):
 
-    def __init__(self, tmp_dir, converters={}, log_level="", parent=None):
+    def __init__(self, tmp_dir, project_path="", converters={}, log_level="", parent=None):
 
         super().__init__(parent)
-        
-        self.converters = converters
+
         self.tmp_dir = tmp_dir
-        
+        self.project_path = project_path
+        self.converters = converters
+
         if log_level:
             logging.basicConfig(level=log_level)
 
@@ -121,9 +123,10 @@ class Observation(QDialog, Ui_Form):
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=True))
         self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=False))
         
-        self.pb_add_data_file.clicked.connect(self.add_data_file)
+        self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
+        self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
-        self.pb_plot_data.clicked.connect(self.check_data_file)
+        self.pb_plot_data.clicked.connect(self.plot_data_file)
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
         self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2, flag_path=True))
@@ -182,7 +185,7 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName, "Select the columns to plot (time,value)")
 
 
-    def check_data_file(self):
+    def plot_data_file(self):
         """
         check if data can be plotted
         """
@@ -219,7 +222,15 @@ class Observation(QDialog, Ui_Form):
                 
                 plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
     
-                self.test = plot_data_module.Plot_data(filename,
+                data_file_path = project_functions.media_full_path(filename, self.project_path)
+                print("data_file_path", data_file_path)
+                if not data_file_path:
+                    QMessageBox.critical(self, programName, ("Data file not found:\n{}\n"
+                                                             "If the file path is not stored the data file "
+                                                             "must be in the same directory than your project").format(filename))
+                    return
+    
+                self.test = plot_data_module.Plot_data(data_file_path,
                                                   time_interval, # time interval
                                                   time_offset,   # time offset
                                                   plot_color,    # plot style
@@ -233,7 +244,7 @@ class Observation(QDialog, Ui_Form):
                                                   )
     
                 if self.test.error_msg:
-                    QMessageBox.critical(self, programName, "Impossibile to plot data:\n{}".format(self.test.error_msg))
+                    QMessageBox.critical(self, programName, "Impossible to plot data:\n{}".format(self.test.error_msg))
                     del self.test
                     return
     
@@ -256,20 +267,27 @@ class Observation(QDialog, Ui_Form):
             self.test.close_plot()
             self.pb_plot_data.setText("Show plot")
 
-    def add_data_file(self):
+
+    def add_data_file(self, flag_path=True):
         """
         user select a data file to be plotted synchronously with media file
-        """
         
+        Args:
+            flag_path (bool): true to store path of data file else False
+        """
+
         # limit to 2 files
         if self.tw_data_files.rowCount() >= 2:
             QMessageBox.warning(self, programName , ("It is not yet possible to plot more than 2 external data"
                                                      "This limitation will be removed in future"))
             return
-        
+
         QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")            
-        
-        os.chdir(os.path.expanduser("~"))
+
+        if not flag_path:
+            pass  # cd to project directory
+        else:
+            os.chdir(os.path.expanduser("~"))
         fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
@@ -290,7 +308,7 @@ class Observation(QDialog, Ui_Form):
 
             header = self.return_file_header(file_name)
             if header:
-                text, ok = QInputDialog.getText(self, "Data file: {}".format(os.path.basename(file_name)),
+                text, ok = QInputDialog.getText(self, "Data file: {}".format(Path(file_name).name),
                                                 ("This file contains {} columns. 2 are required for the plot.<br>"
                                                  "<pre>{}</pre><br>"
                                                  "Enter the column indices to plot (time,value) separated by comma").format(r["fields number"], header))
@@ -315,6 +333,9 @@ class Observation(QDialog, Ui_Form):
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
             
+            if not flag_path:
+                file_name = str(Path(file_name).name)
+            
             for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX,
                                        PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX,
                                        PLOT_DATA_CONVERTERS_IDX, PLOT_DATA_TIMEINTERVAL_IDX,
@@ -337,7 +358,6 @@ class Observation(QDialog, Ui_Form):
             combobox = QComboBox()
             combobox.addItems(DATA_PLOT_STYLES)
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
-
 
 
     def return_file_header(self, file_name):
@@ -541,7 +561,10 @@ class Observation(QDialog, Ui_Form):
                                                      "when more media are loaded in the first media player"))
             return
 
-        os.chdir(os.path.expanduser("~"))
+        if not flag_path:
+            pass # cd to project directory
+        else:
+            os.chdir(os.path.expanduser("~"))
         fn = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
         file_paths = fn[0] if type(fn) is tuple else fn
 

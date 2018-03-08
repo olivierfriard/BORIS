@@ -24,6 +24,7 @@ Copyright 2012-2018 Olivier Friard
 import argparse
 import sys
 import re
+import pathlib
 import utilities
 import project_functions
 from config import *
@@ -42,27 +43,40 @@ def cleanhtml(raw_html):
     cleantext = re.sub(cleanr, "", raw_html)
     return cleantext
 
-commands_list = ["check_state_events", "export_events", "irr", "subtitles"]
+commands_list = ["check_state_events", "export_events", "irr", "subtitles", "check_project_integrity"]
+commands_usage = {
+"check_state_events": "usage:\nboris_cli -p PROJECT_FILE --command check_state_events ",
+"export_events": "usage:\nboris_cli -p PROJECT_FILE --command export_events [OUTPUT_FORMAT]\nwhere:\nOUTPUT_FORMAT can be tsv (default), csv, xls, xlsx, ods, html",
+"irr": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID1" "OBSERVATION_ID2" --command irr [INTERVAL] [INCLUDE_MODIFIERS]\nwhere:\n'
+'INTERVAL in seconds (default is 1)\nINCLUDE_MODIFIERS must be true or false (default is true)'),
+"subtitles": "usage:\nboris_cli -p PROJECT_FILE --command subtitles [OUTPUT_DIRECTORY]\nwhere:\nOUTPUT_DIRECTORY is the directory where subtitles files will be saved",
+}
 
 parser = argparse.ArgumentParser(description="BORIS CLI")
 parser.add_argument("-v", "--version", action="store_true", dest='version', help='BORIS version')
-
 parser.add_argument("-p", "--project", action="store", dest='project_file', help='Project file path')
-
 parser.add_argument("-o", "--observation", nargs = '*', action="store", default=[], dest='observation_id', help='Observation id')
-
 parser.add_argument("-i", "--info", action="store_true", dest='project_info', help='Project information')
-
-parser.add_argument("--command", nargs = '*', action="store", dest='command', help='Command to execute')
+parser.add_argument("-c", "--command", nargs = '*', action="store", dest='command', help='Command to execute')
 
 args = parser.parse_args()
 
-pj = {}
-observations_id_list = []
+pj, observations_id_list = {}, {}
 
 if args.version:
     print("version {}".format(__version__))
     sys.exit()
+
+if args.command:
+    if args.command[0].upper() == "LIST" :
+        for command in commands_list:
+            print(command)
+            if command in commands_usage:
+                print(commands_usage[command])
+            print()
+        print()
+        sys.exit()
+
 
 if args.project_file:
 
@@ -79,6 +93,7 @@ if args.project_file:
 if args.observation_id:
     observations_id_list = args.observation_id
 
+    '''
     if not args.command:
         print("\nObservations:")
         for observation_id in observations_id_list:
@@ -87,6 +102,8 @@ if args.observation_id:
             else:
                 print("{}: NOT FOUND in project".format(observation_id))
         print()
+    '''
+
 
 if args.project_info:
     if not args.command:
@@ -143,17 +160,25 @@ if args.command:
         print("No project")
         sys.exit()
 
-    if not observations_id_list:
-        print("No observation")
-        sys.exit()
-    
+   
     if "check_state_events" in args.command:
+        
+        if not observations_id_list:
+            print("No observation selected. Command applied on all observations found in project\n")
+            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+        
         for observation_id in observations_id_list:
             ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
             print("{}: {}".format(observation_id, cleanhtml(msg)))
         sys.exit()
 
     if "export_events" in args.command:
+
+        if not observations_id_list:
+            print("No observation selected. Command applied on all observations found in project\n")
+            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+
+        
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
 
@@ -215,12 +240,20 @@ if args.command:
         sys.exit()
 
     if "subtitles" in args.command:
+
+        if not observations_id_list:
+            print("No observation selected. Command applied on all observations found in project\n")
+            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
 
         export_dir = "."
         if len(args.command) > 1:
             export_dir = args.command[1]
+            if not pathlib.Path(export_dir).is_dir():
+                print("{} is not a valid directory".format(export_dir))
+                sys.exit()
 
         ok, msg = project_functions.create_subtitles(pj,
                                            observations_id_list,
@@ -232,11 +265,15 @@ if args.command:
             print(cleanhtml(msg))
         sys.exit()
 
-    if "list" in args.command:
-        print("Available commands:\n{}".format("\n".join(commands_list)))
+    if "check_project_integrity" in args.command[0]:
+        msg = project_functions.check_project_integrity(pj, HHMMSS)
+        if msg:
+            print(cleanhtml(msg))
+        else:
+            print("No issuses found in project")
         sys.exit()
 
-    print("Command not found")
+    print("Command {} not found!".format(args.command[0]))
     
-    
+print()
     

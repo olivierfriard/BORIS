@@ -731,7 +731,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -3365,36 +3366,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.show()
             self.timer_spectro.start()
 
-
-
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
             self.plot_data = {}
             self.ext_data_timer_list = []
-
             count = 0
-
             for idx in self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-                
                 if count == 0:
                     
-                    w1 = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
-                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
-                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
-                                                                 self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
-                                                                 log_level=logging.getLogger().getEffectiveLevel()
-                                                                 )
+                    data_file_path = project_functions.media_full_path(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                                                                       self.projectFileName)
+                    if not data_file_path:
+                        QMessageBox.critical(self, programName,
+                                             "Data file not found:\n{}".format(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]))
+                        return False
+
+                    w1 = plot_data_module.Plot_data(data_file_path,
+                                                    int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
+                                                    str(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
+                                                    self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
+                                                    log_level=logging.getLogger().getEffectiveLevel()
+                                                    )
 
                     if w1.error_msg:
-                        QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
-                                                                                                             w1.error_msg))
+                        QMessageBox.critical(self, programName,
+                                             "Impossible to plot data from file {}:\n{}".format(
+                                                 os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
+                                                  w1.error_msg))
                         del w1
                         return False
 
@@ -3410,23 +3415,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     
                     self.plot_data[count] = w1
 
-                
                 if count == 1:
-                    w2 = plot_data_module.Plot_data(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
-                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
-                                                                 int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
-                                                                 self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
-                                                                 self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
-                                                                 log_level=logging.getLogger().getEffectiveLevel()
-                                                                 )
+                    
+                    data_file_path = project_functions.media_full_path(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"],
+                                                                       self.projectFileName)
+                    if not data_file_path:
+                        QMessageBox.critical(self, programName,
+                                             "Data file not found:\n{}".format(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]))
+                        return False
+
+                    w2 = plot_data_module.Plot_data(data_file_path,
+                                                    int(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_interval"]),
+                                                    str(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["time_offset"]),
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["color"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["title"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["variable_name"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["columns"],
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["substract_first_value"],
+                                                    self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
+                                                    self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["converters"],
+                                                    log_level=logging.getLogger().getEffectiveLevel()
+                                                    )
 
                     if w2.error_msg:
-                        QMessageBox.critical(self, programName, "Impossibile to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
+                        QMessageBox.critical(self, programName, "Impossible to plot data from file {}:\n{}".format(os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
                                                                                                              w2.error_msg))
                         del w2
                         return False
@@ -3574,6 +3586,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         observationWindow = observation.Observation(self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir(),
+                                                    project_path=self.projectFileName,
                                                     converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
                                                     log_level=logging.getLogger().getEffectiveLevel())
 
@@ -4069,7 +4082,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_data[pd].close_plot()
                 #pd.hide()
 
-            del self.plot_data
 
 
         self.observationId = ""
@@ -4678,6 +4690,349 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "end time": endTime
                 }
 
+    def synthetic_time_budget(self):
+        """
+        Synthetic time budget
+        """
+
+        def default_value(behav, param):
+            """
+            return value for duration in case of point event
+            """
+            default_value_ = 0
+            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
+               and param in ["duration"]):
+                   default_value_ = "-"
+            return default_value_
+
+        def init_behav_modif(selected_subjects, distinct_behav_modif, include_modifiers, parameters):
+            """
+            initialize dictionary with subject, behaviors and modifiers
+            """
+            behaviors = {}
+            for subj in synth_tb_param["selected subjects"]:
+                behaviors[subj] = {}
+                for behav_modif in distinct_behav_modif:
+                    behav, modif = behav_modif
+                    if behav not in behaviors[subj]:
+                        behaviors[subj][behav] = {}
+                    if not synth_tb_param["include modifiers"]:
+                        for param in parameters:
+                            behaviors[subj][behav][param[0]] = default_value(behav, param[0])
+
+                    if synth_tb_param["include modifiers"]:
+                        behaviors[subj][behav][modif] = {}
+                        for param in parameters:
+                            behaviors[subj][behav][modif][param[0]] = default_value(behav, param[0])
+
+            return behaviors
+
+
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+        # check if state events are paired
+        out = ""
+        for obs_id in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obs_id],
+                                                              self.timeFormat)
+            if not r:
+                out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+        if out:
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.show()
+
+        selectedObsTotalMediaLength = Decimal("0.0")
+        max_obs_length = 0
+        for obsId in selected_observations:
+            obs_length =project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+
+            logging.debug("media length for {0}: {1}".format(obsId, obs_length))
+
+            if obs_length in [0, -1]:
+                selectedObsTotalMediaLength = -1
+                break
+            max_obs_length = max(max_obs_length, obs_length)
+
+            selectedObsTotalMediaLength += obs_length
+
+        # an observation media length is not available
+        if selectedObsTotalMediaLength == -1:
+            # propose to user to use max event time
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO]) == YES:
+                maxTime = 0 # max length for all events all subjects
+                for obsId in selected_observations:
+                    if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                        maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+                logging.debug("max time all events all subjects: {}".format(maxTime))
+                selectedObsTotalMediaLength = maxTime
+            else:
+                selectedObsTotalMediaLength = 0
+
+        synth_tb_param = self.choose_obs_subj_behav_category(selected_observations,
+                                                         maxTime=max_obs_length,
+                                                         flagShowExcludeBehaviorsWoEvents=False,
+                                                         by_category=False)
+
+        if not synth_tb_param["selected subjects"] or not synth_tb_param["selected behaviors"]:
+            return
+
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)"]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+
+        if QT_VERSION_STR[0] == "4":
+            filediag_func = QFileDialog(self).getSaveFileNameAndFilter
+        else:
+            filediag_func = QFileDialog(self).getSaveFileName
+
+        file_name, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
+        if not file_name:
+            return
+
+        output_format = file_formats[extended_file_formats.index(filter_)]
+        if pathlib.Path(file_name).suffix != "." + output_format:
+            file_name = str(pathlib.Path(file_name)) + "." + output_format
+
+        data_report = tablib.Dataset()
+        data_report.title = "Synthetic time budget"
+
+        parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
+
+        cursor = db_functions.load_events_in_db(self.pj, synth_tb_param["selected subjects"], selected_observations, synth_tb_param["selected behaviors"])
+        
+        cursor.execute("SELECT distinct code, modifiers FROM events")
+        distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
+        
+        print("distinct_behav_modif", distinct_behav_modif)
+        
+        # add selected behaviors that are not observed
+        for behav in synth_tb_param["selected behaviors"]:
+            if [x for x in distinct_behav_modif if x[0] == behav] == []:
+                distinct_behav_modif.append([behav, "-"])
+
+        behaviors = init_behav_modif(synth_tb_param["selected subjects"],
+                                     distinct_behav_modif,
+                                     synth_tb_param["include modifiers"],
+                                     parameters)
+
+        subj_header, behav_header, modif_header, param_header = ["", ""], ["", ""], ["", ""], ["", "Total length (s)"]
+        for subj in synth_tb_param["selected subjects"]:
+            for behav in synth_tb_param["selected behaviors"]:
+                if not synth_tb_param["include modifiers"]:
+                    for param in parameters:
+                        subj_header.append(subj)
+                        behav_header.append(behav)
+                        param_header.append(param[1])
+                        
+                if synth_tb_param["include modifiers"]:
+                    for modif in sorted(list(behaviors[subj][behav].keys())):
+                        for param in parameters:
+                            subj_header.append(subj)
+                            behav_header.append(behav)
+                            modif_header.append(modif)
+                            param_header.append(param[1])
+
+        data_report.append(subj_header)
+        data_report.append(behav_header)
+        if synth_tb_param["include modifiers"]:
+            data_report.append(modif_header)
+        data_report.append(param_header)
+
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
+                                                           synth_tb_param["selected subjects"],
+                                                           selected_observations,
+                                                           synth_tb_param["selected behaviors"])
+
+        # FIXME
+        if not ok:
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle("Synthetic time budget")
+            self.results.ptText.clear()
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(msg)
+            self.results.show()
+            return
+
+        cursor = db_connector.cursor()
+
+        # select time interval
+        for obs_id in selected_observations:
+
+            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
+            if obs_length == -1:
+                obs_length = 0
+
+            if synth_tb_param["time"] == TIME_FULL_OBS:
+                min_time = float(0)
+                max_time = float(obs_length)
+
+            if synth_tb_param["time"] == TIME_EVENTS:
+                try:
+                    min_time = float(self.pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                except:
+                    min_time = float(0)
+                try:
+                    max_time = float(self.pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                except:
+                    max_time = float(obs_length)
+
+            if synth_tb_param["time"] == TIME_ARBITRARY_INTERVAL:
+                min_time = float(synth_tb_param["start time"])
+                max_time = float(synth_tb_param["end time"])
+
+            cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                          (obs_id, min_time, min_time, min_time, max_time,))
+            cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                          (obs_id, max_time, max_time, min_time, max_time, ))
+                          
+            cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                             (obs_id, min_time, max_time, min_time, max_time, ))
+
+        for subject in synth_tb_param["selected subjects"]:
+            for behavior in synth_tb_param["selected behaviors"]:
+                # total duration
+                cursor.execute("SELECT SUM(stop-start) FROM aggregated_events WHERE subject = ? AND behavior = ?", (subject, behavior))
+                for row in cursor.fetchall():
+                    behaviors[subject][behavior]["duration"] = "NA" if row[0] is None else row[0]
+
+                # number of occurences
+                cursor.execute("SELECT COUNT(*) FROM aggregated_events WHERE subject = ? AND behavior = ?", (subject, behavior))
+                for row in cursor.fetchall():
+                    behaviors[subject][behavior]["number"] = "NA" if row[0] is None else row[0]
+
+
+        columns = []
+        columns.append(obs_id)
+        # FIXME: ?
+        columns.append("{:0.3f}".format(max_time - min_time))
+
+        for subj in synth_tb_param["selected subjects"]:
+            for behav in synth_tb_param["selected behaviors"]:
+                if not synth_tb_param["include modifiers"]:
+                    for param in parameters:
+                        columns.append(behaviors[subj][behav][param[0]])
+                if synth_tb_param["include modifiers"]:
+                    for modif in sorted(list(behaviors[subj][behav].keys())):
+                        for param in parameters:
+                            columns.append(behaviors[subj][behav][modif][param[0]])
+
+        data_report.append(columns)
+
+        
+        
+        
+        '''
+        for obs_id in selected_observations:
+
+            cursor = db_functions.load_events_in_db(self.pj, synth_tb_param["selected subjects"], [obs_id], synth_tb_param["selected behaviors"])
+
+            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
+
+            if obs_length == -1:
+                obs_length = 0
+
+            if synth_tb_param["time"] == TIME_FULL_OBS:
+                min_time = float(0)
+                max_time = float(obs_length)
+
+            if synth_tb_param["time"] == TIME_EVENTS:
+                try:
+                    min_time = float(self.pj[OBSERVATIONS][obs_id]["events"][0][0])
+                except:
+                    min_time = float(0)
+                try:
+                    max_time = float(self.pj[OBSERVATIONS][obs_id]["events"][-1][0])
+                except:
+                    max_time = float(obs_length)
+
+            if synth_tb_param["time"] == TIME_ARBITRARY_INTERVAL:
+                min_time = float(plot_parameters["start time"])
+                max_time = float(plot_parameters["end time"])
+
+                # check intervals
+                for subj in synth_tb_param["selected subjects"]:
+                    for behav in synth_tb_param["selected behaviors"]:
+                        if POINT in self.eventType(behav).upper():
+                            continue
+                        # extract modifiers
+                        #if plot_parameters["include modifiers"]:
+
+                        cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?", (obs_id, subj, behav))
+                        distinct_modifiers = list(cursor.fetchall())
+
+                        for modifier in distinct_modifiers:
+
+                            if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence < ?""",
+                                           (obs_id, subj, behav, modifier[0], min_time)).fetchall()) % 2:
+                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                               (obs_id, subj, behav, "STATE", modifier[0], min_time))
+                            if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence > ?""",
+                                           (obs_id, subj, behav, modifier[0], max_time)).fetchall()) % 2:
+                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
+                                               (obs_id, subj, behav, "STATE", modifier[0], max_time))
+                        try:
+                            cursor.execute("COMMIT")
+                        except:
+                            pass
+
+            cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obs_id, min_time, max_time))
+
+            out, categories = time_budget_analysis(cursor, synth_tb_param, by_category=(mode == "by_category"))
+
+            behaviors = init_behav_modif()
+
+            for element in out:
+                for param in parameters:
+                    if not synth_tb_param["include modifiers"]:
+                        try:
+                            behaviors[element["subject"]][element["behavior"]][param[0]] = element[param[0]]
+                        except:
+                            pass
+                    if synth_tb_param["include modifiers"]:
+                        try:
+                            behaviors[element["subject"]][element["behavior"]][element["modifiers"]][param[0]] = element[param[0]]
+                        except:
+                            pass
+
+            columns = []
+            columns.append(obsId)
+            columns.append("{:0.3f}".format(max_time - min_time))
+        
+
+            for subj in synth_tb_param["selected subjects"]:
+                for behav in synth_tb_param["selected behaviors"]:
+                    if not synth_tb_param["include modifiers"]:
+                        for param in parameters:
+                            columns.append(behaviors[subj][behav][param[0]])
+                    if synth_tb_param["include modifiers"]:
+                        for modif in sorted(list(behaviors[subj][behav].keys())):
+                            for param in parameters:
+                                columns.append(behaviors[subj][behav][modif][param[0]])
+
+            data_report.append(columns)
+        '''
+
+        
+        if output_format in ["tsv", "csv", "html"]:
+            with open(file_name, "wb") as f:
+                f.write(str.encode(data_report.export(output_format)))
+        if output_format in ["ods", "xlsx", "xls"]:
+            with open(file_name, "wb") as f:
+                 f.write(data_report.export(output_format))
+        
+
+
+
+
 
     def time_budget(self, mode):
         """
@@ -4737,25 +5092,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 "ORDER BY observation, occurence"),
                                                (subject, behavior, modifier[0]))
 
-                                '''
-                                if not plot_parameters["start time"] and not plot_parameters["end time"]:
-                                    cursor.execute("""SELECT occurence, observation FROM events
-                                                        WHERE subject = ? 
-                                                            AND code = ? 
-                                                            AND modifiers = ? 
-                                                            ORDER BY observation, occurence""",
-                                                   (subject, behavior, modifier[0]))
-
-                                else:
-                                    cursor.execute("""SELECT occurence,observation FROM events 
-                                                        WHERE subject = ? 
-                                                            AND code = ?
-                                                            AND modifiers = ?
-                                                            AND occurence BETWEEN ? and ? 
-                                                            ORDER BY observation, occurence""",
-                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-                                '''
-
                                 rows = cursor.fetchall()
 
                                 # inter events duration
@@ -4786,26 +5122,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                  "ORDER BY observation, occurence"),
                                                (subject, behavior, modifier[0]))
 
-
-                                '''
-                                if not plot_parameters["start time"] and not plot_parameters["end time"]:
-                                    cursor.execute("""SELECT occurence, observation FROM events
-                                                        WHERE subject = ? 
-                                                            AND code = ? 
-                                                            AND modifiers = ? 
-                                                            ORDER BY observation, occurence""",
-                                                   (subject, behavior, modifier[0]))
-
-                                else:
-                                    cursor.execute("""SELECT occurence,observation FROM events 
-                                                        WHERE subject = ? 
-                                                            AND code = ?
-                                                            AND modifiers = ?
-                                                            AND occurence BETWEEN ? and ? 
-                                                            ORDER BY observation, occurence""",
-                                                   (subject, behavior, modifier[0], str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-                                '''
-
                                 rows = list(cursor.fetchall())
                                 if len(rows) % 2:
                                     out.append({"subject": subject, "behavior": behavior,
@@ -4819,19 +5135,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         # event
                                         if idx % 2 == 0:
                                             new_init, new_end = float(row[0]), float(rows[idx + 1][0])
-                                            
-                                            '''
-                                            if len(selectedObservations) == 1:
-                                                if (new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"]) \
-                                                   or \
-                                                   (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"]):
-                                                    continue
-
-                                                if new_init < plot_parameters["start time"]:
-                                                    new_init = float(plot_parameters["start time"])
-                                                if new_end > plot_parameters["end time"]:
-                                                    new_end = float(plot_parameters["end time"])
-                                            '''
 
                                             all_event_durations.append(new_end - new_init)
 
@@ -4858,14 +5161,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if POINT in self.eventType(behavior).upper():
 
                             #if len(selectedObservations) > 1:
-                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                            '''
-                            if not plot_parameters["start time"] and not plot_parameters["end time"]:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                            else:
-                                cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
-                                               (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-                            '''
+                            cursor.execute("SELECT occurence,observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence",
+                                           (subject, behavior))
 
                             rows = list(cursor.fetchall())
 
@@ -4921,14 +5218,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if STATE in self.eventType(behavior).upper():
 
-                            cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                            '''
-                            if not plot_parameters["start time"] and not plot_parameters["end time"]:
-                                cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence", (subject, behavior))
-                            else:
-                                cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? AND occurence BETWEEN ? and ? ORDER BY observation, occurence",
-                                               (subject, behavior, str(plot_parameters["start time"]), str(plot_parameters["end time"])))
-                            '''
+                            cursor.execute("SELECT occurence, observation FROM events WHERE subject = ? AND code = ? ORDER BY observation, occurence",
+                                           (subject, behavior))
 
                             rows = list(cursor.fetchall())
                             if not len(rows):
@@ -4950,19 +5241,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     # event
                                     if idx % 2 == 0:
                                         new_init, new_end = float(row[0]), float(rows[idx + 1][0])
-                                        
-                                        '''
-                                        if len(selectedObservations) == 1:
-                                            if ((new_init < plot_parameters["start time"] and new_end < plot_parameters["start time"])
-                                               or
-                                               (new_init > plot_parameters["end time"] and new_end > plot_parameters["end time"])):
-                                                continue
-
-                                            if new_init < plot_parameters["start time"]:
-                                                new_init = float(plot_parameters["start time"])
-                                            if new_end > plot_parameters["end time"]:
-                                                new_end = float(plot_parameters["end time"])
-                                        '''
 
                                         all_event_durations.append(new_end - new_init)
 
@@ -5049,9 +5327,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
-
-        logging.debug("Selected observations: {}".format(selectedObservations))
-
         if not selectedObservations:
             return
 
@@ -5063,19 +5338,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         out = ""
         for obsId in selectedObservations:
             r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
-
+                                                              self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
-
         if out:
             self.results = dialog.ResultsWidget()
-            
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.show()
-
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -5107,7 +5379,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
 
         if mode in ["by_behavior", "by_category"]:
-
             if len(selectedObservations) > 1:
                 plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                                       maxTime=max_obs_length,
@@ -5129,18 +5400,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
 
-            '''
-            cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-            '''
             cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
 
             total_observation_time = 0
             for obsId in selectedObservations:
 
-                '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
-                
                 obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
-                
+
                 if obs_length == -1:
                     obs_length = 0
 
@@ -5168,7 +5434,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if POINT in self.eventType(behav).upper():
                                 continue
                             # extract modifiers
-                            #if plot_parameters["include modifiers"]:
 
                             cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?", (obsId, subj, behav))
                             distinct_modifiers = list(cursor.fetchall())
@@ -5176,9 +5441,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             logging.debug("distinct_modifiers: {}".format(distinct_modifiers))
 
                             for modifier in distinct_modifiers:
-
-                                #if not modifier[0]:
-                                #    continue
 
                                 logging.debug("modifier #{}#".format(modifier[0]))
 
@@ -5201,7 +5463,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 total_observation_time += (max_time - min_time)
 
                 cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time, max_time))
-#                cursor.execute("commit")
 
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
@@ -5294,7 +5555,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tb.show()
 
 
-
         if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) or mode == "synthetic":
 
             if mode in ["by_behavior", "by_category"]:
@@ -5373,10 +5633,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data_report.title = "Synthetic time budget"
                 
                 parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
-                
-                '''
-                cursor = self.loadEventsInDB(plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
-                '''
 
                 cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
                 
@@ -5424,15 +5680,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if mode == "by_category":
                 fields = ["subject", "category",  "number", "duration"]
 
-
             for obsId in selectedObservations:
 
                 cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], [obsId], plot_parameters["selected behaviors"])
 
-                '''TO BE REMOVED  obs_length = self.observationTotalMediaLength(obsId)'''
-                
                 obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
-                
+
                 if obs_length == -1:
                     obs_length = 0
 
@@ -5524,13 +5777,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     rows.append(["Observation id", obsId])
                     rows.append([""])
     
-                    #indep variables
-                    '''
-                    if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]:
-                        rows.append(["Independent variables:"])
-                        for var in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]:
-                            rows.append([var, self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][var]])
-                    '''
                     labels = ["Independent variables"]
                     values = [""]
                     if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
@@ -6140,11 +6386,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow.obs = newProjectWindow.pj[ETHOGRAM]
         newProjectWindow.subjects_conf = newProjectWindow.pj[SUBJECTS]
 
-        if newProjectWindow.pj["time_format"] == S:
-            newProjectWindow.rbSeconds.setChecked(True)
-
-        if newProjectWindow.pj["time_format"] == HHMMSS:
-            newProjectWindow.rbHMS.setChecked(True)
+        newProjectWindow.rbSeconds.setChecked(newProjectWindow.pj["time_format"] == S)
+        newProjectWindow.rbHMS.setChecked(newProjectWindow.pj["time_format"] == HHMMSS)
 
         if mode == NEW:
             newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
@@ -9013,7 +9256,6 @@ item []:
                            "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                            "HTML (*.html)"]
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
-
 
             if QT_VERSION_STR[0] == "4":
                 filediag_func = QFileDialog(self).getSaveFileNameAndFilter

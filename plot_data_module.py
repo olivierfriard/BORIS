@@ -34,6 +34,8 @@ import sys
 import numpy as np
 import time
 import logging
+from decimal import Decimal
+
 from utilities import check_txt_file, txt2np_array
 
 
@@ -101,7 +103,12 @@ class Plot_data(QWidget):
 
         self.plot_style = plot_style
         self.plot_title = plot_title
-        self.time_offset = time_offset
+        try:
+            self.time_offset = Decimal(time_offset)
+        except:
+            self.error_msg = "The offset value {} is not a decimal value".format(time_offset)
+            return
+
         self.y_label = y_label
         self.error_msg = ""
 
@@ -280,10 +287,13 @@ class Plot_data(QWidget):
         logging.debug("len y (plot): {}".format(len(y)))
 
         # print current value
-        if x[0] == 0:
-            self.lb_value.setText(str(round(y[position_data], 3)))
-        else:
-            self.lb_value.setText(str(round(y[len(y) // 2], 3)))
+        try:
+            if x[0] == 0:
+                self.lb_value.setText(str(round(y[position_data], 3)))
+            else:
+                self.lb_value.setText(str(round(y[len(y) // 2], 3)))
+        except:
+            self.lb_value.setText("Read error")
 
         try:
             self.myplot.axes.clear()

@@ -40,14 +40,19 @@ import dialog
 from config import *
 from utilities import intfloatstr
 
+
 class timeBudgetResults(QWidget):
     """
     class for displaying time budget results in new window
     a function for exporting data in TSV, CSV, XLS and ODS formats is implemented
+    
+    Args:
+        log_level ():
+        pj (dict): BORIS project
     """
 
     def __init__(self, log_level, pj):
-        super(timeBudgetResults, self).__init__()
+        super().__init__()
 
         logging.basicConfig(level=log_level)
         self.pj = pj
