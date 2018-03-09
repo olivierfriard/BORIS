@@ -34,8 +34,8 @@ import irr
 
 
 
-__version__ = "6.1"
-__version_date__ = "2018-02-23"
+__version__ = "6.1.5"
+__version_date__ = "2018-03-09"
 
 def cleanhtml(raw_html):
     raw_html = raw_html.replace("<br>", "\n")

@@ -100,9 +100,10 @@ import measurement_widget
 import irr
 import db_functions
 import export_observation
+import time_budget_functions
 
 
-__version__ = "6.1.4"
+__version__ = "6.1.5"
 __version_date__ = "2018-03-09"
 
 if platform.python_version() < "3.5":
@@ -121,11 +122,6 @@ parser.add_option("-v", "--version", action="store_true", default=False, dest="v
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 parser.add_option("-p", "--project", action="store", help="Project file")
 parser.add_option("-o", "--observation", action="store",  help="Observation id")
-'''
-parser.add_option("-i", "--project-info", action="store_true", default=False, help="Project information")
-parser.add_option("-l", "--observations-list", action="store_true", default=False, help="List of observations")
-parser.add_option("-a", "--action", action="store",  help="action")
-'''
 
 (options, args) = parser.parse_args()
 
@@ -731,8 +727,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-        #self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -4696,68 +4692,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Synthetic time budget
         """
 
-        def default_value(behav, param):
-            """
-            return value for duration in case of point event
-            """
-            default_value_ = 0
-            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"} 
-               and param in ["duration"]):
-                   default_value_ = "-"
-            return default_value_
-
-        def init_behav_modif(selected_subjects, distinct_behav_modif, include_modifiers, parameters):
-            """
-            initialize dictionary with subject, behaviors and modifiers
-            """
-            behaviors = {}
-            for subj in synth_tb_param["selected subjects"]:
-                behaviors[subj] = {}
-                for behav_modif in distinct_behav_modif:
-
-                    behav, modif = behav_modif
-                    behav_modif_str = "|".join(behav_modif) if modif else behav
-
-                    if behav_modif_str not in behaviors[subj]:
-                        behaviors[subj][behav_modif_str] = {}
-
-                    for param in parameters:
-                        behaviors[subj][behav_modif_str][param[0]] = default_value(behav_modif_str, param[0])
-
-
-                    '''
-                    if not synth_tb_param["include modifiers"]:
-                        for param in parameters:
-                            behaviors[subj][behav][param[0]] = default_value(behav, param[0])
-
-                    if synth_tb_param["include modifiers"]:
-                        behaviors[subj][behav][modif] = {}
-                        for param in parameters:
-                            behaviors[subj][behav][modif][param[0]] = default_value(behav, param[0])
-                    '''
-
-            return behaviors
-
-        class StdevFunc:
-            def __init__(self):
-                self.M = 0.0
-                self.S = 0.0
-                self.k = 1
-        
-            def step(self, value):
-                if value is None:
-                    return
-                tM = self.M
-                self.M += (value - tM) / self.k
-                self.S += (value - tM) * (value - self.M)
-                self.k += 1
-        
-            def finalize(self):
-                if self.k < 3:
-                    return None
-                return math.sqrt(self.S / (self.k-2))
-    
-
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
@@ -4775,6 +4709,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.show()
+            return
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -4787,7 +4722,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 selectedObsTotalMediaLength = -1
                 break
             max_obs_length = max(max_obs_length, obs_length)
-
             selectedObsTotalMediaLength += obs_length
 
         # an observation media length is not available
@@ -4819,12 +4753,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        if QT_VERSION_STR[0] == "4":
-            filediag_func = QFileDialog(self).getSaveFileNameAndFilter
-        else:
-            filediag_func = QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else  QFileDialog(self).getSaveFileName
 
-        file_name, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
+        file_name, filter_ = filediag_func(self, "Synthetic time budget", "", ";;".join(extended_file_formats))
         if not file_name:
             return
 
@@ -4832,23 +4763,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
 
+        ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj,
+                                                                           selected_observations,
+                                                                           synth_tb_param["selected subjects"],
+                                                                           synth_tb_param["selected behaviors"],
+                                                                           synth_tb_param["include modifiers"],
+                                                                           synth_tb_param["time"],
+                                                                           synth_tb_param["start time"],
+                                                                           synth_tb_param["end time"]
+                                                                           )
 
-        parameters = [["duration", "Total duration"],
-                      ["number", "Number of occurrences"],
-                      ["duration mean", "Duration mean"],
-                      ["duration stdev", "Duration std dev"],
-                      ["proportion of time", "Proportion o time"],
-                      ]
-        data_report = tablib.Dataset()
-        data_report.title = "Synthetic time budget"
-
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
-                                                           synth_tb_param["selected subjects"],
-                                                           selected_observations,
-                                                           synth_tb_param["selected behaviors"])
-                                                           
-
-        # FIXME
         if not ok:
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle("Synthetic time budget")
@@ -4858,264 +4782,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.show()
             return
 
-        db_connector.create_aggregate("stdev", 1, StdevFunc)
-        cursor = db_connector.cursor()
-        cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
-        distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
-        print("distinct_behav_modif", distinct_behav_modif)
-
-        # add selected behaviors that are not observed
-        for behav in synth_tb_param["selected behaviors"]:
-            if [x for x in distinct_behav_modif if x[0] == behav] == []:
-                distinct_behav_modif.append([behav, "-"])
-
-        behaviors = init_behav_modif(synth_tb_param["selected subjects"],
-                                     distinct_behav_modif,
-                                     synth_tb_param["include modifiers"],
-                                     parameters)
-
-        param_header = ["", "Total length (s)"]
-        subj_header, behav_header, modif_header= [""]*len(param_header), [""]*len(param_header), [""]*len(param_header)
-
-        for subj in synth_tb_param["selected subjects"]:
-
-            #for behav in synth_tb_param["selected behaviors"]:
-
-            for behavior_modifiers in distinct_behav_modif:
-                behavior, modifiers = behavior_modifiers
-                behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-                for param in parameters:
-                    subj_header.append(subj)
-                    behav_header.append(behavior_modifiers_str)
-                    param_header.append(param[1])
-
-                '''
-                if synth_tb_param["include modifiers"]:
-                    for modif in sorted(list(behaviors[subj][behav].keys())):
-                        for param in parameters:
-                            subj_header.append(subj)
-                            behav_header.append(behav)
-                            modif_header.append(modif)
-                            param_header.append(param[1])
-                else:   #if not synth_tb_param["include modifiers"]:
-                    for param in parameters:
-                        subj_header.append(subj)
-                        behav_header.append(behav)
-                        param_header.append(param[1])
-                '''
-
-
-        data_report.append(subj_header)
-        data_report.append(behav_header)
-        if synth_tb_param["include modifiers"]:
-            data_report.append(modif_header)
-        data_report.append(param_header)
-
-        # select time interval
-        for obs_id in selected_observations:
-
-            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
-            if obs_length == -1:
-                obs_length = 0
-
-            if synth_tb_param["time"] == TIME_FULL_OBS:
-                min_time = float(0)
-                max_time = float(obs_length)
-
-            if synth_tb_param["time"] == TIME_EVENTS:
-                try:
-                    min_time = float(self.pj[OBSERVATIONS][obs_id][EVENTS][0][0])
-                except:
-                    min_time = float(0)
-                try:
-                    max_time = float(self.pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
-                except:
-                    max_time = float(obs_length)
-
-            if synth_tb_param["time"] == TIME_ARBITRARY_INTERVAL:
-                min_time = float(synth_tb_param["start time"])
-                max_time = float(synth_tb_param["end time"])
-
-            cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-                          (min_time, obs_id, min_time, min_time, max_time, ))
-            cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-                          (max_time, obs_id, max_time, min_time, max_time, ))
-                          
-            cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-                             (min_time, max_time, obs_id, min_time, max_time, ))
-
-            for subject in synth_tb_param["selected subjects"]:
-                #for behavior in synth_tb_param["selected behaviors"]:
-                for behavior_modifiers in distinct_behav_modif:
-                    behavior, modifiers = behavior_modifiers
-                    behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-                    
-                    # total duration
-                    cursor.execute(("SELECT SUM(stop-start) FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                                  (obs_id, subject, behavior, modifiers,))
-                    for row in cursor.fetchall():
-                        behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
-    
-                    # number of occurences
-                    cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                                  (obs_id, subject, behavior, modifiers,))
-                    for row in cursor.fetchall():
-                        behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[0] is None else row[0]
-
-                    # mean duration
-                    cursor.execute(("SELECT AVG(stop-start) FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                                  (obs_id, subject, behavior, modifiers,))
-                    for row in cursor.fetchall():
-                        behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[0] is None else row[0]
-
-                    # std dev duration
-                    cursor.execute(("SELECT stdev(stop-start) FROM aggregated_events "
-                                   "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                                  (obs_id, subject, behavior, modifiers,))
-                    for row in cursor.fetchall():
-                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[0] is None else row[0]
-
-                    # % total duration
-                    cursor.execute(("SELECT SUM(stop-start)/? FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                                  (max_time - min_time, obs_id, subject, behavior, modifiers,))
-                    for row in cursor.fetchall():
-                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[0] is None else row[0]
-
-
-            columns = []
-            columns.append(obs_id)
-            # FIXME: ?
-            columns.append("{:0.3f}".format(max_time - min_time))
-    
-            for subj in synth_tb_param["selected subjects"]:
-                #for behav in synth_tb_param["selected behaviors"]:
-                for behavior_modifiers in distinct_behav_modif:
-                    behavior, modifiers = behavior_modifiers
-                    behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-
-                    for param in parameters:
-                        columns.append(behaviors[subj][behavior_modifiers_str][param[0]])
-
-                    '''
-                    if not synth_tb_param["include modifiers"]:
-                        for param in parameters:
-                            columns.append(behaviors[subj][behav][param[0]])
-                    
-
-                    if synth_tb_param["include modifiers"]:
-                        for modif in sorted(list(behaviors[subj][behav].keys())):
-                            for param in parameters:
-                                print(modif)
-                                print(param[0])
-                                print(behaviors[subj][behav][modif][param[0]], type(behaviors[subj][behav][modif][param[0]]))
-                                columns.append(behaviors[subj][behav][modif][param[0]])
-                    '''
-    
-            data_report.append(columns)
-
-        '''
-        for obs_id in selected_observations:
-
-            cursor = db_functions.load_events_in_db(self.pj, synth_tb_param["selected subjects"], [obs_id], synth_tb_param["selected behaviors"])
-
-            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
-
-            if obs_length == -1:
-                obs_length = 0
-
-            if synth_tb_param["time"] == TIME_FULL_OBS:
-                min_time = float(0)
-                max_time = float(obs_length)
-
-            if synth_tb_param["time"] == TIME_EVENTS:
-                try:
-                    min_time = float(self.pj[OBSERVATIONS][obs_id]["events"][0][0])
-                except:
-                    min_time = float(0)
-                try:
-                    max_time = float(self.pj[OBSERVATIONS][obs_id]["events"][-1][0])
-                except:
-                    max_time = float(obs_length)
-
-            if synth_tb_param["time"] == TIME_ARBITRARY_INTERVAL:
-                min_time = float(plot_parameters["start time"])
-                max_time = float(plot_parameters["end time"])
-
-                # check intervals
-                for subj in synth_tb_param["selected subjects"]:
-                    for behav in synth_tb_param["selected behaviors"]:
-                        if POINT in self.eventType(behav).upper():
-                            continue
-                        # extract modifiers
-                        #if plot_parameters["include modifiers"]:
-
-                        cursor.execute("SELECT distinct modifiers FROM events WHERE observation = ? AND subject = ? AND code = ?", (obs_id, subj, behav))
-                        distinct_modifiers = list(cursor.fetchall())
-
-                        for modifier in distinct_modifiers:
-
-                            if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence < ?""",
-                                           (obs_id, subj, behav, modifier[0], min_time)).fetchall()) % 2:
-                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
-                                               (obs_id, subj, behav, "STATE", modifier[0], min_time))
-                            if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence > ?""",
-                                           (obs_id, subj, behav, modifier[0], max_time)).fetchall()) % 2:
-                                cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
-                                               (obs_id, subj, behav, "STATE", modifier[0], max_time))
-                        try:
-                            cursor.execute("COMMIT")
-                        except:
-                            pass
-
-            cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obs_id, min_time, max_time))
-
-            out, categories = time_budget_analysis(cursor, synth_tb_param, by_category=(mode == "by_category"))
-
-            behaviors = init_behav_modif()
-
-            for element in out:
-                for param in parameters:
-                    if not synth_tb_param["include modifiers"]:
-                        try:
-                            behaviors[element["subject"]][element["behavior"]][param[0]] = element[param[0]]
-                        except:
-                            pass
-                    if synth_tb_param["include modifiers"]:
-                        try:
-                            behaviors[element["subject"]][element["behavior"]][element["modifiers"]][param[0]] = element[param[0]]
-                        except:
-                            pass
-
-            columns = []
-            columns.append(obsId)
-            columns.append("{:0.3f}".format(max_time - min_time))
-
-            for subj in synth_tb_param["selected subjects"]:
-                for behav in synth_tb_param["selected behaviors"]:
-                    if not synth_tb_param["include modifiers"]:
-                        for param in parameters:
-                            columns.append(behaviors[subj][behav][param[0]])
-                    if synth_tb_param["include modifiers"]:
-                        for modif in sorted(list(behaviors[subj][behav].keys())):
-                            for param in parameters:
-                                columns.append(behaviors[subj][behav][modif][param[0]])
-
-            data_report.append(columns)
-        '''
-
-        
         if output_format in ["tsv", "csv", "html"]:
             with open(file_name, "wb") as f:
                 f.write(str.encode(data_report.export(output_format)))
         if output_format in ["ods", "xlsx", "xls"]:
             with open(file_name, "wb") as f:
                  f.write(data_report.export(output_format))
-
-
 
 
     def time_budget(self, mode):
@@ -5528,13 +5200,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 logging.debug("modifier #{}#".format(modifier[0]))
 
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence < ?""",
+                                if len(cursor.execute("SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence < ?",
                                                (obsId, subj, behav, modifier[0], min_time)).fetchall()) % 2:
 
                                     cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
                                                    (obsId, subj, behav, "STATE", modifier[0], min_time))
 
-                                if len(cursor.execute("""SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence > ?""",
+                                if len(cursor.execute("SELECT * FROM events WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? AND occurence > ?",
                                                (obsId, subj, behav, modifier[0], max_time)).fetchall()) % 2:
 
                                     cursor.execute("INSERT INTO events (observation, subject, code, type, modifiers, occurence) VALUES (?,?,?,?,?,?)",
@@ -5546,7 +5218,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 total_observation_time += (max_time - min_time)
 
-                cursor.execute("""DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)""", (obsId, min_time, max_time))
+                cursor.execute("DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)", (obsId, min_time, max_time))
 
             out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
@@ -5683,6 +5355,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not exportDir:
                     return
 
+            '''
             if mode == "synthetic":
 
                 formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
@@ -5755,6 +5428,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if plot_parameters["include modifiers"]:
                     data_report.append(modif_header)
                 data_report.append(param_header)
+            '''
 
             if mode == "by_behavior":
                 fields = ["subject", "behavior",  "modifiers", "number",
@@ -5821,6 +5495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
+                '''
                 if mode == "synthetic":
 
                     behaviors = init_behav_modif()
@@ -5854,6 +5529,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         columns.append(behaviors[subj][behav][modif][param[0]])
 
                     data_report.append(columns)
+                '''
 
                 if mode in ["by_behavior", "by_category"]:
                     rows = []
@@ -5964,6 +5640,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             with open(fileName, "wb") as f:
                                 f.write(data.xls)
 
+            '''
             if mode == "synthetic":
                 if extension in ["tsv", "csv", "html"]:
                     with open(fileName, "wb") as f:
@@ -5971,6 +5648,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if extension in ["ods", "xlsx", "xls"]:
                     with open(fileName, "wb") as f:
                          f.write(data_report.export(extension))
+            '''
 
             if mode in ["by_behavior", "by_category"] and flagWorkBook:
                 if "xls" in outputFormat:
