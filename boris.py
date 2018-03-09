@@ -102,8 +102,8 @@ import db_functions
 import export_observation
 
 
-__version__ = "6.1.3"
-__version_date__ = "2018-03-07"
+__version__ = "6.1.4"
+__version_date__ = "2018-03-09"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -731,8 +731,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analyze
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        #self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -1893,10 +1893,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        result, selectedObs = self.selectObservations(EDIT)
+        result, selected_observations = self.selectObservations(EDIT)
 
-        if selectedObs:
-            self.new_observation(mode=EDIT, obsId=selectedObs[0])
+        if selected_observations:
+            self.new_observation(mode=EDIT, obsId=selected_observations[0])
 
 
     def check_state_events(self, mode="all"):
@@ -3912,7 +3912,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
                 self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
-                                                                  "fps":  observationWindow.mediaFPS}
+                                                                   "fps":  observationWindow.mediaFPS}
 
                 try:
                     self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
@@ -3921,7 +3921,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.info("error with media_info information")
 
 
-                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id]['media_info']))
+                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id]["media_info"]))
 
                 '''
                 if not 'project_media_file_info' in self.pj:

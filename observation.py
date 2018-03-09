@@ -282,7 +282,7 @@ class Observation(QDialog, Ui_Form):
                                                      "This limitation will be removed in future"))
             return
 
-        QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")            
+        QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")
 
         if not flag_path:
             pass  # cd to project directory
@@ -457,6 +457,7 @@ class Observation(QDialog, Ui_Form):
     def pbCancel_clicked(self):
         self.reject()
 
+
     def check_parameters(self):
         """
         check observation parameters
@@ -476,11 +477,11 @@ class Observation(QDialog, Ui_Form):
             return False
 
         # check if indep variables are correct type
-        for row in range(0, self.twIndepVariables.rowCount()):
-
+        for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
                 if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
-                    QMessageBox.critical(self, programName , "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
+                    QMessageBox.critical(self, programName,
+                                         "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
                     return False
 
         # check if observation id not empty
@@ -491,15 +492,34 @@ class Observation(QDialog, Ui_Form):
         # check if new obs and observation id already present or if edit obs and id changed
         if (self.mode == "new") or (self.mode == "edit" and self.leObservationId.text() != self.mem_obs_id):
             if self.leObservationId.text() in self.pj[OBSERVATIONS]:
-                QMessageBox.critical(self, programName, "The observation id <b>{0}</b> is already used!<br>{1}<br>{2}".format(self.leObservationId.text(),
-                                                                                                                             self.pj['observations'][self.leObservationId.text()]['description'],
-                                                                                                                             self.pj['observations'][self.leObservationId.text()]['date']))
+                QMessageBox.critical(self, programName,
+                                     "The observation id <b>{0}</b> is already used!<br>{1}<br>{2}".format(self.leObservationId.text(),
+                                                                                                           self.pj['observations'][self.leObservationId.text()]['description'],
+                                                                                                           self.pj['observations'][self.leObservationId.text()]['date']))
                 return False
 
         # check if media list #2 populated and media list #1 empty
         if self.tabProjectType.currentIndex() == 0 and not self.twVideo1.rowCount():
             QMessageBox.critical(self, programName , "Add a media file in the first media player!" )
             return False
+
+        # check offset for external data files
+        
+        for row in range(self.tw_data_files.rowCount()):
+            if not is_numeric(self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()):
+                QMessageBox.critical(self, programName,
+                                     ("The external data file start value <b>{}</b> is not recognized as a numeric value.<br>"
+                                     "Use decimal number of seconds (e.g. -58.5 or 32)").format(
+                                     self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()))
+                return False
+        
+        for row in range(self.twIndepVariables.rowCount()):
+            if self.twIndepVariables.item(row, 1).text() == NUMERIC:
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
+                    QMessageBox.critical(self, programName,
+                                         "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
+                    return False
+
 
         return True
 
