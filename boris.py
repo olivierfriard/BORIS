@@ -1132,11 +1132,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
             check if process finished
             """
-            if not self.ffmpeg_recode_process.is_alive():
-                timerFFmpegRecoding.stop()
-                self.w.hide()
-                del(self.w)
-                self.ffmpeg_recode_process = None
+            try:
+                if not self.ffmpeg_recode_process.is_alive():
+                    timerFFmpegRecoding.stop()
+                    self.w.hide()
+                    del(self.w)
+                    self.ffmpeg_recode_process = None
+            except:
+                pass
 
         if self.ffmpeg_recode_process:
             QMessageBox.warning(self, programName, "BORIS is already re-encoding a video...")
