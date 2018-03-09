@@ -855,7 +855,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def check_project_integrity(self):
-        msg = project_functions.check_project_integrity(self.pj, self.timeFormat)
+        msg = project_functions.check_project_integrity(self.pj, self.timeFormat, self.projectFileName)
         if msg:
             msg = "Some issues were found in the project<br><br>" + msg
             self.results = dialog.ResultsWidget()

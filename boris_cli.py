@@ -50,6 +50,7 @@ commands_usage = {
 "irr": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID1" "OBSERVATION_ID2" --command irr [INTERVAL] [INCLUDE_MODIFIERS]\nwhere:\n'
 'INTERVAL in seconds (default is 1)\nINCLUDE_MODIFIERS must be true or false (default is true)'),
 "subtitles": "usage:\nboris_cli -p PROJECT_FILE --command subtitles [OUTPUT_DIRECTORY]\nwhere:\nOUTPUT_DIRECTORY is the directory where subtitles files will be saved",
+"check_project_integrity": "usage:\nboris_cli -p PROJECT_FILE --command check_project_integrity",
 }
 
 parser = argparse.ArgumentParser(description="BORIS CLI")
@@ -266,7 +267,7 @@ if args.command:
         sys.exit()
 
     if "check_project_integrity" in args.command[0]:
-        msg = project_functions.check_project_integrity(pj, HHMMSS)
+        msg = project_functions.check_project_integrity(pj, HHMMSS, args.project_file)
         if msg:
             print(cleanhtml(msg))
         else:

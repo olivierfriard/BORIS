@@ -96,9 +96,12 @@ def check_if_media_available(observation, project_file_name):
         observation (dict): observation to be checked
         
     Returns:
-         bool: True of media files found else False
+         bool: True if media files found or for live observation
+               else False
     """
-
+    if observation[TYPE] in [LIVE]:
+        return True, ""
+        
     for nplayer in ALL_PLAYERS:
         if nplayer in observation[FILE]:
             if not isinstance(observation[FILE][nplayer], list):
@@ -656,7 +659,7 @@ def check_state_events_obs(obsId, ethogram, observation, time_format):
     return (False, out) if out else (True, "All state events are PAIRED")
 
 
-def check_project_integrity(pj, time_format):
+def check_project_integrity(pj, time_format, project_file_name):
     """
     check project integrity
     
@@ -671,6 +674,7 @@ def check_project_integrity(pj, time_format):
     out = ""
     
     # check for behavior not in ethogram
+    # remove because already tested bt check_state_events_obs function
     '''
     behav_not_in_ethogram = []
     for obs_id in pj[OBSERVATIONS]:
@@ -700,6 +704,14 @@ def check_project_integrity(pj, time_format):
                         out += ("The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
                                "that is no more in behavioral categories list.").format(pj[ETHOGRAM][idx][BEHAVIOR_CODE],
                                                                                         pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
+    
+        # check if all media are available
+        for obs_id in pj[OBSERVATIONS]:
+            ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
+            if not ok:
+                if out:
+                    out += "<br><br>"
+                out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
     
         return out
     except:
