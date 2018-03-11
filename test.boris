@@ -238,7 +238,7 @@
    "file":{
     "1":[
      "video1.avi",
-     "/home/olivier/projects/BORIS/video2.avi"
+     "video2.avi"
     ],
     "2":[]
    },
@@ -454,21 +454,19 @@
    "media_info":{
     "length":{
      "video1.avi":225.64,
-     "/home/olivier/projects/BORIS/video2.avi":300.0
+     "video2.avi":300.0
     },
     "fps":{
      "video1.avi":25.0,
-     "/home/olivier/projects/BORIS/video2.avi":25.0
+     "video2.avi":25.0
     },
     "hasVideo":{
      "video1.avi":true,
-     "video2.avi":true,
-     "/home/olivier/projects/BORIS/video2.avi":true
+     "video2.avi":true
     },
     "hasAudio":{
      "video1.avi":true,
-     "video2.avi":true,
-     "/home/olivier/projects/BORIS/video2.avi":true
+     "video2.avi":true
     }
    }
   },
@@ -679,7 +677,7 @@
   "modifiers":{
    "file":{
     "1":[
-     "/home/olivier/projects/BORIS/video1.avi"
+     "video1.avi"
     ],
     "2":[]
    },
@@ -748,16 +746,16 @@
    "close_behaviors_between_videos":false,
    "media_info":{
     "length":{
-     "/home/olivier/projects/BORIS/video1.avi":225.64
+     "video1.avi":225.64
     },
     "fps":{
-     "/home/olivier/projects/BORIS/video1.avi":25.0
+     "video1.avi":25.0
     },
     "hasVideo":{
-     "/home/olivier/projects/BORIS/video1.avi":true
+     "video1.avi":true
     },
     "hasAudio":{
-     "/home/olivier/projects/BORIS/video1.avi":true
+     "video1.avi":true
     }
    }
   }
