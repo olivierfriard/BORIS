@@ -197,6 +197,7 @@
      </property>
      <addaction name="actionPlot_events1"/>
      <addaction name="actionPlot_events2"/>
+     <addaction name="actionBehavior_bar_plot"/>
     </widget>
     <widget class="QMenu" name="menuInter_rater_reliability">
      <property name="title">
@@ -1175,6 +1176,11 @@
   <action name="actionCheck_project">
    <property name="text">
     <string>Check project integrity</string>
+   </property>
+  </action>
+  <action name="actionBehavior_bar_plot">
+   <property name="text">
+    <string>Behaviors bar plot</string>
    </property>
   </action>
  </widget>

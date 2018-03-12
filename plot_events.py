@@ -37,9 +37,219 @@ import matplotlib.dates
 from matplotlib.dates import MICROSECONDLY, SECONDLY, MINUTELY, HOURLY, WEEKLY, MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 import numpy as np
 import json
+
 from config import *
 import utilities
+import db_functions
+import project_functions
 
+
+def default_value(ethogram, behav, param):
+    """
+    return value for duration in case of point event
+    """
+    default_value_ = 0
+    if ({ethogram[idx]["type"] for idx in ethogram if ethogram[idx]["code"] == behav} == {"Point event"} 
+       and param in ["duration"]):
+           default_value_ = "-"
+    return default_value_
+
+
+def init_behav_modif(ethogram, selected_subjects, distinct_behav_modif, include_modifiers, parameters):
+    """
+    initialize dictionary with subject, behaviors and modifiers
+    """
+    behaviors = {}
+    for subj in selected_subjects:
+        behaviors[subj] = {}
+        for behav_modif in distinct_behav_modif:
+
+            behav, modif = behav_modif
+            behav_modif_str = "|".join(behav_modif) if modif else behav
+
+            if behav_modif_str not in behaviors[subj]:
+                behaviors[subj][behav_modif_str] = {}
+
+            for param in parameters:
+                behaviors[subj][behav_modif_str][param[0]] = default_value(ethogram, behav_modif_str, param[0])
+
+    return behaviors
+
+
+def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_behaviors, include_modifiers,
+                       interval, start_time, end_time,
+                       plot_directory, output_format):
+    """
+    scatter plot
+    """
+    parameters = [["duration", "Total duration"],
+                  ]
+
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
+                                                       selected_subjects,
+                                                       selected_observations,
+                                                       selected_behaviors)
+                                                       
+
+    if not ok:
+        return False, msg, None
+
+    cursor = db_connector.cursor()
+    if include_modifiers:
+        cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+        distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
+    else:
+        cursor.execute("SELECT distinct behavior FROM aggregated_events")
+        distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
+
+    # add selected behaviors that are not observed
+    for behav in selected_behaviors:
+        if [x for x in distinct_behav_modif if x[0] == behav] == []:
+            distinct_behav_modif.append([behav, "-"])
+
+    behaviors = init_behav_modif(pj[ETHOGRAM],
+                                 selected_subjects,
+                                 distinct_behav_modif,
+                                 include_modifiers,
+                                 parameters)
+
+
+
+    # select time interval
+    for obs_id in selected_observations:
+
+        if len(selected_subjects) > 1:
+            fig, axs = plt.subplots(figsize=(20, 8), nrows=1, ncols=len(selected_subjects), sharey=True)
+        else:
+            fig, ax = plt.subplots(figsize=(20, 8), nrows=1, ncols=len(selected_subjects), sharey=True)
+            axs = np.ndarray(shape=(1), dtype=type(ax))
+            axs[0] = ax
+
+        # if modifiers not to be included set modifiers to ""
+        if not include_modifiers:
+            cursor.execute("UPDATE aggregated_events SET modifiers = ''")
+
+        # time
+        obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+        if obs_length == -1:
+            obs_length = 0
+
+        if interval == TIME_FULL_OBS:
+            min_time = float(0)
+            max_time = float(obs_length)
+
+        if interval == TIME_EVENTS:
+            try:
+                min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+            except:
+                min_time = float(0)
+            try:
+                max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+            except:
+                max_time = float(obs_length)
+
+        if interval == TIME_ARBITRARY_INTERVAL:
+            min_time = float(start_time)
+            max_time = float(end_time)
+
+        cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                      (min_time, obs_id, min_time, min_time, max_time, ))
+        cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                      (max_time, obs_id, max_time, min_time, max_time, ))
+        cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                         (min_time, max_time, obs_id, min_time, max_time, ))
+
+        for subject in selected_subjects:
+            for behavior_modifiers in distinct_behav_modif:
+                behavior, modifiers = behavior_modifiers
+                
+                # skip if behavior defined as POINT
+                if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                    continue
+
+                behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                
+                # total duration
+                cursor.execute(("SELECT SUM(stop-start) FROM aggregated_events "
+                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
+                              (obs_id, subject, behavior, modifiers,))
+                for row in cursor.fetchall():
+                    behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
+
+
+        max_length = 0
+        for ax_idx, subj in enumerate(selected_subjects):
+
+            behaviors_duration = {}
+            behavior_ticks = []
+
+            for behavior_modifiers in distinct_behav_modif:
+
+                behavior, modifiers = behavior_modifiers
+                
+                # skip if behavior defined as POINT
+                if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                    continue
+
+                if behavior not in behaviors_duration:
+                    behaviors_duration[behavior] = [[],[]]
+
+                behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                print(subj, behavior, modifiers)
+                behavior_ticks.append(behavior_modifiers_str)
+
+                for param in parameters:
+                    behaviors_duration[behavior][0].append(behaviors[subj][behavior_modifiers_str][param[0]])
+                    behaviors_duration[behavior][1].append(modifiers)
+                    max_length = max(max_length, len(behaviors_duration[behavior][1]))
+
+
+            print("behaviors_duration", behaviors_duration)
+            print("behavior_ticks", behavior_ticks)
+
+        
+
+        for subj in selected_subjects:
+            for i in range(max_length):
+                for behavior in sorted(behaviors_duration.keys()):
+                    #print(len(behaviors_duration[behavior][0]), i)
+                    try:
+                        print(behaviors_duration[behavior][0][i])
+                    except:
+                        print(0)
+
+            #return True, msg, data_report
+            N = len(behaviors_duration)
+            #behaviors_duration = (20, 35, 30, 35, 27)
+            #womenMeans = (25, 32, 34, 20, 25)
+            #menStd = (2, 3, 4, 1, 2)
+            #womenStd = (3, 5, 2, 3, 3)
+            ind = np.arange(N)    # the x locations for the groups
+            width = 0.35       # the width of the bars: can also be len(x) sequence
+
+            #fig, ax = plt.subplots()
+
+            #ax.yaxis.set_major_formatter(formatter)
+            #plt.xticks(x, ('Bill', 'Fred', 'Mary', 'Sue'))
+        
+            axs[ax_idx].bar(ind, behaviors_duration, width)
+            #p2 = plt.bar(ind, womenMeans, width,
+            #             bottom=menMeans, yerr=womenStd)
+            axs[ax_idx].set_ylabel('Duration (s)')
+            axs[ax_idx].set_xlabel('Behaviors')
+            axs[ax_idx].set_title('{}'.format(subj))
+
+            axs[ax_idx].set_xticks(ind)
+            axs[ax_idx].set_xticklabels(behavior_ticks)
+            #plt.yticks(np.arange(0, 81, 10))
+
+            #plt.legend((p1[0], p2[0]), ('Men', 'Women'))
+
+        if plot_directory:
+            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix("." + file_format))
+            plt.savefig(output_file_name)
+        else:
+            plt.show()
 
 
 def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
@@ -126,7 +336,7 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
     ax.set_ylabel("Behaviors")
 
     if time_format == HHMMSS:
-        fmtr = dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
+        fmtr = matplotlib.dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
         ax.xaxis.set_major_formatter(fmtr)
         ax.set_xlabel("Time (hh:mm:ss)")
     else:
@@ -146,9 +356,9 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
     subjectPosition = t0 + (t1 - t0) * 0.05
 
     if time_format == HHMMSS:
-        t0d = datetime.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600) / 60), int(t0 % 60), round(round(t0 % 1, 3) * 1000000))
-        t1d = datetime.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600) / 60), int(t1 % 60), round(round(t1 % 1, 3) * 1000000))
-        subjectPositiond = datetime.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600) / 60), int(subjectPosition % 60), round(round(subjectPosition % 1, 3) * 1000000))
+        t0d = dt.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600) / 60), int(t0 % 60), round(round(t0 % 1, 3) * 1000000))
+        t1d = dt.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600) / 60), int(t1 % 60), round(round(t1 % 1, 3) * 1000000))
+        subjectPositiond = dt.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600) / 60), int(subjectPosition % 60), round(round(subjectPosition % 1, 3) * 1000000))
 
     if time_format == S:
         t0d, t1d = t0, t1
@@ -215,18 +425,18 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
             col_count += 1
 
         if time_format == HHMMSS:
-            ax.hlines(np.array(y), np.array([datetime.datetime(1970, 1, 1, int(p / 3600),
+            ax.hlines(np.array(y), np.array([dt.datetime(1970, 1, 1, int(p / 3600),
                                                                int((p - int(p / 3600) * 3600) / 60),
                                                                int(p % 60), round(round(p % 1, 3) * 1e6))
                                             for p in x1]),
-            np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600) / 60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in x2]),
+            np.array([dt.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600) / 60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in x2]),
             lw=LINE_WIDTH, color=col)
 
         if time_format == S:
             ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
 
         if time_format == HHMMSS:
-            ax.plot(np.array([datetime.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600)/60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in pointsx]), pointsy, "r^")
+            ax.plot(np.array([dt.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600)/60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in pointsx]), pointsy, "r^")
 
         if time_format == S:
             ax.plot(pointsx, pointsy, "r^")
@@ -237,7 +447,6 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
     plt.show()
 
     return True
-
 
 
 def create_events_plot2(events,
@@ -356,10 +565,15 @@ def create_events_plot2(events,
 
     return {"error code": 0, "msg": ""}
 
+
 if __name__ == '__main__':
   
     all_behaviors = ["p","s","a","n"]
     all_subjects = ["No focal subject", "subj 2", "subj 1"]
-    events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]}, 'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], '["s"]': [[31.852, 37.308]]}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], '["s"]': [[19.476, 44.564]], '["a", "None"]': [[15.787, 24.01]], '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
+    events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]},
+      'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], 
+      '["s"]': [[31.852, 37.308]]}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], 
+      '["s"]': [[19.476, 44.564]], '["a", "None"]': [[15.787, 24.01]], 
+      '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
 
     create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=False, min_time=0, max_time=100)

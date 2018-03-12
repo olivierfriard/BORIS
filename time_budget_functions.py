@@ -145,7 +145,7 @@ def synthetic_time_budget(pj, selected_observations, selected_subjects, selected
     # select time interval
     for obs_id in selected_observations:
 
-        # set modifiers to ""
+        # if modifiers not to be included set modifiers to ""
         if not include_modifiers:
             cursor.execute("UPDATE aggregated_events SET modifiers = ''")
 

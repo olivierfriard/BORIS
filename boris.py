@@ -724,11 +724,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #self.actionConverters_manager.triggered.connect(self.converters_manager)
 
-        # menu Analyze
+        # menu Analysis
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
         #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        
+        self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -4700,18 +4702,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         # check if state events are paired
         out = ""
+        not_paired_obs_list = []
         for obs_id in selected_observations:
             r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
                                                               self.pj[OBSERVATIONS][obs_id],
                                                               self.timeFormat)
             if not r:
                 out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+                not_paired_obs_list.append(obs_id)
         if out:
+            out = "The observations with UNPAIRED state events will be removed from the time budget analysis<br><br>" + out
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.show()
+
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
             return
 
         selectedObsTotalMediaLength = Decimal("0.0")
@@ -4730,7 +4738,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # an observation media length is not available
         if selectedObsTotalMediaLength == -1:
             # propose to user to use max event time
-            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?", [YES, NO]) == YES:
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?",
+                                    [YES, NO]) == YES:
                 maxTime = 0 # max length for all events all subjects
                 for obsId in selected_observations:
                     if self.pj[OBSERVATIONS][obsId][EVENTS]:
@@ -5677,9 +5686,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         for obsId in selectedObservations:
-            
             totalMediaLength = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
-
         if totalMediaLength == -1:
             totalMediaLength = 0
 
@@ -5772,7 +5779,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 line_width=10):
             QMessageBox.warning(self, programName, "Check events")
 
-        
 
     def plot_events2_triggered(self):
         """
@@ -5796,6 +5802,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obsId)
 
         if out:
+            out = "The observations with UNPAIRED state events will be removed from the plot<br>br>" + out
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
@@ -5938,11 +5945,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if plot_parameters["time"] == TIME_EVENTS:
                 try:
-                    min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])
+                    min_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][0][0])
                 except:
                     min_time = float(0)
                 try:
-                    max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
+                    max_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0])
                 except:
                     max_time = float(obs_length)
 
@@ -5966,6 +5973,102 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if ret["error code"]:
                 QMessageBox.critical(self, programName, ret["msg"])
+
+
+    def behaviors_bar_plot(self):
+        """
+        bar plot of behaviors durations
+        """
+
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the plot<br>br>" + out
+            self.results = dialog.ResultsWidget()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.show()
+
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
+        # check if almost one selected observation has events
+        flag_no_events = True
+        for obsId in selected_observations:
+            if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                flag_no_events = False
+                break
+        if flag_no_events:
+            QMessageBox.warning(self, programName, "No events found in the selected observations")
+            return
+
+        max_obs_length = -1
+        for obsId in selected_observations:
+            totalMediaLength = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+            if totalMediaLength == -1:
+                totalMediaLength = 0
+            max_obs_length = max(max_obs_length, totalMediaLength)
+
+        if len(selected_observations) == 1:
+            parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=totalMediaLength)
+        else:
+            parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=0)
+
+        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+            QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
+            return
+
+        plot_directory = ""
+        output_format = ""
+        if len(selected_observations) > 1:
+            plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save plots",
+                                                                    os.path.expanduser("~"),
+                                                                    options=QFileDialog(self).ShowDirsOnly)
+            if not plot_directory:
+                return
+
+            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats",
+                                            ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
+            if ok and item:
+                output_format = item.lower()
+            else:
+                return
+
+        '''
+        if len(selected_observations) > 1:
+            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / safeFileName(obsId)).with_suffix("." + file_format))
+        else:
+            output_file_name = ""
+        '''
+
+        plot_events.behaviors_bar_plot(self.pj,
+                                       selected_observations,
+                                       parameters["selected subjects"],
+                                       parameters["selected behaviors"],
+                                       parameters["include modifiers"],
+                                       parameters["time"],
+                                       parameters["start time"],
+                                       parameters["end time"],
+                                       plot_directory,
+                                       output_format
+                                       )
+
+
 
 
     def load_project(self, project_path, project_changed, pj):

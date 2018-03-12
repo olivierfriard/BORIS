@@ -429,6 +429,8 @@ class Ui_MainWindow(object):
         self.actionRemove_path_from_media_files.setObjectName("actionRemove_path_from_media_files")
         self.actionCheck_project = QtWidgets.QAction(MainWindow)
         self.actionCheck_project.setObjectName("actionCheck_project")
+        self.actionBehavior_bar_plot = QtWidgets.QAction(MainWindow)
+        self.actionBehavior_bar_plot.setObjectName("actionBehavior_bar_plot")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -486,6 +488,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.menuCreate_transitions_matrix.menuAction())
         self.menuPlot_events.addAction(self.actionPlot_events1)
         self.menuPlot_events.addAction(self.actionPlot_events2)
+        self.menuPlot_events.addAction(self.actionBehavior_bar_plot)
         self.menuInter_rater_reliability.addAction(self.actionCohen_s_kappa)
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionTime_budget_report)
@@ -729,4 +732,5 @@ class Ui_MainWindow(object):
         self.actionView_observation.setText(_translate("MainWindow", "View observation"))
         self.actionRemove_path_from_media_files.setText(_translate("MainWindow", "Remove path from media files"))
         self.actionCheck_project.setText(_translate("MainWindow", "Check project integrity"))
+        self.actionBehavior_bar_plot.setText(_translate("MainWindow", "Behaviors bar plot"))
 
