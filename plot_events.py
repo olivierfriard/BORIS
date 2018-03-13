@@ -177,10 +177,13 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                     behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
 
 
-        max_length = 0
-        for ax_idx, subj in enumerate(selected_subjects):
+        print(behaviors)
 
-            behaviors_duration = {}
+        max_length = 0
+        behaviors_duration = {}
+        for ax_idx, subj in enumerate(selected_subjects):
+            behaviors_duration[subj] = {}
+
             behavior_ticks = []
 
             for behavior_modifiers in distinct_behav_modif:
@@ -191,17 +194,17 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                 if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
                     continue
 
-                if behavior not in behaviors_duration:
-                    behaviors_duration[behavior] = [[],[]]
+                if behavior not in behaviors_duration[subj]:
+                    behaviors_duration[subj][behavior] = [[],[]]
 
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
                 print(subj, behavior, modifiers)
                 behavior_ticks.append(behavior_modifiers_str)
 
                 for param in parameters:
-                    behaviors_duration[behavior][0].append(behaviors[subj][behavior_modifiers_str][param[0]])
-                    behaviors_duration[behavior][1].append(modifiers)
-                    max_length = max(max_length, len(behaviors_duration[behavior][1]))
+                    behaviors_duration[subj][behavior][0].append(behaviors[subj][behavior_modifiers_str][param[0]])
+                    behaviors_duration[subj][behavior][1].append(modifiers)
+                    max_length = max(max_length, len(behaviors_duration[subj][behavior][1]))
 
 
             print("behaviors_duration", behaviors_duration)
@@ -211,10 +214,10 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
         for subj in selected_subjects:
             for i in range(max_length):
-                for behavior in sorted(behaviors_duration.keys()):
+                for behavior in sorted(behaviors_duration[subj].keys()):
                     #print(len(behaviors_duration[behavior][0]), i)
                     try:
-                        print(behaviors_duration[behavior][0][i])
+                        print(behaviors_duration[subj][behavior][0][i])
                     except:
                         print(0)
 

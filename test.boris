@@ -21,10 +21,10 @@
    "date":"2016-12-10T15:44:57",
    "file":{
     "1":[
-     "50FPS.mp4"
+     "video_test_25fps_360s.mp4"
     ],
     "2":[
-     "50FPS.mp4"
+     "video_test_25fps_180s.mp4"
     ]
    },
    "type":"MEDIA",
@@ -32,8 +32,8 @@
    "visualize_spectrogram":false,
    "time offset":0.0,
    "independent_variables":{
-    "b":"",
     "a":"",
+    "b":"",
     "c":"111"
    },
    "close_behaviors_between_videos":false,
@@ -56,20 +56,26 @@
    "description":"",
    "media_info":{
     "length":{
-     "50FPS.mp4":180.05
+     "video_test_25fps_360s.mp4":359.96,
+     "video_test_25fps_180s.mp4":179.96
     },
-    "hasAudio":{
-     "video1.avi":true,
-     "video2.avi":true,
-     "50FPS.mp4":true
+    "fps":{
+     "video_test_25fps_360s.mp4":25.0,
+     "video_test_25fps_180s.mp4":25.0
     },
     "hasVideo":{
      "video1.avi":true,
      "video2.avi":true,
-     "50FPS.mp4":true
+     "50FPS.mp4":true,
+     "video_test_25fps_360s.mp4":true,
+     "video_test_25fps_180s.mp4":true
     },
-    "fps":{
-     "50FPS.mp4":50.0
+    "hasAudio":{
+     "video1.avi":true,
+     "video2.avi":true,
+     "50FPS.mp4":true,
+     "video_test_25fps_360s.mp4":false,
+     "video_test_25fps_180s.mp4":false
     }
    }
   },
@@ -78,10 +84,10 @@
    "time offset":0.0,
    "file":{
     "1":[
-     "50FPS.mp4"
+     "video_test_25fps_360s.mp4"
     ],
     "2":[
-     "50FPS.mp4"
+     "video_test_25fps_180s.mp4"
     ]
    },
    "events":[
@@ -120,22 +126,28 @@
    "description":"",
    "type":"MEDIA",
    "independent_variables":{
-    "b":"",
     "a":"",
+    "b":"",
     "c":"111"
    },
    "media_info":{
     "length":{
-     "50FPS.mp4":180.05
-    },
-    "hasAudio":{
-     "50FPS.mp4":true
-    },
-    "hasVideo":{
-     "50FPS.mp4":true
+     "video_test_25fps_360s.mp4":359.96,
+     "video_test_25fps_180s.mp4":179.96
     },
     "fps":{
-     "50FPS.mp4":50.0
+     "video_test_25fps_360s.mp4":25.0,
+     "video_test_25fps_180s.mp4":25.0
+    },
+    "hasVideo":{
+     "50FPS.mp4":true,
+     "video_test_25fps_360s.mp4":true,
+     "video_test_25fps_180s.mp4":true
+    },
+    "hasAudio":{
+     "50FPS.mp4":true,
+     "video_test_25fps_360s.mp4":false,
+     "video_test_25fps_180s.mp4":false
     }
    }
   },
@@ -143,7 +155,7 @@
    "date":"2016-11-27T01:57:26",
    "file":{
     "1":[
-     "video1.avi"
+     "video_test_25fps_360s.mp4"
     ],
     "2":[]
    },
@@ -218,18 +230,20 @@
    "description":"",
    "media_info":{
     "length":{
-     "video1.avi":225.64
+     "video_test_25fps_360s.mp4":359.96
     },
     "fps":{
-     "video1.avi":25.0
+     "video_test_25fps_360s.mp4":25.0
     },
     "hasVideo":{
      "video1.avi":true,
-     "50FPS.mp4":true
+     "50FPS.mp4":true,
+     "video_test_25fps_360s.mp4":true
     },
     "hasAudio":{
      "video1.avi":true,
-     "50FPS.mp4":true
+     "50FPS.mp4":true,
+     "video_test_25fps_360s.mp4":false
     }
    }
   },
@@ -237,8 +251,8 @@
    "date":"2016-12-01T23:01:31",
    "file":{
     "1":[
-     "video1.avi",
-     "video2.avi"
+     "video_test_25fps_180s.mp4",
+     "video_test_25fps_360s.mp4"
     ],
     "2":[]
    },
@@ -453,20 +467,24 @@
    "description":"Description of observation #2",
    "media_info":{
     "length":{
-     "video1.avi":225.64,
-     "video2.avi":300.0
+     "video_test_25fps_180s.mp4":179.96,
+     "video_test_25fps_360s.mp4":359.96
     },
     "fps":{
-     "video1.avi":25.0,
-     "video2.avi":25.0
+     "video_test_25fps_180s.mp4":25.0,
+     "video_test_25fps_360s.mp4":25.0
     },
     "hasVideo":{
      "video1.avi":true,
-     "video2.avi":true
+     "video2.avi":true,
+     "video_test_25fps_180s.mp4":true,
+     "video_test_25fps_360s.mp4":true
     },
     "hasAudio":{
      "video1.avi":true,
-     "video2.avi":true
+     "video2.avi":true,
+     "video_test_25fps_180s.mp4":false,
+     "video_test_25fps_360s.mp4":false
     }
    }
   },
@@ -677,7 +695,7 @@
   "modifiers":{
    "file":{
     "1":[
-     "video1.avi"
+     "video_test_25fps_180s.mp4"
     ],
     "2":[]
    },
@@ -746,16 +764,18 @@
    "close_behaviors_between_videos":false,
    "media_info":{
     "length":{
-     "video1.avi":225.64
+     "video_test_25fps_180s.mp4":179.96
     },
     "fps":{
-     "video1.avi":25.0
+     "video_test_25fps_180s.mp4":25.0
     },
     "hasVideo":{
-     "video1.avi":true
+     "video1.avi":true,
+     "video_test_25fps_180s.mp4":true
     },
     "hasAudio":{
-     "video1.avi":true
+     "video1.avi":true,
+     "video_test_25fps_180s.mp4":false
     }
    }
   }

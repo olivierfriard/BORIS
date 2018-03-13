@@ -232,3 +232,9 @@ def synthetic_time_budget(pj, selected_observations, selected_subjects, selected
         data_report.append(columns)
         
     return True, msg, data_report
+
+
+'''
+def time_budget():
+'''
+

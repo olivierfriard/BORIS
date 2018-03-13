@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.1.5"
-__version_date__ = "2018-03-09"
+__version__ = "6.1.6"
+__version_date__ = "2018-03-13"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -727,11 +727,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analysis
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-        # self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
-        self.actionBehavior_bar_plot.setVisible(False)
+        #self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -5318,7 +5318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                             self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
-    
+
             self.tb.twTB.resizeColumnsToContents()
     
             self.tb.show()
@@ -6881,7 +6881,6 @@ item []:
                                 logging.debug("difference after: {} - {} = {}".format(rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
 
                 # check if last event ends at the end of media file
-                '''TO BE REMOVED  if rows[-1]["occurence"] < self.observationTotalMediaLength(obsId):'''
                 if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]):
                     count += 1
                     out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
@@ -8213,10 +8212,10 @@ item []:
                             else:
                                 if memState == vlc.State.Playing:
                                     self.play_video()
-    
+
             else:
                 modifier_str = event["from map"]
-    
+
             # update current state
             if "row" not in event: # no editing
                 if self.currentSubject:

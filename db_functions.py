@@ -54,6 +54,7 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
                                     and pj[ETHOGRAM][x]["code"] in selectedBehaviors]
     
     db = sqlite3.connect(":memory:", isolation_level=None)
+    #db = sqlite3.connect("/tmp/1.sqlite", isolation_level=None)
 
     db.row_factory = sqlite3.Row
     cursor = db.cursor()
@@ -157,33 +158,45 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                                modifiers TEXT,
                                start FLOAT,
                                stop FLOAT,
-                               comment TEXT)""")
+                               comment TEXT,
+                               comment_stop TEXT)""")
 
     for obsId in selectedObservations:
         for subject in selectedSubjects:
             for behavior in selectedBehaviors:
-    
-                cursor1.execute(("SELECT occurence, modifiers, comment FROM events "
-                                 "WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence"), (obsId, subject, behavior))
-                rows = list(cursor1.fetchall())
 
-                for idx, row in enumerate(rows):
-    
-                    if behavior in point_behaviors_codes:
-                        
-                        cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, start, stop) "
-                                        "VALUES (?,?,?,?,?,?,?)"),
-                                        (obsId, subject, behavior, POINT, row["modifiers"].strip(), row["occurence"], row["occurence"]))
+                cursor1.execute("select distinct modifiers from events where observation=? AND subject=? AND code=? order by modifiers",
+                                (obsId, subject, behavior,))
+                rows_distinct_modifiers = list(x[0].strip() for x in cursor1.fetchall())
 
-                    if behavior in state_behaviors_codes:
-                        if idx % 2 == 0:
-                            cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, start, stop) "
-                                            "VALUES (?,?,?,?,?,?,?)"),
-                                            (obsId, subject, behavior, STATE, row["modifiers"].strip(),
-                                             row["occurence"], rows[idx + 1]["occurence"]))
+                for distinct_modifiers in rows_distinct_modifiers:
+                
+                    cursor1.execute(("SELECT occurence, comment FROM events "
+                                    "WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? ORDER by occurence"),
+                                    (obsId, subject, behavior, distinct_modifiers))
+                    rows = list(cursor1.fetchall())
+    
+                    for idx, row in enumerate(rows):
+        
+                        if behavior in point_behaviors_codes:
+                            
+                            cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
+                                             "                               start, stop, comment, comment_stop) "
+                                            "VALUES (?,?,?,?,?,?,?,?,?)"),
+                                            (obsId, subject, behavior, POINT, distinct_modifiers,
+                                             row["occurence"], row["occurence"], row["comment"], "",))
+    
+                        if behavior in state_behaviors_codes:
+                            if idx % 2 == 0:
+                                cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
+                                                 "                               start, stop, comment, comment_stop) "
+                                                "VALUES (?,?,?,?,?,?,?,?,?)"),
+                                                (obsId, subject, behavior, STATE, distinct_modifiers,
+                                                 row["occurence"], rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
 
     db.commit()
     return True, "", db
+
 
 
 
