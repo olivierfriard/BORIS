@@ -727,10 +727,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analysis
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
-        
+        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        # self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
+        self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -5367,7 +5368,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not exportDir:
                     return
 
-            '''
             if mode == "synthetic":
 
                 formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
@@ -5440,7 +5440,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if plot_parameters["include modifiers"]:
                     data_report.append(modif_header)
                 data_report.append(param_header)
-            '''
 
             if mode == "by_behavior":
                 fields = ["subject", "behavior",  "modifiers", "number",
@@ -5507,7 +5506,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
 
-                '''
                 if mode == "synthetic":
 
                     behaviors = init_behav_modif()
@@ -5541,7 +5539,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         columns.append(behaviors[subj][behav][modif][param[0]])
 
                     data_report.append(columns)
-                '''
 
                 if mode in ["by_behavior", "by_category"]:
                     rows = []
@@ -5652,7 +5649,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             with open(fileName, "wb") as f:
                                 f.write(data.xls)
 
-            '''
+
             if mode == "synthetic":
                 if extension in ["tsv", "csv", "html"]:
                     with open(fileName, "wb") as f:
@@ -5660,7 +5657,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if extension in ["ods", "xlsx", "xls"]:
                     with open(fileName, "wb") as f:
                          f.write(data_report.export(extension))
-            '''
 
             if mode in ["by_behavior", "by_category"] and flagWorkBook:
                 if "xls" in outputFormat:
