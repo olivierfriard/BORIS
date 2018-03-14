@@ -218,12 +218,12 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
         
         #b = {}
-        md_lgd = []
+        m
         behavior_mod_ticks = behavior_ticks[:]
         for ax_idx, subj in enumerate(selected_subjects):
             
             print("subject", subj)
-            
+            d_lgd = []
             b = {}
             for i in range(max_length):
 
