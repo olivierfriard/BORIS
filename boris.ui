@@ -300,6 +300,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_obs_list"/>
    <addaction name="actionPlay"/>
    <addaction name="actionPause"/>
    <addaction name="actionReset"/>
@@ -1181,6 +1182,14 @@
   <action name="actionBehavior_bar_plot">
    <property name="text">
     <string>Behaviors bar plot</string>
+   </property>
+  </action>
+  <action name="action_obs_list">
+   <property name="text">
+    <string>Obs list</string>
+   </property>
+   <property name="toolTip">
+    <string>Observations list</string>
    </property>
   </action>
  </widget>

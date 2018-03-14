@@ -431,6 +431,8 @@ class Ui_MainWindow(object):
         self.actionCheck_project.setObjectName("actionCheck_project")
         self.actionBehavior_bar_plot = QtWidgets.QAction(MainWindow)
         self.actionBehavior_bar_plot.setObjectName("actionBehavior_bar_plot")
+        self.action_obs_list = QtWidgets.QAction(MainWindow)
+        self.action_obs_list.setObjectName("action_obs_list")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -537,6 +539,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuTools.menuAction())
         self.menubar.addAction(self.menuAnalyze.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
+        self.toolBar.addAction(self.action_obs_list)
         self.toolBar.addAction(self.actionPlay)
         self.toolBar.addAction(self.actionPause)
         self.toolBar.addAction(self.actionReset)
@@ -733,4 +736,6 @@ class Ui_MainWindow(object):
         self.actionRemove_path_from_media_files.setText(_translate("MainWindow", "Remove path from media files"))
         self.actionCheck_project.setText(_translate("MainWindow", "Check project integrity"))
         self.actionBehavior_bar_plot.setText(_translate("MainWindow", "Behaviors bar plot"))
+        self.action_obs_list.setText(_translate("MainWindow", "Obs list"))
+        self.action_obs_list.setToolTip(_translate("MainWindow", "Observations list"))
 

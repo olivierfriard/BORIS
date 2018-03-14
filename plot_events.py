@@ -211,42 +211,55 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             print("behavior_ticks", behavior_ticks)
 
         
-
+        b = {}
         for subj in selected_subjects:
             for i in range(max_length):
+                
+                b[i] = []
+                
                 for behavior in sorted(behaviors_duration[subj].keys()):
                     #print(len(behaviors_duration[behavior][0]), i)
                     try:
                         print(behaviors_duration[subj][behavior][0][i])
+                        b[i].append(behaviors_duration[subj][behavior][0][i])
                     except:
                         print(0)
+                        b[i].append(0)
 
-            #return True, msg, data_report
-            N = len(behaviors_duration)
-            #behaviors_duration = (20, 35, 30, 35, 27)
-            #womenMeans = (25, 32, 34, 20, 25)
-            #menStd = (2, 3, 4, 1, 2)
-            #womenStd = (3, 5, 2, 3, 3)
-            ind = np.arange(N)    # the x locations for the groups
-            width = 0.35       # the width of the bars: can also be len(x) sequence
-
-            #fig, ax = plt.subplots()
-
-            #ax.yaxis.set_major_formatter(formatter)
-            #plt.xticks(x, ('Bill', 'Fred', 'Mary', 'Sue'))
+        print(b)
         
-            axs[ax_idx].bar(ind, behaviors_duration, width)
-            #p2 = plt.bar(ind, womenMeans, width,
-            #             bottom=menMeans, yerr=womenStd)
-            axs[ax_idx].set_ylabel('Duration (s)')
-            axs[ax_idx].set_xlabel('Behaviors')
-            axs[ax_idx].set_title('{}'.format(subj))
+        N = len(behaviors_duration)
+        #behaviors_duration = (20, 35, 30, 35, 27)
+        #womenMeans = (25, 32, 34, 20, 25)
+        #menStd = (2, 3, 4, 1, 2)
+        #womenStd = (3, 5, 2, 3, 3)
+        ind = np.arange(2)    # the x locations for the groups
+        width = 0.35       # the width of the bars: can also be len(x) sequence
 
-            axs[ax_idx].set_xticks(ind)
-            axs[ax_idx].set_xticklabels(behavior_ticks)
-            #plt.yticks(np.arange(0, 81, 10))
+        #fig, ax = plt.subplots()
+        p = []
+        #ax.yaxis.set_major_formatter(formatter)
+        #plt.xticks(x, ('Bill', 'Fred', 'Mary', 'Sue'))
+    
+        for i in sorted(b.keys()):
+            print(b[i])
+            if i == 0:
+                p.append(axs[ax_idx].bar(ind, b[i], width))
+            else:
+                p.append(axs[ax_idx].bar(ind, b[i], width, bottom=b[i - 1]))
 
-            #plt.legend((p1[0], p2[0]), ('Men', 'Women'))
+        #p2 = plt.bar(ind, womenMeans, width,
+        #             bottom=menMeans, yerr=womenStd)
+        axs[ax_idx].set_ylabel('Duration (s)')
+        axs[ax_idx].set_xlabel('Behaviors')
+        axs[ax_idx].set_title('{}'.format(subj))
+
+        axs[ax_idx].set_xticks(ind)
+        axs[ax_idx].set_xticklabels(behavior_ticks)
+        #plt.yticks(np.arange(0, 81, 10))
+
+        plt.legend((x[0] for x in p), behavior_ticks)
+
 
         if plot_directory:
             output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix("." + file_format))

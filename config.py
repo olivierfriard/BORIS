@@ -166,6 +166,7 @@ NEW = 'new'
 LIST = 'list'
 EDIT = 'edit'
 OPEN = 'open'
+VIEW = "view"
 SELECT = 'select'
 SINGLE = 'single'
 MULTIPLE = 'multiple'

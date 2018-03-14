@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
 BORIS
@@ -112,6 +112,9 @@ class observationsList_widget(QDialog):
         self.pbOpen = QPushButton("Start")
         hbox2.addWidget(self.pbOpen)
 
+        self.pbView = QPushButton("View")
+        hbox2.addWidget(self.pbView)
+
         self.pbEdit = QPushButton("Edit")
         hbox2.addWidget(self.pbEdit)
 
@@ -124,6 +127,7 @@ class observationsList_widget(QDialog):
         self.pbOk.clicked.connect(self.pbOk_clicked)
         self.pbOpen.clicked.connect(self.pbOpen_clicked)
         self.pbEdit.clicked.connect(self.pbEdit_clicked)
+        self.pbView.clicked.connect(self.pbView_clicked)
 
         self.view.doubleClicked.connect(self.view_doubleClicked)
 
@@ -187,6 +191,9 @@ class observationsList_widget(QDialog):
 
     def pbEdit_clicked(self):
         self.done(3)
+
+    def pbView_clicked(self):
+        self.done(4)
 
     def set_item(self, r, c):
 

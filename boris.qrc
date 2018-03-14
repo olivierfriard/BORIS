@@ -1,17 +1,18 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-<file alias="logo.png">icons/logo_eye.128px.png</file>
-<file alias="play.png">icons/glyphicons_173_play.png</file>
-<file alias="pause.png">icons/glyphicons_174_pause.png</file>
-<file alias="reset.png">icons/glyphicons_170_step_backward.png</file>
-<file alias="jump_backward.png">icons/glyphicons_172_rewind.png</file>
-<file alias="jump_forward.png">icons/glyphicons_176_forward.png</file>
-<file alias="faster.png">icons/glyphicons_190_circle_plus.png</file>
-<file alias="slower.png">icons/glyphicons_191_circle_minus.png</file>
-<file alias="previous.png">icons/glyphicons_171_fast_backward.png</file>
-<file alias="next.png">icons/glyphicons_177_fast_forward.png</file>
-<file alias="normal_speed.png">icons/glyphicons_192_circle_egal.png</file>
-<file alias="snapshot.png">icons/glyphicons_011_camera.png</file>
+<file alias="logo">icons/logo_eye.128px.png</file>
+<file alias="play">icons/glyphicons_173_play.png</file>
+<file alias="pause">icons/glyphicons_174_pause.png</file>
+<file alias="reset">icons/glyphicons_170_step_backward.png</file>
+<file alias="jump_backward">icons/glyphicons_172_rewind.png</file>
+<file alias="jump_forward">icons/glyphicons_176_forward.png</file>
+<file alias="faster">icons/glyphicons_190_circle_plus.png</file>
+<file alias="slower">icons/glyphicons_191_circle_minus.png</file>
+<file alias="previous">icons/glyphicons_171_fast_backward.png</file>
+<file alias="next">icons/glyphicons_177_fast_forward.png</file>
+<file alias="normal_speed">icons/glyphicons_192_circle_egal.png</file>
+<file alias="snapshot">icons/glyphicons_011_camera.png</file>
 <file alias="frame_mode">icons/glyphicons_008_film.png</file>
+<file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>
 </qresource>
 </RCC>

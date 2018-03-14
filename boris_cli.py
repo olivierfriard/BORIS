@@ -34,7 +34,7 @@ import irr
 
 
 
-__version__ = "6.1.6"
+__version__ = "6.1.7"
 __version_date__ = "2018-03-14"
 
 def cleanhtml(raw_html):

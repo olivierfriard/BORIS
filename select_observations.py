@@ -1,8 +1,34 @@
+#!/usr/bin/env python3
+
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2018 Olivier Friard
+
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+
+"""
+
 
 import observations_list
 from config import *
 from utilities import *
 import project_functions
+
 
 def select_observations(pj, mode):
     """
@@ -61,6 +87,7 @@ def select_observations(pj, mode):
     obsList = observations_list.observationsList_widget(data, header=obsListFields + indepVarHeader, column_type=column_type)
 
     obsList.pbOpen.setVisible(False)
+    obsList.pbView.setVisible(False)
     obsList.pbEdit.setVisible(False)
     obsList.pbOk.setVisible(False)
     obsList.pbSelectAll.setVisible(False)
@@ -71,6 +98,11 @@ def select_observations(pj, mode):
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOpen.setVisible(True)
 
+    if mode == VIEW:
+        obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
+        obsList.pbView.setVisible(True)
+
+
     if mode == EDIT:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbEdit.setVisible(True)
@@ -78,6 +110,7 @@ def select_observations(pj, mode):
     if mode == SINGLE:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOpen.setVisible(True)
+        obsList.pbView.setVisible(True)
         obsList.pbEdit.setVisible(True)
 
     if mode == MULTIPLE:
@@ -112,5 +145,7 @@ def select_observations(pj, mode):
         resultStr = OPEN
     if result == 3:   # edit
         resultStr = EDIT
+    if result == 4:   # view
+        resultStr = VIEW
 
     return resultStr, selectedObs

@@ -103,7 +103,7 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.1.6"
+__version__ = "6.1.7"
 __version_date__ = "2018-03-14"
 
 if platform.python_version() < "3.5":
@@ -371,21 +371,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.availablePlayers = availablePlayers
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
-        self.setWindowIcon(QIcon(":/logo.png"))
-        self.actionPlay.setIcon(QIcon(":/play.png"))
-        self.actionPause.setIcon(QIcon(":/pause.png"))
-        self.actionReset.setIcon(QIcon(":/reset.png"))
-        self.actionJumpBackward.setIcon(QIcon(":/jump_backward.png"))
-        self.actionJumpForward.setIcon(QIcon(":/jump_forward.png"))
+        self.setWindowIcon(QIcon(":/logo"))
 
-        self.actionFaster.setIcon(QIcon(":/faster.png"))
-        self.actionSlower.setIcon(QIcon(":/slower.png"))
-        self.actionNormalSpeed.setIcon(QIcon(":/normal_speed.png"))
+        self.action_obs_list.setIcon(QIcon(":/observations_list"))
+        self.actionPlay.setIcon(QIcon(":/play"))
+        self.actionPause.setIcon(QIcon(":/pause"))
+        self.actionReset.setIcon(QIcon(":/reset"))
+        self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
+        self.actionJumpForward.setIcon(QIcon(":/jump_forward"))
 
-        self.actionPrevious.setIcon(QIcon(":/previous.png"))
-        self.actionNext.setIcon(QIcon(":/next.png"))
+        self.actionFaster.setIcon(QIcon(":/faster"))
+        self.actionSlower.setIcon(QIcon(":/slower"))
+        self.actionNormalSpeed.setIcon(QIcon(":/normal_speed"))
 
-        self.actionSnapshot.setIcon(QIcon(":/snapshot.png"))
+        self.actionPrevious.setIcon(QIcon(":/previous"))
+        self.actionNext.setIcon(QIcon(":/next"))
+
+        self.actionSnapshot.setIcon(QIcon(":/snapshot"))
 
         self.actionFrame_by_frame.setIcon(QIcon(":/frame_mode"))
         self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
@@ -406,7 +408,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbLogoUnito.setScaledContents(False)
         self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
-        self.toolBar.setEnabled(False)
+        #self.toolBar.setEnabled(False)
+        self.toolBar.setEnabled(True)
+        
+        
         # remove default page from toolBox
         self.toolBox.removeItem(0)
         self.toolBox.setVisible(False)
@@ -522,13 +527,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
                   self.actionClose_project, self.actionSend_project, self.actionNew_observation,
-                  self.actionRemove_path_from_media_files]:
+                  self.actionRemove_path_from_media_files, self.action_obs_list]:
             w.setEnabled(flag)
 
         # observations
 
         # enabled if observations
-        for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation, self.actionObservationsList]:
+        for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation, self.actionObservationsList,
+                  self.action_obs_list]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
         
         '''
@@ -609,7 +615,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPrevious.setEnabled(self.playerType == VLC)
         self.actionNext.setEnabled(self.playerType == VLC)
         self.actionSnapshot.setEnabled(self.playerType == VLC)
-        self.actionFrame_by_frame.setEnabled(True)
+        self.actionFrame_by_frame.setEnabled(self.playerType == VLC)
 
         self.actionFrame_backward.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
@@ -662,7 +668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu observations
         self.actionNew_observation.triggered.connect(self.new_observation_triggered)
         self.actionOpen_observation.triggered.connect(lambda: self.open_observation("start"))
-        self.actionView_observation.triggered.connect(lambda: self.open_observation("view"))
+        self.actionView_observation.triggered.connect(lambda: self.open_observation(VIEW))
         self.actionEdit_observation_2.triggered.connect(self.edit_observation)
         self.actionObservationsList.triggered.connect(self.observations_list)
 
@@ -733,7 +739,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
-        self.actionBehavior_bar_plot.setVisible(False)
+        #self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
@@ -744,6 +750,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCheckUpdate.triggered.connect(self.actionCheckUpdate_activated)
 
         # toolbar
+        self.action_obs_list.triggered.connect(self.observations_list)
         self.actionPlay.triggered.connect(self.play_activated)
         self.actionPause.triggered.connect(self.pause_video)
         self.actionReset.triggered.connect(self.reset_activated)
@@ -1821,8 +1828,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Args:
             obsId (str): observation id
             mode (str): "start" to start observation
-                        "view"  to start observation
+                        "view"  to view observation
         """
+
+        print("mode", mode)
 
         if obsId in self.pj[OBSERVATIONS]:
 
@@ -1830,8 +1839,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.loadEventsInTW(self.observationId)
 
             if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
-                self.playerType = LIVE
-                self.initialize_new_live_observation()
+                
+                if mode == "start":
+                    self.playerType = LIVE
+                    self.initialize_new_live_observation()
+                if mode == "view":
+                    self.playerType = VIEWER
+                    self.playMode = ""
+                    self.dwObservations.setVisible(True)
 
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
@@ -1858,11 +1873,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def open_observation(self, mode):
         """
-        start an observation
+        start or view an observation
         
         Args:
             mode (str): "start" to start observation
-                        "view" to start observation
+                        "view" to view observation
         """
 
         # check if current observation must be closed to open a new one
@@ -1875,7 +1890,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        result, selectedObs = self.selectObservations(OPEN)
+        if mode == "start":
+            result, selectedObs = self.selectObservations(OPEN)
+        if mode == VIEW:
+            result, selectedObs = self.selectObservations(VIEW)
 
         if selectedObs:
             return self.load_observation(selectedObs[0], mode)
@@ -1950,6 +1968,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         view all observations
         """
+
+        if self.playerType == VIEWER:
+            self.close_observation()
         # check if an observation is running
         if self.observationId:
             QMessageBox.critical(self, programName, "You must close the running observation before.")
@@ -1958,6 +1979,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result, selectedObs = self.selectObservations(SINGLE)
 
         if selectedObs:
+            if result == OPEN:
+                self.load_observation(selectedObs[0], "start")
+
+            if result == VIEW:
+                self.load_observation(selectedObs[0], VIEW)
+
+            '''
             if result == OPEN:
                 self.observationId = selectedObs[0]
                 self.loadEventsInTW(self.observationId)
@@ -1969,13 +1997,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
                     if not self.initialize_new_observation_vlc():
-                        self.observationId = ''
+                        self.observationId = ""
                         self.twEvents.setRowCount(0)
                         self.menu_options()
 
                 self.menu_options()
                 # title of dock widget
                 self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
+            '''
+
 
             if result == EDIT:
                 if self.observationId != selectedObs[0]:
@@ -1984,6 +2014,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(self, programName,
                                         ("The observation <b>{}</b> is running!<br>"
                                          "Close it before editing.").format(self.observationId))
+
 
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
@@ -3110,7 +3141,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.playerType, self.playMode = VLC, VLC
         self.fps = {}
-        self.toolBar.setEnabled(False)
+        #self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(True)
         self.toolBox.setVisible(True)
         self.lb_current_media_time.setVisible(True)
@@ -3317,7 +3348,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBox.setCurrentIndex(VIDEO_TAB)
         self.toolBox.setItemEnabled(VIDEO_TAB, False)
 
-        self.toolBar.setEnabled(True)
+        #self.toolBar.setEnabled(True)
+        self.menu_options()
 
         self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
@@ -3559,7 +3591,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBox.setItemEnabled(0, True)   # enable tab
         self.toolBox.setCurrentIndex(0)  # show tab
 
-        self.toolBar.setEnabled(False)
+        #self.toolBar.setEnabled(False)
+        self.menu_options()
 
         self.liveObservationStarted = False
         self.textButton.setText("Start live observation")
@@ -4159,7 +4192,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage("", 0)
 
         # delete layout
-        self.toolBar.setEnabled(False)
+        # self.toolBar.setEnabled(False)
+
         self.dwObservations.setVisible(False)
         self.toolBox.setVisible(False)
         self.lb_current_media_time.setVisible(False)
@@ -7592,6 +7626,11 @@ item []:
         add event by double-clicking in ethogram list
         """
         if self.observationId:
+            if self.playerType == VIEWER:
+                QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
+                                                     "It is not allowed to log events in this mode."))
+                return
+
             if self.twEthogram.selectedIndexes():
                 ethogramRow = self.twEthogram.selectedIndexes()[0].row()
                 code = self.twEthogram.item(ethogramRow, 1).text()
