@@ -104,7 +104,7 @@ import time_budget_functions
 
 
 __version__ = "6.1.6"
-__version_date__ = "2018-03-13"
+__version_date__ = "2018-03-14"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -727,11 +727,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analysis
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+        
+        
+        #self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
-        #self.actionBehavior_bar_plot.setVisible(False)
+        self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
         self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)

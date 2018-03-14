@@ -1053,7 +1053,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # update excluded field
             for r in range(self.twBehaviors.rowCount()):
-                if includePointEvents == YES or (includePointEvents == NO and "State" in BEHAVIOR_TYPES[self.twBehaviors.cellWidget(r, 0).currentIndex()]):
+                if (includePointEvents == YES 
+                   or (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
                     for e in excl:
                         if e == self.twBehaviors.item(r, behavioursFields['code']).text():
                             item = QTableWidgetItem(','.join(new_excl[e]))
