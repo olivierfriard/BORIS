@@ -178,6 +178,9 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
         print("behaviors")
         print(behaviors)
+        
+        print()
+        print("sorted(distinct_behav_modif)", sorted(distinct_behav_modif))
 
         max_length = 0
         behaviors_duration = {}
@@ -218,12 +221,12 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
         
         #b = {}
-        m
+
         behavior_mod_ticks = behavior_ticks[:]
         for ax_idx, subj in enumerate(selected_subjects):
             
             print("subject", subj)
-            d_lgd = []
+            md_lgd = []
             b = {}
             for i in range(max_length):
 
@@ -234,10 +237,11 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                         b[i].append(behaviors_duration[subj][behavior][0][i])
                         if include_modifiers:
                             
+                            '''
                             if behaviors_duration[subj][behavior][1][i]:
-                            
                                 behavior_mod_ticks[behavior_ticks.index(behavior)] = behavior_mod_ticks[behavior_ticks.index(behavior)] + "\n" + \
                                                                                         behaviors_duration[subj][behavior][1][i]
+                            '''
                             
                             if behaviors_duration[subj][behavior][1][i]:
                                 md_lgd.append(behavior + " " + behaviors_duration[subj][behavior][1][i])
@@ -257,19 +261,26 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             
             #ind = np.arange(len(behavior_ticks))    # the x locations for the groups
             
-            ind = np.arange(2)
+            ind = np.arange(len(behavior_ticks))
             
             width = 0.35       # the width of the bars: can also be len(x) sequence
+
+
     
             pp = []
             max_obs = 0
             bottom_ = []
+            
+            idx_color = 0
+            
             for i in sorted(b.keys()):
                 print(i, b[i])
                 if i == 0:
-                    pp.append(axs[ax_idx].bar(ind, b[i], width))
+                    pp.append(axs[ax_idx].bar(ind, b[i], width, color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])]))
                 else:
-                    pp.append(axs[ax_idx].bar(ind, b[i], width, bottom=bottom_))
+                    pp.append(axs[ax_idx].bar(ind, b[i], width, color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])], bottom=bottom_))
+
+                idx_color += len(b[i])
 
                 if not bottom_:
                     bottom_ = b[i]
@@ -277,21 +288,17 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                     bottom_ = [x + bottom_[idx] for idx,x in enumerate(b[i])]
 
                 max_obs = max(max_obs, sum(b[i]))
-                
    
-            #p2 = plt.bar(ind, womenMeans, width,
-            #             bottom=menMeans, yerr=womenStd)
             if ax_idx == 0:
                 axs[ax_idx].set_ylabel('Duration (s)')
             axs[ax_idx].set_xlabel('Behaviors')
             axs[ax_idx].set_title('{}'.format(subj))
     
             axs[ax_idx].set_xticks(ind)
-            axs[ax_idx].set_xticklabels(behavior_mod_ticks)
+            axs[ax_idx].set_xticklabels(behavior_mod_ticks,rotation=90)
             axs[ax_idx].set_yticks(np.arange(0, max(bottom_), 50))
     
             lgd_col = []
-
             for p in pp:
                 for r in p:
                     if r.get_height():
@@ -552,7 +559,6 @@ def create_events_plot2(events,
         ordered_subjects = sorted(list(events.keys()))
 
     for ax_idx, subject in enumerate(ordered_subjects):
-
         axs[ax_idx].set_title(subject, fontsize=14)
         labels_str, ylabels = [], []
         flag_modifiers = False
