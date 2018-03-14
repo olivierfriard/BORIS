@@ -119,9 +119,9 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
     for obs_id in selected_observations:
 
         if len(selected_subjects) > 1:
-            fig, axs = plt.subplots(figsize=(20, 8), nrows=1, ncols=len(selected_subjects), sharey=True)
+            fig, axs = plt.subplots(nrows=1, ncols=len(selected_subjects), sharey=True)
         else:
-            fig, ax = plt.subplots(figsize=(20, 8), nrows=1, ncols=len(selected_subjects), sharey=True)
+            fig, ax = plt.subplots(nrows=1, ncols=len(selected_subjects), sharey=True)
             axs = np.ndarray(shape=(1), dtype=type(ax))
             axs[0] = ax
 
@@ -181,12 +181,14 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
         max_length = 0
         behaviors_duration = {}
+        mb = {}
+        
         for ax_idx, subj in enumerate(selected_subjects):
             behaviors_duration[subj] = {}
 
             behavior_ticks = []
 
-            for behavior_modifiers in distinct_behav_modif:
+            for behavior_modifiers in sorted(distinct_behav_modif):
 
                 behavior, modifiers = behavior_modifiers
                 
@@ -198,8 +200,9 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                     behaviors_duration[subj][behavior] = [[],[]]
 
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-                print(subj, behavior, modifiers)
-                behavior_ticks.append(behavior_modifiers_str)
+                #print(subj, behavior, modifiers)
+                if behavior not in behavior_ticks:
+                    behavior_ticks.append(behavior)
 
                 for param in parameters:
                     behaviors_duration[subj][behavior][0].append(behaviors[subj][behavior_modifiers_str][param[0]])
@@ -207,59 +210,94 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                     max_length = max(max_length, len(behaviors_duration[subj][behavior][1]))
 
 
+            print()
             print("behaviors_duration", behaviors_duration)
+            print()
             print("behavior_ticks", behavior_ticks)
+            print()
 
         
-        b = {}
-        for subj in selected_subjects:
+        #b = {}
+        md_lgd = []
+        behavior_mod_ticks = behavior_ticks[:]
+        for ax_idx, subj in enumerate(selected_subjects):
+            
+            print("subject", subj)
+            
+            b = {}
             for i in range(max_length):
-                
+
                 b[i] = []
-                
+
                 for behavior in sorted(behaviors_duration[subj].keys()):
-                    #print(len(behaviors_duration[behavior][0]), i)
                     try:
-                        #print(behaviors_duration[subj][behavior][0][i])
                         b[i].append(behaviors_duration[subj][behavior][0][i])
+                        if include_modifiers:
+                            
+                            if behaviors_duration[subj][behavior][1][i]:
+                            
+                                behavior_mod_ticks[behavior_ticks.index(behavior)] = behavior_mod_ticks[behavior_ticks.index(behavior)] + "\n" + \
+                                                                                        behaviors_duration[subj][behavior][1][i]
+                            
+                            if behaviors_duration[subj][behavior][1][i]:
+                                md_lgd.append(behavior + " " + behaviors_duration[subj][behavior][1][i])
+                            else:
+                                md_lgd.append(behavior)
                     except:
-                        #print(0)
                         b[i].append(0)
 
-        print("b")
-        print(b)
-        
-        N = len(behaviors_duration)
-        #behaviors_duration = (20, 35, 30, 35, 27)
-        #womenMeans = (25, 32, 34, 20, 25)
-        #menStd = (2, 3, 4, 1, 2)
-        #womenStd = (3, 5, 2, 3, 3)
-        ind = np.arange(2)    # the x locations for the groups
-        width = 0.35       # the width of the bars: can also be len(x) sequence
-
-        #fig, ax = plt.subplots()
-        p = []
-        #ax.yaxis.set_major_formatter(formatter)
-        #plt.xticks(x, ('Bill', 'Fred', 'Mary', 'Sue'))
+            print()
+            print("behavior_mod_ticks", behavior_mod_ticks)
+            print()
+            print("b")
+            print(b)
+            print()
+            print("md_lgd")
+            print(md_lgd)
+            
+            #ind = np.arange(len(behavior_ticks))    # the x locations for the groups
+            
+            ind = np.arange(2)
+            
+            width = 0.35       # the width of the bars: can also be len(x) sequence
     
-        for i in sorted(b.keys()):
-            print(b[i])
-            if i == 0:
-                p.append(axs[ax_idx].bar(ind, b[i], width))
-            else:
-                p.append(axs[ax_idx].bar(ind, b[i], width, bottom=b[i - 1]))
+            pp = []
+            max_obs = 0
+            bottom_ = []
+            for i in sorted(b.keys()):
+                print(i, b[i])
+                if i == 0:
+                    pp.append(axs[ax_idx].bar(ind, b[i], width))
+                else:
+                    pp.append(axs[ax_idx].bar(ind, b[i], width, bottom=bottom_))
 
-        #p2 = plt.bar(ind, womenMeans, width,
-        #             bottom=menMeans, yerr=womenStd)
-        axs[ax_idx].set_ylabel('Duration (s)')
-        axs[ax_idx].set_xlabel('Behaviors')
-        axs[ax_idx].set_title('{}'.format(subj))
+                if not bottom_:
+                    bottom_ = b[i]
+                else:
+                    bottom_ = [x + bottom_[idx] for idx,x in enumerate(b[i])]
 
-        axs[ax_idx].set_xticks(ind)
-        axs[ax_idx].set_xticklabels(behavior_ticks)
-        #plt.yticks(np.arange(0, 81, 10))
+                max_obs = max(max_obs, sum(b[i]))
+                
+   
+            #p2 = plt.bar(ind, womenMeans, width,
+            #             bottom=menMeans, yerr=womenStd)
+            if ax_idx == 0:
+                axs[ax_idx].set_ylabel('Duration (s)')
+            axs[ax_idx].set_xlabel('Behaviors')
+            axs[ax_idx].set_title('{}'.format(subj))
+    
+            axs[ax_idx].set_xticks(ind)
+            axs[ax_idx].set_xticklabels(behavior_mod_ticks)
+            axs[ax_idx].set_yticks(np.arange(0, max(bottom_), 50))
+    
+            lgd_col = []
 
-        plt.legend((x[0] for x in p), behavior_ticks)
+            for p in pp:
+                for r in p:
+                    if r.get_height():
+                        lgd_col.append(r)
+
+            plt.legend(lgd_col, md_lgd)
 
 
         if plot_directory:
