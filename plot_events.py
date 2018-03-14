@@ -176,7 +176,7 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                 for row in cursor.fetchall():
                     behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
 
-
+        print("behaviors")
         print(behaviors)
 
         max_length = 0
@@ -220,12 +220,13 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                 for behavior in sorted(behaviors_duration[subj].keys()):
                     #print(len(behaviors_duration[behavior][0]), i)
                     try:
-                        print(behaviors_duration[subj][behavior][0][i])
+                        #print(behaviors_duration[subj][behavior][0][i])
                         b[i].append(behaviors_duration[subj][behavior][0][i])
                     except:
-                        print(0)
+                        #print(0)
                         b[i].append(0)
 
+        print("b")
         print(b)
         
         N = len(behaviors_duration)
