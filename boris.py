@@ -606,6 +606,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 except:
                     pass
 
+        # toolbar
         self.actionPlay.setEnabled(self.playerType == VLC)
         self.actionPause.setEnabled(self.playerType == VLC)
         self.actionReset.setEnabled(self.playerType == VLC)

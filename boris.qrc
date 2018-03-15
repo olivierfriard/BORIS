@@ -1,6 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
 <file alias="logo">icons/logo_eye.128px.png</file>
+<file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>
 <file alias="play">icons/glyphicons_173_play.png</file>
 <file alias="pause">icons/glyphicons_174_pause.png</file>
 <file alias="reset">icons/glyphicons_170_step_backward.png</file>
@@ -13,6 +14,7 @@
 <file alias="normal_speed">icons/glyphicons_192_circle_egal.png</file>
 <file alias="snapshot">icons/glyphicons_011_camera.png</file>
 <file alias="frame_mode">icons/glyphicons_008_film.png</file>
-<file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>
+<file alias="frame_backward">icons/glyphicons_210_left_arrow.png</file>
+<file alias="frame_forward">icons/glyphicons_211_right_arrow.png</file>
 </qresource>
 </RCC>
