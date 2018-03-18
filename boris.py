@@ -734,10 +734,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu Analysis
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-        
-        
-        #self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
+
+        self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
         #self.actionBehavior_bar_plot.setVisible(False)
@@ -904,6 +903,37 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if len(selected_observations) < 2:
             QMessageBox.information(self, programName, "Select almost 2 observations for IRR analysis")
             return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obsId,
+                                                              self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+            
+            if not self.results.exec_():
+                return
+
+        # remove observations with unpaired state events
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
 
         plot_parameters = self.choose_obs_subj_behav_category(selected_observations,
                                                               maxTime=0,
@@ -1444,9 +1474,62 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         in case of point event, from -n to +n seconds are extracted (n = self.repositioningTimeOffset)
         """
         result, selectedObservations = self.selectObservations(MULTIPLE)
-
         if not selectedObservations:
             return
+
+        # check if obs are MEDIA
+        live_obs_list = []
+        for obs_id in selectedObservations:
+            if self.pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
+                live_obs_list.append(obs_id)
+        if live_obs_list:
+            out = "The following observations are live observations and will be removed from analysis<br><br>"
+            out += "<br>".join(live_obs_list)
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName)
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+            if not results.exec_():
+                return
+
+        # remove live  observations
+        selectedObservations = [x for x in selectedObservations if x not in live_obs_list]
+        if not selectedObservations:
+            return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            r, msg = project_functions.check_state_events_obs(obsId,
+                                                              self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName + " - Check selected observations")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+
+            if not results.exec_():
+                return
+
+        # remove observations with unpaired state events
+        selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
+        if not selectedObservations:
+            return
+
+
 
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0,
                                                               flagShowIncludeModifiers=False,
@@ -1476,6 +1559,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"],
                                                 selectedObservations, plot_parameters["selected behaviors"])
+
+        ffmpeg_extract_command = ('"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} -acodec copy -vcodec copy '
+                                  ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
+                                  '-{globalStop}{extension}" ')
+
 
         for obsId in selectedObservations:
 
@@ -1519,16 +1607,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
-                                ffmpeg_command = ('"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop}'
-                                                  ' "{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
-                                                  '-{globalStop}{extension}" ').format(
+                                ffmpeg_command = ffmpeg_extract_command.format(
                                                           ffmpeg_bin=ffmpeg_bin,
-                                                          input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                          input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                                                   self.projectFileName),
                                                           start=start,
                                                           stop=stop,
                                                           globalStart=globalStart,
                                                           globalStop=globalStop,
-                                                          dir=exportDir,
+                                                          dir_=exportDir,
                                                           sep=os.sep,
                                                           obsId=obsId,
                                                           player="PLAYER{}".format(nplayer),
@@ -1556,16 +1643,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                                            [mediaFileIdx]]:
                                         continue
 
-                                    ffmpeg_command = ('"{ffmpeg_bin}" -i "{input}" -y -ss {start} -to {stop} '
-                                                      '"{dir}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
-                                                      '-{globalStop}{extension}" ').format(
+                                    ffmpeg_command = ffmpeg_extract_command.format(
                                                       ffmpeg_bin=ffmpeg_bin,
-                                                      input=self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                      input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                                               self.projectFileName),
                                                       start=start,
                                                       stop=stop,
                                                       globalStart=globalStart,
                                                       globalStop=globalStop,
-                                                      dir=exportDir,
+                                                      dir_=exportDir,
                                                       sep=os.sep,
                                                       obsId=obsId,
                                                       player="PLAYER{}".format(nplayer),
@@ -4748,13 +4834,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not r:
                 out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
                 not_paired_obs_list.append(obs_id)
+
         if out:
-            out = "The observations with UNPAIRED state events will be removed from the time budget analysis<br><br>" + out
-            self.results = dialog.ResultsWidget()
+            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            self.results = dialog.Results_dialog()
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
-            self.results.show()
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+            
+            if not self.results.exec_():
+                return
 
         selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
         if not selected_observations:
@@ -4788,9 +4879,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 selectedObsTotalMediaLength = 0
 
         synth_tb_param = self.choose_obs_subj_behav_category(selected_observations,
-                                                         maxTime=max_obs_length,
-                                                         flagShowExcludeBehaviorsWoEvents=False,
-                                                         by_category=False)
+                                                             maxTime=max_obs_length,
+                                                             flagShowExcludeBehaviorsWoEvents=False,
+                                                             by_category=False)
 
         if not synth_tb_param["selected subjects"] or not synth_tb_param["selected behaviors"]:
             return
@@ -5136,10 +5227,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "Some observations have UNPAIRED state events<br><br>" + out
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
+
         flagGroup = False
         if len(selectedObservations) > 1 and mode != "synthetic":
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
 
+        '''
         # check if state events are paired
         out = ""
         for obsId in selectedObservations:
@@ -5154,6 +5269,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.show()
+        '''
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -5835,12 +5951,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obsId)
 
         if out:
-            out = "The observations with UNPAIRED state events will be removed from the plot<br>br>" + out
-            self.results = dialog.ResultsWidget()
+            out = "The observations with UNPAIRED state events will be removed from the plot<br><br>" + out
+            self.results = dialog.Results_dialog()
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
-            self.results.show()
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
 
         selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
         if not selectedObservations:
@@ -6628,6 +6748,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the plot<br><br>" + out
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
+
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
         if not selected_observations:
             return
 
@@ -9127,9 +9274,31 @@ item []:
 
         # ask user observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
-
         if not selectedObservations:
             return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "Some observations have UNPAIRED state events<br><br>" + out
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
 
         parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                          maxTime=0,

@@ -425,6 +425,61 @@ class FindReplaceEvents(QWidget):
         self.clickSignal.emit(msg)
 
 
+class Results_dialog(QDialog):
+    """
+    widget for visualizing text output
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("")
+
+        hbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        hbox.addWidget(self.lb)
+
+        self.ptText = QPlainTextEdit()
+        hbox.addWidget(self.ptText)
+
+        hbox2 = QHBoxLayout()
+        self.pbSave = QPushButton("Save text")
+        self.pbSave.clicked.connect(self.save_results)
+        hbox2.addWidget(self.pbSave)
+
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        hbox2.addWidget(self.pbCancel)
+        self.pbCancel.setVisible(False)
+
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.accept)
+        hbox2.addWidget(self.pbOK)
+
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
+
+        self.resize(540, 640)
+
+
+    def save_results(self):
+        """
+        save content of self.ptText
+        """
+        
+        fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        
+        if file_name:
+            try:
+                with open(file_name, "w") as f:
+                    f.write(self.ptText.toPlainText())
+            except:
+                QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
+
+
+
 class ResultsWidget(QWidget):
     """
     widget for visualizing text output

@@ -591,7 +591,7 @@ def check_events(obsId, ethogram, observation):
 
 def check_state_events_obs(obsId, ethogram, observation, time_format):
     """
-    check state events
+    check state events for the observation obsId
     check if number is odd
 
     Args:

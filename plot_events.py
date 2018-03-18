@@ -514,7 +514,10 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
 def create_events_plot2(events,
                         all_behaviors,
                         all_subjects,
-                        exclude_behaviors_wo_events=True, min_time=-1, max_time=-1, output_file_name="",
+                        exclude_behaviors_wo_events=True,
+                        min_time=-1,
+                        max_time=-1,
+                        output_file_name="",
                         plot_colors=BEHAVIORS_PLOT_COLORS):
     """
     Create gantt charts with barh matplotlib function
