@@ -919,21 +919,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if out:
             out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(programName + " - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.pbSave.setVisible(False)
-            self.results.pbCancel.setVisible(True)
-            
-            if not self.results.exec_():
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName + " - Check selected observations")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+
+            if not results.exec_():
                 return
 
         # remove observations with unpaired state events
         selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
         if not selected_observations:
             return
-
 
         plot_parameters = self.choose_obs_subj_behav_category(selected_observations,
                                                               maxTime=0,

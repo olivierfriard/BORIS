@@ -11,7 +11,7 @@
 <file alias="slower">icons/glyphicons_191_circle_minus.png</file>
 <file alias="previous">icons/glyphicons_171_fast_backward.png</file>
 <file alias="next">icons/glyphicons_177_fast_forward.png</file>
-<file alias="normal_speed">icons/glyphicons_192_circle_egal.png</file>
+<file alias="normal_speed">icons/glyphicons_circle_egal.png</file>
 <file alias="snapshot">icons/glyphicons_011_camera.png</file>
 <file alias="frame_mode">icons/glyphicons_008_film.png</file>
 <file alias="frame_backward">icons/glyphicons_210_left_arrow.png</file>
