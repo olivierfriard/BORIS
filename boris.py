@@ -953,17 +953,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                            selected_observations,
                                                            plot_parameters["selected behaviors"])
 
-        if not ok:
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle("Check state events")
-            self.results.ptText.clear()
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(msg)
-            self.results.show()
-            return
-
         cursor = db_connector.cursor()
-        out = ("Cohen's Kappa - Index of Inter-rater Reliability\n\n"
+        out = ("Index of Inter-rater Reliability - Cohen's Kappa\n\n"
                "Interval time: {interval:.3f} s\n"
                "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
                                                                     selected_subjects=", ".join(plot_parameters["selected subjects"]))
@@ -1025,11 +1016,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     modifiers = "-"
 
-                self.results = dialog.ResultsWidget()
-                self.results.setWindowTitle("View behavior")
-                self.results.ptText.clear()
-                self.results.ptText.setReadOnly(True)
-
+                results = dialog.Results_dialog()
+                results.setWindowTitle("View behavior")
+                results.ptText.clear()
+                results.ptText.setReadOnly(True)
                 txt = ("Code: <b>{}</b><br>"
                        "Type: {}<br>"
                        "Key: <b>{}</b><br><br>"
@@ -1043,9 +1033,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                   behav["category"] if behav["category"] else "-",
                                                   behav["excluded"],
                                                   modifiers)
-
-                self.results.ptText.appendHtml(txt)
-                self.results.show()
+                results.ptText.appendHtml(txt)
+                results.exec_()
 
 
     def send_project_via_socket(self):
@@ -2042,12 +2031,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 tot_out += "<strong>{}</strong><br>{}<br>".format(obsId, msg)
 
-        self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle("Check state events")
-        self.results.ptText.clear()
-        self.results.ptText.setReadOnly(True)
-        self.results.ptText.appendHtml(tot_out)
-        self.results.show()
+        results = dialog.Results_dialog()
+        results.setWindowTitle("Check state events")
+        results.ptText.clear()
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(tot_out)
+        results.exec_()
 
 
     def observations_list(self):
@@ -4914,12 +4903,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                            )
 
         if not ok:
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle("Synthetic time budget")
-            self.results.ptText.clear()
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(msg)
-            self.results.show()
+            results = dialog.Results_dialog()
+            results.setWindowTitle("Synthetic time budget")
+            results.ptText.clear()
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(msg)
+            results.exec_()
             return
 
         if output_format in ["tsv", "csv", "html"]:
@@ -6149,11 +6138,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if out:
             out = "The observations with UNPAIRED state events will be removed from the plot<br>br>" + out
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle(programName + " - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.show()
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName + " - Check selected observations")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            if not results.exec_():
+                return
 
         selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
         if not selected_observations:
@@ -6188,7 +6178,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot_directory = ""
         output_format = ""
         if len(selected_observations) > 1:
-            plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save plots",
+            plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the plots",
                                                                     os.path.expanduser("~"),
                                                                     options=QFileDialog(self).ShowDirsOnly)
             if not plot_directory:
