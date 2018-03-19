@@ -943,7 +943,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for time slice
-        i, ok = QInputDialog.getDouble(self, "IRR", "Time slice (in seconds):", 1.0, 0.001, 86400, 3)
+        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa", "Time slice (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
