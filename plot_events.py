@@ -603,6 +603,7 @@ def create_events_plot2_new(pj,
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                bars[behavior_modifiers_str] = []
                 
                 # total duration
                 cursor.execute(("SELECT start,stop FROM aggregated_events "
@@ -610,10 +611,7 @@ def create_events_plot2_new(pj,
                               (obs_id, subject, behavior, modifiers,))
                 for row in cursor.fetchall():
                     print(behavior_modifiers_str, row["start"],row["stop"])
-                    if behavior_modifiers_str in bars:
-                        bars[behavior_modifiers_str].append((row["start"],row["stop"]))
-                    else:
-                        bars[behavior_modifiers_str] = [(row["start"],row["stop"])]
+                    bars[behavior_modifiers_str].append((row["start"],row["stop"]))
 
             print(bars)
 
