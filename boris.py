@@ -738,11 +738,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
+
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
         #self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
-        self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
+        #self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
+        self.actionPlot_events2.triggered.connect(self.plot_events2_new_triggered)
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -5917,13 +5919,99 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "Check events")
 
 
+    def plot_events2_new_triggered(self):
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obs_id in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obs_id], self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+                not_paired_obs_list.append(obs_id)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the plot<br><br>" + out
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
+        # check if almost one selected observation has events
+        '''
+        flag_no_events = True
+        for obs_id in selected_observations:
+            if self.pj[OBSERVATIONS][obs_id][EVENTS]:
+                flag_no_events = False
+                break
+        if flag_no_events:
+            QMessageBox.warning(self, programName, "No events found in the selected observations")
+            return
+        '''
+
+        selectedObsTotalMediaLength = Decimal("0.0")
+        max_obs_length = 0
+        for obs_id in selected_observations:
+            obs_length =project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
+
+            logging.debug("media length for {0}: {1}".format(obs_id, obs_length))
+
+            if obs_length in [0, -1]:
+                selectedObsTotalMediaLength = -1
+                break
+            max_obs_length = max(max_obs_length, obs_length)
+            selectedObsTotalMediaLength += obs_length
+        # an observation media length is not available
+        if selectedObsTotalMediaLength == -1:
+            # propose to user to use max event time
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?",
+                                    [YES, NO]) == YES:
+                maxTime = 0 # max length for all events all subjects
+                for obs_id in selected_observations:
+                    if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                        maxTime += max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0]
+                logging.debug("max time all events all subjects: {}".format(maxTime))
+                selectedObsTotalMediaLength = maxTime
+            else:
+                selectedObsTotalMediaLength = 0
+
+
+        parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                         maxTime=max_obs_length,
+                                                         flagShowExcludeBehaviorsWoEvents=False,
+                                                         by_category=False)
+
+        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+            return
+
+        plot_events.create_events_plot2_new(self.pj,
+                            selected_observations,
+                            parameters["selected subjects"],
+                            parameters["selected behaviors"],
+                            parameters["include modifiers"],
+                            parameters["time"],
+                            parameters["start time"],
+                            parameters["end time"])
+
+
     def plot_events2_triggered(self):
         """
         new plot events with matplotlib 
         """
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
-
         if not selectedObservations:
             return
 
@@ -8348,7 +8436,7 @@ item []:
             if not "from map" in event:   # modifiers only for behaviors without coding map
                 # check if event has modifiers
                 modifier_str = ""
-    
+
                 if event["modifiers"]:
                     # pause media
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:

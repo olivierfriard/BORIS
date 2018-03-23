@@ -82,7 +82,14 @@ class StdevFunc:
 
 
 
-def synthetic_time_budget(pj, selected_observations, selected_subjects, selected_behaviors, include_modifiers, interval, start_time, end_time):
+def synthetic_time_budget(pj,
+                          selected_observations,
+                          selected_subjects,
+                          selected_behaviors,
+                          include_modifiers,
+                          interval,
+                          start_time,
+                          end_time):
 
     parameters = [["duration", "Total duration"],
                   ["number", "Number of occurrences"],
@@ -105,6 +112,8 @@ def synthetic_time_budget(pj, selected_observations, selected_subjects, selected
 
     db_connector.create_aggregate("stdev", 1, StdevFunc)
     cursor = db_connector.cursor()
+
+    # modifiers
     if include_modifiers:
         cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
         distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]

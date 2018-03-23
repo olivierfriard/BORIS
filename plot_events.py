@@ -511,6 +511,115 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
     return True
 
 
+
+def create_events_plot2_new(pj,
+                            selected_observations,
+                            selected_subjects,
+                            selected_behaviors,
+                            include_modifiers,
+                            interval,
+                            start_time,
+                            end_time):
+    
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
+                                                       selected_subjects,
+                                                       selected_observations,
+                                                       selected_behaviors)
+
+    if not ok:
+        return False, msg, None
+    cursor = db_connector.cursor()
+    
+    # if modifiers not to be included set modifiers to ""
+    if not include_modifiers:
+        cursor.execute("UPDATE aggregated_events SET modifiers = ''")
+
+    cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+    distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
+
+    # add selected behaviors that are not observed
+    for behav in selected_behaviors:
+        if [x for x in distinct_behav_modif if x[0] == behav] == []:
+            distinct_behav_modif.append([behav, "-"])
+
+    distinct_behav_modif = sorted(distinct_behav_modif)
+    print("distinct_behav_modif", distinct_behav_modif)
+    max_len = len(distinct_behav_modif)
+
+    par1 = 1
+    bar_height = 0.5
+    point_event_duration = 0.010
+    init = dt.datetime(2017, 1, 1)
+
+
+    for obs_id in selected_observations:
+
+        if len(selected_subjects) > 1:
+            fig, axs = plt.subplots(figsize=(20, 8), nrows=len(selected_subjects), ncols=1, sharex=True)
+        else:
+            fig, ax = plt.subplots(figsize=(20, 8), nrows=len(selected_subjects), ncols=1, sharex=True)
+            axs = np.ndarray(shape=(1), dtype=type(ax))
+            axs[0] = ax
+
+
+        # if modifiers not to be included set modifiers to ""
+        if not include_modifiers:
+            cursor.execute("UPDATE aggregated_events SET modifiers = ''")
+
+        # time
+        obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+        if obs_length == -1:
+            obs_length = 0
+
+        if interval == TIME_FULL_OBS:
+            min_time = float(0)
+            max_time = float(obs_length)
+
+        if interval == TIME_EVENTS:
+            try:
+                min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+            except:
+                min_time = float(0)
+            try:
+                max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+            except:
+                max_time = float(obs_length)
+
+        if interval == TIME_ARBITRARY_INTERVAL:
+            min_time = float(start_time)
+            max_time = float(end_time)
+
+        cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                      (min_time, obs_id, min_time, min_time, max_time, ))
+        cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                      (max_time, obs_id, max_time, min_time, max_time, ))
+                      
+        cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                         (min_time, max_time, obs_id, min_time, max_time, ))
+
+
+        for subject in selected_subjects:
+            bars = {}
+            for behavior_modifiers in distinct_behav_modif:
+                behavior, modifiers = behavior_modifiers
+                behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                
+                # total duration
+                cursor.execute(("SELECT start,stop FROM aggregated_events "
+                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
+                              (obs_id, subject, behavior, modifiers,))
+                for row in cursor.fetchall():
+                    print(behavior_modifiers_str, row["start"],row["stop"])
+                    if behavior_modifiers_str in bars:
+                        bars[behavior_modifiers_str].append((row["start"],row["stop"]))
+                    else:
+                        bars[behavior_modifiers_str] = [(row["start"],row["stop"])]
+
+            print(bars)
+
+
+
+
 def create_events_plot2(events,
                         all_behaviors,
                         all_subjects,
@@ -555,6 +664,7 @@ def create_events_plot2(events,
         max_len = max(max_len, len(events[subject]))
         observed_behaviors_modifiers_json = list(set(observed_behaviors_modifiers_json + list(events[subject].keys())))
 
+    print("observed_behaviors_modifiers_json", observed_behaviors_modifiers_json)
     # order subjects
     try:
         ordered_subjects = [x[1] for x in sorted(list(zip([all_subjects.index(x) for x in sorted(list(events.keys()))], sorted(list(events.keys())))))]
@@ -580,9 +690,14 @@ def create_events_plot2(events,
                         labels_str.append(behav)
 
         ilen = max_len
-        axs[ax_idx].set_ylim(ymin=0, ymax = (ilen * par1) + par1)
-        pos = np.arange(par1, ilen * par1 + par1, par1)
+        axs[ax_idx].set_ylim(ymin=0, ymax = (ilen * par1) + par1 + 1)
+        pos = np.arange(par1, ilen * par1 + par1 + 1, par1)
         axs[ax_idx].set_yticks(pos[:len(ylabels)])
+        
+        #labels_str.sort()
+        print("labels_str",labels_str)
+        print("ylabels", ylabels)
+
         axs[ax_idx].set_yticklabels(labels_str, fontdict={"fontsize": 12})
         
         if flag_modifiers:
@@ -592,6 +707,7 @@ def create_events_plot2(events,
 
         i = 0
         for ylabel in ylabels:
+            print("ylabel", ylabel)
             if ylabel in events[subject]:
                 for interval in events[subject][ylabel]:
                     if interval[0] == interval[1]:
@@ -630,13 +746,16 @@ def create_events_plot2(events,
     return {"error code": 0, "msg": ""}
 
 
+
+
 if __name__ == '__main__':
   
     all_behaviors = ["p","s","a","n"]
     all_subjects = ["No focal subject", "subj 2", "subj 1"]
     events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]},
       'subj 2': {'["p"]': [[10.62, 10.62], [11.3, 11.3], [12.044, 12.044], [13.228, 13.228]], 
-      '["s"]': [[31.852, 37.308]]}, 'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], 
+      '["s"]': [[31.852, 37.308]]}, 
+      'subj 1': {'["p"]': [[7.116, 7.116], [8.5, 8.5], [9.42, 9.42]], 
       '["s"]': [[19.476, 44.564]], '["a", "None"]': [[15.787, 24.01]], 
       '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
 
