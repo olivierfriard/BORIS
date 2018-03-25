@@ -31,7 +31,7 @@ from config import *
 import db_functions
 import export_observation
 import irr
-
+import plot_events
 
 
 __version__ = "6.1.7"
@@ -43,14 +43,37 @@ def cleanhtml(raw_html):
     cleantext = re.sub(cleanr, "", raw_html)
     return cleantext
 
-commands_list = ["check_state_events", "export_events", "irr", "subtitles", "check_project_integrity"]
+commands_list = ["check_state_events", "export_events", "irr", "subtitles", "check_project_integrity", "plot_events"]
 commands_usage = {
-"check_state_events": "usage:\nboris_cli -p PROJECT_FILE --command check_state_events ",
-"export_events": "usage:\nboris_cli -p PROJECT_FILE --command export_events [OUTPUT_FORMAT]\nwhere:\nOUTPUT_FORMAT can be tsv (default), csv, xls, xlsx, ods, html",
-"irr": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID1" "OBSERVATION_ID2" --command irr [INTERVAL] [INCLUDE_MODIFIERS]\nwhere:\n'
-'INTERVAL in seconds (default is 1)\nINCLUDE_MODIFIERS must be true or false (default is true)'),
-"subtitles": "usage:\nboris_cli -p PROJECT_FILE --command subtitles [OUTPUT_DIRECTORY]\nwhere:\nOUTPUT_DIRECTORY is the directory where subtitles files will be saved",
+
+"check_state_events": ("usage:\nboris_cli -p PROJECT_FILE -o OBSERVATION_ID --command check_state_events\n"
+                       "where\n"
+                       "PROJECT_FILE is the path of the BORIS project\n"
+                       "OBSERVATION_ID is the id of observation(s) (if ommitted all observations are checked)"),
+
+"export_events": ("usage:\nboris_cli -p PROJECT_FILE -o OBSERVATION_ID --command export_events [OUTPUT_FORMAT]\n"
+                  "where:\n"
+                  "PROJECT_FILE is the path of the BORIS project\n"
+                  "OBSERVATION_ID is the id of observation(s) (if ommitted all observations are exported)\n"
+                  "OUTPUT_FORMAT can be tsv (default), csv, xls, xlsx, ods, html"),
+
+"irr": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID1" "OBSERVATION_ID2" --command irr [INTERVAL] [INCLUDE_MODIFIERS]\n'
+        'where:\n'
+        'PROJECT_FILE is the path of the BORIS project\n'
+        'INTERVAL in seconds (default is 1)\n'
+        'INCLUDE_MODIFIERS must be true or false (default is true)'),
+
+"subtitles": ('usage:\nboris_cli -p PROJECT_FILE -o "OBSERVATION_ID" --command subtitles [OUTPUT_DIRECTORY]\n'
+             'where:\n'
+             'OUTPUT_DIRECTORY is the directory where subtitles files will be saved'),
+
 "check_project_integrity": "usage:\nboris_cli -p PROJECT_FILE --command check_project_integrity",
+
+"plot_events": ("usage:\nboris_cli - p PROJECT_FILE -o OBSERVATION_ID --command plot_events [OUTPUT_DIRECTORY] [INCLUDE_MODIFIERS] [PLOT_FORMAT]\n"
+                "where\n"
+                "OUTPUT_DIRECTORY is the directory where the plots will be saved\n"
+                "INCLUDE_MODIFIERS must be true or false (default is true)\n"
+                "PLOT_FORMAT can be png, svg, pdf, ps")
 }
 
 parser = argparse.ArgumentParser(description="BORIS CLI")
@@ -72,6 +95,7 @@ if args.command:
     if args.command[0].upper() == "LIST" :
         for command in commands_list:
             print(command)
+            print("=" * len(command))
             if command in commands_usage:
                 print(commands_usage[command])
             print()
@@ -273,6 +297,45 @@ if args.command:
         else:
             print("No issuses found in project")
         sys.exit()
+
+
+    if "plot_events"  in args.command[0]:
+
+        if not observations_id_list:
+            print("No observation selected. Command applied on all observations found in project\n")
+            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+
+        behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
+        subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
+
+        export_dir = "."
+        if len(args.command) > 1:
+            export_dir = args.command[1]
+            if not pathlib.Path(export_dir).is_dir():
+                print("{} is not a valid directory".format(export_dir))
+                sys.exit()
+
+        include_modifiers = True
+        if len(args.command) > 2:
+            include_modifiers =  "TRUE" in args.command[2].upper()
+
+        plot_format = "png"
+        if len(args.command) > 3:
+            plot_format =  args.command[3].lower()
+
+
+        plot_events.create_events_plot2_new(pj,
+                                            observations_id_list,
+                                            subjects,
+                                            behaviors,
+                                            True,
+                                            TIME_FULL_OBS,
+                                            0, 0,
+                                            plot_colors=BEHAVIORS_PLOT_COLORS,
+                                            plot_directory=export_dir,
+                                            file_format=plot_format)
+        sys.exit()
+
 
     print("Command {} not found!".format(args.command[0]))
     

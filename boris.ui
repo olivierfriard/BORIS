@@ -198,6 +198,7 @@
      <addaction name="actionPlot_events1"/>
      <addaction name="actionPlot_events2"/>
      <addaction name="actionBehavior_bar_plot"/>
+     <addaction name="actionTest"/>
     </widget>
     <widget class="QMenu" name="menuInter_rater_reliability">
      <property name="title">
@@ -1190,6 +1191,11 @@
    </property>
    <property name="toolTip">
     <string>Observations list</string>
+   </property>
+  </action>
+  <action name="actionTest">
+   <property name="text">
+    <string>test</string>
    </property>
   </action>
  </widget>

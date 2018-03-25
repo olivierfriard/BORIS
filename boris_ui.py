@@ -447,6 +447,8 @@ class Ui_MainWindow(object):
         self.actionBehavior_bar_plot.setObjectName(_fromUtf8("actionBehavior_bar_plot"))
         self.action_obs_list = QtGui.QAction(MainWindow)
         self.action_obs_list.setObjectName(_fromUtf8("action_obs_list"))
+        self.actionTest = QtGui.QAction(MainWindow)
+        self.actionTest.setObjectName(_fromUtf8("actionTest"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -505,6 +507,7 @@ class Ui_MainWindow(object):
         self.menuPlot_events.addAction(self.actionPlot_events1)
         self.menuPlot_events.addAction(self.actionPlot_events2)
         self.menuPlot_events.addAction(self.actionBehavior_bar_plot)
+        self.menuPlot_events.addAction(self.actionTest)
         self.menuInter_rater_reliability.addAction(self.actionCohen_s_kappa)
         self.menuAnalyze.addAction(self.actionTime_budget)
         self.menuAnalyze.addAction(self.actionTime_budget_report)
@@ -751,4 +754,5 @@ class Ui_MainWindow(object):
         self.actionBehavior_bar_plot.setText(_translate("MainWindow", "Behaviors bar plot", None))
         self.action_obs_list.setText(_translate("MainWindow", "Obs list", None))
         self.action_obs_list.setToolTip(_translate("MainWindow", "Observations list", None))
+        self.actionTest.setText(_translate("MainWindow", "test", None))
 

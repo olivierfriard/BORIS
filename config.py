@@ -56,6 +56,9 @@ CONVERTERS = "converters"
 CODING_MAP_RESIZE_W = 640
 CODING_MAP_RESIZE_H = 640
 
+POINT_EVENT_PLOT_DURATION = 0.010
+POINT_EVENT_PLOT_COLOR = "black"
+
 subjects_config = ['key', 'id']
 
 subjectsFields = ['key', 'name', 'description']

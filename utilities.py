@@ -406,6 +406,12 @@ def replace_spaces(l):
 def sorted_keys(d):
     """
     return list of sorted keys of provided dictionary
+    
+    Args:
+        d (dict): dictionary
+        
+    Returns:
+         list: dictionary keys sorted numerically
     """
     return [str(x) for x in sorted([int(x) for x in d.keys()])]
 
@@ -774,7 +780,10 @@ def behavior_color(colors_list, idx):
     see BEHAVIORS_PLOT_COLORS list in config.py
     """
 
-    return colors_list[idx % len(colors_list)]
+    try:
+        return colors_list[idx % len(colors_list)]
+    except:
+        return "darkgray"
 
 
 class ThreadSignal(QObject):

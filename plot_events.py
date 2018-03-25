@@ -37,6 +37,7 @@ import matplotlib.dates
 from matplotlib.dates import MICROSECONDLY, SECONDLY, MINUTELY, HOURLY, WEEKLY, MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
 import numpy as np
 import json
+import pathlib
 
 from config import *
 import utilities
@@ -519,8 +520,12 @@ def create_events_plot2_new(pj,
                             include_modifiers,
                             interval,
                             start_time,
-                            end_time):
-    
+                            end_time,
+                            plot_colors=BEHAVIORS_PLOT_COLORS,
+                            plot_directory="",
+                            file_format="png"):
+
+
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                        selected_subjects,
                                                        selected_observations,
@@ -543,14 +548,13 @@ def create_events_plot2_new(pj,
             distinct_behav_modif.append([behav, "-"])
 
     distinct_behav_modif = sorted(distinct_behav_modif)
-    print("distinct_behav_modif", distinct_behav_modif)
     max_len = len(distinct_behav_modif)
+
+    all_behaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]
 
     par1 = 1
     bar_height = 0.5
-    point_event_duration = 0.010
     init = dt.datetime(2017, 1, 1)
-
 
     for obs_id in selected_observations:
 
@@ -598,8 +602,14 @@ def create_events_plot2_new(pj,
                          (min_time, max_time, obs_id, min_time, max_time, ))
 
 
-        for subject in selected_subjects:
+        ylabels = [" ".join(x) for x in distinct_behav_modif]
+        for ax_idx, subject in enumerate(selected_subjects):
+            if not ax_idx: 
+                axs[ax_idx].set_title("Observation {}\n{}".format(obs_id, subject), fontsize=14)
+            else:
+                axs[ax_idx].set_title(subject, fontsize=14)
             bars = {}
+            i = 0
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
@@ -613,8 +623,43 @@ def create_events_plot2_new(pj,
                     print(behavior_modifiers_str, row["start"],row["stop"])
                     bars[behavior_modifiers_str].append((row["start"],row["stop"]))
 
-            print(bars)
+                    start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["start"]))
+                    end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["stop"] + POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])))
+                    try:
+                        bar_color = utilities.behavior_color(plot_colors, all_behaviors.index(behavior))
+                    except:
+                        bar_color = "darkgray"
+                    bar_color = POINT_EVENT_PLOT_COLOR if row["stop"] == row["start"] else bar_color
 
+                    axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
+                                             align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
+                i += 1
+
+            axs[ax_idx].set_ylim(ymin=0, ymax = (max_len * par1) + par1 + 1)
+            pos = np.arange(par1, max_len * par1 + par1 + 1, par1)
+            axs[ax_idx].set_yticks(pos[:len(ylabels)])
+
+            axs[ax_idx].set_yticklabels(ylabels, fontdict={"fontsize": 10})
+            
+            axs[ax_idx].set_ylabel("Behaviors" + " (modifiers)" * include_modifiers, fontdict={"fontsize": 10})
+
+            axs[ax_idx].set_xlim(xmin = matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
+                             xmax = matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
+
+            axs[ax_idx].grid(color = "g", linestyle = ":")
+            axs[ax_idx].xaxis_date()
+            axs[ax_idx].xaxis.set_major_formatter(DateFormatter("%H:%M:%S"))
+            axs[ax_idx].set_xlabel("Time (HH:MM:SS)", fontdict={"fontsize": 12})
+            axs[ax_idx].invert_yaxis()
+
+        fig.autofmt_xdate()
+        plt.tight_layout()
+        
+        if len(selected_observations) > 1:
+            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix("." + file_format))
+            plt.savefig(output_file_name)
+        else:
+            plt.show()
 
 
 
@@ -630,6 +675,7 @@ def create_events_plot2(events,
     Create gantt charts with barh matplotlib function
     """
 
+    
     def behav_color(behav):
         """
         return color corresponding to behavior
@@ -642,6 +688,7 @@ def create_events_plot2(events,
             return utilities.behavior_color(plot_colors, all_behaviors.index(behav))
         else:
             return "darkgray"
+    
 
     par1 = 1
     bar_height = 0.5
@@ -748,6 +795,24 @@ def create_events_plot2(events,
 
 if __name__ == '__main__':
   
+    import project_functions
+
+    _, _, pj, _ = project_functions.open_project_json("/home/olivier/gdrive/src/python/pyobserver/boris_projects/boris_projects_from_users/lontre/progetto_lontre_zoom_2017-02-27_modified.boris")
+    create_events_plot2_new(pj,
+                            ["0015","0016"],
+                            ["Nina", "Himal", "Nautilus", "Sharky"],
+                            ["Alert", "Locomotion", "Sniff", "Rest", "Rub"],
+                            True,
+                            TIME_FULL_OBS,
+                            0,
+                            0,
+                            plot_directory="/tmp",
+                            file_format="pdf")
+    '''
+    
+    63.167), (64.059, 67.251), (91.92, 94.602)], 'Rest': [], 'Rub |On the ground': [], 'Rub |On the trunks': [(67.334, 68.449)], 'Sniff': [(7.27, 8.514)], 'Sniff|An object': [], 'Sniff|The ground': [(67.333, 68.449)]}
+
+    
     all_behaviors = ["p","s","a","n"]
     all_subjects = ["No focal subject", "subj 2", "subj 1"]
     events = {'No focal subject': {'["a", "None|None"]': [[47.187, 56.107]]},
@@ -758,3 +823,4 @@ if __name__ == '__main__':
       '["n", "123"]': [[11.459, 11.459]], '["n", "456"]': [[17.611, 17.611]]}}
 
     create_events_plot2(events, all_behaviors, all_subjects, exclude_behaviors_wo_events=False, min_time=0, max_time=100)
+    '''

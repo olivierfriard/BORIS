@@ -743,8 +743,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
-        #self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
-        self.actionPlot_events2.triggered.connect(self.plot_events2_new_triggered)
+        self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
+
+        self.actionTest.triggered.connect(self.plot_events2_new_triggered)
+
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -5920,6 +5922,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def plot_events2_new_triggered(self):
+        """
+        plot events in time diagram
+        """
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
@@ -5931,7 +5936,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.pj[OBSERVATIONS][obs_id], self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+                out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
                 not_paired_obs_list.append(obs_id)
 
         if out:
@@ -5960,6 +5965,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "No events found in the selected observations")
             return
         '''
+        # select dir if many observations
+        plot_directory = ""
+        file_format = "png"
+        if len(selected_observations) > 1:
+            plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the plots",
+                                                                    os.path.expanduser("~"),
+                                                                    options=QFileDialog(self).ShowDirsOnly)
+
+            if not plot_directory:
+                return
+
+            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
+            if ok and item:
+                file_format = item.lower()
+            else:
+                return
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -5980,7 +6001,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     [YES, NO]) == YES:
                 maxTime = 0 # max length for all events all subjects
                 for obs_id in selected_observations:
-                    if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                    if self.pj[OBSERVATIONS][obs_id][EVENTS]:
                         maxTime += max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0]
                 logging.debug("max time all events all subjects: {}".format(maxTime))
                 selectedObsTotalMediaLength = maxTime
@@ -5994,6 +6015,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                          by_category=False)
 
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+            QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
 
         plot_events.create_events_plot2_new(self.pj,
@@ -6003,7 +6025,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             parameters["include modifiers"],
                             parameters["time"],
                             parameters["start time"],
-                            parameters["end time"])
+                            parameters["end time"],
+                            plot_colors=self.plot_colors,
+                            plot_directory=plot_directory,
+                            file_format=file_format)
 
 
     def plot_events2_triggered(self):
@@ -6310,7 +6335,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.initialize_new_project()
         self.projectChanged = True
         self.projectChanged = memProjectChanged
-        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
         self.projectFileName = str(pathlib.Path(project_path).absolute())
         self.project = True
