@@ -449,6 +449,8 @@ class Ui_MainWindow(object):
         self.action_obs_list.setObjectName(_fromUtf8("action_obs_list"))
         self.actionTest = QtGui.QAction(MainWindow)
         self.actionTest.setObjectName(_fromUtf8("actionTest"))
+        self.actionTest_stb2 = QtGui.QAction(MainWindow)
+        self.actionTest_stb2.setObjectName(_fromUtf8("actionTest_stb2"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -514,6 +516,7 @@ class Ui_MainWindow(object):
         self.menuAnalyze.addAction(self.actionTime_budget_by_behaviors_category)
         self.menuAnalyze.addAction(self.menuPlot_events.menuAction())
         self.menuAnalyze.addAction(self.menuInter_rater_reliability.menuAction())
+        self.menuAnalyze.addAction(self.actionTest_stb2)
         self.menuZoom1.addAction(self.actionZoom1_fitwindow)
         self.menuZoom1.addAction(self.actionZoom1_1_4)
         self.menuZoom1.addAction(self.actionZoom1_1_2)
@@ -755,4 +758,5 @@ class Ui_MainWindow(object):
         self.action_obs_list.setText(_translate("MainWindow", "Obs list", None))
         self.action_obs_list.setToolTip(_translate("MainWindow", "Observations list", None))
         self.actionTest.setText(_translate("MainWindow", "test", None))
+        self.actionTest_stb2.setText(_translate("MainWindow", "test stb2", None))
 

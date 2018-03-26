@@ -735,17 +735,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
         #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
-
+        
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        
 
+        #self.actionTest_stb2.triggered.connect(self.synthetic_time_budget)
+        self.actionTest_stb2.setVisible(False)
 
-        self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
-        #self.actionBehavior_bar_plot.setVisible(False)
+        #self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
+        self.actionBehavior_bar_plot.setVisible(False)
 
-        self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
-        self.actionPlot_events2.triggered.connect(self.plot_events2_triggered)
+        #self.actionPlot_events1.triggered.connect(self.plot_events1_triggered)
+        self.actionPlot_events1.setVisible(False)
+        self.actionPlot_events2.triggered.connect(self.plot_events2_new_triggered)
 
-        self.actionTest.triggered.connect(self.plot_events2_new_triggered)
+        #self.actionTest.triggered.connect(self.plot_events2_new_triggered)
+        self.actionTest.setVisible(False)
 
 
         # menu Help
@@ -3643,7 +3648,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         """
         resultStr, selectedObs = select_observations.select_observations(self.pj, mode)
-        
+
         return resultStr, selectedObs
 
 
@@ -4753,7 +4758,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted_keys(self.pj[ETHOGRAM])]:
 
                 if ((categories == ["###no category###"])
-                or (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
+                or (behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]
+                                                 if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in observedBehaviors:
@@ -4788,7 +4794,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             startTime = Decimal(paramPanelWindow.dsbStartTime.value())
             endTime = Decimal(paramPanelWindow.dsbEndTime.value())
         if startTime > endTime:
-            QMessageBox.warning(None, programName, "The start time is after the end time", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(None, programName, "The start time is after the end time",
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return {"selected subjects": [], "selected behaviors": []}
 
         if paramPanelWindow.rb_full.isChecked():
@@ -4896,14 +4903,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
 
+
+        '''synth_tb_param["group observations"] = True'''
+
         ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj,
                                                                            selected_observations,
-                                                                           synth_tb_param["selected subjects"],
-                                                                           synth_tb_param["selected behaviors"],
-                                                                           synth_tb_param["include modifiers"],
-                                                                           synth_tb_param["time"],
-                                                                           synth_tb_param["start time"],
-                                                                           synth_tb_param["end time"]
+                                                                           synth_tb_param
                                                                            )
 
         if not ok:
@@ -5926,6 +5931,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot events in time diagram
         """
         result, selected_observations = self.selectObservations(MULTIPLE)
+
         if not selected_observations:
             return
         # check if state events are paired
@@ -6011,7 +6017,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         parameters = self.choose_obs_subj_behav_category(selected_observations,
                                                          maxTime=max_obs_length,
-                                                         flagShowExcludeBehaviorsWoEvents=False,
+                                                         flagShowExcludeBehaviorsWoEvents=True,
                                                          by_category=False)
 
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
@@ -6020,12 +6026,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         plot_events.create_events_plot2_new(self.pj,
                             selected_observations,
-                            parameters["selected subjects"],
-                            parameters["selected behaviors"],
-                            parameters["include modifiers"],
-                            parameters["time"],
-                            parameters["start time"],
-                            parameters["end time"],
+                            parameters,
                             plot_colors=self.plot_colors,
                             plot_directory=plot_directory,
                             file_format=file_format)

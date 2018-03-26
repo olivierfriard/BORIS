@@ -211,6 +211,7 @@
     <addaction name="actionTime_budget_by_behaviors_category"/>
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
+    <addaction name="actionTest_stb2"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1196,6 +1197,11 @@
   <action name="actionTest">
    <property name="text">
     <string>test</string>
+   </property>
+  </action>
+  <action name="actionTest_stb2">
+   <property name="text">
+    <string>test stb2</string>
    </property>
   </action>
  </widget>

@@ -43,6 +43,9 @@ def cleanhtml(raw_html):
     cleantext = re.sub(cleanr, "", raw_html)
     return cleantext
 
+def all_observations(pj):
+    return [idx for idx in sorted(pj[OBSERVATIONS])]
+
 commands_list = ["check_state_events", "export_events", "irr", "subtitles", "check_project_integrity", "plot_events"]
 commands_usage = {
 
@@ -69,10 +72,11 @@ commands_usage = {
 
 "check_project_integrity": "usage:\nboris_cli -p PROJECT_FILE --command check_project_integrity",
 
-"plot_events": ("usage:\nboris_cli - p PROJECT_FILE -o OBSERVATION_ID --command plot_events [OUTPUT_DIRECTORY] [INCLUDE_MODIFIERS] [PLOT_FORMAT]\n"
+"plot_events": ("usage:\nboris_cli - p PROJECT_FILE -o OBSERVATION_ID --command plot_events [OUTPUT_DIRECTORY] [INCLUDE_MODIFIERS] [EXCLUDE_BEHAVIORS] [PLOT_FORMAT]\n"
                 "where\n"
                 "OUTPUT_DIRECTORY is the directory where the plots will be saved\n"
                 "INCLUDE_MODIFIERS must be true or false (default is true)\n"
+                "EXCLUDE_BEHAVIORS: True: behaviors without events are not plotted (default is true)\n"
                 "PLOT_FORMAT can be png, svg, pdf, ps")
 }
 
@@ -190,7 +194,7 @@ if args.command:
         
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
-            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+            observations_id_list = all_observations(pj)
         
         for observation_id in observations_id_list:
             ret, msg = project_functions.check_state_events_obs(observation_id, pj[ETHOGRAM], pj[OBSERVATIONS][observation_id], HHMMSS)
@@ -268,7 +272,7 @@ if args.command:
 
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
-            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+            observations_id_list = all_observations(pj)
 
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
@@ -303,7 +307,7 @@ if args.command:
 
         if not observations_id_list:
             print("No observation selected. Command applied on all observations found in project\n")
-            observations_id_list = [idx for idx in pj[OBSERVATIONS]]
+            observations_id_list = all_observations(pj)
 
         behaviors = [pj[ETHOGRAM][k]["code"] for k in utilities.sorted_keys(pj[ETHOGRAM])]
         subjects = [pj[SUBJECTS][k]["name"] for k in utilities.sorted_keys(pj[SUBJECTS])] + [NO_FOCAL_SUBJECT]
@@ -319,18 +323,23 @@ if args.command:
         if len(args.command) > 2:
             include_modifiers =  "TRUE" in args.command[2].upper()
 
-        plot_format = "png"
+        exclude_behaviors = True
         if len(args.command) > 3:
-            plot_format =  args.command[3].lower()
+            exclude_behaviors =  False if "FALSE" in args.command[3].upper() else True
+
+        plot_format = "png"
+        if len(args.command) > 4:
+            plot_format =  args.command[4].lower()
 
 
         plot_events.create_events_plot2_new(pj,
                                             observations_id_list,
-                                            subjects,
-                                            behaviors,
-                                            True,
-                                            TIME_FULL_OBS,
-                                            0, 0,
+                                            {"selected subjects": subjects,
+                                             "selected behaviors": behaviors,
+                                             "include modifiers": include_modifiers,
+                                            "exclude behaviors": exclude_behaviors,
+                                             "time": TIME_FULL_OBS,
+                                             "start time": 0, "end time": 0},
                                             plot_colors=BEHAVIORS_PLOT_COLORS,
                                             plot_directory=export_dir,
                                             file_format=plot_format)

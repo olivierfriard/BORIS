@@ -26,6 +26,8 @@ from config import *
 import db_functions
 import project_functions
 
+import time
+
 def default_value(ethogram, behav, param):
     """
     return value for duration in case of point event
@@ -84,23 +86,28 @@ class StdevFunc:
 
 def synthetic_time_budget(pj,
                           selected_observations,
-                          selected_subjects,
-                          selected_behaviors,
-                          include_modifiers,
-                          interval,
-                          start_time,
-                          end_time):
+                          parameters_obs
+                          ):
+
+
+    selected_subjects = parameters_obs["selected subjects"]
+    selected_behaviors = parameters_obs["selected behaviors"]
+    include_modifiers = parameters_obs["include modifiers"]
+    interval = parameters_obs["time"]
+    start_time = parameters_obs["start time"]
+    end_time = parameters_obs["end time"]
 
     parameters = [["duration", "Total duration"],
                   ["number", "Number of occurrences"],
                   ["duration mean", "Duration mean"],
                   ["duration stdev", "Duration std dev"],
-                  ["proportion of time", "Proportion o time"],
+                  ["proportion of time", "Proportion of time"],
                   ]
 
     data_report = tablib.Dataset()
     data_report.title = "Synthetic time budget"
 
+    
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                        selected_subjects,
                                                        selected_observations,
@@ -122,6 +129,7 @@ def synthetic_time_budget(pj,
         distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
 
     # add selected behaviors that are not observed
+    #if not parameters_obs["exclude behaviors"]:
     for behav in selected_behaviors:
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
             distinct_behav_modif.append([behav, "-"])
@@ -145,6 +153,12 @@ def synthetic_time_budget(pj,
                 modif_header.append(modifiers)
                 param_header.append(param[1])
 
+    '''
+    if parameters_obs["group observations"]:
+        cursor.execute("UPDATE aggregated_events SET observation = 'all' " )
+        #selected_observations = ["all"]
+    '''
+
     data_report.append(subj_header)
     data_report.append(behav_header)
     if include_modifiers:
@@ -153,6 +167,18 @@ def synthetic_time_budget(pj,
 
     # select time interval
     for obs_id in selected_observations:
+
+        '''if not parameters_obs["group observations"]:'''
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
+                                                       selected_subjects,
+                                                       [obs_id],
+                                                       selected_behaviors)
+
+        if not ok:
+            return False, msg, None
+    
+        db_connector.create_aggregate("stdev", 1, StdevFunc)
+        cursor = db_connector.cursor()
 
         # if modifiers not to be included set modifiers to ""
         if not include_modifiers:
@@ -180,6 +206,8 @@ def synthetic_time_budget(pj,
         if interval == TIME_ARBITRARY_INTERVAL:
             min_time = float(start_time)
             max_time = float(end_time)
+        
+        #duration = end_time - start_time
 
         cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
                       (min_time, obs_id, min_time, min_time, max_time, ))
@@ -194,40 +222,19 @@ def synthetic_time_budget(pj,
                 behavior, modifiers = behavior_modifiers
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
                 
-                # total duration
-                cursor.execute(("SELECT SUM(stop-start) FROM aggregated_events "
+                
+                cursor.execute(("SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
+                                "FROM aggregated_events "
                                 "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
                               (obs_id, subject, behavior, modifiers,))
+                
+                
                 for row in cursor.fetchall():
                     behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
-
-                # number of occurences
-                cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
-                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (obs_id, subject, behavior, modifiers,))
-                for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[0] is None else row[0]
-
-                # mean duration
-                cursor.execute(("SELECT AVG(stop-start) FROM aggregated_events "
-                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (obs_id, subject, behavior, modifiers,))
-                for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[0] is None else row[0]
-
-                # std dev duration
-                cursor.execute(("SELECT stdev(stop-start) FROM aggregated_events "
-                               "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (obs_id, subject, behavior, modifiers,))
-                for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[0] is None else row[0]
-
-                # % total duration
-                cursor.execute(("SELECT SUM(stop-start)/? FROM aggregated_events "
-                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (max_time - min_time, obs_id, subject, behavior, modifiers,))
-                for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[0] is None else row[0]
+                    behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
+                    behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[2] is None else row[2]
+                    behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[3] is None else row[3]
+                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[0] is None else row[0]/(max_time - min_time)
 
         columns = [obs_id, "{:0.3f}".format(max_time - min_time)]
         for subj in selected_subjects:
@@ -239,7 +246,7 @@ def synthetic_time_budget(pj,
                     columns.append(behaviors[subj][behavior_modifiers_str][param[0]])
 
         data_report.append(columns)
-        
+
     return True, msg, data_report
 
 
