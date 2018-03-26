@@ -89,7 +89,6 @@ def synthetic_time_budget(pj,
                           parameters_obs
                           ):
 
-
     selected_subjects = parameters_obs["selected subjects"]
     selected_behaviors = parameters_obs["selected behaviors"]
     include_modifiers = parameters_obs["include modifiers"]

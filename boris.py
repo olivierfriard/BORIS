@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.1.7"
-__version_date__ = "2018-03-14"
+__version__ = "6.2"
+__version_date__ = "2018-03-26"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -5166,7 +5166,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             category = ""
 
                         if category in categories[subject]:
-                            if behav["duration"] != "-" and categories[subject][category]["duration"] != "-":
+                            if behav["duration"] not in ["-", "NA"] and categories[subject][category]["duration"] != "-":
                                 categories[subject][category]["duration"] += behav["duration"]
                             else:
                                 categories[subject][category]["duration"] = "-"
