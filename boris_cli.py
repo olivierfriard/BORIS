@@ -34,8 +34,8 @@ import irr
 import plot_events
 
 
-__version__ = "6.2"
-__version_date__ = "2018-03-26"
+__version__ = "6.2.1"
+__version_date__ = "2018-03-28"
 
 def cleanhtml(raw_html):
     raw_html = raw_html.replace("<br>", "\n")

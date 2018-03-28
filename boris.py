@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.2"
-__version_date__ = "2018-03-26"
+__version__ = "6.2.1"
+__version_date__ = "2018-03-28"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -9465,11 +9465,19 @@ item []:
     def create_behavioral_strings(self, obsId, subj, plot_parameters):
         """
         return the behavioral string for subject in obsId
+        
+        Args:
+            obsId (str): observation id
+            subj (str): subject
+            plot_parameters (dict): parameters
+        
+        Returns:
+            str: behavioral string for selected subject in selected observation
         """
 
         s = ""
         currentStates = []
-        eventsWithStatus = project_function.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
+        eventsWithStatus = project_functions.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
 
         for event in eventsWithStatus:
             if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
@@ -9510,6 +9518,7 @@ item []:
             s = s[0: -len(self.behaviouralStringsSeparator)]
 
         return s
+
 
     def export_string_events(self):
         """
@@ -9576,9 +9585,8 @@ item []:
                                 outFile.write(out + "\n")
 
             except:
-                errorMsg = sys.exc_info()[1]
-                logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                logging.critical(sys.exc_info()[1])
+                QMessageBox.critical(None, programName, str(sys.exc_info()[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def transitions_matrix(self, mode):
@@ -9605,7 +9613,7 @@ item []:
 
             fn = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "",
                                                    "Transitions matrix files (*.txt *.tsv);;All files (*)")
-            fileName = fn[0] if type(fn) is tuple else fn
+            fileName = fn[0] if type(fn) is tuple else fn # PyQt4/5
 
         else:
             exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices",
@@ -9614,6 +9622,7 @@ item []:
                 return
             flagMulti = True
 
+        flag_overwrite_all = False
         for subject in plot_parameters["selected subjects"]:
 
             logging.debug("subjects: {}".format(subject))
@@ -9643,11 +9652,13 @@ item []:
                                                                                           subject=subject,
                                                                                           mode=mode)
 
-                    if os.path.isfile(nf):
-                        if dialog.MessageDialog(programName,
-                                                "A file with same name already exists.<br><b>{}</b>".format(nf),
-                                                ["Overwrite", CANCEL]) == CANCEL:
+                    if os.path.isfile(nf) and not flag_overwrite_all:
+                        answer = dialog.MessageDialog(programName, "A file with same name already exists.<br><b>{}</b>".format(nf),
+                                                      ["Overwrite", "Overwrite all", CANCEL])
+                        if answer == CANCEL:
                             continue
+                        if answer == "Overwrite all":
+                            flag_overwrite_all = True
 
                     with open(nf, "w") as outfile:
                         outfile.write(observed_matrix)
