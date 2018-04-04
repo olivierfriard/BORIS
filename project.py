@@ -910,7 +910,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # configuration of behaviours
             if project[ETHOGRAM]:
-
                 if self.twBehaviors.rowCount():
                     response = dialog.MessageDialog(programName, ("There are behaviors already configured. "
                                                                   "Do you want to append behaviors or replace them?"),
@@ -929,6 +928,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         item = QTableWidgetItem()
 
                         if field == TYPE:
+                            print(project[ETHOGRAM][i][field])
                             item.setText(project[ETHOGRAM][i][field])
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
@@ -945,7 +945,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 if project[ETHOGRAM][i][field]:
                                     modif_set_list = project[ETHOGRAM][i][field].split("|")
                                     for modif_set in modif_set_list:
-                                        modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": modif_set.split(",")}
+                                        modif_set_dict[str(len(modif_set_dict))] = {"name": "", "type": SINGLE_SELECTION,
+                                                                                    "values": modif_set.split(",")}
                                 project[ETHOGRAM][i][field] = dict(modif_set_dict)
 
                             item.setText(str(project[ETHOGRAM][i][field]))
@@ -954,7 +955,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 item.setFlags(Qt.ItemIsEnabled)
                                 item.setBackground(QColor(230, 230, 230))
 
-                            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
+                        self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
                 self.twBehaviors.resizeColumnsToContents()
 
