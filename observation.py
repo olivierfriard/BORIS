@@ -223,7 +223,7 @@ class Observation(QDialog, Ui_Form):
                 plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
     
                 data_file_path = project_functions.media_full_path(filename, self.project_path)
-                print("data_file_path", data_file_path)
+
                 if not data_file_path:
                     QMessageBox.critical(self, programName, ("Data file not found:\n{}\n"
                                                              "If the file path is not stored the data file "
@@ -434,8 +434,12 @@ class Observation(QDialog, Ui_Form):
 
                 #for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
                 for row in range(self.twVideo1.rowCount()):
-                    if os.path.isfile(self.twVideo1.item(row, 0).text()):
-                        process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=self.twVideo1.item(row, 0).text(),
+                    
+                    media_file_path = project_functions.media_full_path(self.twVideo1.item(row, 0).text(), self.project_path)
+                    
+                    if os.path.isfile(media_file_path):
+                        
+                        process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
                                                                                       tmp_dir=tmp_dir,
                                                                                       chunk_size=self.chunk_length,
                                                                                       ffmpeg_bin=self.ffmpeg_bin,
@@ -449,7 +453,7 @@ class Observation(QDialog, Ui_Form):
                                     w.hide()
                                     break
                     else:
-                        QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(self.twVideo1.item(row, 0).text()))
+                        QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media_file_path))
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
 

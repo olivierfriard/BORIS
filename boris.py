@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.2.2"
-__version_date__ = "2018-04-04"
+__version__ = "6.2.3"
+__version_date__ = "2018-04-17"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -1678,8 +1678,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.label.setText("Generating spectrogram. Please wait...")
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-            if os.path.isfile(media):
-                process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media,
+            media_file_path = project_functions.media_full_path(media, self.projectFileName)
+            if os.path.isfile(media_file_path):
+                process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
                                                                               tmp_dir=tmp_dir,
                                                                               chunk_size=self.chunk_length,
                                                                               ffmpeg_bin=self.ffmpeg_bin,
@@ -1695,7 +1696,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             break
 
             else:
-                QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media))
+                QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media_file_path))
 
 
     def show_spectrogram(self):
@@ -3524,7 +3525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return False
 
                     w1.setWindowFlags(Qt.WindowStaysOnTopHint)
-                    w1.sendEvent.connect(self.signal_from_widget)
+                    w1.sendEvent.connect(self.signal_from_widget) # keypress event
 
                     w1.show()
 

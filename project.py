@@ -1170,7 +1170,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         if self.twBehaviors.rowCount():
-            response = dialog.MessageDialog(programName, "There are behaviors already configured. Do you want to append behaviors or replace them?", ['Append', 'Replace', CANCEL])
+            response = dialog.MessageDialog(programName,
+                                            "There are behaviors already configured. Do you want to append behaviors or replace them?",
+                                            ['Append', 'Replace', CANCEL])
             if response == CANCEL:
                 return
 

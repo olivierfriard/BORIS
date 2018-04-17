@@ -270,7 +270,7 @@ class Plot_data(QWidget):
         """
         update plot by signal
         """
-        self.send_fig.emit(time_ + self.time_offset)
+        self.send_fig.emit(float(time_) + float(self.time_offset))
 
 
     def close_plot(self):
@@ -505,7 +505,7 @@ if __name__ == '__main__':
 
     """
     arguments:
-    1     file_name
+    1 file_name
     2 columns_to_plot (example: 1,2)
     3 substract_first_value:True/False
     4 interval (in seconds)
@@ -575,15 +575,15 @@ if __name__ == '__main__':
     def get_time():
         return time.time() - timer_started_at
     
+    
     win.plot_data_timer = QTimer()
     win.plot_data_timer.setInterval(win.time_out)
     win.plot_data_timer.timeout.connect(lambda: win.timer_plot_data_out(get_time()))
     win.plot_data_timer.start()
-    
     '''
     app.plot_data_timer = QTimer()
     app.plot_data_timer.setInterval(win.time_out)
-    app.plot_data_timer.timeout.connect(timer_plot_data_out)
+    app.plot_data_timer.timeout.connect(win.timer_plot_data_out)
     app.plot_data_timer.start()
     '''
 
