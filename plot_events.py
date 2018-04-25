@@ -35,6 +35,8 @@ import matplotlib.font_manager as font_manager
 import matplotlib.transforms as mtransforms
 import matplotlib.dates
 from matplotlib.dates import MICROSECONDLY, SECONDLY, MINUTELY, HOURLY, WEEKLY, MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
+from matplotlib import colors as mcolors
+
 import numpy as np
 import json
 import pathlib
@@ -44,6 +46,7 @@ import utilities
 import db_functions
 import project_functions
 
+plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
 def default_value(ethogram, behav, param):
     """
@@ -667,8 +670,17 @@ def create_events_plot2_new(pj,
                         bar_color = "darkgray"
                     bar_color = POINT_EVENT_PLOT_COLOR if row["stop"] == row["start"] else bar_color
 
-                    axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
-                                             align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
+                    # sage colors removed from matplotlib colors list
+                    if bar_color in ["sage", "darksage", "lightsage"]:
+                        bar_color = {"darksage": "#598556", "lightsage": "#bcecac", "sage": "#87ae73"}[bar_color]
+
+                    try:
+                        axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
+                                         align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
+                    except:
+                        axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
+                                         align="center", edgecolor="darkgray", color="darkgray", alpha = 1)
+
                 i += 1
 
             axs[ax_idx].set_ylim(ymin=0, ymax = (max_len * par1) + par1 )

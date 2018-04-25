@@ -244,6 +244,14 @@ SPECTROGRAM_COLOR_MAPS = ['viridis','inferno','plasma', 'magma', "gray", "YlOrRd
 SPECTROGRAM_DEFAULT_COLOR_MAP = 'viridis'
 
 # see matplotlib.colors.cnames.keys()
+# https://xkcd.com/color/rgb/
+
+# sage colors are no more available 
+# darksage #598556
+# lightsage #bcecac
+# sage #87ae73
+
+
 BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'tab:orange',
                          'tab:green',
@@ -263,7 +271,7 @@ BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'cornflowerblue','cornsilk','crimson','darkblue','darkcyan',
                          'darkgreen','darkgrey','darkkhaki','darkmagenta',
                          'darkolivegreen','darkorange','darkorchid','darkred',
-                         'darksage','darkseagreen','darkslateblue','darkslategray',
+                         '#598556','darkseagreen','darkslateblue','darkslategray',
                          'darkslategrey','darkturquoise','darkviolet','deeppink',
                          'deepskyblue','dimgray','dimgrey','dodgerblue','firebrick',
                          'floralwhite','forestgreen','fuchsia','gainsboro',
@@ -271,7 +279,7 @@ BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'indianred','indigo','khaki',
                          'lawngreen','lemonchiffon','lightblue','lightcoral',
                          'lightgoldenrodyellow','lightgray','lightgreen','lightgrey',
-                         'lightpink','lightsage','lightsalmon','lightseagreen',
+                         'lightpink','#bcecac','lightsalmon','lightseagreen',
                          'lightskyblue','lightslategray','lightslategrey','lightsteelblue',
                          'lightyellow','limegreen','linen','mediumaquamarine','mediumblue',
                          'mediumorchid','mediumpurple','mediumseagreen','mediumslateblue',
@@ -280,7 +288,7 @@ BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'navy','oldlace','olive','olivedrab','orangered','orchid',
                          'palegoldenrod','palegreen','paleturquoise','palevioletred',
                          'papayawhip','peachpuff','peru','pink','plum','powderblue','rosybrown',
-                         'royalblue','saddlebrown','sage','salmon','sandybrown','seagreen',
+                         'royalblue','saddlebrown','#87ae73','salmon','sandybrown','seagreen',
                          'seashell','sienna','skyblue','slategray','slategrey',
                          'springgreen','tan','teal','thistle','tomato','turquoise','violet',
                          'wheat','yellowgreen','darkgray']
