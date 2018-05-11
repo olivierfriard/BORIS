@@ -680,7 +680,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCheckStateEvents.triggered.connect(lambda: self.check_state_events("all"))
         self.actionCheckStateEventsSingleObs.triggered.connect(lambda: self.check_state_events("current"))
-        self.actionClose_unpaired_events.triggered.connect(lambda: self.close_unpaired_events("current"))
+        self.actionClose_unpaired_events.triggered.connect(self.close_unpaired_events)
         self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
@@ -2050,43 +2050,91 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         results.exec_()
 
 
-    def close_unpaired_events(self, mode="all"):
+    def close_unpaired_events(self):
         """
         close unpaired state events
         
         Args:
             mode (str): current: check current observation / all: ask user to select observations
         """
-        if mode == "current":
-            if self.observationId:
+        if self.observationId:
 
-                r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
-                                                                  self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
-                if "not PAIRED" not in msg:
-                    QMessageBox.warning(self, programName, "All state events are already paired",
-                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                    return
+            r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
+            if "not PAIRED" not in msg:
+                QMessageBox.information(self, programName, "All state events are already paired",
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
 
-                events_to_add = []
+            events_to_add = []
 
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
-                    time = self.getLaps()
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
+                time = self.getLaps()
 
-                    #time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
 
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-                    time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+            events_to_add = project_functions.close_unpaired_state_events(self.observationId,
+                                                      self.pj[ETHOGRAM],
+                                                      self.pj[OBSERVATIONS][self.observationId],
+                                                      time
+                                                      )
 
-                events_to_add = project_functions.close_unpaired_state_events(self.observationId,
-                                                          self.pj[ETHOGRAM],
-                                                          self.pj[OBSERVATIONS][self.observationId],
-                                                          time
-                                                          )
+            if events_to_add:
+                self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
+                self.projectChanged = True
+                self.loadEventsInTW(self.observationId)
 
-                if events_to_add:
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
-                    self.loadEventsInTW(self.observationId)
+        # selected observations
+        else:
+            result, selectedObservations = self.selectObservations(MULTIPLE)
+            if not selectedObservations:
+                return
+
+            # check if state events are paired
+            out = ""
+            not_paired_obs_list = []
+            for obs_id in selectedObservations:
+                r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
+                                                                  self.pj[OBSERVATIONS][obs_id])
+                print("msg", msg)
+                if "NOT PAIRED" in msg.upper():
+                    time = max(x[0] for x in self.pj[OBSERVATIONS][obs_id][EVENTS])
+                    events_to_add = project_functions.close_unpaired_state_events(obs_id,
+                                                                                  self.pj[ETHOGRAM],
+                                                                                  self.pj[OBSERVATIONS][obs_id],
+                                                                                  time
+                                                                                  )
+                    if events_to_add:
+                        events_backup = self.pj[OBSERVATIONS][obs_id][EVENTS][:]
+                        self.pj[OBSERVATIONS][obs_id][EVENTS].extend(events_to_add)
                         
+                        # check if modified obs if fixed
+                        r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
+                                                                  self.pj[OBSERVATIONS][obs_id])
+                        if "NOT PAIRED" in msg.upper():
+                            out += "The observation <b>{}</b> can not be automatically fixed.<br><br>".format(obs_id)
+                            '''
+                            QMessageBox.warning(self, programName, "The observation <b>{}</b> can not be automatically fixed".format(obs_id),
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                            '''
+                            self.pj[OBSERVATIONS][obs_id][EVENTS] = events_backup
+                        else:
+                            out += "<b>{}</b><br>".format(obs_id)
+                            self.projectChanged = True
+            if out:
+                out = "The following observations were modified to fix the unpaired state events:<br><br>" + out
+                self.results = dialog.Results_dialog()
+                self.results.setWindowTitle(programName + " - Fixed observations")
+                self.results.ptText.setReadOnly(True)
+                self.results.ptText.appendHtml(out)
+                self.results.pbSave.setVisible(False)
+                self.results.pbCancel.setVisible(True)
+                self.results.exec_()
+            else:
+                QMessageBox.information(self, programName, "All state events are already paired",
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                
 
 
     def observations_list(self):
@@ -4254,15 +4302,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if results.exec_():
                     # to fix
                     self.liveTimer.start()
-                    r = project_functions.close_unpaired_state_events(self.observationId,
+                    events_to_add = project_functions.close_unpaired_state_events(self.observationId,
                                                                       self.pj[ETHOGRAM],
                                                                       self.pj[OBSERVATIONS][self.observationId],
                                                                       end_time
                                                                       )
-                    print("r", r)
-                self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(r)
-
-                print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                    if events_to_add:
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
 
             self.liveObservationStarted = False
             self.liveStartTime = None
