@@ -2060,7 +2060,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.observationId:
 
             r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
+                                                              self.pj[OBSERVATIONS][self.observationId])
             if "not PAIRED" not in msg:
                 QMessageBox.information(self, programName, "All state events are already paired",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -2068,12 +2068,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             events_to_add = []
 
-            if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
-                time = self.getLaps()
-
-            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+            time = -1
+            if self.playerType == VIEWER:
                 time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+            else:
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
+                    time = self.getLaps()
+    
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                    time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
 
+            print(time)
+            if time == -1:
+                return
             events_to_add = project_functions.close_unpaired_state_events(self.observationId,
                                                       self.pj[ETHOGRAM],
                                                       self.pj[OBSERVATIONS][self.observationId],
