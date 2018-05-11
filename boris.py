@@ -290,7 +290,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     projectChanged = False
     liveObservationStarted = False
-    
+
     # data structures for external data plot
     plot_data = {}
     ext_data_timer_list = []
@@ -680,6 +680,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCheckStateEvents.triggered.connect(lambda: self.check_state_events("all"))
         self.actionCheckStateEventsSingleObs.triggered.connect(lambda: self.check_state_events("current"))
+        self.actionClose_unpaired_events.triggered.connect(lambda: self.close_unpaired_events("current"))
         self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
@@ -830,6 +831,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.addAction(separator2)
 
         self.twEvents.addAction(self.actionCheckStateEventsSingleObs)
+        self.twEvents.addAction(self.actionClose_unpaired_events)
+
         self.twEvents.addAction(self.actionRunEventOutside)
 
         separator2 = QAction(self)
@@ -856,7 +859,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # TODO check value of interval
         self.timer_spectro.setInterval(200)
         self.timer_spectro.timeout.connect(self.timer_spectro_out)
-
 
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
@@ -2009,8 +2011,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def check_state_events(self, mode="all"):
         """
         check state events for each subject
-        use check_state_events_obs function
-        
+        use check_state_events_obs function in project_functions.py
+
         Args:
             mode (str): current: check current observation / all: ask user to select observations
         """
@@ -2020,7 +2022,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId:
                 r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
                                                                   self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
-                
                 tot_out = "Observation: <strong>{}</strong><br>{}<br><br>".format(self.observationId, msg)
 
         if mode == "all":
@@ -2047,6 +2048,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         results.ptText.setReadOnly(True)
         results.ptText.appendHtml(tot_out)
         results.exec_()
+
+
+    def close_unpaired_events(self, mode="all"):
+        """
+        close unpaired state events
+        
+        Args:
+            mode (str): current: check current observation / all: ask user to select observations
+        """
+        if mode == "current":
+            if self.observationId:
+
+                r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
+                                                                  self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
+                if "not PAIRED" not in msg:
+                    QMessageBox.warning(self, programName, "All state events are already paired",
+                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    return
+
+                events_to_add = []
+
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
+                    time = self.getLaps()
+
+                    #time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+
+                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                    time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+
+                events_to_add = project_functions.close_unpaired_state_events(self.observationId,
+                                                          self.pj[ETHOGRAM],
+                                                          self.pj[OBSERVATIONS][self.observationId],
+                                                          time
+                                                          )
+
+                if events_to_add:
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
+                    self.loadEventsInTW(self.observationId)
+                        
 
 
     def observations_list(self):
@@ -3676,7 +3716,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBox.setItemEnabled(0, True)   # enable tab
         self.toolBox.setCurrentIndex(0)  # show tab
 
-        #self.toolBar.setEnabled(False)
         self.menu_options()
 
         self.liveObservationStarted = False
@@ -4107,9 +4146,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             for pd in self.plot_data:
-                #pd.plot_data_timer.stop()
                 self.plot_data[pd].close_plot()
-                #pd.hide()
 
         except:
             pass
@@ -4177,12 +4214,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 del self.mapCreatorWindow
             except:
                 pass
-            
+
         for idx in self.bcm_dict:
             self.bcm_dict[idx].close()
             if idx in self.bcm_dict:
                 del self.bcm_dict[idx]
-            
 
 
     def close_observation(self):
@@ -4192,31 +4228,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("Close observation {}".format(self.playerType))
 
-        logging.debug("del self.plot_data")
-        
-        if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-
-            for x in self.ext_data_timer_list:
-                x.stop()
-
-            for pd in self.plot_data:
-                #pd.plot_data_timer.stop()
-                self.plot_data[pd].close_plot()
-                #pd.hide()
-
-
-
-        self.observationId = ""
-
-        self.close_tool_windows()
-
         if self.playerType == LIVE:
+
+            self.liveTimer.stop()
+            end_time = self.getLaps()
+            self.lbTimeLive.setText(self.convertTime(end_time))
+
+            # check observation events
+            flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
+                                                     self.pj[ETHOGRAM],
+                                                     self.pj[OBSERVATIONS][self.observationId],
+                                                     time_format=HHMMSS)
+
+            if not flag_ok:
+
+                out = "The current observation has state event(s) that are not PAIRED:<br><br>" + msg
+                results = dialog.Results_dialog()
+                results.setWindowTitle(programName + " - Check selected observations")
+                results.ptText.setReadOnly(True)
+                results.ptText.appendHtml(out)
+                results.pbSave.setVisible(False)
+                results.pbCancel.setText("Close observation")
+                results.pbCancel.setVisible(True)
+                results.pbOK.setText("Fix unpaired events and close observation")
+                if results.exec_():
+                    # to fix
+                    self.liveTimer.start()
+                    r = project_functions.close_unpaired_state_events(self.observationId,
+                                                                      self.pj[ETHOGRAM],
+                                                                      self.pj[OBSERVATIONS][self.observationId],
+                                                                      end_time
+                                                                      )
+                    print("r", r)
+                self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(r)
+
+                print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
 
             self.liveObservationStarted = False
             self.liveStartTime = None
             self.liveTimer.stop()
             self.toolBox.removeItem(0)
             self.liveTab.deleteLater()
+
+
+        if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+
+            for x in self.ext_data_timer_list:
+                x.stop()
+
+            for pd in self.plot_data:
+                self.plot_data[pd].close_plot()
+
+        self.close_tool_windows()
 
         if self.playerType == VLC:
 
@@ -4273,11 +4336,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
 
+        self.observationId = ""
 
         self.statusbar.showMessage("", 0)
-
-        # delete layout
-        # self.toolBar.setEnabled(False)
 
         self.dwObservations.setVisible(False)
         self.toolBox.setVisible(False)
@@ -6760,7 +6821,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbTimeLive.setText(self.convertTime(currentTime))
 
         # extract State events
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x]['code'] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
 
         self.currentStates = {}
         # add states for no focal subject
@@ -6776,16 +6837,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # add subject index
             self.currentStates[idx] = []
             for sbc in StateBehaviorsCodes:
-                if len([x[pj_obs_fields['code']] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS] if x[pj_obs_fields['subject']] == self.pj[SUBJECTS][idx]['name'] and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime]) % 2: # test if odd
+                if len([x[pj_obs_fields[BEHAVIOR_CODE]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS] if x[pj_obs_fields['subject']] == self.pj[SUBJECTS][idx]['name'] and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime]) % 2: # test if odd
                     self.currentStates[idx].append(sbc)
 
         # show current states
         if self.currentSubject:
             # get index of focal subject (by name)
             idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
-            self.lbCurrentStates.setText(', '.join(self.currentStates[idx]))
+            self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
         else:
-            self.lbCurrentStates.setText(', '.join(self.currentStates['']))
+            self.lbCurrentStates.setText(", ".join(self.currentStates[""]))
 
         
         self.show_current_states_in_subjects_table()
@@ -6821,12 +6882,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.liveObservationStarted:
 
             if self.twEvents.rowCount():
-
                 if dialog.MessageDialog(programName, "Delete the current events?", [YES, NO]) == YES:
                     self.twEvents.setRowCount(0)
                     self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
                 self.projectChanged = True
+
             self.textButton.setText("Stop live observation")
+
             self.liveStartTime = QTime()
             # set to now
             self.liveStartTime.start()
@@ -8639,10 +8701,14 @@ item []:
 
     def full_event(self, behavior_idx):
         """
-        input: behavior index in ethogram
-        return: event (dict)
-
+        get event as dict
         ask modifiers from coding map if configured and add them under 'from map' key
+
+        Args:
+            behavior_idx (str): behavior index in ethogram
+        Returns:
+            dict: event
+
         """
 
         event = dict(self.pj[ETHOGRAM][behavior_idx])
@@ -9168,7 +9234,7 @@ item []:
             QMessageBox.warning(self, programName, "No events to delete")
             return
 
-        if dialog.MessageDialog(programName, "Do you really want to delete all events from the current observation?", [YES, NO]) == YES:
+        if dialog.MessageDialog(programName, "Confirm the deletion of all events in the current observation?", [YES, NO]) == YES:
             self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)

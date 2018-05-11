@@ -581,15 +581,13 @@ def check_events(obsId, ethogram, observation):
     """
 
     coded_behaviors = {event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]}
-    #print("coded_behaviors", coded_behaviors)
     behaviors_in_ethogram = [ethogram[idx][BEHAVIOR_CODE] for idx in ethogram]
 
-    #print("behaviors_in_ethogram", behaviors_in_ethogram)
     not_in_ethogram = [coded_behavior for coded_behavior in coded_behaviors if coded_behavior not in behaviors_in_ethogram]
     return not_in_ethogram
 
 
-def check_state_events_obs(obsId, ethogram, observation, time_format):
+def check_state_events_obs(obsId, ethogram, observation, time_format=HHMMSS):
     """
     check state events for the observation obsId
     check if number is odd
@@ -605,13 +603,6 @@ def check_state_events_obs(obsId, ethogram, observation, time_format):
     """
 
     out = ""
-
-    '''
-    not_in_ethogram = check_events(obsId, ethogram, observation)
-    if not_in_ethogram:
-        out += "The following coded behavior(s) is/are not found in ethogram: <b>{}</b><br><br>".format("</b>, <b>".join(not_in_ethogram))
-    '''
-
 
     # check if behaviors are defined as "state event"
     event_types = {ethogram[idx]["type"] for idx in ethogram}
@@ -657,6 +648,63 @@ def check_state_events_obs(obsId, ethogram, observation, time_format):
                                       time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
 
     return (False, out) if out else (True, "All state events are PAIRED")
+
+
+def close_unpaired_state_events(obsId, ethogram, observation, time):
+
+    out = ""
+    closing_events_to_add = []
+    flagStateEvent = False
+    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
+    ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
+
+    for subject in sorted(set(subjects)):
+
+        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]
+                     if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+
+        for behavior in sorted(set(behaviors)):
+            if (behavior in ethogram_behaviors) and (STATE in event_type(behavior, ethogram).upper()):
+
+                flagStateEvent = True
+                lst, memTime = [], {}
+                for event in [event for event in observation[EVENTS]
+                              if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and
+                              event[EVENT_SUBJECT_FIELD_IDX] == subject]:
+
+                    behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+
+                    if behav_modif in lst:
+                        lst.remove(behav_modif)
+                        del memTime[str(behav_modif)]
+                    else:
+                        lst.append(behav_modif)
+                        memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+
+                for event in lst:
+
+                    last_event_time = max([time] + [x[0] for x in closing_events_to_add])
+                    print("last_event_time", last_event_time)
+
+
+                    closing_events_to_add.append([last_event_time + Decimal("0.001"),
+                                                  subject,
+                                                  behavior,
+                                                  event[1], # modifiers
+                                                  "" # comment
+                                                  ])
+                    
+                    '''
+                    out += ("""The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
+                            """ "<b>{subject}</b>" at <b>{time}</b><br>""").format(
+                                  behavior=behavior,
+                                  modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
+                                  subject=subject if subject else NO_FOCAL_SUBJECT,
+                                  time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
+                    '''
+
+    return closing_events_to_add
+
 
 
 def check_project_integrity(pj, time_format, project_file_name):

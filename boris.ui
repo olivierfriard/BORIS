@@ -83,7 +83,7 @@
              <x>0</x>
              <y>0</y>
              <width>532</width>
-             <height>360</height>
+             <height>362</height>
             </rect>
            </property>
            <attribute name="label">
@@ -104,7 +104,7 @@
      <x>0</x>
      <y>0</y>
      <width>1108</width>
-     <height>27</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -165,6 +165,7 @@
     <addaction name="actionClose_observation"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_observations_file"/>
+    <addaction name="actionClose_unpaired_events"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_selected_events"/>
@@ -175,7 +176,6 @@
     <addaction name="separator"/>
     <addaction name="actionDelete_selected_observations"/>
     <addaction name="actionDelete_all_observations"/>
-    <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="actionExportEvents"/>
     <addaction name="actionExport_aggregated_events"/>
@@ -1202,6 +1202,11 @@
   <action name="actionTest_stb2">
    <property name="text">
     <string>test stb2</string>
+   </property>
+  </action>
+  <action name="actionClose_unpaired_events">
+   <property name="text">
+    <string>Close unpaired events</string>
    </property>
   </action>
  </widget>

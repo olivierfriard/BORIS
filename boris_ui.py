@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt4 UI code generator 4.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -60,7 +60,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName(_fromUtf8("toolBox"))
         self.page = QtGui.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 532, 360))
+        self.page.setGeometry(QtCore.QRect(0, 0, 532, 362))
         self.page.setObjectName(_fromUtf8("page"))
         self.toolBox.addItem(self.page, _fromUtf8(""))
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -68,7 +68,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 27))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -111,6 +111,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_3 = QtGui.QWidget()
         self.dockWidgetContents_3.setObjectName(_fromUtf8("dockWidgetContents_3"))
         self.verticalLayout_5 = QtGui.QVBoxLayout(self.dockWidgetContents_3)
+        self.verticalLayout_5.setMargin(0)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.verticalLayout_4 = QtGui.QVBoxLayout()
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
@@ -153,6 +154,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents_2 = QtGui.QWidget()
         self.dockWidgetContents_2.setObjectName(_fromUtf8("dockWidgetContents_2"))
         self.verticalLayout_7 = QtGui.QVBoxLayout(self.dockWidgetContents_2)
+        self.verticalLayout_7.setMargin(0)
         self.verticalLayout_7.setObjectName(_fromUtf8("verticalLayout_7"))
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
@@ -180,6 +182,7 @@ class Ui_MainWindow(object):
         self.dockWidgetContents = QtGui.QWidget()
         self.dockWidgetContents.setObjectName(_fromUtf8("dockWidgetContents"))
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.dockWidgetContents)
+        self.verticalLayout_2.setMargin(0)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.twSubjects = QtGui.QTableWidget(self.dockWidgetContents)
         self.twSubjects.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -451,6 +454,8 @@ class Ui_MainWindow(object):
         self.actionTest.setObjectName(_fromUtf8("actionTest"))
         self.actionTest_stb2 = QtGui.QAction(MainWindow)
         self.actionTest_stb2.setObjectName(_fromUtf8("actionTest_stb2"))
+        self.actionClose_unpaired_events = QtGui.QAction(MainWindow)
+        self.actionClose_unpaired_events.setObjectName(_fromUtf8("actionClose_unpaired_events"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -485,6 +490,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionClose_observation)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionLoad_observations_file)
+        self.menuObservations.addAction(self.actionClose_unpaired_events)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)
@@ -495,7 +501,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionDelete_selected_observations)
         self.menuObservations.addAction(self.actionDelete_all_observations)
-        self.menuObservations.addSeparator()
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionExportEvents)
         self.menuObservations.addAction(self.actionExport_aggregated_events)
@@ -759,4 +764,5 @@ class Ui_MainWindow(object):
         self.action_obs_list.setToolTip(_translate("MainWindow", "Observations list", None))
         self.actionTest.setText(_translate("MainWindow", "test", None))
         self.actionTest_stb2.setText(_translate("MainWindow", "test stb2", None))
+        self.actionClose_unpaired_events.setText(_translate("MainWindow", "Close unpaired events", None))
 

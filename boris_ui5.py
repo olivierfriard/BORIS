@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -46,7 +46,7 @@ class Ui_MainWindow(object):
         self.toolBox.setEnabled(True)
         self.toolBox.setObjectName("toolBox")
         self.page = QtWidgets.QWidget()
-        self.page.setGeometry(QtCore.QRect(0, 0, 532, 360))
+        self.page.setGeometry(QtCore.QRect(0, 0, 532, 362))
         self.page.setObjectName("page")
         self.toolBox.addItem(self.page, "")
         self.verticalLayout_3.addWidget(self.toolBox)
@@ -54,7 +54,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 27))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -437,6 +437,8 @@ class Ui_MainWindow(object):
         self.actionTest.setObjectName("actionTest")
         self.actionTest_stb2 = QtWidgets.QAction(MainWindow)
         self.actionTest_stb2.setObjectName("actionTest_stb2")
+        self.actionClose_unpaired_events = QtWidgets.QAction(MainWindow)
+        self.actionClose_unpaired_events.setObjectName("actionClose_unpaired_events")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -471,6 +473,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionClose_observation)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionLoad_observations_file)
+        self.menuObservations.addAction(self.actionClose_unpaired_events)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)
@@ -481,7 +484,6 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionDelete_selected_observations)
         self.menuObservations.addAction(self.actionDelete_all_observations)
-        self.menuObservations.addSeparator()
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionExportEvents)
         self.menuObservations.addAction(self.actionExport_aggregated_events)
@@ -746,4 +748,5 @@ class Ui_MainWindow(object):
         self.action_obs_list.setToolTip(_translate("MainWindow", "Observations list"))
         self.actionTest.setText(_translate("MainWindow", "test"))
         self.actionTest_stb2.setText(_translate("MainWindow", "test stb2"))
+        self.actionClose_unpaired_events.setText(_translate("MainWindow", "Close unpaired events"))
 
