@@ -103,7 +103,7 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.2.5"
+__version__ = "6.2.6"
 __version_date__ = "2018-05-14"
 
 if platform.python_version() < "3.5":
@@ -3885,6 +3885,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.setWindowTitle("""Edit observation "{}" """.format(obsId))
             mem_obs_id = obsId
             observationWindow.leObservationId.setText(obsId)
+
+            # check date format for old versions of BORIS app
+            try:
+                import time
+                time.strptime(self.pj[OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
+                self.pj[OBSERVATIONS][obsId]["date"] = self.pj[OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
+            except ValueError:
+                pass
+
             observationWindow.dteDate.setDateTime(QDateTime.fromString(self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss"))
             observationWindow.teDescription.setPlainText(self.pj[OBSERVATIONS][obsId]["description"])
 
