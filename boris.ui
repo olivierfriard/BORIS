@@ -1206,7 +1206,7 @@
   </action>
   <action name="actionClose_unpaired_events">
    <property name="text">
-    <string>Close unpaired events</string>
+    <string>Fix unpaired events</string>
    </property>
   </action>
  </widget>

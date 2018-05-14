@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.2.4"
-__version_date__ = "2018-04-25"
+__version__ = "6.2.5"
+__version_date__ = "2018-05-14"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -568,6 +568,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCheckStateEvents.setEnabled(flag)
         self.actionCheckStateEventsSingleObs.setEnabled(flag)
+        self.actionClose_unpaired_events.setEnabled(flag)
         self.actionRunEventOutside.setEnabled(flag)
 
         self.actionMedia_file_information.setEnabled(flagObs)

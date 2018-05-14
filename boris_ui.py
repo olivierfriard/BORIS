@@ -764,5 +764,5 @@ class Ui_MainWindow(object):
         self.action_obs_list.setToolTip(_translate("MainWindow", "Observations list", None))
         self.actionTest.setText(_translate("MainWindow", "test", None))
         self.actionTest_stb2.setText(_translate("MainWindow", "test stb2", None))
-        self.actionClose_unpaired_events.setText(_translate("MainWindow", "Close unpaired events", None))
+        self.actionClose_unpaired_events.setText(_translate("MainWindow", "Fix unpaired events", None))
 
