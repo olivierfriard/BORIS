@@ -48,6 +48,20 @@ def MessageDialog(title, text, buttons):
     return message.clickedButton().text()
 
 
+class Info_widget(QWidget):
+
+    def __init__(self, parent = None):
+        super(Info_widget, self).__init__(parent)
+
+        self.setWindowTitle("BORIS")
+        layout = QVBoxLayout()
+        self.label = QLabel()
+        layout.addWidget(self.label)
+        self.lwi = QListWidget()
+        layout.addWidget(self.lwi)
+        self.setLayout(layout)
+
+
 class DuplicateBehaviorCode(QDialog):
     """
     let user show between behaviors that are coded by same key

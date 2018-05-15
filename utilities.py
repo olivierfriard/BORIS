@@ -68,9 +68,9 @@ def bytes_to_str(b):
         return b
 
 
-def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
+def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
     """
-    recode one or more video with ffmpeg
+    resize and recode one or more video with ffmpeg
     
     Args:
         video_paths (list): list of video paths
@@ -83,9 +83,10 @@ def ffmpeg_recode(video_paths, horiz_resol, ffmpeg_bin):
 
     for video_path in video_paths:
         ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                          '-vf scale={horiz_resol}:-1 -b 2000k '
+                          '-vf scale={horiz_resol}:-1 -b {quality}k '
                           '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
                                                                                input_=video_path,
+                                                                               quality=quality,
                                                                                horiz_resol=horiz_resol)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         p.communicate()

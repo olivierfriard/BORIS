@@ -87,7 +87,6 @@ import plot_spectrogram
 import coding_pad
 import subjects_pad
 import transitions
-import recode_widget
 from config import *
 import qrc_boris
 from time_budget_widget import timeBudgetResults
@@ -1127,7 +1126,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if include_obs == CANCEL:
                     return
 
-            self.w = recode_widget.Info_widget()
+            self.w = dialog.Info_widget()
             self.w.resize(450, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.w.setWindowTitle("Project server")
@@ -1185,18 +1184,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
 
         if self.ffmpeg_recode_process:
-            QMessageBox.warning(self, programName, "BORIS is already re-encoding a video...")
+            QMessageBox.warning(self, programName, "BORIS is already re-encoding/resizing a video...")
             return
 
         fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to re-encode/resize", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
 
         if fileNames:
-
             horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\nThe aspect ratio will be maintained"),
                                                   1024, 352, 2048, 20)
             if not ok:
                 return
+
+            video_quality, ok = QInputDialog.getInt(self, "", "Video quality (bitrate)", 2000, 1000, 20000, 1000)
+            if not ok:
+                return
+
 
             # check if recoded files already exist
             files_list = []
@@ -1212,7 +1215,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if response == CANCEL:
                     return
 
-            self.w = recode_widget.Info_widget()
+            self.w = dialog.Info_widget()
             self.w.lwi.setVisible(False)
             self.w.resize(350, 100)
             self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -1223,12 +1226,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check in platform win and program frozen by pyinstaller
             if sys.platform.startswith("win") and getattr(sys, "frozen", False):
                 app.processEvents()
-                ffmpeg_recode(fileNames, horiz_resol, ffmpeg_bin)
+                video_resize_reencode(fileNames, horiz_resol, ffmpeg_bin, quality=video_quality) # from utilities.py
                 self.w.hide()
             else:
 
-                self.ffmpeg_recode_process = multiprocessing.Process(target=ffmpeg_recode,
-                                                                     args=(fileNames, horiz_resol, ffmpeg_bin,))
+                self.ffmpeg_recode_process = multiprocessing.Process(target=video_resize_reencode,
+                                                                     args=(fileNames, horiz_resol, ffmpeg_bin, video_quality,))
                 self.ffmpeg_recode_process.start()
 
                 timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
@@ -1673,7 +1676,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check temp dir for images from ffmpeg
         tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
 
-        w = recode_widget.Info_widget()
+        w = dialog.Info_widget()
         w.lwi.setVisible(False)
         w.resize(350, 100)
         w.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -2757,6 +2760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,
                                                  second=int((frameCurrentMedia -1)/ fps)) not in self.imagesList:
 
+            # see utilities.py
             extract_frames(self.ffmpeg_bin,
                            int((frameCurrentMedia -1) / fps),
                            current_media_full_path,

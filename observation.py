@@ -44,7 +44,6 @@ from config import *
 from utilities import *
 import dialog
 import plot_spectrogram
-import recode_widget
 import plot_data_module
 import project_functions
 
@@ -56,7 +55,6 @@ else:
 
 out = ""
 fps = 0
-
 
 class AssignConverter(QDialog):
     """
@@ -105,6 +103,13 @@ class AssignConverter(QDialog):
 class Observation(QDialog, Ui_Form):
 
     def __init__(self, tmp_dir, project_path="", converters={}, log_level="", parent=None):
+        """
+        Args:
+            tmp_dir (str): path of temporary directory
+            project_path (str): path of project
+            converters (dict): converters dictionary
+            log_level: level of log 
+        """
 
         super().__init__(parent)
 
@@ -284,11 +289,11 @@ class Observation(QDialog, Ui_Form):
 
         QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")
 
-        if not flag_path:
-            pass  # cd to project directory
-        else:
-            os.chdir(os.path.expanduser("~"))
-        fn = QFileDialog(self).getOpenFileName(self, "Add data file", "", "All files (*)")
+
+        fd = QFileDialog(self)
+        fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
+
+        fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
@@ -426,7 +431,7 @@ class Observation(QDialog, Ui_Form):
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
-                w = recode_widget.Info_widget()
+                w = dialog.Info_widget()
                 w.resize(350, 100)
                 w.setWindowFlags(Qt.WindowStaysOnTopHint)
                 w.setWindowTitle("BORIS")
@@ -585,11 +590,10 @@ class Observation(QDialog, Ui_Form):
                                                      "when more media are loaded in the first media player"))
             return
 
-        if not flag_path:
-            pass # cd to project directory
-        else:
-            os.chdir(os.path.expanduser("~"))
-        fn = QFileDialog(self).getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
+        fd = QFileDialog()
+        fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
+
+        fn = fd.getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
         file_paths = fn[0] if type(fn) is tuple else fn
 
         if file_paths:
@@ -610,10 +614,14 @@ class Observation(QDialog, Ui_Form):
             nPlayer (str): player
             flag_path (bool): True include full path of media else only basename
         """
-        dirName = QFileDialog().getExistingDirectory(self, "Select directory")
-        if dirName:
+        
+        fd = QFileDialog(self)
+        fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
+
+        dir_name = fd.getExistingDirectory(self, "Select directory")
+        if dir_name:
             r = ""
-            for file_path in glob.glob(dirName + os.sep + "*"):
+            for file_path in glob.glob(dir_name + os.sep + "*"):
                 if not self.check_media(n_player, file_path, flag_path):
                     if r != "Skip all non media files":
                         r = dialog.MessageDialog(programName,
