@@ -41,6 +41,7 @@ from pathlib import Path
 import numpy
 
 from config import *
+import utilities
 from utilities import *
 import dialog
 import plot_spectrogram
@@ -562,18 +563,22 @@ class Observation(QDialog, Ui_Form):
              bool: True if file is media else False
         """
 
-        nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, file_path)
-        if videoDuration_s > 0:
-            if not flag_path:
-                file_path = str(Path(file_path).name)
-    
-            self.mediaDurations[file_path] = videoDuration_s
-            self.mediaFPS[file_path] = fps
-            self.mediaHasVideo[file_path] = hasVideo
-            self.mediaHasAudio[file_path] = hasAudio
-            self.add_media_to_listview(n_player, file_path, "")
-
-        return (videoDuration_s > 0)
+        #nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, file_path)
+        r = utilities.accurate_media_analysis2(self.ffmpeg_bin, file_path)
+        if "error" in r:
+            return False
+        else:
+            if r["duration"] > 0:
+                if not flag_path:
+                    file_path = str(Path(file_path).name)
+                self.mediaDurations[file_path] = r["duration"]
+                self.mediaFPS[file_path] = r["fps"]
+                self.mediaHasVideo[file_path] = r["has_video"]
+                self.mediaHasAudio[file_path] = r["has_audio"]
+                self.add_media_to_listview(n_player, file_path, "")
+                return True
+            else:
+                return False
 
 
     def add_media(self, n_player, flag_path):

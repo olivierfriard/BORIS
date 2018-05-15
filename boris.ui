@@ -276,6 +276,7 @@
     <addaction name="separator"/>
     <addaction name="menu_coding_map_creator"/>
     <addaction name="actionRecode_resize_video"/>
+    <addaction name="actionRotate_video"/>
     <addaction name="actionMedia_file_information_2"/>
     <addaction name="menuTransitions_flow_diagram"/>
    </widget>
@@ -1207,6 +1208,11 @@
   <action name="actionClose_unpaired_events">
    <property name="text">
     <string>Fix unpaired events</string>
+   </property>
+  </action>
+  <action name="actionRotate_video">
+   <property name="text">
+    <string>Rotate video</string>
    </property>
   </action>
  </widget>

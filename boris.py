@@ -80,6 +80,7 @@ import modifiers_coding_map
 import map_creator
 import behav_coding_map_creator
 import select_modifiers
+import utilities
 from utilities import *
 import tablib
 import observations_list
@@ -103,7 +104,7 @@ import time_budget_functions
 
 
 __version__ = "6.2.6"
-__version_date__ = "2018-05-14"
+__version_date__ = "2018-05-15"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -263,7 +264,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     pj = dict(EMPTY_PROJECT)
     project = False
-    ffmpeg_recode_process = None
+    ffmpeg_recode_process = None  # to be removed
+    ffmpeg_process_ps = None
     observationId = ""   # current observation id
     timeOffset = 0.0
     wrongTimeResponse = ""
@@ -723,8 +725,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
-        
-        self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
+
+        #self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
+        self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
+        #self.actionRotate_video.triggered.connect(self.rotate_video)
+        self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
         self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
@@ -1162,7 +1167,114 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 received += data
             s.close
 
+    def ffmpeg_process(self, action):
+        """
+        launch ffmpeg process
+        
+        Args:
+            action (str): "reencode_resize, rotate
+        """
+        if action not in ["reencode_resize" ,"rotate"]:
+            return
+        
+        timer_ffmpeg_process = QTimer()
+        def timer_ffmpeg_process_timeout():
+            """
+            check if process finished
+            """
+            try:
+                if not self.ffmpeg_process_ps.is_alive():
+                    timer_ffmpeg_process.stop()
+                    self.w.hide()
+                    del(self.w)
+                    self.ffmpeg_process_ps = None
+            except:
+                pass
 
+        if self.ffmpeg_process_ps:
+            QMessageBox.warning(self, programName, "BORIS is already running a ffmpeg process...")
+            return
+
+        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to process", "", "Media files (*)")
+        fileNames = fn[0] if type(fn) is tuple else fn
+
+        if fileNames:
+            if action == "reencode_resize":
+                horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\nThe aspect ratio will be maintained"),
+                                                      1024, 352, 2048, 20)
+                if not ok:
+                    return
+    
+                video_quality, ok = QInputDialog.getInt(self, "", "Video quality (bitrate)", 2000, 1000, 20000, 1000)
+                if not ok:
+                    return
+
+            if action == "rotate":
+                rotation_items = ("Rotate 90 clockwise", "Rotate 90 counter clockwise", "rotate 180")
+
+                rotation, ok = QInputDialog.getItem(self, "Rotate media file(s)",  "Type of rotation", rotation_items, 0, False)
+
+                if not ok:
+                    return
+                rotation_idx = rotation_items.index(rotation) + 1
+
+            # check if processed files already exist
+            files_list = []
+            for file_name in fileNames:
+
+                if action == "reencode_resize":
+                    fn = "{input}.re-encoded.{horiz_resol}px.avi".format(input=file_name, horiz_resol=horiz_resol)
+
+                if action == "rotate":
+                    fn = "{input}.rotated{rotation}.avi".format(input=file_name, rotation=["", "90", "-90", "180"][rotation_idx])
+
+                if os.path.isfile(fn):
+                    files_list.append(fn)
+
+            if files_list:
+                response = dialog.MessageDialog(programName, "Some file(s) already exist.\n\n" + "\n".join(files_list),
+                                                ["Overwrite all", CANCEL])
+                if response == CANCEL:
+                    return
+
+            self.w = dialog.Info_widget()
+            self.w.lwi.setVisible(False)
+            self.w.resize(350, 100)
+            self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
+            if action == "reencode_resize":
+                self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
+            if action == "rotate":
+                self.w.setWindowTitle("Rotating the video with FFmpeg")
+
+            self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
+            self.w.show()
+
+            # check in platform win and program frozen by pyinstaller
+            if sys.platform.startswith("win") and getattr(sys, "frozen", False):
+                app.processEvents()
+                if action == "reencode_resize":
+                    utilities.video_resize_reencode(fileNames, horiz_resol, ffmpeg_bin, quality=video_quality) 
+                    self.w.hide()
+                if action == "rotate":
+                    utilities.video_rotate(fileNames, rotation_idx, ffmpeg_bin) # from utilities.py
+                    self.w.hide()
+
+            else:
+
+                if action == "reencode_resize":
+                    self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_resize_reencode,
+                                                                     args=(fileNames, horiz_resol, ffmpeg_bin, video_quality,))
+
+                if action == "rotate":
+                    print("rotating")
+                    self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
+                                                                     args=(fileNames, rotation_idx, ffmpeg_bin,))
+
+                self.ffmpeg_process_ps.start()
+                timer_ffmpeg_process.timeout.connect(timer_ffmpeg_process_timeout)
+                timer_ffmpeg_process.start(15000)
+
+    '''
     def recode_resize_video(self):
         """
         re-encode video with ffmpeg
@@ -1236,6 +1348,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 timerFFmpegRecoding.timeout.connect(timerFFmpegRecoding_timeout)
                 timerFFmpegRecoding.start(15000)
+    '''
 
 
     def click_signal_from_coding_pad(self, behaviorCode):
@@ -7388,13 +7501,17 @@ item []:
             for nplayer in self.pj[OBSERVATIONS][self.observationId][FILE]:
                 for filePath in self.pj[OBSERVATIONS][self.observationId][FILE][nplayer]:
                     media_full_path = project_functions.media_full_path(filePath, self.projectFileName)
-                    nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                    if nframes == -1:
+                    #nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
+                    
+                    r = utilities.accurate_media_analysis2(self.ffmpeg_bin, media_full_path)
+                    nframes = r["frames_number"]
+                    
+                    if "error" in r:
                         self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=media_full_path,
-                                                                                                             error=duration_ms))
+                                                                                                             error=r["error"]))
                     else:
-                        self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
-                            format(media_full_path, self.convertTime(duration), fps, hasVideo, hasAudio))
+                        self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
+                            format(media_full_path, self.convertTime(r["duration"]), r["bitrate"], r["fps"], r["has_video"], r["has_audio"]))
 
             self.results.ptText.appendHtml("Total duration: {} (hh:mm:ss.sss)".
                 format(self.convertTime(sum(self.duration) / 1000)))
@@ -7411,12 +7528,14 @@ item []:
                 self.results.setWindowTitle(programName + " - Media file information")
                 self.results.ptText.setReadOnly(True)
                 self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
-                nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
-                if nframes == -1:
-                    self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=duration_ms))
+                #nframes, duration_ms, duration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, filePath)
+                r = utilities.accurate_media_analysis2(self.ffmpeg_bin, filePath)
+                if "error" in r:
+                    self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=r["error"]))
                 else:
-                    self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
-                        format(filePath, self.convertTime(duration), fps, hasVideo, hasAudio))
+                    self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
+                                        format(filePath, self.convertTime(r["duration"]), r["bitrate"], r["fps"], r["has_video"], r["has_audio"]))
+
                 self.results.show()
 
 

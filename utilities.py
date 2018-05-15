@@ -76,6 +76,7 @@ def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
         video_paths (list): list of video paths
         horiz_resol (int): horizontal resolution (in pixels)
         ffmpeg_bin (str): path of ffmpeg program
+        quality (int): ffmpeg bitrate
     
     Returns:
         bool: True
@@ -83,11 +84,52 @@ def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
 
     for video_path in video_paths:
         ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                          '-vf scale={horiz_resol}:-1 -b {quality}k '
+                          '-vf scale={horiz_resol}:-1 -b:v {quality}k '
                           '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
                                                                                input_=video_path,
                                                                                quality=quality,
                                                                                horiz_resol=horiz_resol)
+        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        p.communicate()
+
+    return True
+
+def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
+    """
+    rotate a video using ffmpeg
+
+    Args:
+        video_paths (list): list of video paths
+        rotation_idx (int): type of rotation: 1 = 90 clockwise, 2 = 90 counter clockwise, 3 = 180
+        ffmpeg_bin (str): path of ffmpeg program
+        quality (int): ffmpeg bitrate
+    Returns:
+        bool: True
+
+    """
+    for video_path in video_paths:
+
+        # check bitrate
+        #TODO
+
+        if rotation_idx in [1, 2]:
+            ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                              '-vf "transpose={rotation_idx}" -codec:a copy -b:v {quality}k '
+                              '"{input_}.rotated{rotation}.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                              input_=video_path,
+                                                                              quality=quality,
+                                                                              rotation_idx=rotation_idx,
+                                                                              rotation=["", "90", "-90"][rotation_idx]
+                                                                              )
+        if rotation_idx == 3: # 180
+            ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                              '-vf "transpose=2,transpose=2" -codec:a copy -b:v {quality}k '
+                              '"{input_}.rotated180.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                   input_=video_path,
+                                                                   quality=quality)
+            
+
+        print(ffmpeg_command)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         p.communicate()
 
@@ -690,17 +732,115 @@ def check_ffmpeg_path():
     return False, "FFmpeg is not available"
 
 
+def accurate_media_analysis2(ffmpeg_bin, file_name):
+    """
+    analyse frame rate and video duration with ffmpeg
+
+    Args:
+        ffmpeg_bin (str): ffmpeg path
+        file_name (str): path of media file
+
+    Returns:
+        dict
+
+    """
+
+    command = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, file_name, "NUL" if sys.platform.startswith("win") else "/dev/null")
+
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+    duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, -1
+    try:
+        error = p.communicate()[1].decode("utf-8")
+    except:
+        return {}
+
+    # check for invalid data
+    if "Invalid data found when processing input" in error:
+        return {"error": "Invalid data found when processing input"}
+
+    rows = error.split("\n")
+
+    # video duration
+    try:
+        for r in rows:
+            if "Duration" in r:
+                duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
+                break
+    except:
+        duration = 0
+
+    # bitrate
+    try:
+        for r in rows:
+            if "bitrate:" in r:
+                re_results = re.search('bitrate: (.{1,10}) kb', r, re.IGNORECASE)
+                if re_results:
+                    bitrate = int(re_results.group(1).strip())
+                break
+    except:
+        duration = 0
+
+
+    # fps
+    fps = 0
+    try:
+        for r in rows:
+            if " fps," in r:
+                re_results = re.search(', (.{1,10}) fps,', r, re.IGNORECASE)
+                if re_results:
+                    fps = Decimal(re_results.group(1).strip())
+                    break
+    except:
+        fps = 0
+
+    # check for video stream
+    hasVideo = False
+    try:
+        for r in rows:
+            if "Stream #" in r and "Video:" in r:
+                hasVideo = True
+                break
+    except:
+        hasVideo = None
+
+    # check for audio stream
+    hasAudio = False
+    try:
+        for r in rows:
+            if "Stream #" in r and "Audio:" in r:
+                hasAudio = True
+                break
+    except:
+        hasAudio = None
+
+    #return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
+    return {"frames_number": int(fps * duration),
+            "duration_ms": duration * 1000,
+            "duration": duration,
+            "fps": fps,
+            "has_video": hasVideo,
+            "has_audio": hasAudio,
+            "bitrate": bitrate
+           }
+
+
+
 def accurate_media_analysis(ffmpeg_bin, fileName):
     """
     analyse frame rate and video duration with ffmpeg
 
-    return:
-    total number of frames
-    duration in ms (for compatibility)
-    duration in s
-    frame per second
-    hasVideo: boolean
-    hasAudio: boolean
+    Args:
+        ffmpeg_bin (str): ffmpeg path
+        fileName (str): path of media file
+
+    Returns:
+        total number of frames
+        duration in ms (for compatibility)
+        duration in s
+        frame per second
+        hasVideo: boolean
+        hasAudio: boolean
 
     if invalid data found:
     return
@@ -790,29 +930,3 @@ def behavior_color(colors_list, idx):
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
 
-
-class Process(QThread):
-    """
-    process for accurate video analysis
-    """
-    def __init__(self, parent=None):
-        QThread.__init__(self, parent)
-        self.filePath = ''
-        self.ffmpeg_bin = ''
-        self.fileContentMD5 = ''
-        self.nPlayer = ''
-        self.filePath = ''
-        self.signal = ThreadSignal()
-
-    def run(self):
-        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin,
-                                                                                            self.filePath)
-        self.signal.sig.emit(nframe,
-                             videoTime,
-                             videoDuration,
-                             fps,
-                             hasVideo,
-                             hasAudio,
-                             self.fileContentMD5,
-                             self.nPlayer,
-                             self.filePath)

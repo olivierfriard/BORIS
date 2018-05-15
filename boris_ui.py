@@ -456,6 +456,8 @@ class Ui_MainWindow(object):
         self.actionTest_stb2.setObjectName(_fromUtf8("actionTest_stb2"))
         self.actionClose_unpaired_events = QtGui.QAction(MainWindow)
         self.actionClose_unpaired_events.setObjectName(_fromUtf8("actionClose_unpaired_events"))
+        self.actionRotate_video = QtGui.QAction(MainWindow)
+        self.actionRotate_video.setObjectName(_fromUtf8("actionRotate_video"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -556,6 +558,7 @@ class Ui_MainWindow(object):
         self.menuTools.addSeparator()
         self.menuTools.addAction(self.menu_coding_map_creator.menuAction())
         self.menuTools.addAction(self.actionRecode_resize_video)
+        self.menuTools.addAction(self.actionRotate_video)
         self.menuTools.addAction(self.actionMedia_file_information_2)
         self.menuTools.addAction(self.menuTransitions_flow_diagram.menuAction())
         self.menubar.addAction(self.menuFile.menuAction())
@@ -765,4 +768,5 @@ class Ui_MainWindow(object):
         self.actionTest.setText(_translate("MainWindow", "test", None))
         self.actionTest_stb2.setText(_translate("MainWindow", "test stb2", None))
         self.actionClose_unpaired_events.setText(_translate("MainWindow", "Fix unpaired events", None))
+        self.actionRotate_video.setText(_translate("MainWindow", "Rotate video", None))
 
