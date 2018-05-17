@@ -94,9 +94,10 @@ def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
 
     return True
 
+
 def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
     """
-    rotate a video using ffmpeg
+    rotate a video using ffmpeg at same bitrate (quality)
 
     Args:
         video_paths (list): list of video paths
@@ -110,7 +111,9 @@ def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
     for video_path in video_paths:
 
         # check bitrate
-        #TODO
+        r = accurate_media_analysis2(ffmpeg_bin, video_path)
+        if "error" not in r and r["bitrate"] != -1:
+            quality = r["bitrate"]
 
         if rotation_idx in [1, 2]:
             ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
@@ -127,9 +130,7 @@ def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
                               '"{input_}.rotated180.avi" ').format(ffmpeg_bin=ffmpeg_bin,
                                                                    input_=video_path,
                                                                    quality=quality)
-            
 
-        print(ffmpeg_command)
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         p.communicate()
 
@@ -139,10 +140,10 @@ def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
 def convert_time_to_decimal(pj):
     """
     convert time from float to decimal
-    
+
     Args:
         pj (dict): BORIS project
-        
+
     Returns:
         dict: BORIS project
     """
@@ -735,13 +736,14 @@ def check_ffmpeg_path():
 def accurate_media_analysis2(ffmpeg_bin, file_name):
     """
     analyse frame rate and video duration with ffmpeg
+    Returns parameters: duration, duration_ms, bitrate, frames_number, fps, has_video (True/False), has_audio (True/False)
 
     Args:
         ffmpeg_bin (str): ffmpeg path
         file_name (str): path of media file
 
     Returns:
-        dict
+        dict containing keys: duration, duration_ms, frames_number, bitrate, fps, has_video, has_audio
 
     """
 
@@ -780,7 +782,6 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
                 break
     except:
         duration = 0
-
 
     # fps
     fps = 0

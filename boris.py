@@ -3481,21 +3481,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
             except:
                 logging.debug("media_info key not found")
-                nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
-                    self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
-                    if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
-                        self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"] = {}
-                    if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
-                        self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
-
-                self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = videoDuration
-                self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = fps
-
-                mediaLength = videoDuration * 1000
-                mediaFPS = fps
-
-                self.projectChanged = True
+                #nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
+                r = utilities.accurate_media_analysis2(self.ffmpeg_bin, media_full_path)
+                if "error" not in r:
+                    if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
+                        self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
+                        if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
+                            self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"] = {}
+                        if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
+                            self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
+    
+                    self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = r["duration"]
+                    self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = r["fps"]
+    
+                    mediaLength = r["duration"] * 1000
+                    mediaFPS = r["fps"]
+    
+                    self.projectChanged = True
 
             self.duration.append(int(mediaLength))
             self.fps[mediaFile] = mediaFPS
@@ -3584,20 +3586,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
                     except:
                         logging.debug("media_info key not found")
-                        nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
-                        if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
-                            self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
-                            if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
-                                self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"] = {}
-                            if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
-                                self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
-
-                        self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = videoDuration
-                        self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = fps
-
-                        mediaLength = videoDuration * 1000
-                        mediaFPS = fps
-                        self.projectChanged = True
+                        #nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
+                        r = utilities.accurate_media_analysis2(self.ffmpeg_bin, media_full_path)
+                        if "error" not in r:
+                            if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
+                                self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
+                                if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
+                                    self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"] = {}
+                                if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
+                                    self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
+    
+                            self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = r["duration"]
+                            self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = r["fps"]
+    
+                            mediaLength = r["duration"] * 1000
+                            mediaFPS = r["fps"]
+                            self.projectChanged = True
 
                     self.duration2.append(int(mediaLength))
                     self.fps2[mediaFile] = mediaFPS
@@ -7510,7 +7514,7 @@ item []:
                         self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=media_full_path,
                                                                                                              error=r["error"]))
                     else:
-                        self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
+                        self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
                             format(media_full_path, self.convertTime(r["duration"]), r["bitrate"], r["fps"], r["has_video"], r["has_audio"]))
 
             self.results.ptText.appendHtml("Total duration: {} (hh:mm:ss.sss)".
@@ -7533,7 +7537,7 @@ item []:
                 if "error" in r:
                     self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=r["error"]))
                 else:
-                    self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
+                    self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
                                         format(filePath, self.convertTime(r["duration"]), r["bitrate"], r["fps"], r["has_video"], r["has_audio"]))
 
                 self.results.show()

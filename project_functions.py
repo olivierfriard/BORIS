@@ -252,7 +252,7 @@ def observation_total_length(observation):
     live: return last event time
     
     Args:
-        obsId (str): observation id
+        observation (dict): observation dictionary
         
     Returns:
         Decimal: total length in seconds
@@ -278,7 +278,8 @@ def observation_total_length(observation):
                 try:
                     mediaLength = observation["media_info"]["length"][mediaFile]
                 except:
-                    nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                    #nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                    r = utilities.accurate_media_analysis2(self.ffmpeg_bin, mediaFile)
                     if "media_info" not in observation:
                         observation["media_info"] = {"length": {}, "fps": {}}
                         if "length" not in observation["media_info"]:
@@ -286,10 +287,10 @@ def observation_total_length(observation):
                         if "fps" not in observation["media_info"]:
                             observation["media_info"]["fps"] = {}
     
-                    observation["media_info"]["length"][mediaFile] = videoDuration
-                    observation["media_info"]["fps"][mediaFile] = fps
+                    observation["media_info"]["length"][mediaFile] = r["duration"]
+                    observation["media_info"]["fps"][mediaFile] = r["fps"]
     
-                    mediaLength = videoDuration
+                    mediaLength = r["duration"]
     
                 total_media_length[player] += Decimal(mediaLength)
         
@@ -494,7 +495,6 @@ def open_project_json(projectFileName):
                "The old file project was saved as {project_file_name}").format(project_format_version=project_format_version,
                                                                                project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
 
-
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
     project_updated = False
 
@@ -514,14 +514,17 @@ def open_project_json(projectFileName):
                         return projectFileName, projectChanged, {"error": "FFmpeg path not found"}, ""
                     else:
                         ffmpeg_bin = msg
-                    
-                    nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
 
-                    if videoDuration:
-                        pj[OBSERVATIONS][obs]['media_info']["length"][media_file_path] = videoDuration
-                        pj[OBSERVATIONS][obs]['media_info']["fps"][media_file_path] = fps
-                        pj[OBSERVATIONS][obs]['media_info']["hasVideo"][media_file_path] = hasVideo
-                        pj[OBSERVATIONS][obs]['media_info']["hasAudio"][media_file_path] = hasAudio
+                    #nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
+                    r = utilities.accurate_media_analysis2(ffmpeg_bin, media_file_path)
+                    if "error" in r:
+                        return projectFileName, projectChanged, {"error": r["error"]}, ""
+
+                    if r["duration"]:
+                        pj[OBSERVATIONS][obs]["media_info"]["length"][media_file_path] = r["duration"]
+                        pj[OBSERVATIONS][obs]["media_info"]["fps"][media_file_path] = r["fps"]
+                        pj[OBSERVATIONS][obs]["media_info"]["hasVideo"][media_file_path] = r["has_video"]
+                        pj[OBSERVATIONS][obs]["media_info"]["hasAudio"][media_file_path] = r["has_audio"]
                         project_updated, projectChanged = True, True
                     else:  # file path not found
                         if ("media_file_info" in pj[OBSERVATIONS][obs]
@@ -541,7 +544,6 @@ def open_project_json(projectFileName):
                                          / (pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['video_length']/1000)}
                                 else:
                                     pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path: 0}
-
 
     if project_updated:
         msg = "The media files information was updated to the new project format."
