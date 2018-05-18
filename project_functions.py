@@ -652,7 +652,19 @@ def check_state_events_obs(obsId, ethogram, observation, time_format=HHMMSS):
     return (False, out) if out else (True, "All state events are PAIRED")
 
 
-def close_unpaired_state_events(obsId, ethogram, observation, time):
+def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
+    """
+    fix unpaired state events in observation
+    
+    Args:
+        obsId (str): observation id
+        ethogram (dict): ethogram dictionary
+        observation (dict): observation dictionary 
+        fix_at_time (Decimal): time to fix the unpaired events
+
+    Returns:
+        list: list of events with state events fixed
+    """
 
     out = ""
     closing_events_to_add = []
@@ -685,9 +697,8 @@ def close_unpaired_state_events(obsId, ethogram, observation, time):
 
                 for event in lst:
 
-                    last_event_time = max([time] + [x[0] for x in closing_events_to_add])
-                    print("last_event_time", last_event_time)
-
+                    last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
+                    print("last_event_time", last_event_time, type(last_event_time))
 
                     closing_events_to_add.append([last_event_time + Decimal("0.001"),
                                                   subject,

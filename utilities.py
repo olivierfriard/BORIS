@@ -557,9 +557,15 @@ def float2decimal(f):
     return Decimal(str(f))
 
 
-def time2seconds(time):
+def time2seconds(time) -> Decimal:
     """
     convert hh:mm:ss.s to number of seconds (decimal)
+    
+    Args
+        time (str): time (hh:mm:ss.zzz format)
+        
+    Returns:
+        Decimal: time in seconds
     """
     flagNeg = '-' in time
     time = time.replace("-", "")

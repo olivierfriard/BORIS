@@ -169,7 +169,7 @@ class ChooseObservationsToImport(QDialog):
         Vlayout.addWidget(pbCancel)
         pbOK = QPushButton("OK")
         pbOK.setDefault(True)
-        pbOK.clicked.connect(self.pbOK_clicked)
+        pbOK.clicked.connect(self.accept)
         Vlayout.addWidget(pbOK)
 
         self.setLayout(Vlayout)
@@ -183,9 +183,6 @@ class ChooseObservationsToImport(QDialog):
         get selected_observations
         """
         return [item.text() for item in self.lw.selectedItems()]
-
-    def pbOK_clicked(self):
-        self.accept()
 
 
 class JumpTo(QDialog):
@@ -207,23 +204,19 @@ class JumpTo(QDialog):
             self.te.setMinimum(0)
             self.te.setMaximum(86400)
             self.te.setDecimals(3)
+        self.te.setStyleSheet("font-size:14px")
         hbox.addWidget(self.te)
-        self.pbOK = QPushButton('OK')
-        self.pbOK.clicked.connect(self.pbOK_clicked)
-        self.pbCancel = QPushButton('Cancel')
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-        hbox2 = QHBoxLayout(self)
-        hbox2.addWidget(self.pbCancel)
-        hbox2.addWidget(self.pbOK)
-        hbox.addLayout(hbox2)
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.accept)
+        self.pbOK.setDefault(True)
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        self.hbox2 = QHBoxLayout(self)
+        self.hbox2.addWidget(self.pbCancel)
+        self.hbox2.addWidget(self.pbOK)
+        hbox.addLayout(self.hbox2)
         self.setLayout(hbox)
-        self.setWindowTitle('Jump to specific time')
-
-    def pbOK_clicked(self):
-        self.accept()
-
-    def pbCancel_clicked(self):
-        self.reject()
+        self.setWindowTitle("Jump to specific time")
 
 
 class EditSelectedEvents(QDialog):

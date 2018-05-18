@@ -104,7 +104,7 @@ import time_budget_functions
 
 
 __version__ = "6.2.6"
-__version_date__ = "2018-05-15"
+__version_date__ = "2018-05-18"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -682,7 +682,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCheckStateEvents.triggered.connect(lambda: self.check_state_events("all"))
         self.actionCheckStateEventsSingleObs.triggered.connect(lambda: self.check_state_events("current"))
-        self.actionClose_unpaired_events.triggered.connect(self.close_unpaired_events)
+        self.actionClose_unpaired_events.triggered.connect(self.fix_unpaired_events)
         self.actionRunEventOutside.triggered.connect(self.run_event_outside)
 
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
@@ -2167,13 +2167,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         results.exec_()
 
 
-    def close_unpaired_events(self):
+    def fix_unpaired_events(self):
         """
-        close unpaired state events
-        
-        Args:
-            mode (str): current: check current observation / all: ask user to select observations
+        fix unpaired state events
         """
+
         if self.observationId:
 
             r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
@@ -2183,51 +2181,57 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
-            events_to_add = []
-
-            time = -1
+            '''
             if self.playerType == VIEWER:
-                time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                # max time
+                time_ = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
             else:
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
-                    time = self.getLaps()
-    
-                if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-                    time = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                time_ = self.getLaps()
+            '''
 
-            print(time)
-            if time == -1:
-                return
-            events_to_add = project_functions.close_unpaired_state_events(self.observationId,
-                                                      self.pj[ETHOGRAM],
-                                                      self.pj[OBSERVATIONS][self.observationId],
-                                                      time
-                                                      )
+            w = dialog.JumpTo(self.timeFormat)
+            w.setWindowTitle("Fix UNPAIRED state events")
+            w.label.setText("Fix UNPAIRED events at time")
 
-            if events_to_add:
-                self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
-                self.projectChanged = True
-                self.loadEventsInTW(self.observationId)
+            if w.exec_():
+                if self.timeFormat == HHMMSS:
+                    fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
+                elif self.timeFormat == S:
+                    fix_at_time = Decimal(str(w.te.value()))
+                print("fix_at_time",  fix_at_time)
+
+                events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
+                                                                  self.pj[ETHOGRAM],
+                                                                  self.pj[OBSERVATIONS][self.observationId],
+                                                                  fix_at_time - Decimal("0.001")
+                                                                  )
+                if events_to_add:
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
+                    self.projectChanged = True
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
+                    self.loadEventsInTW(self.observationId)
+                    item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == fix_at_time][0], 0)
+                    self.twEvents.scrollToItem(item)
 
         # selected observations
         else:
-            result, selectedObservations = self.selectObservations(MULTIPLE)
-            if not selectedObservations:
+            result, selected_observations = self.selectObservations(MULTIPLE)
+            if not selected_observations:
                 return
 
             # check if state events are paired
             out = ""
             not_paired_obs_list = []
-            for obs_id in selectedObservations:
+            for obs_id in selected_observations:
                 r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
                                                                   self.pj[OBSERVATIONS][obs_id])
                 print("msg", msg)
                 if "NOT PAIRED" in msg.upper():
-                    time = max(x[0] for x in self.pj[OBSERVATIONS][obs_id][EVENTS])
-                    events_to_add = project_functions.close_unpaired_state_events(obs_id,
+                    fix_at_time = max(x[0] for x in self.pj[OBSERVATIONS][obs_id][EVENTS])
+                    events_to_add = project_functions.fix_unpaired_state_events(obs_id,
                                                                                   self.pj[ETHOGRAM],
                                                                                   self.pj[OBSERVATIONS][obs_id],
-                                                                                  time
+                                                                                  fix_at_time
                                                                                   )
                     if events_to_add:
                         events_backup = self.pj[OBSERVATIONS][obs_id][EVENTS][:]
@@ -2238,10 +2242,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                   self.pj[OBSERVATIONS][obs_id])
                         if "NOT PAIRED" in msg.upper():
                             out += "The observation <b>{}</b> can not be automatically fixed.<br><br>".format(obs_id)
-                            '''
-                            QMessageBox.warning(self, programName, "The observation <b>{}</b> can not be automatically fixed".format(obs_id),
-                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                            '''
                             self.pj[OBSERVATIONS][obs_id][EVENTS] = events_backup
                         else:
                             out += "<b>{}</b><br>".format(obs_id)
@@ -2258,7 +2258,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 QMessageBox.information(self, programName, "All state events are already paired",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                
 
 
     def observations_list(self):
@@ -4414,40 +4413,68 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info("Close observation {}".format(self.playerType))
 
-        if self.playerType == LIVE:
+        if self.playerType == VLC:
+            self.timer.stop()
+            self.timer_spectro.stop()
+            self.mediaplayer.stop()
 
+        if self.playerType == LIVE:
             self.liveTimer.stop()
+            '''
             end_time = self.getLaps()
             self.lbTimeLive.setText(self.convertTime(end_time))
+            '''
 
-            # check observation events
-            flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
+        # check observation events
+        flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
                                                      self.pj[ETHOGRAM],
                                                      self.pj[OBSERVATIONS][self.observationId],
                                                      time_format=HHMMSS)
 
-            if not flag_ok:
+        if not flag_ok:
 
-                out = "The current observation has state event(s) that are not PAIRED:<br><br>" + msg
-                results = dialog.Results_dialog()
-                results.setWindowTitle(programName + " - Check selected observations")
-                results.ptText.setReadOnly(True)
-                results.ptText.appendHtml(out)
-                results.pbSave.setVisible(False)
-                results.pbCancel.setText("Close observation")
-                results.pbCancel.setVisible(True)
-                results.pbOK.setText("Fix unpaired events and close observation")
-                if results.exec_():
-                    # to fix
-                    self.liveTimer.start()
-                    events_to_add = project_functions.close_unpaired_state_events(self.observationId,
-                                                                      self.pj[ETHOGRAM],
-                                                                      self.pj[OBSERVATIONS][self.observationId],
-                                                                      end_time
-                                                                      )
+            out = "The current observation has state event(s) that are not PAIRED:<br><br>" + msg
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName + " - Check selected observations")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setText("Close observation")
+            results.pbCancel.setVisible(True)
+            results.pbOK.setText("Fix unpaired state events")
+
+            if results.exec_():  # fix events
+
+                w = dialog.JumpTo(self.timeFormat)
+                w.setWindowTitle("Fix UNPAIRED state events")
+                w.label.setText("Fix UNPAIRED events at time")
+    
+                if w.exec_():
+                    if self.timeFormat == HHMMSS:
+                        fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
+                    elif self.timeFormat == S:
+                        fix_at_time = Decimal(str(w.te.value()))
+                    print("fix_at_time",  fix_at_time)
+
+                    events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
+                                                                                self.pj[ETHOGRAM],
+                                                                                self.pj[OBSERVATIONS][self.observationId],
+                                                                                fix_at_time - Decimal("0.001")
+                                                                                )
                     if events_to_add:
                         self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
+                        self.projectChanged = True
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
 
+                        self.loadEventsInTW(self.observationId)
+                        item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == fix_at_time][0], 0)
+                        self.twEvents.scrollToItem(item)
+                        return
+                else:
+                    return
+
+
+        if self.playerType == LIVE:
             self.liveObservationStarted = False
             self.liveStartTime = None
             self.liveTimer.stop()
@@ -4467,10 +4494,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
 
-            self.timer.stop()
-            self.timer_spectro.stop()
-
-            self.mediaplayer.stop()
             del self.mediaplayer
             del self.mediaListPlayer
 
@@ -8636,6 +8659,7 @@ item []:
                     # add cell for current state(s) after last subject field
                     self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields), QTableWidgetItem(""))
 
+
     def update_events_start_stop(self):
         """
         update status start/stop of events in Events table
@@ -8693,7 +8717,7 @@ item []:
         Args:
             event (dict): event parameters
             memTime (Decimal): time 
-        
+
         """
 
         logging.debug("write event - event: {0}  memtime: {1}".format(event, memTime))
@@ -8812,7 +8836,7 @@ item []:
     
             # sort events in pj
             self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
-    
+
             # reload all events in tw
             self.loadEventsInTW(self.observationId)
             item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
