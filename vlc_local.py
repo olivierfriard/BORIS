@@ -25,6 +25,7 @@ This file is part of BORIS.
 import pathlib
 import sys
 import ctypes
+import os
 
 def find_local_libvlc():
     
