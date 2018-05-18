@@ -1,20 +1,42 @@
+"""
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2018 Olivier Friard
+
+This file is part of BORIS.
+
+  BORIS is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
+
+  BORIS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not see <http://www.gnu.org/licenses/>.
+
+"""
+
 # check if library in same dir than vlc.py
+
 import pathlib
 import sys
 import ctypes
 
-def find_local_lib():
+def find_local_libvlc():
     
     dll = None
     plugin_path = ""
     
     if sys.platform.startswith("linux"):
+        # for Linux VLC must be installed
         return dll, plugin_path
 
     p = pathlib.Path(sys.argv[0])
-    print("p", p)
     parent_dir = p.resolve().parent
-    print("parent_dir", parent_dir)
 
     if sys.platform.startswith('win'):
         libname = 'libvlc.dll'
@@ -42,4 +64,4 @@ def find_local_lib():
 
 
 if __name__ == '__main__':
-    print(find_local_lib())
+    print(find_local_libvlc())
