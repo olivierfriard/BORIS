@@ -42,4 +42,4 @@ def find_local_lib():
 
 
 if __name__ == '__main__':
-    print(find_local_lib)
+    print(find_local_lib())
