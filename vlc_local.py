@@ -43,7 +43,10 @@ def find_local_libvlc():
         
         lib_path = parent_dir / libname
         if lib_path.exists():
-            dll = ctypes.CDLL(str(lib_path))
+            mem_dir = os.getcwd()
+            os.chdir(str(parent_dir))
+            dll = ctypes.CDLL(libname)
+            os.chdir(mem_dir)
             plugin_path = str(parent_dir)
 
     if sys.platform.startswith("darwin"):
