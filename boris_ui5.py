@@ -752,5 +752,6 @@ class Ui_MainWindow(object):
         self.actionTest.setText(_translate("MainWindow", "test"))
         self.actionTest_stb2.setText(_translate("MainWindow", "test stb2"))
         self.actionClose_unpaired_events.setText(_translate("MainWindow", "Fix unpaired events"))
+        self.actionClose_unpaired_events.setShortcut(_translate("MainWindow", "Ctrl+U"))
         self.actionRotate_video.setText(_translate("MainWindow", "Rotate video"))
 

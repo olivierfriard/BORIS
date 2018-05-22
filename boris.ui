@@ -1209,6 +1209,9 @@
    <property name="text">
     <string>Fix unpaired events</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
+   </property>
   </action>
   <action name="actionRotate_video">
    <property name="text">
