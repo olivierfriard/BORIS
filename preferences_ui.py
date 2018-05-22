@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt4 UI code generator 4.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +26,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName(_fromUtf8("prefDialog"))
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(596, 502)
+        prefDialog.resize(596, 525)
         self.verticalLayout_5 = QtGui.QVBoxLayout(prefDialog)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.verticalLayout_2 = QtGui.QVBoxLayout()
@@ -36,6 +36,7 @@ class Ui_prefDialog(object):
         self.tab = QtGui.QWidget()
         self.tab.setObjectName(_fromUtf8("tab"))
         self.verticalLayout = QtGui.QVBoxLayout(self.tab)
+        self.verticalLayout.setMargin(0)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
@@ -123,6 +124,7 @@ class Ui_prefDialog(object):
         self.tab_2 = QtGui.QWidget()
         self.tab_2.setObjectName(_fromUtf8("tab_2"))
         self.verticalLayout_4 = QtGui.QVBoxLayout(self.tab_2)
+        self.verticalLayout_4.setMargin(0)
         self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
         self.verticalLayout_3 = QtGui.QVBoxLayout()
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
@@ -164,9 +166,8 @@ class Ui_prefDialog(object):
         self.tab_3 = QtGui.QWidget()
         self.tab_3.setObjectName(_fromUtf8("tab_3"))
         self.verticalLayout_7 = QtGui.QVBoxLayout(self.tab_3)
+        self.verticalLayout_7.setMargin(0)
         self.verticalLayout_7.setObjectName(_fromUtf8("verticalLayout_7"))
-        self.verticalLayout_6 = QtGui.QVBoxLayout()
-        self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
         self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
         self.lbResize = QtGui.QLabel(self.tab_3)
@@ -178,7 +179,9 @@ class Ui_prefDialog(object):
         self.sbFrameResize.setSingleStep(10)
         self.sbFrameResize.setObjectName(_fromUtf8("sbFrameResize"))
         self.horizontalLayout_5.addWidget(self.sbFrameResize)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_5)
+        self.verticalLayout_6 = QtGui.QVBoxLayout()
+        self.verticalLayout_6.setObjectName(_fromUtf8("verticalLayout_6"))
         self.horizontalLayout_8 = QtGui.QHBoxLayout()
         self.horizontalLayout_8.setObjectName(_fromUtf8("horizontalLayout_8"))
         self.label_9 = QtGui.QLabel(self.tab_3)
@@ -190,6 +193,17 @@ class Ui_prefDialog(object):
         self.cbFrameBitmapFormat.addItem(_fromUtf8(""))
         self.horizontalLayout_8.addWidget(self.cbFrameBitmapFormat)
         self.verticalLayout_6.addLayout(self.horizontalLayout_8)
+        self.horizontalLayout_9 = QtGui.QHBoxLayout()
+        self.horizontalLayout_9.setObjectName(_fromUtf8("horizontalLayout_9"))
+        self.label_11 = QtGui.QLabel(self.tab_3)
+        self.label_11.setObjectName(_fromUtf8("label_11"))
+        self.horizontalLayout_9.addWidget(self.label_11)
+        self.sb_fbf_cache_size = QtGui.QSpinBox(self.tab_3)
+        self.sb_fbf_cache_size.setMinimum(1)
+        self.sb_fbf_cache_size.setMaximum(3600)
+        self.sb_fbf_cache_size.setObjectName(_fromUtf8("sb_fbf_cache_size"))
+        self.horizontalLayout_9.addWidget(self.sb_fbf_cache_size)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_9)
         self.cbDetachFrameViewer = QtGui.QCheckBox(self.tab_3)
         self.cbDetachFrameViewer.setObjectName(_fromUtf8("cbDetachFrameViewer"))
         self.verticalLayout_6.addWidget(self.cbDetachFrameViewer)
@@ -200,6 +214,7 @@ class Ui_prefDialog(object):
         self.tab_4 = QtGui.QWidget()
         self.tab_4.setObjectName(_fromUtf8("tab_4"))
         self.verticalLayout_9 = QtGui.QVBoxLayout(self.tab_4)
+        self.verticalLayout_9.setMargin(0)
         self.verticalLayout_9.setObjectName(_fromUtf8("verticalLayout_9"))
         self.verticalLayout_8 = QtGui.QVBoxLayout()
         self.verticalLayout_8.setObjectName(_fromUtf8("verticalLayout_8"))
@@ -232,6 +247,7 @@ class Ui_prefDialog(object):
         self.tab_5 = QtGui.QWidget()
         self.tab_5.setObjectName(_fromUtf8("tab_5"))
         self.verticalLayout_11 = QtGui.QVBoxLayout(self.tab_5)
+        self.verticalLayout_11.setMargin(0)
         self.verticalLayout_11.setObjectName(_fromUtf8("verticalLayout_11"))
         self.verticalLayout_10 = QtGui.QVBoxLayout()
         self.verticalLayout_10.setObjectName(_fromUtf8("verticalLayout_10"))
@@ -262,7 +278,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -294,6 +310,7 @@ class Ui_prefDialog(object):
         self.label_9.setText(_translate("prefDialog", "Frame bitmap format (JPG: Low quality  PNG: High quality)", None))
         self.cbFrameBitmapFormat.setItemText(0, _translate("prefDialog", "JPG", None))
         self.cbFrameBitmapFormat.setItemText(1, _translate("prefDialog", "PNG", None))
+        self.label_11.setText(_translate("prefDialog", "Cache size (in seconds)", None))
         self.cbDetachFrameViewer.setText(_translate("prefDialog", "Detach frame viewer", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode", None))
         self.lbspectrogram.setText(_translate("prefDialog", "Spectrogram height", None))

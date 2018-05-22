@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,7 +12,7 @@ class Ui_prefDialog(object):
     def setupUi(self, prefDialog):
         prefDialog.setObjectName("prefDialog")
         prefDialog.setWindowModality(QtCore.Qt.WindowModal)
-        prefDialog.resize(596, 502)
+        prefDialog.resize(596, 525)
         self.verticalLayout_5 = QtWidgets.QVBoxLayout(prefDialog)
         self.verticalLayout_5.setObjectName("verticalLayout_5")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
@@ -151,8 +151,6 @@ class Ui_prefDialog(object):
         self.tab_3.setObjectName("tab_3")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.tab_3)
         self.verticalLayout_7.setObjectName("verticalLayout_7")
-        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.lbResize = QtWidgets.QLabel(self.tab_3)
@@ -164,7 +162,9 @@ class Ui_prefDialog(object):
         self.sbFrameResize.setSingleStep(10)
         self.sbFrameResize.setObjectName("sbFrameResize")
         self.horizontalLayout_5.addWidget(self.sbFrameResize)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_5)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_5)
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         self.label_9 = QtWidgets.QLabel(self.tab_3)
@@ -176,6 +176,17 @@ class Ui_prefDialog(object):
         self.cbFrameBitmapFormat.addItem("")
         self.horizontalLayout_8.addWidget(self.cbFrameBitmapFormat)
         self.verticalLayout_6.addLayout(self.horizontalLayout_8)
+        self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_9.setObjectName("horizontalLayout_9")
+        self.label_11 = QtWidgets.QLabel(self.tab_3)
+        self.label_11.setObjectName("label_11")
+        self.horizontalLayout_9.addWidget(self.label_11)
+        self.sb_fbf_cache_size = QtWidgets.QSpinBox(self.tab_3)
+        self.sb_fbf_cache_size.setMinimum(1)
+        self.sb_fbf_cache_size.setMaximum(3600)
+        self.sb_fbf_cache_size.setObjectName("sb_fbf_cache_size")
+        self.horizontalLayout_9.addWidget(self.sb_fbf_cache_size)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_9)
         self.cbDetachFrameViewer = QtWidgets.QCheckBox(self.tab_3)
         self.cbDetachFrameViewer.setObjectName("cbDetachFrameViewer")
         self.verticalLayout_6.addWidget(self.cbDetachFrameViewer)
@@ -248,7 +259,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -281,6 +292,7 @@ class Ui_prefDialog(object):
         self.label_9.setText(_translate("prefDialog", "Frame bitmap format (JPG: Low quality  PNG: High quality)"))
         self.cbFrameBitmapFormat.setItemText(0, _translate("prefDialog", "JPG"))
         self.cbFrameBitmapFormat.setItemText(1, _translate("prefDialog", "PNG"))
+        self.label_11.setText(_translate("prefDialog", "Cache size (in seconds)"))
         self.cbDetachFrameViewer.setText(_translate("prefDialog", "Detach frame viewer"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_3), _translate("prefDialog", "Frame-by-frame mode"))
         self.lbspectrogram.setText(_translate("prefDialog", "Spectrogram height"))

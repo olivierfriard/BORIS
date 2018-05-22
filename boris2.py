@@ -80,8 +80,8 @@ import modifiers_coding_map
 import map_creator
 import behav_coding_map_creator
 import select_modifiers
-import utilities
-from utilities import *
+import utilities2
+from utilities2 import *
 import tablib
 import observations_list
 import plot_spectrogram
@@ -470,7 +470,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.setColumnCount(len(tw_events_fields))
         self.twEvents.setHorizontalHeaderLabels(tw_events_fields)
 
-        self.imagesList = set()
         self.FFmpegGlobalFrame = 0
 
         self.menu_options()
@@ -2823,7 +2822,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.frame_viewer1_mem_geometry:
                 self.frame_viewer1.setGeometry(self.frame_viewer1_mem_geometry)
             else:
-                self.frame_viewer1.setGeometry(100, 100, 256, 256)
+                self.frame_viewer1.setGeometry(100, 100, 1024, 768)
 
         if self.second_player():
             if not hasattr(self, "frame_viewer2"):
@@ -2833,7 +2832,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.frame_viewer2_mem_geometry:
                     self.frame_viewer2.setGeometry(self.frame_viewer2_mem_geometry)
                 else:
-                    self.frame_viewer2.setGeometry(150, 150, 256, 256)
+                    self.frame_viewer2.setGeometry(150, 150, 1024, 768)
 
 
     def ffmpegTimerOut(self):
@@ -2850,7 +2849,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         frameMs = 1000 / fps
 
-        logging.debug("framMs {}".format(frameMs))
+        logging.debug("frame Ms {}".format(frameMs))
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
@@ -2874,60 +2873,53 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # plot external data files
 
-        md5FileName = hashlib.md5(currentMedia.encode("utf-8")).hexdigest()
+        md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
 
-        if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName,
-                                                 second=int((frameCurrentMedia -1)/ fps)) not in self.imagesList:
+        print("self.FFmpegGlobalFrame",self.FFmpegGlobalFrame)
+        print("frameCurrentMedia:", frameCurrentMedia)
 
-            utilities.extract_frames(self.ffmpeg_bin,
-                           int((frameCurrentMedia -1) / fps),
-                           current_media_full_path,
-                           str(round(fps) + 1),
-                           self.imageDirectory,
-                           md5FileName,
-                           self.frame_bitmap_format.lower(),
-                           self.frame_resize
-                           )
-
-            self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0]
-                                    for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
-
-        logging.debug("images 1 list: {}".format(self.imagesList))
-
-        second1 = int((frameCurrentMedia - 1) / fps)
-        frame1 = round((frameCurrentMedia - int((frameCurrentMedia - 1) / fps) * fps))
-        if frame1 == 0:
-            frame1 += 1
-        logging.debug("second1: {}  frame1: {}".format(second1, frame1))
-
-        img = "{imageDir}{sep}BORIS@{fileName}-{second}_{frame}.{extension}".format(imageDir=self.imageDirectory,
+        frame_image_path = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
                                                                                     sep=os.sep,
                                                                                     fileName=md5FileName,
-                                                                                    second=second1,
-                                                                                    frame=frame1,
+                                                                                    frame=frameCurrentMedia,
                                                                                     extension=self.frame_bitmap_format.lower())
 
-        logging.debug("image1: {}".format(img))
-        if not os.path.isfile(img):
-            logging.warning("image 1 not found: {} {} {}".format(img, frameCurrentMedia, int(frameCurrentMedia / fps)))
-            utilities.extract_frames(self.ffmpeg_bin,
-                           int(frameCurrentMedia / fps),
+        if os.path.isfile(frame_image_path):
+            self.pixmap = QPixmap(frame_image_path)
+            # check if jpg filter available if not use png
+            if self.pixmap.isNull():
+                self.frame_bitmap_format = "PNG"
+
+        else:
+            self.extract_frames_ps = multiprocessing.Process(target=utilities2.extract_frames,
+                                                                     args=(self.ffmpeg_bin,
+                           frameCurrentMedia,
+                           (frameCurrentMedia -1) / fps,
                            current_media_full_path,
-                           str(round(fps) + 1),
+                           round(fps),
                            self.imageDirectory,
                            md5FileName,
                            self.frame_bitmap_format.lower(),
                            self.frame_resize,
-                           self.fbf_cache_size)
+                           self.fbf_cache_size,))
+            #self.statusbar.showMessage("Generating frames...", 0)
+            self.extract_frames_ps.start()
+            print("Generating frames... from for ", frameCurrentMedia)
+            t1 = time.time()
+            while True:
+                if os.path.isfile(frame_image_path):
+                    break
+                if time.time() -t1 > 3:
+                    break
 
-            if not os.path.isfile(img):
-                logging.warning("image 1 still not found: {0}".format(img))
+            if not os.path.isfile(frame_image_path):
+                logging.warning("frame not found: {} {} {}".format(frame_image_path, frameCurrentMedia, int(frameCurrentMedia / fps)))
                 return
 
-        self.pixmap = QPixmap(img)
-        # check if jpg filter available if not use png
-        if self.pixmap.isNull():
-            self.frame_bitmap_format = "PNG"
+            self.pixmap = QPixmap(frame_image_path)
+            # check if jpg filter available if not use png
+            if self.pixmap.isNull():
+                self.frame_bitmap_format = "PNG"
 
         if self.second_player():
 
@@ -2958,22 +2950,65 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             currentMedia2, frameCurrentMedia2 = self.getCurrentMediaByFrame(PLAYER2, requiredFrame2, fps)
             current_media_full_path2 = project_functions.media_full_path(currentMedia2, self.projectFileName)
-            
-            md5FileName2 = hashlib.md5(currentMedia2.encode("utf-8")).hexdigest()
+
+            md5FileName2 = hashlib.md5(current_media_full_path2.encode("utf-8")).hexdigest()
+
+            frame_image_path2 = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
+                                                                                    sep=os.sep,
+                                                                                    fileName=md5FileName2,
+                                                                                    frame=frameCurrentMedia2,
+                                                                                    extension=self.frame_bitmap_format.lower())
+
+            if os.path.isfile(frame_image_path2):
+                self.pixmap2 = QPixmap(frame_image_path2)
+                # check if jpg filter available if not use png
+                if self.pixmap2.isNull():
+                    self.frame_bitmap_format = "PNG"
+    
+            else:
+                self.extract_frames_ps2 = multiprocessing.Process(target=utilities2.extract_frames,
+                                                                         args=(self.ffmpeg_bin,
+                               frameCurrentMedia2,
+                               (frameCurrentMedia2 -1) / fps,
+                               current_media_full_path2,
+                               round(fps),
+                               self.imageDirectory,
+                               md5FileName2,
+                               self.frame_bitmap_format.lower(),
+                               self.frame_resize,
+                               self.fbf_cache_size,))
+                #self.statusbar.showMessage("Generating frames...", 0)
+                self.extract_frames_ps2.start()
+                print("Generating frames... from ", frameCurrentMedia2)
+                t1 = time.time()
+                while True:
+                    if os.path.isfile(frame_image_path2):
+                        break
+                    if time.time() -t1 > 3:
+                        break
+    
+                if not os.path.isfile(frame_image_path2):
+                    logging.warning("frame not found: {} {} {}".format(frame_image_path2, frameCurrentMedia2, int(frameCurrentMedia2 / fps)))
+                    return
+    
+                self.pixmap2 = QPixmap(frame_image_path2)
+                # check if jpg filter available if not use png
+                if self.pixmap2.isNull():
+                    self.frame_bitmap_format = "PNG"
+
+            '''
             if "BORIS@{md5FileName}-{second}".format(md5FileName=md5FileName2,
                                                      second=int(frameCurrentMedia2 / fps)) not in self.imagesList:
 
-                utilities.extract_frames(self.ffmpeg_bin,
+                utilities.extract_frames2(self.ffmpeg_bin,
                                          int(frameCurrentMedia2 / fps),
                                          current_media_full_path2,
                                          str(round(fps) + 1),
                                          self.imageDirectory,
                                          md5FileName2,
                                          self.frame_bitmap_format.lower(),
-                                         self.frame_resize)
-
-                self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in
-                                        glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
+                                         self.frame_resize,
+                                         self.fbf_cache_size)
 
             second2 = int((frameCurrentMedia2 - 1) / fps)
             frame2 = round((frameCurrentMedia2 - int((frameCurrentMedia2 - 1) / fps) * fps))
@@ -3001,6 +3036,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     logging.warning("image 2 still not found: {0}".format(img2))
                     return
             self.pixmap2 = QPixmap(img2)
+            '''
 
         if self.detachFrameViewer or self.second_player():   # frame viewer detached or 2 players
             self.create_frame_viewer()
@@ -4556,7 +4592,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpegTab.deleteLater()
                 self.FFmpegTimer.stop()
                 self.FFmpegGlobalFrame = 0
-                self.imagesList = set()
             except:
                 pass
 
@@ -7652,7 +7687,7 @@ item []:
                 self.cleaningThread.exiting = True
 
         # go to frame by frame mode
-        else:
+        elif self.playMode == VLC:
 
             if list(self.fps.values())[0] == 0:
                 logging.warning("The frame per second value is not available. Frame-by-frame mode will not be available")
@@ -7689,10 +7724,6 @@ item []:
                 self.imageDirectory = tempfile.gettempdir()
             else:
                 self.imageDirectory = self.ffmpeg_cache_dir
-
-            # load list of images in a set
-            if not self.imagesList:
-                self.imagesList.update([f.replace(self.imageDirectory + os.sep, "").split("_")[0] for f in glob.glob(self.imageDirectory + os.sep + "BORIS@*")])
 
             # show frame-by_frame tab
             self.toolBox.setCurrentIndex(1)
@@ -8927,7 +8958,7 @@ item []:
                     # cumulative time
                     memLaps = Decimal(self.FFmpegGlobalFrame * (1000 / list(self.fps.values())[0]) / 1000).quantize(Decimal(".001"))
                     return memLaps
-                else: # playMode == VLC
+                elif self.playMode == VLC:
                     # cumulative time
                     memLaps = Decimal(str(round((sum(self.duration[0: self.media_list.index_of_item(self.mediaplayer.get_media())]) +
                               self.mediaplayer.get_time()) / 1000, 3)))
@@ -8981,7 +9012,7 @@ item []:
 
     def frame_backward(self):
         """
-        go one frame back
+        go to previous frame (frame backward)
         """
 
         if self.playMode == FFMPEG:

@@ -31,9 +31,7 @@ except:
     from PyQt4.QtCore import *
 
 import os
-
-from config import *
-from utilities import *
+from config import BEHAVIORS_PLOT_COLORS
 
 if QT_VERSION_STR[0] == "4":
     from preferences_ui import Ui_prefDialog
@@ -44,7 +42,7 @@ class Preferences(QDialog, Ui_prefDialog):
 
     def __init__(self, parent=None):
 
-        super(Preferences, self).__init__(parent)
+        super().__init__()
         self.setupUi(self)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
@@ -58,7 +56,8 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         allow user select a cache dir for ffmpeg images
         """
-        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly)
+        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"),
+                                                            options=QFileDialog().ShowDirsOnly)
 
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
