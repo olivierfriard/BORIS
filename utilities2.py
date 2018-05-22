@@ -420,24 +420,29 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
                         extension=extension,
                         frame_resize=frame_resize
                         )
-    
+
         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
-    
+
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         out, error = p.communicate()
         out, error = out.decode("utf-8"), error.decode("utf-8")
-    
+
         if error:
             logging.debug("ffmpeg error: {}".format(error))
-    
-    # check before
-    
+
+    # check before frame
     if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(imageDir=imageDir,
                     sep=os.sep,
                     md5_media_path=md5_media_path,
                     frame=start_frame - 1,
                     extension=extension)):
             print("before", round(start_frame - fps * number_of_seconds), number_of_seconds * fps)
+            if round(start_frame - fps * number_of_seconds) < 1:
+                start_frame_before = 1
+                second_before = 0
+            else:
+                start_frame_before = round(start_frame - fps * number_of_seconds)
+                second_before = second - number_of_seconds
 
             ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
                       '-loglevel quiet '
@@ -447,10 +452,10 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
                       '-vf scale={frame_resize}:-1 '
                       '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
                     ffmpeg_bin=ffmpeg_bin,
-                    second=second - number_of_seconds,
+                    second=second_before,
                     current_media_path=current_media_path,
-                    start_number=round(start_frame - fps * number_of_seconds),
-                    number_of_frames=number_of_seconds * fps + 2,
+                    start_number=start_frame_before,
+                    number_of_frames=number_of_seconds * fps + 2, # +2 to obtain current frame
                     imageDir=imageDir,
                     sep=os.sep,
                     md5_media_path=md5_media_path,
