@@ -1175,9 +1175,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Args:
             action (str): "reencode_resize, rotate
         """
+
         if action not in ["reencode_resize" ,"rotate"]:
             return
-        
         timer_ffmpeg_process = QTimer()
         def timer_ffmpeg_process_timeout():
             """
@@ -2891,6 +2891,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.frame_bitmap_format = "PNG"
 
         else:
+
+            self.iw = dialog.Info_widget()
+            self.iw.lwi.setVisible(False)
+            self.iw.resize(350, 100)
+            self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.iw.setWindowTitle("Extracting frames...")
+            self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
+            self.iw.show()
+            app.processEvents()
+
+            utilities.extract_frames(self.ffmpeg_bin,
+                           frameCurrentMedia,
+                           (frameCurrentMedia -1) / fps,
+                           current_media_full_path,
+                           round(fps),
+                           self.imageDirectory,
+                           md5FileName,
+                           self.frame_bitmap_format.lower(),
+                           self.frame_resize,
+                           self.fbf_cache_size)
+            self.iw.hide()
+            '''
             self.extract_frames_ps = multiprocessing.Process(target=utilities.extract_frames,
                                                                      args=(self.ffmpeg_bin,
                            frameCurrentMedia,
@@ -2902,16 +2924,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                            self.frame_bitmap_format.lower(),
                            self.frame_resize,
                            self.fbf_cache_size,))
-            #self.statusbar.showMessage("Generating frames...", 0)
             self.extract_frames_ps.start()
-            print("Generating frames... from for ", frameCurrentMedia)
             t1 = time.time()
             while True:
                 if os.path.isfile(frame_image_path):
                     break
                 if time.time() -t1 > 3:
                     break
-
+            '''
             if not os.path.isfile(frame_image_path):
                 logging.warning("frame not found: {} {} {}".format(frame_image_path, frameCurrentMedia, int(frameCurrentMedia / fps)))
                 return
