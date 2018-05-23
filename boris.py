@@ -4652,6 +4652,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.restoreState(settings.value("windowState"))
             except:
                 pass
+            self.dwEthogram.setVisible(False)
+            self.dwSubjects.setVisible(False)
+            self.dwObservations.setVisible(False)
 
             '''
             size = settings.value("MainWindow/Size")
