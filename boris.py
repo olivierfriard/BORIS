@@ -2894,7 +2894,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.iw = dialog.Info_widget()
             self.iw.lwi.setVisible(False)
-            self.iw.resize(350, 100)
+            self.iw.resize(350, 200)
             self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.iw.setWindowTitle("Extracting frames...")
             self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
