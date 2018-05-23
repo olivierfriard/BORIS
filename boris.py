@@ -80,8 +80,8 @@ import modifiers_coding_map
 import map_creator
 import behav_coding_map_creator
 import select_modifiers
-import utilities2
-from utilities2 import *
+import utilities
+from utilities import *
 import tablib
 import observations_list
 import plot_spectrogram
@@ -2891,7 +2891,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.frame_bitmap_format = "PNG"
 
         else:
-            self.extract_frames_ps = multiprocessing.Process(target=utilities2.extract_frames,
+            self.extract_frames_ps = multiprocessing.Process(target=utilities.extract_frames,
                                                                      args=(self.ffmpeg_bin,
                            frameCurrentMedia,
                            (frameCurrentMedia -1) / fps,
@@ -2966,7 +2966,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.frame_bitmap_format = "PNG"
     
             else:
-                self.extract_frames_ps2 = multiprocessing.Process(target=utilities2.extract_frames,
+                self.extract_frames_ps2 = multiprocessing.Process(target=utilities.extract_frames,
                                                                          args=(self.ffmpeg_bin,
                                frameCurrentMedia2,
                                (frameCurrentMedia2 -1) / fps,
@@ -4644,10 +4644,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
 
+            try:
+                self.restoreGeometry(settings.value("geometry"))
+            except:
+                pass
+            try:
+                self.restoreState(settings.value("windowState"))
+            except:
+                pass
+
+            '''
             size = settings.value("MainWindow/Size")
             if size:
                 self.resize(size)
                 self.move(settings.value("MainWindow/Position"))
+            '''
 
             self.timeFormat = HHMMSS
             try:
@@ -4860,8 +4871,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
 
         settings = QSettings(iniFilePath, QSettings.IniFormat)
+        
+        settings.setValue("geometry", self.saveGeometry())
+        settings.setValue('windowState', self.saveState())
+
+        '''
         settings.setValue("MainWindow/Size", self.size())
         settings.setValue("MainWindow/Position", self.pos())
+        '''
         settings.setValue("Time/Format", self.timeFormat)
         settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
         settings.setValue("Time/fast_forward_speed", self.fast)
@@ -10448,6 +10465,7 @@ item []:
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
 
