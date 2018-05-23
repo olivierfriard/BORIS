@@ -377,7 +377,7 @@ def check_txt_file(file_name):
 
 
 
-def extract_frames(ffmpeg_bin, second, current_media_path, fps, imageDir, md5_media_path, extension, frame_resize):
+def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, imageDir, md5_media_path, extension, frame_resize, number_of_seconds):
     """
     extract frames from media file and save them in imageDir directory
     
@@ -391,21 +391,71 @@ def extract_frames(ffmpeg_bin, second, current_media_path, fps, imageDir, md5_me
         md5FileName (str): md5 of file name content
         extension (str): image format
         frame_resize (int): horizontal resolution of frame
+        number_of_seconds (int): number of seconds to extract
 
     """
+    #print(ffmpeg_bin, second, current_media_path, fps, imageDir, md5_media_path, extension, frame_resize, number_of_seconds)
+    if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(imageDir=imageDir,
+                    sep=os.sep,
+                    md5_media_path=md5_media_path,
+                    frame=start_frame + 1,
+                    extension=extension)):
 
-    ffmpeg_command = ('"{ffmpeg_bin}" -ss {second_minus1} '
+        print("after", start_frame, number_of_seconds * fps )
+        ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
+                          '-loglevel quiet '
+                          '-i "{current_media_path}" '
+                          '-start_number {start_number} '
+                          '-vframes {number_of_frames} '
+                          '-vf scale={frame_resize}:-1 '
+                          '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
+                        ffmpeg_bin=ffmpeg_bin,
+                        second=second,
+                        current_media_path=current_media_path,
+                        start_number=start_frame,
+                        number_of_frames=number_of_seconds * fps,
+                        imageDir=imageDir,
+                        sep=os.sep,
+                        md5_media_path=md5_media_path,
+                        extension=extension,
+                        frame_resize=frame_resize
+                        )
+
+        logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+
+        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        out, error = p.communicate()
+        out, error = out.decode("utf-8"), error.decode("utf-8")
+
+        if error:
+            logging.debug("ffmpeg error: {}".format(error))
+
+    # check before frame
+    if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(imageDir=imageDir,
+                    sep=os.sep,
+                    md5_media_path=md5_media_path,
+                    frame=start_frame - 1,
+                    extension=extension)):
+            print("before", round(start_frame - fps * number_of_seconds), number_of_seconds * fps)
+            if round(start_frame - fps * number_of_seconds) < 1:
+                start_frame_before = 1
+                second_before = 0
+            else:
+                start_frame_before = round(start_frame - fps * number_of_seconds)
+                second_before = second - number_of_seconds
+
+            ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
                       '-loglevel quiet '
                       '-i "{current_media_path}" '
-                      '-ss 1 '
-                      '-frames:v {fps} '
+                      '-start_number {start_number} '
+                      '-vframes {number_of_frames} '
                       '-vf scale={frame_resize}:-1 '
-                      '"{imageDir}{sep}BORIS@{md5_media_path}-{second}_%d.{extension}"').format(
+                      '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
                     ffmpeg_bin=ffmpeg_bin,
-                    second_minus1=second - 1,
-                    second=second,
+                    second=second_before,
                     current_media_path=current_media_path,
-                    fps=fps,
+                    start_number=start_frame_before,
+                    number_of_frames=number_of_seconds * fps + 2, # +2 to obtain current frame
                     imageDir=imageDir,
                     sep=os.sep,
                     md5_media_path=md5_media_path,
@@ -413,15 +463,12 @@ def extract_frames(ffmpeg_bin, second, current_media_path, fps, imageDir, md5_me
                     frame_resize=frame_resize
                     )
 
-    logging.debug("ffmpeg command: {}".format(ffmpeg_command))
-
-    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    out, error = p.communicate()
-    out, error = out.decode("utf-8"), error.decode("utf-8")
-
-    if error:
-        logging.debug("ffmpeg error: {}".format(error))
-
+            p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            out, error = p.communicate()
+            out, error = out.decode("utf-8"), error.decode("utf-8")
+        
+            if error:
+                logging.debug("ffmpeg error: {}".format(error))
 
 
 def decimal_default(obj):
