@@ -778,6 +778,88 @@
      "video_test_25fps_180s.mp4":false
     }
    }
+  },
+  "2 video":{
+   "file":{
+    "1":[
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4"
+    ],
+    "2":[
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4"
+    ]
+   },
+   "type":"MEDIA",
+   "date":"2018-05-29T11:01:03",
+   "description":"",
+   "time offset":0.0,
+   "events":[],
+   "independent_variables":{
+    "a":"",
+    "b":"",
+    "c":"111"
+   },
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "media_info":{
+    "length":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4":179.96,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4":179.96
+    },
+    "fps":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4":25.0,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4":25.0
+    },
+    "hasVideo":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4":true,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4":true
+    },
+    "hasAudio":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4":false,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4":false
+    }
+   }
+  },
+  "2 video avi":{
+   "file":{
+    "1":[
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4.re-encoded.640px.avi"
+    ],
+    "2":[
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4.re-encoded.640px.avi"
+    ]
+   },
+   "type":"MEDIA",
+   "date":"2018-05-29T11:08:25",
+   "description":"",
+   "time offset":0.0,
+   "events":[],
+   "independent_variables":{
+    "a":"",
+    "b":"",
+    "c":"111"
+   },
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "media_info":{
+    "length":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4.re-encoded.640px.avi":179.96,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4.re-encoded.640px.avi":179.96
+    },
+    "fps":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4.re-encoded.640px.avi":25.0,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4.re-encoded.640px.avi":25.0
+    },
+    "hasVideo":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4.re-encoded.640px.avi":true,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4.re-encoded.640px.avi":true
+    },
+    "hasAudio":{
+     "/home/olivier/gdrive/src/python/BORIS_mp/video1.mp4.re-encoded.640px.avi":false,
+     "/home/olivier/gdrive/src/python/BORIS_mp/video2.mp4.re-encoded.640px.avi":false
+    }
+   }
   }
  },
  "independent_variables":{

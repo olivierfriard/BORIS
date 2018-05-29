@@ -2495,7 +2495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # remember if player paused (go previous will start playing)
                     flagPaused = self.mediaListPlayer.get_state() == vlc.State.Paused
 
-                    next(self.mediaListPlayer)
+                    self.mediaListPlayer.next()
 
                     # wait until media is played
                     while True:
@@ -10407,12 +10407,14 @@ item []:
 
             else:
                 if self.media_list.count() == 1:
+                    print("1st media")
                     if self.mediaplayer.get_time() >= self.mediaplayer.get_length() - self.fast * 1000:
                         self.mediaplayer.set_time(self.mediaplayer.get_length())
                     else:
                         self.mediaplayer.set_time(self.mediaplayer.get_time() + self.fast * 1000)
 
                     if self.simultaneousMedia:
+                        print("2nd media")
                         self.mediaplayer2.set_time(int(self.mediaplayer.get_time() -
                                                    self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
 
