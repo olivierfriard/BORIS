@@ -156,7 +156,7 @@ class observationsList_widget(QDialog):
         """
         export list of observations
         """
-        out = "Observation id\tDate\tDescription\tSubjects\tmedia"
+        out = "Observation id\tDate\tDescription\tSubjects\tmedia\n"
         for r in range(len(self.data)):
             out += "\t".join([str(x).replace("\n", " ") for x in self.data[r]]) + "\n"
         fn = QFileDialog(self).getSaveFileName(self, "Export list of observations", "", "Text files (*.txt *.tsv);;All files (*)")
