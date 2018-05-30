@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.3.0"
-__version_date__ = "2018-05-28"
+__version__ = "6.3.1"
+__version_date__ = "2018-05-29"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
