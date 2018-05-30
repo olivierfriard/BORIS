@@ -218,7 +218,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>2</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -235,7 +235,7 @@
                    <item>
                     <widget class="QLabel" name="label_5">
                      <property name="text">
-                      <string>Media file paths (first player)</string>
+                      <string>Media file paths</string>
                      </property>
                     </widget>
                    </item>
@@ -250,6 +250,11 @@
                      <property name="selectionBehavior">
                       <enum>QAbstractItemView::SelectRows</enum>
                      </property>
+                     <column>
+                      <property name="text">
+                       <string>Player</string>
+                      </property>
+                     </column>
                      <column>
                       <property name="text">
                        <string>Path</string>

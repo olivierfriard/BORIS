@@ -31,6 +31,8 @@ VLC_MIN_VERSION = "2"
 
 CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
 
+N_PLAYER = 8
+
 #FFMPEG_BIN = 'ffmpeg'
 
 function_keys = {16777264: 'F1', 16777265: 'F2', 16777266: 'F3', 16777267: 'F4', 16777268: 'F5',
@@ -215,7 +217,8 @@ START = "START"
 STOP = "STOP"
 
 PLAYER1, PLAYER2 = "1", "2"
-ALL_PLAYERS = [PLAYER1, PLAYER2]
+ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
+
 
 POINT_EVENT_ST_DURATION = 0.5
 
@@ -252,7 +255,8 @@ SPECTROGRAM_DEFAULT_COLOR_MAP = 'viridis'
 # darksage #598556
 # lightsage #bcecac
 # sage #87ae73
-
+ACTIVE_MEASUREMENTS_COLOR = "lime"
+PASSIVE_MEASUREMENTS_COLOR = "red"
 
 BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'tab:orange',

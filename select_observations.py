@@ -69,7 +69,8 @@ def select_observations(pj, mode):
                     for media in pj[OBSERVATIONS][obs][FILE][player]:
                         mediaList.append("#{0}: {1}".format(player, media))
 
-            media = os.linesep.join(mediaList)
+            #media = os.linesep.join(mediaList)
+            media = "\n".join(mediaList)
         elif pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
             media = LIVE
 
@@ -126,6 +127,8 @@ def select_observations(pj, mode):
     obsList.resize(900, 600)
 
     obsList.view.sortItems(0, Qt.AscendingOrder)
+    for row in range(obsList.view.rowCount()):
+        obsList.view.resizeRowToContents(row) 
 
     selectedObs = []
 

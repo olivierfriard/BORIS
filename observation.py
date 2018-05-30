@@ -421,6 +421,7 @@ class Observation(QDialog, Ui_Form):
         generate spectrogram of all media files loaded in player #1
         """
 
+
         if self.cbVisualizeSpectrogram.isChecked():
 
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
@@ -475,15 +476,51 @@ class Observation(QDialog, Ui_Form):
         return True if everything OK else False
         """
         def is_numeric(s):
+            """
+            check if s is numeric (float)
+            
+            Args:
+                s (str/int/float): value to test
+                
+            Returns:
+                boolean: True if numeric else False
+            """
             try:
                 float(s)
                 return True
             except ValueError:
                 return False
 
+        # check player number
+        players_list = []
+        players = {}
+        for row in range(self.twVideo1.rowCount()):
+            players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
+            if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
+                players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 2).text())]
+            else:
+                players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 2).text()))
+        print(players)
+        # check if player#1 used
+        if min(players_list) > 1:
+            QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
+            return False
+        # check if players are used in crescent order
+        if set(list(range(min(players_list), max(players_list)+1))) != set(players_list):
+            QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media file")
+            return False
+        # check that longuest media is in player #1
+        durations = []
+        for i in players:
+            durations.append(sum(players[i]))
+        print(durations)
+        if [x for x in durations[1:] if x > durations[0]]:
+            QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
+            return False
+
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
-            QMessageBox.warning(self, programName , "<b>{}</b> is not recognized as a valid time offset format".format(self.leTimeOffset.text()))
+            QMessageBox.critical(self, programName , "<b>{}</b> is not recognized as a valid time offset format".format(self.leTimeOffset.text()))
             return False
 
         # check if indep variables are correct type
@@ -514,7 +551,6 @@ class Observation(QDialog, Ui_Form):
             return False
 
         # check offset for external data files
-        
         for row in range(self.tw_data_files.rowCount()):
             if not is_numeric(self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()):
                 QMessageBox.critical(self, programName,
@@ -646,6 +682,7 @@ class Observation(QDialog, Ui_Form):
         add media file path to list widget
         """
 
+        '''
         if not self.twVideo1.rowCount() and nPlayer == PLAYER2:
             QMessageBox.critical(self, programName, "Add the first media file to Player #1")
             return False
@@ -654,17 +691,27 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
                                                      "when more media are loaded in the first media player"))
             return False
+        '''
 
+        '''
         if nPlayer == PLAYER1:
             twVideo = self.twVideo1
         if nPlayer == PLAYER2:
             twVideo = self.twVideo2
+        '''
+
+        twVideo = self.twVideo1
 
         twVideo.setRowCount(twVideo.rowCount() + 1)
         
-        for idx, s in enumerate([fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
+        for idx, s in enumerate([None, fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
                                 self.mediaHasAudio[fileName]]):
-            twVideo.setItem(twVideo.rowCount()-1, idx, QTableWidgetItem("{}".format(s)))
+            if idx == 0:
+                combobox = QComboBox()
+                combobox.addItems(ALL_PLAYERS)
+                twVideo.setCellWidget(twVideo.rowCount() - 1, idx, combobox)
+            else:
+                twVideo.setItem(twVideo.rowCount()-1, idx, QTableWidgetItem("{}".format(s)))
 
 
     def remove_data_file(self):
@@ -681,36 +728,20 @@ class Observation(QDialog, Ui_Form):
         remove selected item from list widget
         """
 
-        if nPlayer == PLAYER1:
+        if self.twVideo1.selectedIndexes():
+            mediaPath = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(), 1).text()
+            self.twVideo1.removeRow(self.twVideo1.selectedIndexes()[0].row())
 
-            if self.twVideo1.selectedIndexes():
-                mediaPath = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(),0).text()
-                self.twVideo1.removeRow(self.twVideo1.selectedIndexes()[0].row())
-
-                if mediaPath not in [self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
-                    try:
-                        del self.mediaDurations[mediaPath]
-                    except:
-                        pass
-                    try:
-                        del self.mediaFPS[mediaPath]
-                    except:
-                        pass
-
-        if nPlayer == PLAYER2:
-            if self.twVideo2.selectedIndexes():
-                mediaPath = self.twVideo2.item(self.twVideo2.selectedIndexes()[0].row(),0).text()
-                self.twVideo2.removeRow(self.twVideo2.selectedIndexes()[0].row())
-
-                if mediaPath not in [ self.twVideo1.item(idx, 0).text() for idx in range(self.twVideo1.rowCount())]:
-                    try:
-                        del self.mediaDurations[mediaPath]
-                    except:
-                        pass
-                    try:
-                        del self.mediaFPS[mediaPath]
-                    except:
-                        pass
+            # FIXME ! check if media in same or other player
+            if mediaPath not in [self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
+                try:
+                    del self.mediaDurations[mediaPath]
+                except:
+                    pass
+                try:
+                    del self.mediaFPS[mediaPath]
+                except:
+                    pass
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
@@ -718,7 +749,7 @@ class Observation(QDialog, Ui_Form):
 if __name__ == '__main__':
 
     import sys
-    
+
     converters = {
   "convert_time_ecg":{
    "name":"convert_time_ecg",
@@ -734,6 +765,178 @@ if __name__ == '__main__':
     
     app = QApplication(sys.argv)
     w = Observation("/tmp", converters)
+    w.ffmpeg_bin="ffmpeg"
+    w.mode = "new"
+    w.pj = """{
+ "time_format":"hh:mm:ss",
+ "project_date":"2018-05-23T14:05:50",
+ "project_name":"",
+ "project_description":"",
+ "project_format_version":"4.0",
+ "subjects_conf":{
+  "0":{
+   "key":"1",
+   "name":"111",
+   "description":""
+  },
+  "1":{
+   "key":"2",
+   "name":"222",
+   "description":""
+  }
+ },
+ "behaviors_conf":{
+  "0":{
+   "type":"Point event",
+   "key":"P",
+   "code":"p",
+   "description":"",
+   "category":"",
+   "modifiers":"",
+   "excluded":"",
+   "coding map":""
+  },
+  "1":{
+   "type":"Point event",
+   "key":"S",
+   "code":"s",
+   "description":"",
+   "category":"",
+   "modifiers":"",
+   "excluded":"",
+   "coding map":""
+  }
+ },
+ "observations":{
+  "3video":{
+   "file":{
+    "1":[
+     "/home/olivier/gdrive/ownCloud/media_files_boris/50FPS.mp4"
+    ],
+    "2":[
+     "/home/olivier/gdrive/ownCloud/media_files_boris/60FPS.mp4"
+    ],
+    "3":[
+     "/home/olivier/gdrive/ownCloud/media_files_boris/mire1.mp4"
+    ]
+   },
+   "type":"MEDIA",
+   "date":"2018-05-23T14:07:07",
+   "description":"",
+   "time offset":0.0,
+   "events":[],
+   "independent_variables":{},
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "media_info":{
+    "length":{
+     "/home/olivier/gdrive/ownCloud/media_files_boris/mire1.mp4":180.27,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/50FPS.mp4":180.05,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/60FPS.mp4":180.05
+    },
+    "fps":{
+     "/home/olivier/gdrive/ownCloud/media_files_boris/mire1.mp4":23.98,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/50FPS.mp4":50.0,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/60FPS.mp4":60.0
+    },
+    "hasVideo":{
+     "/home/olivier/gdrive/ownCloud/media_files_boris/mire1.mp4":true,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/50FPS.mp4":true,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/60FPS.mp4":true
+    },
+    "hasAudio":{
+     "/home/olivier/gdrive/ownCloud/media_files_boris/mire1.mp4":true,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/50FPS.mp4":true,
+     "/home/olivier/gdrive/ownCloud/media_files_boris/60FPS.mp4":true
+    }
+   }
+  },
+  "dummy":{
+   "file":{
+    "1":[
+     "/home/olivier/Videos/media_files/mire1.mp4"
+    ],
+    "2":[]
+   },
+   "type":"MEDIA",
+   "date":"2018-05-23T14:10:10",
+   "description":"",
+   "time offset":0.0,
+   "events":[],
+   "independent_variables":{},
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "media_info":{
+    "length":{
+     "/home/olivier/Videos/media_files/mire1.mp4":180.27
+    },
+    "fps":{
+     "/home/olivier/Videos/media_files/mire1.mp4":23.98
+    },
+    "hasVideo":{
+     "/home/olivier/Videos/media_files/mire1.mp4":true
+    },
+    "hasAudio":{
+     "/home/olivier/Videos/media_files/mire1.mp4":true
+    }
+   }
+  },
+  "3video 2":{
+   "file":{
+    "1":[
+     "video1.mp4"
+    ],
+    "2":[
+     "video2.mp4"
+    ],
+    "3":[
+     "video3.mp4"
+    ]    
+   },
+   "type":"MEDIA",
+   "date":"2018-05-24T01:16:47",
+   "description":"",
+   "time offset":0.0,
+   "events":[],
+   "independent_variables":{},
+   "time offset second player":0.0,
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "media_info":{
+    "length":{
+     "video1.mp4":179.96,
+     "video2.mp4":179.96,
+     "video3.mp4":179.96
+    },
+    "fps":{
+     "video1.mp4":25.0,
+     "video2.mp4":25.0,
+     "video3.mp4":25.0
+    },
+    "hasVideo":{
+     "video1.mp4":true,
+     "video2.mp4":true,
+     "video3.mp4":true
+    },
+    "hasAudio":{
+     "video1.mp4":false,
+     "video2.mp4":false,
+     "video3.mp4":true
+    }
+   }
+  }
+ },
+ "behavioral_categories":[],
+ "independent_variables":{},
+ "coding_map":{},
+ "behaviors_coding_map":[],
+ "converters":{}
+}
+
+    
+"""
     w.show()
     w.exec_()
     sys.exit()
