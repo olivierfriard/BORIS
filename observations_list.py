@@ -109,6 +109,10 @@ class observationsList_widget(QDialog):
         self.pbCancel = QPushButton("Cancel")
         hbox2.addWidget(self.pbCancel)
 
+        self.pbExportList = QPushButton("Export list")
+        self.pbExportList.clicked.connect(self.pbExportList_clicked)
+        hbox2.addWidget(self.pbExportList)
+
         self.pbOpen = QPushButton("Start")
         hbox2.addWidget(self.pbOpen)
 
@@ -147,6 +151,18 @@ class observationsList_widget(QDialog):
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
         self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount()>1)))
 
+
+    def pbExportList_clicked(self):
+        """
+        export list of observations
+        """
+        out = "Observation id\tDate\tDescription\tSubjects\tmedia"
+        for r in range(len(self.data)):
+            out += "\t".join([str(x).replace("\n", " ") for x in self.data[r]]) + "\n"
+        fn = QFileDialog(self).getSaveFileName(self, "Export list of observations", "", "Text files (*.txt *.tsv);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        with open(file_name, "w", encoding="utf-8") as out_file:
+            out_file.write(out)
 
 
     def view_doubleClicked(self, index):
