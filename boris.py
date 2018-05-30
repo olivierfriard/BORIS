@@ -3461,7 +3461,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif sys.platform == "win32": # for Windows
                 self.dw_player[i].mediaplayer.set_hwnd(self.dw_player[i].videoframe.winId())
             elif sys.platform == "darwin": # for MacOS
-                self.dw_player[i].mediaplayer.set_nsobject(self.dw_player[i].videoframe.winId())
+                self.dw_player[i].mediaplayer.set_nsobject(int(self.dw_player[i].videoframe.winId()))
 
 
             '''
