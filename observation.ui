@@ -242,7 +242,7 @@
                    <item>
                     <widget class="QTableWidget" name="twVideo1">
                      <property name="editTriggers">
-                      <set>QAbstractItemView::NoEditTriggers</set>
+                      <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
                      </property>
                      <property name="selectionMode">
                       <enum>QAbstractItemView::SingleSelection</enum>
@@ -258,6 +258,11 @@
                      <column>
                       <property name="text">
                        <string>Path</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Offset (seconds)</string>
                       </property>
                      </column>
                      <column>

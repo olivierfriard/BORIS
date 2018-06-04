@@ -290,7 +290,6 @@ class Observation(QDialog, Ui_Form):
 
         QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")
 
-
         fd = QFileDialog(self)
         fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
 
@@ -493,20 +492,20 @@ class Observation(QDialog, Ui_Form):
 
         # check player number
         players_list = []
-        players = {}
+        players = {} # for storing duration
         for row in range(self.twVideo1.rowCount()):
             players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
             if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
-                players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 2).text())]
+                players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
             else:
-                players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 2).text()))
+                players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
         print(players)
         # check if player#1 used
         if min(players_list) > 1:
             QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
             return False
         # check if players are used in crescent order
-        if set(list(range(min(players_list), max(players_list)+1))) != set(players_list):
+        if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
             QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media file")
             return False
         # check that longuest media is in player #1
@@ -565,7 +564,6 @@ class Observation(QDialog, Ui_Form):
                     QMessageBox.critical(self, programName,
                                          "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
                     return False
-
 
         return True
 
@@ -700,18 +698,22 @@ class Observation(QDialog, Ui_Form):
             twVideo = self.twVideo2
         '''
 
-        twVideo = self.twVideo1
+        #twVideo = self.twVideo1
 
-        twVideo.setRowCount(twVideo.rowCount() + 1)
+        self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
         
-        for idx, s in enumerate([None, fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName], self.mediaHasVideo[fileName],
-                                self.mediaHasAudio[fileName]]):
-            if idx == 0:
+        for col_idx, s in enumerate([None, fileName, 0, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName],
+                                 self.mediaHasVideo[fileName], self.mediaHasAudio[fileName]]):
+            if col_idx == 0: # player combobox
                 combobox = QComboBox()
                 combobox.addItems(ALL_PLAYERS)
-                twVideo.setCellWidget(twVideo.rowCount() - 1, idx, combobox)
+                self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
             else:
-                twVideo.setItem(twVideo.rowCount()-1, idx, QTableWidgetItem("{}".format(s)))
+                item = QTableWidgetItem("{}".format(s))
+                if col_idx != 2:  # only offset is editable by user
+                    item.setFlags(Qt.ItemIsEnabled)
+
+                self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, item)
 
 
     def remove_data_file(self):

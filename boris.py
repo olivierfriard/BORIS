@@ -3880,6 +3880,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 observationWindow.leTimeOffset.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId]["time offset"])))
 
+                '''
                 if "time offset second player" in self.pj[OBSERVATIONS][obsId]:
                     observationWindow.leTimeOffset_2.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId]["time offset second player"])))
 
@@ -3887,6 +3888,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbEarlier.setChecked(True)
                     else:
                         observationWindow.rbLater.setChecked(True)
+                '''
 
             if self.timeFormat == HHMMSS:
                 time = QTime()
@@ -3895,6 +3897,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 time.setHMS(int(h), int(m), int(s), int(ms))
                 observationWindow.teTimeOffset.setTime(time)
 
+                '''
                 if "time offset second player" in self.pj[OBSERVATIONS][obsId]:
                     time = QTime()
                     h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset second player"])).split(':')
@@ -3906,6 +3909,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.rbEarlier.setChecked(True)
                     else:
                         observationWindow.rbLater.setChecked(True)
+                '''
 
             if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
                 observationWindow.rbSubstract.setChecked(True)
@@ -3915,24 +3919,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if player in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
                     for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][player]:
                         observationWindow.twVideo1.setRowCount(observationWindow.twVideo1.rowCount() + 1)
-                        
+
                         combobox = QComboBox()
                         combobox.addItems(ALL_PLAYERS)
                         combobox.setCurrentIndex(int(player) - 1)
                         observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
                         
                         observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem(mediaFile))
+
                         try:
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2,
-                                QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                                QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId]["media_info"]["offset"][mediaFile])))
+                        except:
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2,
+                                                               QTableWidgetItem("0.0"))
+
+                        try:
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 3,
+                                QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4,
                                 QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
                         except:
                             pass
                         try:
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 4,
-                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 5,
+                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 6,
                                 QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"][mediaFile])))
                         except:
                             pass
@@ -4112,10 +4124,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # media
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [MEDIA]:
+
+                self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
+                                                                   "fps":  observationWindow.mediaFPS}
+
+                try:
+                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
+                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasAudio"] = observationWindow.mediaHasAudio
+                except:
+                    logging.info("error with media_info information")
+                    
+                self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"] = {}
+
+
+                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id]["media_info"]))
+
                 for i in range(N_PLAYER):
                     self.pj[OBSERVATIONS][new_obs_id][FILE][str(i + 1)] = []
+
                 for row in range(observationWindow.twVideo1.rowCount()):
                     self.pj[OBSERVATIONS][new_obs_id][FILE][observationWindow.twVideo1.cellWidget(row, 0).currentText()].append(observationWindow.twVideo1.item(row, 1).text())
+                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][observationWindow.twVideo1.item(row, 1).text()] = float(observationWindow.twVideo1.item(row, 2).text())
 
                 '''
                 for i in range(N_PLAYER):
@@ -4127,17 +4156,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 #self.pj[OBSERVATIONS][new_obs_id][FILE] = fileName
 
-                self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
-                                                                   "fps":  observationWindow.mediaFPS}
-
-                try:
-                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
-                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasAudio"] = observationWindow.mediaHasAudio
-                except:
-                    logging.info("error with media_info information")
-
-
-                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id]["media_info"]))
 
                 '''
                 if not 'project_media_file_info' in self.pj:
@@ -8459,6 +8477,11 @@ item []:
             mediaName = ""
 
             #if self.mediaplayer[0].get_length():
+            
+            print("self.dw_player[0].mediaplayer.get_length()", self.dw_player[0].mediaplayer.get_length())
+            
+            print("", )
+            
             if self.dw_player[0].mediaplayer.get_length():
 
                 self.mediaTotalLength = self.dw_player[0].mediaplayer.get_length() / 1000

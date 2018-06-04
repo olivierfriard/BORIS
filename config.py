@@ -25,7 +25,7 @@ This file is part of BORIS.
 
 programName = "BORIS"
 
-project_format_version = "4.0"
+project_format_version = "7.0"
 
 VLC_MIN_VERSION = "2"
 
