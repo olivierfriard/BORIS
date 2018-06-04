@@ -702,7 +702,7 @@ class Observation(QDialog, Ui_Form):
 
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
         
-        for col_idx, s in enumerate([None, fileName, 0, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName],
+        for col_idx, s in enumerate([None, 0, fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName],
                                  self.mediaHasVideo[fileName], self.mediaHasAudio[fileName]]):
             if col_idx == 0: # player combobox
                 combobox = QComboBox()
@@ -710,7 +710,7 @@ class Observation(QDialog, Ui_Form):
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
             else:
                 item = QTableWidgetItem("{}".format(s))
-                if col_idx != 2:  # only offset is editable by user
+                if col_idx != 1:  # only offset is editable by user
                     item.setFlags(Qt.ItemIsEnabled)
 
                 self.twVideo1.setItem(self.twVideo1.rowCount() - 1, col_idx, item)

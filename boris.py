@@ -3925,13 +3925,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         combobox.setCurrentIndex(int(player) - 1)
                         observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
                         
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem(mediaFile))
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, QTableWidgetItem(mediaFile))
 
+                        # set offset
                         try:
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2,
-                                QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId]["media_info"]["offset"][mediaFile])))
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1,
+                                QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId]["media_info"]["offset"][player])))
                         except:
-                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2,
+                            observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1,
                                                                QTableWidgetItem("0.0"))
 
                         try:
@@ -4143,8 +4144,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[OBSERVATIONS][new_obs_id][FILE][str(i + 1)] = []
 
                 for row in range(observationWindow.twVideo1.rowCount()):
-                    self.pj[OBSERVATIONS][new_obs_id][FILE][observationWindow.twVideo1.cellWidget(row, 0).currentText()].append(observationWindow.twVideo1.item(row, 1).text())
-                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][observationWindow.twVideo1.item(row, 1).text()] = float(observationWindow.twVideo1.item(row, 2).text())
+                    self.pj[OBSERVATIONS][new_obs_id][FILE][observationWindow.twVideo1.cellWidget(row, 0).currentText()].append(observationWindow.twVideo1.item(row, 2).text())
+                    # store offset for media player
+                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][observationWindow.twVideo1.cellWidget(row, 0).currentText()] = float(observationWindow.twVideo1.item(row, 1).text())
 
                 '''
                 for i in range(N_PLAYER):
@@ -8327,20 +8329,20 @@ item []:
         elif self.dw_player[n_player].media_list.count() > 1:
 
             if new_time < sum(self.dw_player[n_player].media_durations):
-                
-                
-                
+
                 media_idx = self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())
+
                 print(self.dw_player[n_player].media_durations)
                 print( sum(self.dw_player[n_player].media_durations[0: media_idx]), new_time,  sum(self.dw_player[n_player].media_durations[0: media_idx+1]))
+
                 if  sum(self.dw_player[n_player].media_durations[0: media_idx]) < new_time < sum(self.dw_player[n_player].media_durations[0: media_idx+1]):
                     # correct media
-                    print(n_player+1, "correct nmedia")
+                    print(n_player+1, "correct media")
                     self.dw_player[n_player].mediaplayer.set_time(new_time -  sum(
                                 self.dw_player[n_player].media_durations[0: media_idx]))
                 else:
-                
-                    print(n_player+1, "not correct nmedia")
+
+                    print(n_player+1, "not correct media")
                     flagPaused = self.dw_player[n_player].mediaListPlayer.get_state() == vlc.State.Paused
                     tot = 0
                     for idx, d in enumerate(self.dw_player[n_player].media_durations):
