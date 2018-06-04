@@ -8324,7 +8324,29 @@ item []:
 
 
         if self.dw_player[n_player].media_list.count() == 1:
-            self.dw_player[n_player].mediaplayer.set_time(new_time)
+            
+            try:
+                if self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)]:
+
+                    if self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] > 0:
+
+                        if new_time < self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)]:
+                            self.dw_player[n_player].mediaplayer.set_time(0)
+                            self.dw_player[n_player].mediaListPlayer.pause()
+                        else:
+                            self.dw_player[n_player].mediaplayer.set_time(new_time + self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] )
+
+                    elif self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] < 0:
+                        
+                        self.dw_player[n_player].mediaplayer.set_time(new_time - self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] )
+
+                    else:
+
+                        self.dw_player[n_player].mediaplayer.set_time(new_time)
+
+            except:
+                print("offset error with player #{}".format(n_player + 1))
+                self.dw_player[n_player].mediaplayer.set_time(new_time)
 
         elif self.dw_player[n_player].media_list.count() > 1:
 
@@ -8414,11 +8436,14 @@ item []:
             print("===================\nct0 {} ".format(ct0/1000))
             for i in range(1, N_PLAYER):
                 if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
+                    
+                    
+                    
                     t = self.dw_player[i].mediaplayer.get_time()
                     ct = self.getLaps(n_player=i) * 1000
                     print("ct {} ".format(ct/1000))
                     #if abs(t0 - t) >= 300:
-                    if abs(ct0 - ct) >= 300:
+                    if abs((ct0 - ct) - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000) >= 300:
                         print("sync player {} {} with time {} ".format(i+1, ct/1000, ct0/1000))
                         self.sync_time(i, ct0)
                         #self.dw_player[i].mediaplayer.set_time(t0)
