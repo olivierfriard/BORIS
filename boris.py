@@ -7573,7 +7573,7 @@ item []:
             for i in range(N_PLAYER):
                 if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                     all_fps.extend(list(self.dw_player[i].fps.values()))
-            print(all_fps)
+            print("all FPS", all_fps)
 
             if len(set(all_fps)) != 1:
                 logging.warning("The frame-by-frame mode will not be available because the video files have different frame rates")
@@ -8325,28 +8325,48 @@ item []:
 
         if self.dw_player[n_player].media_list.count() == 1:
             
-            try:
-                if self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)]:
+                #try:
+                if self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)]:
 
-                    if self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] > 0:
+                    if self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] > 0:
 
-                        if new_time < self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)]:
+                        if new_time < self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000:
+                            
+                            print("new time < offset",n_player, self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)])
+                            
                             self.dw_player[n_player].mediaplayer.set_time(0)
                             self.dw_player[n_player].mediaListPlayer.pause()
-                        else:
-                            self.dw_player[n_player].mediaplayer.set_time(new_time + self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] )
 
-                    elif self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] < 0:
+                            self.dw_player[n_player].frame_viewer.setVisible(True)
+                            self.dw_player[n_player].videoframe.setVisible(False)
+                            
+                        else:
+
+                            self.dw_player[n_player].frame_viewer.setVisible(False)
+                            self.dw_player[n_player].videoframe.setVisible(True)
+                            self.dw_player[n_player].mediaListPlayer.play()
+
+
+                            self.dw_player[n_player].mediaplayer.set_time(new_time + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000) )
+
+                    elif self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] < 0:
+
+                        self.dw_player[n_player].frame_viewer.setVisible(False)
+                        self.dw_player[n_player].videoframe.setVisible(True)
+
                         
-                        self.dw_player[n_player].mediaplayer.set_time(new_time - self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"][str(nplayer + 1)] )
+                        self.dw_player[n_player].mediaplayer.set_time(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000))
 
                     else:
 
+                        #self.dw_player[n_player].frame_viewer.setVisible(False)
+                        #self.dw_player[n_player].videoframe.setVisible(True)
+
                         self.dw_player[n_player].mediaplayer.set_time(new_time)
 
-            except:
-                print("offset error with player #{}".format(n_player + 1))
-                self.dw_player[n_player].mediaplayer.set_time(new_time)
+                #except:
+                #print("offset error with player #{}".format(n_player + 1))
+                #self.dw_player[n_player].mediaplayer.set_time(new_time)
 
         elif self.dw_player[n_player].media_list.count() > 1:
 
