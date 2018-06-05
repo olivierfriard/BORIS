@@ -10579,7 +10579,7 @@ if __name__ == "__main__":
                 QMessageBox.information(window, programName, msg)
             window.load_project(project_path, project_changed, pj)
 
-    if observation_to_open:
+    if observation_to_open and "error" not in pj:
         r = window.load_observation(observation_to_open)
         if r:
             QMessageBox.warning(None, programName, "Error opening observation: <b>{}</b><br>{}".format(observation_to_open, r.split(":")[1]),

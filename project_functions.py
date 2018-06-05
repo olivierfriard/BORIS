@@ -410,8 +410,8 @@ def open_project_json(projectFileName):
     # check if project file version is newer than current BORIS project file version
     if "project_format_version" in pj and Decimal(pj["project_format_version"]) > Decimal(project_format_version):
       
-        return projectFileName, projectChanged, {"error": ("This project file was created with a more recent version of BORIS.\n"
-                                                 "You must update BORIS to open it")}, msg
+        return projectFileName, projectChanged, {"error": ("This project file was created with a more recent version of BORIS.<br>"
+                                                        "You must update BORIS to <b>v. >= {}</b> to open this project").format(pj["project_format_version"])}, msg
 
 
     # check if old version  v. 0 *.obs
