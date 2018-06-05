@@ -410,24 +410,24 @@ def open_project_json(projectFileName):
     # check if project file version is newer than current BORIS project file version
     if "project_format_version" in pj and Decimal(pj["project_format_version"]) > Decimal(project_format_version):
       
-        return projectFileName, projectChanged, {"error": ("This project file was created with a more recent version of BORIS.\n"
-                                                 "You must update BORIS to open it")}, msg
+        return projectFileName, projectChanged, {"error": ("This project file was created with a more recent version of BORIS.<br>"
+                                                        "You must update BORIS to <b>v. >= {}</b> to open this project").format(pj["project_format_version"])}, msg
 
 
     # check if old version  v. 0 *.obs
     if "project_format_version" not in pj:
 
         # convert VIDEO, AUDIO -> MEDIA
-        pj['project_format_version'] = project_format_version
+        pj["project_format_version"] = project_format_version
         projectChanged = True
 
         for obs in [x for x in pj[OBSERVATIONS]]:
 
             # remove 'replace audio' key
             if "replace audio" in pj[OBSERVATIONS][obs]:
-                del pj[OBSERVATIONS][obs]['replace audio']
+                del pj[OBSERVATIONS][obs]["replace audio"]
 
-            if pj[OBSERVATIONS][obs][TYPE] in ['VIDEO', 'AUDIO']:
+            if pj[OBSERVATIONS][obs][TYPE] in ["VIDEO", "AUDIO"]:
                 pj[OBSERVATIONS][obs][TYPE] = MEDIA
 
             # convert old media list in new one
