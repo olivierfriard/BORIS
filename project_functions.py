@@ -448,10 +448,19 @@ def open_project_json(projectFileName):
                                                     "Choose a new file name for saving it.").format(project_format_version)
         projectFileName = ""
 
-
+    # update project to v.7
     for obs in pj[OBSERVATIONS]:
-        if not "time offset second player" in pj[OBSERVATIONS][obs]:
-            pj[OBSERVATIONS][obs]["time offset second player"] = Decimal("0.0")
+        if "time offset second player" in pj[OBSERVATIONS][obs]:
+            if "media_info" not in pj[OBSERVATIONS][obs]:
+                pj[OBSERVATIONS][obs]["media_info"] = {}
+            if "offset" not in pj[OBSERVATIONS][obs]["media_info"]:
+                pj[OBSERVATIONS][obs]["media_info"]["offset"] = {}
+            for player in pj[OBSERVATIONS][obs][FILE]:
+                pj[OBSERVATIONS][obs]["media_info"]["offset"][player] = 0.0
+            if pj[OBSERVATIONS][obs]["time offset second player"]:
+                pj[OBSERVATIONS][obs]["media_info"]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
+            
+            del pj[OBSERVATIONS][obs]["time offset second player"]
             projectChanged = True
 
     # update modifiers to JSON format
