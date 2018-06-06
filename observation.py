@@ -48,6 +48,8 @@ import plot_spectrogram
 import plot_data_module
 import project_functions
 
+MEDIA_FILE_PATH_IDX = 2
+HAS_AUDIO_IDX = 6
 
 if QT_VERSION_STR[0] == "4":
     from observation_ui import Ui_Form
@@ -134,10 +136,6 @@ class Observation(QDialog, Ui_Form):
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
-
-        self.pbAddVideo_2.clicked.connect(lambda: self.add_media(PLAYER2, flag_path=True))
-        self.pb_add_media_without_path2.clicked.connect(lambda: self.add_media(PLAYER2, flag_path=False))
-        self.pbRemoveVideo_2.clicked.connect(lambda: self.remove_media(PLAYER2))
 
         self.cbVisualizeSpectrogram.clicked.connect(self.generate_spectrogram)
 
@@ -422,7 +420,18 @@ class Observation(QDialog, Ui_Form):
 
 
         if self.cbVisualizeSpectrogram.isChecked():
-
+            flag_spectro_produced = False
+            # check if player 1 is selected
+            flag_player1 = False
+            for row in range(self.twVideo1.rowCount()):
+                if self.twVideo1.cellWidget(row, 0).currentText() == "1":
+                    flag_player1 = True
+            
+            if not flag_player1:
+                QMessageBox.critical(self, programName , "The player #1 is not selected")
+                self.cbVisualizeSpectrogram.setChecked(False)
+                return
+                
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO]) == YES:
@@ -438,10 +447,15 @@ class Observation(QDialog, Ui_Form):
                 w.setWindowTitle("BORIS")
                 w.label.setText("Generating spectrogram...")
 
-                #for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
                 for row in range(self.twVideo1.rowCount()):
-                    
-                    media_file_path = project_functions.media_full_path(self.twVideo1.item(row, 0).text(), self.project_path)
+                    # check if player 1
+                    if self.twVideo1.cellWidget(row, 0).currentText() != "1":
+                        continue
+
+                    media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(), self.project_path)
+                    if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
+                        QMessageBox.critical(self, programName , "The media file {} do not seem to have audio".format(media_file_path))
+                        continue
                     
                     if os.path.isfile(media_file_path):
                         
@@ -458,8 +472,12 @@ class Observation(QDialog, Ui_Form):
                                 if not process.is_alive():
                                     w.hide()
                                     break
+                        flag_spectro_produced = True
                     else:
                         QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media_file_path))
+                
+                if not flag_spectro_produced:
+                    self.cbVisualizeSpectrogram.setChecked(False)
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
 
@@ -499,7 +517,9 @@ class Observation(QDialog, Ui_Form):
                 players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
             else:
                 players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
+
         print(players)
+
         # check if player#1 used
         if min(players_list) > 1:
             QMessageBox.critical(self, programName , "A media file must be loaded in player #1")

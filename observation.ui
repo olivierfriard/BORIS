@@ -222,7 +222,7 @@
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
-               <string>Player 1</string>
+               <string>Media files</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
@@ -232,13 +232,6 @@
                  </property>
                  <widget class="QWidget" name="layoutWidget">
                   <layout class="QVBoxLayout" name="verticalLayout_3">
-                   <item>
-                    <widget class="QLabel" name="label_5">
-                     <property name="text">
-                      <string>Media file paths</string>
-                     </property>
-                    </widget>
-                   </item>
                    <item>
                     <widget class="QTableWidget" name="twVideo1">
                      <property name="editTriggers">
@@ -346,7 +339,7 @@
                    <item>
                     <widget class="QCheckBox" name="cbVisualizeSpectrogram">
                      <property name="text">
-                      <string>Visualize spectrogram</string>
+                      <string>Visualize spectrogram for the player #1</string>
                      </property>
                     </widget>
                    </item>
@@ -364,170 +357,6 @@
                      </property>
                      <property name="sizeType">
                       <enum>QSizePolicy::MinimumExpanding</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>20</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </spacer>
-                   </item>
-                  </layout>
-                 </widget>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="tab_player_2">
-              <attribute name="title">
-               <string>Player 2</string>
-              </attribute>
-              <layout class="QVBoxLayout" name="verticalLayout_7">
-               <item>
-                <widget class="QSplitter" name="splitter_4">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
-                 </property>
-                 <widget class="QWidget" name="layoutWidget">
-                  <layout class="QVBoxLayout" name="verticalLayout_4">
-                   <item>
-                    <widget class="QLabel" name="label_2">
-                     <property name="text">
-                      <string>Media file paths for second player (will be played simultaneously)</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QTableWidget" name="twVideo2">
-                     <column>
-                      <property name="text">
-                       <string>Path</string>
-                      </property>
-                     </column>
-                     <column>
-                      <property name="text">
-                       <string>Duration</string>
-                      </property>
-                     </column>
-                     <column>
-                      <property name="text">
-                       <string>FPS</string>
-                      </property>
-                     </column>
-                     <column>
-                      <property name="text">
-                       <string>Video</string>
-                      </property>
-                     </column>
-                     <column>
-                      <property name="text">
-                       <string>Audio</string>
-                      </property>
-                     </column>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                 <widget class="QWidget" name="layoutWidget">
-                  <layout class="QVBoxLayout" name="verticalLayout_6">
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_4">
-                     <item>
-                      <widget class="QPushButton" name="pbAddVideo_2">
-                       <property name="text">
-                        <string>Add media</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="pb_add_media_without_path2">
-                       <property name="text">
-                        <string>Add media without path</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="pbRemoveVideo_2">
-                       <property name="text">
-                        <string>Remove media</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_5">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_7">
-                     <item>
-                      <widget class="QLabel" name="lbTimeOffset_2">
-                       <property name="text">
-                        <string>Time offset for second player</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="rbEarlier">
-                       <property name="text">
-                        <string>Earlier</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QRadioButton" name="rbLater">
-                       <property name="text">
-                        <string>Later</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="leTimeOffset_2">
-                       <property name="text">
-                        <string>0</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QTimeEdit" name="teTimeOffset_2">
-                       <property name="displayFormat">
-                        <string>hh:mm:ss.zzz</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_4">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                    </layout>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer_3">
-                     <property name="orientation">
-                      <enum>Qt::Vertical</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>

@@ -3844,7 +3844,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.timeFormat == HHMMSS:
             observationWindow.leTimeOffset.setVisible(False)
-            observationWindow.leTimeOffset_2.setVisible(False)
 
         if mode == EDIT:
 
