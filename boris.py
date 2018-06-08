@@ -104,8 +104,8 @@ import time_budget_functions
 
 import vlc
 
-__version__ = "7.0.0"
-__version_date__ = "2018-00-xx"
+__version__ = "7.0.1"
+__version_date__ = "2018-06-08"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -115,7 +115,7 @@ if sys.platform == "darwin":  # for MacOS
     os.environ["LC_ALL"] = "en_US.UTF-8"
 
 # check if argument
-usage = "usage: %prog [options] [PROJECT_PATH] [\"OBSERVATION ID\"]"
+usage = "usage: %prog [options] [-p PROJECT_PATH] [-o \"OBSERVATION ID\"]"
 parser = OptionParser(usage=usage)
 
 parser.add_option("-d", "--debug", action="store_true", default=False, dest="debug", help="Verbose mode for debugging")
@@ -273,8 +273,10 @@ class Click_label(QLabel):
     def mousePressEvent(self, event):
         print("label clicked", self.id_)
         self.mouse_pressed_signal.emit(self.id_, event)
-    
 
+class Video_frame(QFrame):
+    def sizeHint(self):
+        return QtCore.QSize(150, 75)
 
 class DW(QDockWidget):
 
@@ -289,9 +291,10 @@ class DW(QDockWidget):
         
         self.w = QtWidgets.QWidget()
         
-        self.videoframe = QtWidgets.QFrame()
+        #self.videoframe = QtWidgets.QFrame()
+        self.videoframe = Video_frame()
         self.palette = self.videoframe.palette()
-        self.palette.setColor (QtGui.QPalette.Window,
+        self.palette.setColor(QtGui.QPalette.Window,
                                QtGui.QColor(0,0,0))
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
@@ -3348,16 +3351,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dwObservations.setVisible(True)
             return True
 
-        # check if media list player 1 contains more than 1 media
-        # FIXME
-        '''
-        if (len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) > 1 and
-                PLAYER2 in self.pj[OBSERVATIONS][self.observationId][FILE] and
-                self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
-            QMessageBox.warning(self, programName, ("It is not yet possible to play a second media when more media"
-                                                    "are loaded in the first media player"))
-            return False
-        '''
 
         self.playerType, self.playMode = VLC, VLC
         self.fps = 0
@@ -3368,46 +3361,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setVisible(True)
         self.lbCurrentStates.setVisible(True)
 
-        # init duration of media file and FPS
-        '''
-        self.duration.clear()
-        self.duration2.clear()
-        self.fps.clear()
-        self.fps2.clear()
-        '''
-
         # add all media files to media list
         '''self.simultaneousMedia = False'''
 
         for i in range(N_PLAYER):
             n_player = str(i + 1)
 
-            print("n_player", n_player)
-            
             if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
                or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
                 continue
 
             self.dw_player[i].setVisible(True)
-            #self.dw_player[i].frame_viewer.mousePressEvent = self.getPoslbFFmpeg
-            
+            self.dw_player[i]
+
             # for receiving mouse event from dock widget
             self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
 
-            #self.mediaplayer.append(self.instance.media_player_new())
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
 
-            #self.mediaListPlayer.append(self.instance.media_list_player_new())
             self.dw_player[i].mediaListPlayer = self.instance.media_list_player_new()
-            
-            #self.mediaListPlayer[-1].set_media_player(self.mediaplayer[-1])
+
             self.dw_player[i].mediaListPlayer.set_media_player(self.dw_player[i].mediaplayer)
-    
-            #self.media_list.append(self.instance.media_list_new())
+
             self.dw_player[i].media_list = self.instance.media_list_new()
-            
+
             # add durations list
             self.dw_player[i].media_durations = []
             # add fps list
