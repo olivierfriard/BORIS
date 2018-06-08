@@ -49,7 +49,6 @@ PROJECT_DESCRIPTION = "project_description"
 OBSERVATIONS = 'observations'
 EVENTS = 'events'
 TIME_OFFSET='time offset'
-TIME_OFFSET_SECOND_PLAYER='time offset second player'
 
 CODING_MAP = 'coding_map'
 BEHAVIORS_CODING_MAP = 'behaviors_coding_map'

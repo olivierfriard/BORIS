@@ -3502,7 +3502,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 tmp_dir = self.ffmpeg_cache_dir
 
-            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.mediaplayer.get_media().get_mrl())))
+            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())))
+
+            print("currentMediaTmpPath", currentMediaTmpPath)
 
             if not os.path.isfile("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
                                                                              self.chunk_length,
@@ -3859,40 +3861,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # offset
             if self.timeFormat == S:
 
-                observationWindow.leTimeOffset.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId]["time offset"])))
-
-                '''
-                if "time offset second player" in self.pj[OBSERVATIONS][obsId]:
-                    observationWindow.leTimeOffset_2.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId]["time offset second player"])))
-
-                    if self.pj[OBSERVATIONS][obsId]["time offset second player"] <= 0:
-                        observationWindow.rbEarlier.setChecked(True)
-                    else:
-                        observationWindow.rbLater.setChecked(True)
-                '''
+                observationWindow.leTimeOffset.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])))
 
             if self.timeFormat == HHMMSS:
                 time = QTime()
-                h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset"])).split(":")
+                h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])).split(":")
                 s, ms = s_dec.split(".")
                 time.setHMS(int(h), int(m), int(s), int(ms))
                 observationWindow.teTimeOffset.setTime(time)
 
-                '''
-                if "time offset second player" in self.pj[OBSERVATIONS][obsId]:
-                    time = QTime()
-                    h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId]["time offset second player"])).split(':')
-                    s, ms = s_dec.split(".")
-                    time.setHMS(int(h), int(m), int(s), int(ms))
-                    observationWindow.teTimeOffset_2.setTime(time)
-
-                    if self.pj[OBSERVATIONS][obsId]["time offset second player"] <= 0:
-                        observationWindow.rbEarlier.setChecked(True)
-                    else:
-                        observationWindow.rbLater.setChecked(True)
-                '''
-
-            if self.pj[OBSERVATIONS][obsId]["time offset"] < 0:
+            if self.pj[OBSERVATIONS][obsId][TIME_OFFSET] < 0:
                 observationWindow.rbSubstract.setChecked(True)
 
             observationWindow.twVideo1.setRowCount(0)
@@ -3989,7 +3967,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                               PLOT_DATA_PLOTCOLOR_IDX, combobox)
                             elif idx3 == PLOT_DATA_SUBSTRACT1STVALUE_IDX:
                                 combobox2 = QComboBox()
-                                combobox2.addItems(["False","True"])
+                                combobox2.addItems(["False", "True"])
                                 combobox2.setCurrentIndex(["False", "True"].index(self.pj[OBSERVATIONS][obsId][PLOT_DATA][idx2][DATA_PLOT_FIELDS[idx3]]))
 
                                 observationWindow.tw_data_files.setCellWidget(observationWindow.tw_data_files.rowCount() - 1,
@@ -4059,17 +4037,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # observation time offset
             if self.timeFormat == HHMMSS:
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = time2seconds(observationWindow.teTimeOffset.time().toString(HHMMSSZZZ))
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = time2seconds(observationWindow.teTimeOffset_2.time().toString(HHMMSSZZZ))
 
             if self.timeFormat == S:
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = abs(Decimal(observationWindow.leTimeOffset.text()))
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = abs(Decimal(observationWindow.leTimeOffset_2.text()))
 
             if observationWindow.rbSubstract.isChecked():
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]
-
-            if observationWindow.rbEarlier.isChecked():
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER] = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET_SECOND_PLAYER]
 
             self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
 
@@ -8468,55 +8441,6 @@ item []:
                             print("sync player {} {} with time {} ".format(i + 1, ct/1000, ct0/1000))
                             self.sync_time(i, ct0)
 
-
-            '''
-            for mp in self.mediaplayer[1:]:
-                t = mp.get_time()
-                if abs(t0 - t) >= 300:
-                    mp.set_time(t0)
-            '''
-                
-            # FIXME !
-            '''
-            if self.simultaneousMedia:
-
-                if TIME_OFFSET_SECOND_PLAYER in self.pj[OBSERVATIONS][self.observationId]:
-
-                    # sync 2nd player on 1st player when no offset
-                    if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] == 0:
-                        t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                        if abs(t1 - t2) >= 300:
-                            self.mediaplayer2.set_time(t1)
-
-                    if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] > 0:
-
-                        if mediaTime < self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000:
-
-                            if self.mediaListPlayer2.get_state() == vlc.State.Playing:
-                                self.mediaplayer2.set_time(0)
-                                self.mediaListPlayer2.pause()
-                        else:
-                            if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                                t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                                if abs((t1 - t2) - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300:  # synchr if diff >= 300 ms
-                                    self.mediaplayer2.set_time(int(t1 - self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
-                                self.mediaListPlayer2.play()
-
-                    if self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] < 0:
-                        mediaTime2 = self.mediaplayer2.get_time()
-
-                        if mediaTime2 < abs(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000):
-
-                            if self.mediaListPlayer.get_state() == vlc.State.Playing:
-                                self.mediaplayer.set_time(0)
-                                self.mediaListPlayer.pause()
-                        else:
-                            if self.mediaListPlayer2.get_state() == vlc.State.Playing:
-                                t1, t2 = self.mediaplayer.get_time(), self.mediaplayer2.get_time()
-                                if abs((t2 - t1) + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000) >= 300:  # synchr if diff >= 300 ms
-                                    self.mediaplayer.set_time(int(t2 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET_SECOND_PLAYER] * 1000))
-                                self.mediaListPlayer.play()
-            '''
 
             currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
