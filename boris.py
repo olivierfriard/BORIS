@@ -52,13 +52,13 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtWidgets import *
     from boris_ui5 import *
-except:
+except ModuleNotFoundError:
     logging.info("PyQt5 not installed!\nTrying with PyQt4")
     try:
         from PyQt4.QtCore import *
         from PyQt4.QtGui import *
         from boris_ui import *
-    except:
+    except ModuleNotFoundError:
         logging.critical("PyQt4 not installed!\nTry PyQt4")
         sys.exit()
 

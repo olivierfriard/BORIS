@@ -700,28 +700,8 @@ class Observation(QDialog, Ui_Form):
         add media file path to list widget
         """
 
-        '''
-        if not self.twVideo1.rowCount() and nPlayer == PLAYER2:
-            QMessageBox.critical(self, programName, "Add the first media file to Player #1")
-            return False
-
-        if (self.twVideo1.rowCount() and self.twVideo2.rowCount()) or (self.twVideo2.rowCount() > 1):
-            QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
-                                                     "when more media are loaded in the first media player"))
-            return False
-        '''
-
-        '''
-        if nPlayer == PLAYER1:
-            twVideo = self.twVideo1
-        if nPlayer == PLAYER2:
-            twVideo = self.twVideo2
-        '''
-
-        #twVideo = self.twVideo1
-
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
-        
+
         for col_idx, s in enumerate([None, 0, fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName],
                                  self.mediaHasVideo[fileName], self.mediaHasAudio[fileName]]):
             if col_idx == 0: # player combobox
@@ -745,24 +725,25 @@ class Observation(QDialog, Ui_Form):
         else:
             QMessageBox.warning(self, programName, "Select a data file")
 
+
     def remove_media(self, nPlayer):
         """
         remove selected item from list widget
         """
 
         if self.twVideo1.selectedIndexes():
-            mediaPath = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(), 1).text()
+            media_path = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(), MEDIA_FILE_PATH_IDX).text()
             self.twVideo1.removeRow(self.twVideo1.selectedIndexes()[0].row())
 
             # FIXME ! check if media in same or other player
-            if mediaPath not in [self.twVideo2.item(idx, 0).text() for idx in range(self.twVideo2.rowCount())]:
+            if media_path not in [self.twVideo1.item(idx, MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
                 try:
                     del self.mediaDurations[mediaPath]
-                except:
+                except NameError:
                     pass
                 try:
                     del self.mediaFPS[mediaPath]
-                except:
+                except NameError:
                     pass
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)

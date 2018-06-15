@@ -81,41 +81,31 @@ def export_observations_list(pj, file_name, output_format):
                 else:
                     indep_var.append("")
 
-
         data.append([obs_id,
                      pj[OBSERVATIONS][obs_id]["date"],
                      pj[OBSERVATIONS][obs_id]["description"],
                      subjects,
                      ", ".join(media_files),
-                    ] + indep_var
-                   )
+                     ] + indep_var
+                    )
 
     if output_format in ["tsv", "csv", "html"]:
         with open(file_name, "wb") as f:
             f.write(str.encode(data.export(output_format)))
     if output_format in ["ods", "xlsx", "xls"]:
         with open(file_name, "wb") as f:
-             f.write(data.export(output_format))
+            f.write(data.export(output_format))
 
-
-    '''
-    fn = QFileDialog(self).getSaveFileName(self, "Export list of observations", "", "Text files (*.txt *.tsv);;All files (*)")
-    file_name = fn[0] if type(fn) is tuple else fn
-    with open(file_name, "w", encoding="utf-8") as out_file:
-        out_file.write(out)
-    '''
-
-    
 
 
 def remove_media_files_path(pj):
     """
     remove path from media files
     tested
-    
+
     Args:
         pj (dict): project file
-    
+
     Returns:
         dict: project without media file paths
     """
@@ -220,9 +210,9 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
 
     try:
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                           parameters["selected subjects"],
-                                                           selected_observations,
-                                                           parameters["selected behaviors"])
+                                                                          parameters["selected subjects"],
+                                                                          selected_observations,
+                                                                          parameters["selected behaviors"])
         if not ok:
             return False, msg
 
@@ -518,7 +508,7 @@ def open_project_json(projectFileName):
         for idx in [x for x in pj[SUBJECTS]]:
             key, name = pj[SUBJECTS][idx]
             pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
-        
+
         msg = ("The project file was converted to the new format (v. {}) in use with your version of BORIS.<br>"
                                                     "Choose a new file name for saving it.").format(project_format_version)
         projectFileName = ""
@@ -536,6 +526,11 @@ def open_project_json(projectFileName):
                 pj[OBSERVATIONS][obs]["media_info"]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
             
             del pj[OBSERVATIONS][obs]["time offset second player"]
+
+            msg = ("The project file was converted to the new format (v. {project_version}) in use with your version of BORIS.<br>"
+                   "Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_version}).<br>"
+                   "Remember to choose a new file name for saving it (File &gt; > Save project as...).").format(project_version=project_format_version)
+
             projectChanged = True
 
     # update modifiers to JSON format
@@ -574,10 +569,11 @@ def open_project_json(projectFileName):
     if project_lowerthan4:
 
         copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
-        
+
         msg = ("The project was updated to the current project version ({project_format_version}).\n\n"
-               "The old file project was saved as {project_file_name}").format(project_format_version=project_format_version,
-                                                                               project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
+               "The old file project was saved as {project_file_name}"
+               ).format(project_format_version=project_format_version,
+                        project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
 
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
     project_updated = False
@@ -592,14 +588,12 @@ def open_project_json(projectFileName):
 
                 for media_file_path in pj[OBSERVATIONS][obs]["file"][player]:
                     # FIX: ffmpeg path
-                    
                     ret, msg = utilities.check_ffmpeg_path()
                     if not ret:
                         return projectFileName, projectChanged, {"error": "FFmpeg path not found"}, ""
                     else:
                         ffmpeg_bin = msg
 
-                    #nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
                     r = utilities.accurate_media_analysis2(ffmpeg_bin, media_file_path)
                     if "error" in r:
                         return projectFileName, projectChanged, {"error": r["error"]}, ""
@@ -623,9 +617,9 @@ def open_project_json(projectFileName):
 
                                 # FPS
                                 if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
-                                    pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path:
-                                         pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['nframe']
-                                         / (pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]["video_length"] / 1000)}
+                                    pj[OBSERVATIONS][obs]['media_info']['fps'] = {
+                                    media_file_path: pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['nframe'] /
+                                                    (pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]["video_length"] / 1000)}
                                 else:
                                     pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path: 0}
 
@@ -727,11 +721,11 @@ def check_state_events_obs(obsId, ethogram, observation, time_format=HHMMSS):
 
                     for event in lst:
                         out += ("""The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
-                                """ "<b>{subject}</b>" at <b>{time}</b><br>""").format(
-                                      behavior=behavior,
-                                      modifier=("(modifier " + event[1] + ") ") if event[1] else "",
-                                      subject=subject if subject else NO_FOCAL_SUBJECT,
-                                      time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
+                                """ "<b>{subject}</b>" at <b>{time}</b><br>"""
+                                ).format(behavior=behavior,
+                                         modifier=("(modifier " + event[1] + ") ") if event[1] else "",
+                                         subject=subject if subject else NO_FOCAL_SUBJECT,
+                                         time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
 
     return (False, out) if out else (True, "All state events are PAIRED")
 
