@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.3.2"
-__version_date__ = "2018-06-14"
+__version__ = "6.3.3"
+__version_date__ = "2018-06-15"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -7390,19 +7390,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 dataList = list(data[1:])
                 for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
                     if event[0] == obsId:
-                        behavior = event[-7]
+                        behavior = event[-8]
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             behavior = behavior.replace(char, "_")
-                        subject = event[-8]
+                        subject = event[-9]
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             subject = subject.replace(char, "_")
-                        event_start = "{0:.3f}".format(round(event[-4], 3))  # start event (from end for independent variables)
-                        if not event[-3]:  # stop event (from end)
-                            event_stop = "{0:.3f}".format(round(event[-4] + 0.001, 3))
+                        print(event)
+                        event_start = "{0:.3f}".format(float(event[-5]))  # start event (from end for independent variables)
+                        if not event[-4]:  # stop event (from end)
+                            event_stop = "{0:.3f}".format(float(event[-5]) + 0.001)
                         else:
-                            event_stop = "{0:.3f}".format(round(event[-3], 3))
+                            event_stop = "{0:.3f}".format(float(event[-4]))
                         out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject, behavior=behavior, start=event_start, stop=event_stop)
                 out += "/\n\n"
             with open(fileName, "wb") as f:
