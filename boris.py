@@ -104,11 +104,11 @@ import time_budget_functions
 
 import vlc
 
-__version__ = "7.0.1"
-__version_date__ = "2018-06-08"
+__version__ = "7.0.2"
+__version_date__ = "2018-06-16"
 
-if platform.python_version() < "3.5":
-    logging.critical("BORIS requires Python 3.5+! You are using v. {}")
+if platform.python_version() < "3.6":
+    logging.critical("BORIS requires Python 3.6+! You are using v. {}")
     sys.exit()
 
 if sys.platform == "darwin":  # for MacOS
