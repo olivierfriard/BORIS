@@ -7398,7 +7398,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             subject = subject.replace(char, "_")
-                        print(event)
                         event_start = "{0:.3f}".format(float(event[-5]))  # start event (from end for independent variables)
                         if not event[-4]:  # stop event (from end)
                             event_stop = "{0:.3f}".format(float(event[-5]) + 0.001)
