@@ -114,11 +114,7 @@ class timeBudgetResults(QWidget):
                        "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-
-        if QT_VERSION_STR[0] == "4":
-            filediag_func = QFileDialog(self).getSaveFileNameAndFilter
-        else:
-            filediag_func = QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
 
         fileName, filter_ = filediag_func(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
 
@@ -129,49 +125,48 @@ class timeBudgetResults(QWidget):
         if pathlib.Path(fileName).suffix != "." + outputFormat:
             fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
-        if fileName:
-            rows = []
-            # observations list
-            rows.append(["Observations:"])
-            for idx in range(self.lw.count()):
-                rows.append([""])
-                rows.append([self.lw.item(idx).text()])
-
-                if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(idx).text()]:
-                    rows.append(["Independent variables:"])
-                    for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
-                        rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
-
-            rows.extend([[""],[""],["Time budget:"]])
-
-            # write header
-            cols = []
-            for col in range(self.twTB.columnCount()):
-                cols.append(self.twTB.horizontalHeaderItem(col).text())
-
-            rows.append(cols)
+        rows = []
+        # observations list
+        rows.append(["Observations:"])
+        for idx in range(self.lw.count()):
             rows.append([""])
+            rows.append([self.lw.item(idx).text()])
 
-            for row in range(self.twTB.rowCount()):
-                values = []
-                for col in range(self.twTB.columnCount()):
-                    values.append(intfloatstr(self.twTB.item(row,col).text()))
+            if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(idx).text()]:
+                rows.append(["Independent variables:"])
+                for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
+                    rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
 
-                rows.append(values)
+        rows.extend([[""],[""],["Time budget:"]])
 
-            maxLen = max([len(r) for r in rows])
-            data = tablib.Dataset()
-            data.title = "Time budget"
+        # write header
+        cols = []
+        for col in range(self.twTB.columnCount()):
+            cols.append(self.twTB.horizontalHeaderItem(col).text())
 
-            for row in rows:
-                data.append(complete(row, maxLen))
+        rows.append(cols)
+        rows.append([""])
 
-            if outputFormat in ["tsv", "csv", "html"]:
-                with open(fileName, "wb") as f:
-                    f.write(str.encode(data.export(outputFormat)))
-                return
+        for row in range(self.twTB.rowCount()):
+            values = []
+            for col in range(self.twTB.columnCount()):
+                values.append(intfloatstr(self.twTB.item(row,col).text()))
 
-            if outputFormat in ["ods", "xlsx", "xls"]:
-                with open(fileName, "wb") as f:
-                    f.write(data.export(outputFormat))
-                return
+            rows.append(values)
+
+        maxLen = max([len(r) for r in rows])
+        data = tablib.Dataset()
+        data.title = "Time budget"
+
+        for row in rows:
+            data.append(complete(row, maxLen))
+
+        if outputFormat in ["tsv", "csv", "html"]:
+            with open(fileName, "wb") as f:
+                f.write(str.encode(data.export(outputFormat)))
+            return
+
+        if outputFormat in ["ods", "xlsx", "xls"]:
+            with open(fileName, "wb") as f:
+                f.write(data.export(outputFormat))
+            return

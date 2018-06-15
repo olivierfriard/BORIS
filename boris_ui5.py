@@ -441,6 +441,8 @@ class Ui_MainWindow(object):
         self.actionClose_unpaired_events.setObjectName("actionClose_unpaired_events")
         self.actionRotate_video = QtWidgets.QAction(MainWindow)
         self.actionRotate_video.setObjectName("actionRotate_video")
+        self.actionExport_observations_list = QtWidgets.QAction(MainWindow)
+        self.actionExport_observations_list.setObjectName("actionExport_observations_list")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -475,6 +477,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionClose_observation)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionLoad_observations_file)
+        self.menuObservations.addAction(self.actionExport_observations_list)
         self.menuObservations.addAction(self.actionClose_unpaired_events)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
@@ -754,4 +757,5 @@ class Ui_MainWindow(object):
         self.actionClose_unpaired_events.setText(_translate("MainWindow", "Fix unpaired events"))
         self.actionClose_unpaired_events.setShortcut(_translate("MainWindow", "Ctrl+U"))
         self.actionRotate_video.setText(_translate("MainWindow", "Rotate video"))
+        self.actionExport_observations_list.setText(_translate("MainWindow", "Export observations list"))
 

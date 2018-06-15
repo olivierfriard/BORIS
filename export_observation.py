@@ -312,7 +312,7 @@ def export_aggregated_events(pj, parameters, obsId):
                         mediaFileString = "LIVE"
                         fpsString = "NA"
     
-                    #if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                    # if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
                     if row["type"] == POINT:
     
                         row_data = []
@@ -331,18 +331,18 @@ def export_aggregated_events(pj, parameters, obsId):
                                     row_data.append("")
     
                         row_data.extend([subject,
-                                    behavior,
-                                    row["modifiers"].strip(),
-                                    POINT,
-                                    "{0:.3f}".format(row["start"]), # start
-                                    "{0:.3f}".format(row["stop"]), # stop
-                                    "NA", # duration
-                                    row["comment"],
-                                    ""
-                                    ])
+                                        behavior,
+                                        row["modifiers"].strip(),
+                                        POINT,
+                                        "{0:.3f}".format(row["start"]), # start
+                                        "{0:.3f}".format(row["stop"]), # stop
+                                        "NA", # duration
+                                        row["comment"],
+                                        ""
+                                        ])
                         data.append(row_data)
     
-                    #if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                    # if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
                     if row["type"] == STATE:
                         if idx % 2 == 0:
                             row_data = []
@@ -359,7 +359,7 @@ def export_aggregated_events(pj, parameters, obsId):
                                        row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
                                     else:
                                         row_data.append("")
-    
+
                             row_data.extend([subject,
                                     behavior,
                                     row["modifiers"].strip(),

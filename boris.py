@@ -607,7 +607,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
                   self.actionClose_project, self.actionSend_project, self.actionNew_observation,
-                  self.actionRemove_path_from_media_files, self.action_obs_list]:
+                  self.actionRemove_path_from_media_files, self.action_obs_list, self.actionExport_observations_list]:
             w.setEnabled(flag)
 
         # observations
@@ -616,13 +616,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation, self.actionObservationsList,
                   self.action_obs_list]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
-        
-        '''
-        self.actionOpen_observation.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.actionEdit_observation_2.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.actionView_observation.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.actionObservationsList.setEnabled(self.pj[OBSERVATIONS] != {})
-        '''
 
         # enabled if observation
         flagObs = self.observationId != ""
@@ -759,6 +752,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
+
+        self.actionExport_observations_list.triggered.connect(self.export_observations_list_clicked)
 
         self.actionCheckStateEvents.triggered.connect(lambda: self.check_state_events("all"))
         self.actionCheckStateEventsSingleObs.triggered.connect(lambda: self.check_state_events("current"))
@@ -954,6 +949,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+    def export_observations_list_clicked(self):
+        
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)"]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+    
+        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
+
+        file_name, filter_ = filediag_func(self, "Export list of selected observations", "", ";;".join(extended_file_formats))
+    
+        if file_name:
+
+            output_format = file_formats[extended_file_formats.index(filter_)]
+            if pathlib.Path(file_name).suffix != "." + output_format:
+                file_name = str(pathlib.Path(file_name)) + "." + output_format
+
+            project_functions.export_observations_list(self.pj, file_name, output_format)
 
 
     def check_project_integrity(self):
@@ -2339,7 +2356,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def observations_list(self):
         """
-        view all observations
+        show all observations of current project
         """
 
         if self.playerType == VIEWER:
@@ -10087,7 +10104,6 @@ item []:
         """
         play video
         check if first player ended
-        
         """
 
         if self.playerType == VLC:
@@ -10098,7 +10114,7 @@ item []:
                 if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
                     return
-                
+
                 for i in range(N_PLAYER):
                     if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                         self.dw_player[i].mediaListPlayer.play()
@@ -10117,11 +10133,10 @@ item []:
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.stop()
             else:
-                
                 for i in range(N_PLAYER):
                     if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                         if self.dw_player[i].mediaListPlayer.get_state() != vlc.State.Paused:
-        
+
                             self.timer.stop()
                             self.timer_spectro.stop()
                             self.dw_player[i].mediaListPlayer.pause()
@@ -10165,7 +10180,7 @@ item []:
 
                 elif self.dw_player[0].media_list.count() > 1:
 
-                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]) 
+                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())])
                                + self.dw_player[0].mediaplayer.get_time()
                                - self.fast * 1000)
                     if newTime < self.fast * 1000:
@@ -10176,8 +10191,7 @@ item []:
 
                     tot = 0
                     for idx, d in enumerate(self.dw_player[0].media_durations):
-                        if tot <= newTime < tot + d :
-                        #if newTime >= tot and newTime < tot+d:
+                        if tot <= newTime < tot + d:
                             self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
 
                             # wait until media is played
@@ -10188,11 +10202,11 @@ item []:
                             if flagPaused:
                                 self.dw_player[0].mediaListPlayer.pause()
 
-                            self.dw_player[0].mediaplayer.set_time(newTime 
+                            self.dw_player[0].mediaplayer.set_time(newTime
                                                       - sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
 
                             break
-                        tot += d 
+                        tot += d
 
                 else:
                     self.no_media()
@@ -10218,7 +10232,8 @@ item []:
                 if self.FFmpegGlobalFrame * (1000 / self.fps) >= sum(self.dw_player[0].media_durations):
                     logging.debug("end of last media")
                     self.FFmpegGlobalFrame = int(sum(self.dw_player[0].media_durations) * self.fps / 1000)-1
-                    logging.debug("FFmpegGlobalFrame {}  sum duration {}".format(self.FFmpegGlobalFrame, sum(self.dw_player[0].media_durations)))
+                    logging.debug("FFmpegGlobalFrame {}  sum duration {}".format(self.FFmpegGlobalFrame,
+                                                                                 sum(self.dw_player[0].media_durations)))
 
                 if self.FFmpegGlobalFrame > 0:
                     self.FFmpegGlobalFrame -= 1
@@ -10234,7 +10249,7 @@ item []:
 
                 elif self.dw_player[0].media_list.count() > 1:
 
-                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]) 
+                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())])
                                + self.dw_player[0].mediaplayer.get_time()
                                + self.fast * 1000)
                     if newTime < sum(self.dw_player[0].media_durations):
@@ -10244,7 +10259,6 @@ item []:
                         tot = 0
                         for idx, d in enumerate(self.dw_player[0].media_durations):
                             if tot <= newTime < tot + d:
-                            #if newTime >= tot and newTime < tot + d:
                                 self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
                                 app.processEvents()
                                 # wait until media is played
@@ -10259,7 +10273,7 @@ item []:
                                     self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
 
                                 break
-                            tot += d 
+                            tot += d
 
                 else:
                     self.no_media()
@@ -10370,7 +10384,7 @@ if __name__ == "__main__":
 
     logging.debug("args: {}".format(args))
     if args and len(args) > 0:
-       project_to_open = args[0]
+        project_to_open = args[0]
 
     if options.observation:
         if not project_to_open:
@@ -10399,7 +10413,10 @@ if __name__ == "__main__":
     if observation_to_open and "error" not in pj:
         r = window.load_observation(observation_to_open)
         if r:
-            QMessageBox.warning(None, programName, "Error opening observation: <b>{}</b><br>{}".format(observation_to_open, r.split(":")[1]),
+            QMessageBox.warning(None, programName,
+                                (
+                                "Error opening observation: <b>{}</b><br>{}"
+                                ).format(observation_to_open, r.split(":")[1]),
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     window.show()

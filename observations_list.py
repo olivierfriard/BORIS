@@ -43,7 +43,7 @@ class MyTableWidgetItem(QTableWidgetItem):
             QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
             self.sortKey = sortKey
 
-    #Qt uses a simple < check for sorting items, override this to use the sortKey
+    # Qt uses a simple < check for sorting items, override this to use the sortKey
     def __lt__(self, other):
             return self.sortKey < other.sortKey
 
@@ -80,15 +80,15 @@ class observationsList_widget(QDialog):
                                ">=",
                                "<=",
                                "between (use and to separate terms)"
-                              ])
+                               ])
         self.cbLogic.currentIndexChanged.connect(self.view_filter)
 
         self.label = QLabel(self)
 
         self.gridLayout = QGridLayout(self)
-        self.gridLayout.addWidget(self.label,    0, 0, 1, 3)
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 3)
         self.gridLayout.addWidget(self.comboBox, 1, 0, 1, 1)
-        self.gridLayout.addWidget(self.cbLogic,  1, 1, 1, 1)
+        self.gridLayout.addWidget(self.cbLogic, 1, 1, 1, 1)
         self.gridLayout.addWidget(self.lineEdit, 1, 2, 1, 1)
 
         self.gridLayout.addWidget(self.view, 2, 0, 1, 3)
@@ -109,9 +109,11 @@ class observationsList_widget(QDialog):
         self.pbCancel = QPushButton("Cancel")
         hbox2.addWidget(self.pbCancel)
 
+        '''
         self.pbExportList = QPushButton("Export list")
         self.pbExportList.clicked.connect(self.pbExportList_clicked)
         hbox2.addWidget(self.pbExportList)
+        '''
 
         self.pbOpen = QPushButton("Start")
         hbox2.addWidget(self.pbOpen)
@@ -148,10 +150,11 @@ class observationsList_widget(QDialog):
 
         self.comboBox.addItems(header)
 
-        self.view.setEditTriggers(QAbstractItemView.NoEditTriggers);
-        self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount()>1)))
+        self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
 
 
+    '''
     def pbExportList_clicked(self):
         """
         export list of observations
@@ -163,12 +166,13 @@ class observationsList_widget(QDialog):
         file_name = fn[0] if type(fn) is tuple else fn
         with open(file_name, "w", encoding="utf-8") as out_file:
             out_file.write(out)
+    '''
 
 
     def view_doubleClicked(self, index):
 
         if self.mode == config.MULTIPLE:
-           return
+            return
 
         if self.mode == config.OPEN or self.mode == config.EDIT:
             self.done(2)
@@ -178,7 +182,8 @@ class observationsList_widget(QDialog):
             self.done(2)
             return
 
-        response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?", ["Open", "Edit", config.CANCEL])
+        response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?",
+                                        ["Open", "Edit", config.CANCEL])
         if response == "Open":
             self.done(2)
         if response == "Edit":
@@ -298,11 +303,8 @@ class observationsList_widget(QDialog):
             else:
                 return l >= s1 and l <= s2
 
-
-        #if self.comboBox.currentIndex() <= 4 and len(self.lineEdit.text()) < 3:
         if not self.lineEdit.text():
             self.view.setRowCount(len(self.data))
-            #self.view.setColumnCount(len(self.data[0]))
 
             for r in range(len(self.data)):
                 for c in range(len(self.data[0])):
@@ -340,4 +342,3 @@ class observationsList_widget(QDialog):
             except:
                 pass
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
-

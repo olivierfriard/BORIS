@@ -24,9 +24,16 @@ Copyright 2012-2018 Olivier Friard
 """
 
 
+try:
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+except:
+    from PyQt4.QtCore import *
+    from PyQt4.QtGui import *
+
 import observations_list
 from config import *
-from utilities import *
+import utilities
 import project_functions
 
 
@@ -45,7 +52,7 @@ def select_observations(pj, mode):
     indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
 
     if INDEPENDENT_VARIABLES in pj:
-        for idx in sorted_keys(pj[INDEPENDENT_VARIABLES]):
+        for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
             indepVarHeader.append(pj[INDEPENDENT_VARIABLES][idx]["label"])
             column_type.append(pj[INDEPENDENT_VARIABLES][idx]["type"])
 

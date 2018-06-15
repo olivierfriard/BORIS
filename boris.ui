@@ -165,6 +165,7 @@
     <addaction name="actionClose_observation"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_observations_file"/>
+    <addaction name="actionExport_observations_list"/>
     <addaction name="actionClose_unpaired_events"/>
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
@@ -1216,6 +1217,11 @@
   <action name="actionRotate_video">
    <property name="text">
     <string>Rotate video</string>
+   </property>
+  </action>
+  <action name="actionExport_observations_list">
+   <property name="text">
+    <string>Export observations list</string>
    </property>
   </action>
  </widget>

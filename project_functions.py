@@ -19,6 +19,8 @@ Copyright 2012-2018 Olivier Friard
   MA 02110-1301, USA.
 """
 
+
+
 import logging
 import os
 import sys
@@ -27,10 +29,83 @@ import pathlib
 from shutil import copyfile
 from decimal import *
 import copy
+import tablib
 
 from config import *
 import db_functions
 import utilities
+import select_observations
+
+
+def export_observations_list(pj, file_name, output_format):
+    """
+    export a list of selected observations
+
+    Args:
+        pj (dict): project dictionary
+        file_name (str): path of file to save list of observations
+        output_format (str): format output
+    """
+
+    resultStr, selected_observations = select_observations.select_observations(pj, MULTIPLE)
+    if not selected_observations:
+        return
+
+    data = tablib.Dataset()
+    data.headers = ["Observation id", "Date", "Description", "Subjects", "Media files/LIVE"]
+
+    indep_var_header = []
+    if INDEPENDENT_VARIABLES in pj:
+        for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
+            indep_var_header.append(pj[INDEPENDENT_VARIABLES][idx]["label"])
+    data.headers.extend(indep_var_header)
+
+    for obs_id in selected_observations:
+
+        subjects = ", ".join(sorted(list(set([x[EVENT_SUBJECT_FIELD_IDX] for x in pj[OBSERVATIONS][obs_id][EVENTS]]))))
+        if pj[OBSERVATIONS][obs_id][TYPE] == "LIVE":
+            media_files = ["LIVE"]
+        elif pj[OBSERVATIONS][obs_id][TYPE] == "MEDIA":
+            media_files = []
+            if pj[OBSERVATIONS][obs_id][FILE]:
+                for player in sorted(pj[OBSERVATIONS][obs_id][FILE].keys()):
+                    for media in pj[OBSERVATIONS][obs_id][FILE][player]:
+                        media_files.append("#{0}: {1}".format(player, media))
+
+        # independent variables
+        indep_var = []
+        if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:
+            for var_label in indep_var_header:
+                if var_label in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
+                    indep_var.append(pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][var_label])
+                else:
+                    indep_var.append("")
+
+
+        data.append([obs_id,
+                     pj[OBSERVATIONS][obs_id]["date"],
+                     pj[OBSERVATIONS][obs_id]["description"],
+                     subjects,
+                     ", ".join(media_files),
+                    ] + indep_var
+                   )
+
+    if output_format in ["tsv", "csv", "html"]:
+        with open(file_name, "wb") as f:
+            f.write(str.encode(data.export(output_format)))
+    if output_format in ["ods", "xlsx", "xls"]:
+        with open(file_name, "wb") as f:
+             f.write(data.export(output_format))
+
+
+    '''
+    fn = QFileDialog(self).getSaveFileName(self, "Export list of observations", "", "Text files (*.txt *.tsv);;All files (*)")
+    file_name = fn[0] if type(fn) is tuple else fn
+    with open(file_name, "w", encoding="utf-8") as out_file:
+        out_file.write(out)
+    '''
+
+    
 
 
 def remove_media_files_path(pj):
@@ -537,26 +612,26 @@ def open_project_json(projectFileName):
                         project_updated, projectChanged = True, True
                     else:  # file path not found
                         if ("media_file_info" in pj[OBSERVATIONS][obs]
-                            and len(pj[OBSERVATIONS][obs]["media_file_info"]) == 1
-                            and len(pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
-                            and len(pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
+                           and len(pj[OBSERVATIONS][obs]["media_file_info"]) == 1
+                           and len(pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1
+                           and len(pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0):
                                 media_md5_key = list(pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]
                                 # duration
                                 pj[OBSERVATIONS][obs]["media_info"] = {"length": {media_file_path:
-                                         pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"]/1000}}
+                                         pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000}}
                                 project_updated, projectChanged = True, True
 
                                 # FPS
                                 if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
                                     pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path:
                                          pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['nframe']
-                                         / (pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]['video_length']/1000)}
+                                         / (pj[OBSERVATIONS][obs]['media_file_info'][media_md5_key]["video_length"] / 1000)}
                                 else:
                                     pj[OBSERVATIONS][obs]['media_info']['fps'] = {media_file_path: 0}
 
     if project_updated:
         msg = "The media files information was updated to the new project format."
-        
+
     return projectFileName, projectChanged, pj, msg
 
 
@@ -581,7 +656,7 @@ def event_type(code, ethogram):
 def check_events(obsId, ethogram, observation):
     """
     Check if coded events are in ethogram
-    
+
     Args:
         obsId (str): id of observation to check
         ethogram (dict): ethogram of project
@@ -654,7 +729,7 @@ def check_state_events_obs(obsId, ethogram, observation, time_format=HHMMSS):
                         out += ("""The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
                                 """ "<b>{subject}</b>" at <b>{time}</b><br>""").format(
                                       behavior=behavior,
-                                      modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
+                                      modifier=("(modifier " + event[1] + ") ") if event[1] else "",
                                       subject=subject if subject else NO_FOCAL_SUBJECT,
                                       time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
 
@@ -664,11 +739,11 @@ def check_state_events_obs(obsId, ethogram, observation, time_format=HHMMSS):
 def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     """
     fix unpaired state events in observation
-    
+
     Args:
         obsId (str): observation id
         ethogram (dict): ethogram dictionary
-        observation (dict): observation dictionary 
+        observation (dict): observation dictionary
         fix_at_time (Decimal): time to fix the unpaired events
 
     Returns:
@@ -712,49 +787,29 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
                     closing_events_to_add.append([last_event_time + Decimal("0.001"),
                                                   subject,
                                                   behavior,
-                                                  event[1], # modifiers
-                                                  "" # comment
+                                                  event[1],  # modifiers
+                                                  ""  # comment
                                                   ])
-                    
-                    '''
-                    out += ("""The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
-                            """ "<b>{subject}</b>" at <b>{time}</b><br>""").format(
-                                  behavior=behavior,
-                                  modifier=("(modifier "+ event[1] + ") ") if event[1] else "",
-                                  subject=subject if subject else NO_FOCAL_SUBJECT,
-                                  time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]))
-                    '''
 
     return closing_events_to_add
-
 
 
 def check_project_integrity(pj, time_format, project_file_name):
     """
     check project integrity
-    
     check if behaviors in observations are in ethogram
-    
+
     Args:
         pj (dict): BORIS project
-    
+
     Returns:
         str: message
     """
     out = ""
-    
+
     # check for behavior not in ethogram
     # remove because already tested bt check_state_events_obs function
-    '''
-    behav_not_in_ethogram = []
-    for obs_id in pj[OBSERVATIONS]:
-        behav_not_in_ethogram.extend(check_events(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id]))
-    for behav in behav_not_in_ethogram:
-        if out:
-            out += "<br><br>"
-        out += ("The behavior <b>{}</b> is found in observation "
-                "but not is not present in ethogram.").format(behav)
-    '''
+
     try:
         # check for unpaired state events
         for obs_id in pj[OBSERVATIONS]:
@@ -763,7 +818,7 @@ def check_project_integrity(pj, time_format, project_file_name):
                 if out:
                     out += "<br><br>"
                 out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
-    
+
         # check if behavior belong to category that is not in categories list
         for idx in pj[ETHOGRAM]:
             if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]:
@@ -772,9 +827,9 @@ def check_project_integrity(pj, time_format, project_file_name):
                         if out:
                             out += "<br><br>"
                         out += ("The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
-                               "that is no more in behavioral categories list.").format(pj[ETHOGRAM][idx][BEHAVIOR_CODE],
-                                                                                        pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
-    
+                                "that is no more in behavioral categories list.").format(pj[ETHOGRAM][idx][BEHAVIOR_CODE],
+                                                                                         pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
+
         # check if all media are available
         for obs_id in pj[OBSERVATIONS]:
             ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
@@ -782,8 +837,7 @@ def check_project_integrity(pj, time_format, project_file_name):
                 if out:
                     out += "<br><br>"
                 out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
-    
+
         return out
     except:
         return str(sys.exc_info()[1])
-
