@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 """
 
-
 programName = "BORIS"
 
 project_format_version = "7.0"
@@ -107,6 +106,7 @@ DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
+BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
 # fields for event configuration
@@ -152,7 +152,7 @@ EVENT_TIME_FIELD_IDX = 0
 SUBJECT_EVENT_FIELD = 1       # to be removed after check
 EVENT_SUBJECT_FIELD_IDX = 1
 
-BEHAVIOR_EVENT_FIELD = 2
+BEHAVIOR_EVENT_FIELD = 2       # to be removed after check
 EVENT_BEHAVIOR_FIELD_IDX = 2
 
 EVENT_MODIFIER_FIELD_IDX = 3

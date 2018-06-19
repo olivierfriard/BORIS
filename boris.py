@@ -624,11 +624,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionClose_observation.setEnabled(flagObs)
         self.actionLoad_observations_file.setEnabled(flag)
 
-        self.actionExportEvents.setEnabled(flag)
+        self.actionExportEvents_2.setEnabled(flag)
         self.actionExport_aggregated_events.setEnabled(flag)
 
         self.actionExportEventString.setEnabled(flag)
         self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
+        self.actionJWatcher.setEnabled(flag)
+
         self.actionExtract_events_from_media_files.setEnabled(flag)
 
         self.actionDelete_all_observations.setEnabled(flagObs)
@@ -772,10 +774,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
-        self.actionExportEvents.triggered.connect(self.export_tabular_events)
+        self.actionExportEvents_2.triggered.connect(lambda: self.export_tabular_events("tabular"))
         self.actionExportEventString.triggered.connect(self.export_string_events)
         self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
+        self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
@@ -6834,8 +6837,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return ""
 
         except:
-            logging.critical("The project file can not be saved.\nError: {}".format(sys.exc_info()[0]))
-            QMessageBox.critical(self, programName, "The project file can not be saved! {}".format(sys.exc_info()[0]))
+            logging.critical("The project file can not be saved.\nError: {}".format(sys.exc_info()[1]))
+            QMessageBox.critical(self, programName, "The project file can not be saved! {}".format(sys.exc_info()[1]))
             return "not saved"
 
 
@@ -7324,8 +7327,6 @@ item []:
                 if flagUnpairedEventFound:
                     QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-                self.statusbar.showMessage("Events exported successfully", 10000)
 
             except:
                 errorMsg = sys.exc_info()[1]
@@ -9602,9 +9603,12 @@ item []:
         self.find_replace_dialog.show()
 
 
-    def export_tabular_events(self):
+    def export_tabular_events(self, mode="tabular"):
         """
         export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
+        
+        Args:
+            mode (str): export mode: must be ["tabular", "jwatcher"]
         """
 
         # ask user observations to analyze
@@ -9643,53 +9647,75 @@ item []:
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
-        if len(selectedObservations) > 1:  # choose directory for exporting observations
+        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
 
-            items = ("Tab Separated Values (*.tsv)",
-                     "Comma separated values (*.csv)",
-                     "Open Document Spreadsheet (*.ods)",
-                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                     "HTML (*.html)")
-            item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
-            if not ok:
-                return
-            outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
+        if mode == "tabular":
+            if len(selectedObservations) > 1:  # choose directory for exporting observations
 
-            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
-                                                               options=QFileDialog.ShowDirsOnly)
-            if not exportDir:
-                return
+                items = ("Tab Separated Values (*.tsv)",
+                         "Comma separated values (*.csv)",
+                         "Open Document Spreadsheet (*.ods)",
+                         "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                         "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                         "HTML (*.html)")
+                item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
+                if not ok:
+                    return
+                outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
-        if len(selectedObservations) == 1:
-            extended_file_formats = ["Tab Separated Values (*.tsv)",
-                           "Comma Separated Values (*.csv)",
-                           "Open Document Spreadsheet ODS (*.ods)",
-                           "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                           "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                           "HTML (*.html)"]
-            file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
+                                                                   options=QFileDialog.ShowDirsOnly)
+                if not exportDir:
+                    return
+    
+            if len(selectedObservations) == 1:
+                extended_file_formats = ["Tab Separated Values (*.tsv)",
+                               "Comma Separated Values (*.csv)",
+                               "Open Document Spreadsheet ODS (*.ods)",
+                               "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                               "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                               "HTML (*.html)"]
+                file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+    
+                fileName, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
+                if not fileName:
+                    return
+    
+                outputFormat = file_formats[extended_file_formats.index(filter_)]
+                if pathlib.Path(fileName).suffix != "." + outputFormat:
+                    fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
-            if QT_VERSION_STR[0] == "4":
-                filediag_func = QFileDialog(self).getSaveFileNameAndFilter
+        if mode == "jwatcher":
+            if len(selectedObservations) > 1:
+                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events",
+                                                                   os.path.expanduser("~"),
+                                                                   options=QFileDialog.ShowDirsOnly)
+                if not exportDir:
+                    return
             else:
-                filediag_func = QFileDialog(self).getSaveFileName
+                fileName, filter_ = filediag_func(self, "Export events for Jwatcher", "", "DAT files (*.dat)")
+                if not fileName:
+                    return
 
-            fileName, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
-
-            if not fileName:
-                return
-
-            outputFormat = file_formats[extended_file_formats.index(filter_)]
-            if pathlib.Path(fileName).suffix != "." + outputFormat:
-                fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+            outputFormat = "dat"
 
         for obsId in selectedObservations:
             if len(selectedObservations) > 1:
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
 
-            r, msg = export_observation.export_events(parameters, obsId, self.pj[OBSERVATIONS][obsId], self.pj[ETHOGRAM],
-                                                      fileName, outputFormat)
+            if mode == "tabular":
+                r, msg = export_observation.export_events(parameters,
+                                                          obsId,
+                                                          self.pj[OBSERVATIONS][obsId],
+                                                          self.pj[ETHOGRAM],
+                                                          fileName, outputFormat)
+            elif mode == "jwatcher":
+                r, msg = export_observation.export_events_jwatcher(parameters,
+                                                          obsId,
+                                                          self.pj[OBSERVATIONS][obsId],
+                                                          self.pj[ETHOGRAM],
+                                                          fileName, outputFormat)
+
             if not r:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
@@ -9927,7 +9953,7 @@ item []:
 
                     out += "<b>{}</b> created<br>".format(fileName + ".gv")
                 except:
-                    QMessageBox.information(self, programName, "Error during dot script creation.\n{}".format(str(sys.exc_info()[0])))
+                    QMessageBox.information(self, programName, "Error during dot script creation.\n{}".format(str(sys.exc_info()[1])))
 
         if out:
             QMessageBox.information(self, programName,
@@ -9972,7 +9998,7 @@ item []:
                     else:
                         out += "Problem with <b>{}</b><br>".format(fileName)
                 except:
-                    QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[0])))
+                    QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[1])))
 
         if out:
             QMessageBox.information(self, programName, out)

@@ -154,6 +154,16 @@
      <addaction name="actionFrequencies_of_transitions_after_behaviors"/>
      <addaction name="actionNumber_of_transitions"/>
     </widget>
+    <widget class="QMenu" name="menuExport_events">
+     <property name="title">
+      <string>Export events</string>
+     </property>
+     <addaction name="actionExportEvents_2"/>
+     <addaction name="actionExport_aggregated_events"/>
+     <addaction name="actionExportEventString"/>
+     <addaction name="actionExport_events_as_Praat_TextGrid"/>
+     <addaction name="actionJWatcher"/>
+    </widget>
     <addaction name="actionNew_observation"/>
     <addaction name="actionOpen_observation"/>
     <addaction name="actionView_observation"/>
@@ -178,10 +188,7 @@
     <addaction name="actionDelete_selected_observations"/>
     <addaction name="actionDelete_all_observations"/>
     <addaction name="separator"/>
-    <addaction name="actionExportEvents"/>
-    <addaction name="actionExport_aggregated_events"/>
-    <addaction name="actionExportEventString"/>
-    <addaction name="actionExport_events_as_Praat_TextGrid"/>
+    <addaction name="menuExport_events"/>
     <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionExtract_events_from_media_files"/>
@@ -781,14 +788,9 @@
     <string>Check for updates and news</string>
    </property>
   </action>
-  <action name="actionExportEvents">
-   <property name="text">
-    <string>Export events</string>
-   </property>
-  </action>
   <action name="actionExportEventString">
    <property name="text">
-    <string>Export events as behavioural strings</string>
+    <string>as behavioural strings</string>
    </property>
   </action>
   <action name="actionClose_project">
@@ -822,11 +824,6 @@
     <string>Frame by frame</string>
    </property>
   </action>
-  <action name="actionExportEventsSQL">
-   <property name="text">
-    <string>Structured Query Language (SQL)</string>
-   </property>
-  </action>
   <action name="actionAggregatedEventsTabularFormat">
    <property name="text">
     <string>Tab Separated Values (tsv)</string>
@@ -840,11 +837,6 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionExportEventTabular_ODS">
-   <property name="text">
-    <string>Open Document Spreadsheet (ods)</string>
-   </property>
-  </action>
   <action name="actionAaaa">
    <property name="text">
     <string>aaaa</string>
@@ -853,11 +845,6 @@
   <action name="menuCreate_subtitles_2">
    <property name="text">
     <string>Create subtitles</string>
-   </property>
-  </action>
-  <action name="actionExportEventTabular_XLS">
-   <property name="text">
-    <string>Microsoft Excel format (xls)</string>
    </property>
   </action>
   <action name="actionUser_guide">
@@ -895,7 +882,7 @@
   </action>
   <action name="actionExport_events_as_Praat_TextGrid">
    <property name="text">
-    <string>Export events as Praat TextGrid</string>
+    <string>as Praat TextGrid</string>
    </property>
   </action>
   <action name="actionExtract_events_from_media_files">
@@ -933,7 +920,7 @@
   </action>
   <action name="actionExport_aggregated_events">
    <property name="text">
-    <string>Export aggregated events</string>
+    <string>aggregated events</string>
    </property>
   </action>
   <action name="actionCoding_pad">
@@ -1222,6 +1209,16 @@
   <action name="actionExport_observations_list">
    <property name="text">
     <string>Export observations list</string>
+   </property>
+  </action>
+  <action name="actionExportEvents_2">
+   <property name="text">
+    <string>Tabular events</string>
+   </property>
+  </action>
+  <action name="actionJWatcher">
+   <property name="text">
+    <string>JWatcher</string>
    </property>
   </action>
  </widget>

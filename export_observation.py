@@ -23,11 +23,92 @@ import tablib
 import logging
 import os
 import sys
+import datetime
+import pathlib
 
 from config import *
 import utilities
 import project_functions
 import db_functions
+
+
+def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, output_format):
+    """
+    export events jwatcher .dat format
+
+    Args:
+        parameters (dict): subjects, behaviors
+        obsId (str): observation id
+        observation (dict): observation
+        ethogram (dict): ethogram of project
+        file_name (str): file name for exporting events
+        output_format (str): output for exporting events
+
+    Returns:
+        bool: result: True if OK else False
+        str: error message
+    """
+
+    print("selected subjects", parameters["selected subjects"])
+    for subject in parameters["selected subjects"]:
+
+        # remove events from another subject
+        events = []
+        for event in observation[EVENTS]:
+            if event[SUBJECT_EVENT_FIELD] == subject:
+                events.append(event)
+
+        total_length = 0   # in seconds
+        if observation[EVENTS]:
+            total_length = observation[EVENTS][-1][0] - observation[EVENTS][0][0]  # last event time - first event time
+
+        file_name_subject = str(pathlib.Path(file_name).parent / pathlib.Path(file_name).stem) + "_" + subject + ".dat"
+
+        rows = ["FirstLineOfData"]
+        rows.append("#-----------------------------------------------------------")
+        rows.append("# Name: {}".format(pathlib.Path(file_name_subject).name))
+        rows.append("# Format: Focal Data File 1.0")
+        rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+        rows.append("#-----------------------------------------------------------")
+        rows.append("")
+        rows.append("FocalMasterFile=")
+        rows.append("")
+
+        rows.append("# Observation started: {}".format(observation["date"]))
+        try:
+            start_time = datetime.datetime.strptime(observation["date"], '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            start_time = datetime.datetime(1970, 1, 1, 0, 0)
+        start_time_epoch = int((start_time - datetime.datetime(1970, 1, 1, 0, 0)).total_seconds() * 1000)
+        rows.append("StartTime={}".format(start_time_epoch))
+
+        stop_time = (start_time + datetime.timedelta(seconds=float(total_length))).isoformat()
+        stop_time_epoch = int(start_time_epoch + float(total_length) * 1000)
+    
+        rows.append("# Observation stopped: {}".format(stop_time))
+        rows.append("StopTime={}".format(stop_time_epoch))
+
+        rows.extend([""] * 3)
+        rows.append("#BEGIN DATA")
+        rows[0] = "FirstLineOfData={}".format(len(rows) + 1)
+
+        for event in events:
+            behavior_key = [ethogram[k][BEHAVIOR_KEY] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == event[EVENT_BEHAVIOR_FIELD_IDX]][0]
+            rows.append("{time_ms}, {bevavior_key}".format(time_ms=int(event[EVENT_TIME_FIELD_IDX] * 1000),
+                                                           bevavior_key=behavior_key))
+        rows.append("{}, {}".format(int(events[-1][0] * 1000), "EOF"))
+
+        print("subject", subject)
+        for r in rows:
+            print(r)
+
+        try:
+            with open(file_name_subject, "w") as f_out:
+                f_out.write("\n".join(rows))
+        except:
+            return False, "File not created: {}".format(sys.exc_info()[1])
+
+    return True, ""
 
 
 def export_events(parameters, obsId, observation, ethogram, file_name, output_format):
@@ -60,10 +141,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     # media file number
     mediaNb = 0
-    if observation["type"] in [MEDIA]:
-        for idx in observation[FILE]:
-            for media in observation[FILE][idx]:
-                mediaNb += 1
+    if observation["type"] == MEDIA:
+        for player in observation[FILE]:
+            mediaNb += len(observation[FILE][player])
 
     rows = []
 
@@ -79,10 +159,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     rows.append([""])
 
     if observation[TYPE] in [MEDIA]:
-
-        for idx in observation[FILE]:
-            for media in observation[FILE][idx]:
-                rows.append(["Player #{0}".format(idx), media])
+        for player in sorted(list(observation[FILE].keys())):
+            for media in observation[FILE][player]:
+                rows.append(["Player #{0}".format(player), media])
     rows.append([""])
 
     # date
@@ -102,7 +181,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     # independent variables
     if INDEPENDENT_VARIABLES in observation:
-        rows.extend([["independent variables"],["variable", "value"]])
+        rows.extend([["independent variables"], ["variable", "value"]])
 
         for variable in observation[INDEPENDENT_VARIABLES]:
             rows.append([variable, observation[INDEPENDENT_VARIABLES][variable]])
@@ -126,14 +205,13 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
         try:
             for mediaFile in observation[FILE][PLAYER1]:
                 duration1.append(observation["media_info"]["length"][mediaFile])
-        except:
+        except KeyError:
             pass
 
     for event in eventsWithStatus:
-        
         if (((event[SUBJECT_EVENT_FIELD] in parameters["selected subjects"]) or
-           (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"])) and
-           (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
+             (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"])) and
+             (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
 
             fields = []
             fields.append(utilities.intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
@@ -150,9 +228,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
                 fields.append(observation["media_info"]["fps"][observation[FILE][PLAYER1][mediaFileIdx]])  # fps
 
             if observation["type"] in [LIVE]:
-                fields.append(LIVE) # media
-                fields.append(total_length) # total length
-                fields.append("NA") # FPS
+                fields.append(LIVE)  # media
+                fields.append(total_length)  # total length
+                fields.append("NA")   # FPS
 
             fields.append(event[EVENT_SUBJECT_FIELD_IDX])
             fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
@@ -193,14 +271,14 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 def dataset_write(dataset, file_name, output_format):
     """
     write a tablib dataset to file in specified format
-    
+
     Args:
         dataset (tablib.dataset): dataset to write
         file_name (str): file name
         output_format (str): format of output
-        
+
     Returns:
-        bool: result
+        bool: result. True if OK else False
         str: error message
     """
 
@@ -274,9 +352,9 @@ def export_aggregated_events(pj, parameters, obsId):
     total_length = "{0:.3f}".format(project_functions.observation_total_length(observation))
 
     ok, msg, connector = db_functions.load_aggregated_events_in_db(pj,
-                                            parameters["selected subjects"],
-                                            [obsId],
-                                            parameters["selected behaviors"])
+                                                                   parameters["selected subjects"],
+                                                                   [obsId],
+                                                                   parameters["selected behaviors"])
     if not ok:
         data
 
@@ -287,7 +365,7 @@ def export_aggregated_events(pj, parameters, obsId):
         for behavior in parameters["selected behaviors"]:
 
             cursor.execute("select distinct modifiers from aggregated_events where subject=? AND behavior=? order by modifiers",
-                          (subject, behavior,))
+                           (subject, behavior,))
             rows_distinct_modifiers = list(x[0].strip() for x in cursor.fetchall())
 
             for distinct_modifiers in rows_distinct_modifiers:
@@ -298,7 +376,7 @@ def export_aggregated_events(pj, parameters, obsId):
                 rows = list(cursor.fetchall())
 
                 for row in rows:
-    
+
                     if observation[TYPE] in [MEDIA]:
                         if duration1:
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["start"] >= sum(duration1[0:idx1])][-1]
@@ -307,187 +385,67 @@ def export_aggregated_events(pj, parameters, obsId):
                         else:
                             mediaFileString = "-"
                             fpsString = "NA"
-    
+
                     if observation[TYPE] in [LIVE]:
                         mediaFileString = "LIVE"
                         fpsString = "NA"
-    
-                    # if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
+
                     if row["type"] == POINT:
-    
+
                         row_data = []
                         row_data.extend([obsId,
-                                    observation["date"].replace("T", " "),
-                                    mediaFileString,
-                                    total_length,
-                                    fpsString])
-    
+                                         observation["date"].replace("T", " "),
+                                         mediaFileString,
+                                         total_length,
+                                         fpsString])
+
                         # independent variables
                         if INDEPENDENT_VARIABLES in pj:
                             for idx_var in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
                                 if pj[INDEPENDENT_VARIABLES][idx_var]["label"] in observation[INDEPENDENT_VARIABLES]:
-                                   row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
+                                    row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
                                 else:
                                     row_data.append("")
-    
+
                         row_data.extend([subject,
-                                        behavior,
-                                        row["modifiers"].strip(),
-                                        POINT,
-                                        "{0:.3f}".format(row["start"]), # start
-                                        "{0:.3f}".format(row["stop"]), # stop
-                                        "NA", # duration
-                                        row["comment"],
-                                        ""
-                                        ])
+                                         behavior,
+                                         row["modifiers"].strip(),
+                                         POINT,
+                                         "{0:.3f}".format(row["start"]),  # start
+                                         "{0:.3f}".format(row["stop"]),  # stop
+                                         "NA",  # duration
+                                         row["comment"],
+                                         ""
+                                         ])
                         data.append(row_data)
-    
-                    # if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
+
                     if row["type"] == STATE:
                         if idx % 2 == 0:
                             row_data = []
                             row_data.extend([obsId,
-                                    observation["date"].replace("T", " "),
-                                    mediaFileString,
-                                    total_length,
-                                    fpsString])
-    
+                                             observation["date"].replace("T", " "),
+                                             mediaFileString,
+                                             total_length,
+                                             fpsString])
+
                             # independent variables
                             if INDEPENDENT_VARIABLES in pj:
                                 for idx_var in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
                                     if pj[INDEPENDENT_VARIABLES][idx_var]["label"] in observation[INDEPENDENT_VARIABLES]:
-                                       row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
+                                        row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
                                     else:
                                         row_data.append("")
 
                             row_data.extend([subject,
-                                    behavior,
-                                    row["modifiers"].strip(),
-                                    STATE,
-                                    "{0:.3f}".format(row["start"]),
-                                    "{0:.3f}".format(row["stop"]),
-                                    "{0:.3f}".format(row["stop"] - row["start"]),
-                                    row["comment"],
-                                    row["comment_stop"]
-                                    ])
+                                             behavior,
+                                             row["modifiers"].strip(),
+                                             STATE,
+                                             "{0:.3f}".format(row["start"]),
+                                             "{0:.3f}".format(row["stop"]),
+                                             "{0:.3f}".format(row["stop"] - row["start"]),
+                                             row["comment"],
+                                             row["comment_stop"]
+                                             ])
                             data.append(row_data)
 
     return data
-
-
-'''
-def export_aggregated_events(pj, parameters, obsId):
-    """
-    export aggregated events
-
-    Args:
-        pj (dict): BORIS project
-        parameters (dict): subjects, behaviors
-        obsId (str): observation id
-
-    Returns:
-        tablib.Dataset:
-
-    """
-    data = tablib.Dataset()
-    observation = pj[OBSERVATIONS][obsId]
-
-    duration1 = []   # in seconds
-    if observation[TYPE] in [MEDIA]:
-        try:
-            for mediaFile in observation[FILE][PLAYER1]:
-                if "media_info" in observation:
-                    duration1.append(observation["media_info"]["length"][mediaFile])
-        except:
-            duration1 = []
-
-    total_length = "{0:.3f}".format(project_functions.observation_total_length(observation))
-
-    cursor = db_functions.load_events_in_db(pj,
-                                            parameters["selected subjects"],
-                                            [obsId],
-                                            parameters["selected behaviors"])
-
-    for subject in parameters["selected subjects"]:
-
-        for behavior in parameters["selected behaviors"]:
-
-            cursor.execute("SELECT occurence, modifiers, comment FROM events WHERE observation = ? AND subject = ? AND code = ? ORDER by occurence",
-                           (obsId, subject, behavior))
-            rows = list(cursor.fetchall())
-
-            for idx, row in enumerate(rows):
-
-                if observation[TYPE] in [MEDIA]:
-                    if duration1:
-                        mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["occurence"] >= sum(duration1[0:idx1])][-1]
-                        mediaFileString = observation[FILE][PLAYER1][mediaFileIdx]
-                        fpsString = observation["media_info"]["fps"][observation[FILE][PLAYER1][mediaFileIdx]]
-                    else:
-                        mediaFileString = "-"
-                        fpsString = "NA"
-
-                if observation[TYPE] in [LIVE]:
-                    mediaFileString = "LIVE"
-                    fpsString = "NA"
-
-                if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
-
-                    row_data = []
-                    row_data.extend([obsId,
-                                observation["date"].replace("T", " "),
-                                mediaFileString,
-                                total_length,
-                                fpsString])
-
-                    # independent variables
-                    if INDEPENDENT_VARIABLES in pj:
-                        for idx_var in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-                            if pj[INDEPENDENT_VARIABLES][idx_var]["label"] in observation[INDEPENDENT_VARIABLES]:
-                               row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
-                            else:
-                                row_data.append("")
-
-                    row_data.extend([subject,
-                                behavior,
-                                row["modifiers"].strip(),
-                                POINT,
-                                "{0:.3f}".format(row["occurence"]), # start
-                                "NA", # stop
-                                "NA", # duration
-                                row["comment"],
-                                ""
-                                ])
-                    data.append(row_data)
-
-                if STATE in project_functions.event_type(behavior, pj[ETHOGRAM]):
-                    if idx % 2 == 0:
-                        row_data = []
-                        row_data.extend([obsId,
-                                observation["date"].replace("T", " "),
-                                mediaFileString,
-                                total_length,
-                                fpsString])
-
-                        # independent variables
-                        if INDEPENDENT_VARIABLES in pj:
-                            for idx_var in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-                                if pj[INDEPENDENT_VARIABLES][idx_var]["label"] in observation[INDEPENDENT_VARIABLES]:
-                                   row_data.append(observation[INDEPENDENT_VARIABLES][pj[INDEPENDENT_VARIABLES][idx_var]["label"]])
-                                else:
-                                    row_data.append("")
-
-                        row_data.extend([subject,
-                                behavior,
-                                row["modifiers"].strip(),
-                                STATE,
-                                "{0:.3f}".format(row["occurence"]),
-                                "{0:.3f}".format(rows[idx + 1]["occurence"]),
-                                "{0:.3f}".format(rows[idx + 1]["occurence"] - row["occurence"]),
-                                row["comment"],
-                                rows[idx + 1]["comment"]
-                                ])
-                        data.append(row_data)
-
-    return data
-'''
