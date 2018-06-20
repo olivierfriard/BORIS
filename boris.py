@@ -105,7 +105,7 @@ import time_budget_functions
 import vlc
 
 __version__ = "7.0.2"
-__version_date__ = "2018-06-16"
+__version_date__ = "2018-06-20"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -3841,7 +3841,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # adapt time offset for current time format
         if self.timeFormat == S:
             observationWindow.teTimeOffset.setVisible(False)
-            observationWindow.teTimeOffset_2.setVisible(False)
 
         if self.timeFormat == HHMMSS:
             observationWindow.leTimeOffset.setVisible(False)
@@ -8333,12 +8332,9 @@ item []:
 
                             self.dw_player[n_player].mediaplayer.set_time(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000))
 
-                    else:
+                else:
 
-                        #self.dw_player[n_player].frame_viewer.setVisible(False)
-                        #self.dw_player[n_player].videoframe.setVisible(True)
-
-                        self.dw_player[n_player].mediaplayer.set_time(new_time)
+                    self.dw_player[n_player].mediaplayer.set_time(new_time)
 
                 #except:
                 #print("offset error with player #{}".format(n_player + 1))
@@ -8443,20 +8439,20 @@ item []:
 
             t0 = self.dw_player[0].mediaplayer.get_time()
             ct0 = self.getLaps() * 1000
-            print("ct0 {} ".format(ct0/1000))
+            print("ct0 {} ".format(ct0 / 1000))
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
                 for i in range(1, N_PLAYER):
                     if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                         
                         t = self.dw_player[i].mediaplayer.get_time()
                         ct = self.getLaps(n_player=i) * 1000
-                        print("ct {} ".format(ct/1000))
+                        print("ct {} ".format(ct / 1000))
                         #if abs(t0 - t) >= 300:
                         print("abs", abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)))
     
                         if abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)) >= 300:
                             
-                            print("sync player {} {} with time {} ".format(i + 1, ct/1000, ct0/1000))
+                            print("sync player {} {} with time {} ".format(i + 1, ct / 1000, ct0 / 1000))
                             self.sync_time(i, ct0)
 
 
@@ -8852,7 +8848,7 @@ item []:
 
         """
 
-        if self.pj[OBSERVATIONS][self.observationId]["type"] in [LIVE]:
+        if self.pj[OBSERVATIONS][self.observationId]["type"] == LIVE:
 
             if self.liveObservationStarted:
                 now = QTime()
@@ -8862,7 +8858,7 @@ item []:
             else:
                 return Decimal("0.0")
 
-        if self.pj[OBSERVATIONS][self.observationId]["type"] in [MEDIA]:
+        if self.pj[OBSERVATIONS][self.observationId]["type"] == MEDIA:
 
             if self.playerType == VIEWER:
                 return Decimal(0)
@@ -9209,7 +9205,7 @@ item []:
     def twEvents_doubleClicked(self):
         """
         seek video to double clicked position (add self.repositioningTimeOffset value)
-        substract time offset if any
+        substract time offset if defined
         """
 
         if self.twEvents.selectedIndexes():
@@ -9230,21 +9226,18 @@ item []:
                 newTime = 0
 
             if self.playMode == VLC:
-                
+
                 print("new time", newTime)
-                
+
                 '''
                 flag_pause = (self.mediaListPlayer.get_state() in [vlc.State.Paused]
                               or self.mediaListPlayer2.get_state() in [vlc.State.Paused])
                 '''
                 flag_pause = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused])
 
-
                 if len(self.dw_player[0].media_durations) == 1:
-                    '''print(self.mediaplayer.get_media().get_duration())'''
                     if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
-                        #self.play_video()
-                        
+
                         self.dw_player[0].mediaListPlayer.play()
                         while True:
                             if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
@@ -9260,7 +9253,7 @@ item []:
 
                     if time_ >= self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
                         print("set to ",self.dw_player[0].mediaplayer.get_media().get_duration())
-                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_media().get_duration()-100)
+                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_media().get_duration() - 100)
                         #self.mediaplayer.stop()
                     else:
                         self.dw_player[0].mediaplayer.set_time(int(newTime))
