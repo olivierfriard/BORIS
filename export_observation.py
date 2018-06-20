@@ -49,7 +49,6 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
         str: error message
     """
 
-    # TODO: check "no focal subject"
     print("selected subjects", parameters["selected subjects"])
     
     for subject in parameters["selected subjects"]:
@@ -158,7 +157,7 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
         rows.append("Offset=0.0")
         rows.append("BehaviorToScoreFrom=")
         rows.append("")
-        rows.append("OutOfSightCode=???")
+        rows.append("OutOfSightCode=")
         rows.append("")
         rows.append("Report.StateNaturalInterval.Occurrence=false")
         rows.append("Report.StateNaturalInterval.TotalTime=false")

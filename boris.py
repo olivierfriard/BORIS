@@ -9686,21 +9686,16 @@ item []:
                     fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
         if mode == "jwatcher":
-            if len(selectedObservations) > 1:
-                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events",
-                                                                   os.path.expanduser("~"),
-                                                                   options=QFileDialog.ShowDirsOnly)
-                if not exportDir:
-                    return
-            else:
-                fileName, filter_ = filediag_func(self, "Export events for Jwatcher", "", "DAT files (*.dat)")
-                if not fileName:
-                    return
+            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events",
+                                                               os.path.expanduser("~"),
+                                                               options=QFileDialog.ShowDirsOnly)
+            if not exportDir:
+                return
 
             outputFormat = "dat"
 
         for obsId in selectedObservations:
-            if len(selectedObservations) > 1:
+            if (len(selectedObservations) > 1 or mode == "jwatcher"):
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
 
             if mode == "tabular":
