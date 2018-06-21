@@ -8351,12 +8351,15 @@ item []:
 
                 if  sum(self.dw_player[n_player].media_durations[0: media_idx]) < new_time < sum(self.dw_player[n_player].media_durations[0: media_idx+1]):
                     # correct media
-                    print(n_player+1, "correct media")
+
+                    logging.debug("{} correct media".format(n_player+1))
+
                     self.dw_player[n_player].mediaplayer.set_time(new_time -  sum(
                                 self.dw_player[n_player].media_durations[0: media_idx]))
                 else:
 
-                    print(n_player+1, "not correct media")
+                    logging.debug("{} not correct media".format(n_player+1))
+
                     flagPaused = self.dw_player[n_player].mediaListPlayer.get_state() == vlc.State.Paused
                     tot = 0
                     for idx, d in enumerate(self.dw_player[n_player].media_durations):
@@ -8377,9 +8380,9 @@ item []:
                         tot += d
 
             else: # end of media list
-                
-                print(n_player+1, "end of nmedia")
-                
+
+                logging.debug("{} end of media".format(n_player+1))
+
                 self.dw_player[n_player].mediaListPlayer.play_item_at_index(len(self.dw_player[n_player].media_durations) - 1)
                 app.processEvents()
                 # wait until media is played
@@ -8423,10 +8426,6 @@ item []:
             # highlight current event in tw events and scroll event list
             self.get_events_current_row()
 
-            print("===================")
-            print("mediaplayer 1 state", self.dw_player[0].mediaplayer.get_state())
-            print("medialistplayer 1 state", self.dw_player[0].mediaListPlayer.get_state())
-            
             if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                 self.dw_player[0].frame_viewer.setVisible(True)
                 self.dw_player[0].videoframe.setVisible(False)
@@ -8439,20 +8438,19 @@ item []:
 
             t0 = self.dw_player[0].mediaplayer.get_time()
             ct0 = self.getLaps() * 1000
-            print("ct0 {} ".format(ct0 / 1000))
+            # print("ct0 {} ".format(ct0 / 1000))
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
                 for i in range(1, N_PLAYER):
                     if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                         
                         t = self.dw_player[i].mediaplayer.get_time()
                         ct = self.getLaps(n_player=i) * 1000
-                        print("ct {} ".format(ct / 1000))
-                        #if abs(t0 - t) >= 300:
-                        print("abs", abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)))
+                        #print("ct {} ".format(ct / 1000))
+                        #print("abs", abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)))
     
                         if abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)) >= 300:
                             
-                            print("sync player {} {} with time {} ".format(i + 1, ct / 1000, ct0 / 1000))
+                            #print("sync player {} {} with time {} ".format(i + 1, ct / 1000, ct0 / 1000))
                             self.sync_time(i, ct0)
 
 
@@ -8464,9 +8462,9 @@ item []:
 
             #if self.mediaplayer[0].get_length():
             
-            print("self.dw_player[0].mediaplayer.get_length()", self.dw_player[0].mediaplayer.get_length())
+            #print("self.dw_player[0].mediaplayer.get_length()", self.dw_player[0].mediaplayer.get_length())
             
-            print("", )
+            #print("", )
             
             if self.dw_player[0].mediaplayer.get_length():
 
