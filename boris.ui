@@ -102,6 +102,19 @@
              </item>
             </layout>
            </item>
+           <item>
+            <widget class="QWidget" name="w_live" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_11">
+              <item>
+               <widget class="QPushButton" name="pb_live_obs">
+                <property name="text">
+                 <string>PushButton</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>

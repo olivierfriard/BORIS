@@ -627,31 +627,12 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check compatibility between variable type and default value
             if not self.check_variable_default_value(self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
                                                    self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex()):
-                QMessageBox.warning(self, programName + " - Independent variables error", "The default value ({0}) of variable <b>{1}</b> is not compatible with variable type".format(
-                                    self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
-                                    self.twVariables.item(row, tw_indVarFields.index("label")).text()))
+                QMessageBox.warning(self,
+                                    programName + " - Independent variables error",
+                                    "The default value ({0}) of variable <b>{1}</b> is not compatible with variable type".format(
+                                        self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
+                                        self.twVariables.item(row, tw_indVarFields.index("label")).text()))
 
-    '''
-    def check_indep_var_config_old(self):
-        """
-        check if default type is compatible with var type
-        """
-
-        self.lePredefined.setStyleSheet("color: rgb(0, 0, 0);")
-        if self.cbType.currentText() != TIMESTAMP and not self.check_variable_default_value(self.lePredefined.text(), self.cbType.currentText()):
-            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
-            return False, "The default value is not compatible with the variable type"
-
-        # check if default value in set of values
-        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() == "":
-            return False, "No values were defined in set"
-
-        if self.cbType.currentText() == SET_OF_VALUES and self.leSetValues.text() and self.lePredefined.text() not in self.leSetValues.text().split(","):
-            self.lePredefined.setStyleSheet("color: rgb(255, 0, 0);")
-            return False
-
-        return True, "OK"
-    '''
 
 
     def check_indep_var_config(self):
@@ -681,7 +662,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 and self.twVariables.item(r, 3).text()
                 and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
                 return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
-
 
         return True, "OK"
 
@@ -805,7 +785,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 existing_var = []
 
                 for r in range(self.twVariables.rowCount()):
-                    existing_var.append(self.twVariables.item(r, 0).text().strip().upper())  # = [self.pj[INDEPENDENT_VARIABLES][k]["label"].upper().strip() for k in self.pj[INDEPENDENT_VARIABLES]]
+                    existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
 
                 for i in sorted_keys(project[INDEPENDENT_VARIABLES]):
 
@@ -839,9 +819,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         import subjects from another project
         """
         if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "", "Project files (*.boris);;All files (*)")
+            fileName = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "",
+                                                         "Project files (*.boris);;All files (*)")
         else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "", "Project files (*.boris);;All files (*)")
+            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "",
+                                                            "Project files (*.boris);;All files (*)")
 
         if fileName:
 
@@ -864,7 +846,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                                   "Do you want to append subjects or replace them?"),
                                                                   ['Append', 'Replace', 'Cancel'])
 
-                    if response == 'Replace':
+                    if response == "Replace":
                         self.twSubjects.setRowCount(0)
 
                     if response == CANCEL:
@@ -932,12 +914,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                             item.setText(project[ETHOGRAM][i][field])
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
-                            '''
-                            comboBox = QComboBox()
-                            comboBox.addItems(BEHAVIOR_TYPES)
-                            comboBox.setCurrentIndex(BEHAVIOR_TYPES.index( project[ETHOGRAM][i][field] ))
-                            self.twBehaviors.setCellWidget(self.twBehaviors.rowCount() - 1, behavioursFields[field], comboBox)
-                            '''
 
                         else:
                             if field == "modifiers" and isinstance(project[ETHOGRAM][i][field], str):
@@ -990,13 +966,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     '''flag_point_event_present = True'''
                     includePointEvents = dialog.MessageDialog(programName, "Do you want to include point events?", [YES, NO])
                     break
-
-        '''
-        if flag_point_event_present:
-            includePointEvents = dialog.MessageDialog(programName, "Do you want to include point events?", [YES, NO])
-        else:
-            includePointEvents = NO
-        '''
 
         for r in range(self.twBehaviors.rowCount()):
 
@@ -1090,7 +1059,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 for codeToDelete in codesToDelete:
                     # if code to delete used in obs ask confirmation
                     if codeToDelete in codesInObs:
-                        response = dialog.MessageDialog(programName, "The code <b>{}</b> is used in observations!".format(codeToDelete), ['Remove', CANCEL])
+                        response = dialog.MessageDialog(programName,
+                                                        "The code <b>{}</b> is used in observations!".format(codeToDelete),
+                                                        ['Remove', CANCEL])
                         if response == "Remove":
                             self.twBehaviors.removeRow(row_mem[codeToDelete])
                     else:   # remove without asking
@@ -1102,7 +1073,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         import behaviors configuration from JWatcher (GDL file)
         """
         if self.twBehaviors.rowCount():
-            response = dialog.MessageDialog(programName, "There are behaviors already configured. Do you want to append behaviors or replace them?",
+            response = dialog.MessageDialog(programName,
+                                            "There are behaviors already configured. Do you want to append behaviors or replace them?",
                                             ["Append", "Replace", CANCEL])
             if response == CANCEL:
                 return
@@ -1128,7 +1100,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if idx < len(rows) and "Behavior.description." in rows[idx+1]:
                         description = rows[idx+1].split('=')[-1]
 
-                    behavior = {"key": key, "code": code, "description": description, "modifiers": "", "excluded": "", "coding map": "", "category": ""}
+                    behavior = {"key": key, "code": code, "description": description,
+                                "modifiers": "", "excluded": "", "coding map": "", "category": ""}
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -1193,7 +1166,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     rows.append(row.decode("utf-8"))
                 except:
-                    QMessageBox.critical(None, programName, "Error while reading file\nThe line # {}\n{}\ncontains characters that are not readable.".format(idx,row), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    QMessageBox.critical(None, programName,
+                                        ("Error while reading file\nThe line # {}\n"
+                                         "{}\ncontains characters that are not readable.").format(idx,row),
+                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                     return
                 idx += 1
 
@@ -1202,7 +1178,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             logging.debug("fields separator: {}  fields number: {}".format(fieldSeparator, fieldsNumber))
 
             if fieldSeparator is None:
-                QMessageBox.critical(self, programName, "Separator character not found! Use plain text file and TAB or comma as value separator")
+                QMessageBox.critical(self, programName,
+                                     "Separator character not found! Use plain text file and TAB or comma as value separator")
             else:
 
                 for row in rows:
@@ -1251,25 +1228,27 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(self.twBehaviors.rowCount()):
 
             # check key
-            if self.twBehaviors.item(r, behavioursFields["key"]):
+            if self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX):
+                key = self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).text()
                 # check key length
-                if self.twBehaviors.item(r, behavioursFields["key"]).text().upper() not in ["F" + str(i) for i in range(1, 13)] \
-                   and len(self.twBehaviors.item(r, behavioursFields["key"]).text()) > 1:
+                if key.upper() not in ["F" + str(i) for i in range(1, 13)] and len(key) > 1:
                     self.lbObservationsState.setText("""<font color="red">Key length &gt; 1</font>""")
                     return
 
-                keys.append(self.twBehaviors.item(r, behavioursFields["key"]).text())
+                keys.append(key)
 
                 # convert to upper text
-                self.twBehaviors.item(r, behavioursFields["key"]).setText(self.twBehaviors.item(r, behavioursFields["key"]).text().upper())
+                '''
+                self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).setText(self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).text().upper())
+                '''
 
             # check code
-            if self.twBehaviors.item(r, behavioursFields["code"]):
-                if self.twBehaviors.item(r, behavioursFields["code"]).text() in codes:
+            if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX):
+                if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text() in codes:
                     self.lbObservationsState.setText("""<font color="red">Code duplicated at line {} </font>""".format(r + 1))
                 else:
-                    if self.twBehaviors.item(r, behavioursFields["code"]).text():
-                        codes.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
+                    if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
+                        codes.append(self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
 
 
     def pb_clone_behavior_clicked(self):

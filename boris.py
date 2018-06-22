@@ -500,12 +500,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dwObservations.setVisible(False)
         self.dwEthogram.setVisible(False)
         self.dwSubjects.setVisible(False)
-        
-        '''
-        self.lb_current_media_time.setVisible(False)
-        self.lbFocalSubject.setVisible(False)
-        self.lbCurrentStates.setVisible(False)
-        '''
 
         self.lb_current_media_time.setText("")
         self.lbFocalSubject.setText("")
@@ -946,6 +940,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.automaticBackupTimer.timeout.connect(self.automatic_backup)
         if self.automaticBackup:
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
+
+        self.pb_live_obs.clicked.connect(self.start_live_observation)
+
 
     def export_observations_list_clicked(self):
         
@@ -3350,7 +3347,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.playerType, self.playMode = VLC, VLC
         self.fps = 0
-        #self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(True)
         
         self.w_obs_info.setVisible(True)
@@ -3698,14 +3694,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.playerType = LIVE
         self.playMode = LIVE
+        
+        self.w_live.setVisible(True)
 
-        # self.create_live_tab()
+        '''self.textButton = QPushButton("Start live observation")'''
+        self.pb_live_obs.setMinimumHeight(60)
+        '''self.textButton.clicked.connect(self.start_live_observation)'''
 
-        self.textButton = QPushButton("Start live observation")
-        self.textButton.setMinimumHeight(60)
-        self.textButton.clicked.connect(self.start_live_observation)
-
-        self.verticalLayout_3.addWidget(self.textButton)
+        '''self.verticalLayout_3.addWidget(self.textButton)'''
 
         #font = QFont("Monospace")
         font = QFont()
@@ -3719,13 +3715,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_options()
 
         self.liveObservationStarted = False
-        self.textButton.setText("Start live observation")
+        self.pb_live_obs.setText("Start live observation")
 
         if self.timeFormat == HHMMSS:
             self.lb_current_media_time.setText("00:00:00.000")
         if self.timeFormat == S:
             self.lb_current_media_time.setText("0.000")
-
 
         self.liveStartTime = None
         self.liveTimer.stop()
@@ -4225,6 +4220,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == LIVE:
             self.liveTimer.stop()
+            self.w_live.setVisible(False)
             '''
             end_time = self.getLaps()
             self.lbTimeLive.setText(self.convertTime(end_time))
@@ -4259,7 +4255,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
                     elif self.timeFormat == S:
                         fix_at_time = Decimal(str(w.te.value()))
-                    print("fix_at_time",  fix_at_time)
 
                     events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
                                                                                 self.pj[ETHOGRAM],
@@ -4283,10 +4278,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.liveObservationStarted = False
             self.liveStartTime = None
             self.liveTimer.stop()
-            '''
-            self.toolBox.removeItem(0)
-            self.liveTab.deleteLater()
-            '''
 
 
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
@@ -6903,7 +6894,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if  int(currentTime) % self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"] == 0:
                     app.beep()
                     self.liveTimer.stop()
-                    self.textButton.setText("Live observation stopped (scan sampling)")
+                    self.pb_live_obs.setText("Live observation stopped (scan sampling)")
 
 
     def start_live_observation(self):
@@ -6913,8 +6904,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("start live observation, self.liveObservationStarted: {}".format(self.liveObservationStarted))
 
-        if "scan sampling" in self.textButton.text():
-            self.textButton.setText("Stop live observation")
+        if "scan sampling" in self.pb_live_obs.text():
+            self.pb_live_obs.setText("Stop live observation")
             self.liveTimer.start(100)
             return
 
@@ -6927,7 +6918,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
                 self.projectChanged = True
 
-            self.textButton.setText("Stop live observation")
+            self.pb_live_obs.setText("Stop live observation")
 
             self.liveStartTime = QTime()
             # set to now
@@ -6936,7 +6927,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.liveTimer.start(100)
         else:
 
-            self.textButton.setText("Start live observation")
+            self.pb_live_obs.setText("Start live observation")
             self.liveStartTime = None
             self.liveTimer.stop()
 
@@ -7729,10 +7720,10 @@ item []:
             if self.timeFormat == S:
                 newTime = Decimal(editWindow.dsbTime.value())
 
-            for obs_idx in self.pj[ETHOGRAM]:
-                if self.pj[ETHOGRAM][obs_idx]["code"] == editWindow.cobCode.currentText():
+            for idx in self.pj[ETHOGRAM]:
+                if self.pj[ETHOGRAM][idx]["code"] == editWindow.cobCode.currentText():
 
-                    event = self.full_event(obs_idx)
+                    event = self.full_event(idx)
 
                     event["subject"] = editWindow.cobSubject.currentText()
                     if editWindow.leComment.toPlainText():
@@ -8879,6 +8870,7 @@ item []:
         else:
             app.beep()
 
+
     def keyPressEvent(self, event):
 
         logging.debug("text #{0}#  event key: {1} ".format(event.text(), event.key()))
@@ -8903,11 +8895,8 @@ item []:
         if self.confirmSound:
             self.beep("")
 
-        if self.playerType == VLC and self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused:
-            flagPlayerPlaying = True
-        else:
-            flagPlayerPlaying = False
-
+        if self.playerType == VLC: 
+            flagPlayerPlaying = self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused
 
         # check if media ever played
 
@@ -8915,9 +8904,7 @@ item []:
             if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.NothingSpecial:
                 return
 
-        ek = event.key()
-
-        logging.debug("key event {0}".format(ek))
+        ek, ek_text = event.key(), event.text()
 
         if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
             return
@@ -8933,7 +8920,7 @@ item []:
 
         # play / pause with space bar
         if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-            if self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused:
+            if flagPlayerPlaying:
                 self.pause_video()
             else:
                 self.play_video()
@@ -9011,13 +8998,15 @@ item []:
            (ek in function_keys) or
            (ek == Qt.Key_Enter and event.text())):  # click from coding pad or subjects pad
 
-            obs_idx, subj_idx  = -1, -1
-            count = 0
+            ethogram_idx, subj_idx, count  = -1, -1, 0
 
             if (ek in function_keys):
                 ek_unichr = function_keys[ek]
             elif ek != Qt.Key_Enter:
-                ek_unichr = chr(ek)
+                '''ek_unichr = chr(ek)'''
+                ek_unichr = ek_text
+
+            logging.debug("ek_unichr {}".format(ek_unichr))
 
             if ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ""
@@ -9035,17 +9024,16 @@ item []:
                             self.update_subject(self.pj[SUBJECTS][subj_idx]["name"])
                             return
 
-
                 else: # behavior
-                    for o in self.pj[ETHOGRAM]:
-                        if self.pj[ETHOGRAM][o]["code"] == event.text():
-                            obs_idx = o
+                    for idx in self.pj[ETHOGRAM]:
+                        if self.pj[ETHOGRAM][idx]["code"] == event.text():
+                            ethogram_idx = idx
                             count += 1
             else:
                 # count key occurence in ethogram
-                for o in self.pj[ETHOGRAM]:
-                    if self.pj[ETHOGRAM][o]["key"] == ek_unichr:
-                        obs_idx = o
+                for idx in self.pj[ETHOGRAM]:
+                    if self.pj[ETHOGRAM][idx]["key"] == ek_unichr:
+                        ethogram_idx = idx
                         count += 1
 
             # check if key defines a suject
@@ -9077,11 +9065,11 @@ item []:
                             self.pause_video()
 
                 # let user choose event
-                obs_idx = self.fill_lwDetailed(ek_unichr, memLaps)
+                ethogram_idx = self.fill_lwDetailed(ek_unichr, memLaps)
 
                 logging.debug("obs_idx: {}".format(obs_idx))
 
-                if obs_idx:
+                if ethogram_idx:
                     count = 1
 
             if self.playerType == VLC and flagPlayerPlaying:
@@ -9105,7 +9093,7 @@ item []:
                     if response == NO:
                         return
 
-                event = self.full_event(obs_idx)
+                event = self.full_event(ethogram_idx)
 
                 self.writeEvent(event, memLaps)
 
@@ -9127,6 +9115,7 @@ item []:
                             self.update_subject(self.pj[SUBJECTS][idx]["name"])
 
                 if not flag_subject:
+                    logging.debug("Key not assigned ({})".format(ek_unichr))
                     self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
 
 
