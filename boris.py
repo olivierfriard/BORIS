@@ -262,8 +262,7 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 
 
 class Click_label(QLabel):
-    
-    #mouse_pressed_signal = pyqtSignal(str, QPoint) 
+
     mouse_pressed_signal = pyqtSignal(int, QEvent)
 
     def __init__(self, id_, parent= None):
@@ -271,46 +270,69 @@ class Click_label(QLabel):
         self.id_ = id_
 
     def mousePressEvent(self, event):
-        print("label clicked", self.id_)
+        """
+        label clicked
+        """
         self.mouse_pressed_signal.emit(self.id_, event)
 
 class Video_frame(QFrame):
     def sizeHint(self):
         return QtCore.QSize(150, 75)
 
+
 class DW(QDockWidget):
 
-    #ev_mp = pyqtSignal(str, QPoint)
     key_pressed_signal = pyqtSignal(QEvent)
+    volume_slider_moved_signal = pyqtSignal(int, int)
 
     def __init__(self, id_, parent = None):
         super().__init__(parent)
-
+        self.id_ = id_
         self.setWindowTitle("Player #{}".format(id_ + 1))
         self.setObjectName("player{}".format(id_ + 1))
         
         self.w = QtWidgets.QWidget()
-        
-        #self.videoframe = QtWidgets.QFrame()
+
+        self.hlayout = QHBoxLayout()
+
         self.videoframe = Video_frame()
         self.palette = self.videoframe.palette()
-        self.palette.setColor(QtGui.QPalette.Window,
-                               QtGui.QColor(0,0,0))
+        self.palette.setColor(QPalette.Window, QColor(0,0,0))
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
+        
+        self.hlayout.addWidget(self.videoframe)
+
+        self.volume_slider = QSlider(Qt.Vertical, self)
+        self.volume_slider.setMaximum(100)
+        self.volume_slider.setValue(50)
+        # self.volume_slider.setToolTip("Volume")
+
+        self.volume_slider.sliderMoved.connect(self.volume_slider_moved)
+
+        self.hlayout.addWidget(self.volume_slider)
 
         self.frame_viewer = Click_label(id_)
         self.frame_viewer.setVisible(False)
 
         self.setWidget(self.w)
-        self.w.setLayout(QtWidgets.QVBoxLayout())
-        self.w.layout().addWidget(self.videoframe)
+        self.w.setLayout(QVBoxLayout())
+        #self.w.layout().addWidget(self.videoframe)
+        self.w.layout().addLayout(self.hlayout)
+
+        #self.w.layout().addWidget(self.volume_slider)
+
         self.w.layout().addWidget(self.frame_viewer)
         self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
+    def volume_slider_moved(self):
+        self.volume_slider_moved_signal.emit(self.id_, self.volume_slider.value())
+
 
     def keyPressEvent(self, event):
-        print("key pressed on dock widget")
+        """
+        key pressed on dock widget
+        """
         self.key_pressed_signal.emit(event)
 
 
@@ -376,13 +398,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     memPoints = []   # memory of clicked points for measurement tool
 
     behaviouralStringsSeparator = "|"
-
-    '''
-    duration = []
-    duration2 = []
-    '''
-
-    simultaneousMedia = False  # if second player was created
 
     # time laps
     fast = 10
@@ -467,6 +482,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             datadir = sys.path[0]
 
+        self.w_obs_info.setVisible(False)
+
         self.lbLogoBoris.setPixmap(QPixmap(datadir + "/logo_boris_500px.png"))
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
@@ -477,19 +494,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #self.toolBar.setEnabled(False)
         self.toolBar.setEnabled(True)
-        
-        
-        # remove default page from toolBox
-        self.toolBox.removeItem(0)
-        self.toolBox.setVisible(False)
+
 
         # start with dock widget invisible
         self.dwObservations.setVisible(False)
         self.dwEthogram.setVisible(False)
         self.dwSubjects.setVisible(False)
+        
+        '''
         self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
+        '''
 
         self.lb_current_media_time.setText("")
         self.lbFocalSubject.setText("")
@@ -555,31 +571,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.readConfigFile()
 
 
+    '''
     def create_live_tab(self):
         """
         create tab with widget for live observation
         """
 
-        self.liveLayout = QGridLayout()
         self.textButton = QPushButton("Start live observation")
         self.textButton.setMinimumHeight(60)
         self.textButton.clicked.connect(self.start_live_observation)
-        self.liveLayout.addWidget(self.textButton)
-        self.lbTimeLive = QLabel()
-        self.lbTimeLive.setAlignment(Qt.AlignCenter)
+        
+        self.verticalLayout_3.addWidget(self.textButton)
 
         font = QFont("Monospace")
         font.setPointSize(48)
-        self.lbTimeLive.setFont(font)
-        if self.timeFormat == HHMMSS:
-            self.lbTimeLive.setText("00:00:00.000")
-        if self.timeFormat == S:
-            self.lbTimeLive.setText("0.000")
-
-        self.liveLayout.addWidget(self.lbTimeLive)
-        self.liveTab = QWidget()
-        self.liveTab.setLayout(self.liveLayout)
-        self.toolBox.insertItem(2, self.liveTab, "Live")
+    '''
 
 
     def menu_options(self):
@@ -671,18 +677,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
     
-            if self.simultaneousMedia:
-                self.menuZoom2.setEnabled((self.playerType == VLC) and (self.playMode == VLC))
-                try:
-                    zv = self.mediaplayer2.video_get_scale()
-                    self.actionZoom2_fitwindow.setChecked(zv == 0)
-                    self.actionZoom2_1_1.setChecked(zv == 1)
-                    self.actionZoom2_1_2.setChecked(zv == 0.5)
-                    self.actionZoom2_1_4.setChecked(zv == 0.25)
-                    self.actionZoom2_2_1.setChecked(zv == 2)
-                except:
-                    pass
-
         # toolbar
         self.actionPlay.setEnabled(self.playerType == VLC)
         self.actionPause.setEnabled(self.playerType == VLC)
@@ -2619,22 +2613,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.memChunk = -1
 
 
-    def setVolume(self):
+    def setVolume(self, nplayer, new_volume):
         """
         set volume for player #1
         """
+        print(nplayer, new_volume)
 
-        self.dw_player[0].mediaplayer.audio_set_volume(self.volumeslider.value())
-
-
-    '''
-    def setVolume2(self):
-        """
-        set volume for player #2
-        """
-
-        self.mediaplayer2.audio_set_volume(self.volumeslider2.value())
-    '''
+        self.dw_player[nplayer].mediaplayer.audio_set_volume(new_volume)
 
 
     def automatic_backup(self):
@@ -2934,9 +2919,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("FFmpegTimerOut function")
 
-        '''
-        fps = list(self.fps.values())[0]
-        '''
 
         logging.debug("fps {}".format(self.fps))
 
@@ -3299,50 +3281,44 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def initialize_video_tab(self):
 
-        self.volumeslider = QSlider(QtCore.Qt.Vertical, self)
-        self.volumeslider.setMaximum(100)
-        self.volumeslider.setValue(self.dw_player[0].mediaplayer.audio_get_volume())
-        self.volumeslider.setToolTip("Volume")
-        self.volumeslider.sliderMoved.connect(self.setVolume)
+        '''
+        self.volume_slider = QSlider(QtCore.Qt.Vertical, self)
+        self.volume_slider.setMaximum(100)
+        self.volume_slider.setValue(self.dw_player[0].mediaplayer.audio_get_volume())
+        self.volume_slider.setToolTip("Volume")
+        self.volume_slider.sliderMoved.connect(self.setVolume)
+        self.verticalLayout_3.addWidget(self.volume_slider)
+        '''
 
-        self.hsVideo = QSlider(QtCore.Qt.Horizontal, self)
-        self.hsVideo.setMaximum(slider_maximum)
-        self.hsVideo.sliderMoved.connect(self.hsVideo_sliderMoved)
+        self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
+        self.video_slider.setMaximum(slider_maximum)
+        self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
+        self.verticalLayout_3.addWidget(self.video_slider)
 
+
+        '''
         self.video1layout = QHBoxLayout()
         self.video1layout.addWidget(self.volumeslider)
+
         self.vboxlayout = QVBoxLayout()
         self.vboxlayout.addLayout(self.video1layout)
         self.vboxlayout.addWidget(self.hsVideo)
+
         self.hsVideo.setVisible(True)
 
         self.videoTab = QWidget()
 
         self.videoTab.setLayout(self.vboxlayout)
 
-        self.toolBox.insertItem(VIDEO_TAB, self.videoTab, "Audio/Video")
-        
 
         self.actionFrame_by_frame.setEnabled(False)
 
-        '''
-        self.ffmpegLayout = QHBoxLayout()
-        
-        self.lbFFmpeg = QLabel(self)
-        self.lbFFmpeg.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        self.lbFFmpeg.setBackgroundRole(QPalette.Base)
-        self.lbFFmpeg.mousePressEvent = self.getPoslbFFmpeg
-
-        self.ffmpegLayout.addWidget(self.lbFFmpeg)
-        '''
-
         self.ffmpegTab = QWidget()
-        '''self.ffmpegTab.setLayout(self.ffmpegLayout)'''
-
         self.toolBox.insertItem(FRAME_TAB, self.ffmpegTab, "Frame by frame")
         self.toolBox.setItemEnabled(FRAME_TAB, False)
 
         self.actionFrame_by_frame.setEnabled(True)
+        '''
 
 
     def initialize_new_observation_vlc(self):
@@ -3376,14 +3352,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.fps = 0
         #self.toolBar.setEnabled(False)
         self.dwObservations.setVisible(True)
-        self.toolBox.setVisible(True)
+        
+        self.w_obs_info.setVisible(True)
+        '''
         self.lb_current_media_time.setVisible(True)
         self.lbFocalSubject.setVisible(True)
         self.lbCurrentStates.setVisible(True)
+        '''
 
-        # add all media files to media list
-        '''self.simultaneousMedia = False'''
-
+        # add all media files to media lists
         for i in range(N_PLAYER):
             n_player = str(i + 1)
 
@@ -3398,6 +3375,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
+            # for receiving event from colume slider
+            self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
 
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
 
@@ -3480,19 +3459,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaplayer.set_time(0)
 
         self.initialize_video_tab()
+
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.ffmpegTimerOut)
         try:
-            #self.FFmpegTimerTick = int(1000 / list(self.fps.values())[0])
-
             self.FFmpegTimerTick = int(1000 / self.fps )
-
         except:
             # default value 40 ms (25 frames / s)
             self.FFmpegTimerTick = 40
 
         self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
-
 
         #self.toolBar.setEnabled(True)
         self.menu_options()
@@ -3523,8 +3499,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 tmp_dir = self.ffmpeg_cache_dir
 
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())))
-
-            print("currentMediaTmpPath", currentMediaTmpPath)
 
             if not os.path.isfile("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
                                                                              self.chunk_length,
@@ -3724,29 +3698,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.playerType = LIVE
         self.playMode = LIVE
 
-        self.create_live_tab()
+        # self.create_live_tab()
 
-        self.toolBox.setVisible(True)
+        self.textButton = QPushButton("Start live observation")
+        self.textButton.setMinimumHeight(60)
+        self.textButton.clicked.connect(self.start_live_observation)
+
+        self.verticalLayout_3.addWidget(self.textButton)
+
+        font = QFont("Monospace")
+        font.setPointSize(48)
+        self.lb_current_media_time.setFont(font)
 
         self.dwObservations.setVisible(True)
 
-        self.simultaneousMedia = False
-
-        self.lbFocalSubject.setVisible(True)
-        self.lbCurrentStates.setVisible(True)
-
-        self.liveTab.setEnabled(True)
-        self.toolBox.setItemEnabled(0, True)   # enable tab
-        self.toolBox.setCurrentIndex(0)  # show tab
+        self.w_obs_info.setVisible(True)
 
         self.menu_options()
 
         self.liveObservationStarted = False
         self.textButton.setText("Start live observation")
+
         if self.timeFormat == HHMMSS:
-            self.lbTimeLive.setText("00:00:00.000")
+            self.lb_current_media_time.setText("00:00:00.000")
         if self.timeFormat == S:
-            self.lbTimeLive.setText("0.000")
+            self.lb_current_media_time.setText("0.000")
+
 
         self.liveStartTime = None
         self.liveTimer.stop()
@@ -3928,31 +3905,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         except:
                             pass
 
-
-
-            '''
-            for player, twVideo in zip([PLAYER1, PLAYER2], [observationWindow.twVideo1, observationWindow.twVideo2]):
-
-                if player in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
-                    twVideo.setRowCount(0)
-                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE] and self.pj[OBSERVATIONS][obsId][FILE][player]:
-                        twVideo.setRowCount(twVideo.rowCount() + 1)
-                        twVideo.setItem(twVideo.rowCount() - 1, 0, QTableWidgetItem(mediaFile))
-                        try:
-                            twVideo.setItem(twVideo.rowCount() - 1, 1,
-                                QTableWidgetItem(seconds2time(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
-                            twVideo.setItem(twVideo.rowCount() - 1, 2,
-                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
-                        except:
-                            pass
-                        try:
-                            twVideo.setItem(twVideo.rowCount() - 1, 3,
-                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
-                            twVideo.setItem(twVideo.rowCount() - 1, 4,
-                                QTableWidgetItem("{}".format(self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"][mediaFile])))
-                        except:
-                            pass
-            '''
 
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
@@ -4329,8 +4281,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.liveObservationStarted = False
             self.liveStartTime = None
             self.liveTimer.stop()
+            '''
             self.toolBox.removeItem(0)
             self.liveTab.deleteLater()
+            '''
 
 
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
@@ -4373,8 +4327,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 item.widget().deleteLater()
             '''
 
-
-            self.videoTab.deleteLater()
             self.actionFrame_by_frame.setChecked(False)
             self.playMode = VLC
 
@@ -4385,7 +4337,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
 
             try:
-                self.ffmpegLayout.deleteLater()
+                # self.ffmpegLayout.deleteLater()
                 self.lbFFmpeg.deleteLater()
                 self.ffmpegTab.deleteLater()
                 self.FFmpegTimer.stop()
@@ -4398,10 +4350,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.showMessage("", 0)
 
         self.dwObservations.setVisible(False)
-        self.toolBox.setVisible(False)
+
+        self.w_obs_info.setVisible(False)
+        '''
         self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
+        '''
 
         self.twEvents.setRowCount(0)
 
@@ -6542,8 +6497,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         logging.debug("initialize new project...")
 
-        self.lbLogoUnito.setVisible(not flag_new)
-        self.lbLogoBoris.setVisible(not flag_new)
+        self.w_logo.setVisible(not flag_new)
         self.dwEthogram.setVisible(flag_new)
         self.dwSubjects.setVisible(flag_new)
 
@@ -6584,9 +6538,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.initialize_new_project(flag_new=False)
 
+        self.w_obs_info.setVisible(False)
+        '''
         self.lb_current_media_time.setVisible(False)
         self.lbFocalSubject.setVisible(False)
         self.lbCurrentStates.setVisible(False)
+        '''
 
 
     def convertTime(self, sec):
@@ -6899,7 +6856,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         currentTime = self.getLaps()
+        self.lb_current_media_time.setText(self.convertTime(currentTime))
+        '''
         self.lbTimeLive.setText(self.convertTime(currentTime))
+        '''
 
         # extract State events
         StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
@@ -6981,10 +6941,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.liveStartTime = None
             self.liveTimer.stop()
 
+            '''
             if self.timeFormat == HHMMSS:
                 self.lbTimeLive.setText("00:00:00.000")
             if self.timeFormat == S:
                 self.lbTimeLive.setText("0.000")
+            '''
+
+            if self.timeFormat == HHMMSS:
+                self.lb_current_media_time.setText("00:00:00.000")
+            if self.timeFormat == S:
+                self.lb_current_media_time.setText("0.000")
+
 
         self.liveObservationStarted = not self.liveObservationStarted
 
@@ -7479,9 +7447,9 @@ item []:
                    or not self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
                     continue
                 self.dw_player[n_player].frame_viewer.setVisible(False)
-                self.dw_player[n_player].videoframe.setVisible(True)
                 
-            
+                self.dw_player[n_player].videoframe.setVisible(True)
+                self.dw_player[n_player].volume_slider.setVisible(True)
             '''
             for n_player in range(N_PLAYER):
                 if (str(n_player + 1) not in self.pj[OBSERVATIONS][self.observationId][FILE] 
@@ -7506,26 +7474,6 @@ item []:
                 self.dw_player[n_player].videoframe.setVisible(True)
             '''
 
-
-            '''
-            if self.second_player():
-
-                # set on media player2 end
-                currentMediaTime2 = int(sum(self.duration2))
-                globalCurrentTime2 = int(self.FFmpegGlobalFrame2 * (1000 / list(self.fps2.values())[0]))
-                for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER2]):
-                    if globalCurrentTime2 < sum(self.duration2[0:idx + 1]):
-                        self.mediaListPlayer2.play_item_at_index(idx)
-                        while True:
-                            if self.mediaListPlayer2.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                                break
-                        self.mediaListPlayer2.pause()
-                        currentMediaTime2 = int(globalCurrentTime2 - sum(self.duration2[0:idx]))
-                        break
-                self.mediaplayer2.set_time(currentMediaTime2)
-            '''
-
-            self.toolBox.setCurrentIndex(VIDEO_TAB)
 
             self.FFmpegTimer.stop()
 
@@ -7555,16 +7503,6 @@ item []:
                 self.actionFrame_by_frame.setChecked(False)
                 return
 
-            '''
-            if len(set(self.fps.values())) != 1:
-                logging.warning("The frame-by-frame mode will not be available because the video files have different frame rates")
-                QMessageBox.warning(self, programName, ("The frame-by-frame mode will not be available"
-                                                        " because the video files have different frame rates ({}).".format(
-                                                         ", ".join([str(i) for i in list(self.fps.values())]))),
-                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                self.actionFrame_by_frame.setChecked(False)
-                return
-            '''
 
             self.pause_video()
             self.playMode = FFMPEG
@@ -7573,7 +7511,7 @@ item []:
             for i in range(N_PLAYER):
                 self.dw_player[i].frame_viewer.setVisible(True)
                 self.dw_player[i].videoframe.setVisible(False)
-        
+                self.dw_player[i].volume_slider.setVisible(False)
 
 
             # check temp dir for images from ffmpeg
@@ -7581,9 +7519,6 @@ item []:
                 self.imageDirectory = tempfile.gettempdir()
             else:
                 self.imageDirectory = self.ffmpeg_cache_dir
-
-            # show frame-by_frame tab
-            self.toolBox.setCurrentIndex(1)
 
             globalTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]) + self.dw_player[0].mediaplayer.get_time())
 
@@ -7672,16 +7607,6 @@ item []:
             self.actionZoom1_1_2.setChecked(zv == 0.5)
             self.actionZoom1_1_4.setChecked(zv == 0.25)
             self.actionZoom1_2_1.setChecked(zv == 2)
-
-            '''
-            if player == 2 and self.simultaneousMedia:
-                zv = self.mediaplayer2.video_get_scale()
-                self.actionZoom2_fitwindow.setChecked(zv == 0)
-                self.actionZoom2_1_1.setChecked(zv == 1)
-                self.actionZoom2_1_2.setChecked(zv == 0.5)
-                self.actionZoom2_1_4.setChecked(zv == 0.25)
-                self.actionZoom2_2_1.setChecked(zv == 2)
-            '''
 
         except:
             pass
@@ -8208,7 +8133,7 @@ item []:
         _ = about_dialog.exec_()
 
 
-    def hsVideo_sliderMoved(self):
+    def video_slider_sliderMoved(self):
         """
         media position slider moved
         adjust media position
@@ -8217,7 +8142,7 @@ item []:
         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
             if self.playerType == VLC and self.playMode == VLC:
-                sliderPos = self.hsVideo.value() / (slider_maximum - 1)
+                sliderPos = self.video_slider.value() / (slider_maximum - 1)
                 videoPosition = sliderPos * self.dw_player[0].mediaplayer.get_length()
                 self.dw_player[0].mediaplayer.set_time(int(videoPosition))
                 self.timer_out(scrollSlider=False)
@@ -8305,18 +8230,20 @@ item []:
                             # hide video if time < offset
                             self.dw_player[n_player].frame_viewer.setVisible(True)
                             self.dw_player[n_player].videoframe.setVisible(False)
-
+                            self.dw_player[n_player].volume_slider.setVisible(False)
                         else:
 
                             if new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000) > sum(self.dw_player[n_player].media_durations):
                                 # hide video if required time > video time + offset
                                 self.dw_player[n_player].frame_viewer.setVisible(True)
                                 self.dw_player[n_player].videoframe.setVisible(False)
+                                self.dw_player[n_player].volume_slider.setVisible(False)
 
                             else:
 
                                 self.dw_player[n_player].frame_viewer.setVisible(False)
                                 self.dw_player[n_player].videoframe.setVisible(True)
+                                self.dw_player[n_player].volume_slider.setVisible(True)
                                 self.dw_player[n_player].mediaplayer.set_time(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000) )
 
 
@@ -8326,9 +8253,11 @@ item []:
                             # hide video if required time > video time + offset
                             self.dw_player[n_player].frame_viewer.setVisible(True)
                             self.dw_player[n_player].videoframe.setVisible(False)
+                            self.dw_player[n_player].volume_slider.setVisible(False)
                         else:
                             self.dw_player[n_player].frame_viewer.setVisible(False)
                             self.dw_player[n_player].videoframe.setVisible(True)
+                            self.dw_player[n_player].volume_slider.setVisible(True)
 
                             self.dw_player[n_player].mediaplayer.set_time(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000))
 
@@ -8429,9 +8358,11 @@ item []:
             if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                 self.dw_player[0].frame_viewer.setVisible(True)
                 self.dw_player[0].videoframe.setVisible(False)
+                self.dw_player[0].volume_slider.setVisible(False)
             else:
                 self.dw_player[0].frame_viewer.setVisible(False)
                 self.dw_player[0].videoframe.setVisible(True)
+                self.dw_player[0].volume_slider.setVisible(True)
                 
 
             #self.dw_player[0].mediaplayer.get_time()
@@ -8532,7 +8463,7 @@ item []:
 
                     # set video scroll bar
                     if scrollSlider:
-                        self.hsVideo.setValue(mediaTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+                        self.video_slider.setValue(mediaTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
@@ -9016,7 +8947,7 @@ item []:
                 logging.debug("current frame {0}".format(self.FFmpegGlobalFrame))
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
-                    newTime = 1000 * self.FFmpegGlobalFrame / list(self.fps.values())[0]
+                    newTime = 1000 * self.FFmpegGlobalFrame / self.fps
                     self.ffmpegTimerOut()
                     logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
                 return
@@ -9063,13 +8994,13 @@ item []:
                 obs_key = function_keys[ek]
 
         # get video time
-        if (self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE]
+        if (self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE
            and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]
            and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
             if self.timeFormat == HHMMSS:
-                memLaps = Decimal(int(time2seconds(self.lbTimeLive.text())))
+                memLaps = Decimal(int(time2seconds(self.lb_current_media_time.text())))
             if self.timeFormat == S:
-                memLaps = Decimal(int(Decimal(self.lbTimeLive.text())))
+                memLaps = Decimal(int(Decimal(self.lb_current_media_time.text())))
 
         else:
             memLaps = self.getLaps()

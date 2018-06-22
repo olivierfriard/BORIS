@@ -508,34 +508,38 @@ class Observation(QDialog, Ui_Form):
             except ValueError:
                 return False
 
-        # check player number
-        players_list = []
-        players = {} # for storing duration
-        for row in range(self.twVideo1.rowCount()):
-            players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
-            if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
-                players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
-            else:
-                players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
-
-        print(players)
-
-        # check if player#1 used
-        if min(players_list) > 1:
-            QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
-            return False
-        # check if players are used in crescent order
-        if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
-            QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media file")
-            return False
-        # check that longuest media is in player #1
-        durations = []
-        for i in players:
-            durations.append(sum(players[i]))
-        print(durations)
-        if [x for x in durations[1:] if x > durations[0]]:
-            QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
-            return False
+        if self.tabProjectType.currentIndex() == 0:
+            # check player number
+            players_list = []
+            players = {} # for storing duration
+            for row in range(self.twVideo1.rowCount()):
+                players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
+                if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
+                    players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
+                else:
+                    players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
+    
+            print(players)
+    
+            # check if player#1 used
+            if min(players_list) > 1:
+                QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
+                return False
+    
+            # check if players are used in crescent order
+            if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
+                QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media file")
+                return False
+    
+            # check that longuest media is in player #1
+            durations = []
+            for i in players:
+                durations.append(sum(players[i]))
+            print(durations)
+    
+            if [x for x in durations[1:] if x > durations[0]]:
+                QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
+                return False
 
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
