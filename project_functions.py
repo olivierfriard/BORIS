@@ -513,7 +513,8 @@ def open_project_json(projectFileName):
                                                     "Choose a new file name for saving it.").format(project_format_version)
         projectFileName = ""
 
-    # update project to v.7
+    # update project to v.7 for time offset second player
+    project_lowerthan7 = False
     for obs in pj[OBSERVATIONS]:
         if "time offset second player" in pj[OBSERVATIONS][obs]:
             if "media_info" not in pj[OBSERVATIONS][obs]:
@@ -526,12 +527,21 @@ def open_project_json(projectFileName):
                 pj[OBSERVATIONS][obs]["media_info"]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
             
             del pj[OBSERVATIONS][obs]["time offset second player"]
+            project_lowerthan7 = True
 
             msg = ("The project file was converted to the new format (v. {project_version}) in use with your version of BORIS.<br>"
                    "Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_version}).<br>"
                    "Remember to choose a new file name for saving it (File &gt; > Save project as...).").format(project_version=project_format_version)
 
             projectChanged = True
+
+    # update project to v.7 for lower behavior key
+    '''
+    if project_lowerthan7:
+        for idx in pj[ETHOGRAM]:
+            if pj[ETHOGRAM][idx]["key"] in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
+    '''
 
     # update modifiers to JSON format
 
@@ -634,7 +644,7 @@ def event_type(code, ethogram):
     returns type of event for code
 
     Args:
-        ethogram (dict); etogram of project
+        ethogram (dict); ethogram of project
         code (str): behavior code
 
     Returns:
