@@ -3354,11 +3354,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dwObservations.setVisible(True)
         
         self.w_obs_info.setVisible(True)
-        '''
-        self.lb_current_media_time.setVisible(True)
-        self.lbFocalSubject.setVisible(True)
-        self.lbCurrentStates.setVisible(True)
-        '''
+
+        font = QFont()
+        font.setPointSize(15)
+        self.lb_current_media_time.setFont(font)
+
+
 
         # add all media files to media lists
         for i in range(N_PLAYER):
@@ -3706,7 +3707,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.verticalLayout_3.addWidget(self.textButton)
 
-        font = QFont("Monospace")
+        #font = QFont("Monospace")
+        font = QFont()
         font.setPointSize(48)
         self.lb_current_media_time.setFont(font)
 
@@ -6857,9 +6859,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentTime = self.getLaps()
         self.lb_current_media_time.setText(self.convertTime(currentTime))
-        '''
-        self.lbTimeLive.setText(self.convertTime(currentTime))
-        '''
 
         # extract State events
         StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
