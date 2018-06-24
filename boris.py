@@ -122,7 +122,7 @@ parser.add_option("-d", "--debug", action="store_true", default=False, dest="deb
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 parser.add_option("-p", "--project", action="store", help="Project file")
-parser.add_option("-o", "--observation", action="store",  help="Observation id")
+parser.add_option("-o", "--observation", action="store", help="Observation id")
 
 (options, args) = parser.parse_args()
 
@@ -3278,44 +3278,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def initialize_video_tab(self):
 
-        '''
-        self.volume_slider = QSlider(QtCore.Qt.Vertical, self)
-        self.volume_slider.setMaximum(100)
-        self.volume_slider.setValue(self.dw_player[0].mediaplayer.audio_get_volume())
-        self.volume_slider.setToolTip("Volume")
-        self.volume_slider.sliderMoved.connect(self.setVolume)
-        self.verticalLayout_3.addWidget(self.volume_slider)
-        '''
-
         self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
         self.video_slider.setMaximum(slider_maximum)
         self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
         self.verticalLayout_3.addWidget(self.video_slider)
-
-
-        '''
-        self.video1layout = QHBoxLayout()
-        self.video1layout.addWidget(self.volumeslider)
-
-        self.vboxlayout = QVBoxLayout()
-        self.vboxlayout.addLayout(self.video1layout)
-        self.vboxlayout.addWidget(self.hsVideo)
-
-        self.hsVideo.setVisible(True)
-
-        self.videoTab = QWidget()
-
-        self.videoTab.setLayout(self.vboxlayout)
-
-
-        self.actionFrame_by_frame.setEnabled(False)
-
-        self.ffmpegTab = QWidget()
-        self.toolBox.insertItem(FRAME_TAB, self.ffmpegTab, "Frame by frame")
-        self.toolBox.setItemEnabled(FRAME_TAB, False)
-
-        self.actionFrame_by_frame.setEnabled(True)
-        '''
 
 
     def initialize_new_observation_vlc(self):
@@ -3350,6 +3316,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dwObservations.setVisible(True)
         
         self.w_obs_info.setVisible(True)
+        self.w_live.setVisible(False)
 
         font = QFont()
         font.setPointSize(15)
@@ -6481,7 +6448,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if msg:
                     QMessageBox.information(self, programName, msg)
 
+                # check behavior keys
+                if project_changed and pj[ETHOGRAM]:
+                    flag_all_upper = True
+                    for idx in pj[ETHOGRAM]:
+                        if pj[ETHOGRAM][idx]["key"] in "abcdefghijklmnopqrstuvwxyz":
+                            flag_all_upper = False
+                            # pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
+
+                    if dialog.MessageDialog(programName,
+                                            ("It is now possible to use <b>lower keys</b> to code behaviors.<br><br>"
+                                             "In ths project all behavior keys are upper case.<br>"
+                                             "Do you want to convert them in lower case?"),
+                                            [YES, NO]) == YES:
+                        for idx in pj[ETHOGRAM]:
+                            pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
+
                 self.load_project(project_path, project_changed, pj)
+                del pj
 
 
     def initialize_new_project(self, flag_new=True):
@@ -6502,7 +6486,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if current observation
         if self.observationId:
-            response = dialog.MessageDialog(programName, "There is a current observation. What do you want to do?",
+            response = dialog.MessageDialog(programName,
+                                            "There is a current observation. What do you want to do?",
                                             ["Close observation", "Continue observation"])
             if response == "Close observation":
                 self.close_observation()
@@ -6532,11 +6517,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.initialize_new_project(flag_new=False)
 
         self.w_obs_info.setVisible(False)
-        '''
-        self.lb_current_media_time.setVisible(False)
-        self.lbFocalSubject.setVisible(False)
-        self.lbCurrentStates.setVisible(False)
-        '''
 
 
     def convertTime(self, sec):
@@ -6769,8 +6749,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def save_project_json(self, projectFileName):
         """
         save project to JSON file
-
         convert Decimal type in float
+        
+        Args:
+            projectFileName (str): path of project to save
+        
+        Returns:
+            str: 
         """
 
         logging.debug("save project json {0}:".format(projectFileName))
@@ -8724,6 +8709,7 @@ item []:
             self.twEvents.scrollToItem(item)
             self.projectChanged = True
         except:
+            raise
             dialog.MessageDialog(programName, "Even can not be recorded.\nError: {}".format(sys.exc_info()[1]) , [OK])
             
 
@@ -9516,7 +9502,7 @@ item []:
     def export_tabular_events(self, mode="tabular"):
         """
         export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
-        
+
         Args:
             mode (str): export mode: must be ["tabular", "jwatcher"]
         """
@@ -9577,7 +9563,7 @@ item []:
                                                                    options=QFileDialog.ShowDirsOnly)
                 if not exportDir:
                     return
-    
+
             if len(selectedObservations) == 1:
                 extended_file_formats = ["Tab Separated Values (*.tsv)",
                                "Comma Separated Values (*.csv)",

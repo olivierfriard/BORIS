@@ -536,7 +536,7 @@ class ResultsWidget(QWidget):
                 QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
 
 
-
+'''
 class FrameViewer(QWidget):
     """
     widget for visualizing frame
@@ -555,3 +555,37 @@ class FrameViewer(QWidget):
 
     def pbOK_clicked(self):
         self.close()
+'''
+
+class View_data_head(QDialog):
+    """
+    widget for visualizing first rows of data file
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("")
+
+        hbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        hbox.addWidget(self.lb)
+
+        '''self.ptText = QPlainTextEdit()'''
+        self.tw = QTableWidget()
+        hbox.addWidget(self.tw)
+
+        hbox2 = QHBoxLayout()
+        self.pbSave = QPushButton("Save results")
+        # self.pbSave.clicked.connect(self.save_results)
+        hbox2.addWidget(self.pbSave)
+
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.close)
+        hbox2.addWidget(self.pbOK)
+
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
+
+        self.resize(540, 640)

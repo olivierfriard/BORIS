@@ -75,11 +75,13 @@ REMOVE = "Remove"
 SAVE = "Save"
 DISCARD = "Discard"
 OK = "OK"
+OVERWRITE = "Overwrite"
 
 NO_FOCAL_SUBJECT = 'No focal subject'
 
 TYPE = "type"
 FILE = "file"
+DESCRIPTION = "description"
 
 PLOT_DATA = "plot_data"
 
@@ -122,6 +124,9 @@ PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
 PROJECT_BEHAVIORS_CODE_FIELD_IDX = 2
 
 #observation_types = ['Point event', 'State event', 'Point event with coding map', 'State event with coding map']  # to be removed
+
+STATE_EVENT = "State event"
+POINT_EVENT = "Point event"
 
 BEHAVIOR_TYPES = ["Point event", "State event", "Point event with coding map", "State event with coding map"]
 

@@ -347,8 +347,7 @@ def check_txt_file(file_name):
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
             logging.debug("dialect.delimiter: {}".format(dialect.delimiter))
-    
-    
+
         csv.register_dialect("dialect", dialect)
         rows_len = []
         with open(file_name, "r") as f:
@@ -366,7 +365,7 @@ def check_txt_file(file_name):
         if not len(rows_len):
             return {"error": "The file is empty"}
         if len(rows_len) == 1 and rows_len[0] >= 2:
-            return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t"}
+            return {"homogeneous": True, "fields number": rows_len[0], "separator": "\t", "dialect":dialect}
         
         if len(rows_len) > 1:
             return {"homogeneous": False}

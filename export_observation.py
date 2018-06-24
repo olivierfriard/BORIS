@@ -25,6 +25,7 @@ import os
 import sys
 import datetime
 import pathlib
+import dialog
 
 from config import *
 import utilities
@@ -32,7 +33,7 @@ import project_functions
 import db_functions
 
 
-def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, output_format):
+def export_events_jwatcher_old(parameters, obsId, observation, ethogram, file_name, output_format):
     """
     export events jwatcher .dat format
 
@@ -223,6 +224,234 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
         except:
             return False, "File FAF not created: {}".format(sys.exc_info()[1])
 
+
+    return True, ""
+
+
+def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, output_format):
+    """
+    export events jwatcher .dat format
+
+    Args:
+        parameters (dict): subjects, behaviors
+        obsId (str): observation id
+        observation (dict): observation
+        ethogram (dict): ethogram of project
+        file_name (str): file name for exporting events
+        output_format (str): output for exporting events
+
+    Returns:
+        bool: result: True if OK else False
+        str: error message
+    """
+
+    print("selected subjects", parameters["selected subjects"])
+    
+    for subject in parameters["selected subjects"]:
+
+        # select events for current subject
+        events = []
+        for event in observation[EVENTS]:
+            if event[SUBJECT_EVENT_FIELD] == subject or (subject == "No focal subject" and event[SUBJECT_EVENT_FIELD] == ""):
+                events.append(event)
+
+        total_length = 0   # in seconds
+        if observation[EVENTS]:
+            total_length = observation[EVENTS][-1][0] - observation[EVENTS][0][0]  # last event time - first event time
+
+        file_name_subject = str(pathlib.Path(file_name).parent / pathlib.Path(file_name).stem) + "_" + subject + ".dat"
+
+        rows = ["FirstLineOfData"]
+        rows.append("#-----------------------------------------------------------")
+        rows.append("# Name: {}".format(pathlib.Path(file_name_subject).name))
+        rows.append("# Format: Focal Data File 1.0")
+        rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+        rows.append("#-----------------------------------------------------------")
+        rows.append("")
+        rows.append("FocalMasterFile={}".format(pathlib.Path(file_name_subject).with_suffix(".fmf")))
+        rows.append("")
+
+        rows.append("# Observation started: {}".format(observation["date"]))
+        try:
+            start_time = datetime.datetime.strptime(observation["date"], '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            start_time = datetime.datetime(1970, 1, 1, 0, 0)
+        start_time_epoch = int((start_time - datetime.datetime(1970, 1, 1, 0, 0)).total_seconds() * 1000)
+        rows.append("StartTime={}".format(start_time_epoch))
+
+        stop_time = (start_time + datetime.timedelta(seconds=float(total_length))).isoformat()
+        stop_time_epoch = int(start_time_epoch + float(total_length) * 1000)
+    
+        rows.append("# Observation stopped: {}".format(stop_time))
+        rows.append("StopTime={}".format(stop_time_epoch))
+
+        rows.extend([""] * 3)
+        rows.append("#BEGIN DATA")
+        rows[0] = "FirstLineOfData={}".format(len(rows) + 1)
+
+        all_observed_behaviors = []
+        mem_number_of_state_events = {}
+        for event in events:
+            behav_code = event[EVENT_BEHAVIOR_FIELD_IDX]
+            behavior_key = [ethogram[k][BEHAVIOR_KEY] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav_code][0]
+            if [ethogram[k][TYPE] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav_code] == [STATE_EVENT]:
+                if behav_code in mem_number_of_state_events:
+                    mem_number_of_state_events[behav_code] += 1
+                else:
+                    mem_number_of_state_events[behav_code] = 1
+                # skip the STOP event in case of STATE
+                if mem_number_of_state_events[behav_code] % 2 == 0:
+                    continue
+
+            rows.append("{time_ms}, {bevavior_key}".format(time_ms=int(event[EVENT_TIME_FIELD_IDX] * 1000),
+                                                           bevavior_key=behavior_key))
+            if (event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key) not in all_observed_behaviors:
+                all_observed_behaviors.append((event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key))
+
+        rows.append("{}, {}".format(int(events[-1][0] * 1000), "EOF\n"))
+
+        try:
+            with open(file_name_subject, "w") as f_out:
+                f_out.write("\n".join(rows))
+        except:
+            return False, "File DAT not created for subject {}: {}".format(subject, sys.exc_info()[1])
+
+        # create fmf file
+        fmf_file_path = pathlib.Path(file_name_subject).with_suffix(".fmf")
+        fmf_creation_answer = ""
+        if fmf_file_path.exists():
+            fmf_creation_answer = dialog.MessageDialog(programName,
+                                    ("The {} file already exists.<br>"
+                                    "What do you want to do?").format(fmf_file_path),
+                                    [OVERWRITE, "Skip file creation", CANCEL])
+            if fmf_creation_answer == CANCEL:
+                return True, "" 
+
+        rows = []
+        rows.append("#-----------------------------------------------------------")
+        rows.append("# Name: {}".format(pathlib.Path(file_name_subject).with_suffix(".fmf").name))
+        rows.append("# Format: Focal Master File 1.0")
+        rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+        rows.append("#-----------------------------------------------------------")
+        for (behav, key) in all_observed_behaviors:
+            rows.append("Behaviour.name.{}={}".format(key, behav))
+            behav_description = [ethogram[k][DESCRIPTION] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav][0]
+            rows.append("Behaviour.description.{}={}".format(key, behav_description))
+            
+        rows.append("DurationMilliseconds={}".format(int(float(total_length) * 1000)))
+        rows.append("CountUp=false")
+        rows.append("Question.1=")
+        rows.append("Question.2=")
+        rows.append("Question.3=")
+        rows.append("Question.4=")
+        rows.append("Question.5=")
+        rows.append("Question.6=")
+        rows.append("Notes=")
+        rows.append("Supplementary=\n")
+
+        if fmf_creation_answer == "Overwrite":
+            try:
+                with open(fmf_file_path, "w") as f_out:
+                    f_out.write("\n".join(rows))
+            except:
+                return False, "File FMF not created: {}".format(sys.exc_info()[1])
+
+        # create FAF file
+        faf_file_path = pathlib.Path(file_name_subject).with_suffix(".faf")
+        faf_creation_answer = ""
+        if faf_file_path.exists():
+            faf_creation_answer = dialog.MessageDialog(programName,
+                                    ("The {} file already exists.<br>"
+                                    "What do you want to do?").format(faf_file_path),
+                                    [OVERWRITE, "Skip file creation", CANCEL])
+            if faf_creation_answer == CANCEL:
+                return True, "" 
+
+        rows = []
+        rows.append("#-----------------------------------------------------------")
+        rows.append("# Name: {}".format(pathlib.Path(file_name_subject).with_suffix(".faf").name))
+        rows.append("# Format: Focal Analysis Master File 1.0")
+        rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+        rows.append("#-----------------------------------------------------------")
+        rows.append("FocalMasterFile={}".format(str(pathlib.Path(file_name_subject).with_suffix(".fmf"))))
+        rows.append("")
+        rows.append("TimeBinDuration=0.0")
+        rows.append("EndWithLastCompleteBin=true")
+        rows.append("")
+        rows.append("ScoreFromBeginning=true")
+        rows.append("ScoreFromBehavior=false")
+        rows.append("ScoreFromFirstBehavior=false")
+        rows.append("ScoreFromOffset=false")
+        rows.append("")
+        rows.append("Offset=0.0")
+        rows.append("BehaviorToScoreFrom=")
+        rows.append("")
+        rows.append("OutOfSightCode=")
+        rows.append("")
+        rows.append("Report.StateNaturalInterval.Occurrence=false")
+        rows.append("Report.StateNaturalInterval.TotalTime=false")
+        rows.append("Report.StateNaturalInterval.Average=false")
+        rows.append("Report.StateNaturalInterval.StandardDeviation=false")
+        rows.append("Report.StateNaturalInterval.ProportionOfTime=false")
+        rows.append("Report.StateNaturalInterval.ProportionOfTimeInSight=false")
+        rows.append("Report.StateNaturalInterval.ConditionalProportionOfTime=false")
+        rows.append("")
+        rows.append("Report.StateNaturalDuration.Occurrence=false")
+        rows.append("Report.StateNaturalDuration.TotalTime=false")
+        rows.append("Report.StateNaturalDuration.Average=false")
+        rows.append("Report.StateNaturalDuration.StandardDeviation=false")
+        rows.append("Report.StateNaturalDuration.ProportionOfTime=false")
+        rows.append("Report.StateNaturalDuration.ProportionOfTimeInSight=false")
+        rows.append("Report.StateNaturalDuration.ConditionalProportionOfTime=false")
+        rows.append("")
+        rows.append("Report.StateAllInterval.Occurrence=false")
+        rows.append("Report.StateAllInterval.TotalTime=false")
+        rows.append("Report.StateAllInterval.Average=false")
+        rows.append("Report.StateAllInterval.StandardDeviation=false")
+        rows.append("Report.StateAllInterval.ProportionOfTime=false")
+        rows.append("Report.StateAllInterval.ProportionOfTimeInSight=false")
+        rows.append("Report.StateAllInterval.ConditionalProportionOfTime=false")
+        rows.append("")
+        rows.append("Report.StateAllDuration.Occurrence=true")
+        rows.append("Report.StateAllDuration.TotalTime=true")
+        rows.append("Report.StateAllDuration.Average=true")
+        rows.append("Report.StateAllDuration.StandardDeviation=false")
+        rows.append("Report.StateAllDuration.ProportionOfTime=false")
+        rows.append("Report.StateAllDuration.ProportionOfTimeInSight=true")
+        rows.append("Report.StateAllDuration.ConditionalProportionOfTime=false")
+        rows.append("")
+        rows.append("Report.EventNaturalInterval.EventCount=false")
+        rows.append("Report.EventNaturalInterval.Occurrence=false")
+        rows.append("Report.EventNaturalInterval.Average=false")
+        rows.append("Report.EventNaturalInterval.StandardDeviation=false")
+        rows.append("Report.EventNaturalInterval.ConditionalNatEventCount=false")
+        rows.append("Report.EventNaturalInterval.ConditionalNatRate=false")
+        rows.append("Report.EventNaturalInterval.ConditionalNatIntervalOccurance=false")
+        rows.append("Report.EventNaturalInterval.ConditionalNatIntervalAverage=false")
+        rows.append("Report.EventNaturalInterval.ConditionalNatIntervalStandardDeviation=false")
+        rows.append("Report.EventNaturalInterval.ConditionalAllEventCount=false")
+        rows.append("Report.EventNaturalInterval.ConditionalAllRate=false")
+        rows.append("Report.EventNaturalInterval.ConditionalAllIntervalOccurance=false")
+        rows.append("Report.EventNaturalInterval.ConditionalAllIntervalAverage=false")
+        rows.append("Report.EventNaturalInterval.ConditionalAllIntervalStandardDeviation=false")
+        rows.append("")
+        rows.append("AllCodesMutuallyExclusive=true")
+        rows.append("")
+
+        for (behav, key) in all_observed_behaviors:
+            rows.append("Behavior.isModified.{}=false".format(key))
+            rows.append("Behavior.isSubtracted.{}=false".format(key))
+            rows.append("Behavior.isIgnored.{}=false".format(key))
+            rows.append("Behavior.isEventAnalyzed.{}=false".format(key))
+            rows.append("Behavior.switchesOff.{}=".format(key))
+            rows.append("")
+
+        if faf_creation_answer == OVERWRITE:
+            try:
+                with open(pathlib.Path(file_name_subject).with_suffix(".faf"), "w") as f_out:
+                    f_out.write("\n".join(rows))
+            except:
+                return False, "File FAF not created: {}".format(sys.exc_info()[1])
 
     return True, ""
 

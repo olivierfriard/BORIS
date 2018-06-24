@@ -531,7 +531,8 @@ def open_project_json(projectFileName):
 
             msg = ("The project file was converted to the new format (v. {project_version}) in use with your version of BORIS.<br>"
                    "Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_version}).<br>"
-                   "Remember to choose a new file name for saving it (File &gt; > Save project as...).").format(project_version=project_format_version)
+                   "Remember to choose a new file name"
+                   " for saving it (File &gt; > Save project as...).").format(project_version=project_format_version)
 
             projectChanged = True
 

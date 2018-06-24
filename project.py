@@ -191,8 +191,9 @@ class BehavioralCategories(QDialog):
                 if dialog.MessageDialog(programName, ("Some behavior belong to the <b>{1}</b>:<br>"
                                                       "{0}<br>"
                                                       "<br>Some features may not be available anymore.<br>"
-                                                      "Are you sure to remove this behavioral category ?").format("<br>".join(behaviors_in_category),
-                                                                                                                  category_to_remove),
+                                                      "Are you sure to remove this behavioral category ?").format(
+                                                                                        "<br>".join(behaviors_in_category),
+                                                                                        category_to_remove),
                                         [YES, CANCEL]) == YES:
 
                     self.lw.takeItem(self.lw.row(SelectedItem))
@@ -859,7 +860,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     for idx2, sbjField in enumerate(subjectsFields):
 
                         if sbjField in project[SUBJECTS][idx]:
-                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(project[SUBJECTS][idx][sbjField]))
+                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2,
+                                                    QTableWidgetItem(project[SUBJECTS][idx][sbjField]))
                         else:
                             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
 
@@ -893,8 +895,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             # configuration of behaviours
             if project[ETHOGRAM]:
                 if self.twBehaviors.rowCount():
-                    response = dialog.MessageDialog(programName, ("There are behaviors already configured. "
-                                                                  "Do you want to append behaviors or replace them?"),
+                    response = dialog.MessageDialog(programName,
+                                                    ("There are behaviors already configured. "
+                                                     "Do you want to append behaviors or replace them?"),
                                                     ["Append", "Replace", CANCEL])
                     if response == "Replace":
                         self.twBehaviors.setRowCount(0)
@@ -984,7 +987,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         logging.debug("stateBehaviors: {}".format(stateBehaviors))
 
         if not stateBehaviors:
-            QMessageBox.critical(None, programName, "State events not found in behaviors list!", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(None, programName, "State events not found in behaviors list!",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         logging.debug('exclusion matrix {0}'.format(excl))
@@ -1070,7 +1074,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def pbImportFromJWatcher_clicked(self):
         """
-        import behaviors configuration from JWatcher (GDL file)
+        import behaviors configuration from JWatcher (GDF file)
         """
         if self.twBehaviors.rowCount():
             response = dialog.MessageDialog(programName,
@@ -1097,8 +1101,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     key, code = row.split('=')
                     key = key.replace("Behavior.name.", "")
                     # read description
-                    if idx < len(rows) and "Behavior.description." in rows[idx+1]:
-                        description = rows[idx+1].split('=')[-1]
+                    if idx < len(rows) and "Behavior.description." in rows[idx + 1]:
+                        description = rows[idx + 1].split("=")[-1]
 
                     behavior = {"key": key, "code": code, "description": description,
                                 "modifiers": "", "excluded": "", "coding map": "", "category": ""}
@@ -1195,7 +1199,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if fieldsNumber > 4:
                         type_, key, code, description = row.split(fieldSeparator)[:4]
 
-                    behavior = {"key": key, "code": code, "description": description, "modifiers": "", "excluded": "", "coding map": "", "category": ""}
+                    behavior = {"key": key, "code": code, "description": description, "modifiers": "",
+                                "excluded": "", "coding map": "", "category": ""}
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -1428,15 +1433,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twSubjects.item(r, 1).text():
                         subjects.append(self.twSubjects.item(r, 1).text())
 
-        # check behaviours keys
-        '''
-        for r in range(0, self.twBehaviors.rowCount()):
-            # check key
-            if self.twBehaviors.item(r, fields['key']):
-                if self.twBehaviors.item(r, fields['key']).text() in keys:
-                    self.lbSubjectsState.setText("""<font color="red">Key found in behaviours configuration ({}) at line # {} </font>""".format(self.twBehaviors.item(r, fields['key']).text(), r + 1))
-        '''
-
 
     def twVariables_cellClicked(self, row, column):
         """
@@ -1453,10 +1449,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.leDescription.setText("")
                 self.lePredefined.setText("")
                 self.leSetValues.setText("")
-        
+
                 self.cbType.clear()
             return
-            
 
 
         # enable widget for indep var setting
@@ -1596,10 +1591,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         remove_leading_trailing_spaces = NO
         if code_with_leading_trailing_spaces:
             remove_leading_trailing_spaces = dialog.MessageDialog(programName,
-                                            ("Attention! Some leading and/or trailing spaces are present in the following <b>behaviors code(s)</b>:<br>"
+                                            ("Attention! Some leading and/or trailing spaces are present"
+                                            " in the following <b>behaviors code(s)</b>:<br>"
                                             "<b>{}</b><br><br>"
                                             "Do you want to remove the leading and trailing spaces?<br><br>"
-                                            """<font color="red"><b>Be careful with this option if you have already done observations!</b></font>""").format(code_with_leading_trailing_spaces),
+                                            """<font color="red"><b>Be careful with this option"""
+                                            """ if you have already done observations!</b></font>""").format(code_with_leading_trailing_spaces),
                                             [YES, NO])
 
 
@@ -1611,7 +1608,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     # check for | char in code
                     if field == "code" and "|" in self.twBehaviors.item(r, behavioursFields[field]).text():
-                        QMessageBox.warning(self, programName, "The pipe (|) character is not allowed in code <b>{}</b> !".format(self.twBehaviors.item(r, behavioursFields[field]).text()))
+                        QMessageBox.warning(self, programName,
+                                            "The pipe (|) character is not allowed in code <b>{}</b> !".format(
+                                                                          self.twBehaviors.item(r, behavioursFields[field]).text()))
                         return
 
                     if remove_leading_trailing_spaces == YES:
@@ -1647,11 +1646,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             return
 
         # delete coding maps loaded in pj and not cited in ethogram
-        '''
-        for loadedCodingMap in loadedCodingMaps:
-            del self.pj['coding_map'][ loadedCodingMap ]
-        '''
-
         self.pj[ETHOGRAM] = dict(self.obs)
 
         # independent variables
@@ -1666,8 +1660,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             for idx, field in enumerate(tw_indVarFields):
                 if self.twVariables.item(r, idx):
                     # check if label is empty
-                    if field  == "label" and self.twVariables.item(r, idx).text() == "":
-                        QMessageBox.warning(self, programName, "The label of an indipendent variable can not be empty (check row #{}).".format(r + 1))
+                    if field == "label" and self.twVariables.item(r, idx).text() == "":
+                        QMessageBox.warning(self, programName,
+                                            "The label of an indipendent variable can not be empty (check row #{}).".format(r + 1))
                         return
                     row[field] = self.twVariables.item(r, idx).text().strip()
                 else:
@@ -1683,7 +1678,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             converters[self.tw_converters.item(row, 0).text()] = {"name": self.tw_converters.item(row, 0).text(),
                                                                   "description": self.tw_converters.item(row, 1).text(),
                                                                   "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
-                                                                 }
+                                                                  }
         self.pj[CONVERTERS] = dict(converters)
 
         self.accept()
@@ -1703,10 +1698,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                      "A time value like 00:23:59 must be converted into seconds before to be plotted synchronously with your media.<br>"
                      "For this you can use BORIS native converters or write your own converter.<br>"
                      "A converter must be written using the <a href=\"www.python.org\">Python3</a> language.<br>"
+                     ))
 
-))
-
-        #msg.setInformativeText("This is additional information")
+        # msg.setInformativeText("This is additional information")
 
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
@@ -1718,7 +1712,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(True)
         # disable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
+                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
             w.setEnabled(False)
 
 
@@ -1731,26 +1726,27 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(True)
-            
+
         # disable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
+                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
             w.setEnabled(False)
 
         self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
         self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
         self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
-        
+
         self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
 
 
     def code_2_func(self, name, code):
         """
         convert code to function
-        
+
         Args:
             name (str): function name
             code (str): Python code
-        
+
         Returns:
             str: string containing Python function
         """
@@ -1759,7 +1755,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT\n"""
         function += "\n".join(["    " + row for row in code.split("\n")])
         function += """\n    return OUTPUT"""
-        
+
         return function
 
 
@@ -1809,11 +1805,12 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pb_save_converter.setEnabled(False)
         self.pb_cancel_converter.setEnabled(False)
         self.tw_converters.setEnabled(True)
-        
+
         self.flag_modified = True
-        
+
         # enable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
+                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
             w.setEnabled(True)
 
 
@@ -1828,9 +1825,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pb_cancel_converter.setEnabled(False)
 
         # enable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter, self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
+                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
             w.setEnabled(True)
-        
 
 
     def delete_converter(self):
@@ -1852,19 +1849,19 @@ class projectDialog(QDialog, Ui_dlgProject):
         for converter in sorted(self.converters.keys()):
             self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,
-                 QTableWidgetItem(converter)) # id / name
+                                       QTableWidgetItem(converter))  # id / name
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 1,
-                 QTableWidgetItem(self.converters[converter]["description"]))
+                                       QTableWidgetItem(self.converters[converter]["description"]))
             self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
-             QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")))
+                                       QTableWidgetItem(self.converters[converter]["code"].replace("\n", "@")))
 
-        [self.tw_converters.resizeColumnToContents(idx) for idx in [0,1]]
+        [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
 
 
     def load_converters_from_file_repo(self, mode):
         """
-        Load converters from file (JSON) or BORIS remote repository 
-        
+        Load converters from file (JSON) or BORIS remote repository
+
         Args:
             mode (str): string "repo" or "file"
         """
@@ -1900,13 +1897,14 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if converters_from_file:
 
-            diag_choose_conv = dialog.ChooseObservationsToImport("Choose the converters to load:", sorted(list(converters_from_file.keys())))
+            diag_choose_conv = dialog.ChooseObservationsToImport("Choose the converters to load:",
+                                                                 sorted(list(converters_from_file.keys())))
 
             if diag_choose_conv.exec_():
 
                 selected_converters = diag_choose_conv.get_selected_observations()
                 if selected_converters:
-                    
+
                     # extract converter names from table
                     converter_names = []
                     for row in range(self.tw_converters.rowCount()):
@@ -1927,7 +1925,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     QMessageBox.critical(self, programName, "This name already exists in converters")
 
                                 if not text.replace("_", "a").isalnum():
-                                    QMessageBox.critical(self, programName, "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
+                                    QMessageBox.critical(self, programName,
+                                                         "This name contains forbidden character(s).<br>Use a..z, A..Z, 0..9 _")
 
                                 if text != converter and text not in converter_names and text.replace("_", "a").isalnum():
                                     break
@@ -1942,20 +1941,21 @@ class projectDialog(QDialog, Ui_dlgProject):
                         try:
                             exec(function)
                         except:
-                            QMessageBox.critical(self, "BORIS", "The code of {} converter produces an error:<br><b>{}</b>".format(converter_name,
-                                                                                                                                  sys.exc_info()[1]))
+                            QMessageBox.critical(self, "BORIS",
+                                                 "The code of {} converter produces an error:<br><b>{}</b>".format(converter_name,
+                                                                                                                   sys.exc_info()[1]))
 
                         self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,
-                            QTableWidgetItem(converter_name))
+                                                   QTableWidgetItem(converter_name))
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 1,
-                            QTableWidgetItem(converters_from_file[converter]["description"]))
+                                                   QTableWidgetItem(converters_from_file[converter]["description"]))
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
-                            QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")))
-                        
+                                                   QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")))
+
                         self.flag_modified = True
 
-                [self.tw_converters.resizeColumnToContents(idx) for idx in [0,1]]
+                [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
 
 
 
@@ -1967,10 +1967,9 @@ if __name__ == '__main__':
     import project_functions
     _, _, pj, _ = project_functions.open_project_json("test.boris")
     '''
-    
+
     app = QApplication(sys.argv)
     w = projectDialog()
     w.show()
     w.exec_()
     sys.exit()
-

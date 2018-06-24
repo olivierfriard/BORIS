@@ -282,11 +282,9 @@ class Observation(QDialog, Ui_Form):
 
         # limit to 2 files
         if self.tw_data_files.rowCount() >= 2:
-            QMessageBox.warning(self, programName , ("It is not yet possible to plot more than 2 external data"
+            QMessageBox.warning(self, programName , ("It is not yet possible to plot more than 2 external data sources"
                                                      "This limitation will be removed in future"))
             return
-
-        QMessageBox.warning(self, programName, "This function is experimental.<br>Please report any bug")
 
         fd = QFileDialog(self)
         fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
@@ -300,6 +298,8 @@ class Observation(QDialog, Ui_Form):
 
             # check data file
             r = check_txt_file(file_name) # check_txt_file defined in utilities
+            
+            print('r["dialect"].delimiter', r["dialect"].delimiter)
 
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
@@ -310,7 +310,22 @@ class Observation(QDialog, Ui_Form):
                 return
 
             header = self.return_file_header(file_name)
+            print(header)
             if header:
+                w = dialog.View_data_head()
+                w.setWindowTitle("Data file: {}".format(Path(file_name).name))
+                w.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                w.tw.setColumnCount(r["fields number"])
+                w.tw.setRowCount(len(header))
+
+                for row in range(len(header)):
+                    for col, v in enumerate(header[row].split("\t")):
+                        w.tw.setItem(row, col, QTableWidgetItem(v))
+
+                w.exec_()
+
+                '''
                 text, ok = QInputDialog.getText(self, "Data file: {}".format(Path(file_name).name),
                                                 ("This file contains {} columns. 2 are required for the plot.<br>"
                                                  "<pre>{}</pre><br>"
@@ -331,6 +346,7 @@ class Observation(QDialog, Ui_Form):
                             return
                 else:
                     return
+                '''
             else:
                 return # problem with header
 
@@ -371,13 +387,13 @@ class Observation(QDialog, Ui_Form):
             file_name (str): path of file
             
         Returns:
-            str: 5 first rows of file
+            list: 5 first rows of file
         """
-        header = ""
+        header = []
         try:
             with open(file_name) as f_in:
                 for _ in range(5):
-                    header += f_in.readline()
+                    header.append(f_in.readline())
         except:
             QMessageBox.critical(self, programName, str(sys.exc_info()[1]))
             return ""
