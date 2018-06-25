@@ -2974,10 +2974,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             md5FileName2 = hashlib.md5(current_media_full_path2.encode("utf-8")).hexdigest()
 
             frame_image_path2 = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
-                                                                                    sep=os.sep,
-                                                                                    fileName=md5FileName2,
-                                                                                    frame=frameCurrentMedia2,
-                                                                                    extension=self.frame_bitmap_format.lower())
+                                                                                                sep=os.sep,
+                                                                                                fileName=md5FileName2,
+                                                                                                frame=frameCurrentMedia2,
+                                                                                                extension=self.frame_bitmap_format.lower())
 
             if os.path.isfile(frame_image_path2):
                 self.pixmap2 = QPixmap(frame_image_path2)
@@ -2987,11 +2987,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
             else:
                 self.extract_frames_ps2 = multiprocessing.Process(target=utilities.extract_frames,
-                                                                         args=(self.ffmpeg_bin,
-                               frameCurrentMedia2,
-                               (frameCurrentMedia2 -1) / fps,
-                               current_media_full_path2,
-                               round(fps),
+                                                                  args=(self.ffmpeg_bin,
+                                                                  frameCurrentMedia2,
+                                                                  (frameCurrentMedia2 -1) / fps,
+                                                                  current_media_full_path2,
+                                                                  round(fps),
                                self.imageDirectory,
                                md5FileName2,
                                self.frame_bitmap_format.lower(),
