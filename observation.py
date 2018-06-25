@@ -258,15 +258,15 @@ class Observation(QDialog, Ui_Form):
                 print(Path(self.tmp_dir).joinpath(file_content_md5(filename)))
                 numpy.save(Path(self.tmp_dir).joinpath(file_content_md5(filename)), test.plotter.data)
                 '''
-                
+
                 self.test.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.test.show()
                 self.test.update_plot(0)
                 self.pb_plot_data.setText("Close plot")
-    
+
             else:
                 QMessageBox.warning(self, programName, "Select a data file")
-        
+
         else: # close plot
             self.test.close_plot()
             self.pb_plot_data.setText("Show plot")
@@ -298,8 +298,6 @@ class Observation(QDialog, Ui_Form):
 
             # check data file
             r = check_txt_file(file_name) # check_txt_file defined in utilities
-            
-            print('r["dialect"].delimiter', r["dialect"].delimiter)
 
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
@@ -310,7 +308,7 @@ class Observation(QDialog, Ui_Form):
                 return
 
             header = self.return_file_header(file_name)
-            print(header)
+
             if header:
                 w = dialog.View_data_head()
                 w.setWindowTitle("Data file: {}".format(Path(file_name).name))
@@ -323,7 +321,28 @@ class Observation(QDialog, Ui_Form):
                     for col, v in enumerate(header[row].split("\t")):
                         w.tw.setItem(row, col, QTableWidgetItem(v))
 
-                w.exec_()
+                while True:
+                    flag_ok = True
+                    if w.exec_():
+                        columns_to_plot = w.le.text().replace(" ", "")
+                        for col in columns_to_plot.split(","):
+                            try:
+                                col_idx = int(col)
+                            except ValueError:
+                                QMessageBox.critical(self, programName , "<b>{}</b> does not seem to be a column index".format(col))
+                                flag_ok = False
+                                break
+                            if col_idx <= 0 or col_idx > r["fields number"]:
+                                QMessageBox.critical(self, programName , "<b>{}</b> is not a valid column index".format(col))
+                                flag_ok = False
+                                break
+                        if flag_ok:
+                            break
+                    else:
+                        return
+
+                else:
+                    return
 
                 '''
                 text, ok = QInputDialog.getText(self, "Data file: {}".format(Path(file_name).name),

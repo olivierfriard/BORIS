@@ -566,26 +566,36 @@ class View_data_head(QDialog):
 
         self.setWindowTitle("")
 
-        hbox = QVBoxLayout()
+        vbox = QVBoxLayout()
 
         self.lb = QLabel("")
-        hbox.addWidget(self.lb)
+        vbox.addWidget(self.lb)
 
-        '''self.ptText = QPlainTextEdit()'''
         self.tw = QTableWidget()
-        hbox.addWidget(self.tw)
+        vbox.addWidget(self.tw)
+
+        label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
+        vbox.addWidget(label)
+
+        self.le = QLineEdit()
+        vbox.addWidget(self.le)
 
         hbox2 = QHBoxLayout()
-        self.pbSave = QPushButton("Save results")
+        # self.pbSave = QPushButton("Save results")
         # self.pbSave.clicked.connect(self.save_results)
-        hbox2.addWidget(self.pbSave)
+        # hbox2.addWidget(self.pbSave)
+
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        hbox2.addWidget(self.pbCancel)
+
 
         self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.close)
+        self.pbOK.clicked.connect(self.accept)
         hbox2.addWidget(self.pbOK)
 
-        hbox.addLayout(hbox2)
+        vbox.addLayout(hbox2)
 
-        self.setLayout(hbox)
+        self.setLayout(vbox)
 
         self.resize(540, 640)
