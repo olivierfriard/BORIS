@@ -104,6 +104,7 @@ import time_budget_functions
 
 import vlc
 
+# 1
 __version__ = "7.0.4"
 __version_date__ = "2018-06-25"
 
