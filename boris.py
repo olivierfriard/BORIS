@@ -318,10 +318,8 @@ class DW(QDockWidget):
 
         self.setWidget(self.w)
         self.w.setLayout(QVBoxLayout())
-        #self.w.layout().addWidget(self.videoframe)
-        self.w.layout().addLayout(self.hlayout)
 
-        #self.w.layout().addWidget(self.volume_slider)
+        self.w.layout().addLayout(self.hlayout)
 
         self.w.layout().addWidget(self.frame_viewer)
         self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
