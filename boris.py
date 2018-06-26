@@ -4216,9 +4216,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             # cbCloseCurrentBehaviorsBetweenVideo
+            
+            # DISABLED 
+            # FIXME
+            '''
             observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
             if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
+            '''
 
         # spectrogram
         #observationWindow.cbVisualizeSpectrogram.setEnabled(FLAG_MATPLOTLIB_INSTALLED)
@@ -4304,7 +4309,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
             # cbCloseCurrentBehaviorsBetweenVideo
+            # FIXME
+            '''
             self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = observationWindow.cbCloseCurrentBehaviorsBetweenVideo.isChecked()
+            '''
 
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
                 self.pj[OBSERVATIONS][new_obs_id]["scan_sampling_time"] = observationWindow.sbScanSampling.value()
@@ -8670,7 +8678,8 @@ item []:
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
-            # stop 
+            # stop ongoing behaviors between successive media files
+            '''
             if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive()):
 
                 if (CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] 
@@ -8693,11 +8702,8 @@ item []:
                                     if ev[EVENT_BEHAVIOR_FIELD_IDX] == behav:   # code
                                         cm = ev[EVENT_MODIFIER_FIELD_IDX]
 
-                            '''event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}'''
-
                             end_time = currentTime / 1000 - Decimal("0.001")
 
-                            
                             new_event = {"type": "State event", "code": behav, "subject": subjName, "modifiers": cm}
                             print("new_event", new_event)
                             self.writeEvent(new_event, end_time)
@@ -8707,6 +8713,7 @@ item []:
                             #item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == end_time][0], 0)
                             #self.twEvents.scrollToItem(item)
                             self.projectChanged = True
+            '''
 
             self.memMedia = mediaName
 

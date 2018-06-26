@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created by: PyQt5 UI code generator 5.5.1
+# Created by: PyQt5 UI code generator 5.9.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -39,6 +39,7 @@ class Ui_Form(object):
         self.layoutWidget = QtWidgets.QWidget(self.splitter)
         self.layoutWidget.setObjectName("layoutWidget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.layoutWidget)
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.label_9 = QtWidgets.QLabel(self.layoutWidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
@@ -83,6 +84,7 @@ class Ui_Form(object):
         self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
         self.layoutWidget1.setObjectName("layoutWidget1")
         self.verticalLayout_11 = QtWidgets.QVBoxLayout(self.layoutWidget1)
+        self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_11.setObjectName("verticalLayout_11")
         self.label_3 = QtWidgets.QLabel(self.layoutWidget1)
         self.label_3.setObjectName("label_3")
@@ -101,6 +103,7 @@ class Ui_Form(object):
         self.layoutWidget2 = QtWidgets.QWidget(self.splitter_2)
         self.layoutWidget2.setObjectName("layoutWidget2")
         self.verticalLayout_9 = QtWidgets.QVBoxLayout(self.layoutWidget2)
+        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_9.setObjectName("verticalLayout_9")
         self.tabProjectType = QtWidgets.QTabWidget(self.layoutWidget2)
         self.tabProjectType.setEnabled(True)
@@ -127,6 +130,7 @@ class Ui_Form(object):
         self.layoutWidget3 = QtWidgets.QWidget(self.splitter_3)
         self.layoutWidget3.setObjectName("layoutWidget3")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.layoutWidget3)
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.label_5 = QtWidgets.QLabel(self.layoutWidget3)
         self.label_5.setObjectName("label_5")
@@ -152,6 +156,7 @@ class Ui_Form(object):
         self.layoutWidget4 = QtWidgets.QWidget(self.splitter_3)
         self.layoutWidget4.setObjectName("layoutWidget4")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget4)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -177,6 +182,7 @@ class Ui_Form(object):
         self.cbVisualizeSpectrogram.setObjectName("cbVisualizeSpectrogram")
         self.verticalLayout.addWidget(self.cbVisualizeSpectrogram)
         self.cbCloseCurrentBehaviorsBetweenVideo = QtWidgets.QCheckBox(self.layoutWidget4)
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName("cbCloseCurrentBehaviorsBetweenVideo")
         self.verticalLayout.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
@@ -193,6 +199,7 @@ class Ui_Form(object):
         self.layoutWidget5 = QtWidgets.QWidget(self.splitter_4)
         self.layoutWidget5.setObjectName("layoutWidget5")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.layoutWidget5)
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.label_2 = QtWidgets.QLabel(self.layoutWidget5)
         self.label_2.setObjectName("label_2")
@@ -215,6 +222,7 @@ class Ui_Form(object):
         self.layoutWidget6 = QtWidgets.QWidget(self.splitter_4)
         self.layoutWidget6.setObjectName("layoutWidget6")
         self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.layoutWidget6)
+        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
@@ -265,6 +273,7 @@ class Ui_Form(object):
         self.layoutWidget7 = QtWidgets.QWidget(self.splitter_5)
         self.layoutWidget7.setObjectName("layoutWidget7")
         self.verticalLayout_15 = QtWidgets.QVBoxLayout(self.layoutWidget7)
+        self.verticalLayout_15.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_15.setObjectName("verticalLayout_15")
         self.label_7 = QtWidgets.QLabel(self.layoutWidget7)
         self.label_7.setObjectName("label_7")
@@ -295,6 +304,7 @@ class Ui_Form(object):
         self.layoutWidget8 = QtWidgets.QWidget(self.splitter_5)
         self.layoutWidget8.setObjectName("layoutWidget8")
         self.verticalLayout_16 = QtWidgets.QVBoxLayout(self.layoutWidget8)
+        self.verticalLayout_16.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_16.setObjectName("verticalLayout_16")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -366,7 +376,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
