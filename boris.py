@@ -8670,6 +8670,7 @@ item []:
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
+            # stop 
             if (self.memMedia and mediaName != self.memMedia) or (self.mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive()):
 
                 if (CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] 
@@ -8696,10 +8697,15 @@ item []:
 
                             end_time = currentTime / 1000 - Decimal("0.001")
 
-                            self.pj[OBSERVATIONS][self.observationId][EVENTS].append([end_time, subjName, behav, cm, ""])
-                            self.loadEventsInTW(self.observationId)
-                            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == end_time][0], 0)
-                            self.twEvents.scrollToItem(item)
+                            
+                            new_event = {"type": "State event", "code": behav, "subject": subjName, "modifiers": cm}
+                            print("new_event", new_event)
+                            self.writeEvent(new_event, end_time)
+
+                            #self.pj[OBSERVATIONS][self.observationId][EVENTS].append([end_time, subjName, behav, cm, ""])
+                            #self.loadEventsInTW(self.observationId)
+                            #item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == end_time][0], 0)
+                            #self.twEvents.scrollToItem(item)
                             self.projectChanged = True
 
             self.memMedia = mediaName
