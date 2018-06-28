@@ -8635,7 +8635,8 @@ item []:
                             if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
                                 modifier_str += selected_modifiers[idx]["selected"]
                     else:
-                        modifier_str = currentModifiers
+                        # modifier_str = currentModifiers
+                        return  # cancel button pressed
     
                     # restart media
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
