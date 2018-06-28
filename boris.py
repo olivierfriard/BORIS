@@ -103,8 +103,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.3.4"
-__version_date__ = "2018-06-26"
+__version__ = "6.3.5"
+__version_date__ = "2018-06-28"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -8864,7 +8864,9 @@ item []:
                     modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
     
                     if modifierSelector.exec_():
+                        print("executed")
                         selected_modifiers = modifierSelector.getModifiers()
+                        print("selected_modifiers", selected_modifiers)
     
                         modifier_str = ""
                         for idx in sorted_keys(selected_modifiers):
@@ -8876,6 +8878,7 @@ item []:
                                 modifier_str += selected_modifiers[idx]["selected"]
                     else:
                         modifier_str = currentModifiers
+                        return
     
                     # restart media
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
