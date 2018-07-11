@@ -77,7 +77,8 @@ def media_full_path(media_file, project_file_name):
     """
 
     media_path = pathlib.Path(media_file)
-    if media_path.resolve() == media_path and media_path.exists():
+    '''if media_path.resolve() == media_path and media_path.exists():'''
+    if media_path.exists():
         return str(media_path)
     else:
         project_path = pathlib.Path(project_file_name)
