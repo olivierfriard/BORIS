@@ -261,7 +261,7 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
 
         file_name_subject = str(pathlib.Path(file_name).parent / pathlib.Path(file_name).stem) + "_" + subject + ".dat"
 
-        rows = ["FirstLineOfData"]
+        rows = ["FirstLineOfData"]  # to be completed
         rows.append("#-----------------------------------------------------------")
         rows.append("# Name: {}".format(pathlib.Path(file_name_subject).name))
         rows.append("# Format: Focal Data File 1.0")
