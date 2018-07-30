@@ -820,11 +820,13 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
     try:
         error = p.communicate()[1].decode("utf-8")
     except:
-        return {}
+        return {"error": "Error reading file"}
 
     # check for invalid data
+    '''
     if "Invalid data found when processing input" in error:
         return {"error": "Invalid data found when processing input"}
+    '''
 
     rows = error.split("\n")
 
@@ -846,7 +848,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
                     bitrate = int(re_results.group(1).strip())
                 break
     except:
-        duration = 0
+        bitrate = -1
 
     # fps
     fps = 0
@@ -880,7 +882,9 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
     except:
         hasAudio = None
 
-    #return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
+    if duration == 0 or bitrate == -1:
+        return {"error": "This file do not seem to be a media file"}
+
     return {"frames_number": int(fps * duration),
             "duration_ms": duration * 1000,
             "duration": duration,
