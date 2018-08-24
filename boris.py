@@ -3330,10 +3330,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def initialize_video_tab(self):
         # creating a basic vlc instance
-        self.instance = vlc.Instance()
+        self.instance = vlc.Instance("--no-xlib --quiet ")
 
         # creating an empty vlc media player
         self.mediaplayer = self.instance.media_player_new()
+
+        '''
+        self.mediaplayer.video_set_mouse_input(False)
+        self.mediaplayer.video_set_key_input(False)
+        '''
+
         self.mediaListPlayer = self.instance.media_list_player_new()
         self.mediaListPlayer.set_media_player(self.mediaplayer)
 
