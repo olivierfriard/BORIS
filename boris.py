@@ -106,7 +106,7 @@ import vlc
 
 # 1
 __version__ = "7.0.5"
-__version_date__ = "2018-07-30"
+__version_date__ = "2018-08-24"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -3394,7 +3394,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[i].media_list.add_media(media)
 
             # add media list to media player list
-            #self.mediaListPlayer[-1].set_media_list(self.media_list[-1])
             self.dw_player[i].mediaListPlayer.set_media_list(self.dw_player[i].media_list)
 
             if sys.platform.startswith('linux'): # for Linux using the X Server
@@ -3407,7 +3406,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # show first frame of video
             logging.debug("playing media #{0}".format(0))
     
-            #self.mediaListPlayer[-1].play_item_at_index(0)
             self.dw_player[i].mediaListPlayer.play_item_at_index(0)
     
             # play mediaListPlayer for a while to obtain media information
@@ -4260,31 +4258,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for i in range(N_PLAYER):
                 self.dw_player[i].setVisible(False)
-
-            '''
-            self.mediaplayer.clear()
-            self.mediaListPlayer.clear()
-            self.media_list.clear()
-            '''
-
-            #del self.mediaplayer
-            #del self.mediaListPlayer
-
-            # empty media list
-            '''
-            print(self.media_list)
-            for ml in self.media_list:
-                 while ml.count():
-                    ml.remove_index(0)
-            '''
-
-            #del self.media_list
-
-            '''
-            while self.video1layout.count():
-                item = self.video1layout.takeAt(0)
-                item.widget().deleteLater()
-            '''
 
             self.actionFrame_by_frame.setChecked(False)
             self.playMode = VLC
@@ -7658,8 +7631,8 @@ item []:
                         memState = self.FFmpegTimer.isActive()
                         if memState:
                             self.pause_video()
-                    else:
-                        memState = self.mediaListPlayer.get_state()
+                    elif self.playMode == VLC:
+                        memState = self.dw_player[0].mediaListPlayer.get_state()
                         if memState == vlc.State.Playing:
                             self.pause_video()
 
@@ -9066,7 +9039,7 @@ item []:
                 if not self.currentSubject and self.alertNoFocalSubject:
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
-                            if self.mediaListPlayer.get_state() != vlc.State.Paused:
+                            if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused]:
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
@@ -9130,12 +9103,6 @@ item []:
 
             if self.playMode == VLC:
 
-                print("new time", newTime)
-
-                '''
-                flag_pause = (self.mediaListPlayer.get_state() in [vlc.State.Paused]
-                              or self.mediaListPlayer2.get_state() in [vlc.State.Paused])
-                '''
                 flag_pause = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused])
 
                 if len(self.dw_player[0].media_durations) == 1:
