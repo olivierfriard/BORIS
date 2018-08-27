@@ -127,7 +127,7 @@ class Observation(QDialog, Ui_Form):
 
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=True))
         self.pb_add_media_without_path.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=False))
-        self.pbRemoveVideo.clicked.connect(lambda: self.remove_media(PLAYER1))
+        self.pbRemoveVideo.clicked.connect(self.remove_media)
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=True))
         self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=False))
         
@@ -757,36 +757,42 @@ class Observation(QDialog, Ui_Form):
 
     def remove_data_file(self):
         """
-        remove selected data file from list widget
+        remove all selected data file from list widget
         """
         if self.tw_data_files.selectedIndexes():
-            self.tw_data_files.removeRow(self.tw_data_files.selectedIndexes()[0].row())
+            rows_to_delete = set([x.row() for x in self.tw_data_files.selectedIndexes()])
+            for row in sorted(rows_to_delete, reverse=True):
+                self.tw_data_files.removeRow(row)
         else:
-            QMessageBox.warning(self, programName, "Select a data file")
+            QMessageBox.warning(self, programName, "No data file selected")
 
 
-    def remove_media(self, nPlayer):
+    def remove_media(self):
         """
-        remove selected item from list widget
+        remove all selected media files from list widget
         """
 
         if self.twVideo1.selectedIndexes():
-            media_path = self.twVideo1.item(self.twVideo1.selectedIndexes()[0].row(), MEDIA_FILE_PATH_IDX).text()
-            self.twVideo1.removeRow(self.twVideo1.selectedIndexes()[0].row())
+            rows_to_delete = set([x.row() for x in self.twVideo1.selectedIndexes()])
+            for row in sorted(rows_to_delete, reverse=True):
+                media_path = self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text()
+                self.twVideo1.removeRow(row)
+                if media_path not in [self.twVideo1.item(idx, MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
+                    try:
+                        del self.mediaDurations[mediaPath]
+                    except NameError:
+                        pass
+                    try:
+                        del self.mediaFPS[mediaPath]
+                    except NameError:
+                        pass
 
-            # FIXME ! check if media in same or other player
-            if media_path not in [self.twVideo1.item(idx, MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
-                try:
-                    del self.mediaDurations[mediaPath]
-                except NameError:
-                    pass
-                try:
-                    del self.mediaFPS[mediaPath]
-                except NameError:
-                    pass
+            self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+            self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+        else:
+            QMessageBox.warning(self, programName, "No media file selected")
 
-        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+
 
 if __name__ == '__main__':
 

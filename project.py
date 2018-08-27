@@ -61,7 +61,7 @@ class ExclusionMatrix(QDialog):
         super(ExclusionMatrix, self).__init__()
 
         hbox = QVBoxLayout(self)
-        
+
         self.label = QLabel()
         self.label.setText("Check behaviors excluded by")
         hbox.addWidget(self.label)
@@ -85,7 +85,6 @@ class ExclusionMatrix(QDialog):
         self.pb_revert_selection.clicked.connect(lambda: self.pb_cb_selection("revert"))
         hbox2.addWidget(self.pb_revert_selection)
 
-
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
         hbox2.addWidget(self.pbCancel)
@@ -100,11 +99,14 @@ class ExclusionMatrix(QDialog):
         self.setWindowTitle("Behaviors exclusion matrix")
         self.setGeometry(100, 100, 600, 400)
 
+
     def pbOK_clicked(self):
         self.accept()
 
+
     def pbCancel_clicked(self):
         self.reject()
+
 
     def pb_cb_selection(self, mode):
         """
@@ -486,7 +488,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check if double click on excluded column
         if column == behavioursFields["excluded"]:
             self.pbExclusionMatrix_clicked()
-            #QMessageBox.information(self, programName, "Use the 'Exclusion matrix' button to manage excluded behaviors")
 
         # check if double click on 'coding map' column
         if column == behavioursFields["coding map"]:
@@ -495,7 +496,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.behaviorTypeChanged(row)
             else:
                 QMessageBox.information(self, programName, "Change the behavior type on first column to select a coding map")
-            
 
         # check if double click on category
         if column == behavioursFields["type"]:
@@ -966,7 +966,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(0, self.twBehaviors.rowCount()):
             if self.twBehaviors.item(r, behavioursFields["code"]):
                 if "Point" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
-                    '''flag_point_event_present = True'''
                     includePointEvents = dialog.MessageDialog(programName, "Do you want to include point events?", [YES, NO])
                     break
 
@@ -991,7 +990,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        logging.debug('exclusion matrix {0}'.format(excl))
+        logging.debug("exclusion matrix {0}".format(excl))
 
         # columns contain state events
         ex.twExclusions.setColumnCount(len(stateBehaviors))
@@ -1005,7 +1004,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             for c in range(len(stateBehaviors)):
                 if stateBehaviors[c] != allBehaviors[r]:
                     checkBox = QCheckBox()
-                    if stateBehaviors[c] in excl[allBehaviors[r]]:  # or headers[ r ] in excl[ headers[c] ]:
+                    if stateBehaviors[c] in excl[allBehaviors[r]]:
                         checkBox.setChecked(True)
                     ex.twExclusions.setCellWidget(r, c, checkBox)
 
@@ -1023,18 +1022,18 @@ class projectDialog(QDialog, Ui_dlgProject):
                             if s1 not in new_excl[s2]:
                                 new_excl[s2].append(s1)
 
-            logging.debug('new exclusion matrix {0}'.format(new_excl))
+            logging.debug("new exclusion matrix {0}".format(new_excl))
 
             # update excluded field
             for r in range(self.twBehaviors.rowCount()):
                 if (includePointEvents == YES 
                    or (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
                     for e in excl:
-                        if e == self.twBehaviors.item(r, behavioursFields['code']).text():
+                        if e == self.twBehaviors.item(r, behavioursFields["code"]).text():
                             item = QTableWidgetItem(','.join(new_excl[e]))
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
-                            self.twBehaviors.setItem(r, behavioursFields['excluded'], item)
+                            self.twBehaviors.setItem(r, behavioursFields["excluded"], item)
 
 
     def pbRemoveAllBehaviors_clicked(self):

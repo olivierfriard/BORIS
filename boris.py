@@ -62,7 +62,6 @@ except ModuleNotFoundError:
         logging.critical("PyQt4 not installed!\nTry PyQt4")
         sys.exit()
 
-
 import matplotlib
 matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
 import matplotlib.pyplot as plt
@@ -105,8 +104,8 @@ import time_budget_functions
 import vlc
 
 # 1
-__version__ = "7.0.5"
-__version_date__ = "2018-08-24"
+__version__ = "7.0.6"
+__version_date__ = "2018-08-27"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -2349,15 +2348,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def observations_list(self):
         """
-        show all observations of current project
+        show list of all observations of current project
         """
 
         if self.playerType == VIEWER:
             self.close_observation()
         # check if an observation is running
         if self.observationId:
-            QMessageBox.critical(self, programName, "You must close the running observation before.")
-            return
+
+            if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?", 
+                                    [YES, NO]) == NO:
+                return
+            else:
+                self.close_observation()
 
         result, selectedObs = self.selectObservations(SINGLE)
 

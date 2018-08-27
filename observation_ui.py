@@ -150,7 +150,7 @@ class Ui_Form(object):
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.twVideo1 = QtGui.QTableWidget(self.layoutWidget3)
         self.twVideo1.setEditTriggers(QtGui.QAbstractItemView.AnyKeyPressed|QtGui.QAbstractItemView.DoubleClicked|QtGui.QAbstractItemView.EditKeyPressed)
-        self.twVideo1.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.twVideo1.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.twVideo1.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
         self.twVideo1.setObjectName(_fromUtf8("twVideo1"))
         self.twVideo1.setColumnCount(7)
@@ -222,6 +222,7 @@ class Ui_Form(object):
         self.label_7.setObjectName(_fromUtf8("label_7"))
         self.verticalLayout_15.addWidget(self.label_7)
         self.tw_data_files = QtGui.QTableWidget(self.layoutWidget5)
+        self.tw_data_files.setSelectionMode(QtGui.QAbstractItemView.MultiSelection)
         self.tw_data_files.setObjectName(_fromUtf8("tw_data_files"))
         self.tw_data_files.setColumnCount(9)
         self.tw_data_files.setRowCount(0)
@@ -320,7 +321,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -357,7 +358,7 @@ class Ui_Form(object):
         item.setText(_translate("Form", "Audio", None))
         self.pbAddVideo.setText(_translate("Form", "Add media", None))
         self.pb_add_media_without_path.setText(_translate("Form", "Add media without path", None))
-        self.pbRemoveVideo.setText(_translate("Form", "Remove media", None))
+        self.pbRemoveVideo.setText(_translate("Form", "Remove selected media", None))
         self.pbAddMediaFromDir.setText(_translate("Form", "Add all media from directory", None))
         self.pb_add_all_media_from_dir_without_path.setText(_translate("Form", "Add all media from dir without path", None))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram for the player #1", None))
@@ -386,7 +387,7 @@ class Ui_Form(object):
         self.pb_add_data_file_wo_path.setText(_translate("Form", "Add data file without path", None))
         self.pb_view_data_head.setText(_translate("Form", "View first rows", None))
         self.pb_plot_data.setText(_translate("Form", "Show plot", None))
-        self.pb_remove_data_file.setText(_translate("Form", "Remove data file", None))
+        self.pb_remove_data_file.setText(_translate("Form", "Remove selected data file", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_data_files), _translate("Form", "Data files", None))
         self.tabProjectType.setTabText(self.tabProjectType.indexOf(self.tabVideo), _translate("Form", "Media", None))
         self.label_4.setText(_translate("Form", "Scan sampling every", None))

@@ -218,7 +218,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -238,7 +238,7 @@
                       <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
                      </property>
                      <property name="selectionMode">
-                      <enum>QAbstractItemView::SingleSelection</enum>
+                      <enum>QAbstractItemView::MultiSelection</enum>
                      </property>
                      <property name="selectionBehavior">
                       <enum>QAbstractItemView::SelectRows</enum>
@@ -303,7 +303,7 @@
                      <item>
                       <widget class="QPushButton" name="pbRemoveVideo">
                        <property name="text">
-                        <string>Remove media</string>
+                        <string>Remove selected media</string>
                        </property>
                       </widget>
                      </item>
@@ -393,6 +393,9 @@
                    </item>
                    <item>
                     <widget class="QTableWidget" name="tw_data_files">
+                     <property name="selectionMode">
+                      <enum>QAbstractItemView::MultiSelection</enum>
+                     </property>
                      <column>
                       <property name="text">
                        <string>Path</string>
@@ -477,7 +480,7 @@
                      <item>
                       <widget class="QPushButton" name="pb_remove_data_file">
                        <property name="text">
-                        <string>Remove data file</string>
+                        <string>Remove selected data file</string>
                        </property>
                       </widget>
                      </item>
