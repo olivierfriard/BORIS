@@ -52,12 +52,14 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtWidgets import *
     from boris_ui5 import *
+    import qrc_boris5
 except:
     logging.info("PyQt5 not installed!\nTrying with PyQt4")
     try:
         from PyQt4.QtCore import *
         from PyQt4.QtGui import *
         from boris_ui import *
+        import qrc_boris
     except:
         logging.critical("PyQt4 not installed!\nTry PyQt4")
         sys.exit()
@@ -89,7 +91,6 @@ import coding_pad
 import subjects_pad
 import transitions
 from config import *
-import qrc_boris
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
