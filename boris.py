@@ -8062,7 +8062,7 @@ item []:
         "How to cite BORIS:<br>"
         "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
         "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
-        "DOI:10.1111/2041-210X.12584").format(prog_name=programName,
+        """<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>""").format(prog_name=programName,
                                               ver=ver,
                                               date=__version_date__,
                                               python_ver=platform.python_version()
