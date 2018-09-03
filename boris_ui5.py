@@ -574,7 +574,6 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
         self.toolBar.addAction(self.action_obs_list)
         self.toolBar.addAction(self.actionPlay)
-        self.toolBar.addAction(self.actionPause)
         self.toolBar.addAction(self.actionReset)
         self.toolBar.addAction(self.actionJumpBackward)
         self.toolBar.addAction(self.actionJumpForward)

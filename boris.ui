@@ -339,7 +339,6 @@
    </attribute>
    <addaction name="action_obs_list"/>
    <addaction name="actionPlay"/>
-   <addaction name="actionPause"/>
    <addaction name="actionReset"/>
    <addaction name="actionJumpBackward"/>
    <addaction name="actionJumpForward"/>

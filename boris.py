@@ -456,7 +456,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.action_obs_list.setIcon(QIcon(":/observations_list"))
         self.actionPlay.setIcon(QIcon(":/play"))
-        self.actionPause.setIcon(QIcon(":/pause"))
+        '''self.actionPause.setIcon(QIcon(":/pause"))'''
         self.actionReset.setIcon(QIcon(":/reset"))
         self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
         self.actionJumpForward.setIcon(QIcon(":/jump_forward"))
@@ -832,7 +832,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # toolbar
         self.action_obs_list.triggered.connect(self.observations_list)
         self.actionPlay.triggered.connect(self.play_activated)
-        self.actionPause.triggered.connect(self.pause_video)
+        #self.actionPause.triggered.connect(self.pause_video)
         self.actionReset.triggered.connect(self.reset_activated)
         self.actionJumpBackward.triggered.connect(self.jumpBackward_activated)
         self.actionJumpForward.triggered.connect(self.jumpForward_activated)
@@ -3325,8 +3325,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         font.setPointSize(15)
         self.lb_current_media_time.setFont(font)
 
-
-
         # add all media files to media lists
         for i in range(N_PLAYER):
             n_player = str(i + 1)
@@ -3437,6 +3435,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #self.toolBar.setEnabled(True)
         self.menu_options()
+        
+        self.actionPlay.setIcon(QIcon(":/play"))
 
         self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
@@ -8043,8 +8043,9 @@ item []:
         players.append("\nGraphViz")
         players.append(gv_version)
 
-        about_dialog = msg = QMessageBox()
-        about_dialog.setIconPixmap(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/logo_eye.128px.png"))
+        about_dialog = QMessageBox()
+        about_dialog.setIconPixmap(QPixmap(":/logo"))
+        
         about_dialog.setWindowTitle("About " + programName)
         about_dialog.setStandardButtons(QMessageBox.Ok)
         about_dialog.setDefaultButton(QMessageBox.Ok)
@@ -9997,11 +9998,12 @@ item []:
         if self.playerType == VLC:
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.start()
+                return True
             else:
                 # check if player 1 is ended
                 if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
-                    return
+                    return False
 
                 for i in range(N_PLAYER):
                     if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
@@ -10009,6 +10011,7 @@ item []:
 
                 self.timer.start(VLC_TIMER_OUT)
                 self.timer_spectro.start()
+                return True
 
 
     def pause_video(self):
@@ -10043,7 +10046,13 @@ item []:
         button 'play' activated
         """
         if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-            self.play_video()
+            if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused:
+                if self.play_video():
+                    self.actionPlay.setIcon(QIcon(":/pause"))
+
+            else:
+                self.pause_video()
+                self.actionPlay.setIcon(QIcon(":/play"))
 
 
     def jumpBackward_activated(self):
