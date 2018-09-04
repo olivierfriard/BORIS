@@ -402,6 +402,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     fast = 10
 
     currentStates = {}
+    subject_name_index = {}
     flag_slow = False
     play_rate = 1
 
@@ -472,6 +473,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_by_frame.setIcon(QIcon(":/frame_mode"))
         self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
+        self.actionCloseObs.setIcon(QIcon(":/close_observation"))
 
         self.setWindowTitle("{} ({})".format(programName, __version__))
 
@@ -680,9 +682,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionNext.setEnabled(self.playerType == VLC)
         self.actionSnapshot.setEnabled(self.playerType == VLC)
         self.actionFrame_by_frame.setEnabled(self.playerType == VLC)
-
         self.actionFrame_backward.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
+        self.actionCloseObs.setEnabled(flagObs)
 
         # Tools
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
@@ -861,6 +863,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionFrame_backward.triggered.connect(self.frame_backward)
         self.actionFrame_forward.triggered.connect(self.frame_forward)
+        self.actionCloseObs.triggered.connect(self.close_observation)
 
         # table Widget double click
         self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
@@ -1632,7 +1635,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def filter_subjects(self):
         """
-        allow user to select subjects to show in the subjects list
+        allow user to select subjects to show in the subjects widget
         """
 
         paramPanelWindow = param_panel.Param_panel()
@@ -2638,7 +2641,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Args:
             subject (str): subject
         """
-        if not subject or (self.currentSubject == subject):
+        if (not subject) or (subject == NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
             self.currentSubject = ""
             self.lbSubject.setText("<b>{}</b>".format(NO_FOCAL_SUBJECT))
             self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
@@ -3371,7 +3374,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
                 except:
                     logging.debug("media_info key not found")
-                    #nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     r = utilities.accurate_media_analysis2(self.ffmpeg_bin, media_full_path)
                     if "error" not in r:
                         if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
@@ -3389,12 +3391,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
                         self.projectChanged = True
     
-                #self.duration.append(int(mediaLength))
                 self.dw_player[i].media_durations.append(int(mediaLength))
-                #self.fps[mediaFile] = mediaFPS
                 self.dw_player[i].fps[mediaFile] = mediaFPS
-
-                #self.media_list[-1].add_media(media)
                 self.dw_player[i].media_list.add_media(media)
 
             # add media list to media player list
@@ -4187,6 +4185,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for i in range(N_PLAYER):
                 if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                     self.dw_player[i].mediaplayer.stop()
+            self.verticalLayout_3.removeWidget(self.video_slider)
+            self.video_slider.deleteLater()
+            self.video_slider = None
 
         if self.playerType == LIVE:
             self.liveTimer.stop()
@@ -7655,7 +7656,7 @@ item []:
         editWindow.setWindowTitle("Add a new event")
 
         # send pj to edit_event window
-        editWindow.pj, editWindow.currentModifier = self.pj, ""
+        '''editWindow.pj, editWindow.currentModifier = self.pj, ""'''
 
         editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ))
         editWindow.dsbTime.setValue(float(laps))
@@ -7663,6 +7664,7 @@ item []:
         sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
         editWindow.cobSubject.addItems(sortedSubjects)
+        editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFixedString))
 
         sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
@@ -7718,7 +7720,6 @@ item []:
             self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
 
             self.show_current_states_in_subjects_table()
-
 
 
         if self.pause_before_addevent:
@@ -7852,8 +7853,6 @@ item []:
             editWindow.setWindowTitle("Edit event parameters")
 
             # pass project to window
-            editWindow.pj, editWindow.currentModifier = self.pj, ""
-
             row = self.twEvents.selectedItems()[0].row()
 
             editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), HHMMSSZZZ))
@@ -7871,7 +7870,6 @@ item []:
                 editWindow.cobSubject.setCurrentIndex(0)
 
             sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
-
             editWindow.cobCode.addItems(sortedCodes)
 
             # check if selected code is in code's list (no modification of codes)
@@ -8180,12 +8178,25 @@ item []:
 
     def show_current_states_in_subjects_table(self):
         """
-        show current state(s) for all subjects in subjects widget
+        show current state(s) for all subjects (including "No focal subject") in subjects widget
         """
+        '''
         for idx in sorted_keys(self.pj[SUBJECTS]):
             for j in range(self.twSubjects.rowCount()):
                 if self.twSubjects.item(j, 1).text() == self.pj[SUBJECTS][idx]["name"]:
                     self.twSubjects.item(j, len(subjectsFields)).setText(",".join(self.currentStates[idx]))
+        '''
+
+        '''self.subject_name_index = dict([(self.pj[SUBJECTS][x]["name"], x) for x in self.pj[SUBJECTS]])'''
+
+        for i in range(self.twSubjects.rowCount()):
+            try:
+                if self.twSubjects.item(i, 1).text() == NO_FOCAL_SUBJECT:
+                    self.twSubjects.item(i, len(subjectsFields)).setText(",".join(self.currentStates[""]))
+                else:
+                    self.twSubjects.item(i, len(subjectsFields)).setText(",".join(self.currentStates[self.subject_name_index[self.twSubjects.item(i, 1).text()]]))
+            except KeyError:
+                self.twSubjects.item(i, len(subjectsFields)).setText("")
 
 
     def sync_time(self, n_player: int, new_time: float) -> None:
@@ -8513,10 +8524,10 @@ item []:
             subjects_to_show (list): list of subject to be shown
         """
 
-        print("subjects_to_show", subjects_to_show)
+        self.subject_name_index = {}    # dict([(self.pj[SUBJECTS][x]["name"], x) for x in self.pj[SUBJECTS]])
 
-        self.twSubjects.setRowCount(1)
         # no focal subject
+        self.twSubjects.setRowCount(1)
         self.twSubjects.setItem(0, 0, QTableWidgetItem(""))
         self.twSubjects.setItem(0, 1, QTableWidgetItem(NO_FOCAL_SUBJECT))
         self.twSubjects.setItem(0, 2, QTableWidgetItem(""))
@@ -8524,6 +8535,9 @@ item []:
 
         if self.pj[SUBJECTS]:
             for idx in sorted_keys(self.pj[SUBJECTS]):
+
+                self.subject_name_index[self.pj[SUBJECTS][idx]["name"]] = idx
+
                 if self.pj[SUBJECTS][idx]["name"] in subjects_to_show:
 
                     self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
@@ -9210,17 +9224,7 @@ item []:
 
         if self.observationId:
             if self.twSubjects.selectedIndexes():
-
-                row = self.twSubjects.selectedIndexes()[0].row()
-
-                # select or deselect current subject
-                '''
-                if self.currentSubject == self.twSubjects.item(row, 1).text():
-                    self.update_subject("")
-                else:
-                    self.update_subject(self.twSubjects.item(row, 1).text())
-                '''
-                self.update_subject(self.twSubjects.item(row, 1).text())
+                self.update_subject(self.twSubjects.item(self.twSubjects.selectedIndexes()[0].row(), 1).text())
         else:
             self.no_observation()
 
@@ -10030,6 +10034,7 @@ item []:
         if self.playerType == VLC:
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.start()
+                self.actionPlay.setIcon(QIcon(":/pause"))
                 return True
             else:
                 # check if player 1 is ended
@@ -10043,6 +10048,7 @@ item []:
 
                 self.timer.start(VLC_TIMER_OUT)
                 self.timer_spectro.start()
+                self.actionPlay.setIcon(QIcon(":/pause"))
                 return True
 
 
@@ -10067,6 +10073,7 @@ item []:
                             while True:
                                 if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                                    break
+                            self.actionPlay.setIcon(QIcon(":/play"))
 
                 time.sleep(1)
                 self.timer_out()
@@ -10079,12 +10086,9 @@ item []:
         """
         if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
             if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused:
-                if self.play_video():
-                    self.actionPlay.setIcon(QIcon(":/pause"))
-
+                self.play_video()
             else:
                 self.pause_video()
-                self.actionPlay.setIcon(QIcon(":/play"))
 
 
     def jumpBackward_activated(self):

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1108</width>
+    <width>1198</width>
     <height>604</height>
    </rect>
   </property>
@@ -129,7 +129,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1108</width>
+     <width>1198</width>
      <height>22</height>
     </rect>
    </property>
@@ -351,6 +351,7 @@
    <addaction name="actionFrame_by_frame"/>
    <addaction name="actionFrame_backward"/>
    <addaction name="actionFrame_forward"/>
+   <addaction name="actionCloseObs"/>
   </widget>
   <widget class="QDockWidget" name="dwEthogram">
    <property name="floating">
@@ -1244,6 +1245,14 @@
   <action name="actionJWatcher">
    <property name="text">
     <string>JWatcher</string>
+   </property>
+  </action>
+  <action name="actionCloseObs">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Close observation</string>
    </property>
   </action>
  </widget>

@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
-        MainWindow.resize(1108, 604)
+        MainWindow.resize(1198, 604)
         self.centralwidget = QtGui.QWidget(MainWindow)
         self.centralwidget.setObjectName(_fromUtf8("centralwidget"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout(self.centralwidget)
@@ -90,7 +90,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1108, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1198, 22))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuHelp = QtGui.QMenu(self.menubar)
         self.menuHelp.setObjectName(_fromUtf8("menuHelp"))
@@ -480,6 +480,9 @@ class Ui_MainWindow(object):
         self.actionExportEvents_2.setObjectName(_fromUtf8("actionExportEvents_2"))
         self.actionJWatcher = QtGui.QAction(MainWindow)
         self.actionJWatcher.setObjectName(_fromUtf8("actionJWatcher"))
+        self.actionCloseObs = QtGui.QAction(MainWindow)
+        self.actionCloseObs.setEnabled(True)
+        self.actionCloseObs.setObjectName(_fromUtf8("actionCloseObs"))
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -606,6 +609,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionFrame_by_frame)
         self.toolBar.addAction(self.actionFrame_backward)
         self.toolBar.addAction(self.actionFrame_forward)
+        self.toolBar.addAction(self.actionCloseObs)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -793,4 +797,5 @@ class Ui_MainWindow(object):
         self.actionExport_observations_list.setText(_translate("MainWindow", "Export observations list", None))
         self.actionExportEvents_2.setText(_translate("MainWindow", "Tabular events", None))
         self.actionJWatcher.setText(_translate("MainWindow", "JWatcher", None))
+        self.actionCloseObs.setText(_translate("MainWindow", "Close observation", None))
 

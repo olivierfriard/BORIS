@@ -2,6 +2,7 @@
 <qresource>
 <file alias="logo">icons/logo_eye.128px.png</file>
 <file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>
+<file alias="close_observation">icons/glyphicons_207_remove_2.png</file>
 <file alias="play">icons/glyphicons_173_play.png</file>
 <file alias="pause">icons/glyphicons_174_pause.png</file>
 <file alias="reset">icons/glyphicons_170_step_backward.png</file>
