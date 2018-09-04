@@ -64,7 +64,7 @@ POINT_EVENT_PLOT_COLOR = "black"
 
 subjects_config = ['key', 'id']
 
-subjectsFields = ['key', 'name', 'description']
+subjectsFields = ["key", "name", "description"]
 
 UNPAIRED = 'UNPAIRED'
 

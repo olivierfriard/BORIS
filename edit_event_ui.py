@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'edit_event.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt4 UI code generator 4.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(342, 408)
+        Form.resize(413, 408)
         self.verticalLayout_2 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
         self.verticalLayout = QtGui.QVBoxLayout()
@@ -45,6 +45,9 @@ class Ui_Form(object):
         self.dsbTime.setMaximum(9999999.0)
         self.dsbTime.setObjectName(_fromUtf8("dsbTime"))
         self.horizontalLayout_2.addWidget(self.dsbTime)
+        self.pb_set_to_current_time = QtGui.QPushButton(Form)
+        self.pb_set_to_current_time.setObjectName(_fromUtf8("pb_set_to_current_time"))
+        self.horizontalLayout_2.addWidget(self.pb_set_to_current_time)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
         self.horizontalLayout_3.addLayout(self.horizontalLayout_2)
@@ -79,6 +82,8 @@ class Ui_Form(object):
         self.verticalLayout.addWidget(self.leComment)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem3)
         self.pbCancel = QtGui.QPushButton(Form)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout.addWidget(self.pbCancel)
@@ -96,6 +101,7 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Edit event", None))
         self.label.setText(_translate("Form", "Time", None))
         self.teTime.setDisplayFormat(_translate("Form", "hh:mm:ss.zzz", None))
+        self.pb_set_to_current_time.setText(_translate("Form", "Set to current time", None))
         self.lbSubject.setText(_translate("Form", "Subject", None))
         self.label_2.setText(_translate("Form", "Code", None))
         self.label_4.setText(_translate("Form", "Comment", None))

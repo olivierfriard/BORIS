@@ -72,7 +72,7 @@ from matplotlib import dates
 
 import select_observations
 import dialog
-from edit_event import *
+from edit_event import DlgEditEvent
 from project import *
 import preferences
 import param_panel
@@ -456,7 +456,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.action_obs_list.setIcon(QIcon(":/observations_list"))
         self.actionPlay.setIcon(QIcon(":/play"))
-        '''self.actionPause.setIcon(QIcon(":/pause"))'''
         self.actionReset.setIcon(QIcon(":/reset"))
         self.actionJumpBackward.setIcon(QIcon(":/jump_backward"))
         self.actionJumpForward.setIcon(QIcon(":/jump_forward"))
@@ -2635,6 +2634,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def update_subject(self, subject):
         """
         update the current subject
+
+        Args:
+            subject (str): subject
         """
         if not subject or (self.currentSubject == subject):
             self.currentSubject = ""
@@ -7646,32 +7648,28 @@ item []:
             QMessageBox.warning(self, programName, "The ethogram is not set!")
             return
 
-        editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel())
+        editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
+                                  current_time=0,
+                                  time_format=self.timeFormat,
+                                  show_set_current_time=False)
         editWindow.setWindowTitle("Add a new event")
 
         # send pj to edit_event window
-        editWindow.pj = self.pj
+        editWindow.pj, editWindow.currentModifier = self.pj, ""
 
-        if self.timeFormat == HHMMSS:
-            editWindow.dsbTime.setVisible(False)
-            editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ))
-
-        if self.timeFormat == S:
-            editWindow.teTime.setVisible(False)
-            editWindow.dsbTime.setValue(float(laps))
+        editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ))
+        editWindow.dsbTime.setValue(float(laps))
 
         sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
         editWindow.cobSubject.addItems(sortedSubjects)
 
-        sortedCodes = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+        sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
         editWindow.cobCode.addItems(sortedCodes)
 
         # activate signal
         #editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
-
-        editWindow.currentModifier = ""
 
         if editWindow.exec_():  #button OK
 
@@ -7682,7 +7680,7 @@ item []:
                 newTime = Decimal(editWindow.dsbTime.value())
 
             for idx in self.pj[ETHOGRAM]:
-                if self.pj[ETHOGRAM][idx]["code"] == editWindow.cobCode.currentText():
+                if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
 
                     event = self.full_event(idx)
 
@@ -7692,6 +7690,36 @@ item []:
 
                     self.writeEvent(event, newTime)
                     break
+
+            self.currentStates = self.get_current_states_by_subject(state_behavior_codes(self.pj[ETHOGRAM]),
+                                                    self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                    dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                    newTime)
+
+            # show current subject
+            cm = {}
+            if self.currentSubject:
+                # get index of focal subject (by name)
+                idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
+            else:
+                idx = ""
+            # show current state(s)
+            txt = []
+            for cs in self.currentStates[idx]:
+                for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+                    if ev[EVENT_TIME_FIELD_IDX] > newTime:
+                        break
+                    if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
+                        if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
+                            cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
+                # state and modifiers (if any)
+                txt.append(cs + " ({}) ".format(cm[cs])*(cm[cs] != ""))
+            txt = ", ".join(txt)
+            self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
+
+            self.show_current_states_in_subjects_table()
+
+
 
         if self.pause_before_addevent:
             # restart media
@@ -7817,22 +7845,19 @@ item []:
 
         if self.twEvents.selectedItems():
 
-            editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel())
+            editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
+                                      current_time=self.getLaps(),
+                                      time_format=self.timeFormat,
+                                      show_set_current_time=True)
             editWindow.setWindowTitle("Edit event parameters")
 
             # pass project to window
-            editWindow.pj = self.pj
-            editWindow.currentModifier = ""
+            editWindow.pj, editWindow.currentModifier = self.pj, ""
 
             row = self.twEvents.selectedItems()[0].row()
 
-            if self.timeFormat == HHMMSS:
-                editWindow.dsbTime.setVisible(False)
-                editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), HHMMSSZZZ))
-
-            if self.timeFormat == S:
-                editWindow.teTime.setVisible(False)
-                editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
+            editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), HHMMSSZZZ))
+            editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
 
             sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
@@ -7845,7 +7870,7 @@ item []:
                     format(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]))
                 editWindow.cobSubject.setCurrentIndex(0)
 
-            sortedCodes = sorted([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+            sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
             editWindow.cobCode.addItems(sortedCodes)
 
@@ -7876,7 +7901,7 @@ item []:
                     newTime = Decimal(str(editWindow.dsbTime.value()))
 
                 for key in self.pj[ETHOGRAM]:
-                    if self.pj[ETHOGRAM][key]["code"] == editWindow.cobCode.currentText():
+                    if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                         event = self.full_event(key)
                         event["subject"] = editWindow.cobSubject.currentText()
                         event["comment"] = editWindow.leComment.toPlainText()
@@ -7909,7 +7934,7 @@ item []:
         if self.observationId:
             if self.playerType == VIEWER:
                 QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
-                                                     "It is not allowed to log events in this mode."))
+                                                         "It is not allowed to log events in this mode."))
                 return
 
             if self.twEthogram.selectedIndexes():
@@ -7942,7 +7967,7 @@ item []:
 
         for code in behavior_codes_list:
             try:
-                behavior_idx = [key for key in  self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key]["code"] == code][0]
+                behavior_idx = [key for key in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key]["code"] == code][0]
             except:
                 QMessageBox.critical(self, programName, "The code <b>{}</b> of behavior coding map do not exists in ethogram.".format(code))
                 return
@@ -8097,7 +8122,7 @@ item []:
                 sliderPos = self.video_slider.value() / (slider_maximum - 1)
                 videoPosition = sliderPos * self.dw_player[0].mediaplayer.get_length()
                 self.dw_player[0].mediaplayer.set_time(int(videoPosition))
-                self.timer_out(scrollSlider=False)
+                self.timer_out(scroll_slider=False)
                 self.timer_spectro_out()
 
 
@@ -8154,6 +8179,9 @@ item []:
 
 
     def show_current_states_in_subjects_table(self):
+        """
+        show current state(s) for all subjects in subjects widget
+        """
         for idx in sorted_keys(self.pj[SUBJECTS]):
             for j in range(self.twSubjects.rowCount()):
                 if self.twSubjects.item(j, 1).text() == self.pj[SUBJECTS][idx]["name"]:
@@ -8274,7 +8302,7 @@ item []:
 
 
 
-    def timer_out(self, scrollSlider=True):
+    def timer_out(self, scroll_slider=True):
         """
         indicate the video current position and total length for VLC player
         scroll video slider to video position
@@ -8287,8 +8315,6 @@ item []:
 
         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
-            
-
             # cumulative time
             currentTime = self.getLaps() * 1000
 
@@ -8298,7 +8324,6 @@ item []:
 
             # current media time
             try:
-                #mediaTime = self.mediaplayer[0].get_time() # time of FIRST media player
                 mediaTime = self.dw_player[0].mediaplayer.get_time() # time of FIRST media player
             except:
                 print("error on get time")
@@ -8335,7 +8360,6 @@ item []:
                             
                             #print("sync player {} {} with time {} ".format(i + 1, ct / 1000, ct0 / 1000))
                             self.sync_time(i, ct0)
-
 
             currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
@@ -8414,7 +8438,7 @@ item []:
                     self.lb_current_media_time.setText(msg)
 
                     # set video scroll bar
-                    if scrollSlider:
+                    if scroll_slider:
                         self.video_slider.setValue(mediaTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
@@ -8489,7 +8513,15 @@ item []:
             subjects_to_show (list): list of subject to be shown
         """
 
-        self.twSubjects.setRowCount(0)
+        print("subjects_to_show", subjects_to_show)
+
+        self.twSubjects.setRowCount(1)
+        # no focal subject
+        self.twSubjects.setItem(0, 0, QTableWidgetItem(""))
+        self.twSubjects.setItem(0, 1, QTableWidgetItem(NO_FOCAL_SUBJECT))
+        self.twSubjects.setItem(0, 2, QTableWidgetItem(""))
+        self.twSubjects.setItem(0, 3, QTableWidgetItem(""))
+
         if self.pj[SUBJECTS]:
             for idx in sorted_keys(self.pj[SUBJECTS]):
                 if self.pj[SUBJECTS][idx]["name"] in subjects_to_show:

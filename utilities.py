@@ -642,6 +642,11 @@ def time2seconds(time) -> Decimal:
 def seconds2time(sec):
     """
     convert seconds to hh:mm:ss.sss format
+    
+    Args:
+        sec (Decimal): time in seconds
+    Returns:
+        str: time in format hh:mm:ss
     """
     flagNeg = sec < 0
     sec = abs(sec)
