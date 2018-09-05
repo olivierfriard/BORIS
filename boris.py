@@ -106,7 +106,7 @@ import vlc
 
 # 1
 __version__ = "7.0.6"
-__version_date__ = "2018-08-27"
+__version_date__ = "2018-09-05"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
