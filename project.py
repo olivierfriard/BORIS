@@ -1009,23 +1009,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         flag_point_event_present = False
         includePointEvents = NO
         for r in range(0, self.twBehaviors.rowCount()):
-            if self.twBehaviors.item(r, behavioursFields["code"]):
+            if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
                 if "Point" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
                     includePointEvents = dialog.MessageDialog(programName, "Do you want to include point events?", [YES, NO])
                     break
 
         for r in range(self.twBehaviors.rowCount()):
 
-            if self.twBehaviors.item(r, behavioursFields["code"]):
+            if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
 
                 if includePointEvents == YES or (includePointEvents == NO and "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text()):
-                    allBehaviors.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
+                    allBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
 
-                excl[self.twBehaviors.item(r, behavioursFields["code"]).text()] = self.twBehaviors.item(r, behavioursFields["excluded"]).text().split(",")
-                new_excl[self.twBehaviors.item(r, behavioursFields["code"]).text()] = []
+                excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = self.twBehaviors.item(r, behavioursFields["excluded"]).text().split(",")
+                new_excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = []
 
                 if "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
-                    stateBehaviors.append(self.twBehaviors.item(r, behavioursFields["code"]).text())
+                    stateBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
 
         logging.debug("all behaviors: {}".format(allBehaviors))
         logging.debug("stateBehaviors: {}".format(stateBehaviors))
@@ -1037,35 +1037,38 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         logging.debug("exclusion matrix {0}".format(excl))
 
-        # columns contain state events
+        # first row contain state events
         ex.twExclusions.setColumnCount(len(stateBehaviors))
         ex.twExclusions.setHorizontalHeaderLabels(stateBehaviors)
 
-        # rows contains all events
+        # first column contains all events
         ex.twExclusions.setRowCount(len(allBehaviors))
         ex.twExclusions.setVerticalHeaderLabels(allBehaviors)
 
-        for r in range(len(allBehaviors)):
-            for c in range(len(stateBehaviors)):
-                if stateBehaviors[c] != allBehaviors[r]:
-                    checkBox = QCheckBox()
-                    if stateBehaviors[c] in excl[allBehaviors[r]]:
-                        checkBox.setChecked(True)
-                    ex.twExclusions.setCellWidget(r, c, checkBox)
+        ex.checkboxes = {}
+        for r, r_name in enumerate(allBehaviors):
+            for c, c_name in enumerate(stateBehaviors):
+                if c_name != r_name:
+                    ex.checkboxes["{}|{}".format(r_name, c_name)] = QCheckBox()
+                    if stateBehaviors[c] in excl[r_name]:
+                        ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
+                    ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
 
         if ex.exec_():
 
-            for r in range(len(allBehaviors)):
-                for c in range(len(stateBehaviors)):
-                    if stateBehaviors[c] != allBehaviors[r]:
-                        checkBox = ex.twExclusions.cellWidget(r, c)
-                        if checkBox.isChecked():
+            for r, r_name in enumerate(allBehaviors):
+                for c, c_name in enumerate(stateBehaviors):
+                    if c_name != r_name:
+                        '''checkBox = ex.twExclusions.cellWidget(r, c)'''
+                        if ex.twExclusions.cellWidget(r, c).isChecked():
 
+                            '''
                             s1 = stateBehaviors[c]
                             s2 = allBehaviors[r]
+                            '''
 
-                            if s1 not in new_excl[s2]:
-                                new_excl[s2].append(s1)
+                            if c_name not in new_excl[r_name]:
+                                new_excl[r_name].append(c_name)
 
             logging.debug("new exclusion matrix {0}".format(new_excl))
 
