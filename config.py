@@ -169,7 +169,7 @@ EVENT_COMMENT_FIELD_IDX = 4
 
 SUBJECT_NAME_FIELD_IDX = 1
 
-LIVE = 'LIVE'
+LIVE = "LIVE"
 MEDIA = 'MEDIA'
 VIEWER = 'VIEWER'
 
@@ -214,9 +214,8 @@ OBSERVATIONS = 'observations'
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
-OPENCV = 'opencv'
-VLC = 'vlc'
-FFMPEG = 'ffmpeg'
+VLC = "vlc"
+FFMPEG = "ffmpeg"
 
 MEDIA_FILE_INFO = "media_file_info"
 

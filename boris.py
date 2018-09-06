@@ -104,9 +104,10 @@ import time_budget_functions
 
 import vlc
 
-# 1
-__version__ = "7.0.6"
-__version_date__ = "2018-09-05"
+logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
+
+__version__ = "7.0.7"
+__version_date__ = "2018-09-06"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -276,6 +277,7 @@ class Click_label(QLabel):
         """
         self.mouse_pressed_signal.emit(self.id_, event)
 
+
 class Video_frame(QFrame):
     def sizeHint(self):
         return QtCore.QSize(150, 75)
@@ -324,6 +326,7 @@ class DW(QDockWidget):
         self.w.layout().addWidget(self.frame_viewer)
         self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
+
     def volume_slider_moved(self):
         self.volume_slider_moved_signal.emit(self.id_, self.volume_slider.value())
 
@@ -332,6 +335,9 @@ class DW(QDockWidget):
         """
         key pressed on dock widget
         """
+
+        print("key press event from DW", self.id_)
+
         self.key_pressed_signal.emit(event)
 
 
@@ -340,10 +346,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     instance = vlc.Instance()
 
-    #mediaplayer = []
-    #mediaListPlayer = []
-    #media_list = []
-    dw_player = []
+    #dw_player = []
 
     pj = dict(EMPTY_PROJECT)
     project = False
@@ -380,9 +383,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # data structures for external data plot
     plot_data = {}
     ext_data_timer_list = []
-
-    frame_viewer1_mem_geometry = None
-    frame_viewer2_mem_geometry = None
 
     projectFileName = ""
     mediaTotalLength = None
@@ -445,12 +445,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     recent_projects = []
 
 
-    def __init__(self, availablePlayers, ffmpeg_bin, parent=None):
+    def __init__(self, ffmpeg_bin, parent=None):
 
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
-        self.availablePlayers = availablePlayers
         self.ffmpeg_bin = ffmpeg_bin
         # set icons
         self.setWindowIcon(QIcon(":/logo"))
@@ -492,9 +491,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbLogoUnito.setScaledContents(False)
         self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
-        #self.toolBar.setEnabled(False)
         self.toolBar.setEnabled(True)
-
 
         # start with dock widget invisible
         self.dwObservations.setVisible(False)
@@ -546,6 +543,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.FFmpegGlobalFrame = 0
 
+        '''
+        self.dw_player = []
         # create dock widgets for players
         for i in range(N_PLAYER):
             self.dw_player.append(DW(i))
@@ -557,6 +556,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[-1])
             else:
                 self.addDockWidget(Qt.BottomDockWidgetArea, self.dw_player[-1])
+        '''
 
         self.menu_options()
 
@@ -3299,13 +3299,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("initialize new observation for VLC")
 
-        useMediaFromProjectDirectory = NO
-
-        #if not self.check_if_media_available():
         ok, msg = project_functions.check_if_media_available(self.pj[OBSERVATIONS][self.observationId],
                                                           self.projectFileName)
         if not ok:
-
             QMessageBox.critical(self, programName, msg + ("<br><br>The observation will be opened in VIEW mode.<br>"
                                                          "It will not be possible to log events.<br>"
                                                          "Modify the media path to point an existing media file "
@@ -3318,11 +3314,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dwObservations.setVisible(True)
             return True
 
-
         self.playerType, self.playMode = VLC, VLC
         self.fps = 0
         self.dwObservations.setVisible(True)
-        
+
         self.w_obs_info.setVisible(True)
         self.w_live.setVisible(False)
 
@@ -3331,6 +3326,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_current_media_time.setFont(font)
 
         # add all media files to media lists
+
+        self.dw_player = []
+        # create dock widgets for players
+        for i in range(N_PLAYER):
+            self.dw_player.append(DW(i))
+            #self.dw_player[-1].setGeometry(100 + i*20, 100 + i*20, 256, 256)
+            self.dw_player[-1].setFloating(False)
+            self.dw_player[-1].setVisible(False)
+
+            if i < 4:
+                self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[-1])
+            else:
+                self.addDockWidget(Qt.BottomDockWidgetArea, self.dw_player[-1])
+
+        
         for i in range(N_PLAYER):
             n_player = str(i + 1)
 
@@ -3339,12 +3349,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 continue
 
             self.dw_player[i].setVisible(True)
-            self.dw_player[i]
 
             # for receiving mouse event from dock widget
             self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
+
             # for receiving event from colume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
 
@@ -4244,18 +4254,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
                     return
 
-
         if self.playerType == LIVE:
             self.liveObservationStarted = False
             self.liveStartTime = None
             self.liveTimer.stop()
 
-
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-
             for x in self.ext_data_timer_list:
                 x.stop()
-
             for pd in self.plot_data:
                 self.plot_data[pd].close_plot()
 
@@ -4265,6 +4271,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for i in range(N_PLAYER):
                 self.dw_player[i].setVisible(False)
+
+            del self.dw_player
 
             self.actionFrame_by_frame.setChecked(False)
             self.playMode = VLC
@@ -6524,12 +6532,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mode (str): new/edit 
         """
 
-        logging.debug("self.projectChanged: {}".format(self.projectChanged))
-
+        # ask if current observation should be closed to edit the project
         if self.observationId:
-            QMessageBox.warning(self, programName, ("You must close the current observation before creating"
-                                                    " a new project or modifying the current project."))
-            return
+            response = dialog.MessageDialog(programName,
+                                            "The current observation will be closed. Do you want to continue?",
+                                            [YES, NO])
+            if response == NO:
+                return
+            else:
+                self.close_observation()
 
         if mode == NEW:
             if self.projectChanged:
@@ -8042,29 +8053,27 @@ item []:
 
         ver = 'v. {0}'.format(__version__)
 
-        players = []
-        players.append("VLC media player")
-        players.append("version {}".format(bytes_to_str(vlc.libvlc_get_version())))
+        programs_versions = ["VLC media player"]
+        programs_versions.append("version {}".format(bytes_to_str(vlc.libvlc_get_version())))
         if vlc.plugin_path:
-            players.append("VLC libraries path: {}".format(vlc.plugin_path))
+            programs_versions.append("VLC libraries path: {}".format(vlc.plugin_path))
 
-        players.append("\nFFmpeg")
-        players.append(subprocess.getoutput('"{}" -version'.format(self.ffmpeg_bin)).split("\n")[0])
+        # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
             ffmpeg_true_path = subprocess.getoutput("which ffmpeg")
         else:
             ffmpeg_true_path = self.ffmpeg_bin
-        players.append("Path: {}".format(ffmpeg_true_path))
+        programs_versions.extend(["\nFFmpeg",
+                                  subprocess.getoutput('"{}" -version'.format(self.ffmpeg_bin)).split("\n")[0],
+                                  "Path: {}".format(ffmpeg_true_path),
+                                  "https://www.ffmpeg.org"])
 
         # matplotlib
-        players.append("\nMatplotlib")
-        players.append("version {}".format(matplotlib.__version__))
+        programs_versions.extend(["\nMatplotlib", "version {}".format(matplotlib.__version__), "https://matplotlib.org"])
 
         # graphviz
         gv_result = subprocess.getoutput("dot -V")
-        gv_version = gv_result if "graphviz" in gv_result else "not installed"
-        players.append("\nGraphViz")
-        players.append(gv_version)
+        programs_versions.extend(["\nGraphViz", gv_result if "graphviz" in gv_result else "not installed", "https://www.graphviz.org/"])
 
         about_dialog = QMessageBox()
         about_dialog.setIconPixmap(QPixmap(":/logo"))
@@ -8095,13 +8104,13 @@ item []:
 
         details = ("Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}\n"
         "CPU type: {cpu_info}\n\n"
-        "{players}").format(python_ver=platform.python_version(),
+        "{programs_versions}").format(python_ver=platform.python_version(),
                             architecture="64-bit" if sys.maxsize > 2**32 else "32-bit",
                             pyqt_ver=PYQT_VERSION_STR,
                             system=platform.system(),
                             qt_ver=QT_VERSION_STR,
                             cpu_info=platform.machine(),
-                            players="\n".join(players))
+                            programs_versions="\n".join(programs_versions))
 
         about_dialog.setDetailedText(details)
 
@@ -8528,10 +8537,8 @@ item []:
 
         # no focal subject
         self.twSubjects.setRowCount(1)
-        self.twSubjects.setItem(0, 0, QTableWidgetItem(""))
-        self.twSubjects.setItem(0, 1, QTableWidgetItem(NO_FOCAL_SUBJECT))
-        self.twSubjects.setItem(0, 2, QTableWidgetItem(""))
-        self.twSubjects.setItem(0, 3, QTableWidgetItem(""))
+        for idx, s in enumerate(["", NO_FOCAL_SUBJECT, "", ""]):
+            self.twSubjects.setItem(0, idx, QTableWidgetItem(s))
 
         if self.pj[SUBJECTS]:
             for idx in sorted_keys(self.pj[SUBJECTS]):
@@ -8621,6 +8628,10 @@ item []:
             # check if a same event is already in events list (time, subject, code)
             # "row" present in case of event editing
     
+            
+            print(self.observationId, memTime, self.currentSubject, event["code"])
+            
+            print(self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]))
             if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
                 _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
                 return
@@ -8884,6 +8895,7 @@ item []:
     def keyPressEvent(self, event):
 
         logging.debug("text #{0}#  event key: {1} ".format(event.text(), event.key()))
+        print("text #{0}#  event key: {1} ".format(event.text(), event.key()))
 
         '''
         if (event.modifiers() & Qt.ShiftModifier):   # SHIFT
@@ -10268,26 +10280,18 @@ if __name__ == "__main__":
             time.sleep(0.001)
             app.processEvents()
 
-    availablePlayers = []
-
-    # load VLC
-    import vlc
+    # check VLC
     if vlc.dll is None:
-        logging.critical("VLC media player not found")
-        QMessageBox.critical(None, programName, "This program requires the VLC media player.<br>Go to http://www.videolan.org/vlc",
-                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
+        QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        logging.critical(msg)
         sys.exit(1)
 
-    availablePlayers.append(VLC)
-
-    logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        QMessageBox.critical(None, programName, ("The VLC media player seems very old ({}).<br>"
-                                                 "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version()),
-                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-
-        logging.critical(("The VLC media player seems a little bit old... ({})."
-                          "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version()))
+        msg = ("The VLC media player seems very old ({}). "
+               "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version())
+        QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        logging.critical(msg)
         sys.exit(2)
 
     # check FFmpeg
@@ -10307,7 +10311,7 @@ if __name__ == "__main__":
                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     app.setApplicationName(programName)
-    window = MainWindow(availablePlayers, ffmpeg_bin)
+    window = MainWindow(ffmpeg_bin)
 
     # open project/start observation on command line
     project_to_open = ""

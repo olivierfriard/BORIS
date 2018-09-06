@@ -183,8 +183,8 @@ class observationsList_widget(QDialog):
             return
 
         response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?",
-                                        ["Open", "Edit", config.CANCEL])
-        if response == "Open":
+                                        ["Start", "Edit", config.CANCEL])
+        if response == "Start":
             self.done(2)
         if response == "Edit":
             self.done(3)
