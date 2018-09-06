@@ -148,6 +148,8 @@ class Observation(QDialog, Ui_Form):
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
 
         self.cbVisualizeSpectrogram.setEnabled(False)
+        # disabled due to problem when video goes back
+        self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
         self.tabWidget.setCurrentIndex(0)
@@ -701,7 +703,8 @@ class Observation(QDialog, Ui_Form):
                                  file_path=file_path))
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+        # disabled due to problem when video goes back
+        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
     def add_media_from_dir(self, n_player, flag_path):
@@ -731,7 +734,8 @@ class Observation(QDialog, Ui_Form):
 
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+        # disabled due to problem when video goes back
+        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
     def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
@@ -788,7 +792,8 @@ class Observation(QDialog, Ui_Form):
                         pass
 
             self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-            self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+            # disabled due to problem when video goes back
+            # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
         else:
             QMessageBox.warning(self, programName, "No media file selected")
 
