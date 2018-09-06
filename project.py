@@ -27,9 +27,11 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+    from project_ui5 import Ui_dlgProject
 except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
+    from project_ui import Ui_dlgProject
 
 import logging
 import json
@@ -41,18 +43,11 @@ import urllib.request
 import urllib.error
 import pathlib
 
-
 from utilities import sorted_keys
 from config import *
 import add_modifier
 import dialog
 import export_observation
-
-
-if QT_VERSION_STR[0] == "4":
-    from project_ui import Ui_dlgProject
-else:
-    from project_ui5 import Ui_dlgProject
 
 
 class ExclusionMatrix(QDialog):
@@ -133,6 +128,9 @@ class BehavioralCategories(QDialog):
 
         self.pj = pj
         self.setWindowTitle("Behavioral categories")
+        
+        self.renamed = None
+        self.removed = None
 
         self.vbox = QVBoxLayout(self)
 
@@ -153,8 +151,12 @@ class BehavioralCategories(QDialog):
         self.pbAddCategory.clicked.connect(self.pbAddCategory_clicked)
         self.pbRemoveCategory = QPushButton("Remove category")
         self.pbRemoveCategory.clicked.connect(self.pbRemoveCategory_clicked)
+        self.pb_rename_category = QPushButton("Rename category")
+        self.pb_rename_category.clicked.connect(self.pb_rename_category_clicked)
+
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.hbox0.addItem(spacerItem)
+        self.hbox0.addWidget(self.pb_rename_category)
         self.hbox0.addWidget(self.pbRemoveCategory)
         self.hbox0.addWidget(self.pbAddCategory)
         self.vbox.addLayout(self.hbox0)
@@ -190,17 +192,53 @@ class BehavioralCategories(QDialog):
                     behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
 
             if behaviors_in_category:
-                if dialog.MessageDialog(programName, ("Some behavior belong to the <b>{1}</b>:<br>"
-                                                      "{0}<br>"
-                                                      "<br>Some features may not be available anymore.<br>"
-                                                      "Are you sure to remove this behavioral category ?").format(
-                                                                                        "<br>".join(behaviors_in_category),
-                                                                                        category_to_remove),
-                                        [YES, CANCEL]) == YES:
+                if dialog.MessageDialog(programName,
+                                        ("Some behavior belong to the <b>{1}</b> to remove:<br>"
+                                         "{0}<br>"
+                                         "<br>Some features may not be available anymore.<br>").format("<br>".join(behaviors_in_category),
+                                                                                                       category_to_remove),
+                                        ["Remove category", CANCEL]) == "Remove category":
 
                     self.lw.takeItem(self.lw.row(SelectedItem))
+                    self.removed = category_to_remove
+                    self.accept()
             else:
                 self.lw.takeItem(self.lw.row(SelectedItem))
+                self.removed = category_to_remove
+                self.accept()
+
+
+    def pb_rename_category_clicked(self):
+        """
+        rename the selected behavioral category
+        """
+        for SelectedItem in self.lw.selectedItems():
+            # check if behavioral category is in use
+            category_to_rename = self.lw.item(self.lw.row(SelectedItem)).text().strip()
+            behaviors_in_category = []
+            for idx in self.pj[ETHOGRAM]:
+                if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] == category_to_rename:
+                    behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
+
+            flag_rename = False
+            if behaviors_in_category:
+                if dialog.MessageDialog(programName,
+                                        ("Some behavior belong to the <b>{1}</b> to rename:<br>"
+                                         "{0}<br>").format("<br>".join(behaviors_in_category),
+                                                           category_to_rename),
+                                        ["Rename category", CANCEL]) == "Rename category":
+                    flag_rename = True
+            else:
+                flag_rename = True
+
+            if flag_rename:
+                new_category_name, ok = QInputDialog.getText(self, "Rename behavioral category", "New category name:")
+                if ok:
+                    self.lw.item( self.lw.indexFromItem(SelectedItem).row() ).setText(new_category_name)
+
+                    # check behaviors belonging to the renamed category
+                    self.renamed = [category_to_rename, new_category_name]
+                    self.accept()
 
 
 class projectDialog(QDialog, Ui_dlgProject):
@@ -457,24 +495,29 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
 
             # check if behavior belong to removed category 
-            for row in range(self.twBehaviors.rowCount()):
-                if self.twBehaviors.item(row, behavioursFields["category"]):
-    
-                    if (self.twBehaviors.item(row, behavioursFields["category"]).text()
-                       and self.twBehaviors.item(row, behavioursFields["category"]).text() not in self.pj[BEHAVIORAL_CATEGORIES]):
-                        if dialog.MessageDialog(programName, ("The <b>{}</b> behavior belongs to the behavioral category <b>{}</b>"
-                                                              "that is not in the behavioral categories list.<br><br>"
-                                                              "Remove the behavior from category?").format(self.twBehaviors.item(row, behavioursFields["code"]).text(),
-                                                                                                           self.twBehaviors.item(row, behavioursFields["category"]).text()),
-                                        [YES, CANCEL]) == YES:
-                            self.twBehaviors.item(row, behavioursFields["category"]).setText("")
+            if bc.removed:
+                for row in range(self.twBehaviors.rowCount()):
+                    if self.twBehaviors.item(row, behavioursFields["category"]):
+                        if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.removed:
+                            if dialog.MessageDialog(programName, ("The <b>{}</b> behavior belongs to a behavioral category <b>{}</b> "
+                                                                  "that is no more in the behavioral categories list.<br><br>"
+                                                                  "Remove the behavior from category?").format(self.twBehaviors.item(row, behavioursFields["code"]).text(),
+                                                                                                               self.twBehaviors.item(row, behavioursFields["category"]).text()),
+                                            [YES, CANCEL]) == YES:
+                                self.twBehaviors.item(row, behavioursFields["category"]).setText("")
+            if bc.renamed:
+                for row in range(self.twBehaviors.rowCount()):
+                    if self.twBehaviors.item(row, behavioursFields["category"]):
+                        if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.renamed[0]:
+                            self.twBehaviors.item(row, behavioursFields["category"]).setText(bc.renamed[1])
+
 
 
 
     def twBehaviors_cellDoubleClicked(self, row, column):
         """
         manage double-click on ethogram table:
-        * behavior category
+        * behavioral category
         * modifiers
         * exclusion
         * modifiers coding map
@@ -482,7 +525,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         Args:
             row (int): row double-clicked
             column (int): column double-clicked
-
         """
 
         # check if double click on excluded column
@@ -491,7 +533,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check if double click on 'coding map' column
         if column == behavioursFields["coding map"]:
-
             if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
                 self.behaviorTypeChanged(row)
             else:
@@ -500,8 +541,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         # check if double click on category
         if column == behavioursFields["type"]:
             self.behavior_type_doubleclicked(row)
-        
-        
+
+        # behavioral category
         if column == behavioursFields["category"]:
             self.category_doubleclicked(row)
 

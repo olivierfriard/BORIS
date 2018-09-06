@@ -328,16 +328,16 @@ class DW(QDockWidget):
 
 
     def volume_slider_moved(self):
+        """
+        emit signal when volume slider moved
+        """
         self.volume_slider_moved_signal.emit(self.id_, self.volume_slider.value())
 
 
     def keyPressEvent(self, event):
         """
-        key pressed on dock widget
+        emit signal when key pressed on dock widget
         """
-
-        print("key press event from DW", self.id_)
-
         self.key_pressed_signal.emit(event)
 
 
@@ -8897,7 +8897,6 @@ item []:
     def keyPressEvent(self, event):
 
         logging.debug("text #{0}#  event key: {1} ".format(event.text(), event.key()))
-        print("text #{0}#  event key: {1} ".format(event.text(), event.key()))
 
         '''
         if (event.modifiers() & Qt.ShiftModifier):   # SHIFT
