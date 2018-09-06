@@ -176,36 +176,42 @@ class BehavioralCategories(QDialog):
 
 
     def pbAddCategory_clicked(self):
+        """
+        add a behavioral category
+        """
         category, ok = QInputDialog.getText(self, "New behavioral category", "Category name:")
         if ok:
             self.lw.addItem(QListWidgetItem(category))
 
 
     def pbRemoveCategory_clicked(self):
-        for SelectedItem in self.lw.selectedItems():
+        """
+        remove the selected behavioral category
+        """
 
+        for SelectedItem in self.lw.selectedItems():
             # check if behavioral category is in use
             category_to_remove = self.lw.item(self.lw.row(SelectedItem)).text().strip()
             behaviors_in_category = []
             for idx in self.pj[ETHOGRAM]:
                 if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx] and self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] == category_to_remove:
                     behaviors_in_category.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
-
+            flag_remove = False
             if behaviors_in_category:
-                if dialog.MessageDialog(programName,
+                flag_remove = dialog.MessageDialog(programName,
                                         ("Some behavior belong to the <b>{1}</b> to remove:<br>"
                                          "{0}<br>"
                                          "<br>Some features may not be available anymore.<br>").format("<br>".join(behaviors_in_category),
                                                                                                        category_to_remove),
-                                        ["Remove category", CANCEL]) == "Remove category":
-
-                    self.lw.takeItem(self.lw.row(SelectedItem))
-                    self.removed = category_to_remove
-                    self.accept()
+                                        ["Remove category", CANCEL]) == "Remove category"
             else:
+                flag_remove = True
+            
+            if flag_remove:
                 self.lw.takeItem(self.lw.row(SelectedItem))
                 self.removed = category_to_remove
                 self.accept()
+
 
 
     def pb_rename_category_clicked(self):
@@ -222,20 +228,18 @@ class BehavioralCategories(QDialog):
 
             flag_rename = False
             if behaviors_in_category:
-                if dialog.MessageDialog(programName,
+                flag_rename = dialog.MessageDialog(programName,
                                         ("Some behavior belong to the <b>{1}</b> to rename:<br>"
                                          "{0}<br>").format("<br>".join(behaviors_in_category),
                                                            category_to_rename),
-                                        ["Rename category", CANCEL]) == "Rename category":
-                    flag_rename = True
+                                        ["Rename category", CANCEL]) == "Rename category"
             else:
                 flag_rename = True
 
             if flag_rename:
                 new_category_name, ok = QInputDialog.getText(self, "Rename behavioral category", "New category name:", QLineEdit.Normal, category_to_rename)
                 if ok:
-                    self.lw.item( self.lw.indexFromItem(SelectedItem).row() ).setText(new_category_name)
-
+                    self.lw.item(self.lw.indexFromItem(SelectedItem).row()).setText(new_category_name)
                     # check behaviors belonging to the renamed category
                     self.renamed = [category_to_rename, new_category_name]
                     self.accept()
