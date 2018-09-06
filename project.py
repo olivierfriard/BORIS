@@ -120,6 +120,14 @@ class ExclusionMatrix(QDialog):
                 except:
                     pass
 
+    def cb_clicked(self):
+        for r, r_name in enumerate(self.allBehaviors):
+            for c, c_name in enumerate(self.stateBehaviors):
+                if c_name != r_name:
+                    try:
+                        self.checkboxes["{}|{}".format(c_name, r_name)].setChecked(self.checkboxes["{}|{}".format(r_name, c_name)].isChecked())
+                    except:
+                        pass
 
 class BehavioralCategories(QDialog):
 
@@ -1045,13 +1053,18 @@ class projectDialog(QDialog, Ui_dlgProject):
         ex.twExclusions.setRowCount(len(allBehaviors))
         ex.twExclusions.setVerticalHeaderLabels(allBehaviors)
 
+        ex.allBehaviors = allBehaviors
+        ex.stateBehaviors = stateBehaviors
+
         ex.checkboxes = {}
         for r, r_name in enumerate(allBehaviors):
             for c, c_name in enumerate(stateBehaviors):
                 if c_name != r_name:
                     ex.checkboxes["{}|{}".format(r_name, c_name)] = QCheckBox()
-                    if stateBehaviors[c] in excl[r_name]:
+                    ex.checkboxes["{}|{}".format(r_name, c_name)].clicked.connect(ex.cb_clicked)
+                    if c_name in excl[r_name]:
                         ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
+                        
                     ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
 
         if ex.exec_():
@@ -1059,14 +1072,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             for r, r_name in enumerate(allBehaviors):
                 for c, c_name in enumerate(stateBehaviors):
                     if c_name != r_name:
-                        '''checkBox = ex.twExclusions.cellWidget(r, c)'''
                         if ex.twExclusions.cellWidget(r, c).isChecked():
-
-                            '''
-                            s1 = stateBehaviors[c]
-                            s2 = allBehaviors[r]
-                            '''
-
                             if c_name not in new_excl[r_name]:
                                 new_excl[r_name].append(c_name)
 
