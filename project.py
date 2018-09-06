@@ -232,7 +232,7 @@ class BehavioralCategories(QDialog):
                 flag_rename = True
 
             if flag_rename:
-                new_category_name, ok = QInputDialog.getText(self, "Rename behavioral category", "New category name:")
+                new_category_name, ok = QInputDialog.getText(self, "Rename behavioral category", "New category name:", QLineEdit.Normal, category_to_rename)
                 if ok:
                     self.lw.item( self.lw.indexFromItem(SelectedItem).row() ).setText(new_category_name)
 
