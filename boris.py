@@ -104,10 +104,8 @@ import time_budget_functions
 
 import vlc
 
-logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
-
-__version__ = "7.0.7"
-__version_date__ = "2018-09-06"
+__version__ = "7.0.8"
+__version_date__ = "2018-09-07"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -137,6 +135,8 @@ else:
 if options.version:
     print("version {0} release date: {1}".format(__version__, __version_date__))
     sys.exit(0)
+
+logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
 
 video, live = 0, 1
 FLAG_MATPLOTLIB_INSTALLED = True
@@ -1356,7 +1356,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                      args=(fileNames, horiz_resol, ffmpeg_bin, video_quality,))
 
                 if action == "rotate":
-                    print("rotating")
                     self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
                                                                      args=(fileNames, rotation_idx, ffmpeg_bin,))
 
@@ -2124,8 +2123,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         "view"  to view observation
         """
 
-        print("mode", mode)
-
         if obsId in self.pj[OBSERVATIONS]:
 
             self.observationId = obsId
@@ -2287,7 +2284,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
                 elif self.timeFormat == S:
                     fix_at_time = Decimal(str(w.te.value()))
-                print("fix_at_time",  fix_at_time)
 
                 events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
                                                                   self.pj[ETHOGRAM],
@@ -2314,7 +2310,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for obs_id in selected_observations:
                 r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
                                                                   self.pj[OBSERVATIONS][obs_id])
-                print("msg", msg)
                 if "NOT PAIRED" in msg.upper():
                     fix_at_time = max(x[0] for x in self.pj[OBSERVATIONS][obs_id][EVENTS])
                     events_to_add = project_functions.fix_unpaired_state_events(obs_id,
@@ -2619,8 +2614,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         set volume for player #1
         """
-        print(nplayer, new_volume)
-
         self.dw_player[nplayer].mediaplayer.audio_set_volume(new_volume)
 
 
@@ -2961,8 +2954,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
 
-            print("self.FFmpegGlobalFrame",self.FFmpegGlobalFrame)
-            print("frameCurrentMedia:", frameCurrentMedia)
 
             frame_image_path = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
                                                                                                sep=os.sep,
@@ -7459,7 +7450,6 @@ item []:
             for i in range(N_PLAYER):
                 if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                     all_fps.extend(list(self.dw_player[i].fps.values()))
-            print("all FPS", all_fps)
 
             if len(set(all_fps)) != 1:
                 logging.warning("The frame-by-frame mode will not be available because the video files have different frame rates")
@@ -7980,7 +7970,7 @@ item []:
             try:
                 behavior_idx = [key for key in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key]["code"] == code][0]
             except:
-                QMessageBox.critical(self, programName, "The code <b>{}</b> of behavior coding map do not exists in ethogram.".format(code))
+                QMessageBox.critical(self, programName, "The code <b>{}</b> of behavior coding map does not exist in ethogram.".format(code))
                 return
 
             event = self.full_event(behavior_idx)
@@ -8277,9 +8267,6 @@ item []:
 
                 media_idx = self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())
 
-                print(self.dw_player[n_player].media_durations)
-                print( sum(self.dw_player[n_player].media_durations[0: media_idx]), new_time,  sum(self.dw_player[n_player].media_durations[0: media_idx+1]))
-
                 if  sum(self.dw_player[n_player].media_durations[0: media_idx]) < new_time < sum(self.dw_player[n_player].media_durations[0: media_idx+1]):
                     # correct media
 
@@ -8368,19 +8355,15 @@ item []:
 
             t0 = self.dw_player[0].mediaplayer.get_time()
             ct0 = self.getLaps() * 1000
-            # print("ct0 {} ".format(ct0 / 1000))
+
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
                 for i in range(1, N_PLAYER):
                     if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                         
                         t = self.dw_player[i].mediaplayer.get_time()
                         ct = self.getLaps(n_player=i) * 1000
-                        #print("ct {} ".format(ct / 1000))
-                        #print("abs", abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)))
-    
+   
                         if abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)) >= 300:
-                            
-                            #print("sync player {} {} with time {} ".format(i + 1, ct / 1000, ct0 / 1000))
                             self.sync_time(i, ct0)
 
             currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
@@ -8630,10 +8613,6 @@ item []:
             # check if a same event is already in events list (time, subject, code)
             # "row" present in case of event editing
     
-            
-            print(self.observationId, memTime, self.currentSubject, event["code"])
-            
-            print(self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]))
             if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
                 _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
                 return
@@ -9028,6 +9007,8 @@ item []:
             elif ek != Qt.Key_Enter:
                 '''ek_unichr = chr(ek)'''
                 ek_unichr = ek_text
+            elif (ek == Qt.Key_Enter and event.text()): # click from coding pad or subjects pad
+                ek_unichr = ek_text
 
             logging.debug("ek_unichr {}".format(ek_unichr))
 
@@ -9186,9 +9167,7 @@ item []:
                         '''self.pause_video()'''
 
                     if time_ >= self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
-                        print("set to ",self.dw_player[0].mediaplayer.get_media().get_duration())
                         self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_media().get_duration() - 100)
-                        #self.mediaplayer.stop()
                     else:
                         self.dw_player[0].mediaplayer.set_time(int(newTime))
 

@@ -207,9 +207,6 @@ if dll is None:
     dll, plugin_path  = find_lib()
 # END OF MODIF #
 
-print("dll", dll)
-print("plugin_path", plugin_path)
-
 class VLCException(Exception):
     """Exception raised by libvlc methods.
     """
