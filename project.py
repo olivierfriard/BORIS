@@ -62,30 +62,42 @@ class ExclusionMatrix(QDialog):
         hbox.addWidget(self.label)
 
         self.twExclusions = QTableWidget()
+        self.twExclusions.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.twExclusions.setAlternatingRowColors(True)
+        self.twExclusions.setEditTriggers(QAbstractItemView.NoEditTriggers)
         hbox.addWidget(self.twExclusions)
 
-        hbox2 = QHBoxLayout(self)
+        hbox2 = QHBoxLayout()
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
-        self.pb_select_all = QPushButton("Select all")
+        self.pb_select_all = QPushButton("Check all")
         self.pb_select_all.clicked.connect(lambda: self.pb_cb_selection("select"))
         hbox2.addWidget(self.pb_select_all)
 
-        self.pb_unselect_all = QPushButton("Unselect all")
+        self.pb_unselect_all = QPushButton("Uncheck all")
         self.pb_unselect_all.clicked.connect(lambda: self.pb_cb_selection("unselect"))
         hbox2.addWidget(self.pb_unselect_all)
 
-        self.pb_revert_selection = QPushButton("Revert selection")
+        self.pb_revert_selection = QPushButton("Revert check")
         self.pb_revert_selection.clicked.connect(lambda: self.pb_cb_selection("revert"))
         hbox2.addWidget(self.pb_revert_selection)
 
+        self.pb_check_selected = QPushButton("Check selected")
+        self.pb_check_selected.clicked.connect(lambda: self.pb_selected(True))
+        hbox2.addWidget(self.pb_check_selected)
+
+        self.pb_uncheck_selected = QPushButton("Uncheck selected")
+        self.pb_uncheck_selected.clicked.connect(lambda: self.pb_selected(False))
+        hbox2.addWidget(self.pb_uncheck_selected)
+
+
         self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
+        self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
 
         self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.pbOK_clicked)
+        self.pbOK.clicked.connect(self.accept)
         hbox2.addWidget(self.pbOK)
 
         hbox.addLayout(hbox2)
@@ -95,18 +107,40 @@ class ExclusionMatrix(QDialog):
         self.setGeometry(100, 100, 600, 400)
 
 
-    def pbOK_clicked(self):
+    '''def pbOK_clicked(self):
         self.accept()
 
 
     def pbCancel_clicked(self):
         self.reject()
+    '''
+
+    def pb_selected(self, to_check):
+        """
+        check/uncheck the checkbox in selected cells
+        
+        Args:
+            to_check (boolean): True to check else False
+        """
+        for selected_range in self.twExclusions.selectedRanges():
+            for row in range(selected_range.topRow(), selected_range.bottomRow() + 1):
+                for column in range(self.twExclusions.columnCount()):
+                    try:
+                        self.twExclusions.cellWidget(row, column).setChecked(to_check)
+                    except:
+                        pass
+        self.cb_clicked()
 
 
     def pb_cb_selection(self, mode):
         """
         button for checkbox selection/deselection and revert selection
+
+        Args:
+            mode (str): select, unselect, revert
+
         """
+
         for r in range(self.twExclusions.rowCount()):
             for c in range(self.twExclusions.columnCount()):
                 if mode == "select":
@@ -120,7 +154,11 @@ class ExclusionMatrix(QDialog):
                 except:
                     pass
 
+
     def cb_clicked(self):
+        """
+        de/select the corresponding checkbox
+        """
         for r, r_name in enumerate(self.allBehaviors):
             for c, c_name in enumerate(self.stateBehaviors):
                 if c_name != r_name:
@@ -128,6 +166,7 @@ class ExclusionMatrix(QDialog):
                         self.checkboxes["{}|{}".format(c_name, r_name)].setChecked(self.checkboxes["{}|{}".format(r_name, c_name)].isChecked())
                     except:
                         pass
+
 
 class BehavioralCategories(QDialog):
 
@@ -1057,6 +1096,29 @@ class projectDialog(QDialog, Ui_dlgProject):
         ex.stateBehaviors = stateBehaviors
 
         ex.checkboxes = {}
+
+        for c, c_name in enumerate(stateBehaviors):
+            flag_left_bottom = False
+            for r, r_name in enumerate(allBehaviors):
+                if c_name == r_name:
+                    flag_left_bottom = True
+
+                if c_name != r_name:
+                    ex.checkboxes["{}|{}".format(r_name, c_name)] = QCheckBox()
+
+                    if flag_left_bottom:
+                        # hide if cell in left-bottom part of table
+                        ex.checkboxes["{}|{}".format(r_name, c_name)].setEnabled(False)
+
+                    ex.checkboxes["{}|{}".format(r_name, c_name)].clicked.connect(ex.cb_clicked)
+                    if c_name in excl[r_name]:
+                        ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
+                    ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
+            print()
+                
+
+
+        '''
         for r, r_name in enumerate(allBehaviors):
             for c, c_name in enumerate(stateBehaviors):
                 if c_name != r_name:
@@ -1066,11 +1128,14 @@ class projectDialog(QDialog, Ui_dlgProject):
                         ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
                         
                     ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
+        '''
+
+        # check corresponding checkbox
+        ex.cb_clicked()
 
         if ex.exec_():
-
-            for r, r_name in enumerate(allBehaviors):
-                for c, c_name in enumerate(stateBehaviors):
+            for c, c_name in enumerate(stateBehaviors):
+                for r, r_name in enumerate(allBehaviors):
                     if c_name != r_name:
                         if ex.twExclusions.cellWidget(r, c).isChecked():
                             if c_name not in new_excl[r_name]:
@@ -1083,8 +1148,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if (includePointEvents == YES 
                    or (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
                     for e in excl:
-                        if e == self.twBehaviors.item(r, behavioursFields["code"]).text():
-                            item = QTableWidgetItem(','.join(new_excl[e]))
+                        if e == self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text():
+                            item = QTableWidgetItem(",".join(new_excl[e]))
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
                             self.twBehaviors.setItem(r, behavioursFields["excluded"], item)
@@ -1865,7 +1930,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
                   self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
             w.setEnabled(True)
-
 
 
     def cancel_converter(self):
