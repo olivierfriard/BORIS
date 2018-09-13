@@ -1255,6 +1255,11 @@
     <string>Close observation</string>
    </property>
   </action>
+  <action name="actionFilter_events">
+   <property name="text">
+    <string>Filter events</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

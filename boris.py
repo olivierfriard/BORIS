@@ -741,6 +741,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionAdd_event.triggered.connect(self.add_event)
         self.actionEdit_event.triggered.connect(self.edit_event)
+        self.actionFilter_events.triggered.connect(self.filter_events)
 
         self.actionExport_observations_list.triggered.connect(self.export_observations_list_clicked)
 
@@ -875,7 +876,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionViewBehavior.triggered.connect(self.view_behavior)
         self.twEthogram.addAction(self.actionViewBehavior)
 
-        self.actionFilterBehaviors.triggered.connect(self.filter_behaviors)
+        self.actionFilterBehaviors.triggered.connect(lambda: self.filter_behaviors(table=ETHOGRAM))
         self.twEthogram.addAction(self.actionFilterBehaviors)
 
         self.actionShowAllBehaviors.triggered.connect(self.show_all_behaviors)
@@ -889,13 +890,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShowAllSubjects.triggered.connect(self.show_all_subjects)
         self.twSubjects.addAction(self.actionShowAllSubjects)
 
-        # Actions for twEvents context menu
+        # Actions for twEvents menu
         self.twEvents.setContextMenuPolicy(Qt.ActionsContextMenu)
 
         self.twEvents.addAction(self.actionAdd_event)
         self.twEvents.addAction(self.actionEdit_selected_events)
         self.twEvents.addAction(self.actionFind_events)
         self.twEvents.addAction(self.actionFind_replace_events)
+        self.twEvents.addAction(self.actionFilter_events)
 
         separator2 = QAction(self)
         separator2.setSeparator(True)
@@ -1552,9 +1554,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
 
 
-    def filter_behaviors(self):
+    def filter_behaviors(self, table=ETHOGRAM):
         """
         allow user to filter behaviors in ethogram
+        
+        Args:
+            table (str): table where behaviors will be filtered
         """
 
         if not self.pj[ETHOGRAM]:
@@ -1570,7 +1575,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             w.setVisible(False)
 
         # behaviors filtered
-        filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+        if table == ETHOGRAM:
+            filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+        else:
+            filtered_behaviors = []
 
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
@@ -1625,11 +1633,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if paramPanelWindow.exec_():
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
                 self.projectChanged = True
-            self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
-            # update subjects pad
-            if hasattr(self, "codingpad"):
-                self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
-                self.codingpad.compose()
+            
+            if table == ETHOGRAM:
+                self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
+                # update subjects pad
+                if hasattr(self, "codingpad"):
+                    self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+                    self.codingpad.compose()
 
     def filter_subjects(self):
         """
@@ -2814,7 +2824,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 '''
                 self.FFmpegGlobalFrame -= 1
                 self.ffmpegTimerOut()
-                
 
             # plot colors
             self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
@@ -7902,6 +7911,15 @@ item []:
         else:
             QMessageBox.warning(self, programName, "Select an event to edit")
 
+
+    def filter_events(self):
+        """
+        filter coded events
+        """
+        print("filter events")
+        
+        self.filter_behaviors(table=EVENTS)
+        
 
     def no_media(self):
         QMessageBox.warning(self, programName, "There is no media available")

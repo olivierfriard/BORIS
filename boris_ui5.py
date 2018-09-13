@@ -463,6 +463,8 @@ class Ui_MainWindow(object):
         self.actionCloseObs = QtWidgets.QAction(MainWindow)
         self.actionCloseObs.setEnabled(True)
         self.actionCloseObs.setObjectName("actionCloseObs")
+        self.actionFilter_events = QtWidgets.QAction(MainWindow)
+        self.actionFilter_events.setObjectName("actionFilter_events")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -779,4 +781,5 @@ class Ui_MainWindow(object):
         self.actionExportEvents_2.setText(_translate("MainWindow", "Tabular events"))
         self.actionJWatcher.setText(_translate("MainWindow", "JWatcher"))
         self.actionCloseObs.setText(_translate("MainWindow", "Close observation"))
+        self.actionFilter_events.setText(_translate("MainWindow", "Filter events"))
 
