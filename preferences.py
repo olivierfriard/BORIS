@@ -26,17 +26,14 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+    from preferences_ui5 import Ui_prefDialog
 except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
+    from preferences_ui import Ui_prefDialog
 
 import os
 from config import BEHAVIORS_PLOT_COLORS
-
-if QT_VERSION_STR[0] == "4":
-    from preferences_ui import Ui_prefDialog
-else:
-    from preferences_ui5 import Ui_prefDialog
 
 class Preferences(QDialog, Ui_prefDialog):
 
@@ -58,12 +55,13 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"),
                                                             options=QFileDialog().ShowDirsOnly)
-
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
+
     def reset_colors(self):
         self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
+
 
     def ok(self):
         self.accept()

@@ -104,8 +104,8 @@ import time_budget_functions
 
 import vlc
 
-__version__ = "7.0.8"
-__version_date__ = "2018-09-07"
+__version__ = "7.0.9"
+__version_date__ = "2018-09-13"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -358,7 +358,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     confirmSound = False               # if True each keypress will be confirmed by a beep
     embedPlayer = True                 # if True the VLC player will be embedded in the main window
-    detachFrameViewer = False          # if True frame are displayed in a separate window (frameViewer class in dialog)
 
     spectrogramHeight = 80
     spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
@@ -2087,7 +2086,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         
         self.pj["behaviors_coding_map"].append(behav_coding_map)
-        QMessageBox.information(self, programName, "The behaviors coding map <b>{}</b> was added to current project".format(behav_coding_map["name"]))
+        QMessageBox.information(self, programName,
+                                "The behaviors coding map <b>{}</b> was added to current project".format(behav_coding_map["name"]))
         self.projectChanged = True
 
 
@@ -2707,8 +2707,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except:
             preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(FRAME_DEFAULT_BITMAP_FORMAT))
 
-        preferencesWindow.cbDetachFrameViewer.setChecked(self.detachFrameViewer)
-
         # spectrogram
         preferencesWindow.sbSpectrogramHeight.setValue(self.spectrogramHeight)
         preferencesWindow.cbSpectrogramColorMap.clear()
@@ -2791,30 +2789,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # frame-by-frame cache size (in seconds)
             self.fbf_cache_size = preferencesWindow.sb_fbf_cache_size.value()
 
-            # detach frame viewer
-            self.detachFrameViewer = preferencesWindow.cbDetachFrameViewer.isChecked()
-
             # spectrogram
             self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
             self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
 
             if self.playMode == FFMPEG:
 
+                '''
                 if self.detachFrameViewer:
                     if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
-                        QMessageBox.warning(self, programName, "The frame viewer can not be detached when geometric measurements are active")
+                        QMessageBox.warning(self, programName,
+                                            "The frame viewer can not be detached when geometric measurements are active")
                         self.detachFrameViewer = False
                     else:
                         if hasattr(self, "lbFFmpeg"):
                             self.lbFFmpeg.clear()
                         if self.observationId and self.playerType == VLC and self.playMode == FFMPEG:
-                            '''self.create_frame_viewer()'''
                             self.FFmpegGlobalFrame -= 1
                             self.ffmpegTimerOut()
                 else: # attach frame viewer
 
                     self.FFmpegGlobalFrame -= 1
                     self.ffmpegTimerOut()
+                '''
+                self.FFmpegGlobalFrame -= 1
+                self.ffmpegTimerOut()
+                
 
             # plot colors
             self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
@@ -3117,13 +3117,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         active the geometric measurement window
         """
-        
-        '''
-        if self.detachFrameViewer:
-            QMessageBox.warning(self, programName, ("The geometric measurement is only available when the frames viewer is not detached\n"
-                                                    "See Preferences > Frame-by-frame mode > Detach frame viewer") )
-            return
-        '''
 
         self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
         self.measurement_w.draw_mem = {}
@@ -4500,11 +4493,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
 
-            try:
-                self.detachFrameViewer = (settings.value("detach_frame_viewer") == "true")
-            except:
-                self.detachFrameViewer = False
-
             # spectrogram
             self.spectrogramHeight = 80
             try:
@@ -4601,7 +4589,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("frame_resize", self.frame_resize)
         settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
         settings.setValue("frame_cache_size", self.fbf_cache_size)
-        settings.setValue("detach_frame_viewer", self.detachFrameViewer)
         # spectrogram
         settings.setValue("spectrogram_height", self.spectrogramHeight)
         settings.setValue("spectrogram_color_map", self.spectrogram_color_map)

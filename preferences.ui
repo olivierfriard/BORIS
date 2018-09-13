@@ -375,13 +375,6 @@
             </layout>
            </item>
            <item>
-            <widget class="QCheckBox" name="cbDetachFrameViewer">
-             <property name="text">
-              <string>Detach frame viewer</string>
-             </property>
-            </widget>
-           </item>
-           <item>
             <spacer name="verticalSpacer_2">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
