@@ -27,14 +27,11 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
+    from add_modifier_ui5 import Ui_Dialog
 except:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
-
-if QT_VERSION_STR[0] == "4":
     from add_modifier_ui import Ui_Dialog
-else:
-    from add_modifier_ui5 import Ui_Dialog
 
 import copy
 
@@ -94,7 +91,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
             '''
 
-        print(self.tabWidgetModifiersSets.currentIndex())
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             for w in [self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers, self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft, self.pbMoveSetRight]:
                 w.setVisible(False)
@@ -110,8 +106,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
             self.lwModifiers.addItems(self.modifiers_sets_dict["0"]["values"])
         '''
         self.tabMem = 0
-
-
 
 
     def set_name_changed(self):

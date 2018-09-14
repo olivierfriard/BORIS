@@ -105,7 +105,7 @@ import time_budget_functions
 import vlc
 
 __version__ = "7.0.9"
-__version_date__ = "2018-09-13"
+__version_date__ = "2018-09-14"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -8389,7 +8389,9 @@ item []:
     
                     modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
     
-                    if modifierSelector.exec_():
+    
+                    r = modifierSelector.exec_()
+                    if r:
                         selected_modifiers = modifierSelector.getModifiers()
     
                         modifier_str = ""
@@ -8400,9 +8402,10 @@ item []:
                                 modifier_str += ",".join(selected_modifiers[idx]["selected"])
                             if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
                                 modifier_str += selected_modifiers[idx]["selected"]
+                    '''
                     else:
-                        # modifier_str = currentModifiers
                         return  # cancel button pressed
+                    '''
     
                     # restart media
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -8413,6 +8416,8 @@ item []:
                             else:
                                 if memState == vlc.State.Playing:
                                     self.play_video()
+                    if not r:  # cancel button pressed
+                        return 
 
             else:
                 modifier_str = event["from map"]
@@ -8471,14 +8476,8 @@ item []:
 
             # reload all events in tw
             self.loadEventsInTW(self.observationId)
-            '''
-            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0], 0)
-            print("item to scroll", item.text())
-            '''
             
             position_in_events = [i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0]
-            print("position_in_events", position_in_events, len(self.pj[OBSERVATIONS][self.observationId][EVENTS]))
-            print(self.pj[OBSERVATIONS][self.observationId][EVENTS][-1])
             
             if position_in_events == len(self.pj[OBSERVATIONS][self.observationId][EVENTS]) - 1:
                 self.twEvents.scrollToBottom()
@@ -8489,7 +8488,6 @@ item []:
         except:
             raise
             dialog.MessageDialog(programName, "Even can not be recorded.\nError: {}".format(sys.exc_info()[1]) , [OK])
-            
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
