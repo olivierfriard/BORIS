@@ -516,7 +516,7 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
 
 
 
-def create_events_plot2_new(pj,
+def create_events_plot(pj,
                             selected_observations,
                             parameters,
                             plot_colors=BEHAVIORS_PLOT_COLORS,
@@ -710,7 +710,7 @@ def create_events_plot2_new(pj,
             plt.show()
 
 
-
+'''
 def create_events_plot2(events,
                         all_behaviors,
                         all_subjects,
@@ -837,7 +837,7 @@ def create_events_plot2(events,
         plt.show()
 
     return {"error code": 0, "msg": ""}
-
+'''
 
 
 

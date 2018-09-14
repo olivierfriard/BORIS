@@ -1260,6 +1260,14 @@
     <string>Filter events</string>
    </property>
   </action>
+  <action name="actionShow_all_events">
+   <property name="text">
+    <string>Show all events</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all events</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

@@ -133,7 +133,7 @@ BEHAVIOR_TYPES = ["Point event", "State event", "Point event with coding map", "
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
 # fields for events table
-tw_events_fields = ['time', 'subject', 'code', 'type', 'modifier', 'comment']
+tw_events_fields = ["time", "subject", "code", "type", "modifier", "comment"]
 
 # fields for project events list
 pj_events_fields = ["time", "subject", "code", "modifier", "comment"]
@@ -148,11 +148,11 @@ EXCEL_FORBIDDEN_CHARACTERS = r"\/*[]:?"
 tw_obs_fields, pj_obs_fields = {}, {}
 
 for idx, field in enumerate(tw_events_fields):
-    tw_obs_fields[ field ] = idx
+    tw_obs_fields[field] = idx
 
 
 for idx, field in enumerate(pj_events_fields):
-    pj_obs_fields[ field ] = idx
+    pj_obs_fields[field] = idx
 
 
 EVENT_TIME_FIELD_IDX = 0
