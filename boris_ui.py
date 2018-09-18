@@ -641,6 +641,7 @@ class Ui_MainWindow(object):
         self.menu_coding_map_creator.setTitle(_translate("MainWindow", "Create a coding map", None))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar", None))
         self.dwEthogram.setWindowTitle(_translate("MainWindow", "Ethogram", None))
+        self.twEthogram.setSortingEnabled(True)
         item = self.twEthogram.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Key", None))
         item = self.twEthogram.horizontalHeaderItem(1)

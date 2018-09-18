@@ -872,6 +872,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Actions for twEthogram context menu
         self.twEthogram.setContextMenuPolicy(Qt.ActionsContextMenu)
+        self.twEthogram.horizontalHeader().sortIndicatorChanged.connect(self.twEthogram_sorted)
 
         self.actionViewBehavior.triggered.connect(self.view_behavior)
         self.twEthogram.addAction(self.actionViewBehavior)
@@ -950,6 +951,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
         self.pb_live_obs.clicked.connect(self.start_live_observation)
+
+
+    def twEthogram_sorted(self):
+        """
+        Ethogram widget sorted
+        """
+        return
+        
+        # disabled
+        
+        new_ethogram = {}
+        new_idx = 0
+        not_in_ethogram_widget = []
+        for idx in self.pj[ETHOGRAM]:
+            for row in range(self.twEthogram.rowCount()):
+                code = self.twEthogram.item(row, 1).text()
+                if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] == code:
+                    new_ethogram[str(row)] = dict(self.pj[ETHOGRAM][idx])
+            else:
+                not_in_ethogram_widget.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
+        
+        self.pj[ETHOGRAM] = dict(new_ethogram)
 
 
     def export_observations_list_clicked(self):
@@ -6238,7 +6261,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return seconds2time(sec)
 
 
-    def edit_project(self, mode):
+    def edit_project(self, mode: str):
         """
         project management
         
@@ -6428,11 +6451,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
             else:
                 # ethogram
-                self.twEthogram.setRowCount(0)
-                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
-
+                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
                 # subjects
-                self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+                self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
             self.initialize_new_project()
 
@@ -7693,9 +7714,12 @@ item []:
                 return
 
             if self.twEthogram.selectedIndexes():
-                ethogramRow = self.twEthogram.selectedIndexes()[0].row()
-                code = self.twEthogram.item(ethogramRow, 1).text()
-                event = self.full_event(str(ethogramRow))
+                ethogram_row = self.twEthogram.selectedIndexes()[0].row()
+                code = self.twEthogram.item(ethogram_row, 1).text()
+
+                ethogram_idx = [x for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x][BEHAVIOR_CODE] == code][0]
+
+                event = self.full_event(ethogram_idx)
                 self.writeEvent(event, self.getLaps())
         else:
             self.no_observation()

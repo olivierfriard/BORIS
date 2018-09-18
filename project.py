@@ -28,7 +28,7 @@ try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
     from project_ui5 import Ui_dlgProject
-except:
+except ModuleNotFoundError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
     from project_ui import Ui_dlgProject
@@ -163,7 +163,8 @@ class ExclusionMatrix(QDialog):
             for c, c_name in enumerate(self.stateBehaviors):
                 if c_name != r_name:
                     try:
-                        self.checkboxes["{}|{}".format(c_name, r_name)].setChecked(self.checkboxes["{}|{}".format(r_name, c_name)].isChecked())
+                        self.checkboxes["{}|{}".format(c_name, r_name)].setChecked(self.checkboxes["{}|{}".format(r_name,
+                                                                                                                  c_name)].isChecked())
                     except:
                         pass
 
@@ -253,7 +254,7 @@ class BehavioralCategories(QDialog):
                                         ["Remove category", CANCEL]) == "Remove category"
             else:
                 flag_remove = True
-            
+
             if flag_remove:
                 self.lw.takeItem(self.lw.row(SelectedItem))
                 self.removed = category_to_remove
@@ -618,36 +619,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.twBehaviors.item(row, behavioursFields["type"]).setText(new_type)
 
             self.behaviorTypeChanged(row)
-            '''
-            if "with coding map" in new_type:
-                # let user select a coding maop
-                
-                fn = QFileDialog(self).getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()),
-                                                        "", "BORIS map files (*.boris_map);;All files (*)")
-                fileName = fn[0] if type(fn) is tuple else fn
-    
-                if fileName:
-                    try:
-                        new_map = json.loads(open(fileName, "r").read())
-                        self.pj["coding_map"][new_map["name"]] = new_map
-    
-                        # add modifiers from coding map areas
-                        modifstr = str({"0": {"name": new_map["name"], "type": MULTI_SELECTION, "values": list(sorted(new_map['areas'].keys()))}})
-                        
-                        self.twBehaviors.item(row, behavioursFields['modifiers']).setText(modifstr)
-                        self.twBehaviors.item(row, behavioursFields['coding map']).setText(new_map["name"])
-                    except:
-                        QMessageBox.critical(self, programName, "Error in coding map file")
-    
-                else:
-                    # if coding map already exists do not reset the behavior type if no filename selected
-                    if not self.twBehaviors.item(row, behavioursFields["coding map"]).text():
-                        QMessageBox.critical(self, programName, ("No coding map was selected.\n"
-                                                                 "Event type will be reset to '{}' ").format(DEFAULT_BEHAVIOR_TYPE))
-                        self.twBehaviors.item(row, behavioursFields["type"]).setText(DEFAULT_BEHAVIOR_TYPE)
-            else:
-                self.twBehaviors.item(row, behavioursFields["coding map"]).setText("")
-            '''
 
 
     def category_doubleclicked(self, row):
@@ -961,7 +932,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         import behaviors from another project
         """
 
-        fn =  QFileDialog(self).getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
+        fn = QFileDialog(self).getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
@@ -1045,7 +1016,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         ex = ExclusionMatrix()
 
-        stateBehaviors, allBehaviors, excl, new_excl  = [], [], {}, {}
+        stateBehaviors, allBehaviors, excl, new_excl = [], [], {}, {}
 
         flag_point_event_present = False
         includePointEvents = NO
@@ -1108,21 +1079,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if c_name in excl[r_name]:
                         ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
                     ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
-            print()
-                
-
-
-        '''
-        for r, r_name in enumerate(allBehaviors):
-            for c, c_name in enumerate(stateBehaviors):
-                if c_name != r_name:
-                    ex.checkboxes["{}|{}".format(r_name, c_name)] = QCheckBox()
-                    ex.checkboxes["{}|{}".format(r_name, c_name)].clicked.connect(ex.cb_clicked)
-                    if c_name in excl[r_name]:
-                        ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
-                        
-                    ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
-        '''
 
         # check corresponding checkbox
         ex.cb_clicked()
@@ -1139,8 +1095,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # update excluded field
             for r in range(self.twBehaviors.rowCount()):
-                if (includePointEvents == YES 
-                   or (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
+                if (includePointEvents == YES or
+                   (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
                     for e in excl:
                         if e == self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text():
                             item = QTableWidgetItem(",".join(new_excl[e]))
@@ -1284,7 +1240,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 except:
                     QMessageBox.critical(None, programName,
                                         ("Error while reading file\nThe line # {}\n"
-                                         "{}\ncontains characters that are not readable.").format(idx,row),
+                                         "{}\ncontains characters that are not readable.").format(idx, row),
                                          QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                     return
                 idx += 1
@@ -1354,11 +1310,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 keys.append(key)
 
-                # convert to upper text
-                '''
-                self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).setText(self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).text().upper())
-                '''
-
             # check code
             if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX):
                 if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text() in codes:
@@ -1421,7 +1372,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 item = QTableWidgetItem()
                 if field_type == TYPE:
                     item.setText("Point event")
-    
+
                 if field_type in [TYPE, "category", "excluded", "coding map", "modifiers"]:
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor(230, 230, 230))
@@ -1437,8 +1388,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
             # let user select a coding maop
-            
-            fn = QFileDialog(self).getOpenFileName(self, "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()),
+            fn = QFileDialog(self).getOpenFileName(self,
+                                                   "Select a coding map for {} behavior".format(self.twBehaviors.item(row, behavioursFields['code']).text()),
                                                     "", "BORIS map files (*.boris_map);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
@@ -1448,7 +1399,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 # add modifiers from coding map areas
                 modifstr = str({"0": {"name": new_map["name"], "type": MULTI_SELECTION, "values": list(sorted(new_map['areas'].keys()))}})
-                
+
                 self.twBehaviors.item(row, behavioursFields['modifiers']).setText(modifstr)
                 self.twBehaviors.item(row, behavioursFields['coding map']).setText(new_map["name"])
 
@@ -1504,7 +1455,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if flagDel:
                     self.twSubjects.removeRow(self.twSubjects.selectedIndexes()[0].row())
 
-                self.twSubjects_cellChanged(0,0)
+                self.twSubjects_cellChanged(0, 0)
 
 
     def twSubjects_cellChanged(self, row, column):
@@ -1687,7 +1638,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.subjects_conf[str(len(self.subjects_conf))] = {"key": key, "name": subjectName, "description": subjectDescription}
 
-        self.pj[SUBJECTS] =  dict(self.subjects_conf)
+        self.pj[SUBJECTS] = dict(self.subjects_conf)
 
         # store behaviors
         missing_data = []
@@ -1702,15 +1653,19 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         remove_leading_trailing_spaces = NO
         if code_with_leading_trailing_spaces:
-            remove_leading_trailing_spaces = dialog.MessageDialog(programName,
-                                            ("Attention! Some leading and/or trailing spaces are present"
-                                            " in the following <b>behaviors code(s)</b>:<br>"
-                                            "<b>{}</b><br><br>"
-                                            "Do you want to remove the leading and trailing spaces?<br><br>"
-                                            """<font color="red"><b>Be careful with this option"""
-                                            """ if you have already done observations!</b></font>""").format(code_with_leading_trailing_spaces),
-                                            [YES, NO])
 
+            remove_leading_trailing_spaces = dialog.MessageDialog(
+                programName,
+                (
+                    "Attention! Some leading and/or trailing spaces are present"
+                    " in the following <b>behaviors code(s)</b>:<br>"
+                    "<b>{}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces?<br><br>"
+                    """<font color="red"><b>Be careful with this option"""
+                    """ if you have already done observations!</b></font>"""
+                ).format(code_with_leading_trailing_spaces),
+                [YES, NO],
+            )
 
         codingMapsList = []
         for r in range(self.twBehaviors.rowCount()):

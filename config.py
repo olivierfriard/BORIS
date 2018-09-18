@@ -35,7 +35,6 @@ N_PLAYER = 8
 VLC_TIMER_OUT = 200
 SPECTRO_TIMER = 200
 
-#FFMPEG_BIN = 'ffmpeg'
 
 function_keys = {16777264: 'F1', 16777265: 'F2', 16777266: 'F3', 16777267: 'F4', 16777268: 'F5',
                  16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',
@@ -45,11 +44,11 @@ PROJECT_NAME = "project_name"
 PROJECT_DATE = "project_date"
 PROJECT_DESCRIPTION = "project_description"
 
-OBSERVATIONS = 'observations'
-EVENTS = 'events'
-TIME_OFFSET='time offset'
+OBSERVATIONS = "observations"
+EVENTS = "events"
+TIME_OFFSET = "time offset"
 
-CODING_MAP = 'coding_map'
+CODING_MAP = "coding_map"
 BEHAVIORS_CODING_MAP = 'behaviors_coding_map'
 SUBJECTS = 'subjects_conf'
 ETHOGRAM = 'behaviors_conf'
@@ -118,7 +117,7 @@ BEHAVIOR_CATEGORY = "category"
 # fields for event configuration
 fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 
-behav_fields_in_mainwindow = {0: "key", 1: "code", 2: "type", 3: "description", 4:"category", 5:"modifiers", 6:"excluded"}
+behav_fields_in_mainwindow = {0: "key", 1: "code", 2: "type", 3: "description", 4: "category", 5: "modifiers", 6: "excluded"}
 
 # fields in ethogram table from project window
 # behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
@@ -126,8 +125,6 @@ behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'category'
 
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
 PROJECT_BEHAVIORS_CODE_FIELD_IDX = 2
-
-#observation_types = ['Point event', 'State event', 'Point event with coding map', 'State event with coding map']  # to be removed
 
 STATE_EVENT = "State event"
 POINT_EVENT = "Point event"
@@ -253,18 +250,18 @@ NUMERIC_MODIFIER = 2
 
 MODIFIERS_STR = {SINGLE_SELECTION: "Single item selection", MULTI_SELECTION: "Multiple items selection", NUMERIC_MODIFIER: "Numeric"}
 
-#colors
-subtitlesColors = ['cyan','red','blue','yellow','fuchsia','orange', 'lime', 'green']
+# colors
+subtitlesColors = ['cyan', 'red', 'blue', 'yellow', 'fuchsia', 'orange', 'lime', 'green']
 
-CATEGORY_COLORS_LIST = ["#FF96CC", "#96FF9C","#CCFFFE", "#EEFF70", "#FF4F64", "#F8BF15", "#3DC7AD"]
+CATEGORY_COLORS_LIST = ["#FF96CC", "#96FF9C", "#CCFFFE", "#EEFF70", "#FF4F64", "#F8BF15", "#3DC7AD"]
 
-SPECTROGRAM_COLOR_MAPS = ['viridis','inferno','plasma', 'magma', "gray", "YlOrRd"]
+SPECTROGRAM_COLOR_MAPS = ['viridis', 'inferno', 'plasma', 'magma', "gray", "YlOrRd"]
 SPECTROGRAM_DEFAULT_COLOR_MAP = 'viridis'
 
 # see matplotlib.colors.cnames.keys()
 # https://xkcd.com/color/rgb/
 
-# sage colors are no more available 
+# sage colors are no more available
 # darksage #598556
 # lightsage #bcecac
 # sage #87ae73
@@ -281,47 +278,47 @@ BEHAVIORS_PLOT_COLORS = ['tab:blue',
                          'tab:gray',
                          'tab:olive',
                          'tab:cyan',
-                         "blue", "green", "red", "cyan", "magenta","yellow", "lime",
+                         "blue", "green", "red", "cyan", "magenta", "yellow", "lime",
                          "darksalmon", "purple", "orange", "maroon", "silver",
                          "slateblue", "hotpink", "steelblue", "darkgoldenrod",
-                         'aqua','aquamarine',
-                         'beige','bisque','black','blanchedalmond','blueviolet','brown',
-                         'burlywood','cadetblue','chartreuse','chocolate','coral',
-                         'cornflowerblue','cornsilk','crimson','darkblue','darkcyan',
-                         'darkgreen','darkgrey','darkkhaki','darkmagenta',
-                         'darkolivegreen','darkorange','darkorchid','darkred',
-                         '#598556','darkseagreen','darkslateblue','darkslategray',
-                         'darkslategrey','darkturquoise','darkviolet','deeppink',
-                         'deepskyblue','dimgray','dimgrey','dodgerblue','firebrick',
-                         'floralwhite','forestgreen','fuchsia','gainsboro',
-                         'gold','goldenrod','gray','greenyellow','grey','honeydew',
-                         'indianred','indigo','khaki',
-                         'lawngreen','lemonchiffon','lightblue','lightcoral',
-                         'lightgoldenrodyellow','lightgray','lightgreen','lightgrey',
-                         'lightpink','#bcecac','lightsalmon','lightseagreen',
-                         'lightskyblue','lightslategray','lightslategrey','lightsteelblue',
-                         'lightyellow','limegreen','linen','mediumaquamarine','mediumblue',
-                         'mediumorchid','mediumpurple','mediumseagreen','mediumslateblue',
-                         'mediumspringgreen','mediumturquoise','mediumvioletred',
-                         'midnightblue','mintcream','mistyrose','moccasin','navajowhite',
-                         'navy','oldlace','olive','olivedrab','orangered','orchid',
-                         'palegoldenrod','palegreen','paleturquoise','palevioletred',
-                         'papayawhip','peachpuff','peru','pink','plum','powderblue','rosybrown',
-                         'royalblue','saddlebrown','#87ae73','salmon','sandybrown','seagreen',
-                         'seashell','sienna','skyblue','slategray','slategrey',
-                         'springgreen','tan','teal','thistle','tomato','turquoise','violet',
-                         'wheat','yellowgreen','darkgray']
+                         'aqua', 'aquamarine',
+                         'beige', 'bisque', 'black', 'blanchedalmond', 'blueviolet', 'brown',
+                         'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral',
+                         'cornflowerblue', 'cornsilk', 'crimson', 'darkblue', 'darkcyan',
+                         'darkgreen', 'darkgrey', 'darkkhaki', 'darkmagenta',
+                         'darkolivegreen', 'darkorange', 'darkorchid', 'darkred',
+                         '#598556', 'darkseagreen', 'darkslateblue', 'darkslategray',
+                         'darkslategrey', 'darkturquoise', 'darkviolet', 'deeppink',
+                         'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue', 'firebrick',
+                         'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro',
+                         'gold', 'goldenrod', 'gray', 'greenyellow', 'grey', 'honeydew',
+                         'indianred', 'indigo', 'khaki',
+                         'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral',
+                         'lightgoldenrodyellow', 'lightgray', 'lightgreen', 'lightgrey',
+                         'lightpink', '#bcecac', 'lightsalmon', 'lightseagreen',
+                         'lightskyblue', 'lightslategray', 'lightslategrey', 'lightsteelblue',
+                         'lightyellow', 'limegreen', 'linen', 'mediumaquamarine', 'mediumblue',
+                         'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue',
+                         'mediumspringgreen', 'mediumturquoise', 'mediumvioletred',
+                         'midnightblue', 'mintcream', 'mistyrose', 'moccasin', 'navajowhite',
+                         'navy', 'oldlace', 'olive', 'olivedrab', 'orangered', 'orchid',
+                         'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred',
+                         'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'rosybrown',
+                         'royalblue', 'saddlebrown', '#87ae73', 'salmon', 'sandybrown', 'seagreen',
+                         'seashell', 'sienna', 'skyblue', 'slategray', 'slategrey',
+                         'springgreen', 'tan', 'teal', 'thistle', 'tomato', 'turquoise', 'violet',
+                         'wheat', 'yellowgreen', 'darkgray']
 
 EMPTY_PROJECT = {"time_format": HHMMSS,
-                       "project_date": "",
-                       "project_name": "",
-                       "project_description": "",
-                       "project_format_version": project_format_version,
-                       SUBJECTS: {},
-                       ETHOGRAM: {},
-                       OBSERVATIONS: {},
-                       BEHAVIORAL_CATEGORIES: [],
-                       INDEPENDENT_VARIABLES: {},
-                       CODING_MAP: {},
-                       BEHAVIORS_CODING_MAP: [],
-                       CONVERTERS: {}}
+                 "project_date": "",
+                 "project_name": "",
+                 "project_description": "",
+                 "project_format_version": project_format_version,
+                 SUBJECTS: {},
+                 ETHOGRAM: {},
+                 OBSERVATIONS: {},
+                 BEHAVIORAL_CATEGORIES: [],
+                 INDEPENDENT_VARIABLES: {},
+                 CODING_MAP: {},
+                 BEHAVIORS_CODING_MAP: [],
+                 CONVERTERS: {}}
