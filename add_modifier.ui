@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>638</width>
-    <height>510</height>
+    <height>636</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -229,6 +229,13 @@
             </widget>
            </item>
           </layout>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_add_subjects">
+           <property name="text">
+            <string>Add subjects as modifiers</string>
+           </property>
+          </widget>
          </item>
          <item>
           <spacer name="verticalSpacer_3">

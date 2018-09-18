@@ -351,7 +351,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.cbType.currentIndexChanged.connect(self.cbtype_changed)
         self.cbType.activated.connect(self.cbtype_activated)
-        '''self.cbType.highlighted.connect(self.cbtype_changed)'''
 
         self.pbImportVarFromProject.clicked.connect(self.pbImportVarFromProject_clicked)
 
@@ -362,7 +361,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
 
         self.selected_twvariables_row = -1
-        
+
         self.pbAddBehaviorsCodingMap.clicked.connect(self.add_behaviors_coding_map)
         self.pbRemoveBehaviorsCodingMap.clicked.connect(self.remove_behaviors_coding_map)
         
@@ -376,19 +375,13 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pb_load_from_file.clicked.connect(lambda: self.load_converters_from_file_repo("file"))
         self.pb_load_from_repo.clicked.connect(lambda: self.load_converters_from_file_repo("repo"))
 
-        '''
-        self.pbOK.clicked.connect(self.pb_ok_clicked)
-        self.pb_cancel_widget.clicked.connect(self.pb_cancel_widget_clicked)
-        '''
-        
         self.pb_code_help.clicked.connect(self.pb_code_help_clicked)
-        
+
         self.row_in_modification = -1
         self.flag_modified = False
 
         for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(False)
-        
 
         # disable widget for indep var setting
         for widget in [self.leLabel, self.le_converter_description, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
@@ -602,7 +595,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(row, behavioursFields["coding map"]).text():
                 QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
             else:
-                addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text())
+                addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text(),
+                                                                   subjects=[self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
                 addModifierWindow.setWindowTitle("""Set modifiers for "{}" behavior""".format(self.twBehaviors.item(row, 2).text()))
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())

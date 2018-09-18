@@ -2,8 +2,7 @@
 
 # Form implementation generated from reading ui file 'add_modifier.ui'
 #
-# Created: Fri Jul  7 12:43:56 2017
-#      by: PyQt4 UI code generator 4.11.2
+# Created by: PyQt4 UI code generator 4.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -26,7 +25,7 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(638, 510)
+        Dialog.resize(638, 636)
         self.verticalLayout_5 = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
         self.verticalLayout_4 = QtGui.QVBoxLayout()
@@ -128,6 +127,9 @@ class Ui_Dialog(object):
         self.pbMoveSetRight.setObjectName(_fromUtf8("pbMoveSetRight"))
         self.horizontalLayout_4.addWidget(self.pbMoveSetRight)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
+        self.pb_add_subjects = QtGui.QPushButton(Dialog)
+        self.pb_add_subjects.setObjectName(_fromUtf8("pb_add_subjects"))
+        self.verticalLayout.addWidget(self.pb_add_subjects)
         spacerItem2 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem2)
         self.horizontalLayout_5.addLayout(self.verticalLayout)
@@ -167,6 +169,7 @@ class Ui_Dialog(object):
         self.pbRemoveSet.setText(_translate("Dialog", "Remove set of modifiers", None))
         self.pbMoveSetLeft.setText(_translate("Dialog", "Move set left", None))
         self.pbMoveSetRight.setText(_translate("Dialog", "Move set right", None))
+        self.pb_add_subjects.setText(_translate("Dialog", "Add subjects as modifiers", None))
         self.pbCancel.setText(_translate("Dialog", "Cancel", None))
         self.pbOK.setText(_translate("Dialog", "OK", None))
 

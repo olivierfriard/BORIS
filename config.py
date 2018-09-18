@@ -56,15 +56,19 @@ ETHOGRAM = 'behaviors_conf'
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
 CONVERTERS = "converters"
 
+SUBJECT_NAME = "name"
+
 CODING_MAP_RESIZE_W = 640
 CODING_MAP_RESIZE_H = 640
 
 POINT_EVENT_PLOT_DURATION = 0.010
 POINT_EVENT_PLOT_COLOR = "black"
 
+CHAR_FORBIDDEN_IN_MODIFIERS = "(|),`~"
+
 subjects_config = ['key', 'id']
 
-subjectsFields = ["key", "name", "description"]
+subjectsFields = ["key", SUBJECT_NAME, "description"]
 
 UNPAIRED = 'UNPAIRED'
 
