@@ -957,10 +957,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         Ethogram widget sorted
         """
-        return
+        pass
         
-        # disabled
-        
+        # disabled because ethogram can be filtered
+        '''
         new_ethogram = {}
         new_idx = 0
         not_in_ethogram_widget = []
@@ -973,6 +973,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_in_ethogram_widget.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
         
         self.pj[ETHOGRAM] = dict(new_ethogram)
+        '''
 
 
     def export_observations_list_clicked(self):
@@ -985,15 +986,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
     
-        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
 
         file_name, filter_ = filediag_func(self, "Export list of selected observations", "", ";;".join(extended_file_formats))
-    
-        if file_name:
 
+        if file_name:
             output_format = file_formats[extended_file_formats.index(filter_)]
             if pathlib.Path(file_name).suffix != "." + output_format:
                 file_name = str(pathlib.Path(file_name)) + "." + output_format
+                # check if file name with extension already exists
+                if pathlib.Path(file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            "The file {} already exists.".format(file_name),
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return
 
             project_functions.export_observations_list(self.pj, file_name, output_format)
 
@@ -6433,7 +6439,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.projectChanged = True
 
             if mode == EDIT:
-                self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
+                if not self.projectChanged:
+                    self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
 
             # retrieve project dict from window
             self.pj = copy.deepcopy(newProjectWindow.pj)
@@ -6505,20 +6512,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project asking for a new file name
         """
-        if QT_VERSION_STR[0] == "4":
-            projectNewFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
-        else:
-            projectNewFileName, filtr = QFileDialog(self).getSaveFileName(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
-        if not projectNewFileName:
+        
+        func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog().getSaveFileName
+        project_new_file_name, filtr = func(self, "Save project as", os.path.dirname(self.projectFileName), "Projects file (*.boris);;All files (*)")
+
+        if not project_new_file_name:
             return "Not saved"
         else:
 
             # add .boris if filter = 'Projects file (*.boris)'
-            if  filtr == "Projects file (*.boris)" and os.path.splitext(projectNewFileName)[1] != ".boris":
-                projectNewFileName += ".boris"
+            if  filtr == "Projects file (*.boris)" and os.path.splitext(project_new_file_name)[1] != ".boris":
+                project_new_file_name += ".boris"
+                # check if file name with extension already exists
+                if pathlib.Path(project_new_file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            "The file {} already exists.".format(project_new_file_name),
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return "Not saved"
 
-            self.save_project_json(projectNewFileName)
-            self.projectFileName = projectNewFileName
+            self.save_project_json(project_new_file_name)
+            self.projectFileName = project_new_file_name
 
 
     def save_project_activated(self):
@@ -6531,22 +6544,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not self.pj["project_name"]:
                 txt = "NONAME.boris"
             else:
-                txt = self.pj['project_name'] + '.boris'
+                txt = self.pj["project_name"] + ".boris"
             os.chdir(os.path.expanduser("~"))
-            if QT_VERSION_STR[0] == "4":
-                self.projectFileName, filtr = QFileDialog(self).getSaveFileNameAndFilter(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
-            else:
-                self.projectFileName, filtr = QFileDialog(self).getSaveFileName(self, 'Save project', txt, 'Projects file (*.boris);;All files (*)')
+
+            func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog().getSaveFileName
+
+            self.projectFileName, filtr = func(self, "Save project", txt, "Projects file (*.boris);;All files (*)")
 
             if not self.projectFileName:
                 return "not saved"
 
             # add .boris if filter = 'Projects file (*.boris)'
-            if filtr == 'Projects file (*.boris)' and os.path.splitext(self.projectFileName)[1] != '.boris':
-                self.projectFileName += '.boris'
+            if filtr == "Projects file (*.boris)" and os.path.splitext(self.projectFileName)[1] != ".boris":
+                self.projectFileName += ".boris"
+                # check if file name with extension already exists
+                if pathlib.Path(self.projectFileName).is_file():
+                    if dialog.MessageDialog(programName,
+                                            "The file {} already exists.".format(self.projectFileName),
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        self.projectFileName = ""
+                        return ""
 
             return self.save_project_json(self.projectFileName)
-
         else:
             return self.save_project_json(self.projectFileName)
 
@@ -6562,14 +6581,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_current_media_time.setText(self.convertTime(currentTime))
 
         # extract State events
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in [y for y in self.pj[ETHOGRAM] if 'State' in self.pj[ETHOGRAM][y][TYPE]]]
+        StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE]
+                               for x in [y for y in self.pj[ETHOGRAM]
+                               if "State" in self.pj[ETHOGRAM][y][TYPE]]]
 
         self.currentStates = {}
         # add states for no focal subject
 
         self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes,
                                                                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                                                                dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                dict(self.pj[SUBJECTS], **{"": {SUBJECT_NAME: ""}}),
                                                                 currentTime)
 
 
@@ -6578,24 +6599,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # add subject index
             self.currentStates[idx] = []
             for sbc in StateBehaviorsCodes:
-                if len([x[pj_obs_fields[BEHAVIOR_CODE]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS] if x[pj_obs_fields['subject']] == self.pj[SUBJECTS][idx]['name'] and x[pj_obs_fields['code']] == sbc and x[pj_obs_fields['time']] <= currentTime]) % 2: # test if odd
+                if (
+                    len(
+                        [
+                            x[pj_obs_fields[BEHAVIOR_CODE]]
+                            for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                            if x[pj_obs_fields["subject"]] == self.pj[SUBJECTS][idx][SUBJECT_NAME]
+                            and x[pj_obs_fields["code"]] == sbc
+                            and x[pj_obs_fields["time"]] <= currentTime
+                        ]
+                    )
+                    % 2
+                ):  # test if odd
                     self.currentStates[idx].append(sbc)
 
         # show current states
         if self.currentSubject:
             # get index of focal subject (by name)
-            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]['name'] == self.currentSubject][0]
+            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx][SUBJECT_NAME] == self.currentSubject][0]
             self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
         else:
             self.lbCurrentStates.setText(", ".join(self.currentStates[""]))
 
-        
         self.show_current_states_in_subjects_table()
-
-        '''
-        for idx in sorted_keys(self.pj[SUBJECTS]):
-            self.twSubjects.item(int(idx), len(subjectsFields)).setText(','.join(self.currentStates[idx]))
-        '''
 
         # check scan sampling
 
@@ -6641,18 +6667,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.liveStartTime = None
             self.liveTimer.stop()
 
-            '''
-            if self.timeFormat == HHMMSS:
-                self.lbTimeLive.setText("00:00:00.000")
-            if self.timeFormat == S:
-                self.lbTimeLive.setText("0.000")
-            '''
-
             if self.timeFormat == HHMMSS:
                 self.lb_current_media_time.setText("00:00:00.000")
             if self.timeFormat == S:
                 self.lb_current_media_time.setText("0.000")
-
 
         self.liveObservationStarted = not self.liveObservationStarted
 
@@ -6849,7 +6867,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             event_stop = "{0:.3f}".format(float(event[-5]) + 0.001)
                         else:
                             event_stop = "{0:.3f}".format(float(event[-4]))
-                        out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject, behavior=behavior, start=event_start, stop=event_stop)
+                        out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject,
+                                                                             behavior=behavior,
+                                                                             start=event_start,
+                                                                             stop=event_stop)
                 out += "/\n\n"
             with open(fileName, "wb") as f:
                 f.write(str.encode(out))
@@ -6911,10 +6932,16 @@ item []:
             '''TO BE REMOVED  totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)'''
             totalMediaDuration = round(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]), 3)
 
-            cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], selectedObservations, plot_parameters["selected behaviors"])
+            cursor = db_functions.load_events_in_db(self.pj,
+                                                    plot_parameters["selected subjects"],
+                                                    selectedObservations,
+                                                    plot_parameters["selected behaviors"])
 
             cursor.execute(("SELECT count(distinct subject) FROM events "
-                            "WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ").format(obsId, "','".join(plot_parameters["selected subjects"])))
+                            "WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ").format(obsId,
+                                                                                                         "','".join(
+                                                                                                         plot_parameters["selected subjects"]
+                                                                                                         )))
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
             subjectsMin, subjectsMax = 0, totalMediaDuration
@@ -6941,7 +6968,8 @@ item []:
 
                 out += subjectheader
 
-                cursor.execute("SELECT occurence, code FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence", (obsId, subject))
+                cursor.execute(("SELECT occurence, code FROM events "
+                                "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"), (obsId, subject))
 
                 rows = [{"occurence": float2decimal(r["occurence"]), "code": r["code"]}  for r in cursor.fetchall()]
                 if not rows:
@@ -6960,7 +6988,9 @@ item []:
 
                         # check if events not interlacced
                         if row["code"] != rows[idx + 1]["code"]:
-                            QMessageBox.critical(None, programName, "The events are interlaced. It is not possible to produce the Praat TextGrid file", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                            QMessageBox.critical(None, programName,
+                                                 "The events are interlaced. It is not possible to produce the Praat TextGrid file",
+                                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                             return
 
                         count += 1
@@ -6970,14 +7000,25 @@ item []:
                         if len(rows) > idx + 2:
                             if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
 
-                                logging.debug("difference: {}-{}={}".format(rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
+                                '''
+                                logging.debug("difference: {}-{}={}".format(rows[idx + 2]["occurence"],
+                                              rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
+                                '''
 
-                                out += template.format(count=count + 1, name="null", xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"])
+                                out += template.format(count=count + 1, name="null",
+                                                       xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"])
                                 count += 1
                             else:
-                                logging.debug("difference <=0.001: {} - {} = {}".format(rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
+                                '''
+                                logging.debug("difference <=0.001: {} - {} = {}".format(rows[idx + 2]["occurence"],
+                                               rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
+                                '''
                                 rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
-                                logging.debug("difference after: {} - {} = {}".format(rows[idx + 2]["occurence"], rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
+                                
+                                '''
+                                logging.debug("difference after: {} - {} = {}".format(rows[idx + 2]["occurence"],
+                                               rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
+                                '''
 
                 # check if last event ends at the end of media file
                 if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]):
@@ -6985,7 +7026,9 @@ item []:
                     out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
 
                 # add info
-                out = out.format(subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax)
+                out = out.format(
+                    subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax
+                )
 
             try:
                 with open("{exportDir}{sep}{obsId}.textGrid".format(exportDir=exportDir, sep=os.sep, obsId=obsId), "w") as f:
@@ -7011,14 +7054,16 @@ item []:
             tot_output = ""
             
             for i in range(N_PLAYER):
-                if not (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
+                if not (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and 
+                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     continue
                 media = self.dw_player[i].mediaplayer.get_media()
     
                 logging.info("State: {}".format(self.dw_player[i].mediaplayer.get_state()))
                 logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
                 logging.info("media.get_meta(0): {}".format(media.get_meta(0)))
-                logging.info("Track: {}/{}".format(self.dw_player[i].mediaplayer.video_get_track(), self.dw_player[i].mediaplayer.video_get_track_count()))
+                logging.info("Track: {}/{}".format(self.dw_player[i].mediaplayer.video_get_track(),
+                                                   self.dw_player[i].mediaplayer.video_get_track_count()))
                 logging.info("number of media in media list: {}".format(self.dw_player[i].media_list.count()))
                 logging.info("get time: {}  duration: {}".format(self.dw_player[i].mediaplayer.get_time(), media.get_duration()))
                 logging.info("Position: {} %".format(self.dw_player[i].mediaplayer.get_position()))
@@ -7079,7 +7124,9 @@ item []:
                                           "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>").format(media_full_path,
                                           self.convertTime(r["duration"]), r["bitrate"], r["fps"], r["has_video"], r["has_audio"])
 
-                    ffmpeg_output += "Total duration: {} (hh:mm:ss.sss)".format(self.convertTime(sum(self.dw_player[i].media_durations) / 1000))
+                    ffmpeg_output += "Total duration: {} (hh:mm:ss.sss)".format(
+                                   self.convertTime(sum(self.dw_player[i].media_durations) / 1000)
+                                   )
     
                 tot_output += vlc_output + ffmpeg_output + "<br><hr>"
     
@@ -7103,10 +7150,18 @@ item []:
                 self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
                 r = utilities.accurate_media_analysis2(self.ffmpeg_bin, filePath)
                 if "error" in r:
-                    self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath, error=r["error"]))
+                    self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath,
+                                                                                                         error=r["error"]))
                 else:
-                    self.results.ptText.appendHtml("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>".
-                                        format(filePath, self.convertTime(r["duration"]), r["bitrate"], r["fps"], r["has_video"], r["has_audio"]))
+                    self.results.ptText.appendHtml(("File path: {}<br>Duration: {}<br>Bitrate: {}k<br>"
+                                                    "FPS: {}<br>Has video: {}<br>Has audio: {}<br><br>").format(
+                                                    filePath,
+                                                    self.convertTime(r["duration"]),
+                                                    r["bitrate"],
+                                                    r["fps"],
+                                                    r["has_video"],
+                                                    r["has_audio"])
+                                                    )
 
                 self.results.show()
 
@@ -7150,30 +7205,6 @@ item []:
                 
                 self.dw_player[n_player].videoframe.setVisible(True)
                 self.dw_player[n_player].volume_slider.setVisible(True)
-            '''
-            for n_player in range(N_PLAYER):
-                if (str(n_player + 1) not in self.pj[OBSERVATIONS][self.observationId][FILE] 
-                   or not self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
-                    continue
-                for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
-                    if globalCurrentTime < sum(self.duration[0:idx + 1]):
-                        self.mediaListPlayer[n_player].play_item_at_index(idx)
-                        while True:
-                            if self.mediaListPlayer[n_player].get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                                break
-                        self.mediaListPlayer[n_player].pause()
-                        currentMediaTime = int(globalCurrentTime - sum(self.duration[0:idx]))
-                        break
-    
-                self.dw_player[n_player].mediaplayer.set_time(currentMediaTime)
-                #self.mediaplayer[n_player].set_time(currentMediaTime)
-                
-
-                # make visible video frame(s)
-                self.dw_player[n_player].frame_viewer.setVisible(False)
-                self.dw_player[n_player].videoframe.setVisible(True)
-            '''
-
 
             self.FFmpegTimer.stop()
 
@@ -7190,7 +7221,8 @@ item []:
             
             all_fps = []
             for i in range(N_PLAYER):
-                if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
+                if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                    self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     all_fps.extend(list(self.dw_player[i].fps.values()))
 
             if len(set(all_fps)) != 1:
@@ -7219,7 +7251,11 @@ item []:
             else:
                 self.imageDirectory = self.ffmpeg_cache_dir
 
-            globalTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]) + self.dw_player[0].mediaplayer.get_time())
+
+            globalTime = (
+                sum(self.dw_player[0].media_durations[0 : self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())])
+                + self.dw_player[0].mediaplayer.get_time()
+            )
 
             self.fps = all_fps[0]
 
@@ -7259,12 +7295,8 @@ item []:
         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
 
             if self.playerType == VLC:
-
                 if self.playMode == FFMPEG:
-                    
-                    
                     for n_player, player in enumerate(self.dw_player):
-                        #
                         if (str(n_player + 1) not in self.pj[OBSERVATIONS][self.observationId][FILE]
                            or not  self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
                             continue
@@ -7279,7 +7311,7 @@ item []:
                                 break
 
                 elif self.playMode == VLC:
-                    
+
                     for i in range(N_PLAYER):
                         if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:                        
                             current_media_path = url2path(self.dw_player[i].mediaplayer.get_media().get_mrl())
@@ -7603,7 +7635,7 @@ item []:
             editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]), HHMMSSZZZ))
             editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
 
-            sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+            sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
             editWindow.cobSubject.addItems(sortedSubjects)
 
