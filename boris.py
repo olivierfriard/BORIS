@@ -977,6 +977,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def export_observations_list_clicked(self):
+        """
+        export the list of observations
+        """
         
         extended_file_formats = ["Tab Separated Values (*.tsv)",
                                  "Comma Separated Values (*.csv)",
@@ -6502,7 +6505,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.projectChanged = False
             return ""
 
-        except:
+        except Exception:
             logging.critical("The project file can not be saved.\nError: {}".format(sys.exc_info()[1]))
             QMessageBox.critical(self, programName, "The project file can not be saved! {}".format(sys.exc_info()[1]))
             return "not saved"
