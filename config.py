@@ -191,6 +191,8 @@ SELECT1 = 'select1'
 
 FILTERED_BEHAVIORS = "filtered behaviors"
 
+SELECTED_BEHAVIORS = "selected behaviors"
+SELECTED_SUBJECTS = "selected subjects"
 
 # indep variables
 NUMERIC = "numeric"
