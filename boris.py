@@ -104,8 +104,8 @@ import export_observation
 import time_budget_functions
 
 
-__version__ = "6.3.8"
-__version_date__ = "2018-09-06"
+__version__ = "6.3.9"
+__version_date__ = "2018-09-19"
 
 if platform.python_version() < "3.5":
     logging.critical("BORIS requires Python 3.5+! You are using v. {}")
@@ -9876,6 +9876,11 @@ item []:
         eventsWithStatus = project_functions.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
 
         for event in eventsWithStatus:
+
+            # check if event in selected behaviors
+            if event[EVENT_BEHAVIOR_FIELD_IDX] not in plot_parameters["selected behaviors"]:
+                continue
+
             if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
 
                 if event[-1] == POINT:
