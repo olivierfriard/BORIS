@@ -1247,7 +1247,7 @@
   </action>
   <action name="actionJWatcher">
    <property name="text">
-    <string>JWatcher</string>
+    <string>for analysis with JWatcher</string>
    </property>
   </action>
   <action name="actionCloseObs">

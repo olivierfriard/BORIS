@@ -32,7 +32,7 @@ import utilities
 import project_functions
 import db_functions
 
-
+'''
 def export_events_jwatcher_old(parameters, obsId, observation, ethogram, file_name, output_format):
     """
     export events jwatcher .dat format
@@ -226,7 +226,7 @@ def export_events_jwatcher_old(parameters, obsId, observation, ethogram, file_na
 
 
     return True, ""
-
+'''
 
 def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, output_format):
     """
@@ -349,7 +349,7 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
         rows.append("Notes=")
         rows.append("Supplementary=\n")
 
-        if fmf_creation_answer == "Overwrite":
+        if fmf_creation_answer == OVERWRITE or fmf_creation_answer == "":
             try:
                 with open(fmf_file_path, "w") as f_out:
                     f_out.write("\n".join(rows))
@@ -446,7 +446,7 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
             rows.append("Behavior.switchesOff.{}=".format(key))
             rows.append("")
 
-        if faf_creation_answer == OVERWRITE:
+        if faf_creation_answer == "" or faf_creation_answer == OVERWRITE:
             try:
                 with open(pathlib.Path(file_name_subject).with_suffix(".faf"), "w") as f_out:
                     f_out.write("\n".join(rows))

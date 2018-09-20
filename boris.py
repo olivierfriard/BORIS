@@ -104,8 +104,8 @@ import time_budget_functions
 
 import vlc
 
-__version__ = "7.0.10"
-__version_date__ = "2018-09-18"
+__version__ = "7.0.11"
+__version_date__ = "2018-09-xx"
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
@@ -9188,7 +9188,7 @@ item []:
         self.find_replace_dialog.show()
 
 
-    def export_tabular_events(self, mode="tabular"):
+    def export_tabular_events(self, mode: str="tabular"):
         """
         export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
 

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -782,7 +782,7 @@ class Ui_MainWindow(object):
         self.actionRotate_video.setText(_translate("MainWindow", "Rotate video"))
         self.actionExport_observations_list.setText(_translate("MainWindow", "Export observations list"))
         self.actionExportEvents_2.setText(_translate("MainWindow", "Tabular events"))
-        self.actionJWatcher.setText(_translate("MainWindow", "JWatcher"))
+        self.actionJWatcher.setText(_translate("MainWindow", "for analysis with JWatcher"))
         self.actionCloseObs.setText(_translate("MainWindow", "Close observation"))
         self.actionFilter_events.setText(_translate("MainWindow", "Filter events"))
         self.actionShow_all_events.setText(_translate("MainWindow", "Show all events"))

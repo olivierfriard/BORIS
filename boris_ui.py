@@ -801,7 +801,7 @@ class Ui_MainWindow(object):
         self.actionRotate_video.setText(_translate("MainWindow", "Rotate video", None))
         self.actionExport_observations_list.setText(_translate("MainWindow", "Export observations list", None))
         self.actionExportEvents_2.setText(_translate("MainWindow", "Tabular events", None))
-        self.actionJWatcher.setText(_translate("MainWindow", "JWatcher", None))
+        self.actionJWatcher.setText(_translate("MainWindow", "for analysis with JWatcher", None))
         self.actionCloseObs.setText(_translate("MainWindow", "Close observation", None))
         self.actionFilter_events.setText(_translate("MainWindow", "Filter events", None))
         self.actionShow_all_events.setText(_translate("MainWindow", "Show all events", None))
