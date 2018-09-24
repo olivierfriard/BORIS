@@ -235,6 +235,7 @@ class TempDirCleanerThread(QThread):
             time.sleep(30)
             logging.debug("cleaning frame cache directory")
 
+
 ROW = -1  # red triangle
 
 
@@ -267,7 +268,7 @@ class Click_label(QLabel):
 
     mouse_pressed_signal = pyqtSignal(int, QEvent)
 
-    def __init__(self, id_, parent= None):
+    def __init__(self, id_, parent=None):
         QLabel.__init__(self, parent)
         self.id_ = id_
 
@@ -288,22 +289,22 @@ class DW(QDockWidget):
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
 
-    def __init__(self, id_, parent = None):
+    def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
         self.setWindowTitle("Player #{}".format(id_ + 1))
         self.setObjectName("player{}".format(id_ + 1))
-        
+
         self.w = QtWidgets.QWidget()
 
         self.hlayout = QHBoxLayout()
 
         self.videoframe = Video_frame()
         self.palette = self.videoframe.palette()
-        self.palette.setColor(QPalette.Window, QColor(0,0,0))
+        self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
-        
+
         self.hlayout.addWidget(self.videoframe)
 
         self.volume_slider = QSlider(Qt.Vertical, self)
@@ -346,8 +347,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     instance = vlc.Instance()
 
-    #dw_player = []
-
     pj = dict(EMPTY_PROJECT)
     project = False
     ffmpeg_recode_process = None  # to be removed
@@ -369,9 +368,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     alertNoFocalSubject = False        # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
     checkForNewVersion = False         # if True BORIS will check for new version every 15 days
-    
+
     pause_before_addevent = False      # pause before "Add event" command CTRL + A
-    
+
     timeFormat = HHMMSS                # 's' or 'hh:mm:ss'
     repositioningTimeOffset = 0
     automaticBackup = 0                # automatic backup interval (0 no backup)
@@ -442,7 +441,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     cleaningThread = TempDirCleanerThread()
     bcm_dict = {}
     recent_projects = []
-    
+
     filtered_subjects = []
     filtered_behaviors = []
 
@@ -636,9 +635,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.actionZoom1_1_2.setChecked(zv == 0.5)
                 self.actionZoom1_1_4.setChecked(zv == 0.25)
                 self.actionZoom1_2_1.setChecked(zv == 2)
-            except:
+            except Exception:
                 pass
-    
+
         # toolbar
         self.actionPlay.setEnabled(self.playerType == VLC)
         self.actionPause.setEnabled(self.playerType == VLC)
@@ -664,13 +663,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_coding_map.setEnabled(flagObs)
 
         # Analysis
-        for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report]: 
+        for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
         # plot events
         self.menuPlot_events.setEnabled(FLAG_MATPLOTLIB_INSTALLED and self.pj[OBSERVATIONS] != {})
         # IRR
         self.menuInter_rater_reliability.setEnabled(self.pj[OBSERVATIONS] != {})
-        #self.actionCohen_s_kappa.setEnabled(self.pj[OBSERVATIONS] != {})
 
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
@@ -744,8 +742,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
         self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
-        self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(lambda: self.transitions_matrix(
-                                                                                        "frequencies_after_behaviors"))
+
+        self.actionFrequencies_of_transitions_after_behaviors.triggered.connect(
+            lambda: self.transitions_matrix("frequencies_after_behaviors")
+        )
 
         # menu playback
         self.actionJumpTo.triggered.connect(self.jump_to)
@@ -762,28 +762,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
 
-        #self.actionRecode_resize_video.triggered.connect(self.recode_resize_video)
         self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
-        #self.actionRotate_video.triggered.connect(self.rotate_video)
         self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
         self.actionMedia_file_information_2.triggered.connect(self.media_file_info)
 
         self.actionCreate_transitions_flow_diagram.triggered.connect(self.transitions_dot_script)
         self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
 
-        #self.actionConverters_manager.triggered.connect(self.converters_manager)
-
         # menu Analysis
         self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
-        #self.actionTime_budget_report.triggered.connect(lambda: self.time_budget("synthetic"))
         
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
         
-        #self.actionTest_stb2.triggered.connect(self.synthetic_time_budget)
         self.actionTest_stb2.setVisible(False)
 
-        #self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
+        # self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
         self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.setVisible(False)
@@ -8352,26 +8346,26 @@ item []:
                 modifier_str = event["from map"]
 
             # update current state
-            if "row" not in event: # no editing
+            if "row" not in event:  # no editing
                 if self.currentSubject:
                     csj = []
                     for idx in self.currentStates:
                         if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]["name"] == self.currentSubject:
                             csj = self.currentStates[idx]
                             break
-    
+
                 else:  # no focal subject
                     try:
                         csj = self.currentStates[""]
                     except:
                         csj = []
-    
+
                 cm = {} # modifiers for current behaviors
                 for cs in csj:
                     for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
                         if ev[EVENT_TIME_FIELD_IDX] > memTime:
                             break
-    
+
                         if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
                             if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
                                 cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
@@ -8381,17 +8375,17 @@ item []:
                     if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
                         modifier_str = cm[cs]
                         continue
-    
+
                     if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and cm[cs] != modifier_str):
                         # add excluded state event to observations (= STOP them)
                         self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""])
 
             # remove key code from modifiers
             modifier_str = re.sub(" \(.*\)", "", modifier_str)
-    
+
             comment = event["comment"] if "comment" in event else ""
             subject = event["subject"] if "subject" in event else self.currentSubject
-    
+
             # add event to pj
             if "row" in event:
                 # modifying event
@@ -8399,24 +8393,24 @@ item []:
             else:
                 # add event
                 self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime, subject, event["code"], modifier_str, comment])
-    
+
             # sort events in pj
             self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
 
             # reload all events in tw
             self.loadEventsInTW(self.observationId)
-            
+
             position_in_events = [i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == memTime][0]
-            
+
             if position_in_events == len(self.pj[OBSERVATIONS][self.observationId][EVENTS]) - 1:
                 self.twEvents.scrollToBottom()
             else:
                 self.twEvents.scrollToItem(self.twEvents.item(position_in_events, 0), QAbstractItemView.EnsureVisible)
 
             self.projectChanged = True
-        except:
+        except Exception:
             raise
-            dialog.MessageDialog(programName, "Even can not be recorded.\nError: {}".format(sys.exc_info()[1]) , [OK])
+            dialog.MessageDialog(programName, "Even can not be recorded.\nError: {}".format(sys.exc_info()[1]), [OK])
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
@@ -8479,8 +8473,10 @@ item []:
                     memLaps = Decimal(self.FFmpegGlobalFrame * (1000 / self.fps) / 1000).quantize(Decimal(".001"))
                     return memLaps
                 elif self.playMode == VLC:
-                    # cumulative time 
-                    memLaps = Decimal(str(round((sum(self.dw_player[n_player].media_durations[0: self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())]) +
+                    # cumulative time
+                    memLaps = Decimal(str(round((sum(self.dw_player[n_player].media_durations[
+                    0: self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())
+                                                                                             ]) +
                               self.dw_player[n_player].mediaplayer.get_time()) / 1000, 3)))
                     return memLaps
 
@@ -8512,7 +8508,7 @@ item []:
 
             self.codingMapWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
             if self.codingMapWindowGeometry:
-                 self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
+                self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
 
             if not self.codingMapWindow.exec_():
                 return
@@ -8556,7 +8552,7 @@ item []:
         emit beep on various platform
         """
         if sys.platform.startswith("linux"):
-            #os.system("beep {}".format(parameters))
+            # os.system("beep {}".format(parameters))
             app.beep()
         else:
             app.beep()
@@ -8586,7 +8582,7 @@ item []:
         if self.confirmSound:
             self.beep("")
 
-        if self.playerType == VLC: 
+        if self.playerType == VLC:
             flagPlayerPlaying = self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused
 
         # check if media ever played
@@ -8682,7 +8678,7 @@ item []:
         else:
             memLaps = self.getLaps()
 
-        if memLaps == None:
+        if memLaps is None:
             return
 
         if (((ek in range(33, 256)) and (ek not in [Qt.Key_Plus, Qt.Key_Minus])) or
@@ -8696,7 +8692,7 @@ item []:
             elif ek != Qt.Key_Enter:
                 '''ek_unichr = chr(ek)'''
                 ek_unichr = ek_text
-            elif (ek == Qt.Key_Enter and event.text()): # click from coding pad or subjects pad
+            elif (ek == Qt.Key_Enter and event.text()):  # click from coding pad or subjects pad
                 ek_unichr = ek_text
 
             logging.debug("ek_unichr {}".format(ek_unichr))
@@ -8717,7 +8713,7 @@ item []:
                             self.update_subject(self.pj[SUBJECTS][subj_idx]["name"])
                             return
 
-                else: # behavior
+                else:  # behavior
                     for idx in self.pj[ETHOGRAM]:
                         if self.pj[ETHOGRAM][idx]["code"] == event.text():
                             ethogram_idx = idx
@@ -8825,7 +8821,7 @@ item []:
             if ":" in self.twEvents.item(row, 0).text():
                 time_ = time2seconds(self.twEvents.item(row, 0).text())
             else:
-                time_  = Decimal(self.twEvents.item(row, 0).text())
+                time_ = Decimal(self.twEvents.item(row, 0).text())
 
             # substract time offset
             time_ -= self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]
@@ -9011,7 +9007,7 @@ item []:
                                                                      if idx not in rows]
                 self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
-            except:
+            except Exception:
                 QMessageBox.critical(self, programName, "Problem during event deletion!")
 
 
@@ -9075,7 +9071,7 @@ item []:
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
-            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() 
+            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked()
                 and event_idx in self.find_dialog.rowsToFind)):
                 for idx in fields_list:
                     if self.find_dialog.findText.text() in event[idx]:
@@ -9261,11 +9257,11 @@ item []:
                                "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                                "HTML (*.html)"]
                 file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
-    
+
                 fileName, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
                 if not fileName:
                     return
-    
+
                 outputFormat = file_formats[extended_file_formats.index(filter_)]
                 if pathlib.Path(fileName).suffix != "." + outputFormat:
                     fileName = str(pathlib.Path(fileName)) + "." + outputFormat
@@ -9303,12 +9299,12 @@ item []:
     def create_behavioral_strings(self, obsId: str, subj: str, plot_parameters: list) -> str:
         """
         return the behavioral string for subject in obsId
-        
+
         Args:
             obsId (str): observation id
             subj (str): subject
             plot_parameters (dict): parameters
-        
+
         Returns:
             str: behavioral string for selected subject in selected observation
         """
@@ -9449,9 +9445,9 @@ item []:
         flagMulti = False
         if len(plot_parameters["selected subjects"]) == 1:
 
-            fn = QFileDialog(self).getSaveFileName(self, "Create matrix of transitions " + mode, "",
+            fn = QFileDialog().getSaveFileName(self, "Create matrix of transitions " + mode, "",
                                                    "Transitions matrix files (*.txt *.tsv);;All files (*)")
-            fileName = fn[0] if type(fn) is tuple else fn # PyQt4/5
+            fileName = fn[0] if type(fn) is tuple else fn  # PyQt4/5
 
         else:
             exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the transitions matrices",
@@ -9500,14 +9496,14 @@ item []:
 
                     with open(nf, "w") as outfile:
                         outfile.write(observed_matrix)
-                except:
+                except Exception:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(nf))
             else:
                 try:
                     with open(fileName, "w") as outfile:
                         outfile.write(observed_matrix)
 
-                except:
+                except Exception:
                     QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
 
 
@@ -9532,7 +9528,7 @@ item []:
                         f.write(gv)
 
                     out += "<b>{}</b> created<br>".format(fileName + ".gv")
-                except:
+                except Exception:
                     QMessageBox.information(self, programName, "Error during dot script creation.\n{}".format(str(sys.exc_info()[1])))
 
         if out:
@@ -9577,7 +9573,7 @@ item []:
                         out += "<b>{}</b> created<br>".format(fileName + ".png")
                     else:
                         out += "Problem with <b>{}</b><br>".format(fileName)
-                except:
+                except Exception:
                     QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[1])))
 
         if out:
@@ -9632,7 +9628,7 @@ item []:
         if fileName:
             try:
                 fromProject = json.loads(open(fileName, "r").read())
-            except:
+            except Exception:
                 QMessageBox.critical(self, programName, "This project file seems corrupted")
                 return
 
@@ -9816,8 +9812,8 @@ item []:
                             if flagPaused:
                                 self.dw_player[0].mediaListPlayer.pause()
 
-                            self.dw_player[0].mediaplayer.set_time(newTime
-                                                      - sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
+                            self.dw_player[0].mediaplayer.set_time(newTime -
+        sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
 
                             break
                         tot += d
@@ -9863,7 +9859,9 @@ item []:
 
                 elif self.dw_player[0].media_list.count() > 1:
 
-                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())])
+                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(
+                                                                                    self.dw_player[0].mediaplayer.get_media()
+                                                                                    )])
                                + self.dw_player[0].mediaplayer.get_time()
                                + self.fast * 1000)
                     if newTime < sum(self.dw_player[0].media_durations):
@@ -9883,8 +9881,17 @@ item []:
                                 if flagPaused:
                                     self.dw_player[0].mediaListPlayer.pause()
 
-                                self.dw_player[0].mediaplayer.set_time(newTime - sum(
-                                    self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
+                                    self.dw_player[0].mediaplayer.set_time(
+                                        newTime -
+                                          sum(
+                                            self.dw_player[0].media_durations[
+                                                0: self.dw_player[0].media_list.index_of_item(
+                                                    self.dw_player[0].mediaplayer.get_media()
+                                                )
+                                            ]
+                                        )
+                                    )
+                                
 
                                 break
                             tot += d
@@ -10019,11 +10026,15 @@ if __name__ == "__main__":
     if observation_to_open and "error" not in pj:
         r = window.load_observation(observation_to_open)
         if r:
-            QMessageBox.warning(None, programName,
-                                (
-                                "Error opening observation: <b>{}</b><br>{}"
-                                ).format(observation_to_open, r.split(":")[1]),
-                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.warning(
+                None,
+                programName,
+                ("Error opening observation: <b>{}</b><br>{}").format(
+                    observation_to_open, r.split(":")[1]
+                ),
+                QMessageBox.Ok | QMessageBox.Default,
+                QMessageBox.NoButton,
+            )
 
     window.show()
     window.raise_()
