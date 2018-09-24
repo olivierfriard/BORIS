@@ -7947,39 +7947,42 @@ item []:
 
                 media_idx = self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())
 
-                if  sum(self.dw_player[n_player].media_durations[0: media_idx]) < new_time < sum(self.dw_player[n_player].media_durations[0: media_idx+1]):
+                if sum(self.dw_player[n_player].media_durations[0:media_idx]) < new_time < sum(
+                        self.dw_player[n_player].media_durations[0:media_idx + 1]):
                     # correct media
 
-                    logging.debug("{} correct media".format(n_player+1))
+                    logging.debug("{} correct media".format(n_player + 1))
 
-                    self.dw_player[n_player].mediaplayer.set_time(new_time -  sum(
+                    self.dw_player[n_player].mediaplayer.set_time(new_time - sum(
                                 self.dw_player[n_player].media_durations[0: media_idx]))
                 else:
 
-                    logging.debug("{} not correct media".format(n_player+1))
+                    logging.debug("{} not correct media".format(n_player + 1))
 
                     flagPaused = self.dw_player[n_player].mediaListPlayer.get_state() == vlc.State.Paused
                     tot = 0
                     for idx, d in enumerate(self.dw_player[n_player].media_durations):
-                        if tot <= new_time < tot + d :
+                        if tot <= new_time < tot + d:
                             self.dw_player[n_player].mediaListPlayer.play_item_at_index(idx)
                             app.processEvents()
                             # wait until media is played
                             while True:
                                 if self.dw_player[n_player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                                     break
-    
+
                             if flagPaused:
                                 self.dw_player[n_player].mediaListPlayer.pause()
-    
+
                             self.dw_player[n_player].mediaplayer.set_time(new_time - sum(
-                                self.dw_player[n_player].media_durations[0: self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())]))
+                                self.dw_player[n_player].media_durations[0: self.dw_player[n_player].media_list.index_of_item(
+                                    self.dw_player[n_player].mediaplayer.get_media()
+                                )]))
                             break
                         tot += d
 
-            else: # end of media list
+            else:  # end of media list
 
-                logging.debug("{} end of media".format(n_player+1))
+                logging.debug("{} end of media".format(n_player + 1))
 
                 self.dw_player[n_player].mediaListPlayer.play_item_at_index(len(self.dw_player[n_player].media_durations) - 1)
                 app.processEvents()
@@ -7987,7 +7990,7 @@ item []:
                 while True:
                     if self.dw_player[n_player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                         break
-                self.dw_player[n_player].mediaplayer.set_time(self.dw_player[n_player].media_durations[-1] )
+                self.dw_player[n_player].mediaplayer.set_time(self.dw_player[n_player].media_durations[-1])
 
 
 
@@ -8013,8 +8016,8 @@ item []:
 
             # current media time
             try:
-                mediaTime = self.dw_player[0].mediaplayer.get_time() # time of FIRST media player
-            except:
+                mediaTime = self.dw_player[0].mediaplayer.get_time()  # time of FIRST media player
+            except Exception:
                 print("error on get time")
                 return
 
@@ -8029,21 +8032,20 @@ item []:
                 self.dw_player[0].frame_viewer.setVisible(False)
                 self.dw_player[0].videoframe.setVisible(True)
                 self.dw_player[0].volume_slider.setVisible(True)
-                
-
-            #self.dw_player[0].mediaplayer.get_time()
 
             t0 = self.dw_player[0].mediaplayer.get_time()
             ct0 = self.getLaps() * 1000
 
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
                 for i in range(1, N_PLAYER):
-                    if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
-                        
+                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
+                            and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         t = self.dw_player[i].mediaplayer.get_time()
                         ct = self.getLaps(n_player=i) * 1000
-   
-                        if abs(ct0 - (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(i + 1)]) * 1000)) >= 300:
+
+                        if abs(ct0 -
+                               (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                             ["offset"][str(i + 1)]) * 1000)) >= 300:
                             self.sync_time(i, ct0)
 
             currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
@@ -8086,7 +8088,7 @@ item []:
                             if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
                                 cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
                     # state and modifiers (if any)
-                    txt.append(cs + " ({}) ".format(cm[cs])*(cm[cs] != ""))
+                    txt.append(cs + " ({}) ".format(cm[cs]) * (cm[cs] != ""))
 
                 txt = ", ".join(txt)
 
@@ -8099,14 +8101,22 @@ item []:
 
                 # update status bar
                 msg = ""
-                if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing or self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused:
+                if (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing
+                        or self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused):
                     msg = "{media_name}: <b>{time} / {total_time}</b>".format(media_name=mediaName,
                                                                               time=self.convertTime(Decimal(mediaTime / 1000)),
                                                                               total_time=self.convertTime(Decimal(self.mediaTotalLength)))
 
+                    '''
                     if self.dw_player[0].media_list.count() > 1:
                         msg += " | total: <b>%s / %s</b>" % ((self.convertTime(Decimal(currentTime / 1000)),
                                                                self.convertTime(Decimal(totalGlobalTime / 1000))))
+                    '''
+
+                    if self.dw_player[0].media_list.count() > 1:
+                        msg += " | total: <b>{} / {}</b>".format(self.convertTime(Decimal(currentTime / 1000)),
+                                                                 self.convertTime(Decimal(totalGlobalTime / 1000)))
+
                     if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused:
                         msg += " (paused)"
 
@@ -8121,10 +8131,11 @@ item []:
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
-            if (self.memMedia and mediaName != self.memMedia) or (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive()):
+            if ((self.memMedia and mediaName != self.memMedia)
+                    or (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive())):
 
-                if (CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId] 
-                    and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS]):
+                if (CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId]
+                        and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS]):
 
                     logging.debug("video changed")
                     logging.debug("current states: {}".format(self.currentStates))
@@ -8149,7 +8160,8 @@ item []:
 
                             self.pj[OBSERVATIONS][self.observationId][EVENTS].append([end_time, subjName, behav, cm, ""])
                             self.loadEventsInTW(self.observationId)
-                            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]) if t[0] == end_time][0], 0)
+                            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                                                       if t[0] == end_time][0], 0)
                             self.twEvents.scrollToItem(item)
                             self.projectChanged = True
 
@@ -8186,7 +8198,7 @@ item []:
     def load_subjects_in_twSubjects(self, subjects_to_show):
         """
         fill subjects table widget with subjects from subjects_to_show
-        
+
         Args:
             subjects_to_show (list): list of subject to be shown
         """
@@ -8240,13 +8252,16 @@ item []:
             # check if code is state
             if code in stateEventsList:
                 # how many code before with same subject?
-                nbEvents = len([event[EVENT_BEHAVIOR_FIELD_IDX] for event in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                                                                  if event[EVENT_BEHAVIOR_FIELD_IDX] == code
-                                                                     and event[EVENT_TIME_FIELD_IDX] < time
-                                                                     and event[EVENT_SUBJECT_FIELD_IDX] == subject
-                                                                     and event[EVENT_MODIFIER_FIELD_IDX] == modifier])
 
-                if nbEvents and (nbEvents % 2): # test >0 and  odd
+                nbEvents = len([
+                    event[EVENT_BEHAVIOR_FIELD_IDX]
+                    for event in self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                    if event[EVENT_BEHAVIOR_FIELD_IDX] == code
+                    and event[EVENT_TIME_FIELD_IDX] < time and event[EVENT_SUBJECT_FIELD_IDX] ==
+                    subject and event[EVENT_MODIFIER_FIELD_IDX] == modifier
+                ])
+
+                if nbEvents and (nbEvents % 2):  # test >0 and  odd
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(STOP)
                 else:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
@@ -8257,8 +8272,7 @@ item []:
         check if a same event is already in events list (time, subject, code)
         """
         return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]]
-                                            for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
-
+                                         for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
     def writeEvent(self, event, memTime):
         """
@@ -8270,7 +8284,7 @@ item []:
 
         Args:
             event (dict): event parameters
-            memTime (Decimal): time 
+            memTime (Decimal): time
 
         """
 
@@ -8278,19 +8292,19 @@ item []:
         try:
             if event is None:
                 return
-    
+
             # add time offset if not from editing
             if "row" not in event:
                 memTime += Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]).quantize(Decimal(".001"))
-    
+
             # check if a same event is already in events list (time, subject, code)
             # "row" present in case of event editing
-    
+
             if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
                 _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
                 return
-    
-            if not "from map" in event:   # modifiers only for behaviors without coding map
+
+            if "from map" not in event:   # modifiers only for behaviors without coding map
                 # check if event has modifiers
                 modifier_str = ""
 
@@ -8306,17 +8320,16 @@ item []:
                                 memState = self.dw_player[0].mediaListPlayer.get_state()
                                 if memState == vlc.State.Playing:
                                     self.pause_video()
-    
+
                     # check if editing (original_modifiers key)
                     currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
-    
+
                     modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
-    
-    
+
                     r = modifierSelector.exec_()
                     if r:
                         selected_modifiers = modifierSelector.getModifiers()
-    
+
                         modifier_str = ""
                         for idx in sorted_keys(selected_modifiers):
                             if modifier_str:
@@ -8325,11 +8338,7 @@ item []:
                                 modifier_str += ",".join(selected_modifiers[idx]["selected"])
                             if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
                                 modifier_str += selected_modifiers[idx]["selected"]
-                    '''
-                    else:
-                        return  # cancel button pressed
-                    '''
-    
+
                     # restart media
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
@@ -8340,7 +8349,7 @@ item []:
                                 if memState == vlc.State.Playing:
                                     self.play_video()
                     if not r:  # cancel button pressed
-                        return 
+                        return
 
             else:
                 modifier_str = event["from map"]
@@ -8357,10 +8366,10 @@ item []:
                 else:  # no focal subject
                     try:
                         csj = self.currentStates[""]
-                    except:
+                    except Exception:
                         csj = []
 
-                cm = {} # modifiers for current behaviors
+                cm = {}  # modifiers for current behaviors
                 for cs in csj:
                     for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
                         if ev[EVENT_TIME_FIELD_IDX] > memTime:
@@ -8372,13 +8381,16 @@ item []:
 
                 for cs in csj:
                     # close state if same state without modifier
-                    if self.close_the_same_current_event and (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == "":
+                    if (self.close_the_same_current_event and
+                            (event["code"] == cs) and modifier_str.replace("None", "").replace("|", "") == ""):
                         modifier_str = cm[cs]
                         continue
 
                     if (event["excluded"] and cs in event["excluded"].split(",")) or (event["code"] == cs and cm[cs] != modifier_str):
                         # add excluded state event to observations (= STOP them)
-                        self.pj[OBSERVATIONS][self.observationId][EVENTS].append([memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""])
+                        self.pj[OBSERVATIONS][self.observationId][EVENTS].append(
+                            [memTime - Decimal("0.001"), self.currentSubject, cs, cm[cs], ""]
+                        )
 
             # remove key code from modifiers
             modifier_str = re.sub(" \(.*\)", "", modifier_str)
@@ -8425,7 +8437,7 @@ item []:
             if self.pj[ETHOGRAM][idx]["key"] == obs_key:
 
                 code_descr = self.pj[ETHOGRAM][idx]["code"]
-                if  self.pj[ETHOGRAM][idx]["description"]:
+                if self.pj[ETHOGRAM][idx]["description"]:
                     code_descr += " - " + self.pj[ETHOGRAM][idx]["description"]
                 items.append(code_descr)
                 self.detailedObs[code_descr] = idx
@@ -8474,10 +8486,13 @@ item []:
                     return memLaps
                 elif self.playMode == VLC:
                     # cumulative time
-                    memLaps = Decimal(str(round((sum(self.dw_player[n_player].media_durations[
-                    0: self.dw_player[n_player].media_list.index_of_item(self.dw_player[n_player].mediaplayer.get_media())
-                                                                                             ]) +
-                              self.dw_player[n_player].mediaplayer.get_time()) / 1000, 3)))
+                    memLaps = Decimal(
+                        str(
+                            round((sum(self.dw_player[n_player].media_durations[
+                                0:self.dw_player[n_player].media_list.
+                                index_of_item(self.dw_player[n_player].mediaplayer.get_media())]) +
+                                self.dw_player[n_player].mediaplayer.get_time()) / 1000, 3)))
+
                     return memLaps
 
 
@@ -8504,7 +8519,8 @@ item []:
                     if memState == vlc.State.Playing:
                         self.pause_video()
 
-            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(self.pj["coding_map"][self.pj[ETHOGRAM][behavior_idx]["coding map"]])
+            self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
+                self.pj["coding_map"][self.pj[ETHOGRAM][behavior_idx]["coding map"]])
 
             self.codingMapWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
             if self.codingMapWindowGeometry:
@@ -8667,9 +8683,9 @@ item []:
                 obs_key = function_keys[ek]
 
         # get video time
-        if (self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE
-           and "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]
-           and self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
+        if (self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE and
+                "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
             if self.timeFormat == HHMMSS:
                 memLaps = Decimal(int(time2seconds(self.lb_current_media_time.text())))
             if self.timeFormat == S:
@@ -8685,7 +8701,7 @@ item []:
            (ek in function_keys) or
            (ek == Qt.Key_Enter and event.text())):  # click from coding pad or subjects pad
 
-            ethogram_idx, subj_idx, count  = -1, -1, 0
+            ethogram_idx, subj_idx, count = -1, -1, 0
 
             if (ek in function_keys):
                 ek_unichr = function_keys[ek]
@@ -8836,7 +8852,8 @@ item []:
                 flag_pause = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused])
 
                 if len(self.dw_player[0].media_durations) == 1:
-                    if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
+                    if (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and
+                       time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000):
 
                         self.dw_player[0].mediaListPlayer.play()
                         while True:
@@ -8857,7 +8874,7 @@ item []:
                         self.dw_player[0].mediaplayer.set_time(int(newTime))
 
 
-                else: # more media in player 1
+                else:  # more media in player 1
 
                     # remember if player paused (go previous will start playing)
                     flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
@@ -8875,8 +8892,10 @@ item []:
                             if flagPaused:
                                 self.dw_player[0].mediaListPlayer.pause()
 
-                            self.dw_player[0].mediaplayer.set_time(newTime -
-                                                      sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
+                            self.dw_player[0].mediaplayer.set_time(newTime - sum(
+                                self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                                  index_of_item(self.dw_player[0].
+                                                                                mediaplayer.get_media())]))
                             break
 
                         tot += d
@@ -8935,7 +8954,7 @@ item []:
 
             if ok and text != '':
 
-                if not "-" in text:
+                if "-" not in text:
                     QMessageBox.critical(self, programName, "Use minus sign (-) to separate initial value from final value")
                     return
 
@@ -9002,9 +9021,11 @@ item []:
             # list of rows to delete (set for unique)
             try:
                 rows = set([item.row() for item in self.twEvents.selectedIndexes()])
-                self.pj[OBSERVATIONS][self.observationId][EVENTS] = [event
-                                                                     for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-                                                                     if idx not in rows]
+                self.pj[OBSERVATIONS][self.observationId][EVENTS] = [
+                    event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId]
+                                                      [EVENTS]) if idx not in rows
+                ]
+
                 self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
             except Exception:
@@ -9071,8 +9092,8 @@ item []:
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
-            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked()
-                and event_idx in self.find_dialog.rowsToFind)):
+            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and
+               event_idx in self.find_dialog.rowsToFind)):
                 for idx in fields_list:
                     if self.find_dialog.findText.text() in event[idx]:
                         self.find_dialog.currentIdx = event_idx
@@ -9081,8 +9102,9 @@ item []:
                         return
 
         if msg != "FIND_FROM_BEGINING":
-            if dialog.MessageDialog(programName, "<b>{}</b> not found. Search from beginning?".format(self.find_dialog.findText.text()),
-                                [YES, NO]) == YES:
+            if dialog.MessageDialog(programName,
+                                    "<b>{}</b> not found. Search from beginning?".format(self.find_dialog.findText.text()),
+                                    [YES, NO]) == YES:
                 self.find_dialog.currentIdx = -1
                 self.click_signal_find_in_events("FIND_FROM_BEGINING")
             else:
@@ -9139,7 +9161,8 @@ item []:
             if event_idx < self.find_replace_dialog.currentIdx:
                 continue
 
-            if (not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind):
+            if ((not self.find_replace_dialog.cbFindInSelectedEvents.isChecked()) or
+               (self.find_replace_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_replace_dialog.rowsToFind)):
                 for idx1 in fields_list:
                     if idx1 <= self.find_replace_dialog.currentIdx_idx:
                         continue
@@ -9147,7 +9170,9 @@ item []:
                         number_replacement += 1
                         self.find_replace_dialog.currentIdx = event_idx
                         self.find_replace_dialog.currentIdx_idx = idx1
-                        event[idx1] = event[idx1].replace(self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text())
+                        event[idx1] = event[idx1].replace(
+                            self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()
+                        )
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
                         self.loadEventsInTW(self.observationId)
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
@@ -9160,7 +9185,10 @@ item []:
                 self.find_replace_dialog.currentIdx_idx = -1
 
         if msg == "FIND_REPLACE":
-            if dialog.MessageDialog(programName, "{} not found.\nRestart find/replace from the beginning?".format(self.find_replace_dialog.findText.text()),
+            if dialog.MessageDialog(programName,
+                                    "{} not found.\nRestart find/replace from the beginning?".format(
+                                        self.find_replace_dialog.findText.text()
+                                    ),
                                     [YES, NO]) == YES:
                 self.find_replace_dialog.currentIdx = -1
             else:
@@ -9251,11 +9279,11 @@ item []:
 
             if len(selectedObservations) == 1:
                 extended_file_formats = ["Tab Separated Values (*.tsv)",
-                               "Comma Separated Values (*.csv)",
-                               "Open Document Spreadsheet ODS (*.ods)",
-                               "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                               "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                               "HTML (*.html)"]
+                                         "Comma Separated Values (*.csv)",
+                                         "Open Document Spreadsheet ODS (*.ods)",
+                                         "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                         "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                         "HTML (*.html)"]
                 file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
                 fileName, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
@@ -9280,17 +9308,16 @@ item []:
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
 
             if mode == "tabular":
-                r, msg = export_observation.export_events(parameters,
-                                                          obsId,
-                                                          self.pj[OBSERVATIONS][obsId],
-                                                          self.pj[ETHOGRAM],
-                                                          fileName, outputFormat)
-            elif mode == "jwatcher":
-                r, msg = export_observation.export_events_jwatcher(parameters,
-                                                          obsId,
-                                                          self.pj[OBSERVATIONS][obsId],
-                                                          self.pj[ETHOGRAM],
-                                                          fileName, outputFormat)
+                export_function = export_observation.export_events
+            if mode == "jwatcher":
+                export_function = export_observation.export_events_jwatcher
+
+            r, msg = export_function(parameters,
+                                     obsId,
+                                     self.pj[OBSERVATIONS][obsId],
+                                     self.pj[ETHOGRAM],
+                                     fileName,
+                                     outputFormat)
 
             if not r:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -9390,7 +9417,8 @@ item []:
                         outFile.write("\n# observation id: {}\n".format(obs_id))
                         # observation descrition
                         outFile.write("# observation description: {}\n".format(
-                                                                self.pj[OBSERVATIONS][obs_id]["description"].replace(os.linesep, " ")))
+                            self.pj[OBSERVATIONS][obs_id]["description"].replace(os.linesep, " "))
+                        )
                         # media file name
                         if self.pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
                             outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x)
@@ -9446,7 +9474,7 @@ item []:
         if len(plot_parameters["selected subjects"]) == 1:
 
             fn = QFileDialog().getSaveFileName(self, "Create matrix of transitions " + mode, "",
-                                                   "Transitions matrix files (*.txt *.tsv);;All files (*)")
+                                               "Transitions matrix files (*.txt *.tsv);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn  # PyQt4/5
 
         else:
@@ -9720,7 +9748,8 @@ item []:
                     return False
 
                 for i in range(N_PLAYER):
-                    if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
+                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                       self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         self.dw_player[i].mediaListPlayer.play()
 
                 self.timer.start(VLC_TIMER_OUT)
@@ -9740,7 +9769,8 @@ item []:
                 self.FFmpegTimer.stop()
             else:
                 for i in range(N_PLAYER):
-                    if str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
+                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
+                       self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         if self.dw_player[i].mediaListPlayer.get_state() != vlc.State.Paused:
 
                             self.timer.stop()
@@ -9749,7 +9779,7 @@ item []:
                             # wait until video is paused or ended
                             while True:
                                 if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
-                                   break
+                                    break
                             self.actionPlay.setIcon(QIcon(":/play"))
 
                 time.sleep(1)
@@ -9790,9 +9820,12 @@ item []:
 
                 elif self.dw_player[0].media_list.count() > 1:
 
-                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())])
-                               + self.dw_player[0].mediaplayer.get_time()
-                               - self.fast * 1000)
+                    newTime = (sum(
+                        self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                          index_of_item(self.dw_player[0].
+                                                                        mediaplayer.get_media())]) +
+                               self.dw_player[0].mediaplayer.get_time() - self.fast * 1000)
+
                     if newTime < self.fast * 1000:
                         newTime = 0
 
@@ -9812,9 +9845,10 @@ item []:
                             if flagPaused:
                                 self.dw_player[0].mediaListPlayer.pause()
 
-                            self.dw_player[0].mediaplayer.set_time(newTime -
-        sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media())]))
-
+                            self.dw_player[0].mediaplayer.set_time(newTime - sum(
+                                self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                                  index_of_item(self.dw_player[0].
+                                                                                mediaplayer.get_media())]))
                             break
                         tot += d
 
@@ -9841,7 +9875,7 @@ item []:
 
                 if self.FFmpegGlobalFrame * (1000 / self.fps) >= sum(self.dw_player[0].media_durations):
                     logging.debug("end of last media")
-                    self.FFmpegGlobalFrame = int(sum(self.dw_player[0].media_durations) * self.fps / 1000)-1
+                    self.FFmpegGlobalFrame = int(sum(self.dw_player[0].media_durations) * self.fps / 1000) - 1
                     logging.debug("FFmpegGlobalFrame {}  sum duration {}".format(self.FFmpegGlobalFrame,
                                                                                  sum(self.dw_player[0].media_durations)))
 
@@ -9859,11 +9893,12 @@ item []:
 
                 elif self.dw_player[0].media_list.count() > 1:
 
-                    newTime = (sum(self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(
-                                                                                    self.dw_player[0].mediaplayer.get_media()
-                                                                                    )])
-                               + self.dw_player[0].mediaplayer.get_time()
-                               + self.fast * 1000)
+                    newTime = (sum(
+                        self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                          index_of_item(self.dw_player[0].
+                                                                        mediaplayer.get_media())]) +
+                               self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
+
                     if newTime < sum(self.dw_player[0].media_durations):
                         # remember if player paused (go previous will start playing)
                         flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
@@ -9881,17 +9916,10 @@ item []:
                                 if flagPaused:
                                     self.dw_player[0].mediaListPlayer.pause()
 
-                                    self.dw_player[0].mediaplayer.set_time(
-                                        newTime -
-                                          sum(
-                                            self.dw_player[0].media_durations[
-                                                0: self.dw_player[0].media_list.index_of_item(
-                                                    self.dw_player[0].mediaplayer.get_media()
-                                                )
-                                            ]
-                                        )
-                                    )
-                                
+                                    self.dw_player[0].mediaplayer.set_time(newTime - sum(
+                                        self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                                          index_of_item(self.dw_player[0].
+                                                                                        mediaplayer.get_media())]))
 
                                 break
                             tot += d
