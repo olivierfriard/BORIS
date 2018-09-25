@@ -5021,7 +5021,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 "number": "0",
                                                 "inter_duration_mean": "NA",
                                                 "inter_duration_stdev": "NA"})
-                                    else: # point 
+                                    else:  # point
                                         out.append({"subject": subject,
                                                 "behavior": behavior,
                                                 "modifiers": "",
