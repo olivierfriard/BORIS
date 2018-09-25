@@ -7752,34 +7752,38 @@ item []:
         about_dialog.setDefaultButton(QMessageBox.Ok)
         about_dialog.setEscapeButton(QMessageBox.Ok)
 
-        about_dialog.setInformativeText(("<b>{prog_name}</b> {ver} - {date}"
-        "<p>Copyright &copy; 2012-2018 Olivier Friard - Marco Gamba<br>"
-        "Department of Life Sciences and Systems Biology<br>"
-        "University of Torino - Italy<br>"
-        "<br>"
-        """BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>"""
-        """See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>"""
-        "<br>"
-        "The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help."
-        "<hr>"
-        "How to cite BORIS:<br>"
-        "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
-        "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
-        """<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>""").format(prog_name=programName,
-                                              ver=ver,
-                                              date=__version_date__,
-                                              python_ver=platform.python_version()
-                                              ))
+        about_dialog.setInformativeText((
+            "<b>{prog_name}</b> {ver} - {date}"
+            "<p>Copyright &copy; 2012-2018 Olivier Friard - Marco Gamba<br>"
+            "Department of Life Sciences and Systems Biology<br>"
+            "University of Torino - Italy<br>"
+            "<br>"
+            """BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>"""
+            """See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>"""
+            "<br>"
+            "The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help."
+            "<hr>"
+            "How to cite BORIS:<br>"
+            "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
+            "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
+            """<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>"""
+        ).format(
+            prog_name=programName,
+            ver=ver,
+            date=__version_date__,
+            python_ver=platform.python_version()))
 
         details = ("Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}\n"
-        "CPU type: {cpu_info}\n\n"
-        "{programs_versions}").format(python_ver=platform.python_version(),
-                            architecture="64-bit" if sys.maxsize > 2**32 else "32-bit",
-                            pyqt_ver=PYQT_VERSION_STR,
-                            system=platform.system(),
-                            qt_ver=QT_VERSION_STR,
-                            cpu_info=platform.machine(),
-                            programs_versions="\n".join(programs_versions))
+                   "CPU type: {cpu_info}\n\n"
+                   "{programs_versions}").format(
+            python_ver=platform.python_version(),
+            architecture="64-bit" if sys.maxsize > 2**32 else "32-bit",
+            pyqt_ver=PYQT_VERSION_STR,
+            system=platform.system(),
+            qt_ver=QT_VERSION_STR,
+            cpu_info=platform.machine(),
+            programs_versions="\n".join(programs_versions)
+        )
 
         about_dialog.setDetailedText(details)
 
@@ -7817,17 +7821,17 @@ item []:
                 ROW = len(self.pj[OBSERVATIONS][self.observationId][EVENTS])
             else:
                 cr_list = [idx for idx, x in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS][: -1])
-                         if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx+1][0] > ct]
+                           if x[0] <= ct and self.pj[OBSERVATIONS][self.observationId][EVENTS][idx + 1][0] > ct]
 
                 if cr_list:
                     ROW = cr_list[0]
                     if not self.trackingCursorAboveEvent:
-                        ROW +=  1
+                        ROW += 1
                 else:
                     ROW = -1
 
             self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
-            
+
             if self.twEvents.item(ROW, 0):
                 print("self.twEvents.item(ROW, 0)", self.twEvents.item(ROW, 0).text())
                 self.twEvents.scrollToItem(self.twEvents.item(ROW, 0), QAbstractItemView.EnsureVisible)
@@ -7849,11 +7853,14 @@ item []:
         for idx in subjects:
             currentStates[idx] = []
             for sbc in stateBehaviorsCodes:
-                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                                                       if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                                          and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                                          and x[EVENT_TIME_FIELD_IDX] <= time]) % 2: # test if odd
+
+                if len([
+                        x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"] and
+                        x[EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[EVENT_TIME_FIELD_IDX] <= time
+                ]) % 2:  # test if odd
                     currentStates[idx].append(sbc)
+
         return currentStates
 
 
@@ -7875,7 +7882,9 @@ item []:
                 if self.twSubjects.item(i, 1).text() == NO_FOCAL_SUBJECT:
                     self.twSubjects.item(i, len(subjectsFields)).setText(",".join(self.currentStates[""]))
                 else:
-                    self.twSubjects.item(i, len(subjectsFields)).setText(",".join(self.currentStates[self.subject_name_index[self.twSubjects.item(i, 1).text()]]))
+                    self.twSubjects.item(i, len(subjectsFields)).setText(
+                        ",".join(self.currentStates[self.subject_name_index[self.twSubjects.item(i, 1).text()]])
+                    )
             except KeyError:
                 self.twSubjects.item(i, len(subjectsFields)).setText("")
 
@@ -7884,16 +7893,15 @@ item []:
         """
         synchronize player n_player to time new_time
         if required load the media file corresponding to cumulative time in player
-        
+
         Args:
             n_player (int): player
             new_time (int): new time in ms
         """
 
-
         if self.dw_player[n_player].media_list.count() == 1:
-            
-                #try:
+
+                # try:
                 if self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)]:
 
                     if self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] > 0:
@@ -7905,7 +7913,9 @@ item []:
                             self.dw_player[n_player].volume_slider.setVisible(False)
                         else:
 
-                            if new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000) > sum(self.dw_player[n_player].media_durations):
+                            if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                                   ["offset"][str(n_player + 1)] * 1000) > sum(
+                                                       self.dw_player[n_player].media_durations)):
                                 # hide video if required time > video time + offset
                                 self.dw_player[n_player].frame_viewer.setVisible(True)
                                 self.dw_player[n_player].videoframe.setVisible(False)
@@ -7916,12 +7926,15 @@ item []:
                                 self.dw_player[n_player].frame_viewer.setVisible(False)
                                 self.dw_player[n_player].videoframe.setVisible(True)
                                 self.dw_player[n_player].volume_slider.setVisible(True)
-                                self.dw_player[n_player].mediaplayer.set_time(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000) )
-
+                                self.dw_player[n_player].mediaplayer.set_time(
+                                    new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                                       ["offset"][str(n_player + 1)] * 1000))
 
                     elif self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] < 0:
 
-                        if new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000) > sum(self.dw_player[n_player].media_durations):
+                        if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                               ["offset"][str(n_player + 1)] * 1000) > sum(
+                                                   self.dw_player[n_player].media_durations)):
                             # hide video if required time > video time + offset
                             self.dw_player[n_player].frame_viewer.setVisible(True)
                             self.dw_player[n_player].videoframe.setVisible(False)
@@ -7931,15 +7944,17 @@ item []:
                             self.dw_player[n_player].videoframe.setVisible(True)
                             self.dw_player[n_player].volume_slider.setVisible(True)
 
-                            self.dw_player[n_player].mediaplayer.set_time(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000))
+                            self.dw_player[n_player].mediaplayer.set_time(
+                                new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                                   ["offset"][str(n_player + 1)] * 1000))
 
                 else:
 
                     self.dw_player[n_player].mediaplayer.set_time(new_time)
 
-                #except:
-                #print("offset error with player #{}".format(n_player + 1))
-                #self.dw_player[n_player].mediaplayer.set_time(new_time)
+                # except:
+                # print("offset error with player #{}".format(n_player + 1))
+                # self.dw_player[n_player].mediaplayer.set_time(new_time)
 
         elif self.dw_player[n_player].media_list.count() > 1:
 
@@ -7954,7 +7969,8 @@ item []:
                     logging.debug("{} correct media".format(n_player + 1))
 
                     self.dw_player[n_player].mediaplayer.set_time(new_time - sum(
-                                self.dw_player[n_player].media_durations[0: media_idx]))
+                        self.dw_player[n_player].media_durations[0: media_idx])
+                    )
                 else:
 
                     logging.debug("{} not correct media".format(n_player + 1))
