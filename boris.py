@@ -5455,7 +5455,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     filters = "Microsoft Excel Workbook *.xlsx (*.xlsx);;All files (*)"
                 if "od" in outputFormat:
                     filters = "Open Document Workbook *.ods (*.ods);;All files (*)"
-                
+
                 if QT_VERSION_STR[0] == "4":
                     WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
                 else:
@@ -5475,7 +5475,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
                        "Open Document Spreadsheet *.ods (*.ods);;"
                        "Microsoft Excel Spreadsheet *.xlsx (*.xlsx);;"
-                       #"Pandas dataframe (*.df);;"
+                       # "Pandas dataframe (*.df);;"
                        "Legacy Microsoft Excel Spreadsheet *.xls (*.xls);;"
                        "HTML *.html (*.html);;"
                        "All files (*)")
@@ -5502,28 +5502,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 data_report = tablib.Dataset()
                 data_report.title = "Synthetic time budget"
-                
+
                 parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
 
                 cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"],
                                                         selectedObservations, plot_parameters["selected behaviors"])
-                
+
                 cursor.execute("SELECT distinct code, modifiers FROM events WHERE subject in ({})".format(
-                                        ",".join("?" * len(plot_parameters["selected subjects"]))
-                                                                                                         ),
+                    ",".join("?" * len(plot_parameters["selected subjects"]))
+                ),
                                (plot_parameters["selected subjects"]))
-                
+
                 distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
-                
+
                 # add selected behaviors that are not observed
                 for behav in plot_parameters["selected behaviors"]:
                     if [x for x in distinct_behav_modif if x[0] == behav] == []:
                         distinct_behav_modif.append([behav, "-"])
-    
+
                 behaviors = init_behav_modif()
-                
+
                 subj_header, behav_header, modif_header, param_header = ["", ""], ["", ""], ["", ""], ["", "Total length (s)"]
-                #subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
+                # subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
                 for subj in plot_parameters["selected subjects"]:
                     for behav in plot_parameters["selected behaviors"]:
                         if not plot_parameters["include modifiers"]:
@@ -5531,7 +5531,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 subj_header.append(subj)
                                 behav_header.append(behav)
                                 param_header.append(param[1])
-                                
+
                         if plot_parameters["include modifiers"]:
                             for modif in sorted(list(behaviors[subj][behav].keys())):
                                 for param in parameters:
@@ -5539,7 +5539,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     behav_header.append(behav)
                                     modif_header.append(modif)
                                     param_header.append(param[1])
-    
+
                 data_report.append(subj_header)
                 data_report.append(behav_header)
                 if plot_parameters["include modifiers"]:
@@ -5547,12 +5547,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data_report.append(param_header)
 
             if mode == "by_behavior":
-                fields = ["subject", "behavior",  "modifiers", "number",
+                fields = ["subject", "behavior", "modifiers", "number",
                           "duration", "duration_mean", "duration_stdev",
                           "inter_duration_mean", "inter_duration_stdev"]
 
             if mode == "by_category":
-                fields = ["subject", "category",  "number", "duration"]
+                fields = ["subject", "category", "number", "duration"]
 
             for obsId in selectedObservations:
 
@@ -5567,15 +5567,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if plot_parameters["time"] == TIME_FULL_OBS:
                     min_time = float(0)
                     max_time = float(obs_length)
-    
+
                 if plot_parameters["time"] == TIME_EVENTS:
                     try:
                         min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])
-                    except:
+                    except Exception:
                         min_time = float(0)
                     try:
                         max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
-                    except:
+                    except Exception:
                         max_time = float(obs_length)
 
                 if plot_parameters["time"] == TIME_ARBITRARY_INTERVAL:
@@ -5660,9 +5660,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
                         for idx in self.pj[INDEPENDENT_VARIABLES]:
                             labels.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+
                             if (INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
-                                and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
-                                values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
+                                    and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.
+                                    pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
+                                values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][
+                                    self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
+
                     rows.append(labels)
                     rows.append(values)
                     rows.append([""])
@@ -5675,16 +5679,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if mode == "by_behavior":
 
                         rows.append(fields + ["% of total length"])
-                        #data.headers = fields + ["% of total media length"]
 
                         for row in out:
                             values = []
                             for field in fields:
                                 values.append(str(row[field]).replace(" ()", ""))
-    
                             # % of total time
                             if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
-                            # if row["duration"] != "-" and row["duration"] != 0 and row["duration"] != UNPAIRED and selectedObsTotalMediaLength:
                                 values.append(round(row["duration"] / float(max_time - min_time) * 100, 1))
                                 '''
                                 if len(selectedObservations) > 1:
@@ -5751,10 +5752,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if outputFormat == "xls legacy":
                             if len(data.title) > 31:
                                 data.title = data.title[:31]
-                                QMessageBox.warning(None, programName,
-                                              ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
-                                              "The limit on worksheet name length is 31 characters").format(obsId, data.title),
-                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.warning(
+                                    None,
+                                    programName,
+                                    ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
+                                     "The limit on worksheet name length is 31 characters").format(obsId, data.title),
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
+                                )
 
                             with open(fileName, "wb") as f:
                                 f.write(data.xls)
@@ -6675,9 +6679,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if outputFormat == "sql":
             _, _, conn = db_functions.load_aggregated_events_in_db(self.pj,
-                                                             parameters["selected subjects"],
-                                                             selectedObservations,
-                                                             parameters["selected behaviors"])
+                                                                   parameters["selected subjects"],
+                                                                   selectedObservations,
+                                                                   parameters["selected behaviors"])
             try:
                 with open(fileName, "w") as f:
                     for line in conn.iterdump():
@@ -6803,11 +6807,11 @@ item []:
                                                     selectedObservations,
                                                     plot_parameters["selected behaviors"])
 
-            cursor.execute(("SELECT count(distinct subject) FROM events "
-                            "WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' ").format(obsId,
-                                                                                                         "','".join(
-                                                                                                      plot_parameters["selected subjects"]
-                                                                                                         )))
+            cursor.execute(
+                ("SELECT count(distinct subject) FROM events "
+                 "WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' "
+                 ).format(obsId, "','".join(plot_parameters["selected subjects"])))
+
             subjectsNum = int(list(cursor.fetchall())[0][0])
 
             subjectsMin, subjectsMax = 0, totalMediaDuration
@@ -6901,8 +6905,8 @@ item []:
                     f.write(out)
 
                 if flagUnpairedEventFound:
-                    QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",\
-                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                    QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",
+                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             except Exception:
                 errorMsg = sys.exc_info()[1]
@@ -7460,7 +7464,8 @@ item []:
             else:
                 durationsec = eventtimeE-eventtimeS
                 q = ["--durationmsec",str(int(durationsec*1000))]
-            args = [ex, "-f",os.path.abspath(fn),"--seekmsec",str(int(eventtimeS*1000)),*q,*("--size 1 --track 1 --redetect 100").split(" ")]
+            args = [ex, "-f",os.path.abspath(fn),"--seekmsec",str(int(eventtimeS*1000)),*q,*("--size 1 --track 1 --redetect 100")
+            .split(" ")]
             if os.path.split(fn)[1].split("_")[0] in set(["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10"]):
                 args.append("--flip")
                 args.append("2")
