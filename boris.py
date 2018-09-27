@@ -65,6 +65,7 @@ except ModuleNotFoundError:
         sys.exit()
 
 import matplotlib
+matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 from matplotlib import dates
@@ -107,7 +108,7 @@ __version__ = "7.0.11"
 __version_date__ = "2018-09-xx"
 
 
-matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
+
 
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
