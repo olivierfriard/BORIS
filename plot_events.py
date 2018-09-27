@@ -504,12 +504,16 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
             ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
 
         if time_format == HHMMSS:
-            ax.plot(np.array([dt.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600)/60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in pointsx]), pointsy, "r^")
+
+            ax.plot(
+                np.array([
+                    dt.datetime(1970, 1, 1, int(p / 3600),
+                                int((p - int(p / 3600) * 3600) / 60), int(p % 60),
+                                round(round(p % 1, 3) * 1e6)) for p in pointsx
+                ]), pointsy, "r^")
 
         if time_format == S:
             ax.plot(pointsx, pointsy, "r^")
-
-        #ax.axhline(y=y[-1] + 0.5,linewidth=1, color='black')
 
     fig.canvas.mpl_connect("draw_event", on_draw)
     plt.show()
@@ -574,10 +578,11 @@ def create_events_plot(pj,
             axs[0] = ax
 
 
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                       selected_subjects,
-                                                       [obs_id],
-                                                       selected_behaviors)
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(
+            pj,
+            selected_subjects,
+            [obs_id],
+            selected_behaviors)
 
         cursor = db_connector.cursor()
         # if modifiers not to be included set modifiers to ""
@@ -610,11 +615,11 @@ def create_events_plot(pj,
         if interval == TIME_EVENTS:
             try:
                 min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
-            except:
+            except Exception:
                 min_time = float(0)
             try:
                 max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
-            except:
+            except Exception:
                 max_time = float(obs_length)
 
         if interval == TIME_ARBITRARY_INTERVAL:
@@ -622,11 +627,11 @@ def create_events_plot(pj,
             max_time = float(end_time)
 
         cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-                      (min_time, obs_id, min_time, min_time, max_time, ))
+                       (min_time, obs_id, min_time, min_time, max_time, ))
         cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-                      (max_time, obs_id, max_time, min_time, max_time, ))
+                       (max_time, obs_id, max_time, min_time, max_time, ))
         cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-                         (min_time, max_time, obs_id, min_time, max_time, ))
+                       (min_time, max_time, obs_id, min_time, max_time, ))
 
         ylabels = [" ".join(x) for x in distinct_behav_modif]
         for ax_idx, subject in enumerate(selected_subjects):
@@ -659,16 +664,16 @@ def create_events_plot(pj,
                 # total duration
                 cursor.execute(("SELECT start,stop FROM aggregated_events "
                                 "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (obs_id, subject, behavior, modifiers,))
+                               (obs_id, subject, behavior, modifiers,))
                 for row in cursor.fetchall():
-                    #print(behavior_modifiers_str, row["start"],row["stop"])
-                    bars[behavior_modifiers_str].append((row["start"],row["stop"]))
+                    bars[behavior_modifiers_str].append((row["start"], row["stop"]))
 
                     start_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["start"]))
-                    end_date = matplotlib.dates.date2num(init + dt.timedelta(seconds=row["stop"] + POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])))
+                    end_date = matplotlib.dates.date2num(
+                        init + dt.timedelta(seconds=row["stop"] + POINT_EVENT_PLOT_DURATION * (row["stop"] == row["start"])))
                     try:
                         bar_color = utilities.behavior_color(plot_colors, all_behaviors.index(behavior))
-                    except:
+                    except Exception:
                         bar_color = "darkgray"
                     bar_color = POINT_EVENT_PLOT_COLOR if row["stop"] == row["start"] else bar_color
 
@@ -678,14 +683,14 @@ def create_events_plot(pj,
 
                     try:
                         axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
-                                         align="center", edgecolor=bar_color, color=bar_color, alpha = 1)
-                    except:
+                                         align="center", edgecolor=bar_color, color=bar_color, alpha=1)
+                    except Exception:
                         axs[ax_idx].barh((i * par1) + par1, end_date - start_date, left=start_date, height=bar_height,
-                                         align="center", edgecolor="darkgray", color="darkgray", alpha = 1)
+                                         align="center", edgecolor="darkgray", color="darkgray", alpha=1)
 
                 i += 1
 
-            axs[ax_idx].set_ylim(ymin=0, ymax = (max_len * par1) + par1)
+            axs[ax_idx].set_ylim(ymin=0, ymax=(max_len * par1) + par1)
             pos = np.arange(par1, max_len * par1 + par1 + 1, par1)
             axs[ax_idx].set_yticks(pos[:len(ylabels)])
 
