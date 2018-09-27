@@ -44,8 +44,6 @@ class ModifiersList(QDialog):
 
         self.modifiers_dict = dict(modifiers_dict)
         currentModifierList = currentModifier.split("|")
-        
-        print("currentModifierList", currentModifierList)
 
         V1layout = QVBoxLayout()
         label = QLabel()
@@ -68,7 +66,7 @@ class ModifiersList(QDialog):
             if self.modifiers_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
                 lw = QListWidget()
                 self.modifiers_dict[idx]["widget"] = lw
-                lw.setObjectName("lw_modifiers")
+                lw.setObjectName("lw_modifiers_({})".format(self.modifiers_dict[idx]["type"]))
                 lw.installEventFilter(self)
 
                 if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
@@ -165,14 +163,13 @@ class ModifiersList(QDialog):
                 return True
 
             for widget in self.children():
-                if widget.objectName() == "lw_modifiers":
+                if "lw_modifiers" in widget.objectName():
                     for index in range(widget.count()):
 
                         if ek in function_keys:
                             if "({})".format(function_keys[ek]) in widget.item(index).text().upper():
                                 if QT_VERSION_STR[0] == "4":
                                     widget.setItemSelected(widget.item(index), True)
-
                                 else:
                                     widget.item(index).setSelected(True)
 
@@ -185,7 +182,13 @@ class ModifiersList(QDialog):
                             if QT_VERSION_STR[0] == "4":
                                 widget.setItemSelected(widget.item(index), True)
                             else:
-                                widget.item(index).setSelected(True)
+                                if "({})".format(SINGLE_SELECTION) in widget.objectName():
+                                    widget.item(index).setSelected(True)
+                                if "({})".format(MULTI_SELECTION) in widget.objectName():
+                                    if widget.item(index).checkState() == Qt.Checked:
+                                        widget.item(index).setCheckState(Qt.Unchecked)
+                                    else:
+                                        widget.item(index).setCheckState(Qt.Checked)
 
                             # close dialog if one set of modifiers
                             if self.modifiersSetNumber == 1:
