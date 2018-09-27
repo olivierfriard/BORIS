@@ -22,13 +22,11 @@ This file is part of BORIS.
 
 """
 
-codeSeparator = ","
-
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
+except Exception:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
@@ -37,6 +35,7 @@ import binascii
 import os
 import config
 
+codeSeparator = ","
 penWidth = 0
 penStyle = Qt.NoPen
 '''
@@ -44,6 +43,7 @@ selectedBrush = QBrush()
 selectedBrush.setStyle(Qt.SolidPattern)
 selectedBrush.setColor(QColor(255, 255, 0, 255))
 '''
+
 
 class BehaviorsCodingMapWindowClass(QWidget):
 
@@ -65,10 +65,10 @@ class BehaviorsCodingMapWindowClass(QWidget):
         def eventFilter(self, source, event):
             if (event.type() == QEvent.MouseMove):
                 self.mouseMove.emit(event)
-                
+
             if (event.type() == QEvent.MouseButtonPress):
                 self.mousePress.emit(event)
-                
+
             return QWidget.eventFilter(self, source, event)
 
         elList, points = [], []
@@ -77,7 +77,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
             QGraphicsView.__init__(self, parent)
             self.setScene(QGraphicsScene(self))
             self.scene().update()
-            
+
             self.viewport().installEventFilter(self)
             self.setMouseTracking(True)
 
@@ -88,7 +88,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
 
     def __init__(self, behaviors_coding_map, idx=0):
         super(BehaviorsCodingMapWindowClass, self).__init__()
-        
+
         self.polygonsList2 = []
 
         self.installEventFilter(self)
@@ -106,13 +106,13 @@ class BehaviorsCodingMapWindowClass(QWidget):
         Vlayout.addWidget(self.view)
 
         hBoxLayout1 = QHBoxLayout()
-        
+
         self.label = QLabel("Behavior(s)")
         hBoxLayout1.addWidget(self.label)
 
         self.leareaCode = QLineEdit(self)
         hBoxLayout1.addWidget(self.leareaCode)
-        
+
         self.btClose = QPushButton("Close")
         self.btClose.clicked.connect(self.close)
         hBoxLayout1.addWidget(self.btClose)
@@ -150,7 +150,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
             if pg.contains(test):
                 codes.append(areaCode)
         self.leareaCode.setText(", ".join(codes))
-        
+
 
     def viewMousePressEvent(self, event):
         """
@@ -185,7 +185,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         for key in self.codingMap["areas"]:
             areaCode = self.codingMap["areas"][key]["code"]
             points = self.codingMap["areas"][key]["geometry"]
-            
+
             newPolygon = QPolygonF()
             for p in points:
                 newPolygon.append(QPoint(p[0], p[1]))
@@ -199,7 +199,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
             polygon.setBrush(QBrush(clr, Qt.SolidPattern))
 
             self.view.scene().addItem(polygon)
-            
+
             self.polygonsList2.append([areaCode, polygon])
 
 
