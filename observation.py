@@ -59,6 +59,7 @@ else:
 out = ""
 fps = 0
 
+
 class AssignConverter(QDialog):
     """
     dialog for assigning converter to selected column
@@ -111,7 +112,7 @@ class Observation(QDialog, Ui_Form):
             tmp_dir (str): path of temporary directory
             project_path (str): path of project
             converters (dict): converters dictionary
-            log_level: level of log 
+            log_level: level of log
         """
 
         super().__init__(parent)
@@ -130,7 +131,7 @@ class Observation(QDialog, Ui_Form):
         self.pbRemoveVideo.clicked.connect(self.remove_media)
         self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=True))
         self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=False))
-        
+
         self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
         self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
@@ -142,7 +143,7 @@ class Observation(QDialog, Ui_Form):
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
         self.pbCancel.clicked.connect(self.pbCancel_clicked)
-        
+
         self.tw_data_files.cellDoubleClicked[int, int].connect(self.tw_data_files_cellDoubleClicked)
 
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
@@ -193,41 +194,37 @@ class Observation(QDialog, Ui_Form):
 
     def plot_data_file(self):
         """
+        show plot
         check if data can be plotted
         """
 
         if self.pb_plot_data.text() == "Show plot":
 
             if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
-    
+
                 if self.tw_data_files.rowCount() == 1:
                     row_idx = 0
                 else:
                     row_idx = self.tw_data_files.selectedIndexes()[0].row()
-    
+
                 filename = self.tw_data_files.item(row_idx, PLOT_DATA_FILEPATH_IDX).text()
                 columns_to_plot = self.tw_data_files.item(row_idx, PLOT_DATA_COLUMNS_IDX).text()
                 plot_title = self.tw_data_files.item(row_idx, PLOT_DATA_PLOTTITLE_IDX).text()
-    
+
                 # load converters in dictionary
                 if self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text():
                     column_converter = eval(self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text())
-                    '''
-                    for idx_conv in self.tw_data_files.item(row_idx, PLOT_DATA_CONVERTERS_IDX).text().split(","):
-                        idx, conv = idx_conv.split(":")
-                        column_converter[int(idx)] = conv
-                    '''
                 else:
                     column_converter = {}
-    
+
                 variable_name  = self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text()
                 time_interval = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEINTERVAL_IDX).text())
                 time_offset = int(self.tw_data_files.item(row_idx, PLOT_DATA_TIMEOFFSET_IDX).text())
-    
+
                 substract_first_value = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_SUBSTRACT1STVALUE_IDX).currentText()
-                
+
                 plot_color = self.tw_data_files.cellWidget(row_idx, PLOT_DATA_PLOTCOLOR_IDX).currentText()
-    
+
                 data_file_path = project_functions.media_full_path(filename, self.project_path)
 
                 if not data_file_path:
@@ -235,28 +232,28 @@ class Observation(QDialog, Ui_Form):
                                                              "If the file path is not stored the data file "
                                                              "must be in the same directory than your project").format(filename))
                     return
-    
+
                 self.test = plot_data_module.Plot_data(data_file_path,
                                                   time_interval, # time interval
                                                   time_offset,   # time offset
                                                   plot_color,    # plot style
                                                   plot_title,    # plot title
-                                                  variable_name, 
+                                                  variable_name,
                                                   columns_to_plot,
                                                   substract_first_value,
                                                   self.converters,
                                                   column_converter,
                                                   log_level=logging.getLogger().getEffectiveLevel()
                                                   )
-    
+
                 if self.test.error_msg:
                     QMessageBox.critical(self, programName, "Impossible to plot data:\n{}".format(self.test.error_msg))
                     del self.test
                     return
-    
+
                 '''
                 print(test.plotter.data)
-    
+
                 print(Path(self.tmp_dir).joinpath(file_content_md5(filename)))
                 numpy.save(Path(self.tmp_dir).joinpath(file_content_md5(filename)), test.plotter.data)
                 '''
@@ -277,9 +274,9 @@ class Observation(QDialog, Ui_Form):
     def add_data_file(self, flag_path=True):
         """
         user select a data file to be plotted synchronously with media file
-        
+
         Args:
-            flag_path (bool): true to store path of data file else False
+            flag_path (bool): True to store path of data file else False
         """
 
         # limit to 2 files
@@ -288,7 +285,7 @@ class Observation(QDialog, Ui_Form):
                                                      "This limitation will be removed in future"))
             return
 
-        fd = QFileDialog(self)
+        fd = QFileDialog()
         fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
 
         fn = fd.getOpenFileName(self, "Add data file", "", "All files (*)")
@@ -296,20 +293,20 @@ class Observation(QDialog, Ui_Form):
 
         if file_name:
 
-            columns_to_plot = "1,2" # columns to plot by default
+            columns_to_plot = "1,2"  # columns to plot by default
 
             # check data file
-            r = check_txt_file(file_name) # check_txt_file defined in utilities
+            r = utilities.check_txt_file(file_name)  # check_txt_file defined in utilities
 
             if "error" in r:
                 QMessageBox.critical(self, programName , r["error"])
                 return
 
-            if not r["homogeneous"]: # not all rows have 2 columns
-                QMessageBox.critical(self, programName , "This file does not contain a constant number of columns")
+            if not r["homogeneous"]:  # not all rows have 2 columns
+                QMessageBox.critical(self, programName, "This file does not contain a constant number of columns")
                 return
 
-            header = self.return_file_header(file_name)
+            header = utilities.return_file_header(file_name)
 
             if header:
                 w = dialog.View_data_head()
@@ -320,7 +317,7 @@ class Observation(QDialog, Ui_Form):
                 w.tw.setRowCount(len(header))
 
                 for row in range(len(header)):
-                    for col, v in enumerate(header[row].split("\t")):
+                    for col, v in enumerate(header[row].split(r["separator"])):
                         w.tw.setItem(row, col, QTableWidgetItem(v))
 
                 while True:
@@ -331,11 +328,11 @@ class Observation(QDialog, Ui_Form):
                             try:
                                 col_idx = int(col)
                             except ValueError:
-                                QMessageBox.critical(self, programName , "<b>{}</b> does not seem to be a column index".format(col))
+                                QMessageBox.critical(self, programName, "<b>{}</b> does not seem to be a column index".format(col))
                                 flag_ok = False
                                 break
                             if col_idx <= 0 or col_idx > r["fields number"]:
-                                QMessageBox.critical(self, programName , "<b>{}</b> is not a valid column index".format(col))
+                                QMessageBox.critical(self, programName, "<b>{}</b> is not a valid column index".format(col))
                                 flag_ok = False
                                 break
                         if flag_ok:
@@ -346,36 +343,14 @@ class Observation(QDialog, Ui_Form):
                 else:
                     return
 
-                '''
-                text, ok = QInputDialog.getText(self, "Data file: {}".format(Path(file_name).name),
-                                                ("This file contains {} columns. 2 are required for the plot.<br>"
-                                                 "<pre>{}</pre><br>"
-                                                 "Enter the column indices to plot (time,value) separated by comma").format(r["fields number"], header))
-                if ok:
-                    if len(text.split(",")) != 2:
-                        QMessageBox.critical(self, programName , "Indicate only 2 column indices")
-                        return
-                    columns_to_plot = str(text).replace(" ", "")
-                    for col in text.split(","):
-                        try:
-                            col_idx = int(col)
-                        except:
-                            QMessageBox.critical(self, programName , "<b>{}</b> does not seem to be a column index".format(col))
-                            return
-                        if col_idx < 0 or col_idx > r["fields number"]:
-                            QMessageBox.critical(self, programName , "<b>{}</b> is not a valid column index".format(col))
-                            return
-                else:
-                    return
-                '''
             else:
                 return # problem with header
 
             self.tw_data_files.setRowCount(self.tw_data_files.rowCount() + 1)
-            
+
             if not flag_path:
                 file_name = str(Path(file_name).name)
-            
+
             for col_idx, value in zip([PLOT_DATA_FILEPATH_IDX, PLOT_DATA_COLUMNS_IDX,
                                        PLOT_DATA_PLOTTITLE_IDX, PLOT_DATA_VARIABLENAME_IDX,
                                        PLOT_DATA_CONVERTERS_IDX, PLOT_DATA_TIMEINTERVAL_IDX,
@@ -394,58 +369,51 @@ class Observation(QDialog, Ui_Form):
             combobox.addItems(["True", "False"])
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_SUBSTRACT1STVALUE_IDX, combobox)
 
-            # plot line color  
+            # plot line color
             combobox = QComboBox()
             combobox.addItems(DATA_PLOT_STYLES)
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
 
-
-    def return_file_header(self, file_name):
-        """
-        return file header
-        
-        Args:
-            file_name (str): path of file
-            
-        Returns:
-            list: 5 first rows of file
-        """
-        header = []
-        try:
-            with open(file_name) as f_in:
-                for _ in range(5):
-                    header.append(f_in.readline())
-        except:
-            QMessageBox.critical(self, programName, str(sys.exc_info()[1]))
-            return ""
-        return header
-        
 
     def view_data_file_head(self):
         """
         view first parts of data file
         """
         if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
-
             if self.tw_data_files.rowCount() == 1:
-                header = self.return_file_header(self.tw_data_files.item(0, 0).text())
+                data_file_path = project_functions.media_full_path(self.tw_data_files.item(0, 0).text(), self.project_path)
             else:
-                header = self.return_file_header(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text())
+                data_file_path = project_functions.media_full_path(self.tw_data_files.item(
+                                                                       self.tw_data_files.selectedIndexes()[0].row(), 0).text(),
+                                                                   self.project_path)
+
+            file_parameters = utilities.check_txt_file(data_file_path)
+            if "error" in file_parameters:
+                QMessageBox.critical(self, programName, "Error on file {}: {}".format(data_file_path,
+                                                                                    file_parameters["error"]))
+                return
+            header = utilities.return_file_header(data_file_path)
 
             if header:
-                dialog.MessageDialog(programName, "<pre>{}</pre>".format(header), [OK])
 
-                '''
-                self.data_file_head = dialog.ResultsWidget()
-                #self.results.setWindowFlags(Qt.WindowStaysOnTopHint)
-                self.data_file_head.resize(540, 340)
-                self.data_file_head.setWindowTitle(programName + " - Data file first lines")
-                self.data_file_head.lb.setText(os.path.basename(self.tw_data_files.item(self.tw_data_files.selectedIndexes()[0].row(), 0).text()))
-                self.data_file_head.ptText.setReadOnly(True)
-                self.data_file_head.ptText.appendHtml("<pre>" + text + "</pre>")
-                
-                self.data_file_head.show()
-                '''
+                w = dialog.View_data_head()
+                w.setWindowTitle("Data file: {}".format(Path(data_file_path).name))
+                w.setWindowFlags(Qt.WindowStaysOnTopHint)
+                w.label.setVisible(False)
+                w.le.setVisible(False)
+
+                w.tw.setColumnCount(file_parameters["fields number"])
+                w.tw.setRowCount(len(header))
+
+                for row in range(len(header)):
+                    for col, v in enumerate(header[row].split(file_parameters["separator"])):
+                        w.tw.setItem(row, col, QTableWidgetItem(v))
+
+                w.exec_()
+
+            else:
+                QMessageBox.critical(self, programName, "Error on file {}".format(data_file_path))
+
         else:
             QMessageBox.warning(self, programName, "Select a data file")
 
@@ -463,12 +431,12 @@ class Observation(QDialog, Ui_Form):
             for row in range(self.twVideo1.rowCount()):
                 if self.twVideo1.cellWidget(row, 0).currentText() == "1":
                     flag_player1 = True
-            
+
             if not flag_player1:
                 QMessageBox.critical(self, programName , "The player #1 is not selected")
                 self.cbVisualizeSpectrogram.setChecked(False)
                 return
-                
+
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
                                                   "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"), [YES, NO]) == YES:
@@ -493,9 +461,9 @@ class Observation(QDialog, Ui_Form):
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
                         QMessageBox.critical(self, programName , "The media file {} do not seem to have audio".format(media_file_path))
                         continue
-                    
+
                     if os.path.isfile(media_file_path):
-                        
+
                         process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
                                                                                       tmp_dir=tmp_dir,
                                                                                       chunk_size=self.chunk_length,
@@ -512,7 +480,7 @@ class Observation(QDialog, Ui_Form):
                         flag_spectro_produced = True
                     else:
                         QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media_file_path))
-                
+
                 if not flag_spectro_produced:
                     self.cbVisualizeSpectrogram.setChecked(False)
             else:
@@ -526,16 +494,16 @@ class Observation(QDialog, Ui_Form):
     def check_parameters(self):
         """
         check observation parameters
-        
+
         return True if everything OK else False
         """
         def is_numeric(s):
             """
             check if s is numeric (float)
-            
+
             Args:
                 s (str/int/float): value to test
-                
+
             Returns:
                 boolean: True if numeric else False
             """
@@ -555,25 +523,25 @@ class Observation(QDialog, Ui_Form):
                     players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
                 else:
                     players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
-    
+
             print(players)
-    
+
             # check if player#1 used
             if min(players_list) > 1:
                 QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
                 return False
-    
+
             # check if players are used in crescent order
             if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
                 QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media file")
                 return False
-    
+
             # check that longuest media is in player #1
             durations = []
             for i in players:
                 durations.append(sum(players[i]))
             print(durations)
-    
+
             if [x for x in durations[1:] if x > durations[0]]:
                 QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
                 return False
@@ -618,7 +586,7 @@ class Observation(QDialog, Ui_Form):
                                      "Use decimal number of seconds (e.g. -58.5 or 32)").format(
                                      self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()))
                 return False
-        
+
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
                 if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
@@ -649,11 +617,11 @@ class Observation(QDialog, Ui_Form):
     def check_media(self, n_player, file_path, flag_path):
         """
         check media and add them to list view if duration > 0
-        
+
         Args:
             file_path (str): media file path to be checked
             flag_path (bool): True include full path of media else only basename
-            
+
         Returns:
              bool: True if file is media else False
         """
@@ -679,7 +647,7 @@ class Observation(QDialog, Ui_Form):
     def add_media(self, n_player, flag_path):
         """
         add media in player nPlayer
-        
+
         Args:
             n_player (str): player
             flag_path (bool): True include full path of media else only basename
@@ -715,7 +683,7 @@ class Observation(QDialog, Ui_Form):
             nPlayer (str): player
             flag_path (bool): True include full path of media else only basename
         """
-        
+
         fd = QFileDialog(self)
         fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
 
@@ -815,7 +783,7 @@ if __name__ == '__main__':
    "code":"\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
   }
  }
-    
+
     app = QApplication(sys.argv)
     w = Observation("/tmp", converters)
     w.ffmpeg_bin="ffmpeg"
@@ -946,7 +914,7 @@ if __name__ == '__main__':
     ],
     "3":[
      "video3.mp4"
-    ]    
+    ]
    },
    "type":"MEDIA",
    "date":"2018-05-24T01:16:47",
@@ -988,7 +956,7 @@ if __name__ == '__main__':
  "converters":{}
 }
 
-    
+
 """
     w.show()
     w.exec_()

@@ -22,14 +22,19 @@ This file is part of BORIS.
 
 """
 
-
+import sys
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+except ModuleNotFoundError:
+    print("Module PyQt 5 not found. Try PyQt4.")
+    try:
+        from PyQt4.QtGui import *
+        from PyQt4.QtCore import *
+    except ModuleNotFoundError:
+        print("Module PyQt4 not found")
+        sys.exit()
 
 import config
 
@@ -84,8 +89,8 @@ class DuplicateBehaviorCode(QDialog):
 
         self.lw = QListWidget(widget)
         self.lw.setObjectName("lw_modifiers")
-        #TODO: to be enabled
-        #lw.installEventFilter(self)
+        # TODO: to be enabled
+        # lw.installEventFilter(self)
 
         '''
         if QT_VERSION_STR[0] == "4":
@@ -110,9 +115,9 @@ class DuplicateBehaviorCode(QDialog):
 
         self.setLayout(Vlayout)
 
-        #self.installEventFilter(self)
+        # self.installEventFilter(self)
 
-        self.setMaximumSize(1024 , 960)
+        self.setMaximumSize(1024, 960)
 
     def getCode(self):
         """
@@ -148,8 +153,8 @@ class ChooseObservationsToImport(QDialog):
         self.lw = QListWidget(widget)
         self.lw.setObjectName("lw_observations")
         self.lw.setSelectionMode(QAbstractItemView.ExtendedSelection)
-        #TODO: to be enabled
-        #lw.installEventFilter(self)
+        # TODO: to be enabled
+        # lw.installEventFilter(self)
 
         '''
         if QT_VERSION_STR[0] == "4":
@@ -174,9 +179,9 @@ class ChooseObservationsToImport(QDialog):
 
         self.setLayout(Vlayout)
 
-        #self.installEventFilter(self)
+        # self.installEventFilter(self)
 
-        self.setMaximumSize(1024 , 960)
+        self.setMaximumSize(1024, 960)
 
     def get_selected_observations(self):
         """
@@ -474,15 +479,15 @@ class Results_dialog(QDialog):
         """
         save content of self.ptText
         """
-        
+
         fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
-        
+
         if file_name:
             try:
                 with open(file_name, "w") as f:
                     f.write(self.ptText.toPlainText())
-            except:
+            except Exception:
                 QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
 
 
@@ -524,15 +529,15 @@ class ResultsWidget(QWidget):
         """
         save content of self.ptText
         """
-        
+
         fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
-        
+
         if file_name:
             try:
                 with open(file_name, "w") as f:
                     f.write(self.ptText.toPlainText())
-            except:
+            except Exception:
                 QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
 
 
@@ -557,10 +562,12 @@ class FrameViewer(QWidget):
         self.close()
 '''
 
+
 class View_data_head(QDialog):
     """
     widget for visualizing first rows of data file
     """
+
     def __init__(self):
         super().__init__()
 
@@ -574,21 +581,17 @@ class View_data_head(QDialog):
         self.tw = QTableWidget()
         vbox.addWidget(self.tw)
 
-        label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
-        vbox.addWidget(label)
+        self.label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
+        vbox.addWidget(self.label)
 
         self.le = QLineEdit()
         vbox.addWidget(self.le)
 
         hbox2 = QHBoxLayout()
-        # self.pbSave = QPushButton("Save results")
-        # self.pbSave.clicked.connect(self.save_results)
-        # hbox2.addWidget(self.pbSave)
 
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
-
 
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.accept)

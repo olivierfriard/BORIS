@@ -1,4 +1,3 @@
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -22,8 +21,6 @@ Copyright 2012-2018 Olivier Friard
 
 """
 
-
-
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -40,7 +37,6 @@ from utilities import check_txt_file, txt2np_array
 
 
 class MyMplCanvas(FigureCanvas):
-
     def __init__(self, parent=None):
         self.fig = Figure()
         self.axes = self.fig.add_subplot(1, 1, 1)
@@ -52,19 +48,31 @@ class MyMplCanvas(FigureCanvas):
 
 class Plot_data(QWidget):
     send_fig = pyqtSignal(float)
-    
+
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
-    def __init__(self, file_name, interval, time_offset, plot_style, plot_title, y_label, columns_to_plot,
-                       substract_first_value, converters, column_converter, log_level="",):
+    def __init__(
+            self,
+            file_name,
+            interval,
+            time_offset,
+            plot_style,
+            plot_title,
+            y_label,
+            columns_to_plot,
+            substract_first_value,
+            converters,
+            column_converter,
+            log_level="",
+    ):
         super().__init__()
 
         if log_level:
             logging.basicConfig(level=log_level)
 
         self.installEventFilter(self)
-        
+
         self.setWindowTitle("External data: " + plot_title)
 
         d = {}
@@ -72,52 +80,53 @@ class Plot_data(QWidget):
         for k in column_converter:
             d[int(k)] = column_converter[k]
         column_converter = dict(d)
-        
+
         self.myplot = MyMplCanvas(self)
 
         self.button_plus = QPushButton("+", self)
         self.button_plus.clicked.connect(lambda: self.zoom(-1))
-        
+
         self.button_minus = QPushButton("-", self)
         self.button_minus.clicked.connect(lambda: self.zoom(1))
 
         self.layout = QVBoxLayout()
-        
+
         self.hlayout1 = QHBoxLayout()
         self.hlayout1.addWidget(QLabel("Zoom"))
         self.hlayout1.addWidget(self.button_plus)
         self.hlayout1.addWidget(self.button_minus)
-        self.hlayout1.addItem( QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.hlayout1.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
         self.hlayout2 = QHBoxLayout()
         self.hlayout2.addWidget(QLabel("Value"))
         self.lb_value = QLabel("")
         self.hlayout2.addWidget(self.lb_value)
-        self.hlayout2.addItem( QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        
+        self.hlayout2.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
         self.layout.addLayout(self.hlayout1)
         self.layout.addLayout(self.hlayout2)
         self.layout.addWidget(self.myplot)
-        
+
         self.setLayout(self.layout)
 
         self.plot_style = plot_style
         self.plot_title = plot_title
         try:
             self.time_offset = Decimal(time_offset)
-        except:
+        except Exception:
             self.error_msg = "The offset value {} is not a decimal value".format(time_offset)
             return
 
         self.y_label = y_label
         self.error_msg = ""
 
-        result, error_msg, data = txt2np_array(file_name,
-                                               columns_to_plot,
-                                               substract_first_value,
-                                               converters=converters,
-                                               column_converter=column_converter,
-                                               ) # txt2np_array defined in utilities.py
+        result, error_msg, data = txt2np_array(
+            file_name,
+            columns_to_plot,
+            substract_first_value,
+            converters=converters,
+            column_converter=column_converter,
+        )  # txt2np_array defined in utilities.py
 
         if not result:
             self.error_msg = error_msg
@@ -126,25 +135,25 @@ class Plot_data(QWidget):
         logging.debug("data[50]: {}".format(data[:50]))
         logging.debug("shape: {}".format(data.shape))
 
-        if data.shape == (0,):
+        if data.shape == (0, ):
             self.error_msg = "Empty input file"
             return
 
         # sort data by time ascending
-        data = data[data[:,0].argsort()]
-        
+        data = data[data[:, 0].argsort()]
+
         # unique
-        u, idx = np.unique(data[:,0], return_index=True)
+        u, idx = np.unique(data[:, 0], return_index=True)
         data = data[idx]
 
         # time
-        min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
+        min_time_value, max_time_value = min(data[:, 0]), max(data[:, 0])
 
         # variable
-        min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
+        min_var_value, max_var_value = min(data[:, 1]), max(data[:, 1])
 
         # check if time is linear
-        diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
+        diff = set(np.round(np.diff(data, axis=0)[:, 0], 4))
         if min(diff) == 0:
             self.error_msg = "more values for same time"
             return
@@ -152,7 +161,6 @@ class Plot_data(QWidget):
         logging.debug("diff: {}".format(diff))
         min_time_step = min(diff)
         logging.debug("min_time_step: {}".format(min_time_step))
-
 
         # check if sampling rate is not constant
         if len(diff) != 1:
@@ -163,7 +171,6 @@ class Plot_data(QWidget):
             # increase value for low sampling rate (> 1 s)
             if min_time_step > 1:
                 min_time_step = 1
-            
             '''
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             y2 = np.interp(x2, data[:,0], data[:,1])
@@ -172,26 +179,23 @@ class Plot_data(QWidget):
             '''
 
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
-            data = np.array((x2, np.interp(x2, data[:,0], data[:,1]))).T
+            data = np.array((x2, np.interp(x2, data[:, 0], data[:, 1]))).T
             del x2
 
-            logging.debug("data[:,0]: {}".format(data[:,0]))
-
+            logging.debug("data[:,0]: {}".format(data[:, 0]))
 
             # time
-            min_time_value, max_time_value = min(data[:,0]), max(data[:,0])
+            min_time_value, max_time_value = min(data[:, 0]), max(data[:, 0])
             # variable
-            min_var_value, max_var_value = min(data[:,1]), max(data[:,1])
+            min_var_value, max_var_value = min(data[:, 1]), max(data[:, 1])
 
-            diff = set(np.round(np.diff(data, axis=0)[:,0], 4))
+            diff = set(np.round(np.diff(data, axis=0)[:, 0], 4))
             min_time_step = min(diff)
-
 
         # subsampling
         if min_time_step < 0.04:
             data = data[0::int(round(0.04 / min_time_step, 2))]
             min_time_step = 0.04
-        
 
         logging.debug("new data after subsampling: {}".format(data[:50]))
 
@@ -214,7 +218,7 @@ class Plot_data(QWidget):
         self.plotter.max_time_value = max_time_value
 
         self.plotter.min_time_step = min_time_step
-        
+
         # interval must be even
         interval += 1 if interval % 2 else 0
         self.plotter.interval = interval
@@ -227,44 +231,37 @@ class Plot_data(QWidget):
         #move to thread and start
         self.plotter.moveToThread(self.thread)
         self.thread.start()
-        
+
         if min_time_step < .2:
             self.time_out = 200
         else:
             self.time_out = min_time_step * 1000
-        
-
-
-
 
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
         """
-        if(event.type() == QEvent.KeyPress):
+        if (event.type() == QEvent.KeyPress):
             self.sendEvent.emit(event)
             return True
         else:
             return False
 
-
     def zoom(self, z):
         if z == -1 and self.plotter.interval <= 10:
             return
-            
+
         if z == 1 and self.plotter.interval > 3600:
             return
 
-        new_interval = round(self.plotter.interval + z * self.plotter.interval/2)
+        new_interval = round(self.plotter.interval + z * self.plotter.interval / 2)
         new_interval += 1 if new_interval % 2 else 0
 
         self.plotter.interval = new_interval
 
-
     def timer_plot_data_out(self, time_):
         #print(self.plot_title, time_)
         self.update_plot(time_)
-
 
     def update_plot(self, time_):
         """
@@ -272,13 +269,10 @@ class Plot_data(QWidget):
         """
         self.send_fig.emit(float(time_) + float(self.time_offset))
 
-
     def close_plot(self):
         self.thread.quit()
         self.thread.wait()
         self.close()
-
-
 
     # Slot receives data and plots it
     def plot(self, x, y, position_data, position_start, min_value, max_value, position_end):
@@ -297,38 +291,38 @@ class Plot_data(QWidget):
 
         try:
             self.myplot.axes.clear()
-            
+
             self.myplot.axes.set_title(self.plot_title)
-            
-            self.myplot.axes.set_xlim(position_start , position_end)
-    
+
+            self.myplot.axes.set_xlim(position_start, position_end)
+
             self.myplot.axes.set_ylabel(self.y_label, rotation=90, labelpad=10)
             self.myplot.axes.set_ylim((min_value, max_value))
-    
+
             self.myplot.axes.plot(x, y, self.plot_style)
             self.myplot.axes.axvline(x=position_data, color="red", linestyle='-')
-    
+
             self.myplot.draw()
         except:
             logging.debug("error")
-            pass # only for protection agains crash
+            pass  # only for protection agains crash
 
 
 class Plotter(QObject):
-    return_fig = pyqtSignal(np.ndarray, # x array
-                            np.ndarray, #y array
-                            float, # position_data
-                            float, #position start
-                            float, #min value
-                            float, #max value
-                            float # position end
-                            )
+    return_fig = pyqtSignal(
+        np.ndarray,  # x array
+        np.ndarray,  #y array
+        float,  # position_data
+        float,  #position start
+        float,  #min value
+        float,  #max value
+        float  # position end
+    )
 
     @pyqtSlot(float)
-    def replot(self, current_time): # time_ in s
+    def replot(self, current_time):  # time_ in s
 
         logging.debug("============================================")
-        
         '''
         print("============================================")
         print("current time", current_time)
@@ -337,10 +331,9 @@ class Plotter(QObject):
 
         logging.debug("current_time: {}".format(current_time))
 
-        current_discrete_time = round(round( current_time / self.min_time_step ) * self.min_time_step, 2)
+        current_discrete_time = round(round(current_time / self.min_time_step) * self.min_time_step, 2)
         logging.debug("current_discrete_time: {}".format(current_discrete_time))
         logging.debug("self.interval: {}".format(self.interval))
-
 
         freq_interval = int(round(self.interval / self.min_time_step))
         '''
@@ -348,91 +341,87 @@ class Plotter(QObject):
         '''
 
         if self.min_time_value <= current_discrete_time <= self.max_time_value:
-            
-                logging.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
 
-                idx = np.where(self.data[:,0] == current_discrete_time)[0]
-                '''
+            logging.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
+
+            idx = np.where(self.data[:, 0] == current_discrete_time)[0]
+            '''
                 print("idx 1", idx)
                 print(self.data[:20])
                 '''
-                if not len(idx):
-                    idx = np.where(abs(self.data[:,0] - current_discrete_time) <= 0.02)[0]
-                    '''
+            if not len(idx):
+                idx = np.where(abs(self.data[:, 0] - current_discrete_time) <= 0.02)[0]
+                '''
                     print("idx 2", idx)
                     '''
 
-                if len(idx):
+            if len(idx):
 
-                    position_data = idx[0]
-                    
-                    logging.debug("position data: {}".format(position_data))
-                    
-                    #print(current_discrete_time, position_data, self.data[position_data:position_data+1][:,1])
+                position_data = idx[0]
 
-                    position_start = int(position_data - freq_interval // 2)
-                    '''
+                logging.debug("position data: {}".format(position_data))
+
+                #print(current_discrete_time, position_data, self.data[position_data:position_data+1][:,1])
+
+                position_start = int(position_data - freq_interval // 2)
+                '''
                     print("position_start", position_start)
                     '''
 
-                    flag_i, flag_j  = False, False
+                flag_i, flag_j = False, False
 
-                    if position_start < 0:
-                        i = np.array([np.nan]*abs(position_start)).T
-                        flag_i = True
+                if position_start < 0:
+                    i = np.array([np.nan] * abs(position_start)).T
+                    flag_i = True
 
-                        logging.debug("len(i): {}".format(len(i)))
+                    logging.debug("len(i): {}".format(len(i)))
 
-                        position_start =0
+                    position_start = 0
 
-                    position_end = int(position_data + freq_interval // 2)
-                    '''print("position_end", position_end)'''
-        
-                    if position_end >= len(self.data):
-                        j = np.array([np.nan] * abs(position_end - len(self.data))).T
-                        flag_j = True
-                        
-                        '''
+                position_end = int(position_data + freq_interval // 2)
+                '''print("position_end", position_end)'''
+
+                if position_end >= len(self.data):
+                    j = np.array([np.nan] * abs(position_end - len(self.data))).T
+                    flag_j = True
+                    '''
                         print("len j", len(j))
                         '''
-        
-                        position_end = len(self.data)
-        
-                    d = self.data[position_start:position_end][:,1]
-        
-                    if flag_i:
-                        d = np.append(i , d, axis=0)
-                
-                    if flag_j:
-                        d = np.append(d, j, axis=0)
-                    
-                    '''
+
+                    position_end = len(self.data)
+
+                d = self.data[position_start:position_end][:, 1]
+
+                if flag_i:
+                    d = np.append(i, d, axis=0)
+
+                if flag_j:
+                    d = np.append(d, j, axis=0)
+                '''
                     print("len d", len(d))
                     '''
-                else:
-                    # not known problem
-                    #return nan data
-                    d = np.array([np.nan] * int(self.interval /self.min_time_step)).T
+            else:
+                # not known problem
+                #return nan data
+                d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
 
-                    
         elif current_time > self.max_time_value:
 
-            logging.debug("self.interval/self.min_time_step/2: {}".format(self.interval/self.min_time_step/2))
+            logging.debug("self.interval/self.min_time_step/2: {}".format(self.interval / self.min_time_step / 2))
 
-            
             #print((current_time - self.max_time_value)/self.min_time_step)
-            
-            #dim_footer = int((current_time - self.max_time_value)/self.min_time_step +  self.interval/self.min_time_step/2)
-            dim_footer = int(round((current_time - self.max_time_value)/self.min_time_step +  self.interval / self.min_time_step / 2))
 
-            footer = np.array([np.nan] * dim_footer ).T
+            #dim_footer = int((current_time - self.max_time_value)/self.min_time_step +  self.interval/self.min_time_step/2)
+            dim_footer = int(round((current_time - self.max_time_value) / self.min_time_step + self.interval / self.min_time_step / 2))
+
+            footer = np.array([np.nan] * dim_footer).T
             logging.debug("len footer: {}".format(len(footer)))
 
-            a = (self.interval/2 - (current_time - self.max_time_value)) / self.min_time_step
-            logging.debug("a: {}".format(a)) 
+            a = (self.interval / 2 - (current_time - self.max_time_value)) / self.min_time_step
+            logging.debug("a: {}".format(a))
 
             if a >= 0:
-                
+
                 logging.debug("a>=0")
 
                 st = int(round(len(self.data) - a))
@@ -444,25 +433,24 @@ class Plotter(QObject):
                     st = 0
                     flag_i = True
 
-                d = np.append(self.data[st:len(self.data)][:,1] , footer, axis=0)
+                d = np.append(self.data[st:len(self.data)][:, 1], footer, axis=0)
 
                 if flag_i:
                     d = np.append(i, d, axis=0)
 
                 logging.debug("len d a>=0: {}".format(len(d)))
 
-            else: # a <0
+            else:  # a <0
                 logging.debug("a<0")
-                d = np.array([np.nan] * int(self.interval /self.min_time_step)).T
-            
+                d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
+
                 logging.debug("len d a<0: {}".format(len(d)))
 
         elif current_time < self.min_time_value:
 
             x = (self.min_time_value - current_time) / self.min_time_step
             dim_header = int(round(self.interval / self.min_time_step / 2 + x))
-            header = np.array([np.nan] * dim_header ).T
-
+            header = np.array([np.nan] * dim_header).T
             '''
             print("len header", len(header))
             '''
@@ -473,36 +461,35 @@ class Plotter(QObject):
             '''
 
             if b >= 0:
-                d = np.append(header, self.data[0:b][:,1],  axis=0)
+                d = np.append(header, self.data[0:b][:, 1], axis=0)
                 if len(d) < freq_interval:
-                    d = np.append(d, np.array([np.nan] * int(freq_interval - len(d))).T,  axis=0)
+                    d = np.append(d, np.array([np.nan] * int(freq_interval - len(d))).T, axis=0)
 
             else:
-                d = np.array([np.nan] * int(self.interval /self.min_time_step)).T
+                d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
 
         y = d
         logging.debug("len y: {}".format(len(y)))
 
-        
         logging.debug("self.min_time_step: {}".format(self.min_time_step))
-        
-        x = np.arange(current_time - self.interval//2, current_time + self.interval//2, self.min_time_step)
+
+        x = np.arange(current_time - self.interval // 2, current_time + self.interval // 2, self.min_time_step)
         #x = np.arange(round(current_discrete_time - self.interval//2,2), round(current_discrete_time + self.interval//2, 2), self.min_time_step)
 
         logging.debug("len x 1: {}".format(len(x)))
 
-        self.return_fig.emit(x, y,
-                             current_discrete_time, #position_data
-                             current_discrete_time - self.interval//2, #position_start
-                             self.min_value,
-                             self.max_value,
-                             current_discrete_time + self.interval//2 #position_end,
-                             )
-
+        self.return_fig.emit(
+            x,
+            y,
+            current_discrete_time,  #position_data
+            current_discrete_time - self.interval // 2,  #position_start
+            self.min_value,
+            self.max_value,
+            current_discrete_time + self.interval // 2  #position_end,
+        )
 
 
 if __name__ == '__main__':
-
     """
     arguments:
     1 file_name
@@ -517,7 +504,6 @@ if __name__ == '__main__':
 
     """
 
-
     file_name = sys.argv[1]
     columns_to_plot = sys.argv[2]
     substract_first_value = sys.argv[3]
@@ -529,36 +515,30 @@ if __name__ == '__main__':
     plot_title = "test"
     y_label = "TEST"
 
-
     converters = {
-  "convert_time_ecg":{
-   "name":"convert_time_ecg",
-   "description":"convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
-   "code":"\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
-  },
-  "hhmmss_2_seconds":{
-   "name":"hhmmss_2_seconds",
-   "description":"convert HH:MM:SS in seconds",
-   "code":"\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
-  },
-  "invert_value":{
-   "name":"invert value",
-   "description":"invert the value",
-   "code":"\nOUTPUT = -float(INPUT)\n\n"
-  }
- }
+        "convert_time_ecg": {
+            "name":
+            "convert_time_ecg",
+            "description":
+            "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+            "code":
+            "\nimport datetime\nepoch = datetime.datetime.utcfromtimestamp(0)\ndatetime_format = \"%d/%m/%Y %H:%M:%S.%f\"\n\nOUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()\n"
+        },
+        "hhmmss_2_seconds": {
+            "name": "hhmmss_2_seconds",
+            "description": "convert HH:MM:SS in seconds",
+            "code": "\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
+        },
+        "invert_value": {
+            "name": "invert value",
+            "description": "invert the value",
+            "code": "\nOUTPUT = -float(INPUT)\n\n"
+        }
+    }
 
     app = QApplication(sys.argv)
 
-    win = Plot_data(file_name,
-                    interval,
-                    time_offset,
-                    color,
-                    plot_title,
-                    y_label,
-                    columns_to_plot,
-                    substract_first_value,
-                    converters,
+    win = Plot_data(file_name, interval, time_offset, color, plot_title, y_label, columns_to_plot, substract_first_value, converters,
                     column_converter)
 
     if win.error_msg:
@@ -566,16 +546,16 @@ if __name__ == '__main__':
         sys.exit()
 
     win.show()
-    
+
     timer_started_at = time.time()
-    
-    #def timer_plot_data_out():
+
+    # def timer_plot_data_out():
     #    win.update_plot(time.time() - timer_started_at)
-    
+
+
     def get_time():
         return time.time() - timer_started_at
-    
-    
+
     win.plot_data_timer = QTimer()
     win.plot_data_timer.setInterval(win.time_out)
     win.plot_data_timer.timeout.connect(lambda: win.timer_plot_data_out(get_time()))
@@ -588,5 +568,3 @@ if __name__ == '__main__':
     '''
 
     sys.exit(app.exec_())
-
-

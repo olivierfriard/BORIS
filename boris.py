@@ -108,8 +108,6 @@ __version__ = "7.0.11"
 __version_date__ = "2018-09-xx"
 
 
-
-
 if platform.python_version() < "3.6":
     logging.critical("BORIS requires Python 3.6+! You are using v. {}")
     sys.exit()
@@ -420,7 +418,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     imageDirectory = ""   # image cache directory
 
     # FFmpeg
-    allowFrameByFrame = False
     memx, memy, mem_player = -1, -1, -1
 
     # path for ffmpeg/ffmpeg.exe program
@@ -432,7 +429,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     # dictionary for FPS storing
     fps = 0
 
-    playerType = ""   # VLC, LIVE, VIEWER
+    playerType: str = ""   # VLC, LIVE, VIEWER
     playMode = VLC    # player mode can be VLC of FMPEG (for frame-by-frame mode)
 
     # spectrogram
