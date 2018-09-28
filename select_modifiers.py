@@ -133,6 +133,7 @@ class ModifiersList(QDialog):
         self.installEventFilter(self)
         self.setMaximumSize(1024, 960)
 
+
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
@@ -186,6 +187,7 @@ class ModifiersList(QDialog):
         else:
             return False
 
+
     def getModifiers(self):
         """
         get modifiers
@@ -224,6 +226,7 @@ class ModifiersList(QDialog):
         '''
 
         return self.modifiers_dict
+
 
     def pbOK_clicked(self):
 
