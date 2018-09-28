@@ -8615,6 +8615,22 @@ item []:
         else:
             app.beep()
 
+    def is_playing(self):
+        """
+        check if media file is playing for VLC or FFMPEG modes
+
+        Returns:
+            bool: True if playing else False
+        """
+
+        if self.playerType == VLC:
+            if self.playMode == VLC:
+                flag_is_playing = self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused
+            if self.playMode == FFMPEG:
+                flag_is_playing = self.FFmpegTimer.isActive()
+            return flag_is_playing
+        else:
+            return False
 
     def keyPressEvent(self, event):
 
@@ -8630,6 +8646,11 @@ item []:
         ESC: 16777216
         '''
 
+        if self.playerType == VIEWER:
+            QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
+                                                     "It is not allowed to log events in this mode."))
+            return
+
         if self.playMode == VLC:
             self.timer_out()
 
@@ -8640,8 +8661,7 @@ item []:
         if self.confirmSound:
             self.beep("")
 
-        if self.playerType == VLC:
-            flagPlayerPlaying = self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused
+        flagPlayerPlaying = self.is_playing()
 
         # check if media ever played
 
@@ -8654,21 +8674,17 @@ item []:
         if ek in [Qt.Key_Tab, Qt.Key_Shift, Qt.Key_Control, Qt.Key_Meta, Qt.Key_Alt, Qt.Key_AltGr]:
             return
 
-        if self.playerType == VIEWER:
-            QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
-                                                     "It is not allowed to log events in this mode."))
-            return
-
         if ek == Qt.Key_Escape:
             self.switch_playing_mode()
             return
 
         # play / pause with space bar
-        if ek == Qt.Key_Space and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-            if flagPlayerPlaying:
-                self.pause_video()
-            else:
-                self.play_video()
+        if ek == Qt.Key_Space:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                if flagPlayerPlaying:
+                    self.pause_video()
+                else:
+                    self.play_video()
             return
 
         # frame-by-frame mode
@@ -8793,7 +8809,7 @@ item []:
             # select between code and subject
             if subj_idx != -1 and count:
                 if self.playerType == VLC:
-                    if self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused:
+                    if self.is_playing():
                         flagPlayerPlaying = True
                         self.pause_video()
 
@@ -8807,14 +8823,12 @@ item []:
             if subj_idx == -1 and count > 1:
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                     if self.playerType == VLC:
-                        if self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused:
+                        if self.is_playing():
                             flagPlayerPlaying = True
                             self.pause_video()
 
                 # let user choose event
                 ethogram_idx = self.fill_lwDetailed(ek_unichr, memLaps)
-
-                logging.debug("obs_idx: {}".format(obs_idx))
 
                 if ethogram_idx:
                     count = 1
@@ -9822,11 +9836,12 @@ item []:
                             while True:
                                 if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                                     break
-                            self.actionPlay.setIcon(QIcon(":/play"))
 
                 time.sleep(1)
                 self.timer_out()
-                self.timer_spectro_out()
+
+            self.timer_spectro_out()
+            self.actionPlay.setIcon(QIcon(":/play"))
 
 
     def play_activated(self):
@@ -9834,7 +9849,7 @@ item []:
         button 'play' activated
         """
         if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-            if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused:
+            if not self.is_playing():
                 self.play_video()
             else:
                 self.pause_video()
@@ -9853,7 +9868,9 @@ item []:
                 else:
                     self.FFmpegGlobalFrame = 0   # position to init
                 self.ffmpegTimerOut()
+
             elif self.playMode == VLC:
+
                 if self.dw_player[0].media_list.count() == 1:
                     if self.dw_player[0].mediaplayer.get_time() >= self.fast * 1000:
                         self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_time() - self.fast * 1000)

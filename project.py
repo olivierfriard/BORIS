@@ -118,7 +118,7 @@ class ExclusionMatrix(QDialog):
     def pb_selected(self, to_check):
         """
         check/uncheck the checkbox in selected cells
-        
+
         Args:
             to_check (boolean): True to check else False
         """
@@ -176,7 +176,7 @@ class BehavioralCategories(QDialog):
 
         self.pj = pj
         self.setWindowTitle("Behavioral categories")
-        
+
         self.renamed = None
         self.removed = None
 
@@ -365,7 +365,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbAddBehaviorsCodingMap.clicked.connect(self.add_behaviors_coding_map)
         self.pbRemoveBehaviorsCodingMap.clicked.connect(self.remove_behaviors_coding_map)
-        
+
         # time converters tab
         self.pb_add_converter.clicked.connect(self.add_converter)
         self.pb_modify_converter.clicked.connect(self.modify_converter)
@@ -393,7 +393,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         Add a behaviors coding map from file
         """
-        
+
         fn = QFileDialog(self).getOpenFileName(self, "Open a behaviors coding map", "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
         if fileName:
@@ -401,26 +401,26 @@ class projectDialog(QDialog, Ui_dlgProject):
                 bcm = json.loads(open(fileName, "r").read())
             except:
                 QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
-                return              
+                return
 
             if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
                 QMessageBox.critical(self, programName, "The file {} seems not a BORIS behaviors coding map...".format(fileName))
-            
+
             if BEHAVIORS_CODING_MAP not in self.pj:
                 self.pj[BEHAVIORS_CODING_MAP] = []
-                
+
             bcm_code_not_found = []
             existing_codes = [self.pj[ETHOGRAM][key]["code"] for key in self.pj[ETHOGRAM]]
             for code in [bcm["areas"][key]["code"] for key in bcm["areas"]]:
                 if code not in existing_codes:
                     bcm_code_not_found.append(code)
-                    
+
             if bcm_code_not_found:
                 QMessageBox.warning(self, programName, ("The following behavior{} are not defined in the ethogram:<br>"
                                                         "{}").format("s" if len(bcm_code_not_found)>1 else "", ",".join(bcm_code_not_found)))
 
             self.pj[BEHAVIORS_CODING_MAP].append(copy.deepcopy(bcm))
-            
+
             self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
 
             self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
@@ -539,7 +539,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             for index in range(bc.lw.count()):
                 self.pj[BEHAVIORAL_CATEGORIES].append(bc.lw.item(index).text().strip())
 
-            # check if behavior belong to removed category 
+            # check if behavior belong to removed category
             if bc.removed:
                 for row in range(self.twBehaviors.rowCount()):
                     if self.twBehaviors.item(row, behavioursFields["category"]):
@@ -650,7 +650,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if txt:
                     float(txt)
                 return True
-            except:
+            except Exception:
                 return False
 
         return True
@@ -1304,7 +1304,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX):
                 key = self.twBehaviors.item(r, PROJECT_BEHAVIORS_KEY_FIELD_IDX).text()
                 # check key length
-                if key.upper() not in ["F" + str(i) for i in range(1, 13)] and len(key) > 1:
+                if key.upper() not in list(function_keys.values()) and len(key) > 1:
                     self.lbObservationsState.setText("""<font color="red">Key length &gt; 1</font>""")
                     return
 
@@ -1458,7 +1458,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twSubjects_cellChanged(0, 0)
 
 
-    def twSubjects_cellChanged(self, row, column):
+    def twSubjects_cellChanged(self, row: int, column: int):
         """
         check if subject not unique
         """
@@ -1472,8 +1472,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twSubjects.item(r, 0):
 
                 # check key length
-                if self.twSubjects.item(r, 0).text().upper() not in ["F" + str(i) for i in range(1, 13)] \
-                   and len(self.twSubjects.item(r, 0).text()) > 1:
+                if (self.twSubjects.item(r, 0).text().upper() not in list(function_keys.values())
+                        and len(self.twSubjects.item(r, 0).text()) > 1):
                     self.lbSubjectsState.setText(("""<font color="red">Error on key {} for subject!</font>"""
                                                   "The key is too long (keys must be of one character"
                                                   " except for function keys _F1, F2..._)").format(self.twSubjects.item(r, 0).text()))
@@ -1484,9 +1484,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 else:
                     if self.twSubjects.item(r, 0).text():
                         keys.append(self.twSubjects.item(r, 0).text())
-
-                # convert to upper text
-                self.twSubjects.item(r, 0).setText(self.twSubjects.item(r, 0).text().upper())
 
             # check subject
             if self.twSubjects.item(r, 1):

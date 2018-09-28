@@ -25,7 +25,7 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
+except Exception:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
@@ -51,24 +51,23 @@ class CodingPad(QWidget):
         self.compose()
 
     def compose(self):
-        for i in reversed(range(self.grid.count())): 
+        for i in reversed(range(self.grid.count())):
             self.grid.itemAt(i).widget().setParent(None)
-        
+
         self.colors_dict = {}
         if BEHAVIORAL_CATEGORIES in self.pj:
             for idx, category in enumerate(set([self.pj[ETHOGRAM][x]["category"]
                                                 for x in self.pj[ETHOGRAM]
-                                                    if "category" in self.pj[ETHOGRAM][x]])):
+                                                if "category" in self.pj[ETHOGRAM][x]])):
                 self.colors_dict[category] = CATEGORY_COLORS_LIST[idx % len(CATEGORY_COLORS_LIST)]
 
         if self.colors_dict:
             behaviorsList = [[self.pj[ETHOGRAM][x]["category"], self.pj[ETHOGRAM][x]["code"]]
                              for x in sorted_keys(self.pj[ETHOGRAM])
-                                 if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
+                             if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
         else:
             behaviorsList = [["", self.pj[ETHOGRAM][x]["code"]]
-                             for x in sorted_keys(self.pj[ETHOGRAM])
-                                 if self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
+                             for x in sorted_keys(self.pj[ETHOGRAM]) if self.pj[ETHOGRAM][x]["code"] in self.filtered_behaviors]
         dim = int(len(behaviorsList)**0.5 + 0.999)
 
         c = 0
@@ -78,7 +77,7 @@ class CodingPad(QWidget):
                     break
                 self.addWidget(behaviorsList[c][1], i, j)
                 c += 1
-        
+
 
     def addWidget(self, behaviorCode, i, j):
 
@@ -89,10 +88,12 @@ class CodingPad(QWidget):
         if widget is not None:
             widget.pushButton.setText(behaviorCode)
             if self.colors_dict:
-                color = self.colors_dict[[self.pj[ETHOGRAM][x]["category"] for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behaviorCode][0]]
+                color = self.colors_dict[[self.pj[ETHOGRAM][x]["category"]
+                                         for x in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][x]["code"] == behaviorCode][0]]
             else:
                 color = CATEGORY_COLORS_LIST[0]
-            widget.pushButton.setStyleSheet("background-color: {}; border-radius: 0px; min-width: 50px;max-width: 200px; min-height:50px; max-height:200px; font-weight: bold;".format(color))
+            widget.pushButton.setStyleSheet(("background-color: {}; border-radius: 0px; min-width: 50px;max-width: 200px; "
+                                             "min-height:50px; max-height:200px; font-weight: bold;").format(color))
             widget.pushButton.clicked.connect(lambda: self.click(behaviorCode))
 
 
@@ -125,4 +126,3 @@ class Button(QWidget):
         layout = QHBoxLayout()
         layout.addWidget(self.pushButton)
         self.setLayout(layout)
-
