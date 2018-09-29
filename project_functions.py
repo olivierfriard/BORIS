@@ -631,7 +631,8 @@ def open_project_json(projectFileName):
         msg = (
             "The project was updated to the current project version ({project_format_version}).\n\n"
             "The old file project was saved as {project_file_name}"
-        ).format(project_format_version=project_format_version, project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
+        ).format(project_format_version=project_format_version,
+                 project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
 
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
     project_updated = False
