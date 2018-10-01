@@ -6057,20 +6057,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.information(self, programName, msg)
 
                 # check behavior keys
-                if project_changed and pj[ETHOGRAM]:
+                if project_changed:
                     flag_all_upper = True
-                    for idx in pj[ETHOGRAM]:
-                        if pj[ETHOGRAM][idx]["key"] in "abcdefghijklmnopqrstuvwxyz":
-                            flag_all_upper = False
-                            # pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
+                    if pj[ETHOGRAM]:
+                        for idx in pj[ETHOGRAM]:
+                            if pj[ETHOGRAM][idx]["key"] in "abcdefghijklmnopqrstuvwxyz":
+                                flag_all_upper = False
 
-                    if dialog.MessageDialog(programName,
-                                            ("It is now possible to use <b>lower keys</b> to code behaviors.<br><br>"
-                                             "In ths project all behavior keys are upper case.<br>"
+                    if pj[SUBJECTS]:
+                        for idx in pj[SUBJECTS]:
+                            if pj[SUBJECTS][idx]["key"] in "abcdefghijklmnopqrstuvwxyz":
+                                flag_all_upper = False
+
+                    if flag_all_upper and dialog.MessageDialog(programName,
+                                            ("It is now possible to use <b>lower keys</b> to code behaviors and subjects.<br><br>"
+                                             "In this project all the behavior and subject keys are upper case.<br>"
                                              "Do you want to convert them in lower case?"),
                                             [YES, NO]) == YES:
                         for idx in pj[ETHOGRAM]:
                             pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
+                        for idx in pj[SUBJECTS]:
+                            pj[SUBJECTS][idx]["key"] = pj[SUBJECTS][idx]["key"].lower()
 
                 self.load_project(project_path, project_changed, pj)
                 del pj
