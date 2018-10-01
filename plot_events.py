@@ -31,7 +31,7 @@ Inspired from
 """
 import datetime as dt
 import matplotlib
-matplotlib.use("Qt5Agg")
+# matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as font_manager
 import matplotlib.transforms as mtransforms

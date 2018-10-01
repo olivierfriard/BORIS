@@ -70,7 +70,7 @@ from edit_event import DlgEditEvent
 from project import *
 import preferences
 import param_panel
-import observation
+
 import modifiers_coding_map
 import map_creator
 import behav_coding_map_creator
@@ -79,7 +79,7 @@ import utilities
 from utilities import *
 import tablib
 import observations_list
-import plot_spectrogram
+
 import coding_pad
 import subjects_pad
 import transitions
@@ -87,9 +87,9 @@ from config import *
 from time_budget_widget import timeBudgetResults
 import select_modifiers
 import behaviors_coding_map
-import plot_events
+
 import project_functions
-import plot_data_module
+
 import measurement_widget
 import irr
 import db_functions
@@ -104,8 +104,10 @@ from matplotlib import dates
 
 matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
 import matplotlib.pyplot as plt
-
-
+import plot_events
+import plot_spectrogram
+import observation
+import plot_data_module
 
 __version__ = "7.0.11"
 __version_date__ = "2018-09-xx"
