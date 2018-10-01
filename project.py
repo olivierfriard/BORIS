@@ -53,7 +53,7 @@ import export_observation
 class ExclusionMatrix(QDialog):
 
     def __init__(self):
-        super(ExclusionMatrix, self).__init__()
+        super().__init__()
 
         hbox = QVBoxLayout(self)
 
@@ -107,15 +107,7 @@ class ExclusionMatrix(QDialog):
         self.setGeometry(100, 100, 600, 400)
 
 
-    '''def pbOK_clicked(self):
-        self.accept()
-
-
-    def pbCancel_clicked(self):
-        self.reject()
-    '''
-
-    def pb_selected(self, to_check):
+    def pb_selected(self, to_check: bool):
         """
         check/uncheck the checkbox in selected cells
 
@@ -172,7 +164,7 @@ class ExclusionMatrix(QDialog):
 class BehavioralCategories(QDialog):
 
     def __init__(self, pj):
-        super(BehavioralCategories, self).__init__()
+        super().__init__()
 
         self.pj = pj
         self.setWindowTitle("Behavioral categories")
@@ -300,7 +292,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def __init__(self, log_level="", parent=None):
 
-        super(projectDialog, self).__init__(parent)
+        super().__init__()
         if log_level:
             logging.basicConfig(level=log_level)
 
@@ -317,6 +309,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbRemoveAllBehaviors.clicked.connect(self.pbRemoveAllBehaviors_clicked)
 
         self.pbBehaviorsCategories.clicked.connect(self.pbBehaviorsCategories_clicked)
+
+        self.pb_convert_behav_keys_to_lower.clicked.connect(self.convert_behaviors_keys_to_lower_case)
 
         self.pbExclusionMatrix.clicked.connect(self.pbExclusionMatrix_clicked)
 
@@ -338,6 +332,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbAddSubject.clicked.connect(self.pbAddSubject_clicked)
         self.pbRemoveSubject.clicked.connect(self.pbRemoveSubject_clicked)
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
+
+        self.pb_convert_subjects_key_to_lower.clicked.connect(self.convert_subjects_keys_to_lower_case)
 
         self.pbImportSubjectsFromProject.clicked.connect(self.pbImportSubjectsFromProject_clicked)
 
@@ -369,7 +365,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbAddBehaviorsCodingMap.clicked.connect(self.add_behaviors_coding_map)
         self.pbRemoveBehaviorsCodingMap.clicked.connect(self.remove_behaviors_coding_map)
 
-        # time converters tab
+        # converters tab
         self.pb_add_converter.clicked.connect(self.add_converter)
         self.pb_modify_converter.clicked.connect(self.modify_converter)
         self.pb_save_converter.clicked.connect(self.save_converter)
@@ -391,6 +387,64 @@ class projectDialog(QDialog, Ui_dlgProject):
         for widget in [self.leLabel, self.le_converter_description, self.cbType,
                        self.lePredefined, self.dte_default_date, self.leSetValues]:
             widget.setEnabled(False)
+
+
+    def convert_behaviors_keys_to_lower_case(self):
+        """
+        convert behaviors key to lower case to help to migrate to v. 7
+        """
+
+        # check if some keys will be duplicated after conversion
+        try:
+            all_keys = [self.twBehaviors.item(row, behavioursFields["key"]).text() for row in range(self.twBehaviors.rowCount())]
+        except Exception:
+            pass
+        if all_keys == [x.lower() for x in all_keys]:
+            QMessageBox.information(self, programName, "All keys are already lower case")
+            return
+
+        if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
+            return
+
+        if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
+            if dialog.MessageDialog(programName,
+                                    "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+                return
+
+        for row in range(self.twBehaviors.rowCount()):
+            if self.twBehaviors.item(row, behavioursFields["key"]).text():
+                self.twBehaviors.item(row, behavioursFields["key"]).setText(self.twBehaviors.item(row,
+                                                                                                  behavioursFields["key"]).text().lower())
+
+
+    def convert_subjects_keys_to_lower_case(self):
+        """
+        convert subjects key to lower case to help to migrate to v. 7
+        """
+
+        # check if some keys will be duplicated after conversion
+        try:
+            all_keys = [self.twSubjects.item(row, subjectsFields.index("key")).text() for row in range(self.twSubjects.rowCount())]
+        except Exception:
+            pass
+        if all_keys == [x.lower() for x in all_keys]:
+            QMessageBox.information(self, programName, "All keys are already lower case")
+            return
+
+        if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
+            return
+
+        if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
+            if dialog.MessageDialog(programName,
+                                    "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+                return
+
+        for row in range(self.twSubjects.rowCount()):
+            if self.twSubjects.item(row, subjectsFields.index("key")).text():
+                self.twSubjects.item(row, subjectsFields.index("key")).setText(
+                    self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
+
+
 
 
     def add_behaviors_coding_map(self):
@@ -1412,7 +1466,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
-        for col in range(0, len(subjectsFields)):
+        for col in range(len(subjectsFields)):
             item = QTableWidgetItem("")
             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
 
@@ -1581,7 +1635,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check for leading/trailing spaces in subjects names
         subjects_name_with_leading_trailing_spaces = ""
-        for row in range(0, self.twSubjects.rowCount()):
+        for row in range(self.twSubjects.rowCount()):
             if self.twSubjects.item(row, 1):
                 if self.twSubjects.item(row, 1).text() != self.twSubjects.item(row, 1).text().strip():
                     subjects_name_with_leading_trailing_spaces += '"{}" '.format(self.twSubjects.item(row, 1).text())
@@ -1598,7 +1652,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             ).format(subjects_name_with_leading_trailing_spaces), [YES, NO])
 
 
-        for row in range(0, self.twSubjects.rowCount()):
+        for row in range(self.twSubjects.rowCount()):
             # check key
             if self.twSubjects.item(row, 0):
                 key = self.twSubjects.item(row, 0).text()
@@ -1744,8 +1798,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pj[CONVERTERS] = dict(converters)
 
         self.accept()
-
-
 
 
     def pb_code_help_clicked(self):

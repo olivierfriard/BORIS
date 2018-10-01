@@ -31,24 +31,27 @@ http://stackoverflow.com/questions/11837979/removing-white-space-around-a-saved-
 
 """
 
+import sys
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+except ModuleNotFoundError:
+    print("PyQt5 not installed!\nTrying with PyQt4")
+    try:
+        from PyQt4.QtGui import *
+        from PyQt4.QtCore import *
+    except ModuleNotFoundError:
+        print("PyQt4 not installed!")
+        sys.exit()
 
-import sys
+
 import os
 import wave
 import subprocess
 import multiprocessing
-try:
-    import numpy as np
-    import matplotlib
-except:
-    pass
+import numpy as np
+import matplotlib
 
 
 class Spectrogram(QWidget):
@@ -78,11 +81,11 @@ class Spectrogram(QWidget):
         self.scene.setSceneRect(0, 0, int(self.width() * .95), self.h)
 
         if QT_VERSION_STR[0] == "4":
-            self.line = QGraphicsLineItem(int(self.width() * .95) // 2, 0, int(self.width() * .95) // 2, self.h, scen =self.scene)
+            self.line = QGraphicsLineItem(int(self.width() * .95) // 2, 0, int(self.width() * .95) // 2, self.h, scen=self.scene)
         else:
             self.line = QGraphicsLineItem(int(self.width() * .95) // 2, 0, int(self.width() * .95) // 2, self.h)
 
-        self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin)) # blue
+        self.line.setPen(QPen(QColor(0, 0, 255, 255), 2, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))  # blue
         self.line.setZValue(100.0)
         self.scene.addItem(self.line)
 
@@ -118,8 +121,8 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
         """
 
         wavTmpPath = "{tmp_dir}{sep}{mediaBaseName}.wav".format(tmp_dir=tmp_dir,
-                                                                  sep=os.sep,
-                                                                  mediaBaseName=os.path.basename(mediaFile))
+                                                                sep=os.sep,
+                                                                mediaBaseName=os.path.basename(mediaFile))
 
         if os.path.isfile(wavTmpPath):
             return wavTmpPath
@@ -127,9 +130,9 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
             p = subprocess.Popen('"{ffmpeg_bin}" -i "{mediaFile}" -y -ac 1 -vn "{wavTmpPath}"'.format(ffmpeg_bin=ffmpeg_bin,
                                                                                                       mediaFile=mediaFile,
                                                                                                       wavTmpPath=wavTmpPath),
-                                                                                                      stdout=subprocess.PIPE,
-                                                                                                      stderr=subprocess.PIPE,
-                                                                                                      shell=True)
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
             out, error = p.communicate()
             out, error = out.decode("utf-8"), error.decode("utf-8")
 
@@ -142,10 +145,10 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     def get_wav_info(wav_file):
         """
         fetch information from wav file
-        
+
         Args:
             wav_file (str): path of wav file
-            
+
         Returns:
             : info on sound
            int: frame_rate
@@ -164,7 +167,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
     else:
         matplotlib.use("Qt5Agg")
 
-    import pylab # do not move. It is important that this line is after the previous one
+    import pylab  # do not move. It is important that this line is after the previous one
 
     fileName1stChunk = ""
     mediaBaseName = os.path.basename(mediaFile)
@@ -187,10 +190,10 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
 
             # complete bitmat spectrogram chunk if shorter than chunk length
             if len(sound_info_slice) / frame_rate < chunk_size:
-                concat = np.zeros(  int( (chunk_size - len(sound_info_slice) / frame_rate) + 1 ) * frame_rate)
+                concat = np.zeros(int((chunk_size - len(sound_info_slice) / frame_rate) + 1) * frame_rate)
                 sound_info_slice = np.concatenate((sound_info_slice, concat))
 
-            pylab.figure(num=None, dpi=100, figsize=(int(len(sound_info_slice)/frame_rate), round(spectrogramHeight / 80)))
+            pylab.figure(num=None, dpi=100, figsize=(int(len(sound_info_slice) / frame_rate), round(spectrogramHeight / 80)))
             pylab.gca().set_axis_off()
             pylab.margins(0, 0)
             pylab.gca().xaxis.set_major_locator(pylab.NullLocator())
@@ -200,7 +203,7 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
             except ValueError:
                 # color_map gray_r is available on all version of matplotlib
                 pylab.specgram(sound_info_slice, Fs=frame_rate, cmap=matplotlib.pyplot.get_cmap("gray_r"), scale_by_freq=False)
- 
+
             pylab.savefig(chunkFileName, bbox_inches="tight", pad_inches=0)
             pylab.clf()
             pylab.close()
@@ -225,9 +228,7 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
         graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
         return None
     else:
-        process = multiprocessing.Process(target=graph_spectrogram, args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
+        process = multiprocessing.Process(target=graph_spectrogram,
+                                          args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
         process.start()
         return process
-
-
-

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -110,6 +110,9 @@ class Ui_dlgProject(object):
         self.pbBehaviorsCategories = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbBehaviorsCategories.setObjectName("pbBehaviorsCategories")
         self.verticalLayout_11.addWidget(self.pbBehaviorsCategories)
+        self.pb_convert_behav_keys_to_lower = QtWidgets.QPushButton(self.tabConfiguration)
+        self.pb_convert_behav_keys_to_lower.setObjectName("pb_convert_behav_keys_to_lower")
+        self.verticalLayout_11.addWidget(self.pb_convert_behav_keys_to_lower)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem)
         self.pbExclusionMatrix = QtWidgets.QPushButton(self.tabConfiguration)
@@ -167,6 +170,9 @@ class Ui_dlgProject(object):
         self.pbRemoveSubject = QtWidgets.QPushButton(self.tabSubjects)
         self.pbRemoveSubject.setObjectName("pbRemoveSubject")
         self.verticalLayout_15.addWidget(self.pbRemoveSubject)
+        self.pb_convert_subjects_key_to_lower = QtWidgets.QPushButton(self.tabSubjects)
+        self.pb_convert_subjects_key_to_lower.setObjectName("pb_convert_subjects_key_to_lower")
+        self.verticalLayout_15.addWidget(self.pb_convert_subjects_key_to_lower)
         self.pbImportSubjectsFromProject = QtWidgets.QPushButton(self.tabSubjects)
         self.pbImportSubjectsFromProject.setObjectName("pbImportSubjectsFromProject")
         self.verticalLayout_15.addWidget(self.pbImportSubjectsFromProject)
@@ -476,7 +482,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(6)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -513,6 +519,7 @@ class Ui_dlgProject(object):
         self.pbRemoveBehavior.setText(_translate("dlgProject", "Remove behavior"))
         self.pbRemoveAllBehaviors.setText(_translate("dlgProject", "Remove all behaviors"))
         self.pbBehaviorsCategories.setText(_translate("dlgProject", "Behavioral categories"))
+        self.pb_convert_behav_keys_to_lower.setText(_translate("dlgProject", "Convert keys to lower case"))
         self.pbExclusionMatrix.setText(_translate("dlgProject", "Exclusion matrix"))
         self.pbImportBehaviorsFromProject.setText(_translate("dlgProject", "Import behaviors\n"
 "from a BORIS project"))
@@ -530,6 +537,7 @@ class Ui_dlgProject(object):
         item.setText(_translate("dlgProject", "Description"))
         self.pbAddSubject.setText(_translate("dlgProject", "Add subject"))
         self.pbRemoveSubject.setText(_translate("dlgProject", "Remove subject"))
+        self.pb_convert_subjects_key_to_lower.setText(_translate("dlgProject", "Convert keys to lower case"))
         self.pbImportSubjectsFromProject.setText(_translate("dlgProject", "Import subjects\n"
 "from a BORIS project"))
         self.lbSubjectsState.setText(_translate("dlgProject", "TextLabel"))

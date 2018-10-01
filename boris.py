@@ -61,14 +61,8 @@ except ModuleNotFoundError:
         from boris_ui import *
         import qrc_boris
     except ModuleNotFoundError:
-        logging.critical("PyQt4 not installed!\nTry PyQt4")
+        logging.critical("PyQt4 not installed!")
         sys.exit()
-
-import matplotlib
-matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
-import matplotlib.pyplot as plt
-import matplotlib.transforms as mtransforms
-from matplotlib import dates
 
 import select_observations
 import dialog
@@ -103,6 +97,15 @@ import export_observation
 import time_budget_functions
 
 import vlc
+
+import matplotlib
+import matplotlib.transforms as mtransforms
+from matplotlib import dates
+
+matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
+import matplotlib.pyplot as plt
+
+
 
 __version__ = "7.0.11"
 __version_date__ = "2018-09-xx"
@@ -6040,7 +6043,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if action.text() == "Open project":
-            fn = QFileDialog(self).getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
+            fn = QFileDialog().getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
         else:  # recent project

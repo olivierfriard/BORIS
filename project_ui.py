@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created by: PyQt4 UI code generator 4.11.4
+# Created by: PyQt4 UI code generator 4.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -35,6 +35,7 @@ class Ui_dlgProject(object):
         self.tabInformation = QtGui.QWidget()
         self.tabInformation.setObjectName(_fromUtf8("tabInformation"))
         self.formLayout = QtGui.QFormLayout(self.tabInformation)
+        self.formLayout.setMargin(0)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
         self.label = QtGui.QLabel(self.tabInformation)
         self.label.setObjectName(_fromUtf8("label"))
@@ -73,6 +74,7 @@ class Ui_dlgProject(object):
         self.tabConfiguration = QtGui.QWidget()
         self.tabConfiguration.setObjectName(_fromUtf8("tabConfiguration"))
         self.verticalLayout_10 = QtGui.QVBoxLayout(self.tabConfiguration)
+        self.verticalLayout_10.setMargin(0)
         self.verticalLayout_10.setObjectName(_fromUtf8("verticalLayout_10"))
         self.verticalLayout_5 = QtGui.QVBoxLayout()
         self.verticalLayout_5.setObjectName(_fromUtf8("verticalLayout_5"))
@@ -124,6 +126,9 @@ class Ui_dlgProject(object):
         self.pbBehaviorsCategories = QtGui.QPushButton(self.tabConfiguration)
         self.pbBehaviorsCategories.setObjectName(_fromUtf8("pbBehaviorsCategories"))
         self.verticalLayout_11.addWidget(self.pbBehaviorsCategories)
+        self.pb_convert_behav_keys_to_lower = QtGui.QPushButton(self.tabConfiguration)
+        self.pb_convert_behav_keys_to_lower.setObjectName(_fromUtf8("pb_convert_behav_keys_to_lower"))
+        self.verticalLayout_11.addWidget(self.pb_convert_behav_keys_to_lower)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout_11.addItem(spacerItem)
         self.pbExclusionMatrix = QtGui.QPushButton(self.tabConfiguration)
@@ -152,6 +157,7 @@ class Ui_dlgProject(object):
         self.tabSubjects = QtGui.QWidget()
         self.tabSubjects.setObjectName(_fromUtf8("tabSubjects"))
         self.verticalLayout_16 = QtGui.QVBoxLayout(self.tabSubjects)
+        self.verticalLayout_16.setMargin(0)
         self.verticalLayout_16.setObjectName(_fromUtf8("verticalLayout_16"))
         self.verticalLayout_14 = QtGui.QVBoxLayout()
         self.verticalLayout_14.setObjectName(_fromUtf8("verticalLayout_14"))
@@ -181,6 +187,9 @@ class Ui_dlgProject(object):
         self.pbRemoveSubject = QtGui.QPushButton(self.tabSubjects)
         self.pbRemoveSubject.setObjectName(_fromUtf8("pbRemoveSubject"))
         self.verticalLayout_15.addWidget(self.pbRemoveSubject)
+        self.pb_convert_subjects_key_to_lower = QtGui.QPushButton(self.tabSubjects)
+        self.pb_convert_subjects_key_to_lower.setObjectName(_fromUtf8("pb_convert_subjects_key_to_lower"))
+        self.verticalLayout_15.addWidget(self.pb_convert_subjects_key_to_lower)
         self.pbImportSubjectsFromProject = QtGui.QPushButton(self.tabSubjects)
         self.pbImportSubjectsFromProject.setObjectName(_fromUtf8("pbImportSubjectsFromProject"))
         self.verticalLayout_15.addWidget(self.pbImportSubjectsFromProject)
@@ -196,6 +205,7 @@ class Ui_dlgProject(object):
         self.tabIndependentVariables = QtGui.QWidget()
         self.tabIndependentVariables.setObjectName(_fromUtf8("tabIndependentVariables"))
         self.horizontalLayout_14 = QtGui.QHBoxLayout(self.tabIndependentVariables)
+        self.horizontalLayout_14.setMargin(0)
         self.horizontalLayout_14.setObjectName(_fromUtf8("horizontalLayout_14"))
         self.horizontalLayout_13 = QtGui.QHBoxLayout()
         self.horizontalLayout_13.setObjectName(_fromUtf8("horizontalLayout_13"))
@@ -317,6 +327,7 @@ class Ui_dlgProject(object):
         self.tabObservations = QtGui.QWidget()
         self.tabObservations.setObjectName(_fromUtf8("tabObservations"))
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.tabObservations)
+        self.verticalLayout_3.setMargin(0)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.verticalLayout = QtGui.QVBoxLayout()
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
@@ -345,6 +356,7 @@ class Ui_dlgProject(object):
         self.tabBehavCodingMap = QtGui.QWidget()
         self.tabBehavCodingMap.setObjectName(_fromUtf8("tabBehavCodingMap"))
         self.verticalLayout_8 = QtGui.QVBoxLayout(self.tabBehavCodingMap)
+        self.verticalLayout_8.setMargin(0)
         self.verticalLayout_8.setObjectName(_fromUtf8("verticalLayout_8"))
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
@@ -378,6 +390,7 @@ class Ui_dlgProject(object):
         self.tab_time_converters = QtGui.QWidget()
         self.tab_time_converters.setObjectName(_fromUtf8("tab_time_converters"))
         self.verticalLayout_18 = QtGui.QVBoxLayout(self.tab_time_converters)
+        self.verticalLayout_18.setMargin(0)
         self.verticalLayout_18.setObjectName(_fromUtf8("verticalLayout_18"))
         self.label_11 = QtGui.QLabel(self.tab_time_converters)
         self.label_11.setObjectName(_fromUtf8("label_11"))
@@ -490,7 +503,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(6)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -526,6 +539,7 @@ class Ui_dlgProject(object):
         self.pbRemoveBehavior.setText(_translate("dlgProject", "Remove behavior", None))
         self.pbRemoveAllBehaviors.setText(_translate("dlgProject", "Remove all behaviors", None))
         self.pbBehaviorsCategories.setText(_translate("dlgProject", "Behavioral categories", None))
+        self.pb_convert_behav_keys_to_lower.setText(_translate("dlgProject", "Convert keys to lower case", None))
         self.pbExclusionMatrix.setText(_translate("dlgProject", "Exclusion matrix", None))
         self.pbImportBehaviorsFromProject.setText(_translate("dlgProject", "Import behaviors\n"
 "from a BORIS project", None))
@@ -543,6 +557,7 @@ class Ui_dlgProject(object):
         item.setText(_translate("dlgProject", "Description", None))
         self.pbAddSubject.setText(_translate("dlgProject", "Add subject", None))
         self.pbRemoveSubject.setText(_translate("dlgProject", "Remove subject", None))
+        self.pb_convert_subjects_key_to_lower.setText(_translate("dlgProject", "Convert keys to lower case", None))
         self.pbImportSubjectsFromProject.setText(_translate("dlgProject", "Import subjects\n"
 "from a BORIS project", None))
         self.lbSubjectsState.setText(_translate("dlgProject", "TextLabel", None))

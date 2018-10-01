@@ -24,7 +24,7 @@ Copyright 2012-2018 Olivier Friard
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
+except ModuleNotFoundError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
@@ -140,12 +140,12 @@ def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
             ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
                               '-vf "transpose={rotation_idx}" -codec:a copy -b:v {quality}k '
                               '"{input_}.rotated{rotation}.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                              input_=video_path,
-                                                                              quality=quality,
-                                                                              rotation_idx=rotation_idx,
-                                                                              rotation=["", "90", "-90"][rotation_idx]
-                                                                              )
-        if rotation_idx == 3: # 180
+                                                                          input_=video_path,
+                                                                          quality=quality,
+                                                                          rotation_idx=rotation_idx,
+                                                                          rotation=["", "90", "-90"][rotation_idx]
+                                                                          )
+        if rotation_idx == 3:  # 180
             ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
                               '-vf "transpose=2,transpose=2" -codec:a copy -b:v {quality}k '
                               '"{input_}.rotated180.avi" ').format(ffmpeg_bin=ffmpeg_bin,
@@ -173,7 +173,8 @@ def convert_time_to_decimal(pj):
         if "time offset" in pj[OBSERVATIONS][obsId]:
             pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
         for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
-            pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
+            pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(
+                str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
 
     return pj
 
@@ -186,7 +187,7 @@ def file_content_md5(file_name):
     return hash_md5.hexdigest()
 
 
-def txt2np_array(file_name, columns_str, substract_first_value, converters = {}, column_converter={}):
+def txt2np_array(file_name, columns_str, substract_first_value, converters={}, column_converter={}):
     """read a txt file (tsv or csv) and return np array with passed columns
 
     Args:
@@ -204,8 +205,8 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters = {},
     """
     # check columns
     try:
-        columns = [int(x) - 1 for x in columns_str.split(",") ]
-    except:
+        columns = [int(x) - 1 for x in columns_str.split(",")]
+    except Exception:
         return False, "Problem with columns {}".format(columns_str), np.array([])
 
     # check converters
@@ -223,15 +224,13 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters = {},
 
             try:
                 exec(function)
-            except:
-                #print(sys.exc_info()[1])
-                return False, "error in converter", np.array([])
+            except Exception:
+                return False, "error in converter: {}".format(sys.exc_info()[1]), np.array([])
 
             np_converters[column_idx - 1] = locals()[conv_name]
 
         else:
-            print("converter {} not found".format(converters_param[column_idx]))
-            return False, "converter not found", np.array([])
+            return False, "converter {} not found".format(converters_param[column_idx]), np.array([])
 
     # snif txt file
     try:
@@ -240,7 +239,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters = {},
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
-    except:
+    except Exception:
         return False, sys.exc_info()[1], np.array([])
 
     try:
@@ -249,12 +248,12 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters = {},
                           usecols=columns,
                           skiprows=has_header,
                           converters=np_converters)
-    except:
+    except Exception:
         return False, sys.exc_info()[1], np.array([])
 
     # check if first value must be substracted
     if substract_first_value == "True":
-        data[:,0] -= data[:,0][0]
+        data[:, 0] -= data[:, 0][0]
 
     return True, "", data
 
@@ -302,9 +301,9 @@ def get_current_states_by_subject(state_behaviors_codes, events, subjects, time)
         current_states[idx] = []
         for sbc in state_behaviors_codes:
             if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                                                   if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                                      and x[EVENT_TIME_FIELD_IDX] <= time]) % 2: # test if odd
+                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                    and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                    and x[EVENT_TIME_FIELD_IDX] <= time]) % 2:  # test if odd
                 current_states[idx].append(sbc)
 
     return current_states
@@ -328,9 +327,9 @@ def get_current_points_by_subject(point_behaviors_codes, events, subjects, time,
         current_points[idx] = []
         for sbc in point_behaviors_codes:
             events = [[x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]] for x in events
-                                                   if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                                      and abs(x[EVENT_TIME_FIELD_IDX] - time) <= distance]
+                      if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                      and abs(x[EVENT_TIME_FIELD_IDX] - time) <= distance]
 
             for event in events:
                 current_points[idx].append(event)
@@ -397,12 +396,13 @@ def check_txt_file(file_name):
             return {"homogeneous": False}
         else:
             return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
-    except:
+    except Exception:
         return {"error": str(sys.exc_info()[1])}
 
 
 
-def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, imageDir, md5_media_path, extension, frame_resize, number_of_seconds):
+def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, imageDir,
+                   md5_media_path, extension, frame_resize, number_of_seconds):
     """
     extract frames from media file and save them in imageDir directory
 
@@ -419,14 +419,14 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
         number_of_seconds (int): number of seconds to extract
 
     """
-    #print(ffmpeg_bin, second, current_media_path, fps, imageDir, md5_media_path, extension, frame_resize, number_of_seconds)
-    if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(imageDir=imageDir,
-                    sep=os.sep,
-                    md5_media_path=md5_media_path,
-                    frame=start_frame + 1,
-                    extension=extension)):
 
-        print("after", start_frame, number_of_seconds * fps )
+    if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(
+            imageDir=imageDir,
+            sep=os.sep,
+            md5_media_path=md5_media_path,
+            frame=start_frame + 1,
+            extension=extension)):
+
         ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
                           '-loglevel quiet '
                           '-i "{current_media_path}" '
@@ -434,17 +434,16 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
                           '-vframes {number_of_frames} '
                           '-vf scale={frame_resize}:-1 '
                           '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
-                        ffmpeg_bin=ffmpeg_bin,
-                        second=second,
-                        current_media_path=current_media_path,
-                        start_number=start_frame,
-                        number_of_frames=number_of_seconds * fps,
-                        imageDir=imageDir,
-                        sep=os.sep,
-                        md5_media_path=md5_media_path,
-                        extension=extension,
-                        frame_resize=frame_resize
-                        )
+                              ffmpeg_bin=ffmpeg_bin,
+                              second=second,
+                              current_media_path=current_media_path,
+                              start_number=start_frame,
+                              number_of_frames=number_of_seconds * fps,
+                              imageDir=imageDir,
+                              sep=os.sep,
+                              md5_media_path=md5_media_path,
+                              extension=extension,
+                              frame_resize=frame_resize)
 
         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
 
@@ -457,11 +456,11 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
 
     # check before frame
     if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(imageDir=imageDir,
-                    sep=os.sep,
-                    md5_media_path=md5_media_path,
-                    frame=start_frame - 1,
-                    extension=extension)):
-            print("before", round(start_frame - fps * number_of_seconds), number_of_seconds * fps)
+                          sep=os.sep,
+                          md5_media_path=md5_media_path,
+                          frame=start_frame - 1,
+                          extension=extension)):
+
             if round(start_frame - fps * number_of_seconds) < 1:
                 start_frame_before = 1
                 second_before = 0
@@ -470,23 +469,22 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
                 second_before = second - number_of_seconds
 
             ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
-                      '-loglevel quiet '
-                      '-i "{current_media_path}" '
-                      '-start_number {start_number} '
-                      '-vframes {number_of_frames} '
-                      '-vf scale={frame_resize}:-1 '
-                      '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
-                    ffmpeg_bin=ffmpeg_bin,
-                    second=second_before,
-                    current_media_path=current_media_path,
-                    start_number=start_frame_before,
-                    number_of_frames=number_of_seconds * fps + 2, # +2 to obtain current frame
-                    imageDir=imageDir,
-                    sep=os.sep,
-                    md5_media_path=md5_media_path,
-                    extension=extension,
-                    frame_resize=frame_resize
-                    )
+                              "-loglevel quiet "
+                              '-i "{current_media_path}"'
+                              '-start_number {start_number} '
+                              '-vframes {number_of_frames} '
+                              '-vf scale={frame_resize}:-1 '
+                              '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
+                ffmpeg_bin=ffmpeg_bin,
+                second=second_before,
+                current_media_path=current_media_path,
+                start_number=start_frame_before,
+                number_of_frames=number_of_seconds * fps + 2,  # +2 to obtain current frame
+                imageDir=imageDir,
+                sep=os.sep,
+                md5_media_path=md5_media_path,
+                extension=extension,
+                frame_resize=frame_resize)
 
             p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             out, error = p.communicate()
@@ -570,11 +568,11 @@ def intfloatstr(s):
     try:
         val = int(s)
         return val
-    except:
+    except Exception:
         try:
             val = float(s)
             return "{:0.3f}".format(val)
-        except:
+        except Exception:
             return s
 
 
@@ -592,7 +590,8 @@ def angle(p1, p2, p3):
     angle between 3 points (p1 must be the vertex)
     return angle in degree
     """
-    return math.acos((distance(p1, p2)**2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
+    return math.acos(
+        (distance(p1, p2) ** 2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
 
 
 def polygon_area(poly):
@@ -684,7 +683,7 @@ def seconds2time(sec):
         hours = int(minutes / 60)
         minutes = minutes % 60
 
-    secs = sec - hours*3600 - minutes * 60
+    secs = sec - hours * 3600 - minutes * 60
     ssecs = "%06.3f" % secs
 
     return "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs)
@@ -721,7 +720,9 @@ def test_ffmpeg_path(FFmpegPath):
         str: message
     """
 
-    out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).communicate()
+    out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath),
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, shell=True).communicate()
     logging.debug("test ffmpeg path output: {}".format(out))
     logging.debug("test ffmpeg path error: {}".format(error))
 
@@ -850,7 +851,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
     duration, fps, hasVideo, hasAudio, bitrate = 0, 0, False, False, -1
     try:
         error = p.communicate()[1].decode("utf-8")
-    except:
+    except Exception:
         return {"error": "Error reading file"}
 
     # check for invalid data
@@ -867,7 +868,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
             if "Duration" in r:
                 duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
                 break
-    except:
+    except Exception:
         duration = 0
 
     # bitrate
@@ -878,7 +879,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
                 if re_results:
                     bitrate = int(re_results.group(1).strip())
                 break
-    except:
+    except Exception:
         bitrate = -1
 
     # fps
@@ -890,7 +891,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
                 if re_results:
                     fps = Decimal(re_results.group(1).strip())
                     break
-    except:
+    except Exception:
         fps = 0
 
     # check for video stream
@@ -900,7 +901,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
             if "Stream #" in r and "Video:" in r:
                 hasVideo = True
                 break
-    except:
+    except Exception:
         hasVideo = None
 
     # check for audio stream
@@ -910,7 +911,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
             if "Stream #" in r and "Audio:" in r:
                 hasAudio = True
                 break
-    except:
+    except Exception:
         hasAudio = None
 
     if duration == 0 or bitrate == -1:
@@ -922,8 +923,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
             "fps": fps,
             "has_video": hasVideo,
             "has_audio": hasAudio,
-            "bitrate": bitrate
-           }
+            "bitrate": bitrate}
 
 
 
@@ -962,7 +962,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
     duration, fps, hasVideo, hasAudio = 0, 0, False, False
     try:
         error = p.communicate()[1].decode("utf-8")
-    except:
+    except Exception:
         return int(fps * duration), duration * 1000, duration, fps, hasVideo, hasAudio
 
     # check for invalid data
@@ -977,7 +977,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
             if "Duration" in r:
                 duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
                 break
-    except:
+    except Exception:
         duration = 0
 
     # fps
@@ -989,7 +989,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
                 if re_results:
                     fps = Decimal(re_results.group(1).strip())
                     break
-    except:
+    except Exception:
         fps = 0
 
     # check for video stream
@@ -999,7 +999,7 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
             if "Stream #" in r and "Video:" in r:
                 hasVideo = True
                 break
-    except:
+    except Exception:
         hasVideo = None
 
     # check for audio stream
@@ -1009,10 +1009,10 @@ def accurate_media_analysis(ffmpeg_bin, fileName):
             if "Stream #" in r and "Audio:" in r:
                 hasAudio = True
                 break
-    except:
+    except Exception:
         hasAudio = None
 
-    return int(fps * duration), duration*1000, duration, fps, hasVideo, hasAudio
+    return int(fps * duration), duration * 1000, duration, fps, hasVideo, hasAudio
 
 
 def behavior_color(colors_list, idx):
@@ -1024,10 +1024,9 @@ def behavior_color(colors_list, idx):
 
     try:
         return colors_list[idx % len(colors_list)]
-    except:
+    except Exception:
         return "darkgray"
 
 
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
-

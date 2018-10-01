@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>6</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -217,6 +217,13 @@
                 </widget>
                </item>
                <item>
+                <widget class="QPushButton" name="pb_convert_behav_keys_to_lower">
+                 <property name="text">
+                  <string>Convert keys to lower case</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <spacer name="verticalSpacer_3">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
@@ -342,6 +349,13 @@ from a BORIS project</string>
                 <widget class="QPushButton" name="pbRemoveSubject">
                  <property name="text">
                   <string>Remove subject</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pb_convert_subjects_key_to_lower">
+                 <property name="text">
+                  <string>Convert keys to lower case</string>
                  </property>
                 </widget>
                </item>
