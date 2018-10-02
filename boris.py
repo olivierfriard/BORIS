@@ -1052,7 +1052,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for time slice
-        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa", "Time slice (in seconds):", 1.0, 0.001, 86400, 3)
+        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
@@ -1091,7 +1091,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             out2 += "\t".join(["%8.6f" % x for x in irr_results[r, :]]) + "\n"
 
         self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa analysis results")
+        self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa (time-unit) analysis results")
         self.results.ptText.setReadOnly(True)
         if len(selected_observations) == 2:
             self.results.ptText.appendPlainText(out)

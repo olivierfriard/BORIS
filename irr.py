@@ -34,7 +34,9 @@ def cohen_kappa(cursor,
                 selected_subjects,
                 include_modifiers):
     """
-    Inter-rater reliability Cohen's kappa coefficient
+    Inter-rater reliability Cohen's kappa coefficient (time-unit)
+    see Sequential Analysis and Observational Methods for the Behavioral Sciences p. 77
+
 
     Args:
         cursor (sqlite3.cursor): cursor to aggregated events db
@@ -42,12 +44,12 @@ def cohen_kappa(cursor,
         obsid2 (str): id of observation #2
         selected_subjects (list): subjects selected for analysis
         include_modifiers (bool): True: include modifiers False: do not
-    
+
     Return:
         float: K
         str: result of analysis
     """
-    
+
     def subj_behav_modif(cursor, obsid, subject, time, include_modifiers):
         """
         current behaviors for observation obsId at time
@@ -86,7 +88,7 @@ def cohen_kappa(cursor,
                    observation = ?
                    AND subject = ?
                    AND type = 'POINT'
-                   AND abs(start - ?) <= ? 
+                   AND abs(start - ?) <= ?
                    """ ,
                 (obsid, subject, float(currentTime), float(interval / 2),)).fetchall()
 
@@ -112,7 +114,7 @@ def cohen_kappa(cursor,
                                                                                              (obsid1, obsid2)).fetchone()[0]
 
     logging.debug("last_event: {}".format(last_event))
-    
+
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
                                                                                         (obsid1,)).fetchone()[0]
@@ -132,23 +134,23 @@ def cohen_kappa(cursor,
 
                 if s not in total_states:
                     total_states.append(s)
-        
+
                 logging.debug("{} {} {} {}".format(obsid, subject, currentTime, s))
 
         currentTime += interval
 
 
     total_states = sorted(total_states)
-    
+
     logging.debug("total_states: {} len:{}".format(total_states, len(total_states)))
-    
+
     contingency_table = np.zeros((len(total_states), len(total_states)))
 
     currentTime = Decimal(str(first_event))
     while currentTime < last_event:
 
         for subject in selected_subjects:
-            
+
             s1 = subj_behav_modif(cursor, obsid1, subject, currentTime, include_modifiers)
             s2 = subj_behav_modif(cursor, obsid2, subject, currentTime, include_modifiers)
 
@@ -180,9 +182,9 @@ def cohen_kappa(cursor,
     overall_total = contingency_table.sum()
 
     logging.debug("overall_total: {}".format(overall_total))
-    
+
     agreements = sum(contingency_table.diagonal())
-    
+
     logging.debug("agreements: {}".format(agreements))
 
     sum_ef = 0
@@ -190,7 +192,7 @@ def cohen_kappa(cursor,
         sum_ef += rows_sums[idx] * cols_sums[idx] / overall_total
 
     logging.debug("sum_ef {}".format(sum_ef))
-    
+
     if not (overall_total - sum_ef):
         K = 1
     else:
@@ -203,7 +205,7 @@ def cohen_kappa(cursor,
                           nb_events1=nb_events1, nb_events2=nb_events2,
                           K=K
                           )
- 
+
     return K, out
 
 

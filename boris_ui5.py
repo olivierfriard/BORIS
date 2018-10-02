@@ -763,7 +763,7 @@ class Ui_MainWindow(object):
         self.action_create_modifiers_coding_map.setText(_translate("MainWindow", "for modifiers"))
         self.actionPlot_events1.setText(_translate("MainWindow", "Plot events (back compatibility)"))
         self.actionPlot_events2.setText(_translate("MainWindow", "Plot events"))
-        self.actionCohen_s_kappa.setText(_translate("MainWindow", "Cohen\'s kappa"))
+        self.actionCohen_s_kappa.setText(_translate("MainWindow", "Cohen\'s kappa (time-unit)"))
         self.actionTime_budget_report.setText(_translate("MainWindow", "Synthetic time budget"))
         self.actionCheckStateEventsSingleObs.setText(_translate("MainWindow", "Check state events"))
         self.actionSubjects_pad.setText(_translate("MainWindow", "Subjects pad"))

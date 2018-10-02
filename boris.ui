@@ -1156,7 +1156,7 @@
   </action>
   <action name="actionCohen_s_kappa">
    <property name="text">
-    <string>Cohen's kappa</string>
+    <string>Cohen's kappa (time-unit)</string>
    </property>
   </action>
   <action name="actionTime_budget_report">
