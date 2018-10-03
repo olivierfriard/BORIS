@@ -193,6 +193,8 @@ FILTERED_BEHAVIORS = "filtered behaviors"
 
 SELECTED_BEHAVIORS = "selected behaviors"
 SELECTED_SUBJECTS = "selected subjects"
+INCLUDE_MODIFIERS = "include modifiers"
+EXCLUDE_BEHAVIORS = "exclude behaviors"
 
 # indep variables
 NUMERIC = "numeric"

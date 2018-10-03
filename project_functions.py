@@ -795,7 +795,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
                             time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]),
                         )
 
-    return (False, out) if out else (True, "All state events are PAIRED")
+    return (False, out) if out else (True, "No problem detected")
 
 
 def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):

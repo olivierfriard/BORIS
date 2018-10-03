@@ -4810,9 +4810,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
 
-
-        '''synth_tb_param["group observations"] = True'''
-
         ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj,
                                                                            selected_observations,
                                                                            synth_tb_param
@@ -4838,7 +4835,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def time_budget(self, mode):
         """
         time budget (by behavior or category)
-        mode must be in ("by_behavior", "by_category", "synthetic")
+
+        Args:
+            mode (str): ["by_behavior", "by_category"]
         """
 
         def time_budget_analysis(cursor, plot_parameters, by_category=False):
@@ -4848,18 +4847,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             """
 
             categories, out = {}, []
-            for subject in plot_parameters["selected subjects"]:
+            for subject in plot_parameters[SELECTED_SUBJECTS]:
                 out_cat, categories[subject] = [], {}
 
-                for behavior in plot_parameters["selected behaviors"]:
+                for behavior in plot_parameters[SELECTED_BEHAVIORS]:
 
-                    if plot_parameters["include modifiers"]:
+                    if plot_parameters[INCLUDE_MODIFIERS]:
 
                         cursor.execute("SELECT distinct modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
                         distinct_modifiers = list(cursor.fetchall())
 
                         if not distinct_modifiers:
-                            if not plot_parameters["exclude behaviors"]:
+                            if not plot_parameters[EXCLUDE_BEHAVIORS]:
 
                                 if {self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM]
                                         if self.pj[ETHOGRAM][idx]["code"] == behavior} == {"State event"}:
@@ -5183,18 +5182,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if state events are paired
-        out = ""
+        out = ""  # will contain the output
         not_paired_obs_list = []
         for obsId in selectedObservations:
-            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][obsId], self.timeFormat)
+            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId], self.timeFormat)
 
             if not r:
                 out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
                 not_paired_obs_list.append(obsId)
 
         if out:
-            out = "Some observations have UNPAIRED state events<br><br>" + out
+            out = "Some selected observations have issues:<br><br>" + out
             self.results = dialog.Results_dialog()
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
@@ -5206,32 +5204,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         flagGroup = False
-        if len(selectedObservations) > 1 and mode != "synthetic":
+        if len(selectedObservations) > 1:
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
-
-        '''
-        # check if state events are paired
-        out = ""
-        for obsId in selectedObservations:
-            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][obsId],
-                                                              self.timeFormat)
-            if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
-        if out:
-            self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle(programName + " - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.show()
-        '''
 
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
         for obsId in selectedObservations:
             obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
-
-            logging.debug("media length for {0}: {1}".format(obsId, obs_length))
 
             if obs_length in [0, -1]:
                 selectedObsTotalMediaLength = -1
@@ -5254,8 +5233,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 selectedObsTotalMediaLength = 0
 
-        logging.debug("selectedObsTotalMediaLength: {}".format(selectedObsTotalMediaLength))
-
         if mode in ["by_behavior", "by_category"]:
             if len(selectedObservations) > 1:
                 plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
@@ -5266,20 +5243,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                       maxTime=selectedObsTotalMediaLength,
                                                                       by_category=(mode == "by_category"))
 
-        if mode == "synthetic":
-            plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
-                                                                  maxTime=max_obs_length,
-                                                                  flagShowExcludeBehaviorsWoEvents=False,
-                                                                  by_category=False)
-
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
+
+        # ask for excluding behaviors from time budget calculation
+        excluded_behaviors = ["s"]
+
 
         # check if time_budget window must be used
         if mode in ["by_behavior", "by_category"] and (flagGroup or len(selectedObservations) == 1):
 
-            cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"],
-                                                    selectedObservations, plot_parameters["selected behaviors"])
+            cursor = db_functions.load_events_in_db(self.pj, plot_parameters[SELECTED_SUBJECTS],
+                                                    selectedObservations, plot_parameters[SELECTED_BEHAVIORS])
 
             total_observation_time = 0
             for obsId in selectedObservations:
@@ -5440,7 +5415,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.tb.show()
 
 
-        if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) or mode == "synthetic":
+        if mode in ["by_behavior", "by_category"] and (not flagGroup and len(selectedObservations) > 1) :
 
             if mode in ["by_behavior", "by_category"]:
                 items = ("Tab Separated Values (*.tsv)",
@@ -5484,81 +5459,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not exportDir:
                     return
 
-            if mode == "synthetic":
-
-                formats_str = ("Tab Separated Values *.txt, *.tsv (*.txt *.tsv);;"
-                               "Comma Separated Values *.txt *.csv (*.txt *.csv);;"
-                               "Open Document Spreadsheet *.ods (*.ods);;"
-                               "Microsoft Excel Spreadsheet *.xlsx (*.xlsx);;"
-                               "Legacy Microsoft Excel Spreadsheet *.xls (*.xls);;"
-                               "HTML *.html (*.html);;"
-                               "All files (*)")
-
-                while True:
-                    if QT_VERSION_STR[0] == "4":
-                        fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget report", "", formats_str)
-                    else:
-                        fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget report", "", formats_str)
-
-                    if not fileName:
-                        return
-
-                    extension = ""
-                    availableFormats = ("tsv", "csv", "ods", "xlsx)", "xls)", "html")  # ) is added to distinguish between xls and xlsx
-                    for fileExtension in availableFormats:
-                        if fileExtension in filter_:
-                            extension = fileExtension.replace(")", "")
-                    if not extension:
-                        QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default,
-                                            QMessageBox.NoButton)
-                    else:
-                        break
-
-                data_report = tablib.Dataset()
-                data_report.title = "Synthetic time budget"
-
-                parameters = [["duration", "Total duration"], ["number", "Number of occurrences"]]
-
-                cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"],
-                                                        selectedObservations, plot_parameters["selected behaviors"])
-
-                cursor.execute("SELECT distinct code, modifiers FROM events WHERE subject in ({})".format(
-                    ",".join("?" * len(plot_parameters["selected subjects"]))
-                ), (plot_parameters["selected subjects"]))
-
-                distinct_behav_modif = [[rows["code"], rows["modifiers"]] for rows in cursor.fetchall()]
-
-                # add selected behaviors that are not observed
-                for behav in plot_parameters["selected behaviors"]:
-                    if [x for x in distinct_behav_modif if x[0] == behav] == []:
-                        distinct_behav_modif.append([behav, "-"])
-
-                behaviors = init_behav_modif()
-
-                subj_header, behav_header, modif_header, param_header = ["", ""], ["", ""], ["", ""], ["", "Total length (s)"]
-                # subj_header, behav_header, modif_header, param_header = [""], [""], [""], [""]
-                for subj in plot_parameters["selected subjects"]:
-                    for behav in plot_parameters["selected behaviors"]:
-                        if not plot_parameters["include modifiers"]:
-                            for param in parameters:
-                                subj_header.append(subj)
-                                behav_header.append(behav)
-                                param_header.append(param[1])
-
-                        if plot_parameters["include modifiers"]:
-                            for modif in sorted(list(behaviors[subj][behav].keys())):
-                                for param in parameters:
-                                    subj_header.append(subj)
-                                    behav_header.append(behav)
-                                    modif_header.append(modif)
-                                    param_header.append(param[1])
-
-                data_report.append(subj_header)
-                data_report.append(behav_header)
-                if plot_parameters["include modifiers"]:
-                    data_report.append(modif_header)
-                data_report.append(param_header)
-
             if mode == "by_behavior":
                 fields = ["subject", "behavior", "modifiers", "number",
                           "duration", "duration_mean", "duration_stdev",
@@ -5569,8 +5469,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for obsId in selectedObservations:
 
-                cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"], [obsId],
-                                                        plot_parameters["selected behaviors"])
+                cursor = db_functions.load_events_in_db(self.pj, plot_parameters[SELECTED_SUBJECTS], [obsId],
+                                                        plot_parameters[SELECTED_BEHAVIORS])
 
                 obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
 
@@ -5596,8 +5496,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     max_time = float(plot_parameters["end time"])
 
                     # check intervals
-                    for subj in plot_parameters["selected subjects"]:
-                        for behav in plot_parameters["selected behaviors"]:
+                    for subj in plot_parameters[SELECTED_SUBJECTS]:
+                        for behav in plot_parameters[SELECTED_BEHAVIORS]:
                             if POINT in self.eventType(behav).upper():
                                 continue
                             # extract modifiers
@@ -5629,39 +5529,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                (obsId, min_time, max_time))
 
                 out, categories = time_budget_analysis(cursor, plot_parameters, by_category=(mode == "by_category"))
-
-                if mode == "synthetic":
-
-                    behaviors = init_behav_modif()
-
-                    for element in out:
-                        for param in parameters:
-                            if not plot_parameters["include modifiers"]:
-                                try:
-                                    behaviors[element["subject"]][element["behavior"]][param[0]] = element[param[0]]
-                                except Exception:
-                                    pass
-                            if plot_parameters["include modifiers"]:
-                                try:
-                                    behaviors[element["subject"]][element["behavior"]][element["modifiers"]][param[0]] = element[param[0]]
-                                except Exception:
-                                    pass
-
-                    columns = []
-                    columns.append(obsId)
-                    columns.append("{:0.3f}".format(max_time - min_time))
-
-                    for subj in plot_parameters["selected subjects"]:
-                        for behav in plot_parameters["selected behaviors"]:
-                            if not plot_parameters["include modifiers"]:
-                                for param in parameters:
-                                    columns.append(behaviors[subj][behav][param[0]])
-                            if plot_parameters["include modifiers"]:
-                                for modif in sorted(list(behaviors[subj][behav].keys())):
-                                    for param in parameters:
-                                        columns.append(behaviors[subj][behav][modif][param[0]])
-
-                    data_report.append(columns)
 
                 if mode in ["by_behavior", "by_category"]:
                     rows = []
@@ -5701,12 +5568,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             # % of total time
                             if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
                                 values.append(round(row["duration"] / float(max_time - min_time) * 100, 1))
-                                '''
-                                if len(selectedObservations) > 1:
-                                    values.append(round(row["duration"] / float(selectedObsTotalMediaLength) * 100, 1))
-                                else:
-                                    values.append(round(row["duration"] / float(max_time - min_time) * 100, 1))
-                                '''
                             else:
                                 values.append("-")
 
@@ -5776,15 +5637,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             with open(fileName, "wb") as f:
                                 f.write(data.xls)
-
-
-            if mode == "synthetic":
-                if extension in ["tsv", "csv", "html"]:
-                    with open(fileName, "wb") as f:
-                        f.write(str.encode(data_report.export(extension)))
-                if extension in ["ods", "xlsx", "xls"]:
-                    with open(fileName, "wb") as f:
-                        f.write(data_report.export(extension))
 
             if mode in ["by_behavior", "by_category"] and flagWorkBook:
                 if "xls" in outputFormat:

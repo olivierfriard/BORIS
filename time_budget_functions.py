@@ -28,12 +28,13 @@ import project_functions
 
 import time
 
+
 def default_value(ethogram, behav, param):
     """
     return value for duration in case of point event
     """
     default_value_ = 0
-    if ({ethogram[idx]["type"] for idx in ethogram if ethogram[idx]["code"] == behav} == {"Point event"} 
+    if ({ethogram[idx]["type"] for idx in ethogram if ethogram[idx]["code"] == behav} == {"Point event"}
        and param in ["duration"]):
            default_value_ = "-"
     return default_value_
@@ -106,12 +107,12 @@ def synthetic_time_budget(pj,
     data_report = tablib.Dataset()
     data_report.title = "Synthetic time budget"
 
-    
+
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                        selected_subjects,
                                                        selected_observations,
                                                        selected_behaviors)
-                                                       
+
 
     if not ok:
         return False, msg, None
@@ -175,7 +176,7 @@ def synthetic_time_budget(pj,
 
         if not ok:
             return False, msg, None
-    
+
         db_connector.create_aggregate("stdev", 1, StdevFunc)
         cursor = db_connector.cursor()
 
@@ -205,14 +206,14 @@ def synthetic_time_budget(pj,
         if interval == TIME_ARBITRARY_INTERVAL:
             min_time = float(start_time)
             max_time = float(end_time)
-        
+
         #duration = end_time - start_time
 
         cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
                       (min_time, obs_id, min_time, min_time, max_time, ))
         cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
                       (max_time, obs_id, max_time, min_time, max_time, ))
-                      
+
         cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
                          (min_time, max_time, obs_id, min_time, max_time, ))
 
@@ -220,14 +221,14 @@ def synthetic_time_budget(pj,
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-                
-                
+
+
                 cursor.execute(("SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
                                 "FROM aggregated_events "
                                 "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
                               (obs_id, subject, behavior, modifiers,))
-                
-                
+
+
                 for row in cursor.fetchall():
                     behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
                     behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
