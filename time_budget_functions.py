@@ -27,6 +27,7 @@ import db_functions
 import project_functions
 
 import time
+import statistics
 
 
 def default_value(ethogram, behav, param):
@@ -34,9 +35,9 @@ def default_value(ethogram, behav, param):
     return value for duration in case of point event
     """
     default_value_ = 0
-    if ({ethogram[idx]["type"] for idx in ethogram if ethogram[idx]["code"] == behav} == {"Point event"}
-       and param in ["duration"]):
-           default_value_ = "-"
+    if (project_functions.event_type(behav, ethogram) == "POINT EVENT"
+            and param in ["duration"]):
+        default_value_ = "-"
     return default_value_
 
 
@@ -81,18 +82,15 @@ class StdevFunc:
     def finalize(self):
         if self.k < 3:
             return None
-        return math.sqrt(self.S / (self.k-2))
+        return math.sqrt(self.S / (self.k - 2))
 
 
 
-def synthetic_time_budget(pj,
-                          selected_observations,
-                          parameters_obs
-                          ):
+def synthetic_time_budget(pj, selected_observations, parameters_obs):
 
-    selected_subjects = parameters_obs["selected subjects"]
-    selected_behaviors = parameters_obs["selected behaviors"]
-    include_modifiers = parameters_obs["include modifiers"]
+    selected_subjects = parameters_obs[SELECTED_SUBJECTS]
+    selected_behaviors = parameters_obs[SELECTED_BEHAVIORS]
+    include_modifiers = parameters_obs[INCLUDE_MODIFIERS]
     interval = parameters_obs["time"]
     start_time = parameters_obs["start time"]
     end_time = parameters_obs["end time"]
@@ -109,9 +107,9 @@ def synthetic_time_budget(pj,
 
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                       selected_subjects,
-                                                       selected_observations,
-                                                       selected_behaviors)
+                                                                      selected_subjects,
+                                                                      selected_observations,
+                                                                      selected_behaviors)
 
 
     if not ok:
@@ -129,7 +127,6 @@ def synthetic_time_budget(pj,
         distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
 
     # add selected behaviors that are not observed
-    #if not parameters_obs["exclude behaviors"]:
     for behav in selected_behaviors:
         if [x for x in distinct_behav_modif if x[0] == behav] == []:
             distinct_behav_modif.append([behav, "-"])
@@ -141,7 +138,7 @@ def synthetic_time_budget(pj,
                                  parameters)
 
     param_header = ["", "Total length (s)"]
-    subj_header, behav_header, modif_header= [""]*len(param_header), [""]*len(param_header), [""]*len(param_header)
+    subj_header, behav_header, modif_header = [""] * len(param_header), [""] * len(param_header), [""] * len(param_header)
 
     for subj in selected_subjects:
         for behavior_modifiers in distinct_behav_modif:
@@ -168,11 +165,10 @@ def synthetic_time_budget(pj,
     # select time interval
     for obs_id in selected_observations:
 
-        '''if not parameters_obs["group observations"]:'''
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                       selected_subjects,
-                                                       [obs_id],
-                                                       selected_behaviors)
+                                                                          selected_subjects,
+                                                                          [obs_id],
+                                                                          selected_behaviors)
 
         if not ok:
             return False, msg, None
@@ -196,26 +192,24 @@ def synthetic_time_budget(pj,
         if interval == TIME_EVENTS:
             try:
                 min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
-            except:
+            except Exception:
                 min_time = float(0)
             try:
                 max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
-            except:
+            except Exception:
                 max_time = float(obs_length)
 
         if interval == TIME_ARBITRARY_INTERVAL:
             min_time = float(start_time)
             max_time = float(end_time)
 
-        #duration = end_time - start_time
-
         cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-                      (min_time, obs_id, min_time, min_time, max_time, ))
+                       (min_time, obs_id, min_time, min_time, max_time, ))
         cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-                      (max_time, obs_id, max_time, min_time, max_time, ))
+                       (max_time, obs_id, max_time, min_time, max_time, ))
 
         cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-                         (min_time, max_time, obs_id, min_time, max_time, ))
+                       (min_time, max_time, obs_id, min_time, max_time, ))
 
         for subject in selected_subjects:
             for behavior_modifiers in distinct_behav_modif:
@@ -226,7 +220,7 @@ def synthetic_time_budget(pj,
                 cursor.execute(("SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
                                 "FROM aggregated_events "
                                 "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (obs_id, subject, behavior, modifiers,))
+                               (obs_id, subject, behavior, modifiers,))
 
 
                 for row in cursor.fetchall():
@@ -234,7 +228,7 @@ def synthetic_time_budget(pj,
                     behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
                     behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[2] is None else row[2]
                     behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[3] is None else row[3]
-                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[0] is None else row[0]/(max_time - min_time)
+                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[0] is None else row[0] / (max_time - min_time)
 
         columns = [obs_id, "{:0.3f}".format(max_time - min_time)]
         for subj in selected_subjects:
@@ -250,7 +244,302 @@ def synthetic_time_budget(pj,
     return True, msg, data_report
 
 
-'''
-def time_budget():
-'''
+def time_budget_analysis(ethogram: dict, cursor, selected_observations: list,
+                         parameters: dict, by_category: bool=False):
+    """
+    extract number of occurrences, total duration, mean ...
+    if start_time = 0 and end_time = 0 all events are extracted
 
+    Args:
+        ethogram (dict): project ethogram
+        cursor: cursor on temporary database
+        selected_observations (list): selected observations
+        parameters (dict): parameters for analysis
+        by_category (bool): True for grouping in category else False
+
+    Returns:
+        list: results
+        dict:
+    """
+
+    categories, out = {}, []
+    for subject in parameters[SELECTED_SUBJECTS]:
+        out_cat, categories[subject] = [], {}
+
+        for behavior in parameters[SELECTED_BEHAVIORS]:
+
+            if parameters[INCLUDE_MODIFIERS]:
+
+                cursor.execute("SELECT DISTINCT modifiers FROM events WHERE subject = ? AND code = ?", (subject, behavior))
+                distinct_modifiers = list(cursor.fetchall())
+
+                if not distinct_modifiers:
+                    if not parameters[EXCLUDE_BEHAVIORS]:
+
+                        if STATE in project_functions.event_type(behavior, ethogram):
+
+                            out.append({"subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": "-",
+                                        "duration": 0,
+                                        "duration_mean": 0,
+                                        "duration_stdev": "NA",
+                                        "number": "0",
+                                        "inter_duration_mean": "NA",
+                                        "inter_duration_stdev": "NA"})
+                        else:  # point
+                            out.append({"subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": "-",
+                                        "duration": "NA",
+                                        "duration_mean": "NA",
+                                        "duration_stdev": "NA",
+                                        "number": "0",
+                                        "inter_duration_mean": "NA",
+                                        "inter_duration_stdev": "NA"})
+                    continue
+
+                if POINT in project_functions.event_type(behavior, ethogram):
+
+                    for modifier in distinct_modifiers:
+                        cursor.execute(("SELECT occurence, observation FROM events "
+                                        "WHERE subject = ? "
+                                        "AND code = ? "
+                                        "AND modifiers = ? "
+                                        "ORDER BY observation, occurence"),
+                                       (subject, behavior, modifier[0]))
+
+                        rows = cursor.fetchall()
+
+                        # inter events duration
+                        all_event_interdurations = []
+                        for idx, row in enumerate(rows):
+                            if idx and row[1] == rows[idx - 1][1]:
+                                all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
+
+                        out_cat.append({
+                            "subject":
+                            subject,
+                            "behavior":
+                            behavior,
+                            "modifiers":
+                            modifier[0],
+                            "duration":
+                            "NA",
+                            "duration_mean":
+                            "NA",
+                            "duration_stdev":
+                            "NA",
+                            "number":
+                            len(rows),
+                            "inter_duration_mean":
+                            round(statistics.mean(all_event_interdurations), 3)
+                            if len(all_event_interdurations) else "NA",
+                            "inter_duration_stdev":
+                            round(statistics.stdev(all_event_interdurations), 3)
+                            if len(all_event_interdurations) > 1 else "NA"
+                        })
+
+                if STATE in project_functions.event_type(behavior, ethogram):
+
+                    for modifier in distinct_modifiers:
+                        cursor.execute(("SELECT occurence, observation FROM events "
+                                        "WHERE subject = ? "
+                                        "AND code = ? "
+                                        "AND modifiers = ? "
+                                        "ORDER BY observation, occurence"),
+                                       (subject, behavior, modifier[0]))
+
+                        rows = list(cursor.fetchall())
+                        if len(rows) % 2:
+                            out.append({"subject": subject, "behavior": behavior,
+                                        "modifiers": modifier[0], "duration": UNPAIRED,
+                                        "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                        "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                        "inter_duration_stdev": UNPAIRED})
+                        else:
+                            all_event_durations, all_event_interdurations = [], []
+                            for idx, row in enumerate(rows):
+                                # event
+                                if idx % 2 == 0:
+                                    new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+
+                                    all_event_durations.append(new_end - new_init)
+
+                                # inter event if same observation
+                                if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                    if (parameters["start time"] <= row[0] <= parameters["end time"]
+                                            and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]):
+                                        all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                            out_cat.append({
+                                "subject":
+                                subject,
+                                "behavior":
+                                behavior,
+                                "modifiers":
+                                modifier[0],
+                                "duration":
+                                round(sum(all_event_durations), 3),
+                                "duration_mean":
+                                round(statistics.mean(all_event_durations), 3)
+                                if len(all_event_durations) else "NA",
+                                "duration_stdev":
+                                round(statistics.stdev(all_event_durations), 3)
+                                if len(all_event_durations) > 1 else "NA",
+                                "number":
+                                len(all_event_durations),
+                                "inter_duration_mean":
+                                round(statistics.mean(all_event_interdurations), 3)
+                                if len(all_event_interdurations) else "NA",
+                                "inter_duration_stdev":
+                                round(statistics.stdev(all_event_interdurations), 3)
+                                if len(all_event_interdurations) > 1 else "NA"
+                            })
+
+            else:  # no modifiers
+
+                if POINT in project_functions.event_type(behavior, ethogram):
+
+                    cursor.execute(("SELECT occurence,observation FROM events "
+                                    "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                                   (subject, behavior))
+
+                    rows = list(cursor.fetchall())
+
+                    if len(selected_observations) == 1:
+                        new_rows = []
+                        for occurence, observation in rows:
+                            new_occurence = max(float(parameters["start time"]), occurence)
+                            new_occurence = min(new_occurence, float(parameters["end time"]))
+                            new_rows.append([new_occurence, observation])
+                        rows = list(new_rows)
+
+                    if not len(rows):
+                        if not parameters["exclude behaviors"]:
+                            out.append({"subject": subject,
+                                        "behavior": behavior,
+                                        "modifiers": "",
+                                        "duration": "NA",
+                                        "duration_mean": "NA",
+                                        "duration_stdev": "NA",
+                                        "number": "0",
+                                        "inter_duration_mean": "NA",
+                                        "inter_duration_stdev": "NA"})
+                        continue
+
+                    # inter events duration
+                    all_event_interdurations = []
+                    for idx, row in enumerate(rows):
+                        if idx and row[1] == rows[idx - 1][1]:
+                            all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
+
+                    out_cat.append({
+                        "subject":
+                        subject,
+                        "behavior":
+                        behavior,
+                        "modifiers":
+                        "-",
+                        "duration":
+                        "NA",
+                        "duration_mean":
+                        "NA",
+                        "duration_stdev":
+                        "NA",
+                        "number":
+                        len(rows),
+                        "inter_duration_mean":
+                        round(statistics.mean(all_event_interdurations), 3)
+                        if len(all_event_interdurations) else "NA",
+                        "inter_duration_stdev":
+                        round(statistics.stdev(all_event_interdurations), 3)
+                        if len(all_event_interdurations) > 1 else "NA"
+                    })
+
+                if STATE in project_functions.event_type(behavior, ethogram):
+
+                    cursor.execute(("SELECT occurence, observation FROM events "
+                                    "WHERE subject = ? AND code = ? ORDER BY observation, occurence"),
+                                   (subject, behavior))
+
+                    rows = list(cursor.fetchall())
+                    if not len(rows):
+                        if not parameters["exclude behaviors"]:  # include behaviors without events
+                            out.append({"subject": subject, "behavior": behavior,
+                                        "modifiers": "-", "duration": 0, "duration_mean": 0,
+                                        "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
+                                        "inter_duration_stdev": "-"})
+                        continue
+
+                    if len(rows) % 2:
+                        out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                                    "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
+                                    "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
+                                    "inter_duration_stdev": UNPAIRED})
+                    else:
+                        all_event_durations, all_event_interdurations = [], []
+                        for idx, row in enumerate(rows):
+                            # event
+                            if idx % 2 == 0:
+                                new_init, new_end = float(row[0]), float(rows[idx + 1][0])
+
+                                all_event_durations.append(new_end - new_init)
+
+                            # inter event if same observation
+                            if idx % 2 and idx != len(rows) - 1 and row[1] == rows[idx + 1][1]:
+                                if (parameters["start time"] <= row[0] <= parameters["end time"]
+                                        and parameters["start time"] <= rows[idx + 1][0] <= parameters["end time"]):
+                                    all_event_interdurations.append(float(rows[idx + 1][0]) - float(row[0]))
+
+                        out_cat.append({
+                            "subject":
+                            subject,
+                            "behavior":
+                            behavior,
+                            "modifiers":
+                            "-",
+                            "duration": round(sum(all_event_durations), 3),
+                            "duration_mean": round(statistics.mean(all_event_durations), 3)
+                            if len(all_event_durations) else "NA",
+                            "duration_stdev":
+                            round(statistics.stdev(all_event_durations), 3)
+                            if len(all_event_durations) > 1 else "NA",
+                            "number": len(all_event_durations),
+                            "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
+                            if len(all_event_interdurations) else "NA",
+                            "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3)
+                            if len(all_event_interdurations) > 1 else "NA"
+                        })
+
+        out += out_cat
+
+        if by_category:  # and flagCategories:
+
+            for behav in out_cat:
+
+                try:
+                    category = [ethogram[x]["category"] for x in ethogram
+                                if "category" in ethogram[x] and ethogram[x]["code"] == behav['behavior']][0]
+                except Exception:
+                    category = ""
+
+                if category in categories[subject]:
+                    if behav["duration"] not in ["-", "NA"] and categories[subject][category]["duration"] != "-":
+                        categories[subject][category]["duration"] += behav["duration"]
+                    else:
+                        categories[subject][category]["duration"] = "-"
+                    categories[subject][category]["number"] += behav["number"]
+                else:
+                    categories[subject][category] = {"duration": behav["duration"], "number": behav["number"]}
+
+    out_sorted = []
+    for subject in parameters[SELECTED_SUBJECTS]:
+        for behavior in parameters[SELECTED_BEHAVIORS]:
+            for row in out:
+                if row["subject"] == subject and row["behavior"] == behavior:
+                    out_sorted.append(row)
+
+
+    # http://stackoverflow.com/questions/673867/python-arbitrary-order-by
+    return out_sorted, categories

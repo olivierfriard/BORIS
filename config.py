@@ -195,6 +195,7 @@ SELECTED_BEHAVIORS = "selected behaviors"
 SELECTED_SUBJECTS = "selected subjects"
 INCLUDE_MODIFIERS = "include modifiers"
 EXCLUDE_BEHAVIORS = "exclude behaviors"
+EXCLUDED_BEHAVIORS = "excluded behaviors"
 
 # indep variables
 NUMERIC = "numeric"

@@ -50,12 +50,13 @@ import project_functions
 
 plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
+
 def default_value(ethogram, behav, param):
     """
     return value for duration in case of point event
     """
     default_value_ = 0
-    if ({ethogram[idx]["type"] for idx in ethogram if ethogram[idx]["code"] == behav} == {"Point event"}
+    if (project_functions.event_type(behav, ethogram) == "POINT EVENT"
        and param in ["duration"]):
            default_value_ = "-"
     return default_value_
@@ -92,9 +93,9 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                   ]
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                       selected_subjects,
-                                                       selected_observations,
-                                                       selected_behaviors)
+                                                                      selected_subjects,
+                                                                      selected_observations,
+                                                                      selected_behaviors)
 
 
     if not ok:
@@ -118,7 +119,6 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                                  distinct_behav_modif,
                                  include_modifiers,
                                  parameters)
-
 
 
     # select time interval
@@ -147,11 +147,11 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
         if interval == TIME_EVENTS:
             try:
                 min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
-            except:
+            except Exception:
                 min_time = float(0)
             try:
                 max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
-            except:
+            except Exception:
                 max_time = float(obs_length)
 
         if interval == TIME_ARBITRARY_INTERVAL:

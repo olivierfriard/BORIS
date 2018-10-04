@@ -692,7 +692,7 @@ def open_project_json(projectFileName):
     return projectFileName, projectChanged, pj, msg
 
 
-def event_type(code, ethogram):
+def event_type(code: str, ethogram: dict) -> str:
     """
     returns type of event for code
 

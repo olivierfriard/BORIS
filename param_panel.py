@@ -22,29 +22,31 @@ This file is part of BORIS.
 
 """
 
+import sys
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+    from param_panel_ui5 import Ui_Dialog
+except ModuleNotFoundError:
+    try:
+        from PyQt4.QtGui import *
+        from PyQt4.QtCore import *
+        from param_panel_ui import Ui_Dialog
+    except ModuleNotFoundError:
+        sys.exit()
 
 import os
 import logging
 
 from config import *
 
-if QT_VERSION_STR[0] == "4":
-    from param_panel_ui import Ui_Dialog
-if QT_VERSION_STR[0] == "5":
-    from param_panel_ui5 import Ui_Dialog
 
 class Param_panel(QDialog, Ui_Dialog):
 
     def __init__(self, parent=None):
 
-        super(Param_panel, self).__init__(parent)
+        super().__init__()
         self.setupUi(self)
 
         self.pbSelectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("select all"))
@@ -134,7 +136,6 @@ class Param_panel(QDialog, Ui_Dialog):
                         self.lwBehaviors.item(i).setCheckState(Qt.Checked)
 
             item.setData(35, not item.data(35))
-
 
 
     def cb_changed(self):

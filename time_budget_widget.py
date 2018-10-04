@@ -22,13 +22,17 @@ This file is part of BORIS.
 
 """
 
+import sys
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+except ModuleNotFoundError:
+    try:
+        from PyQt4.QtGui import *
+        from PyQt4.QtCore import *
+    except ModuleNotFoundError:
+        sys.exit()
 
 import logging
 import os
@@ -45,7 +49,7 @@ class timeBudgetResults(QWidget):
     """
     class for displaying time budget results in new window
     a function for exporting data in TSV, CSV, XLS and ODS formats is implemented
-    
+
     Args:
         log_level ():
         pj (dict): BORIS project
@@ -56,20 +60,25 @@ class timeBudgetResults(QWidget):
 
         logging.basicConfig(level=log_level)
         self.pj = pj
-        self.label = QLabel()
-        self.label.setText("")
-        self.lw = QListWidget()
-        self.lw.setEnabled(False)
-        self.lw.setMaximumHeight(100)
-        self.lbTotalObservedTime = QLabel()
-        self.lbTotalObservedTime.setText("")
-        self.twTB = QTableWidget()
 
         hbox = QVBoxLayout(self)
 
+        self.label = QLabel("")
         hbox.addWidget(self.label)
+
+        self.lw = QListWidget()
+        self.lw.setEnabled(False)
+        self.lw.setMaximumHeight(100)
         hbox.addWidget(self.lw)
+
+        self.lbTotalObservedTime = QLabel("")
         hbox.addWidget(self.lbTotalObservedTime)
+
+        # behaviors excluded from total time
+        self.excluded_behaviors_list = QLabel("")
+        hbox.addWidget(self.excluded_behaviors_list)
+
+        self.twTB = QTableWidget()
         hbox.addWidget(self.twTB)
 
         hbox2 = QHBoxLayout()
@@ -96,22 +105,30 @@ class timeBudgetResults(QWidget):
         save time budget analysis results in TSV, CSV, ODS, XLS format
         """
 
-        def complete(l, max):
+        def complete(l: list, max_: int) -> list:
             """
             complete list with empty string until len = max
+
+            Args:
+                l (list): list to complete
+                max_ (int): length of the returned list
+
+            Returns:
+                list: completed list
             """
-            while len(l) < max:
+
+            while len(l) < max_:
                 l.append("")
             return l
 
         logging.debug("save time budget results to file")
 
         extended_file_formats = ["Tab Separated Values (*.tsv)",
-                       "Comma Separated Values (*.csv)",
-                       "Open Document Spreadsheet ODS (*.ods)",
-                       "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                       "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                       "HTML (*.html)"]
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
         filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
@@ -137,7 +154,11 @@ class timeBudgetResults(QWidget):
                 for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
                     rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
 
-        rows.extend([[""],[""],["Time budget:"]])
+        if self.excluded_behaviors_list.text():
+            s1, s2 = self.excluded_behaviors_list.text().split(": ")
+            rows.extend([[""], [s1] + s2.split(", ")])
+
+        rows.extend([[""], [""], ["Time budget:"]])
 
         # write header
         cols = []
@@ -150,7 +171,7 @@ class timeBudgetResults(QWidget):
         for row in range(self.twTB.rowCount()):
             values = []
             for col in range(self.twTB.columnCount()):
-                values.append(intfloatstr(self.twTB.item(row,col).text()))
+                values.append(intfloatstr(self.twTB.item(row, col).text()))
 
             rows.append(values)
 
