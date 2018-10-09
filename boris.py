@@ -1615,16 +1615,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def extract_events(self):
         """
-        extract sequences from media file corresponding to coded events with FFmpeg
+        extract sequences from media files corresponding to coded events with FFmpeg
         in case of point event, from -n to +n seconds are extracted (n = self.repositioningTimeOffset)
         """
-        result, selectedObservations = self.selectObservations(MULTIPLE)
-        if not selectedObservations:
+
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
             return
 
         # check if obs are MEDIA
         live_obs_list = []
-        for obs_id in selectedObservations:
+        for obs_id in selected_observations:
             if self.pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
                 live_obs_list.append(obs_id)
         if live_obs_list:
@@ -1640,14 +1641,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         # remove live  observations
-        selectedObservations = [x for x in selectedObservations if x not in live_obs_list]
-        if not selectedObservations:
+        selected_observations = [x for x in selected_observations if x not in live_obs_list]
+        if not selected_observations:
             return
 
         # check if state events are paired
         out = ""
         not_paired_obs_list = []
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
             r, msg = project_functions.check_state_events_obs(obsId,
                                                               self.pj[ETHOGRAM],
                                                               self.pj[OBSERVATIONS][obsId],
@@ -1670,17 +1671,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         # remove observations with unpaired state events
-        selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
-        if not selectedObservations:
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
             return
 
+        parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=0,
+                                                         flagShowIncludeModifiers=False,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
 
-
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0,
-                                                              flagShowIncludeModifiers=False,
-                                                              flagShowExcludeBehaviorsWoEvents=False)
-
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
         exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to extract events",
@@ -1690,29 +1689,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check self.repositioningTimeOffset
-        text, ok = QInputDialog.getDouble(self, "Offset to substract/add to start/stop times",
-                                          "Time offset (in seconds):", 0.0, 0.0, 86400, 1)
-        if not ok:
-            return
-        try:
-            timeOffset = float2decimal(text)
-        except Exception:
-            QMessageBox.warning(self, programName, "<b>{}</b> is not recognized as time offset".format(text))
-            return
+        while True:
+            text, ok = QInputDialog.getDouble(self, "Offset to substract/add to start/stop times",
+                                              "Time offset (in seconds):", 0.0, 0.0, 86400, 1)
+            if not ok:
+                return
+            try:
+                timeOffset = float2decimal(text)
+                break
+            except Exception:
+                QMessageBox.warning(self, programName, "<b>{}</b> is not recognized as time offset".format(text))
 
         flagUnpairedEventFound = False
 
-        cursor = db_functions.load_events_in_db(self.pj, plot_parameters["selected subjects"],
-                                                selectedObservations, plot_parameters["selected behaviors"])
+        cursor = db_functions.load_events_in_db(self.pj, parameters[SELECTED_SUBJECTS],
+                                                selected_observations, parameters[SELECTED_BEHAVIORS])
 
         ffmpeg_extract_command = ('"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} -acodec copy -vcodec copy '
                                   ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
                                   '-{globalStop}{extension}" ')
 
 
-        for obsId in selectedObservations:
+        for obsId in selected_observations:
 
-            for nplayer in [PLAYER1, PLAYER2]:
+            # for nplayer in [PLAYER1, PLAYER2]:
+            for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
 
                 if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
                     continue
@@ -1721,17 +1722,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
                     duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
 
-                logging.debug("duration player {}: {}".format(nplayer, duration1))
+                for subject in parameters[SELECTED_SUBJECTS]:
 
-                for subject in plot_parameters["selected subjects"]:
-
-                    for behavior in plot_parameters["selected behaviors"]:
+                    for behavior in parameters[SELECTED_BEHAVIORS]:
 
                         cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
                                        (obsId, subject, behavior))
                         rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
-                        if STATE in self.eventType(behavior).upper() and len(rows) % 2:  # unpaired events
+                        behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
+                        if STATE in behavior_state and len(rows) % 2:  # unpaired events
                             flagUnpairedEventFound = True
                             continue
 
@@ -1746,7 +1746,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if start < timeOffset:
                                 start = Decimal("0.000")
 
-                            if POINT in self.eventType(behavior).upper():
+                            #if POINT in self.eventType(behavior).upper():
+                            if POINT in behavior_state:
 
                                 globalStop = round(row["occurence"] + timeOffset, 3)
 
@@ -1773,7 +1774,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                      shell=True)
                                 out, error = p.communicate()
 
-                            if STATE in self.eventType(behavior).upper():
+                            #if STATE in self.eventType(behavior).upper():
+                            if STATE in behavior_state:
                                 if idx % 2 == 0:
 
                                     globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
@@ -2530,7 +2532,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def setVolume(self, nplayer, new_volume):
         """
-        set volume for player #1
+        set volume for player
+
+        Args:
+            nplayer (str): player to set
+            new_volume (int): volume to set
         """
         self.dw_player[nplayer].mediaplayer.audio_set_volume(new_volume)
 
@@ -5004,6 +5010,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 # logging.debug("modifier #{}#".format(modifier[0]))
 
+                                # insert events at boundaries of time interval
                                 if len(cursor.execute(("SELECT * FROM events "
                                                        "WHERE observation = ? AND subject = ? AND code = ? AND modifiers = ? "
                                                        "AND occurence < ?"),
@@ -5027,9 +5034,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 total_observation_time += (max_time - min_time)
 
+                # delete all events out of time interval from db
                 cursor.execute("DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)", (obsId, min_time, max_time))
 
-            out, categories = time_budget_functions.time_budget_analysis(self.pj[ETHOGRAM], cursor, selectedObservations, parameters,
+            out, categories = time_budget_functions.time_budget_analysis(self.pj[ETHOGRAM],
+                                                                         cursor,
+                                                                         selectedObservations,
+                                                                         parameters,
                                                                          by_category=(mode == "by_category"))
 
             # check excluded behaviors
@@ -6283,9 +6294,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if outputFormat == "sql":
             _, _, conn = db_functions.load_aggregated_events_in_db(self.pj,
-                                                                   parameters["selected subjects"],
+                                                                   parameters[SELECTED_SUBJECTS],
                                                                    selectedObservations,
-                                                                   parameters["selected behaviors"])
+                                                                   parameters[SELECTED_BEHAVIORS])
             try:
                 with open(fileName, "w") as f:
                     for line in conn.iterdump():

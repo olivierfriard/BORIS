@@ -46,14 +46,14 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
     """
     
     # selected behaviors defined as state event
-    state_behaviors_codes = [pj[ETHOGRAM][x]["code"] for x in pj[ETHOGRAM]
+    state_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
                                  if STATE in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x]["code"] in selectedBehaviors]
+                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selectedBehaviors]
 
     # selected behaviors defined as point event
-    point_behaviors_codes = [pj[ETHOGRAM][x]["code"] for x in pj[ETHOGRAM]
+    point_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
                                  if POINT in pj[ETHOGRAM][x][TYPE].upper()
-                                    and pj[ETHOGRAM][x]["code"] in selectedBehaviors]
+                                    and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selectedBehaviors]
     
     db = sqlite3.connect(":memory:", isolation_level=None)
     #db = sqlite3.connect("/tmp/1.sqlite", isolation_level=None)
@@ -103,7 +103,7 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
 def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors):
     """
     populate a memory sqlite database with aggregated events from selectedObservations, selectedSubjects and selectedBehaviors
-    
+
     Args:
         pj (dict): project dictionary
         selectedObservations (list):
@@ -165,12 +165,10 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                                comment TEXT,
                                comment_stop TEXT)""")
 
-    
     cursor2.execute("CREATE INDEX observation_idx ON aggregated_events(observation)")
     cursor2.execute("CREATE INDEX subject_idx ON aggregated_events(subject)")
     cursor2.execute("CREATE INDEX behavior_idx ON aggregated_events(behavior)")
     cursor2.execute("CREATE INDEX modifiers_idx ON aggregated_events(modifiers)")
-    
 
     for obsId in selectedObservations:
 
