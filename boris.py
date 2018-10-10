@@ -7351,8 +7351,6 @@ item []:
         About dialog
         """
 
-        print(self.pj["project_format_version"])
-
         ver = 'v. {0}'.format(__version__)
 
         programs_versions = ["VLC media player"]
