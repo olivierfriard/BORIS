@@ -694,9 +694,9 @@ def safeFileName(s):
     replace characters not allowed in file name by _
     """
     fileName = s
-    notAllowedChars = ['/', '\\']
+    notAllowedChars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
     for char in notAllowedChars:
-        fileName = fileName.replace(char, '_')
+        fileName = fileName.replace(char, "_")
 
     return fileName
 

@@ -559,47 +559,11 @@ def open_project_json(projectFileName):
         ).format(project_format_version)
         projectFileName = ""
 
-    # update project to v.7 for time offset second player
-    project_lowerthan7 = False
-    for obs in pj[OBSERVATIONS]:
-        if "time offset second player" in pj[OBSERVATIONS][obs]:
-            if "media_info" not in pj[OBSERVATIONS][obs]:
-                pj[OBSERVATIONS][obs]["media_info"] = {}
-            if "offset" not in pj[OBSERVATIONS][obs]["media_info"]:
-                pj[OBSERVATIONS][obs]["media_info"]["offset"] = {}
-            for player in pj[OBSERVATIONS][obs][FILE]:
-                pj[OBSERVATIONS][obs]["media_info"]["offset"][player] = 0.0
-            if pj[OBSERVATIONS][obs]["time offset second player"]:
-                pj[OBSERVATIONS][obs]["media_info"]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
-
-            del pj[OBSERVATIONS][obs]["time offset second player"]
-            project_lowerthan7 = True
-
-            msg = (
-                "The project file was converted to the new format (v. {project_version}) in use with your version of BORIS.<br>"
-                "Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_version}).<br>"
-                "Remember to choose a new file name"
-                " for saving it (File &gt; > Save project as...)."
-            ).format(project_version=project_format_version)
-
-            projectChanged = True
-
-    # update project to v.7 for lower behavior key
-    """
-    if project_lowerthan7:
-        for idx in pj[ETHOGRAM]:
-            if pj[ETHOGRAM][idx]["key"] in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
-    """
-
     # update modifiers to JSON format
 
+    # check if project format version < 4 (modifiers were str)
     project_lowerthan4 = False
-
-    logging.debug("project_format_version: {}".format(utilities.versiontuple(pj["project_format_version"])))
-
     if "project_format_version" in pj and utilities.versiontuple(pj["project_format_version"]) < utilities.versiontuple("4.0"):
-
         for idx in pj[ETHOGRAM]:
             if pj[ETHOGRAM][idx]["modifiers"]:
                 if isinstance(pj[ETHOGRAM][idx]["modifiers"], str):
@@ -622,21 +586,7 @@ def open_project_json(projectFileName):
         if "category" not in pj[ETHOGRAM][idx]:
             pj[ETHOGRAM][idx]["category"] = ""
 
-    logging.debug("project_lowerthan4: {}".format(project_lowerthan4))
-
-    if project_lowerthan4:
-
-        copyfile(projectFileName, projectFileName.replace(".boris", "_old_version.boris"))
-
-        msg = (
-            "The project was updated to the current project version ({project_format_version}).\n\n"
-            "The old file project was saved as {project_file_name}"
-        ).format(project_format_version=project_format_version,
-                 project_file_name=projectFileName.replace(".boris", "_old_version.boris"))
-
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
-    project_updated = False
-
     for obs in pj[OBSERVATIONS]:
         if pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and "media_info" not in pj[OBSERVATIONS][obs]:
             pj[OBSERVATIONS][obs]["media_info"] = {"length": {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
@@ -654,10 +604,12 @@ def open_project_json(projectFileName):
                         ffmpeg_bin = msg
 
                     r = utilities.accurate_media_analysis2(ffmpeg_bin, media_file_path)
+                    '''
                     if "error" in r:
                         return projectFileName, projectChanged, {"error": r["error"]}, ""
+                    '''
 
-                    if r["duration"]:
+                    if "duration" in r and r["duration"]:
                         pj[OBSERVATIONS][obs]["media_info"]["length"][media_file_path] = r["duration"]
                         pj[OBSERVATIONS][obs]["media_info"]["fps"][media_file_path] = r["fps"]
                         pj[OBSERVATIONS][obs]["media_info"]["hasVideo"][media_file_path] = r["has_video"]
@@ -675,7 +627,7 @@ def open_project_json(projectFileName):
                             pj[OBSERVATIONS][obs]["media_info"] = {
                                 "length": {media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000}
                             }
-                            project_updated, projectChanged = True, True
+                            projectChanged = True
 
                             # FPS
                             if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
@@ -686,8 +638,43 @@ def open_project_json(projectFileName):
                             else:
                                 pj[OBSERVATIONS][obs]["media_info"]["fps"] = {media_file_path: 0}
 
-    if project_updated:
-        msg = "The media files information was updated to the new project format."
+    # update project to v.7 for time offset second player
+    project_lowerthan7 = False
+    for obs in pj[OBSERVATIONS]:
+        if "time offset second player" in pj[OBSERVATIONS][obs]:
+            if "media_info" not in pj[OBSERVATIONS][obs]:
+                pj[OBSERVATIONS][obs]["media_info"] = {}
+            if "offset" not in pj[OBSERVATIONS][obs]["media_info"]:
+                pj[OBSERVATIONS][obs]["media_info"]["offset"] = {}
+            for player in pj[OBSERVATIONS][obs][FILE]:
+                pj[OBSERVATIONS][obs]["media_info"]["offset"][player] = 0.0
+            if pj[OBSERVATIONS][obs]["time offset second player"]:
+                pj[OBSERVATIONS][obs]["media_info"]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
+
+            del pj[OBSERVATIONS][obs]["time offset second player"]
+            project_lowerthan7 = True
+
+            msg = (
+                "The project file was converted to the new format (v. {project_version}) in use with your version of BORIS.<br>"
+                "Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_version}).<br>"
+            ).format(project_version=project_format_version)
+
+            projectChanged = True
+
+
+    if project_lowerthan7:
+
+        msg = (
+            "The project was updated to the current project version ({project_format_version})."
+        ).format(project_format_version=project_format_version)
+
+        try:
+            copyfile(projectFileName, projectFileName.replace(".boris", ".v{}.boris".format(pj["project_format_version"])))
+            msg += "\n\nThe old file project was saved as {}".format(projectFileName.replace(".boris", ".v{}.boris".format(pj["project_format_version"])))
+        except Exception:
+            pass
+
+        pj["project_format_version"] = project_format_version
 
     return projectFileName, projectChanged, pj, msg
 

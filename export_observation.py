@@ -405,7 +405,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     data.title = obsId
     # check if worksheet name will be > 31 char
     if output_format in ["xls", "xlsx"]:
-        for forbidden_char in r"\/*[]:?":
+        for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
             data.title = data.title.replace(forbidden_char, " ")
 
     if output_format in ["xls"]:

@@ -4958,7 +4958,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # ask for excluding behaviors durations from total time
         parameters[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
-                                                               text="The duration of the selected behaviors will be substracted from the total time",
+                                                               text=("The duration of the selected behaviors will "
+                                                                     "be subtracted from the total time"),
                                                                table="")
 
         # check if time_budget window must be used
@@ -5601,7 +5602,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.projectChanged = True
         self.projectChanged = memProjectChanged
         self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
-        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
         self.projectFileName = str(pathlib.Path(project_path).absolute())
         self.project = True
         if str(self.projectFileName) not in self.recent_projects:
@@ -5639,13 +5640,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if action.text() == "Open project":
             fn = QFileDialog().getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
-            fileName = fn[0] if type(fn) is tuple else fn
+            file_name = fn[0] if type(fn) is tuple else fn
 
         else:  # recent project
-            fileName = action.text()
+            file_name = action.text()
 
-        if fileName:
-            project_path, project_changed, pj, msg = project_functions.open_project_json(fileName)
+        if file_name:
+            project_path, project_changed, pj, msg = project_functions.open_project_json(file_name)
 
             if "error" in pj:
                 logging.debug(pj["error"])
@@ -5659,12 +5660,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     flag_all_upper = True
                     if pj[ETHOGRAM]:
                         for idx in pj[ETHOGRAM]:
-                            if pj[ETHOGRAM][idx]["key"] in "abcdefghijklmnopqrstuvwxyz":
+                            if pj[ETHOGRAM][idx]["key"].islower():
                                 flag_all_upper = False
 
                     if pj[SUBJECTS]:
                         for idx in pj[SUBJECTS]:
-                            if pj[SUBJECTS][idx]["key"] in "abcdefghijklmnopqrstuvwxyz":
+                            if pj[SUBJECTS][idx]["key"].islower():
                                 flag_all_upper = False
 
                     if flag_all_upper and dialog.MessageDialog(
@@ -6380,7 +6381,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False,
                                                               flagShowExcludeBehaviorsWoEvents=False)
 
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
 
         exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as TextGrid", os.path.expanduser('~'),
@@ -6515,8 +6516,9 @@ item []:
                     subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax
                 )
 
+            # FIXME !!!
             try:
-                with open("{exportDir}{sep}{obsId}.textGrid".format(exportDir=exportDir, sep=os.sep, obsId=obsId), "w") as f:
+                with open(str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix(".textGrid")), "w") as f:
                     f.write(out)
 
                 if flagUnpairedEventFound:
@@ -7348,6 +7350,8 @@ item []:
         """
         About dialog
         """
+
+        print(self.pj["project_format_version"])
 
         ver = 'v. {0}'.format(__version__)
 
@@ -9059,7 +9063,7 @@ item []:
         plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True,
                                                               flagShowExcludeBehaviorsWoEvents=False)
 
-        if not plot_parameters["selected subjects"] or not plot_parameters[SELECTED_BEHAVIORS]:
+        if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
 
         fn = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
@@ -9091,14 +9095,13 @@ item []:
                         if "independent_variables" in self.pj[OBSERVATIONS][obs_id]:
                             outFile.write("# Independent variables\n")
 
-                            # rows.append(["variable", "value"])
                             for variable in self.pj[OBSERVATIONS][obs_id]["independent_variables"]:
                                 outFile.write("# {0}: {1}\n".format(variable,
                                                                     self.pj[OBSERVATIONS][obs_id]["independent_variables"][variable]))
                         outFile.write("\n")
 
                         # selected subjects
-                        for subject in plot_parameters["selected subjects"]:
+                        for subject in plot_parameters[SELECTED_SUBJECTS]:
                             outFile.write("\n# {}:\n".format(subject if subject else NO_FOCAL_SUBJECT))
 
                             out = self.create_behavioral_strings(obs_id, subject, plot_parameters)
