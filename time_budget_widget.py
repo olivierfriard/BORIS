@@ -28,10 +28,12 @@ try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
 except ModuleNotFoundError:
+    print("Module PyQt5 not found")
     try:
         from PyQt4.QtGui import *
         from PyQt4.QtCore import *
     except ModuleNotFoundError:
+        print("Module PyQt4 not found")
         sys.exit()
 
 import logging
@@ -40,7 +42,6 @@ import tablib
 import pathlib
 
 import dialog
-
 from config import *
 from utilities import intfloatstr
 
@@ -131,16 +132,23 @@ class timeBudgetResults(QWidget):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
 
-        fileName, filter_ = filediag_func(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
+        file_name, filter_ = filediag_func(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
 
-        if not fileName:
+        if not file_name:
             return
 
         outputFormat = file_formats[extended_file_formats.index(filter_)]
-        if pathlib.Path(fileName).suffix != "." + outputFormat:
-            fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+        if pathlib.Path(file_name).suffix != "." + outputFormat:
+            file_name = str(pathlib.Path(file_name)) + "." + outputFormat
+
+            if pathlib.Path(file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            "The file {} already exists.".format(file_name),
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return
+
 
         rows = []
         # observations list
@@ -183,11 +191,11 @@ class timeBudgetResults(QWidget):
             data.append(complete(row, maxLen))
 
         if outputFormat in ["tsv", "csv", "html"]:
-            with open(fileName, "wb") as f:
+            with open(file_name, "wb") as f:
                 f.write(str.encode(data.export(outputFormat)))
             return
 
         if outputFormat in ["ods", "xlsx", "xls"]:
-            with open(fileName, "wb") as f:
+            with open(file_name, "wb") as f:
                 f.write(data.export(outputFormat))
             return

@@ -230,7 +230,7 @@ class EditSelectedEvents(QDialog):
     """
 
     def __init__(self):
-        super(EditSelectedEvents, self).__init__()
+        super().__init__()
 
         self.setWindowTitle("Edit selected events")
 
@@ -318,7 +318,7 @@ class FindInEvents(QWidget):
     currentIdx = -1
 
     def __init__(self):
-        super(FindInEvents, self).__init__()
+        super().__init__()
 
         self.setWindowTitle("Find in events")
 

@@ -228,7 +228,9 @@ def synthetic_time_budget(pj, selected_observations, parameters_obs):
                     behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
                     behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[2] is None else row[2]
                     behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[3] is None else row[3]
-                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[0] is None else row[0] / (max_time - min_time)
+                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[
+                        0] is None else row[0] / (max_time - min_time)
+
 
         columns = [obs_id, "{:0.3f}".format(max_time - min_time)]
         for subj in selected_subjects:

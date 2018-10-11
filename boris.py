@@ -8935,7 +8935,7 @@ item []:
                     return
                 outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
-                exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
+                exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
                                                                    options=QFileDialog.ShowDirsOnly)
                 if not exportDir:
                     return
