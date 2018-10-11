@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName(_fromUtf8("Form"))
-        Form.resize(1032, 812)
+        Form.resize(1032, 578)
         self.verticalLayout_12 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_12.setObjectName(_fromUtf8("verticalLayout_12"))
         self.horizontalLayout_2 = QtGui.QHBoxLayout()

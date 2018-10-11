@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1032, 812)
+        Form.resize(1032, 578)
         self.verticalLayout_12 = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout_12.setObjectName("verticalLayout_12")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()

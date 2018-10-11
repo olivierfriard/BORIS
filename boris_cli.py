@@ -32,10 +32,10 @@ import db_functions
 import export_observation
 import irr
 import plot_events
+import version
 
-
-__version__ = "6.2.3"
-__version_date__ = "2018-04-17"
+__version__ = version.__version__
+__version_date__ = version.__version_date__
 
 
 def cleanhtml(raw_html):

@@ -66,7 +66,7 @@ except ModuleNotFoundError:
 
 import select_observations
 import dialog
-from edit_event import DlgEditEvent
+from edit_event import DlgEditEvent, EditSelectedEvents
 from project import *
 import preferences
 import param_panel
@@ -79,6 +79,7 @@ import utilities
 from utilities import *
 import tablib
 import observations_list
+import version
 
 import coding_pad
 import subjects_pad
@@ -109,8 +110,8 @@ import plot_spectrogram
 import observation
 import plot_data_module
 
-__version__ = "7.0.11"
-__version_date__ = "2018-09-xx"
+__version__ = version.__version__
+__version_date__ = version.__version_date__
 
 
 if platform.python_version() < "3.6":
@@ -6516,7 +6517,6 @@ item []:
                     subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax
                 )
 
-            # FIXME !!!
             try:
                 with open(str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix(".textGrid")), "w") as f:
                     f.write(out)
@@ -7097,6 +7097,7 @@ item []:
             #   timeinterval
             #   custom execution
 
+
     def edit_event(self):
         """
         edit each event items from the selected row
@@ -7113,7 +7114,6 @@ item []:
                                       show_set_current_time=True)
             editWindow.setWindowTitle("Edit event parameters")
 
-            # pass project to window
             row = self.twEvents.selectedItems()[0].row()
 
             editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]),
@@ -7144,7 +7144,7 @@ item []:
                     sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
                                       [EVENT_BEHAVIOR_FIELD_IDX]))
             else:
-                logging.warning("The behaviour <b>{0}</b> does not exists more in the ethogram".format(
+                logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
                     self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
                 )
                 QMessageBox.warning(self,
@@ -8698,20 +8698,22 @@ item []:
         edit one or more selected events for subject, behavior and/or comment
         """
         # list of rows to edit
-        rowsToEdit = set([item.row() for item in self.twEvents.selectedIndexes()])
+        rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
 
-        if not len(rowsToEdit):
+        if not len(rows_to_edit):
             QMessageBox.warning(self, programName, "No event selected!")
-        elif len(rowsToEdit) == 1:  # 1 event selected
+        elif len(rows_to_edit) == 1:  # 1 event selected
             self.edit_event()
         else:  # editing of more events
-            dialogWindow = dialog.EditSelectedEvents()
-            dialogWindow.all_behaviors = [self.pj[ETHOGRAM][str(k)]["code"] for k in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]
-            dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)]["name"] for k in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]
+            dialogWindow = EditSelectedEvents()
+            '''dialogWindow.all_behaviors = [self.pj[ETHOGRAM][str(k)][BEHAVIOR_CODE] for k in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]'''
+            dialogWindow.all_behaviors = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
+
+            dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)][SUBJECT_NAME] for k in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]
 
             if dialogWindow.exec_():
                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                    if idx in rowsToEdit:
+                    if idx in rows_to_edit:
                         if dialogWindow.rbSubject.isChecked():
                             event[EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
                         if dialogWindow.rbBehavior.isChecked():
