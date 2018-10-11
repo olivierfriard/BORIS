@@ -142,7 +142,7 @@ class timeBudgetResults(QWidget):
         outputFormat = file_formats[extended_file_formats.index(filter_)]
         if pathlib.Path(file_name).suffix != "." + outputFormat:
             file_name = str(pathlib.Path(file_name)) + "." + outputFormat
-
+            # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
                     if dialog.MessageDialog(programName,
                                             "The file {} already exists.".format(file_name),

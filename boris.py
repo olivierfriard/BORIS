@@ -1493,8 +1493,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.setMaximumHeight(800)
-        paramPanelWindow.setMaximumWidth(600)
+        paramPanelWindow.resize(800, 600)
         paramPanelWindow.setWindowTitle(title)
         paramPanelWindow.lbBehaviors.setText(text)
         for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
@@ -1580,8 +1579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.setMaximumHeight(800)
-        paramPanelWindow.setMaximumWidth(600)
+        paramPanelWindow.resize(800, 600)
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
         paramPanelWindow.lbBehaviors.setText("Subjects")
 
@@ -4804,7 +4802,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                              flagShowExcludeBehaviorsWoEvents=False,
                                                              by_category=False)
 
-        if not synth_tb_param["selected subjects"] or not synth_tb_param["selected behaviors"]:
+        if not synth_tb_param[SELECTED_SUBJECTS] or not synth_tb_param[SELECTED_BEHAVIORS]:
             return
 
         extended_file_formats = ["Tab Separated Values (*.tsv)",
@@ -4824,6 +4822,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         output_format = file_formats[extended_file_formats.index(filter_)]
         if pathlib.Path(file_name).suffix != "." + output_format:
             file_name = str(pathlib.Path(file_name)) + "." + output_format
+            if pathlib.Path(file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            "The file {} already exists.".format(file_name),
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return
+
+        # ask for excluding behaviors durations from total time
+        synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+                                                                   text=("The duration of the selected behaviors will "
+                                                                         "be subtracted from the total time"),
+                                                                   table="")
 
         ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj,
                                                                            selected_observations,
@@ -6241,7 +6250,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False,
                                                          flagShowExcludeBehaviorsWoEvents=False)
 
-        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
         # check for grouping results
@@ -6262,19 +6271,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"]  # must be in same order than extended_file_formats
 
             if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self,
-                                                                               "Export aggregated events",
-                                                                               "", ";;".join(extended_file_formats))
+                fileName, filter_ = QFileDialog().getSaveFileNameAndFilter(self,
+                                                                           "Export aggregated events",
+                                                                           "", ";;".join(extended_file_formats))
             else:
-                fileName, filter_ = QFileDialog(self).getSaveFileName(self, "Export aggregated events", "",
-                                                                      ";;".join(extended_file_formats))
+                fileName, filter_ = QFileDialog().getSaveFileName(self, "Export aggregated events", "",
+                                                                  ";;".join(extended_file_formats))
 
             if not fileName:
                 return
 
             outputFormat = file_formats[extended_file_formats.index(filter_)]
             if pathlib.Path(fileName).suffix != "." + outputFormat:
+                # check if file with new extension already exists
                 fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+                if pathlib.Path(fileName).is_file():
+                        if dialog.MessageDialog(programName,
+                                                "The file {} already exists.".format(fileName),
+                                                [CANCEL, OVERWRITE]) == CANCEL:
+                            return
 
         else:  # not grouping
 
@@ -6289,8 +6304,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
             outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
-            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
-                                                               options=QFileDialog.ShowDirsOnly)
+            exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
+                                                           options=QFileDialog.ShowDirsOnly)
             if not exportDir:
                 return
 
@@ -6321,12 +6336,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         data_header.append(header)
 
         data = copy.deepcopy(data_header)
+        mem_command = ""  # remember user choice when file already exists
         for obsId in selectedObservations:
             d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
             data.extend(d)
 
             if not flag_group:
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                # check if file with new extension already exists
+                if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
+                    if mem_command == "Skip all":
+                        continue
+                    mem_command =dialog.MessageDialog(programName,
+                                                      "The file {} already exists.".format(fileName),
+                                                      [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                    if mem_command == CANCEL:
+                        return
+                    if mem_command == "Skip":
+                        continue
+
                 r, msg = export_observation.dataset_write(data, fileName, outputFormat)
                 if not r:
                     QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -8956,6 +8984,14 @@ item []:
                 outputFormat = file_formats[extended_file_formats.index(filter_)]
                 if pathlib.Path(fileName).suffix != "." + outputFormat:
                     fileName = str(pathlib.Path(fileName)) + "." + outputFormat
+                    # check if file with new extension already exists
+                    if pathlib.Path(fileName).is_file():
+                            if dialog.MessageDialog(programName,
+                                                    "The file {} already exists.".format(fileName),
+                                                    [CANCEL, OVERWRITE]) == CANCEL:
+                                return
+
+
 
         if mode == "jwatcher":
             exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events",
@@ -8966,9 +9002,22 @@ item []:
 
             outputFormat = "dat"
 
+        mem_command = ""  # remember user choice when file already exists
         for obsId in selectedObservations:
             if (len(selectedObservations) > 1 or mode == "jwatcher"):
+
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                # check if file with new extension already exists
+                if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
+                    if mem_command == "Skip all":
+                        continue
+                    mem_command =dialog.MessageDialog(programName,
+                                                      "The file {} already exists.".format(fileName),
+                                                      [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                    if mem_command == CANCEL:
+                        return
+                    if mem_command == "Skip":
+                        continue
 
             if mode == "tabular":
                 export_function = export_observation.export_events

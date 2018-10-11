@@ -86,7 +86,20 @@ class StdevFunc:
 
 
 
-def synthetic_time_budget(pj, selected_observations, parameters_obs):
+def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs: dict):
+    """
+    create a synthetic time budget
+
+    Args:
+        pj (dict): project dictionary
+        selected_observations (list): list of observations to include in time budget
+        parameters_obs (dict):
+
+    Returns:
+        bool: True if everything OK
+        str: message
+        tablib.Dataset: dataset containing synthetic time budget data
+    """
 
     selected_subjects = parameters_obs[SELECTED_SUBJECTS]
     selected_behaviors = parameters_obs[SELECTED_BEHAVIORS]
