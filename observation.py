@@ -524,10 +524,8 @@ class Observation(QDialog, Ui_Form):
                 else:
                     players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
 
-            print(players)
-
             # check if player#1 used
-            if min(players_list) > 1:
+            if not players_list or min(players_list) > 1:
                 QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
                 return False
 

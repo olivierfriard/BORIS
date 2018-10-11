@@ -6945,9 +6945,6 @@ item []:
                                   show_set_current_time=False)
         editWindow.setWindowTitle("Add a new event")
 
-        # send pj to edit_event window
-        '''editWindow.pj, editWindow.currentModifier = self.pj, ""'''
-
         editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ))
         editWindow.dsbTime.setValue(float(laps))
 
@@ -6959,9 +6956,6 @@ item []:
         sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
         editWindow.cobCode.addItems(sortedCodes)
-
-        # activate signal
-        # editWindow.cobCode.currentIndexChanged.connect(editWindow.codeChanged)
 
         if editWindow.exec_():  # button OK
 
@@ -6980,6 +6974,7 @@ item []:
                     if editWindow.leComment.toPlainText():
                         event["comment"] = editWindow.leComment.toPlainText()
 
+                    print("newtime", newTime, type(newTime))
                     self.writeEvent(event, newTime)
                     break
 
@@ -7942,14 +7937,16 @@ item []:
                     self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
 
 
-    def checkSameEvent(self, obsId, time, subject, code):
+    def checkSameEvent(self, obsId: str, time: Decimal, subject: str, code: str):
         """
         check if a same event is already in events list (time, subject, code)
         """
+
         return [time, subject, code] in [[x[EVENT_TIME_FIELD_IDX], x[EVENT_SUBJECT_FIELD_IDX], x[EVENT_BEHAVIOR_FIELD_IDX]]
                                          for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
-    def writeEvent(self, event, memTime):
+
+    def writeEvent(self, event: dict, memTime: Decimal):
         """
         add event from pressed key to observation
         offset is added to event time
@@ -7975,7 +7972,10 @@ item []:
             # check if a same event is already in events list (time, subject, code)
             # "row" present in case of event editing
 
-            if "row" not in event and self.checkSameEvent(self.observationId, memTime, self.currentSubject, event["code"]):
+            if ("row" not in event) and self.checkSameEvent(self.observationId,
+                                                            memTime,
+                                                            event["subject"] if "subject" in event else self.currentSubject,
+                                                            event["code"]):
                 _ = dialog.MessageDialog(programName, "The same event already exists (same time, behavior code and subject).", [OK])
                 return
 
@@ -8030,6 +8030,7 @@ item []:
                 modifier_str = event["from map"]
 
             # update current state
+            # TODO: verify event["subject"] / self.currentSubject
             if "row" not in event:  # no editing
                 if self.currentSubject:
                     csj = []

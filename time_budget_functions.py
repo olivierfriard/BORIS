@@ -124,7 +124,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                                                                       selected_observations,
                                                                       selected_behaviors)
 
-
     if not ok:
         return False, msg, None
 
@@ -225,10 +224,22 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                        (min_time, max_time, obs_id, min_time, max_time, ))
 
         for subject in selected_subjects:
+
+            # check if behaviors are to exclude from total time
+            time_to_subtract = 0
+            if EXCLUDED_BEHAVIORS in parameters_obs:
+                for excluded_behav in parameters_obs[EXCLUDED_BEHAVIORS]:
+                    cursor.execute(("SELECT SUM(stop-start) "
+                                    "FROM aggregated_events "
+                                    "WHERE observation = ? AND subject = ? AND behavior = ?"),
+                                   (obs_id, subject, excluded_behav,))
+                    for row in cursor.fetchall():
+                        time_to_subtract = row[0]
+            print("time to subtract", time_to_subtract)
+
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-
 
                 cursor.execute(("SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
                                 "FROM aggregated_events "
@@ -241,8 +252,18 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                     behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
                     behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[2] is None else row[2]
                     behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[3] is None else row[3]
-                    behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[
-                        0] is None else row[0] / (max_time - min_time)
+
+                    if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
+                        try:
+                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[
+                                0] is None else row[0] / ((max_time - min_time) - time_to_subtract)
+                        except ZeroDivisionError:
+                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
+                    else:
+                        # behavior subtracted
+                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[
+                            0] is None else row[0] / (max_time - min_time)
+
 
 
         columns = [obs_id, "{:0.3f}".format(max_time - min_time)]
