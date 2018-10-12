@@ -7008,7 +7008,6 @@ item []:
 
             self.show_current_states_in_subjects_table()
 
-
         if self.pause_before_addevent:
             # restart media
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -7123,8 +7122,9 @@ item []:
 
     def edit_event(self):
         """
-        edit each event items from the selected row
+        edit event corresponfing to the selected row in twEvents
         """
+
         if not self.observationId:
             self.no_observation()
             return
@@ -7135,9 +7135,12 @@ item []:
                                       current_time=self.getLaps(),
                                       time_format=self.timeFormat,
                                       show_set_current_time=True)
-            editWindow.setWindowTitle("Edit event parameters")
+            editWindow.setWindowTitle("Edit event")
 
             row = self.twEvents.selectedItems()[0].row()
+
+            # mem_event = self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
+            # print("mem_event", mem_event)
 
             editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]),
                                                               HHMMSSZZZ))
@@ -7189,7 +7192,6 @@ item []:
 
                 if self.timeFormat == HHMMSS:
                     newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
-
                 if self.timeFormat == S:
                     newTime = Decimal(str(editWindow.dsbTime.value()))
 
@@ -7197,6 +7199,12 @@ item []:
                     if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                         event = self.full_event(key)
                         event["subject"] = editWindow.cobSubject.currentText()
+                        '''
+                        print([newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3])
+                        # check if edited event has changed
+                        if [newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3]:
+                        '''
+
                         event["comment"] = editWindow.leComment.toPlainText()
                         event["row"] = row
                         event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
@@ -7957,6 +7965,7 @@ item []:
         Args:
             event (dict): event parameters
             memTime (Decimal): time
+            mem_event (list): original event in case of editing
 
         """
 
