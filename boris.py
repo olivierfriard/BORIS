@@ -1745,7 +1745,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if start < timeOffset:
                                 start = Decimal("0.000")
 
-                            #if POINT in self.eventType(behavior).upper():
                             if POINT in behavior_state:
 
                                 globalStop = round(row["occurence"] + timeOffset, 3)
@@ -1773,7 +1772,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                      shell=True)
                                 out, error = p.communicate()
 
-                            #if STATE in self.eventType(behavior).upper():
                             if STATE in behavior_state:
                                 if idx % 2 == 0:
 
@@ -5089,7 +5087,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # behaviors excluded from total time
             if parameters[EXCLUDED_BEHAVIORS]:
-                self.tb.excluded_behaviors_list.setText("Behaviors excluded from total time: " + (", ".join(parameters[EXCLUDED_BEHAVIORS])))
+                self.tb.excluded_behaviors_list.setText("Behaviors excluded from total time: "
+                                                        + (", ".join(parameters[EXCLUDED_BEHAVIORS])))
             else:
                 self.tb.excluded_behaviors_list.setVisible(False)
 
@@ -6347,9 +6346,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
                     if mem_command == "Skip all":
                         continue
-                    mem_command =dialog.MessageDialog(programName,
-                                                      "The file {} already exists.".format(fileName),
-                                                      [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                    mem_command = dialog.MessageDialog(programName,
+                                                       "The file {} already exists.".format(fileName),
+                                                       [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
                     if mem_command == "Skip":
@@ -8744,10 +8743,10 @@ item []:
             self.edit_event()
         else:  # editing of more events
             dialogWindow = EditSelectedEvents()
-            '''dialogWindow.all_behaviors = [self.pj[ETHOGRAM][str(k)][BEHAVIOR_CODE] for k in sorted([int(x) for x in self.pj[ETHOGRAM].keys()])]'''
             dialogWindow.all_behaviors = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
-            dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)][SUBJECT_NAME] for k in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]
+            dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)][SUBJECT_NAME]
+                                         for k in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]
 
             if dialogWindow.exec_():
                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
@@ -8974,7 +8973,7 @@ item []:
                 outputFormat = re.sub(".* \(\*\.", "", item)[:-1]
 
                 exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to export events", os.path.expanduser("~"),
-                                                                   options=QFileDialog.ShowDirsOnly)
+                                                               options=QFileDialog.ShowDirsOnly)
                 if not exportDir:
                     return
 
@@ -9021,9 +9020,9 @@ item []:
                 if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
                     if mem_command == "Skip all":
                         continue
-                    mem_command =dialog.MessageDialog(programName,
-                                                      "The file {} already exists.".format(fileName),
-                                                      [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                    mem_command = dialog.MessageDialog(programName,
+                                                       "The file {} already exists.".format(fileName),
+                                                       [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
                     if mem_command == "Skip":
