@@ -76,15 +76,16 @@ def intersection(A, B, C, D):
             xm = xc
             ym = slope * xm + intersept
         else:
-            # round Decimal result: .quantize(Dec('.001'), rounding=decimal.ROUND_DOWN)
-            xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb + xd * ya * xb + xc * xb * yd - xc * ya * xb) /
-                 (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
-                    Dec('.001'),
-                    rounding=decimal.ROUND_DOWN)
-            ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd + xa * yb * yc + ya * xb * yd - ya * xb * yc) /
-                 (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd + xa * yc)).quantize(
-                    Dec('.001'),
-                    rounding=decimal.ROUND_DOWN)
+            xm = ((xd * xa * yc - xd * xb * yc - xd * xa * yb - xc * xa * yd + xc * xa * yb
+                   + xd * ya * xb + xc * xb * yd - xc * ya * xb) /
+                  (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd +
+                   xa * yc)).quantize(
+                       Dec('.001'), rounding=decimal.ROUND_DOWN)
+            ym = ((yb * xc * yd - yb * yc * xd - ya * xc * yd + ya * yc * xd - xa * yb * yd
+                   + xa * yb * yc + ya * xb * yd - ya * xb * yc) /
+                  (-yb * xd + yb * xc + ya * xd - ya * xc + xb * yd - xb * yc - xa * yd +
+                   xa * yc)).quantize(
+                       Dec('.001'), rounding=decimal.ROUND_DOWN)
 
         xmin1, xmax1 = min(xa, xb), max(xa, xb)
         xmin2, xmax2 = min(xc, xd), max(xc, xd)
@@ -549,7 +550,9 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     # draw polygon a red polygon
 
 
-                    self.closedPolygon = QGraphicsPolygonItem(newPolygon, None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem(newPolygon)
+                    self.closedPolygon = QGraphicsPolygonItem(
+                        newPolygon, None,
+                        None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem(newPolygon)
 
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
                     self.closedPolygon.setBrush(self.areaColor)
