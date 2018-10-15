@@ -5676,14 +5676,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if flag_all_upper and dialog.MessageDialog(
                             programName,
-                            ("It is now possible to use <b>lower keys</b> to code behaviors and subjects.<br><br>"
+                            ("It is now possible to use <b>lower keys</b> to code behaviors, subjects and modifiers.<br><br>"
                              "In this project all the behavior and subject keys are upper case.<br>"
                              "Do you want to convert them in lower case?"),
                             [YES, NO]) == YES:
                         for idx in pj[ETHOGRAM]:
                             pj[ETHOGRAM][idx]["key"] = pj[ETHOGRAM][idx]["key"].lower()
+                            # convert modifier short cuts to lower case
+                            for modifier_set in pj[ETHOGRAM][idx]["modifiers"]:
+                                try:
+                                    for idx2, value in enumerate(pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"]):
+                                        if re.findall(r'\((\w+)\)', value):
+                                            pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"][idx2] = value.split("(")[0] +  "(" +  re.findall(r'\((\w+)\)', value)[0].lower()  + ")" + value.split(")")[-1]
+                                except Exception:
+                                    logging.warning("error during converion of modifier short cut to lower case")
+
                         for idx in pj[SUBJECTS]:
                             pj[SUBJECTS][idx]["key"] = pj[SUBJECTS][idx]["key"].lower()
+
 
                 self.load_project(project_path, project_changed, pj)
                 del pj

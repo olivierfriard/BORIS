@@ -47,7 +47,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
     def __init__(self, modifiers_str, subjects=[], parent=None):
 
-        super(addModifierDialog, self).__init__(parent)
+        super().__init__()
         self.setupUi(self)
 
         self.subjects = subjects
@@ -133,7 +133,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
         # disable if modifier numeric
         for obj in [self.lbValues, self.lwModifiers, self.leModifier, self.leCode, self.lbModifier, self.lbCode, self.lbCodeHelp,
-                    self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier]:
+                    self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pb_add_subjects,
+                    self.pbAddModifier, self.pbModifyModifier]:
             obj.setEnabled(self.cbType.currentIndex() != NUMERIC_MODIFIER)
 
 
@@ -313,14 +314,14 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
 
             if len(self.leCode.text()) > 1:
-                if self.leCode.text().upper() not in ["F" + str(i) for i in range(1, 13)]:
+                if self.leCode.text().upper() not in function_keys.values():  #  ["F" + str(i) for i in range(1, 13)]:
                     QMessageBox.critical(self, programName,
                                          "The modifier key code can not exceed one key\nSelect one key or a function key (F1, F2 ... F12)")
                     self.leCode.setFocus()
                     return
 
             if self.leCode.text():
-                for c in "(|),`~":
+                for c in CHAR_FORBIDDEN_IN_MODIFIERS:
                     if c in self.leCode.text():
                         QMessageBox.critical(self, programName,
                                              "The modifier key code is not allowed {}!".format(CHAR_FORBIDDEN_IN_MODIFIERS))
@@ -333,14 +334,14 @@ class addModifierDialog(QDialog, Ui_Dialog):
                                                                                                  "type": SINGLE_SELECTION,
                                                                                                  "values": []}
 
-                if "(" + self.leCode.text().upper() + ")" in " ".join(
+                if "(" + self.leCode.text() + ")" in " ".join(
                     self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]
                 ):
 
                     QMessageBox.critical(self, programName, "The shortcut code <b>{}</b> already exists!".format(self.leCode.text()))
                     self.leCode.setFocus()
                     return
-                txt += " ({})".format(self.leCode.text().upper())
+                txt += " ({})".format(self.leCode.text())
 
             if self.itemPositionMem != -1:
                 self.lwModifiers.insertItem(self.itemPositionMem, txt)

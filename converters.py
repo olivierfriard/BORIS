@@ -26,9 +26,11 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
+    from converters_ui5 import Ui_converters
+except ModuleNotFoundError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
+    from converters_ui import Ui_converters
 
 import os
 import dialog
@@ -37,11 +39,6 @@ import urllib.parse
 import urllib.request
 import urllib.error
 from config import *
-
-if QT_VERSION_STR[0] == "4":
-    from converters_ui import Ui_converters
-else:
-    from converters_ui5 import Ui_converters
 
 
 class Converters(QDialog, Ui_converters):
@@ -64,15 +61,15 @@ class Converters(QDialog, Ui_converters):
 
         self.pbOK.clicked.connect(self.pb_ok_clicked)
         self.pb_cancel_widget.clicked.connect(self.pb_cancel_widget_clicked)
-        
+
         self.pb_code_help.clicked.connect(self.pb_code_help_clicked)
-        
+
         self.row_in_modification = -1
         self.flag_modified = False
 
         for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
             w.setEnabled(False)
-            
+
         self.load_converters_in_table()
 
 
@@ -118,18 +115,18 @@ class Converters(QDialog, Ui_converters):
         self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
         self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
         self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
-        
+
         self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
 
 
     def code_2_func(self, name, code):
         """
         convert code to function
-        
+
         Args:
             name (str): function name
             code (str): Python code
-        
+
         Returns:
             str: string containing Python function
         """
@@ -138,7 +135,7 @@ class Converters(QDialog, Ui_converters):
         function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT\n"""
         function += "\n".join(["    " + row for row in code.split("\n")])
         function += """\n    return OUTPUT"""
-        
+
         return function
 
 
@@ -188,7 +185,7 @@ class Converters(QDialog, Ui_converters):
         self.pb_save_converter.setEnabled(False)
         self.pb_cancel_converter.setEnabled(False)
         self.tw_converters.setEnabled(True)
-        
+
         self.flag_modified = True
 
 
@@ -233,8 +230,8 @@ class Converters(QDialog, Ui_converters):
 
     def load_converters_from_file_repo(self, mode):
         """
-        Load converters from file (JSON) or BORIS remote repository 
-        
+        Load converters from file (JSON) or BORIS remote repository
+
         Args:
             mode (str): string "repo" or "file"
         """
@@ -269,14 +266,14 @@ class Converters(QDialog, Ui_converters):
 
 
         if converters_from_file:
-            
+
             diag_choose_conv = dialog.ChooseObservationsToImport("Choose the converters to load:", sorted(list(converters_from_file.keys())))
 
             if diag_choose_conv.exec_():
 
                 selected_converters = diag_choose_conv.get_selected_observations()
                 if selected_converters:
-                    
+
                     # extract converter names from table
                     converter_names = []
                     for row in range(self.tw_converters.rowCount()):
@@ -322,7 +319,7 @@ class Converters(QDialog, Ui_converters):
                             QTableWidgetItem(converters_from_file[converter]["description"]))
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 2,
                             QTableWidgetItem(converters_from_file[converter]["code"].replace("\n", "@")))
-                        
+
                         self.flag_modified = True
 
                 [self.tw_converters.resizeColumnToContents(idx) for idx in [0,1]]
@@ -330,14 +327,14 @@ class Converters(QDialog, Ui_converters):
 
     def pb_ok_clicked(self):
         """populate converters and close widget"""
-        
+
         converters = {}
         for row in range(self.tw_converters.rowCount()):
             converters[self.tw_converters.item(row, 0).text()] = {"name": self.tw_converters.item(row, 0).text(),
                                                                   "description": self.tw_converters.item(row, 1).text(),
                                                                   "code": self.tw_converters.item(row, 2).text().replace("@", "\n")
                                                                  }
-        
+
         self.converters = converters
         self.accept()
 
@@ -353,36 +350,36 @@ class Converters(QDialog, Ui_converters):
 if __name__ == '__main__':
 
     CONVERTERS = {
-    "BORIS converters":
-    {"convert_time_ecg":
-{
-"name": "convert_time_ecg",
-"description": "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
-"code":
-"""
-import datetime
-epoch = datetime.datetime.utcfromtimestamp(0)
-datetime_format = "%d/%m/%Y %H:%M:%S.%f"
+        "BORIS converters": {
+            "convert_time_ecg": {
+                "name":
+                "convert_time_ecg",
+                "description":
+                "convert '%d/%m/%Y %H:%M:%S.%f' in seconds from epoch",
+                "code":
+                """
+    import datetime
+    epoch = datetime.datetime.utcfromtimestamp(0)
+    datetime_format = "%d/%m/%Y %H:%M:%S.%f"
 
-OUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()
-"""
-},
+    OUTPUT = (datetime.datetime.strptime(INPUT, datetime_format) - epoch).total_seconds()
+    """
+            },
+            "hhmmss_2_seconds": {
+                "name":
+                "hhmmss_2_seconds",
+                "description":
+                "convert HH:MM:SS in seconds",
+                "code":
+                """
+    h, m, s = INPUT.split(':')
+    OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
 
-"hhmmss_2_seconds":
-{
-"name": "hhmmss_2_seconds",
-"description": "convert HH:MM:SS in seconds",
+    """
+            }
+        }
+    }
 
-"code":
-
-"""
-h, m, s = INPUT.split(':')
-OUTPUT = int(h) * 3600 + int(m) * 60 + int(s)
-
-"""
-}
-}
-}
 
 
     import sys

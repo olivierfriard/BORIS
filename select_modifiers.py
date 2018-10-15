@@ -25,7 +25,7 @@ try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except Exception:
+except ModuleNotFoundError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
@@ -139,9 +139,9 @@ class ModifiersList(QDialog):
         send event (if keypress) to main window
         """
         if (event.type() == QEvent.KeyPress):
-            ek = event.key()
-            # close dialog if enter pressed
+            ek, ek_text = event.key(), event.text()
 
+            # close dialog if enter pressed
             if ek == Qt.Key_Escape:  # close
                 self.reject()
                 return False
@@ -165,7 +165,7 @@ class ModifiersList(QDialog):
                                     self.accept()
                                     return True
 
-                        if ek < 1114112 and "({})".format(chr(ek)).upper() in widget.item(index).text().upper():
+                        if ek < 1114112 and "({})".format(ek_text) in widget.item(index).text():
 
                             if QT_VERSION_STR[0] == "4":
                                 widget.setItemSelected(widget.item(index), True)

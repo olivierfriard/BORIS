@@ -35,13 +35,13 @@ except ModuleNotFoundError:
 
 import logging
 import json
-import sys
 import tablib
 import copy
 import urllib.parse
 import urllib.request
 import urllib.error
 import pathlib
+import re
 
 from utilities import sorted_keys
 from config import *
@@ -68,8 +68,8 @@ class ExclusionMatrix(QDialog):
         hbox.addWidget(self.twExclusions)
 
         hbox2 = QHBoxLayout()
-        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        hbox2.addItem(spacerItem)
+        spacer_item = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        hbox2.addItem(spacer_item)
 
         self.pb_select_all = QPushButton("Check all")
         self.pb_select_all.clicked.connect(lambda: self.pb_cb_selection("select"))
@@ -415,6 +415,24 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(row, behavioursFields["key"]).text():
                 self.twBehaviors.item(row, behavioursFields["key"]).setText(self.twBehaviors.item(row,
                                                                                                   behavioursFields["key"]).text().lower())
+
+            # check modifier short cuts
+            if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
+                modifiers_dict = eval(self.twBehaviors.item(row, behavioursFields["modifiers"]).text()) if self.twBehaviors.item(row, behavioursFields["modifiers"]).text() else {}
+                for modifier_set in modifiers_dict:
+                    try:
+                        for idx2, value in enumerate(modifiers_dict[modifier_set]["values"]):
+                            if re.findall(r'\((\w+)\)', value):
+                                modifiers_dict[modifier_set]["values"][idx2] = value.split("(")[
+                                                                                                   0] + "(" + \
+                                                                                               re.findall(r'\((\w+)\)',
+                                                                                                          value)[
+                                                                                                   0].lower() + ")" + \
+                                                                                               value.split(")")[-1]
+                    except Exception:
+                        logging.warning("error during conversion of modifier short cut to lower case")
+
+                self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(str(modifiers_dict))
 
 
     def convert_subjects_keys_to_lower_case(self):
