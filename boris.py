@@ -5059,8 +5059,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     excl_behaviors_total_time[element["subject"]] = 0
                 if element["behavior"] in parameters[EXCLUDED_BEHAVIORS]:
                     excl_behaviors_total_time[element["subject"]] += element["duration"] if element["duration"] != "NA" else 0
-            print("excl_behaviors_total_time", excl_behaviors_total_time)
-
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
@@ -5285,7 +5283,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         excl_behaviors_total_time[element["subject"]] = 0
                     if element["behavior"] in parameters[EXCLUDED_BEHAVIORS]:
                         excl_behaviors_total_time[element["subject"]] += element["duration"] if element["duration"] != "NA" else 0
-                print("excl_behaviors_total_time", excl_behaviors_total_time)
 
                 rows = []
                 # observation id
@@ -6843,7 +6840,7 @@ item []:
         try:
             self.dw_player[player - 1].mediaplayer.video_set_scale(zoom_value)
         except Exception:
-            print("Zoom error")
+            logging.warning("Zoom error")
 
         try:
             zv = self.dw_player[player - 1].mediaplayer.video_get_scale()
@@ -6973,7 +6970,6 @@ item []:
                     if editWindow.leComment.toPlainText():
                         event["comment"] = editWindow.leComment.toPlainText()
 
-                    print("newtime", newTime, type(newTime))
                     self.writeEvent(event, newTime)
                     break
 
@@ -7494,7 +7490,6 @@ item []:
             self.twEvents.setItemDelegate(StyledItemDelegateTriangle(self.twEvents))
 
             if self.twEvents.item(ROW, 0):
-                print("self.twEvents.item(ROW, 0)", self.twEvents.item(ROW, 0).text())
                 self.twEvents.scrollToItem(self.twEvents.item(ROW, 0), QAbstractItemView.EnsureVisible)
 
 
@@ -7613,9 +7608,6 @@ item []:
 
                     self.dw_player[n_player].mediaplayer.set_time(new_time)
 
-                # except:
-                # print("offset error with player #{}".format(n_player + 1))
-                # self.dw_player[n_player].mediaplayer.set_time(new_time)
 
         elif self.dw_player[n_player].media_list.count() > 1:
 
@@ -7695,7 +7687,7 @@ item []:
             try:
                 mediaTime = self.dw_player[0].mediaplayer.get_time()  # time of FIRST media player
             except Exception:
-                print("error on get time")
+                logging.warning("error on get time in timer_out function")
                 return
 
             # highlight current event in tw events and scroll event list
