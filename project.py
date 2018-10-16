@@ -416,7 +416,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.twBehaviors.item(row, behavioursFields["key"]).setText(self.twBehaviors.item(row,
                                                                                                   behavioursFields["key"]).text().lower())
 
-            # check modifier short cuts
+            # convert modifier shortcuts
             if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
                 modifiers_dict = eval(self.twBehaviors.item(row, behavioursFields["modifiers"]).text()) if self.twBehaviors.item(row, behavioursFields["modifiers"]).text() else {}
                 for modifier_set in modifiers_dict:
