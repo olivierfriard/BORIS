@@ -3168,14 +3168,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_current_media_time.setFont(font)
 
         # add all media files to media lists
-
+        self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
         self.dw_player = []
         # create dock widgets for players
         for i in range(N_PLAYER):
             self.dw_player.append(DW(i))
             # self.dw_player[-1].setGeometry(100 + i*20, 100 + i*20, 256, 256)
+
             self.dw_player[-1].setFloating(False)
             self.dw_player[-1].setVisible(False)
+            self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+
 
             if i < 4:
                 self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[-1])

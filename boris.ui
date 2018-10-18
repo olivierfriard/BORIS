@@ -13,6 +13,12 @@
   <property name="windowTitle">
    <string>BORIS</string>
   </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
@@ -71,6 +77,9 @@
                <property name="text">
                 <string>lb_current_media_time</string>
                </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
              <item>
@@ -78,12 +87,18 @@
                <property name="text">
                 <string>lbFocalSubject</string>
                </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
              <item>
               <widget class="QLabel" name="lbCurrentStates">
                <property name="text">
                 <string>lbCurrentStates</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -499,6 +514,9 @@
   <widget class="QDockWidget" name="dwSubjects">
    <property name="floating">
     <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
     <string>Subjects</string>
