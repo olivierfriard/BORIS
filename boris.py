@@ -2323,6 +2323,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         check BORIS web site for updates
         """
+
+        '''
+        self.restoreGeometry(self.saved_geometry)
+        self.restoreState(self.saved_state)
+        '''
+
+
         try:
             versionURL = "http://www.boris.unito.it/static/ver4.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
@@ -7389,6 +7396,11 @@ item []:
         """
         About dialog
         """
+
+        '''
+        self.saved_geometry = self.saveGeometry()
+        self.saved_state = self.saveState()
+        '''
 
         ver = 'v. {0}'.format(__version__)
 
