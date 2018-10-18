@@ -2328,6 +2328,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.restoreGeometry(self.saved_geometry)
         self.restoreState(self.saved_state)
         '''
+        self.dwEthogram.setGeometry(self.saved_dwethogram)
 
 
         try:
@@ -7401,6 +7402,7 @@ item []:
         self.saved_geometry = self.saveGeometry()
         self.saved_state = self.saveState()
         '''
+        self.saved_dwethogram = self.dwEthogram.geometry()
 
         ver = 'v. {0}'.format(__version__)
 
