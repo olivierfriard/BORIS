@@ -4081,6 +4081,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == LIVE:
             self.liveTimer.stop()
             self.w_live.setVisible(False)
+            self.liveObservationStarted = False
+            self.liveStartTime = None
+
             '''
             end_time = self.getLaps()
             self.lbTimeLive.setText(self.convertTime(end_time))
@@ -4133,11 +4136,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return
                 else:
                     return
-
-        if self.playerType == LIVE:
-            self.liveObservationStarted = False
-            self.liveStartTime = None
-            self.liveTimer.stop()
 
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
             for x in self.ext_data_timer_list:
