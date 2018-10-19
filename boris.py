@@ -2804,7 +2804,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug("end of last media 1 frame: {}".format(requiredFrame))
             return
 
-        for i in range(N_PLAYER):
+        '''for i in range(N_PLAYER):'''
+        for i, player in enumerate(self.dw_player):
             n_player = str(i + 1)
             if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
                or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
@@ -2868,7 +2869,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.pixmap.isNull():
                     self.frame_bitmap_format = "PNG"
 
-            self.dw_player[i].frame_viewer.setPixmap(self.pixmap.scaled(self.dw_player[i].frame_viewer.size(), Qt.KeepAspectRatio))
+            player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
             # redraw measurements from previous frames
 
@@ -3179,26 +3180,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
         self.dw_player = []
         # create dock widgets for players
+        '''
         for i in range(N_PLAYER):
             self.dw_player.append(DW(i))
-            # self.dw_player[-1].setGeometry(100 + i*20, 100 + i*20, 256, 256)
-
             self.dw_player[-1].setFloating(False)
             self.dw_player[-1].setVisible(False)
             self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-
 
             if i < 4:
                 self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[-1])
             else:
                 self.addDockWidget(Qt.BottomDockWidgetArea, self.dw_player[-1])
+        '''
 
         for i in range(N_PLAYER):
             n_player = str(i + 1)
-
             if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
                or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
                 continue
+
+            self.dw_player.append(DW(i))
+            self.dw_player[-1].setFloating(False)
+            self.dw_player[-1].setVisible(False)
+            self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
+
+            if i < 4:
+                self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
 
             self.dw_player[i].setVisible(True)
 
@@ -4070,10 +4077,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
             self.timer.stop()
             self.timer_spectro.stop()
-            for i in range(N_PLAYER):
+            '''for i in range(N_PLAYER):'''
+            for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                         and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                    self.dw_player[i].mediaplayer.stop()
+                    player.mediaplayer.stop()
+
             self.verticalLayout_3.removeWidget(self.video_slider)
             self.video_slider.deleteLater()
             self.video_slider = None
@@ -4147,8 +4156,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
 
-            for i in range(N_PLAYER):
-                self.dw_player[i].setVisible(False)
+            '''for i in range(N_PLAYER):'''
+            for i, player in enumerate(self.dw_player):
+                player.setVisible(False)
 
             del self.dw_player
 
@@ -6583,27 +6593,28 @@ item []:
 
             tot_output = ""
 
-            for i in range(N_PLAYER):
+            '''for i in range(N_PLAYER):'''
+            for i, player in enumerate(self.dw_player):
                 if not (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     continue
-                media = self.dw_player[i].mediaplayer.get_media()
+                media = player.mediaplayer.get_media()
 
-                logging.info("State: {}".format(self.dw_player[i].mediaplayer.get_state()))
+                logging.info("State: {}".format(player.mediaplayer.get_state()))
                 logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
                 logging.info("media.get_meta(0): {}".format(media.get_meta(0)))
-                logging.info("Track: {}/{}".format(self.dw_player[i].mediaplayer.video_get_track(),
-                                                   self.dw_player[i].mediaplayer.video_get_track_count()))
-                logging.info("number of media in media list: {}".format(self.dw_player[i].media_list.count()))
-                logging.info("get time: {}  duration: {}".format(self.dw_player[i].mediaplayer.get_time(), media.get_duration()))
-                logging.info("Position: {} %".format(self.dw_player[i].mediaplayer.get_position()))
-                logging.info("FPS: {}".format(self.dw_player[i].mediaplayer.get_fps()))
-                logging.info("Rate: {}".format(self.dw_player[i].mediaplayer.get_rate()))
-                logging.info("Video size: {}".format(self.dw_player[i].mediaplayer.video_get_size(0)))
-                logging.info("Scale: {}".format(self.dw_player[i].mediaplayer.video_get_scale()))
-                logging.info("Aspect ratio: {}".format(self.dw_player[i].mediaplayer.video_get_aspect_ratio()))
-                logging.info("is seekable? {0}".format(self.dw_player[i].mediaplayer.is_seekable()))
-                logging.info("has_vout? {0}".format(self.dw_player[i].mediaplayer.has_vout()))
+                logging.info("Track: {}/{}".format(player.mediaplayer.video_get_track(),
+                                                   player.mediaplayer.video_get_track_count()))
+                logging.info("number of media in media list: {}".format(player.media_list.count()))
+                logging.info("get time: {}  duration: {}".format(player.mediaplayer.get_time(), media.get_duration()))
+                logging.info("Position: {} %".format(player.mediaplayer.get_position()))
+                logging.info("FPS: {}".format(player.mediaplayer.get_fps()))
+                logging.info("Rate: {}".format(player.mediaplayer.get_rate()))
+                logging.info("Video size: {}".format(player.mediaplayer.video_get_size(0)))
+                logging.info("Scale: {}".format(player.mediaplayer.video_get_scale()))
+                logging.info("Aspect ratio: {}".format(player.mediaplayer.video_get_aspect_ratio()))
+                logging.info("is seekable? {0}".format(player.mediaplayer.is_seekable()))
+                logging.info("has_vout? {0}".format(player.mediaplayer.has_vout()))
 
                 vlc_output = ("<b>VLC analysis</b><br>"
                               "State: {}<br>"
@@ -6620,22 +6631,22 @@ item []:
                               "Scale: {}<br>"
                               "Aspect ratio: {}<br>"
                               "is seekable? {}<br>"
-                              "has_vout? {}<br>").format(self.dw_player[i].mediaplayer.get_state(),
+                              "has_vout? {}<br>").format(player.mediaplayer.get_state(),
                                                          bytes_to_str(media.get_mrl()),
                                                          media.get_meta(0),
-                                                         self.dw_player[i].mediaplayer.video_get_track(),
-                                                         self.dw_player[i].mediaplayer.video_get_track_count(),
-                                                         self.dw_player[i].media_list.count(),
-                                                         self.dw_player[i].mediaplayer.get_time(),
+                                                         player.mediaplayer.video_get_track(),
+                                                         player.mediaplayer.video_get_track_count(),
+                                                         player.media_list.count(),
+                                                         player.mediaplayer.get_time(),
                                                          self.convertTime(media.get_duration() / 1000),
-                                                         self.dw_player[i].mediaplayer.get_position(),
-                                                         self.dw_player[i].mediaplayer.get_fps(),
-                                                         self.dw_player[i].mediaplayer.get_rate(),
-                                                         self.dw_player[i].mediaplayer.video_get_size(0),
-                                                         self.dw_player[i].mediaplayer.video_get_scale(),
-                                                         self.dw_player[i].mediaplayer.video_get_aspect_ratio(),
-                                                         "Yes" if self.dw_player[i].mediaplayer.is_seekable() else "No",
-                                                         "Yes" if self.dw_player[i].mediaplayer.has_vout() else "No"
+                                                         player.mediaplayer.get_position(),
+                                                         player.mediaplayer.get_fps(),
+                                                         player.mediaplayer.get_rate(),
+                                                         player.mediaplayer.video_get_size(0),
+                                                         player.mediaplayer.video_get_scale(),
+                                                         player.mediaplayer.video_get_aspect_ratio(),
+                                                         "Yes" if player.mediaplayer.is_seekable() else "No",
+                                                         "Yes" if dw_player.mediaplayer.has_vout() else "No"
                                                          )
 
                 # FFmpeg analysis
@@ -6729,13 +6740,14 @@ item []:
 
             self.timer_out()
 
-            for n_player in range(N_PLAYER):
+            '''for n_player in range(N_PLAYER):'''
+            for n_player, player in enumerate(self.dw_player):
                 if (str(n_player + 1) not in self.pj[OBSERVATIONS][self.observationId][FILE]
                    or not self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
                     continue
-                self.dw_player[n_player].frame_viewer.setVisible(False)
-                self.dw_player[n_player].videoframe.setVisible(True)
-                self.dw_player[n_player].volume_slider.setVisible(True)
+                player.frame_viewer.setVisible(False)
+                player.videoframe.setVisible(True)
+                player.volume_slider.setVisible(True)
 
             self.FFmpegTimer.stop()
 
@@ -6751,10 +6763,11 @@ item []:
             # FIXME check if FPS are compatible for frame-by-frame mode
 
             all_fps = []
-            for i in range(N_PLAYER):
+            '''for i in range(N_PLAYER):'''
+            for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                    all_fps.extend(list(self.dw_player[i].fps.values()))
+                    all_fps.extend(list(player.fps.values()))
 
             if len(set(all_fps)) != 1:
                 logging.warning("The frame-by-frame mode will not be available because the video files have different frame rates")
@@ -6771,11 +6784,16 @@ item []:
             self.playMode = FFMPEG
 
             # make visible frame viewer(s)
+            for player in self.dw_player:
+                player.frame_viewer.setVisible(True)
+                player.videoframe.setVisible(False)
+                player.volume_slider.setVisible(False)
+            '''
             for i in range(N_PLAYER):
                 self.dw_player[i].frame_viewer.setVisible(True)
                 self.dw_player[i].videoframe.setVisible(False)
                 self.dw_player[i].volume_slider.setVisible(False)
-
+            '''
 
             # check temp dir for images from ffmpeg
             if not self.ffmpeg_cache_dir:
@@ -6843,13 +6861,14 @@ item []:
 
                 elif self.playMode == VLC:
 
-                    for i in range(N_PLAYER):
+                    '''for i in range(N_PLAYER):'''
+                    for i, player in enumerate(self.dw_player):
                         if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                                 self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                            current_media_path = url2path(self.dw_player[i].mediaplayer.get_media().get_mrl())
+                            current_media_path = url2path(player.mediaplayer.get_media().get_mrl())
                             p = pathlib.Path(current_media_path)
-                            snapshot_file_path = str(p.parent / "{}_{}.png".format(p.stem, self.dw_player[i].mediaplayer.get_time()))
-                            self.dw_player[i].mediaplayer.video_take_snapshot(0, snapshot_file_path, 0, 0)
+                            snapshot_file_path = str(p.parent / "{}_{}.png".format(p.stem, player.mediaplayer.get_time()))
+                            player.mediaplayer.video_take_snapshot(0, snapshot_file_path, 0, 0)
 
 
     def video_zoom(self, player, zoom_value):
@@ -6875,15 +6894,16 @@ item []:
 
     def video_normalspeed_activated(self):
         """
-        set playing speed at normal speed
+        set playing speed at normal speed (1x)
         """
 
         if self.playerType == VLC and self.playMode == VLC:
             self.play_rate = 1
-            for i in range(N_PLAYER):
+            '''for i in range(N_PLAYER):'''
+            for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                    self.dw_player[i].mediaplayer.set_rate(self.play_rate)
+                    player.mediaplayer.set_rate(self.play_rate)
             self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
             logging.info('play rate: {:.3f}'.format(self.play_rate))
 
@@ -6898,11 +6918,11 @@ item []:
             if self.play_rate + self.play_rate_step <= 8:
                 self.play_rate += self.play_rate_step
 
-                for i in range(N_PLAYER):
+                '''for i in range(N_PLAYER):'''
+                for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                             self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                        self.dw_player[i].mediaplayer.set_rate(self.play_rate)
-
+                        player.mediaplayer.set_rate(self.play_rate)
                 self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
                 logging.info('play rate: {:.3f}'.format(self.play_rate))
 
@@ -6917,10 +6937,11 @@ item []:
             if self.play_rate - self.play_rate_step >= 0.1:
                 self.play_rate -= self.play_rate_step
 
-                for i in range(N_PLAYER):
+                '''for i in range(N_PLAYER):'''
+                for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                             self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                        self.dw_player[i].mediaplayer.set_rate(self.play_rate)
+                        player.mediaplayer.set_rate(self.play_rate)
 
                 self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
                 logging.info('play rate: {:.3f}'.format(self.play_rate))
@@ -9484,10 +9505,11 @@ item []:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
                     return False
 
-                for i in range(N_PLAYER):
+                '''for i in range(N_PLAYER):'''
+                for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                        self.dw_player[i].mediaListPlayer.play()
+                        player.mediaListPlayer.play()
 
                 self.timer.start(VLC_TIMER_OUT)
                 self.timer_spectro.start()
@@ -9505,17 +9527,18 @@ item []:
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.stop()
             else:
-                for i in range(N_PLAYER):
+                '''for i in range(N_PLAYER):'''
+                for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                        if self.dw_player[i].mediaListPlayer.get_state() != vlc.State.Paused:
+                        if player.mediaListPlayer.get_state() != vlc.State.Paused:
 
                             self.timer.stop()
                             self.timer_spectro.stop()
-                            self.dw_player[i].mediaListPlayer.pause()
+                            player.mediaListPlayer.pause()
                             # wait until video is paused or ended
                             while True:
-                                if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                if player.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                                     break
 
                 time.sleep(1)
