@@ -427,7 +427,7 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
             frame=start_frame + 1,
             extension=extension)):
 
-        ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
+        ffmpeg_command = ('"{ffmpeg_bin}" -ss {second:.3f} '
                           '-loglevel quiet '
                           '-i "{current_media_path}" '
                           '-start_number {start_number} '
@@ -445,11 +445,14 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
                               extension=extension,
                               frame_resize=frame_resize)
 
+        print(second)
         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
 
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         out, error = p.communicate()
         out, error = out.decode("utf-8"), error.decode("utf-8")
+        
+        print(error)
 
         if error:
             logging.debug("ffmpeg error: {}".format(error))
