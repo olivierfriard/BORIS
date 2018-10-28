@@ -444,8 +444,8 @@ def extract_frames(ffmpeg_bin, start_frame, second, current_media_path, fps, ima
                               md5_media_path=md5_media_path,
                               extension=extension,
                               frame_resize=frame_resize)
-
         print(second)
+        
         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
 
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
