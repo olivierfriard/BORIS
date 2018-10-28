@@ -2835,7 +2835,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # check if jpg filter available if not use png
                 if self.pixmap.isNull():
                     self.frame_bitmap_format = "PNG"
-
             else:
                 self.iw = dialog.Info_widget()
                 self.iw.lwi.setVisible(False)
@@ -6646,7 +6645,7 @@ item []:
                                                          player.mediaplayer.video_get_scale(),
                                                          player.mediaplayer.video_get_aspect_ratio(),
                                                          "Yes" if player.mediaplayer.is_seekable() else "No",
-                                                         "Yes" if dw_player.mediaplayer.has_vout() else "No"
+                                                         "Yes" if player.mediaplayer.has_vout() else "No"
                                                          )
 
                 # FFmpeg analysis
