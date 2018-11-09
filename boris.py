@@ -6343,8 +6343,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
+        '''
         data_header = tablib.Dataset()
         data_header.title = "Aggregated events"
+        '''
         header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
@@ -6352,9 +6354,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         header.extend(["Subject", "Behavior"])
         header.extend(["Modifiers"])
         header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
-        data_header.append(header)
 
+        '''
+        data_header.append(header)
         data = copy.deepcopy(data_header)
+        '''
+        data = tablib.Dataset()
+
         mem_command = ""  # remember user choice when file already exists
         for obsId in selectedObservations:
             d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
@@ -6379,14 +6385,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 data = copy.deepcopy(data_header)
 
+        # sort by start time
+        start_idx = -5
+        stop_idx = -4
+        data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
+        data.title = "Aggregated events"
 
         if outputFormat == "sds":  # SDIS format
             out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
             for obsId in selectedObservations:
                 # observation id
                 out += "\n<{}>\n".format(obsId)
-                dataList = list(data[1:])
-                for event in sorted(dataList, key=lambda x: x[-4]):  # sort events by start time
+                # dataList = list(data[1:])
+
+                '''for event in sorted(dataList, key=lambda x: float(x[start_idx])):  # sort events by start time'''
+                for event in list(data):
                     if event[0] == obsId:
                         behavior = event[-8]
                         # replace various char by _
@@ -6396,11 +6409,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         # replace various char by _
                         for char in [" ", "-", "/"]:
                             subject = subject.replace(char, "_")
-                        event_start = "{0:.3f}".format(float(event[-5]))  # start event (from end for independent variables)
-                        if not event[-4]:  # stop event (from end)
-                            event_stop = "{0:.3f}".format(float(event[-5]) + 0.001)
+                        event_start = "{0:.3f}".format(float(event[start_idx]))  # start event (from end for independent variables)
+                        if not event[stop_idx]:  # stop event (from end)
+                            event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
                         else:
-                            event_stop = "{0:.3f}".format(float(event[-4]))
+                            event_stop = "{0:.3f}".format(float(event[stop_idx]))
                         out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject,
                                                                              behavior=behavior,
                                                                              start=event_start,
