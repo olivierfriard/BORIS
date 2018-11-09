@@ -2327,9 +2327,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         self.restoreGeometry(self.saved_geometry)
         self.restoreState(self.saved_state)
-        '''
-        self.dwEthogram.setGeometry(self.saved_dwethogram)
 
+        self.dwEthogram.setGeometry(self.saved_dwethogram)
+        '''
 
         try:
             versionURL = "http://www.boris.unito.it/static/ver4.dat"
@@ -5705,7 +5705,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 try:
                                     for idx2, value in enumerate(pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"]):
                                         if re.findall(r'\((\w+)\)', value):
-                                            pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"][idx2] = value.split("(")[0] +  "(" +  re.findall(r'\((\w+)\)', value)[0].lower()  + ")" + value.split(")")[-1]
+                                            pj[ETHOGRAM][idx]["modifiers"][modifier_set]["values"][idx2] = value.split("(")[0] + "(" + re.findall(r'\((\w+)\)', value)[0].lower() + ")" + value.split(")")[-1]
                                 except Exception:
                                     logging.warning("error during converion of modifier short cut to lower case")
 
@@ -7419,9 +7419,9 @@ item []:
         '''
         self.saved_geometry = self.saveGeometry()
         self.saved_state = self.saveState()
-        '''
-        self.saved_dwethogram = self.dwEthogram.geometry()
 
+        self.saved_dwethogram = self.dwEthogram.geometry()
+        '''
         ver = 'v. {0}'.format(__version__)
 
         programs_versions = ["VLC media player"]
