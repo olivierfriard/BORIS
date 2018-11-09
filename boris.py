@@ -451,6 +451,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     filtered_subjects = []
     filtered_behaviors = []
 
+    dw_positions = {"ethogram": None}
+
 
     def __init__(self, ffmpeg_bin, parent=None):
 
@@ -2327,8 +2329,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
         self.restoreGeometry(self.saved_geometry)
         self.restoreState(self.saved_state)
-
-        self.dwEthogram.setGeometry(self.saved_dwethogram)
         '''
 
         try:
@@ -3179,19 +3179,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
         self.dw_player = []
         # create dock widgets for players
-        '''
-        for i in range(N_PLAYER):
-            self.dw_player.append(DW(i))
-            self.dw_player[-1].setFloating(False)
-            self.dw_player[-1].setVisible(False)
-            self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
-
-            if i < 4:
-                self.addDockWidget(Qt.TopDockWidgetArea, self.dw_player[-1])
-            else:
-                self.addDockWidget(Qt.BottomDockWidgetArea, self.dw_player[-1])
-        '''
-
         for i in range(N_PLAYER):
             n_player = str(i + 1)
             if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -4076,7 +4063,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
             self.timer.stop()
             self.timer_spectro.stop()
-            '''for i in range(N_PLAYER):'''
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                         and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -4091,11 +4077,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w_live.setVisible(False)
             self.liveObservationStarted = False
             self.liveStartTime = None
-
-            '''
-            end_time = self.getLaps()
-            self.lbTimeLive.setText(self.convertTime(end_time))
-            '''
 
         # check observation events
         flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
@@ -4155,11 +4136,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
 
-            '''for i in range(N_PLAYER):'''
             for i, player in enumerate(self.dw_player):
                 player.setVisible(False)
+                player.deleteLater()
 
-            del self.dw_player
+            self.dw_player = []
 
             self.actionFrame_by_frame.setChecked(False)
             self.playMode = VLC
@@ -7419,9 +7400,9 @@ item []:
         '''
         self.saved_geometry = self.saveGeometry()
         self.saved_state = self.saveState()
-
-        self.saved_dwethogram = self.dwEthogram.geometry()
+        #self.dw_positions["ethogram"] = self.dwEthogram.geometry()
         '''
+
         ver = 'v. {0}'.format(__version__)
 
         programs_versions = ["VLC media player"]
