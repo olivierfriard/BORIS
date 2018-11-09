@@ -451,7 +451,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     filtered_subjects = []
     filtered_behaviors = []
 
-    dw_positions = {"ethogram": None}
+    '''dw_positions = {"ethogram": None}'''
 
 
     def __init__(self, ffmpeg_bin, parent=None):
@@ -2326,11 +2326,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         check BORIS web site for updates
         """
 
-        '''
-        self.restoreGeometry(self.saved_geometry)
-        self.restoreState(self.saved_state)
-        '''
-
         try:
             versionURL = "http://www.boris.unito.it/static/ver4.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
@@ -3447,6 +3442,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if FILTERED_BEHAVIORS in self.pj[OBSERVATIONS][self.observationId]:
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
+        # restore windows state: dockwidget positions ...
+        try:
+            #self.restoreGeometry(self.saved_geometry)
+            self.restoreState(self.saved_state)
+        except:
+            pass
+
+
         return True
 
 
@@ -3573,6 +3576,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.liveStartTime = None
         self.liveTimer.stop()
+
+        # restore windows state: dockwidget positions ...
+        try:
+            #self.restoreGeometry(self.saved_geometry)
+            self.restoreState(self.saved_state)
+        except:
+            pass
 
 
     def new_observation_triggered(self):
@@ -4059,6 +4069,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.info("Close observation {}".format(self.playerType))
+
+        # self.saved_geometry = self.saveGeometry()
+        self.saved_state = self.saveState()
+
 
         if self.playerType == VLC:
             self.timer.stop()
@@ -7396,12 +7410,6 @@ item []:
         """
         About dialog
         """
-
-        '''
-        self.saved_geometry = self.saveGeometry()
-        self.saved_state = self.saveState()
-        #self.dw_positions["ethogram"] = self.dwEthogram.geometry()
-        '''
 
         ver = 'v. {0}'.format(__version__)
 
