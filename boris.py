@@ -451,8 +451,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     filtered_subjects = []
     filtered_behaviors = []
 
-    '''dw_positions = {"ethogram": None}'''
-
 
     def __init__(self, ffmpeg_bin, parent=None):
 

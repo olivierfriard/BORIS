@@ -221,6 +221,7 @@
     <addaction name="separator"/>
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_selected_events"/>
+    <addaction name="actionEdit_event_time"/>
     <addaction name="actionFind_events"/>
     <addaction name="actionFind_replace_events"/>
     <addaction name="actionCheckStateEvents"/>
@@ -1287,6 +1288,11 @@
    </property>
    <property name="toolTip">
     <string>Show all events</string>
+   </property>
+  </action>
+  <action name="actionEdit_event_time">
+   <property name="text">
+    <string>Edit event time</string>
    </property>
   </action>
  </widget>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.10.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -473,6 +473,8 @@ class Ui_MainWindow(object):
         self.actionFilter_events.setObjectName("actionFilter_events")
         self.actionShow_all_events = QtWidgets.QAction(MainWindow)
         self.actionShow_all_events.setObjectName("actionShow_all_events")
+        self.actionEdit_event_time = QtWidgets.QAction(MainWindow)
+        self.actionEdit_event_time.setObjectName("actionEdit_event_time")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -517,6 +519,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)
+        self.menuObservations.addAction(self.actionEdit_event_time)
         self.menuObservations.addAction(self.actionFind_events)
         self.menuObservations.addAction(self.actionFind_replace_events)
         self.menuObservations.addAction(self.actionCheckStateEvents)
@@ -793,4 +796,5 @@ class Ui_MainWindow(object):
         self.actionFilter_events.setText(_translate("MainWindow", "Filter events"))
         self.actionShow_all_events.setText(_translate("MainWindow", "Show all events"))
         self.actionShow_all_events.setToolTip(_translate("MainWindow", "Show all events"))
+        self.actionEdit_event_time.setText(_translate("MainWindow", "Edit event time"))
 
