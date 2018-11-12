@@ -37,6 +37,7 @@ import dialog
 import config
 from utilities import *
 
+commands_index = {"Start": 2, "Edit": 3, "View": 4}
 
 class MyTableWidgetItem(QTableWidgetItem):
     def __init__(self, text, sortKey):
@@ -183,13 +184,11 @@ class observationsList_widget(QDialog):
             return
 
         response = dialog.MessageDialog(config.programName, "What do you want to do with this observation?",
-                                        ["Start", "Edit", config.CANCEL])
-        if response == "Start":
-            self.done(2)
-        if response == "Edit":
-            self.done(3)
-
-
+                                        list(commands_index.keys()) + [config.CANCEL])
+        if response == config.CANCEL:
+            return
+        else:
+            self.done(commands_index[response])
 
     def pbSelection_clicked(self, mode):
         """

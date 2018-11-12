@@ -611,6 +611,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionDelete_selected_observations.setEnabled(flagObs)
         self.actionEdit_event.setEnabled(flagObs)
         self.actionEdit_selected_events.setEnabled(flagObs)
+        self.actionEdit_event_time.setEnabled(flagObs)
+        self.actionCopy_events.setEnabled(flagObs)
+        self.actionPaste_events.setEnabled(flagObs)
+
         self.actionFind_events.setEnabled(flagObs)
         self.actionFind_replace_events.setEnabled(flagObs)
 
@@ -727,6 +731,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionSelect_observations.triggered.connect(self.select_events_between_activated)
 
         self.actionEdit_selected_events.triggered.connect(self.edit_selected_events)
+        self.actionEdit_event_time.triggered.connect(self.edit_time_selected_events)
+
+        self.actionCopy_events.triggered.connect(self.copy_selected_events)
+        self.actionPaste_events.triggered.connect(self.paste_clipboard_to_events)
+
         self.actionFind_events.triggered.connect(self.find_events)
         self.actionFind_replace_events.triggered.connect(self.find_replace_events)
         self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
@@ -861,6 +870,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.twEvents.addAction(self.actionAdd_event)
         self.twEvents.addAction(self.actionEdit_selected_events)
+        self.twEvents.addAction(self.actionEdit_event_time)
+
+        self.twEvents.addAction(self.actionCopy_events)
+        self.twEvents.addAction(self.actionPaste_events)
+
+        separator2 = QAction(self)
+        separator2.setSeparator(True)
+        self.twEvents.addAction(separator2)
+
         self.twEvents.addAction(self.actionFind_events)
         self.twEvents.addAction(self.actionFind_replace_events)
 
@@ -8326,6 +8344,8 @@ item []:
         '''
 
         if self.playerType == VIEWER:
+            if event.key() in [16777248, 16777249, 16777251, 16777252, 16781571]:
+                return
             QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
                                                      "It is not allowed to log events in this mode."))
             return
@@ -8798,6 +8818,85 @@ item []:
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][idx] = event
                         self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
+
+
+    def edit_time_selected_events(self):
+        """
+        edit time of one or more selected events
+        """
+        # list of rows to edit
+        rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
+
+        if not len(rows_to_edit):
+            QMessageBox.warning(self, programName, "No event selected!")
+            return
+
+        d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or subtract (use negative value):", 0, -86400, 86400, 3)
+        if ok and d:
+            if dialog.MessageDialog(programName,
+                                    ("Confirm the {} of {} seconds "
+                                    "to all selected events in the current observation?").format("addition" if d > 0 else "subtraction",
+                                                                                                 abs(d)),
+                                    [YES, NO]) == NO:
+                return
+
+            for idx, _ in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+                if idx in rows_to_edit:
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS][idx][EVENT_TIME_FIELD_IDX] += Decimal("{:.3f}".format(d))
+                    self.projectChanged = True
+
+            self.pj[OBSERVATIONS][self.observationId][EVENTS] = sorted(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+            self.loadEventsInTW(self.observationId)
+
+
+    def copy_selected_events(self):
+        """
+        copy selected events to clipboard
+        """
+        rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
+        if not len(rows_to_copy):
+            QMessageBox.warning(self, programName, "No event selected!")
+            return
+        copied_events = []
+        for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+            if idx in rows_to_copy:
+                copied_events.append("\t".join([str(x) for x in self.pj[OBSERVATIONS][self.observationId][EVENTS][idx]]))
+
+        cb = QApplication.clipboard()
+        cb.clear(mode=cb.Clipboard )
+        cb.setText("\n".join(copied_events), mode=cb.Clipboard)
+
+
+    def paste_clipboard_to_events(self):
+        """
+        paste clipboard to events
+        """
+
+        cb = QApplication.clipboard()
+        cb_text = cb.text()
+        cb_text_splitted = cb_text.split("\n")
+        length = []
+        content = []
+        for l in cb_text_splitted:
+            length.append(len(l.split("\t")))
+            content.append(l.split("\t"))
+        if set(length) != set([5]):
+            QMessageBox.warning(self, programName, ("The clipboard do not contain events!\n"
+                                                    "Events must be organized in 5 columns separated by TAB character"))
+            return
+        print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+
+        for event in content:
+            event[0] = Decimal(event[0])
+            if event in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+                continue
+            self.pj[OBSERVATIONS][self.observationId][EVENTS].append(event)
+            self.projectChanged = True
+
+        self.pj[OBSERVATIONS][self.observationId][EVENTS] = sorted(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+        self.loadEventsInTW(self.observationId)
+
+
 
 
     def click_signal_find_in_events(self, msg):

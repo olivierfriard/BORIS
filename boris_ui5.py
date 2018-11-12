@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.10.1
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -475,6 +475,10 @@ class Ui_MainWindow(object):
         self.actionShow_all_events.setObjectName("actionShow_all_events")
         self.actionEdit_event_time = QtWidgets.QAction(MainWindow)
         self.actionEdit_event_time.setObjectName("actionEdit_event_time")
+        self.actionCopy_events = QtWidgets.QAction(MainWindow)
+        self.actionCopy_events.setObjectName("actionCopy_events")
+        self.actionPaste_events = QtWidgets.QAction(MainWindow)
+        self.actionPaste_events.setObjectName("actionPaste_events")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -520,6 +524,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addAction(self.actionAdd_event)
         self.menuObservations.addAction(self.actionEdit_selected_events)
         self.menuObservations.addAction(self.actionEdit_event_time)
+        self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.actionFind_events)
         self.menuObservations.addAction(self.actionFind_replace_events)
         self.menuObservations.addAction(self.actionCheckStateEvents)
@@ -796,5 +801,7 @@ class Ui_MainWindow(object):
         self.actionFilter_events.setText(_translate("MainWindow", "Filter events"))
         self.actionShow_all_events.setText(_translate("MainWindow", "Show all events"))
         self.actionShow_all_events.setToolTip(_translate("MainWindow", "Show all events"))
-        self.actionEdit_event_time.setText(_translate("MainWindow", "Edit event time"))
+        self.actionEdit_event_time.setText(_translate("MainWindow", "Edit time of selected event(s)"))
+        self.actionCopy_events.setText(_translate("MainWindow", "Copy events"))
+        self.actionPaste_events.setText(_translate("MainWindow", "Paste_events"))
 

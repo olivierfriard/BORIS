@@ -222,6 +222,7 @@
     <addaction name="actionAdd_event"/>
     <addaction name="actionEdit_selected_events"/>
     <addaction name="actionEdit_event_time"/>
+    <addaction name="separator"/>
     <addaction name="actionFind_events"/>
     <addaction name="actionFind_replace_events"/>
     <addaction name="actionCheckStateEvents"/>
@@ -1292,7 +1293,17 @@
   </action>
   <action name="actionEdit_event_time">
    <property name="text">
-    <string>Edit event time</string>
+    <string>Edit time of selected event(s)</string>
+   </property>
+  </action>
+  <action name="actionCopy_events">
+   <property name="text">
+    <string>Copy events</string>
+   </property>
+  </action>
+  <action name="actionPaste_events">
+   <property name="text">
+    <string>Paste_events</string>
    </property>
   </action>
  </widget>
