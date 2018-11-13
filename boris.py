@@ -746,7 +746,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
         self.actionExportEvents_2.triggered.connect(lambda: self.export_tabular_events("tabular"))
-        self.actionExportEventString.triggered.connect(self.export_string_events)
+        self.actionExportEventString.triggered.connect(self.export_events_as_behavioral_sequences)
         self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
         self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
@@ -6334,7 +6334,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                      "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
                      "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                      "HTML (*.html)",
-                     "SDIS (*.sds)"
+                     "SDIS (*.sds)",
+                     "Timed Behavioral Sequences (*.tbs)",
                      )
             item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
             if not ok:
@@ -6379,7 +6380,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
             data.extend(d)
 
-            if not flag_group and outputFormat != "sds":
+            if not flag_group and outputFormat not in ["sds", "tbs"]:
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
                 # check if file with new extension already exists
                 if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
@@ -6401,6 +6402,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
         data.title = "Aggregated events"
+
+
+
+        if outputFormat == "tbs":  # Timed behavioral sequences
+            out = ""
+            for obsId in selectedObservations:
+                # observation id
+                out += "# {}\n".format(obsId)
+
+                for event in list(data):
+                    if event[0] == obsId:
+                        behavior = event[-8]
+                        # replace various char by _
+                        for char in [" ", "-", "/"]:
+                            behavior = behavior.replace(char, "_")
+                        subject = event[-9]
+                        # replace various char by _
+                        for char in [" ", "-", "/"]:
+                            subject = subject.replace(char, "_")
+                        event_start = "{0:.3f}".format(float(event[start_idx]))  # start event (from end for independent variables)
+                        if not event[stop_idx]:  # stop event (from end)
+                            event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
+                        else:
+                            event_stop = "{0:.3f}".format(float(event[stop_idx]))
+
+                        bs_timed = ["{subject}_{behavior}".format(subject=subject, behavior=behavior)] * (round(float(event_stop) - float(event_start)))*100
+                        out += "|".join(bs_timed)
+
+                out += "\n"
+
+                if not flag_group:
+                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                    with open(fileName, "wb") as f:
+                        f.write(str.encode(out))
+                    out = ""
+
+            if flag_group:
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(out))
+            return
+
+
+
 
         if outputFormat == "sds":  # SDIS format
             out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
@@ -9222,6 +9266,7 @@ item []:
 
                     if plot_parameters["include modifiers"]:
                         s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+
                     s += self.behaviouralStringsSeparator
 
                 if event[-1] == STOP:
@@ -9243,9 +9288,9 @@ item []:
         return s
 
 
-    def export_string_events(self):
+    def export_events_as_behavioral_sequences(self):
         """
-        export events from selected observations by subject as behavioral strings (plain text file)
+        export events from selected observations by subject as behavioral sequences (plain text file)
         behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
         for use with Behatrix (see http://www.boris.unito.it/pages/behatrix)
         """
@@ -9261,7 +9306,7 @@ item []:
         if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
 
-        fn = QFileDialog(self).getSaveFileName(self, "Export events as strings", "", "Events file (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "", "Events file (*.txt *.tsv);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
