@@ -6427,7 +6427,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             event_stop = "{0:.3f}".format(float(event[stop_idx]))
 
-                        bs_timed = ["{subject}_{behavior}".format(subject=subject, behavior=behavior)] * (round(float(event_stop) - float(event_start)))*100
+                        bs_timed = ["{subject}_{behavior}".format(subject=subject, behavior=behavior)] * round( (float(event_stop) - float(event_start)) * 100)
                         out += "|".join(bs_timed)
 
                 out += "\n"
