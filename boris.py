@@ -6333,7 +6333,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                      "Open Document Spreadsheet (*.ods)",
                      "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
                      "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                     "HTML (*.html)")
+                     "HTML (*.html)",
+                     "SDIS (*.sds)"
+                     )
             item, ok = QInputDialog.getItem(self, "Export events format", "Available formats", items, 0, False)
             if not ok:
                 return
@@ -6359,10 +6361,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        '''
-        data_header = tablib.Dataset()
-        data_header.title = "Aggregated events"
-        '''
         header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
@@ -6371,18 +6369,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         header.extend(["Modifiers"])
         header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
 
-        '''
-        data_header.append(header)
-        data = copy.deepcopy(data_header)
-        '''
         data = tablib.Dataset()
+        # sort by start time
+        start_idx = -5
+        stop_idx = -4
 
         mem_command = ""  # remember user choice when file already exists
         for obsId in selectedObservations:
             d = export_observation.export_aggregated_events(self.pj, parameters, obsId)
             data.extend(d)
 
-            if not flag_group:
+            if not flag_group and outputFormat != "sds":
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
                 # check if file with new extension already exists
                 if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
@@ -6396,14 +6393,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if mem_command == "Skip":
                         continue
 
+                data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
                 r, msg = export_observation.dataset_write(data, fileName, outputFormat)
                 if not r:
                     QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                data = copy.deepcopy(data_header)
+                data = tablib.Dataset()
 
-        # sort by start time
-        start_idx = -5
-        stop_idx = -4
         data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
         data.title = "Aggregated events"
 
@@ -6412,9 +6407,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for obsId in selectedObservations:
                 # observation id
                 out += "\n<{}>\n".format(obsId)
-                # dataList = list(data[1:])
 
-                '''for event in sorted(dataList, key=lambda x: float(x[start_idx])):  # sort events by start time'''
                 for event in list(data):
                     if event[0] == obsId:
                         behavior = event[-8]
@@ -6434,9 +6427,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                              behavior=behavior,
                                                                              start=event_start,
                                                                              stop=event_stop)
+
                 out += "/\n\n"
-            with open(fileName, "wb") as f:
-                f.write(str.encode(out))
+                if not flag_group:
+                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                    with open(fileName, "wb") as f:
+                        f.write(str.encode(out))
+                    out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
+
+            if flag_group:
+                with open(fileName, "wb") as f:
+                    f.write(str.encode(out))
             return
 
         if flag_group:
