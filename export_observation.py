@@ -26,6 +26,7 @@ import sys
 import datetime
 import pathlib
 import dialog
+from decimal import Decimal
 
 from config import *
 import utilities
@@ -601,3 +602,118 @@ def export_aggregated_events(pj, parameters, obsId):
                             data.append(row_data)
 
     return data
+
+
+def events_to_behavioral_sequences(pj, obs_id: str, subj: str,
+                                parameters: dict,
+                                behav_seq_separator: str) -> str:
+    """
+    return the behavioral string for subject in obsId
+
+    Args:
+        pj (dict): project
+        obs_id (str): observation id
+        subj (str): subject
+        parameters (dict): parameters
+        behav_seq_separator (str): separator of behviors in behavioral sequences
+
+    Returns:
+        str: behavioral string for selected subject in selected observation
+    """
+
+    out = ""
+    current_states = []
+    events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[OBSERVATIONS][obs_id][EVENTS])
+
+    for event in events_with_status:
+        # check if event in selected behaviors
+        if event[EVENT_BEHAVIOR_FIELD_IDX] not in parameters[SELECTED_BEHAVIORS]:
+            continue
+
+        if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
+
+            if event[-1] == POINT:
+                if current_states:
+                    out += "+".join(current_states) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
+                else:
+                    out += event[EVENT_BEHAVIOR_FIELD_IDX]
+
+                if parameters[INCLUDE_MODIFIERS]:
+                    out += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+
+                out += behav_seq_separator
+
+            if event[-1] == START:
+                if parameters[INCLUDE_MODIFIERS]:
+                    current_states.append("{}{}{}".format(event[EVENT_BEHAVIOR_FIELD_IDX],
+                                                          "&" if event[EVENT_MODIFIER_FIELD_IDX] else "",
+                                                          event[EVENT_MODIFIER_FIELD_IDX].replace("|", ";")))
+                else:
+                    current_states.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+
+                out += "+".join(sorted(current_states))
+
+                out += behav_seq_separator
+
+            if event[-1] == STOP:
+
+                if parameters[INCLUDE_MODIFIERS]:
+                    behav_modif = "{}{}{}".format(event[EVENT_BEHAVIOR_FIELD_IDX],
+                                                  "&" if event[EVENT_MODIFIER_FIELD_IDX] else "",
+                                                  event[EVENT_MODIFIER_FIELD_IDX].replace("|", ";"))
+                else:
+                    behav_modif = event[EVENT_BEHAVIOR_FIELD_IDX]
+                if behav_modif in current_states:
+                    current_states.remove(behav_modif)
+
+                if current_states:
+                    out += "+".join(sorted(current_states))
+
+                    out += behav_seq_separator
+
+    # remove last separator (if separator not empty)
+    if behav_seq_separator:
+        out = out[0: -len(behav_seq_separator)]
+
+    return out
+
+
+def events_to_timed_behavioral_sequences(pj: dict,
+                                        obs_id: str,
+                                        subject: str,
+                                        parameters: dict,
+                                        precision: float,
+                                        behav_seq_separator: str) -> str:
+    """
+    return the behavioral string for subject in obsId
+
+    Args:
+        pj (dict): project
+        obs_id (str): observation id
+        subj (str): subject
+        parameters (dict): parameters
+        precision (float): time value for scan sample
+        behav_seq_separator (str): separator of behviors in behavioral sequences
+
+    Returns:
+        str: behavioral string for selected subject in selected observation
+    """
+
+    out = ""
+    current_states = []
+    # events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[OBSERVATIONS][obs_id][EVENTS])
+
+    state_behaviors_codes = utilities.state_behavior_codes(pj[ETHOGRAM])
+    delta = Decimal(str(round(precision, 3)))
+    out = ""
+    t = Decimal("0.000")
+    while t < pj[OBSERVATIONS][obs_id][EVENTS][-1][0]:
+        if out:
+            out += behav_seq_separator
+        out += "+".join(utilities.get_current_states_by_subject(state_behaviors_codes,
+                                                                pj[OBSERVATIONS][obs_id][EVENTS],
+                                                                {"": {"name": subject}}, t)[""])
+
+        t += delta
+
+    return out

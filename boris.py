@@ -746,7 +746,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
         self.actionExportEvents_2.triggered.connect(lambda: self.export_tabular_events("tabular"))
-        self.actionExportEventString.triggered.connect(self.export_events_as_behavioral_sequences)
+        self.actionExportEventString.triggered.connect(lambda: self.export_events_as_behavioral_sequences(timed=False))
         self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
         self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
@@ -7084,7 +7084,7 @@ item []:
             self.currentStates = self.get_current_states_by_subject(
                 state_behavior_codes(self.pj[ETHOGRAM]),
                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                dict(self.pj[SUBJECTS], **{"": {"name": ""}}), # add no focal subject
                 newTime
             )
 
@@ -9225,77 +9225,15 @@ item []:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-    def create_behavioral_strings(self, obsId: str, subj: str, plot_parameters: list) -> str:
-        """
-        return the behavioral string for subject in obsId
 
-        Args:
-            obsId (str): observation id
-            subj (str): subject
-            plot_parameters (dict): parameters
-
-        Returns:
-            str: behavioral string for selected subject in selected observation
-        """
-
-        s = ""
-        currentStates = []
-        eventsWithStatus = project_functions.events_start_stop(self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId][EVENTS])
-
-        for event in eventsWithStatus:
-            # check if event in selected behaviors
-            if event[EVENT_BEHAVIOR_FIELD_IDX] not in plot_parameters[SELECTED_BEHAVIORS]:
-                continue
-
-            if event[EVENT_SUBJECT_FIELD_IDX] == subj or (subj == NO_FOCAL_SUBJECT and event[EVENT_SUBJECT_FIELD_IDX] == ""):
-
-                if event[-1] == POINT:
-                    if currentStates:
-                        s += "+".join(currentStates) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
-                    else:
-                        s += event[EVENT_BEHAVIOR_FIELD_IDX]
-
-                    if plot_parameters["include modifiers"]:
-                        s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
-
-                    s += self.behaviouralStringsSeparator
-
-                if event[-1] == START:
-                    currentStates.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-                    s += "+".join(currentStates)
-
-                    if plot_parameters["include modifiers"]:
-                        s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
-
-                    s += self.behaviouralStringsSeparator
-
-                if event[-1] == STOP:
-
-                    if event[EVENT_BEHAVIOR_FIELD_IDX] in currentStates:
-                        currentStates.remove(event[EVENT_BEHAVIOR_FIELD_IDX])
-
-                    if currentStates:
-                        s += "+".join(currentStates)
-
-                        if plot_parameters["include modifiers"]:
-                            s += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
-                        s += self.behaviouralStringsSeparator
-
-        # remove last separator (if separator not empty)
-        if self.behaviouralStringsSeparator:
-            s = s[0: -len(self.behaviouralStringsSeparator)]
-
-        return s
-
-
-    def export_events_as_behavioral_sequences(self):
+    def export_events_as_behavioral_sequences(self, timed=False):
         """
         export events from selected observations by subject as behavioral sequences (plain text file)
         behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
         for use with Behatrix (see http://www.boris.unito.it/pages/behatrix)
         """
 
-        # ask user observations to analyze
+        # ask user for observations to analyze
         result, selectedObservations = self.selectObservations(MULTIPLE)
         if not selectedObservations:
             return
@@ -9306,12 +9244,12 @@ item []:
         if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
 
-        fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "", "Events file (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
 
-            response = dialog.MessageDialog(programName, "Include observation(s) information?", [YES, NO])
+            # response = dialog.MessageDialog(programName, "Include observation(s) information?", [YES, NO])
 
             try:
                 with open(fileName, "w", encoding="utf-8") as outFile:
@@ -9344,7 +9282,20 @@ item []:
                         for subject in plot_parameters[SELECTED_SUBJECTS]:
                             outFile.write("\n# {}:\n".format(subject if subject else NO_FOCAL_SUBJECT))
 
-                            out = self.create_behavioral_strings(obs_id, subject, plot_parameters)
+                            if not timed:
+                                out = export_observation.events_to_behavioral_sequences(self.pj,
+                                                                                        obs_id,
+                                                                                        subject,
+                                                                                        plot_parameters,
+                                                                                        self.behaviouralStringsSeparator)
+                            if timed:
+                                out = export_observation.events_to_timed_behavioral_sequences(self.pj,
+                                                                                              obs_id,
+                                                                                              subject,
+                                                                                              plot_parameters,
+                                                                                              0.001,
+                                                                                              self.behaviouralStringsSeparator)
+
                             if out:
                                 outFile.write(out + "\n")
 
@@ -9393,7 +9344,10 @@ item []:
 
             strings_list = []
             for obsId in selectedObservations:
-                strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
+                # strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
+                strings_list.append(export_observation.events_to_behavioral_sequences(self.pj, obsId, subject,
+                                                                                      plot_parameters,
+                                                                                      self.behaviouralStringsSeparator))
 
             sequences, observed_behaviors = transitions.behavioral_strings_analysis(strings_list, self.behaviouralStringsSeparator)
 

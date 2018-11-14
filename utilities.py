@@ -284,7 +284,10 @@ def state_behavior_codes(ethogram):
     return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if "STATE" in ethogram[x][TYPE].upper()]
 
 
-def get_current_states_by_subject(state_behaviors_codes, events, subjects, time):
+def get_current_states_by_subject(state_behaviors_codes: list,
+                                  events: list,
+                                  subjects: dict,
+                                  time: Decimal):
     """
     get current states for subjects at given time
     Args:
@@ -309,15 +312,15 @@ def get_current_states_by_subject(state_behaviors_codes, events, subjects, time)
     return current_states
 
 
-def get_current_points_by_subject(point_behaviors_codes, events, subjects, time, distance):
+def get_current_points_by_subject(point_behaviors_codes, events, subjects, time, tolerance):
     """
     get near point events for subjects at given time
     Args:
         point_behaviors_codes (list): list of behavior codes defined as POINT event
         events (list): list of events
         subjects (dict): dictionary of subjects
-        time (Decimal): time
-        distance (Decimal): distance from time
+        time (Decimal): time (s)
+        tolerance (Decimal): tolerance (s)
 
     Returns:
         dict: current states by subject. dict of list
@@ -329,7 +332,7 @@ def get_current_points_by_subject(point_behaviors_codes, events, subjects, time,
             events = [[x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]] for x in events
                       if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
                       and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                      and abs(x[EVENT_TIME_FIELD_IDX] - time) <= distance]
+                      and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance]
 
             for event in events:
                 current_points[idx].append(event)
