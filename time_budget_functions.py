@@ -280,8 +280,11 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
     return True, msg, data_report
 
 
-def time_budget_analysis(ethogram: dict, cursor, selected_observations: list,
-                         parameters: dict, by_category: bool=False):
+def time_budget_analysis(ethogram: dict,
+                         cursor,
+                         selected_observations: list,
+                         parameters: dict,
+                         by_category: bool=False):
     """
     extract number of occurrences, total duration, mean ...
     if start_time = 0 and end_time = 0 all events are extracted

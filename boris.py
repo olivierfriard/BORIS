@@ -5373,7 +5373,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 values.append(category)
 
                             values.append(categories[subject][category]["number"])
-                            values.append(categories[subject][category]["duration"])
+                            values.append("{:0.3f}".format(categories[subject][category]["duration"]))
 
                             rows.append(values)
 
