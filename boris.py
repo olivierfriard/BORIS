@@ -5081,6 +5081,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                          parameters,
                                                                          by_category=(mode == "by_category"))
 
+            print(categories)
+
             # check excluded behaviors
             excl_behaviors_total_time = {}
             for element in out:
@@ -5121,7 +5123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if mode == "by_behavior":
 
-                tb_fields = ["Subject", "Behavior", "Modifiers", "Total number", "Total duration (s)",
+                tb_fields = ["Subject", "Behavior", "Modifiers", "Total number of occurences", "Total duration (s)",
                              "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
                              "inter-event intervals std dev", "% of total length"]
 
@@ -5134,6 +5136,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.tb.twTB.setRowCount(self.tb.twTB.rowCount() + 1)
                     column = 0
                     for field in fields:
+                        '''
+                        if field == "duration":
+                            item = QTableWidgetItem("{:0.3f}".format(row[field]))
+                        else:
+                        '''
                         item = QTableWidgetItem(str(row[field]).replace(" ()", ""))
                         # no modif allowed
                         item.setFlags(Qt.ItemIsEnabled)
@@ -5181,7 +5188,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         for field in fields:
                             column += 1
-                            item = QTableWidgetItem(str(categories[subject][category][field]))
+
+                            if field == "duration":
+                                try:
+                                    item = QTableWidgetItem("{:0.3f}".format(categories[subject][category][field]))
+                                except Exception:
+                                    item = QTableWidgetItem(categories[subject][category][field])
+                            else:
+                                item = QTableWidgetItem(str(categories[subject][category][field]))
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                             self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
@@ -5234,12 +5248,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             if mode == "by_behavior":
-                fields = ["subject", "behavior", "modifiers", "number",
+                fields = ["subject", "behavior", "modifiers", "number of occurences",
                           "duration", "duration_mean", "duration_stdev",
                           "inter_duration_mean", "inter_duration_stdev"]
 
             if mode == "by_category":
-                fields = ["subject", "category", "number", "duration"]
+                fields = ["subject", "category", "number of occurences", "duration"]
 
             for obsId in selectedObservations:
 
@@ -5373,7 +5387,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 values.append(category)
 
                             values.append(categories[subject][category]["number"])
-                            values.append("{:0.3f}".format(categories[subject][category]["duration"]))
+                            try:
+                                values.append("{:0.3f}".format(categories[subject][category]["duration"]))
+                            except Exception:
+                                values.append(categories[subject][category]["duration"])
 
                             rows.append(values)
 
