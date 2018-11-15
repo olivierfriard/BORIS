@@ -51,8 +51,6 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
         str: error message
     """
 
-    print("selected subjects", parameters["selected subjects"])
-
     for subject in parameters["selected subjects"]:
 
         # select events for current subject
@@ -604,9 +602,11 @@ def export_aggregated_events(pj, parameters, obsId):
     return data
 
 
-def events_to_behavioral_sequences(pj, obs_id: str, subj: str,
-                                parameters: dict,
-                                behav_seq_separator: str) -> str:
+def events_to_behavioral_sequences(pj,
+                                   obs_id: str,
+                                   subj: str,
+                                   parameters: dict,
+                                   behav_seq_separator: str) -> str:
     """
     return the behavioral string for subject in obsId
 
@@ -679,11 +679,11 @@ def events_to_behavioral_sequences(pj, obs_id: str, subj: str,
 
 
 def events_to_timed_behavioral_sequences(pj: dict,
-                                        obs_id: str,
-                                        subject: str,
-                                        parameters: dict,
-                                        precision: float,
-                                        behav_seq_separator: str) -> str:
+                                         obs_id: str,
+                                         subject: str,
+                                         parameters: dict,
+                                         precision: float,
+                                         behav_seq_separator: str) -> str:
     """
     return the behavioral string for subject in obsId
 
@@ -707,13 +707,28 @@ def events_to_timed_behavioral_sequences(pj: dict,
     delta = Decimal(str(round(precision, 3)))
     out = ""
     t = Decimal("0.000")
+
+    current = []
     while t < pj[OBSERVATIONS][obs_id][EVENTS][-1][0]:
+        '''
         if out:
             out += behav_seq_separator
-        out += "+".join(utilities.get_current_states_by_subject(state_behaviors_codes,
-                                                                pj[OBSERVATIONS][obs_id][EVENTS],
-                                                                {"": {"name": subject}}, t)[""])
+        '''
+        csbs = utilities.get_current_states_by_subject(state_behaviors_codes,
+                                                       pj[OBSERVATIONS][obs_id][EVENTS],
+                                                       {"": {"name": subject}}, t)[""]
+        if csbs:
+            if current:
+                if csbs == current[-1]:
+                    current.append("+".join(csbs))
+                else:
+                    out.append(current)
+                    current = [csbs]
+            else:
+                current = [csbs]
 
         t += delta
+
+    print(out)
 
     return out

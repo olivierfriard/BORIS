@@ -5360,7 +5360,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         rows.append(values)
 
                 if mode == "by_category":
-                    rows.append = fields
+                    rows.append(fields)
                     # data.headers = fields # + ["% of total media length"]
                     for subject in categories:
 

@@ -604,6 +604,14 @@ def angle(p1, p2, p3):
     """
     angle between 3 points (p1 must be the vertex)
     return angle in degree
+
+    Args:
+        p1 (tuple): vertex
+        p2 (tuple): side 1
+        p3 (tuple): side 2
+
+    Returns:
+        float: angle between side1 - vertex - side2
     """
     return math.acos(
         (distance(p1, p2) ** 2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
