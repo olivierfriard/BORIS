@@ -336,7 +336,7 @@ if args.command:
             plot_format = args.command[4].lower()
 
 
-        plot_events.create_events_plot2_new(pj,
+        plot_events.create_events_plot(pj,
                                             observations_id_list,
                                             {"selected subjects": subjects,
                                              "selected behaviors": behaviors,

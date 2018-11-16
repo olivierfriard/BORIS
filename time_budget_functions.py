@@ -235,7 +235,6 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                                    (obs_id, subject, excluded_behav,))
                     for row in cursor.fetchall():
                         time_to_subtract = row[0]
-            print("time to subtract", time_to_subtract)
 
             for behavior_modifiers in distinct_behav_modif:
                 behavior, modifiers = behavior_modifiers
@@ -248,21 +247,28 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
 
                 for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
+                    behaviors[subject][behavior_modifiers_str]["duration"] = (0 if row[0] is None
+                                                                              else "{:.3f}".format(row[0]))
+
+
                     behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
-                    behaviors[subject][behavior_modifiers_str]["duration mean"] = 0 if row[2] is None else row[2]
-                    behaviors[subject][behavior_modifiers_str]["duration stdev"] = 0 if row[3] is None else row[3]
+                    behaviors[subject][behavior_modifiers_str]["duration mean"] = (0 if row[2] is None
+                                                                                   else "{:.3f}".format(row[2]))
+                    behaviors[subject][behavior_modifiers_str]["duration stdev"] = (0 if row[3] is None
+                                                                                    else "{:.3f}".format(row[3]))
 
                     if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
                         try:
-                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[
-                                0] is None else row[0] / ((max_time - min_time) - time_to_subtract)
+                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
+                                0 if row[0] is None
+                                else "{:.3f}".format(row[0] / ((max_time - min_time) - time_to_subtract)))
                         except ZeroDivisionError:
                             behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
                     else:
                         # behavior subtracted
-                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = 0 if row[
-                            0] is None else row[0] / (max_time - min_time)
+                        behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
+                            0 if row[0] is None
+                            else "{:.3f}".format(row[0] / (max_time - min_time)))
 
 
 
@@ -330,8 +336,8 @@ def time_budget_analysis(ethogram: dict,
                             out.append({"subject": subject,
                                         "behavior": behavior,
                                         "modifiers": "-",
-                                        "duration": "NA",
-                                        "duration_mean": "NA",
+                                        "duration": 0,
+                                        "duration_mean": 0,
                                         "duration_stdev": "NA",
                                         "number": "0",
                                         "inter_duration_mean": "NA",
@@ -357,20 +363,13 @@ def time_budget_analysis(ethogram: dict,
                                 all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
                         out_cat.append({
-                            "subject":
-                            subject,
-                            "behavior":
-                            behavior,
-                            "modifiers":
-                            modifier[0],
-                            "duration":
-                            "NA",
-                            "duration_mean":
-                            "NA",
-                            "duration_stdev":
-                            "NA",
-                            "number":
-                            len(rows),
+                            "subject": subject,
+                            "behavior": behavior,
+                            "modifiers": modifier[0],
+                            "duration": 0,
+                            "duration_mean": 0,
+                            "duration_stdev": "NA",
+                            "number": len(rows),
                             "inter_duration_mean":
                             round(statistics.mean(all_event_interdurations), 3)
                             if len(all_event_interdurations) else "NA",
@@ -459,8 +458,8 @@ def time_budget_analysis(ethogram: dict,
                             out.append({"subject": subject,
                                         "behavior": behavior,
                                         "modifiers": "",
-                                        "duration": "NA",
-                                        "duration_mean": "NA",
+                                        "duration": 0,
+                                        "duration_mean": 0,
                                         "duration_stdev": "NA",
                                         "number": "0",
                                         "inter_duration_mean": "NA",
@@ -474,20 +473,13 @@ def time_budget_analysis(ethogram: dict,
                             all_event_interdurations.append(float(row[0]) - float(rows[idx - 1][0]))
 
                     out_cat.append({
-                        "subject":
-                        subject,
-                        "behavior":
-                        behavior,
-                        "modifiers":
-                        "-",
-                        "duration":
-                        "NA",
-                        "duration_mean":
-                        "NA",
-                        "duration_stdev":
-                        "NA",
-                        "number":
-                        len(rows),
+                        "subject": subject,
+                        "behavior": behavior,
+                        "modifiers": "-",
+                        "duration": 0,
+                        "duration_mean": 0,
+                        "duration_stdev": 0,
+                        "number": len(rows),
                         "inter_duration_mean":
                         round(statistics.mean(all_event_interdurations), 3)
                         if len(all_event_interdurations) else "NA",
@@ -564,7 +556,8 @@ def time_budget_analysis(ethogram: dict,
                     category = ""
 
                 if category in categories[subject]:
-                    if behav["duration"] not in ["-", "NA"] and categories[subject][category]["duration"] != "-":
+                    if behav["duration"] not in ["-", "NA"] and categories[subject][category]["duration"] not in  ["-", "NA"]:
+                        print(categories[subject][category]["duration"], behav["duration"])
                         categories[subject][category]["duration"] += behav["duration"]
                     else:
                         categories[subject][category]["duration"] = "-"

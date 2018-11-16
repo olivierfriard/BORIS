@@ -4840,7 +4840,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
 
         file_name, filter_ = filediag_func(self, "Synthetic time budget", "", ";;".join(extended_file_formats))
         if not file_name:
@@ -5248,12 +5248,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             if mode == "by_behavior":
-                fields = ["subject", "behavior", "modifiers", "number of occurences",
+                fields = ["subject", "behavior", "modifiers", "number",
                           "duration", "duration_mean", "duration_stdev",
                           "inter_duration_mean", "inter_duration_stdev"]
 
             if mode == "by_category":
-                fields = ["subject", "category", "number of occurences", "duration"]
+                fields = ["subject", "category", "number", "duration"]
 
             for obsId in selectedObservations:
 
