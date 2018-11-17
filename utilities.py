@@ -631,7 +631,7 @@ def polygon_area(poly):
 
     return abs(tot / 2)
 
-
+'''
 def hashfile(fileName, hasher, blocksize=65536):
     """
     return hash of file content
@@ -642,7 +642,7 @@ def hashfile(fileName, hasher, blocksize=65536):
             hasher.update(buf)
             buf = afile.read(blocksize)
     return hasher.hexdigest()
-
+'''
 
 def url2path(url):
     """
@@ -652,7 +652,7 @@ def url2path(url):
 
     path = urllib.parse.unquote(urllib.parse.urlparse(url).path)
     # check / for windows
-    if sys.platform.startswith('win') and path.startswith('/'):
+    if sys.platform.startswith("win") and path.startswith("/"):
         path = path[1:]
     return path
 
@@ -664,7 +664,7 @@ def float2decimal(f):
     return Decimal(str(f))
 
 
-def time2seconds(time) -> Decimal:
+def time2seconds(time: str) -> Decimal:
     """
     convert hh:mm:ss.s to number of seconds (decimal)
 
