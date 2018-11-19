@@ -446,11 +446,13 @@ class Observation(QDialog, Ui_Form):
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
 
+
                 w = dialog.Info_widget()
                 w.resize(350, 100)
                 w.setWindowFlags(Qt.WindowStaysOnTopHint)
                 w.setWindowTitle("BORIS")
                 w.label.setText("Generating spectrogram...")
+
 
                 for row in range(self.twVideo1.rowCount()):
                     # check if player 1
@@ -463,7 +465,18 @@ class Observation(QDialog, Ui_Form):
                         continue
 
                     if os.path.isfile(media_file_path):
+                        w.show()
+                        QApplication.processEvents()
 
+                        _ = plot_spectrogram.create_spectrogram(mediaFile=media_file_path,
+                                                                                      tmp_dir=tmp_dir,
+                                                                                      chunk_size=self.chunk_length,
+                                                                                      ffmpeg_bin=self.ffmpeg_bin,
+                                                                                      spectrogramHeight=self.spectrogramHeight,
+                                                                                      spectrogram_color_map=self.spectrogram_color_map)
+                        w.hide()
+
+                        '''
                         process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
                                                                                       tmp_dir=tmp_dir,
                                                                                       chunk_size=self.chunk_length,
@@ -477,6 +490,8 @@ class Observation(QDialog, Ui_Form):
                                 if not process.is_alive():
                                     w.hide()
                                     break
+                        '''
+
                         flag_spectro_produced = True
                     else:
                         QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media_file_path))

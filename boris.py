@@ -1845,6 +1845,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             media_file_path = project_functions.media_full_path(media, self.projectFileName)
             if os.path.isfile(media_file_path):
+
+                w.show()
+                QApplication.processEvents()
+
+                _ = plot_spectrogram.create_spectrogram(mediaFile=media_file_path,
+                                                                              tmp_dir=tmp_dir,
+                                                                              chunk_size=self.chunk_length,
+                                                                              ffmpeg_bin=self.ffmpeg_bin,
+                                                                              spectrogramHeight=self.spectrogramHeight,
+                                                                              spectrogram_color_map=self.spectrogram_color_map)
+                w.hide()
+
+
+                '''
                 process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
                                                                               tmp_dir=tmp_dir,
                                                                               chunk_size=self.chunk_length,
@@ -1859,6 +1873,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if not process.is_alive():
                             w.hide()
                             break
+                '''
 
             else:
                 QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media_file_path))

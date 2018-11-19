@@ -113,7 +113,12 @@ class Spectrogram(QWidget):
             return False
 
 
-def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map):
+def graph_spectrogram(mediaFile: str,
+                      tmp_dir:str,
+                      chunk_size: int,
+                      ffmpeg_bin: str,
+                      spectrogramHeight: int,
+                      spectrogram_color_map: str):
 
     def extract_wav(mediaFile, tmp_dir):
         """
@@ -216,6 +221,12 @@ def graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHei
             break
 
     return fileName1stChunk
+
+
+def create_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map="gray_r"):
+    fileName1stChunk = graph_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map)
+    return fileName1stChunk
+
 
 
 def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map="gray_r"):
