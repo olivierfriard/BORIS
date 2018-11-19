@@ -5331,8 +5331,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 cursor.execute("DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)",
                                (obsId, min_time, max_time))
 
-                out, categories = time_budget_functions.time_budget_analysis(self.pj[ETHOGRAM], cursor, selectedObservations,
-                                                                             parameters, by_category=(mode == "by_category"))
+                out, categories = time_budget_functions.time_budget_analysis(self.pj[ETHOGRAM],
+                                                                             cursor,
+                                                                             selectedObservations,
+                                                                             parameters,
+                                                                             by_category=(mode == "by_category"))
 
                 # check excluded behaviors
                 excl_behaviors_total_time = {}
