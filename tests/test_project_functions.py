@@ -1,6 +1,8 @@
 """
 module for testing project_functions.py
 """
+
+import os
 import sys
 import json
 from decimal import Decimal
@@ -11,11 +13,6 @@ import project_functions
 from config import *
 
 
-
-
-'''_, _, pj, _ = project_functions.open_project_json("files/test.boris")
-'''
-
 class Test_remove_media_files_path(object):
     def test_1(self):
     
@@ -25,22 +22,16 @@ class Test_remove_media_files_path(object):
         assert pj_wo_media_files_paths == json.loads(open("files/test_without_media_files_paths.boris").read())
 
 
+class Test_media_full_path(object):
 
-"""
+    def test_1(self):
+        assert project_functions.media_full_path("geese1.mp4", os.getcwd() + "/files/test.boris") == os.getcwd() + "/files/geese1.mp4"
 
-def test_media_full_path1():
-    out = project_functions.media_full_path("video1.avi", "/home/olivier/projects/BORIS/test.boris")
-    assert out == "/home/olivier/projects/BORIS/video1.avi"
-    return out
+    def test_2(self):
+        assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.boris") == ""
+
 
 '''
-def test_media_full_path2():
-    out = project_functions.media_full_path("video.xxx", "/home/olivier/projects/BORIS/test.boris")
-    assert out == ""
-    return out
-'''
-
-
 
 def test_observation_total_length1():
     out = project_functions.observation_total_length(pj[OBSERVATIONS]["live"])
@@ -62,4 +53,4 @@ for f in [test_remove_media_files_path,
     print(f())
     print("=====================================")
 
-"""
+'''

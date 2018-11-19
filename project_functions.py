@@ -128,7 +128,7 @@ def remove_media_files_path(pj):
     return copy.deepcopy(pj)
 
 
-def media_full_path(media_file, project_file_name):
+def media_full_path(media_file: str, project_file_name: str):
     """
     media full path
     add path of BORIS project if media without path
