@@ -1,0 +1,17 @@
+#-----------------------------------------------------------
+# Name: test_jwatcher_subject1.fmf
+# Format: Focal Master File 1.0
+# Updated: 2018-11-20T15:14:14.428290
+#-----------------------------------------------------------
+Behaviour.name.s=s
+Behaviour.description.s=Test state event
+DurationMilliseconds=42800
+CountUp=false
+Question.1=
+Question.2=
+Question.3=
+Question.4=
+Question.5=
+Question.6=
+Notes=
+Supplementary=
