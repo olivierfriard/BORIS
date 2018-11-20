@@ -5963,7 +5963,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
-                newProjectWindow.twBehaviors.resizeColumnsToContents()
+                #newProjectWindow.twBehaviors.resizeColumnsToContents()
 
             # load independent variables
             if INDEPENDENT_VARIABLES in newProjectWindow.pj:

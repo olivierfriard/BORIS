@@ -34,7 +34,12 @@ import project_functions
 import db_functions
 
 
-def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, output_format):
+def export_events_jwatcher(parameters: list,
+                           obsId: str,
+                           observation: list,
+                           ethogram: dict,
+                           file_name: str,
+                           output_format: str):
     """
     export events jwatcher .dat format
 
@@ -44,7 +49,7 @@ def export_events_jwatcher(parameters, obsId, observation, ethogram, file_name, 
         observation (dict): observation
         ethogram (dict): ethogram of project
         file_name (str): file name for exporting events
-        output_format (str): output for exporting events
+        output_format (str): Not used for compatibility with export_events function
 
     Returns:
         bool: result: True if OK else False
