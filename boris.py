@@ -1381,16 +1381,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             '''
 
             if action == "reencode_resize":
-                self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_resize_reencode,
-                                                                 args=(fileNames, horiz_resol, ffmpeg_bin, video_quality,))
+
+
+                video_path = fileNames[0]
+                quality = video_quality
+                command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
+
+                args =  ["-y",
+                         "-i", '"{input_}"'.format(input_=video_path),
+                         "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
+                         "-b:v", "{quality}k".format(quality=quality),
+                         '"{input_}.re-encoded.{horiz_resol}px.avi"'.format(input_=video_path,
+                                                                            horiz_resol=horiz_resol)
+                         ]
+
+                '''
+                ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                          '-vf scale={horiz_resol}:-1 -b:v {quality}k '
+                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                               input_=video_path,
+                                                                               quality=quality,
+                                                                               horiz_resol=horiz_resol)
+                '''
+                self.process1 = QProcess(self)
+                self.process1.start(command, args)
+
 
             if action == "rotate":
                 self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
                                                                  args=(fileNames, rotation_idx, ffmpeg_bin,))
 
-            self.ffmpeg_process_ps.start()
-            timer_ffmpeg_process.timeout.connect(timer_ffmpeg_process_timeout)
-            timer_ffmpeg_process.start(10000)
 
             '''
             # check in platform win and program frozen by pyinstaller
@@ -9898,8 +9918,6 @@ item []:
 
 
 if __name__ == "__main__":
-
-    multiprocessing.freeze_support()
 
     app = QApplication(sys.argv)
 
