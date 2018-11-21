@@ -31,20 +31,20 @@ import time
 
 def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors):
     """
-    populate a memory sqlite database with events from selectedObservations, 
+    populate a memory sqlite database with events from selectedObservations,
     selectedSubjects and selectedBehaviors
-    
+
     Args:
         pj (dict): project dictionary
         selectedObservations (list):
         selectedSubjects (list):
         selectedBehaviors (list):
-        
+
     Returns:
         database cursor:
 
     """
-    
+
     # selected behaviors defined as state event
     state_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
                                  if STATE in pj[ETHOGRAM][x][TYPE].upper()
@@ -54,7 +54,7 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
     point_behaviors_codes = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
                                  if POINT in pj[ETHOGRAM][x][TYPE].upper()
                                     and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selectedBehaviors]
-    
+
     db = sqlite3.connect(":memory:", isolation_level=None)
     #db = sqlite3.connect("/tmp/1.sqlite", isolation_level=None)
 
@@ -91,7 +91,7 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
                          NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else event[EVENT_SUBJECT_FIELD_IDX],
                          event[EVENT_BEHAVIOR_FIELD_IDX],
                          STATE if event[EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else POINT,
-                         event[EVENT_MODIFIER_FIELD_IDX], 
+                         event[EVENT_MODIFIER_FIELD_IDX],
                          str(event[EVENT_TIME_FIELD_IDX]),
                          event[EVENT_COMMENT_FIELD_IDX]))
 
@@ -100,7 +100,10 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
 
 
 
-def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors):
+def load_aggregated_events_in_db(pj: dict,
+                                 selectedSubjects: list,
+                                 selectedObservations: list,
+                                 selectedBehaviors: list):
     """
     populate a memory sqlite database with aggregated events from selectedObservations, selectedSubjects and selectedBehaviors
 
@@ -109,7 +112,7 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
         selectedObservations (list):
         selectedSubjects (list):
         selectedBehaviors (list):
-        
+
     Returns:
         bool: True if OK else False
         str: error message
@@ -189,14 +192,14 @@ def load_aggregated_events_in_db(pj, selectedSubjects, selectedObservations, sel
                     rows = list(cursor1.fetchall())
 
                     for idx, row in enumerate(rows):
-        
+
                         if behavior in point_behaviors_codes:
                             cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
                                              "                               start, stop, comment, comment_stop) "
                                             "VALUES (?,?,?,?,?,?,?,?,?)"),
                                             (obsId, subject, behavior, POINT, distinct_modifiers,
                                              row["occurence"], row["occurence"], row["comment"], "",))
-    
+
                         if behavior in state_behaviors_codes:
                             if idx % 2 == 0:
                                 cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"

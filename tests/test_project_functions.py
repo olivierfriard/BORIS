@@ -14,23 +14,29 @@ from config import *
 
 
 class Test_remove_media_files_path(object):
+
     def test_1(self):
-    
+        """
+        test the deletion of the media files path in project
+        """
+
         pj = json.loads(open("files/test.boris").read())
         pj_wo_media_files_paths = project_functions.remove_media_files_path(pj)
-    
+
         assert pj_wo_media_files_paths == json.loads(open("files/test_without_media_files_paths.boris").read())
 
 
 class Test_media_full_path(object):
 
-    def test_1(self):
+    def test_file_and_dir(self):
         assert project_functions.media_full_path("geese1.mp4", os.getcwd() + "/files/test.boris") == os.getcwd() + "/files/geese1.mp4"
 
-    def test_2(self):
+    def test_file_not_found(self):
         assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.boris") == ""
 
 
+    def test_project_file_not_found(self):
+        assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.xxx.boris") == ""
 '''
 
 def test_observation_total_length1():

@@ -1,0 +1,21 @@
+FirstLineOfData=18
+#-----------------------------------------------------------
+# Name: test_jwatcher_subject1.dat
+# Format: Focal Data File 1.0
+# Updated: 2018-11-20T15:14:14.426401
+#-----------------------------------------------------------
+
+FocalMasterFile=output/test_jwatcher_subject1.fmf
+
+# Observation started: 2016-11-27T01:57:26
+StartTime=1480211846000
+# Observation stopped: 2016-11-27T01:58:08.800000
+StopTime=1480211888800
+
+
+
+#BEGIN DATA
+3300, s
+9900, s
+18350, s
+24475, EOF

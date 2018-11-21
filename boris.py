@@ -1279,6 +1279,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 received += data
             s.close
 
+
     def ffmpeg_process(self, action: str):
         """
         launch ffmpeg process
@@ -1288,6 +1289,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if action not in ["reencode_resize", "rotate"]:
             return
+
+        '''
+        def qprocess_finished():
+            print("QProcess finished")
+            self.w.hide()
+        '''
+
         timer_ffmpeg_process = QTimer()
 
         def timer_ffmpeg_process_timeout():
@@ -1307,7 +1315,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "BORIS is already running a ffmpeg process...")
             return
 
-        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more media files to process", "", "Media files (*)")
+        fn = QFileDialog().getOpenFileNames(self, "Select one or more media files to process", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
 
         if fileNames:
@@ -1361,6 +1369,50 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
             self.w.show()
 
+
+            '''
+            command = "ffmpeg"
+            args =  []
+            self.process1 = QProcess(self)
+            self.process1.setProcessChannelMode(QProcess.MergedChannels)
+            # self.process1.readyReadStandardOutput.connect(self.readStdOutput1)
+            self.process1.finished.connect(qprocess_finished)
+            self.process1.start(command, args)
+            '''
+
+            if action == "reencode_resize":
+
+
+                video_path = fileNames[0]
+                quality = video_quality
+                command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
+
+                args =  ["-y",
+                         "-i", '"{input_}"'.format(input_=video_path),
+                         "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
+                         "-b:v", "{quality}k".format(quality=quality),
+                         '"{input_}.re-encoded.{horiz_resol}px.avi"'.format(input_=video_path,
+                                                                            horiz_resol=horiz_resol)
+                         ]
+
+                '''
+                ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                          '-vf scale={horiz_resol}:-1 -b:v {quality}k '
+                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                               input_=video_path,
+                                                                               quality=quality,
+                                                                               horiz_resol=horiz_resol)
+                '''
+                self.process1 = QProcess(self)
+                self.process1.start(command, args)
+
+
+            if action == "rotate":
+                self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
+                                                                 args=(fileNames, rotation_idx, ffmpeg_bin,))
+
+
+            '''
             # check in platform win and program frozen by pyinstaller
             if sys.platform.startswith("win") and getattr(sys, "frozen", False):
                 app.processEvents()
@@ -1384,7 +1436,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_process_ps.start()
                 timer_ffmpeg_process.timeout.connect(timer_ffmpeg_process_timeout)
                 timer_ffmpeg_process.start(15000)
-
+            '''
 
     def click_signal_from_coding_pad(self, behaviorCode):
         """
@@ -2830,7 +2882,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug("end of last media 1 frame: {}".format(requiredFrame))
             return
 
-        '''for i in range(N_PLAYER):'''
         for i, player in enumerate(self.dw_player):
             n_player = str(i + 1)
             if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -5963,7 +6014,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
-                newProjectWindow.twBehaviors.resizeColumnsToContents()
+                #newProjectWindow.twBehaviors.resizeColumnsToContents()
 
             # load independent variables
             if INDEPENDENT_VARIABLES in newProjectWindow.pj:

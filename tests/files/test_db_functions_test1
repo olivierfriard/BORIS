@@ -1,0 +1,39 @@
+BEGIN TRANSACTION;
+CREATE TABLE aggregated_events
+                              (id INTEGER PRIMARY KEY ASC,
+                               observation TEXT,
+                               subject TEXT,
+                               behavior TEXT,
+                               type TEXT,
+                               modifiers TEXT,
+                               start FLOAT,
+                               stop FLOAT,
+                               comment TEXT,
+                               comment_stop TEXT);
+INSERT INTO "aggregated_events" VALUES(1,'observation #1','subject1','s','STATE','',3.3,7.75,'','');
+INSERT INTO "aggregated_events" VALUES(2,'observation #1','subject1','s','STATE','',9.9,16.2,'','');
+INSERT INTO "aggregated_events" VALUES(3,'observation #1','subject1','s','STATE','',18.35,24.475,'','');
+INSERT INTO "aggregated_events" VALUES(4,'observation #1','subject2','s','STATE','',38.425,46.1,'','');
+INSERT INTO "aggregated_events" VALUES(5,'observation #2','No focal subject','p','POINT','',32.825,32.825,'','');
+INSERT INTO "aggregated_events" VALUES(6,'observation #2','No focal subject','p','POINT','',34.15,34.15,'','');
+INSERT INTO "aggregated_events" VALUES(7,'observation #2','No focal subject','p','POINT','',34.925,34.925,'','');
+INSERT INTO "aggregated_events" VALUES(8,'observation #2','No focal subject','p','POINT','',299.715,299.715,'','');
+INSERT INTO "aggregated_events" VALUES(9,'observation #2','No focal subject','p','POINT','',301.34,301.34,'','');
+INSERT INTO "aggregated_events" VALUES(10,'observation #2','No focal subject','p','POINT','',303.24,303.24,'','');
+INSERT INTO "aggregated_events" VALUES(11,'observation #2','No focal subject','s','STATE','',1.8,8.125,'','');
+INSERT INTO "aggregated_events" VALUES(12,'observation #2','No focal subject','s','STATE','',10.25,23.35,'','');
+INSERT INTO "aggregated_events" VALUES(13,'observation #2','No focal subject','s','STATE','',26.775,31.475,'','');
+INSERT INTO "aggregated_events" VALUES(14,'observation #2','No focal subject','s','STATE','',227.765,253.49,'','');
+INSERT INTO "aggregated_events" VALUES(15,'observation #2','No focal subject','s','STATE','',255.34,261.14,'','');
+INSERT INTO "aggregated_events" VALUES(16,'observation #2','No focal subject','s','STATE','',303.79,307.765,'','');
+INSERT INTO "aggregated_events" VALUES(17,'observation #2','subject1','s','STATE','',266.165,276.69,'','');
+INSERT INTO "aggregated_events" VALUES(18,'observation #2','subject1','s','STATE','',280.965,294.215,'','');
+INSERT INTO "aggregated_events" VALUES(19,'observation #2','subject2','p','POINT','',314.49,314.49,'','');
+INSERT INTO "aggregated_events" VALUES(20,'observation #2','subject2','p','POINT','',316.065,316.065,'','');
+INSERT INTO "aggregated_events" VALUES(21,'observation #2','subject2','s','STATE','',286.215,292.065,'','');
+INSERT INTO "aggregated_events" VALUES(22,'observation #2','subject2','s','STATE','',317.39,320.365,'','');
+CREATE INDEX observation_idx ON aggregated_events(observation);
+CREATE INDEX subject_idx ON aggregated_events(subject);
+CREATE INDEX behavior_idx ON aggregated_events(behavior);
+CREATE INDEX modifiers_idx ON aggregated_events(modifiers);
+COMMIT;

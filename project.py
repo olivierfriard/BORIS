@@ -463,8 +463,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
 
 
-
-
     def add_behaviors_coding_map(self):
         """
         Add a behaviors coding map from file
