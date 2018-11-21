@@ -1280,6 +1280,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             s.close
 
 
+
+
     def ffmpeg_process(self, action: str):
         """
         launch ffmpeg process
@@ -1290,11 +1292,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if action not in ["reencode_resize", "rotate"]:
             return
 
-        '''
-        def qprocess_finished():
-            print("QProcess finished")
+        def readStdOutput(idx):
+            print(str(self.processes[idx-1].readAllStandardOutput()))
+            #print(str(self.process1.readAllStandardError()))
+            
+        def qprocess_finished(idx):
+            print("QProcess finished", idx - 1)
+            print(len(self.processes))
+            del self.processes[idx - 1]
+            print(len(self.processes))
+            if self.processes:
+                self.processes[0].start()
             self.w.hide()
-        '''
+        
 
         timer_ffmpeg_process = QTimer()
 
@@ -1380,36 +1390,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.process1.start(command, args)
             '''
 
-            if action == "reencode_resize":
+            self.processes = []
+            for file_name in fileNames:
+
+                self.processes.append(QProcess(self))
+                self.processes[-1].setProcessChannelMode(QProcess.MergedChannels)
+                self.processes[-1].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes[-1].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes[-1].finished.connect(lambda: qprocess_finished(len(self.processes)))
 
 
-                video_path = fileNames[0]
-                quality = video_quality
-                command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
+                if action == "reencode_resize":
+    
+                    video_path = fileNames[0]
+                    quality = video_quality
+                    command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
+                    command = ffmpeg_bin
+    
+                    args =  ["-y",
+                             "-i", '{input_}'.format(input_=video_path),
+                             "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
+                             "-b:v", "{quality}k".format(quality=quality),
+                             '{input_}.re-encoded.{horiz_resol}px.avi'.format(input_=video_path,
+                                                                                horiz_resol=horiz_resol)
+                             ]
+                    print(command, args)
+    
+                    '''
+                    ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
+                              '-vf scale={horiz_resol}:-1 -b:v {quality}k '
+                              '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
+                                                                                   input_=video_path,
+                                                                                   quality=quality,
+                                                                                   horiz_resol=horiz_resol)
+                    '''
+    
+    
+    
+                if action == "rotate":
+                    self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
+                                                                     args=(fileNames, rotation_idx, ffmpeg_bin,))
 
-                args =  ["-y",
-                         "-i", '"{input_}"'.format(input_=video_path),
-                         "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
-                         "-b:v", "{quality}k".format(quality=quality),
-                         '"{input_}.re-encoded.{horiz_resol}px.avi"'.format(input_=video_path,
-                                                                            horiz_resol=horiz_resol)
-                         ]
-
-                '''
-                ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                          '-vf scale={horiz_resol}:-1 -b:v {quality}k '
-                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                               input_=video_path,
-                                                                               quality=quality,
-                                                                               horiz_resol=horiz_resol)
-                '''
-                self.process1 = QProcess(self)
-                self.process1.start(command, args)
-
-
-            if action == "rotate":
-                self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
-                                                                 args=(fileNames, rotation_idx, ffmpeg_bin,))
+            self.processes[-1].start(command, args)
+            print('started')
 
 
             '''

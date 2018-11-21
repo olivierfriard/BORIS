@@ -18,7 +18,7 @@ os.system("mkdir output")
 
 class Test_export_events(object):
 
-    '''
+    
     def test_export_tabular_tsv(self):
 
         pj = json.loads(open("files/test.boris").read())
@@ -73,7 +73,7 @@ class Test_export_events(object):
                                                   output_format)
 
         assert open("files/test_export_events_tabular.html").read() == open("output/test_export_events_tabular.html").read()
-    '''
+    
 
     def test_export_tabular_xlsx(self):
 
