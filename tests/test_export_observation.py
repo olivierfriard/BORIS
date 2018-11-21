@@ -102,8 +102,6 @@ class Test_export_events(object):
         for ws_name in wb.sheetnames:
             test_all_cells.extend([cell.value for row in wb[ws_name].rows for cell in row])
 
-        #print(ref_all_cells == test_all_cells)
-
         assert ref_all_cells == test_all_cells
 
 
@@ -140,7 +138,140 @@ class Test_export_events_jwatcher(object):
         assert ref == out
 
 
+class Test_events_to_behavioral_sequences(object):
+
+    def test_1(self):
+
+        pj = json.loads(open("files/test.boris").read())
+
+        obs_id = "observation #1"
+        subject = "subject1"
+        parameters = {"selected subjects": ["subject1"],
+                      "selected behaviors": ["p", "s"],
+                      INCLUDE_MODIFIERS: False,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "|"
+
+        out = export_observation.events_to_behavioral_sequences(pj,
+                                                                obs_id,
+                                                                subject,
+                                                                parameters,
+                                                                behav_seq_separator)
+
+        assert open("files/Test_events_to_behavioral_sequences_test_1").read() == out
+
+
+
+    def test_2_separator_changed(self):
+
+        pj = json.loads(open("files/test.boris").read())
+
+        obs_id = "observation #1"
+        subject = "subject1"
+        parameters = {"selected subjects": ["subject1"],
+                      "selected behaviors": ["p", "s"],
+                      INCLUDE_MODIFIERS: False,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "£"
+
+        out = export_observation.events_to_behavioral_sequences(pj,
+                                                                obs_id,
+                                                                subject,
+                                                                parameters,
+                                                                behav_seq_separator)
+
+        assert open("files/Test_events_to_behavioral_sequences_test_2_separator").read() == out
+
+
+    def test_3_no_behavior_found_for_selected_subject(self):
+
+        pj = json.loads(open("files/test.boris").read())
+
+        obs_id = "observation #1"
+        subject = "subject1"
+        parameters = {"selected subjects": ["subject2"],
+                      "selected behaviors": ["p"],
+                      INCLUDE_MODIFIERS: False,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "|"
+
+        out = export_observation.events_to_behavioral_sequences(pj,
+                                                                obs_id,
+                                                                subject,
+                                                                parameters,
+                                                                behav_seq_separator)
+
+        # open("1", "w").write(out)
+        assert out == ""
+
+
+    def test_4_behaviors_with_modifiers(self):
+
+        pj = json.loads(open("files/test.boris").read())
+
+        obs_id = "modifiers"
+        subject = ""
+        parameters = {"selected subjects": [""],
+                      "selected behaviors": ["q", "r"],
+                      INCLUDE_MODIFIERS: True,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "|"
+
+        out = export_observation.events_to_behavioral_sequences(pj,
+                                                                obs_id,
+                                                                subject,
+                                                                parameters,
+                                                                behav_seq_separator)
+
+        #open("1", "w").write(out)
+        assert open("files/Test_events_to_behavioral_sequences_test_4_behaviors_with_modifiers").read() == out
+
+
+
+
+    def test_5_observation_not_paired(self):
+
+        pj = json.loads(open("files/test.boris").read())
+
+        obs_id = "live not paired"
+        subject = ""
+        parameters = {"selected subjects": [""],
+                      "selected behaviors": ["p", "s"],
+                      INCLUDE_MODIFIERS: False,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "|"
+
+        out = export_observation.events_to_behavioral_sequences(pj,
+                                                                obs_id,
+                                                                subject,
+                                                                parameters,
+                                                                behav_seq_separator)
+
+        # open("1", "w").write(out)
+        assert open("files/Test_events_to_behavioral_sequences_test_5_observation_not_paired").read() == out
+
+
+
+
 '''
+
+open("1", "w").write(out)
+
 a= Test_export_events()
 a.test_export_tabular_xlsx()
 '''

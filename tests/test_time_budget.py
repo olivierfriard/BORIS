@@ -16,10 +16,11 @@ os.system("mkdir output")
 
 
 class Test_time_budget(object):
+
     def test_time_budget1(self):
-    
+
         pj = json.loads(open("files/test.boris").read())
-        
+
         ethogram = pj[ETHOGRAM]
         selected_observations = ["observation #1"]
         parameters = {"selected subjects": ["subject1", "subject2"],
@@ -42,4 +43,4 @@ class Test_time_budget(object):
 
         #open("test_tb", "w").write(json.dumps(out))
         assert json.loads(open("files/test_time_budget1.json").read()) == out
-        
+
