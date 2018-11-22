@@ -64,8 +64,8 @@ class Plot_data(QWidget):
             substract_first_value,
             converters,
             column_converter,
-            log_level="",
-    ):
+            log_level=""):
+
         super().__init__()
 
         if log_level:
@@ -237,6 +237,7 @@ class Plot_data(QWidget):
         else:
             self.time_out = min_time_step * 1000
 
+
     def eventFilter(self, receiver, event):
         """
         send event (if keypress) to main window
@@ -246,6 +247,7 @@ class Plot_data(QWidget):
             return True
         else:
             return False
+
 
     def zoom(self, z):
         if z == -1 and self.plotter.interval <= 10:
@@ -259,15 +261,18 @@ class Plot_data(QWidget):
 
         self.plotter.interval = new_interval
 
+
     def timer_plot_data_out(self, time_):
         #print(self.plot_title, time_)
         self.update_plot(time_)
+
 
     def update_plot(self, time_):
         """
         update plot by signal
         """
         self.send_fig.emit(float(time_) + float(self.time_offset))
+
 
     def close_plot(self):
         self.thread.quit()
@@ -318,6 +323,7 @@ class Plotter(QObject):
         float,  #max value
         float  # position end
     )
+
 
     @pyqtSlot(float)
     def replot(self, current_time):  # time_ in s
