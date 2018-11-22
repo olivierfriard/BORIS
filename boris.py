@@ -358,6 +358,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     project = False
     ffmpeg_recode_process = None  # to be removed
     ffmpeg_process_ps = None
+
+    processes = [] # list of QProcess processes
+
     observationId = ""   # current observation id
     timeOffset = 0.0
     wrongTimeResponse = ""
@@ -1307,6 +1310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.w.hide()
 
 
+        '''
         timer_ffmpeg_process = QTimer()
 
         def timer_ffmpeg_process_timeout():
@@ -1325,6 +1329,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.ffmpeg_process_ps:
             QMessageBox.warning(self, programName, "BORIS is already running a ffmpeg process...")
             return
+        '''
 
         fn = QFileDialog().getOpenFileNames(self, "Select one or more media files to process", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
@@ -1380,19 +1385,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
             self.w.show()
 
-
-            '''
-            command = "ffmpeg"
-            args =  []
-            self.process1 = QProcess(self)
-            self.process1.setProcessChannelMode(QProcess.MergedChannels)
-            # self.process1.readyReadStandardOutput.connect(self.readStdOutput1)
-            self.process1.finished.connect(qprocess_finished)
-            self.process1.start(command, args)
-            '''
-
             command = ffmpeg_bin
-            self.processes = []
+            # self.processes = []
             for file_name in fileNames:
 
                 if action == "reencode_resize":
@@ -1445,34 +1439,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
 
-            print('started')
 
-
-            '''
-            # check in platform win and program frozen by pyinstaller
-            if sys.platform.startswith("win") and getattr(sys, "frozen", False):
-                app.processEvents()
-                if action == "reencode_resize":
-                    utilities.video_resize_reencode(fileNames, horiz_resol, ffmpeg_bin, quality=video_quality)
-                    self.w.hide()
-                if action == "rotate":
-                    utilities.video_rotate(fileNames, rotation_idx, ffmpeg_bin)  # from utilities.py
-                    self.w.hide()
-
-            else:
-
-                if action == "reencode_resize":
-                    self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_resize_reencode,
-                                                                     args=(fileNames, horiz_resol, ffmpeg_bin, video_quality,))
-
-                if action == "rotate":
-                    self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
-                                                                     args=(fileNames, rotation_idx, ffmpeg_bin,))
-
-                self.ffmpeg_process_ps.start()
-                timer_ffmpeg_process.timeout.connect(timer_ffmpeg_process_timeout)
-                timer_ffmpeg_process.start(15000)
-            '''
 
     def click_signal_from_coding_pad(self, behaviorCode):
         """
@@ -9595,7 +9562,7 @@ item []:
         """
 
         # check if re-encoding
-        if self.ffmpeg_recode_process:
+        if self.processes:
             QMessageBox.warning(self, programName, "BORIS is re-encoding/resizing a video. Please wait before closing.")
             event.ignore()
 
