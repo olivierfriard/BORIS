@@ -1293,18 +1293,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         def readStdOutput(idx):
-            print(str(self.processes[idx-1].readAllStandardOutput()))
+            print(str(self.processes[idx - 1][0].readAllStandardOutput()))
             #print(str(self.process1.readAllStandardError()))
-            
+
         def qprocess_finished(idx):
             print("QProcess finished", idx - 1)
             print(len(self.processes))
             del self.processes[idx - 1]
             print(len(self.processes))
             if self.processes:
-                self.processes[0].start()
-            self.w.hide()
-        
+                self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
+            else:
+                self.w.hide()
+
 
         timer_ffmpeg_process = QTimer()
 
@@ -1390,23 +1391,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.process1.start(command, args)
             '''
 
+            command = ffmpeg_bin
             self.processes = []
             for file_name in fileNames:
 
-                self.processes.append(QProcess(self))
-                self.processes[-1].setProcessChannelMode(QProcess.MergedChannels)
-                self.processes[-1].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
-                self.processes[-1].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
-                self.processes[-1].finished.connect(lambda: qprocess_finished(len(self.processes)))
-
-
                 if action == "reencode_resize":
-    
-                    video_path = fileNames[0]
+
+                    video_path = file_name
                     quality = video_quality
-                    command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
-                    command = ffmpeg_bin
-    
+                    # command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
+                    # command = ffmpeg_bin
+
                     args =  ["-y",
                              "-i", '{input_}'.format(input_=video_path),
                              "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
@@ -1415,7 +1410,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                 horiz_resol=horiz_resol)
                              ]
                     print(command, args)
-    
+
                     '''
                     ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
                               '-vf scale={horiz_resol}:-1 -b:v {quality}k '
@@ -1424,14 +1419,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                    quality=quality,
                                                                                    horiz_resol=horiz_resol)
                     '''
-    
-    
-    
+
                 if action == "rotate":
                     self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
                                                                      args=(fileNames, rotation_idx, ffmpeg_bin,))
 
-            self.processes[-1].start(command, args)
+                self.processes.append([QProcess(self), [command, args]])
+                self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
+                self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
+                self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
+
+
+            self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
             print('started')
 
 
