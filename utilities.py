@@ -116,7 +116,10 @@ def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
     return True
 
 
-def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
+def video_rotate(video_paths: list,
+                 rotation_idx: int,
+                 ffmpeg_bin: str,
+                 quality:int=2000) -> bool:
     """
     rotate a video using ffmpeg at same bitrate (quality)
 
@@ -124,7 +127,7 @@ def video_rotate(video_paths, rotation_idx, ffmpeg_bin, quality=2000):
         video_paths (list): list of video paths
         rotation_idx (int): type of rotation: 1 = 90 clockwise, 2 = 90 counter clockwise, 3 = 180
         ffmpeg_bin (str): path of ffmpeg program
-        quality (int): ffmpeg bitrate
+        quality (int): ffmpeg bitrate / 1000 (k)
     Returns:
         bool: True
 

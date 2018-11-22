@@ -1397,32 +1397,43 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if action == "reencode_resize":
 
-                    video_path = file_name
-                    quality = video_quality
-                    # command = '"{ffmpeg_bin}"'.format(ffmpeg_bin=ffmpeg_bin)
-                    # command = ffmpeg_bin
-
                     args =  ["-y",
-                             "-i", '{input_}'.format(input_=video_path),
+                             "-i", '{file_name}'.format(file_name=file_name),
                              "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
-                             "-b:v", "{quality}k".format(quality=quality),
-                             '{input_}.re-encoded.{horiz_resol}px.avi'.format(input_=video_path,
-                                                                                horiz_resol=horiz_resol)
+                             "-b:v", "{video_quality}k".format(video_quality=video_quality),
+                             '{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi'.format(file_name=file_name,
+                                                                                                  horiz_resol=horiz_resol,
+                                                                                                  video_quality=video_quality)
                              ]
-                    print(command, args)
-
-                    '''
-                    ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                              '-vf scale={horiz_resol}:-1 -b:v {quality}k '
-                              '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                                   input_=video_path,
-                                                                                   quality=quality,
-                                                                                   horiz_resol=horiz_resol)
-                    '''
 
                 if action == "rotate":
-                    self.ffmpeg_process_ps = multiprocessing.Process(target=utilities.video_rotate,
-                                                                     args=(fileNames, rotation_idx, ffmpeg_bin,))
+
+                    # check bitrate
+                    r = accurate_media_analysis2(ffmpeg_bin, file_name)
+                    if "error" not in r and r["bitrate"] != -1:
+                        video_quality = r["bitrate"]
+                    else:
+                        video_quality = 2000
+
+                    if rotation_idx in [1, 2]:
+
+                        args = ["-y",
+                                "-i", '{file_name}'.format(file_name=file_name),
+                                "-vf", "transpose={rotation_idx}".format(rotation_idx=rotation_idx),
+                                "-codec:a", "copy",
+                                "-b:v", "{video_quality}k".format(video_quality=video_quality),
+                                "{file_name}.rotated{rotation}.avi".format(file_name=file_name,
+                                                                       rotation=["", "90", "-90"][rotation_idx])
+                                ]
+
+                    if rotation_idx == 3:  # 180
+                        args = ["-y",
+                                "-i", '{file_name}'.format(file_name=file_name),
+                                "-vf", "transpose=2,transpose=2",
+                                "-codec:a", "copy",
+                                "-b:v", "{video_quality}k".format(video_quality=video_quality),
+                                "{file_name}.rotated180.avi".format(file_name=file_name)
+                                ]
 
                 self.processes.append([QProcess(self), [command, args]])
                 self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
@@ -1430,8 +1441,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
                 self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
 
+            print(command, args)
 
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
+
             print('started')
 
 
