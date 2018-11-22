@@ -49,7 +49,7 @@ except ModuleNotFoundError:
 import os
 import wave
 import subprocess
-import multiprocessing
+'''import multiprocessing'''
 import numpy as np
 import matplotlib
 
@@ -228,7 +228,7 @@ def create_spectrogram(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHe
     return fileName1stChunk
 
 
-
+'''
 def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map="gray_r"):
     """
     create and start process in multiprocessing mode for creation of spectrogram
@@ -243,3 +243,4 @@ def create_spectrogram_multiprocessing(mediaFile, tmp_dir, chunk_size, ffmpeg_bi
                                           args=(mediaFile, tmp_dir, chunk_size, ffmpeg_bin, spectrogramHeight, spectrogram_color_map, ))
         process.start()
         return process
+'''

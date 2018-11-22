@@ -128,7 +128,7 @@ def remove_media_files_path(pj):
     return copy.deepcopy(pj)
 
 
-def media_full_path(media_file: str, project_file_name: str):
+def media_full_path(media_file: str, project_file_name: str) -> str:
     """
     media full path
     add path of BORIS project if media without path
@@ -142,7 +142,6 @@ def media_full_path(media_file: str, project_file_name: str):
     """
 
     media_path = pathlib.Path(media_file)
-    """if media_path.resolve() == media_path and media_path.exists():"""
     if media_path.exists():
         return str(media_path)
     else:

@@ -42,7 +42,6 @@ import tempfile
 import glob
 import statistics
 import datetime
-import multiprocessing
 import socket
 import copy
 import pathlib
@@ -356,8 +355,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     pj = dict(EMPTY_PROJECT)
     project = False
-    ffmpeg_recode_process = None  # to be removed
-    ffmpeg_process_ps = None
 
     processes = [] # list of QProcess processes
 
@@ -366,7 +363,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     wrongTimeResponse = ""
 
     confirmSound = False               # if True each keypress will be confirmed by a beep
-    embedPlayer = True                 # if True the VLC player will be embedded in the main window
 
     spectrogramHeight = 80
     spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
@@ -1296,40 +1292,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         def readStdOutput(idx):
-            print(str(self.processes[idx - 1][0].readAllStandardOutput()))
-            #print(str(self.process1.readAllStandardError()))
+
+            # print(str(self.process1.readAllStandardError()))
+
+            self.processes_widget.label.setText(("This operation can be long. Be patient...\n\n"
+                                                 "Done: {done} of {tot}"
+                                                ).format(done=self.processes_widget.number_of_files - len(self.processes),
+                                                         tot=self.processes_widget.number_of_files))
+            self.processes_widget.lwi.clear()
+            self.processes_widget.lwi.addItems([self.processes[idx - 1][1][2],
+                                                self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8")
+                                               ]
+                                              )
+
 
         def qprocess_finished(idx):
-            print("QProcess finished", idx - 1)
-            print(len(self.processes))
-            del self.processes[idx - 1]
-            print(len(self.processes))
+            """
+            function triggered when process finished
+            """
+            if self.processes:
+                del self.processes[idx - 1]
             if self.processes:
                 self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
             else:
-                self.w.hide()
+                self.processes_widget.hide()
+                del self.processes_widget
 
 
-        '''
-        timer_ffmpeg_process = QTimer()
-
-        def timer_ffmpeg_process_timeout():
-            """
-            check if process finished
-            """
-            try:
-                if not self.ffmpeg_process_ps.is_alive():
-                    timer_ffmpeg_process.stop()
-                    self.w.hide()
-                    del(self.w)
-                    self.ffmpeg_process_ps = None
-            except Exception:
-                pass
-
-        if self.ffmpeg_process_ps:
-            QMessageBox.warning(self, programName, "BORIS is already running a ffmpeg process...")
+        if self.processes:
+            QMessageBox.warning(self, programName, "BORIS is already doing some job.")
             return
-        '''
 
         fn = QFileDialog().getOpenFileNames(self, "Select one or more media files to process", "", "Media files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
@@ -1357,13 +1349,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # check if processed files already exist
             files_list = []
             for file_name in fileNames:
-
                 if action == "reencode_resize":
-                    fn = "{input}.re-encoded.{horiz_resol}px.avi".format(input=file_name, horiz_resol=horiz_resol)
-
+                    fn = "{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi".format(file_name=file_name,
+                                                                                              horiz_resol=horiz_resol,
+                                                                                              video_quality=video_quality)
                 if action == "rotate":
-                    fn = "{input}.rotated{rotation}.avi".format(input=file_name, rotation=["", "90", "-90", "180"][rotation_idx])
-
+                    fn = "{file_name}.rotated{rotation}.avi".format(file_name=file_name,
+                                                                rotation=["", "90", "-90", "180"][rotation_idx])
                 if os.path.isfile(fn):
                     files_list.append(fn)
 
@@ -1373,24 +1365,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if response == CANCEL:
                     return
 
-            self.w = dialog.Info_widget()
-            self.w.lwi.setVisible(False)
-            self.w.resize(350, 100)
-            self.w.setWindowFlags(Qt.WindowStaysOnTopHint)
+            self.processes_widget = dialog.Info_widget()
+            self.processes_widget.resize(350, 100)
+            self.processes_widget.setWindowFlags(Qt.WindowStaysOnTopHint)
             if action == "reencode_resize":
-                self.w.setWindowTitle("Re-encoding and resizing with FFmpeg")
+                self.processes_widget.setWindowTitle("Re-encoding and resizing with FFmpeg")
             if action == "rotate":
-                self.w.setWindowTitle("Rotating the video with FFmpeg")
+                self.processes_widget.setWindowTitle("Rotating the video with FFmpeg")
 
-            self.w.label.setText("This operation can be long. Be patient...\n\n" + "\n".join(fileNames))
-            self.w.show()
+            self.processes_widget.label.setText("This operation can be long. Be patient...\n\n")
+            self.processes_widget.number_of_files = len(fileNames)
+            self.processes_widget.show()
 
-            command = ffmpeg_bin
-            # self.processes = []
             for file_name in fileNames:
 
                 if action == "reencode_resize":
-
                     args =  ["-y",
                              "-i", '{file_name}'.format(file_name=file_name),
                              "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
@@ -1410,7 +1399,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         video_quality = 2000
 
                     if rotation_idx in [1, 2]:
-
                         args = ["-y",
                                 "-i", '{file_name}'.format(file_name=file_name),
                                 "-vf", "transpose={rotation_idx}".format(rotation_idx=rotation_idx),
@@ -1429,13 +1417,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 "{file_name}.rotated180.avi".format(file_name=file_name)
                                 ]
 
-                self.processes.append([QProcess(self), [command, args]])
+                self.processes.append([QProcess(self), [ffmpeg_bin, args, file_name]])
                 self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
                 self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
                 self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
                 self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
-
-            print(command, args)
 
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
 
@@ -1912,23 +1898,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                               spectrogram_color_map=self.spectrogram_color_map)
                 w.hide()
 
-
-                '''
-                process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
-                                                                              tmp_dir=tmp_dir,
-                                                                              chunk_size=self.chunk_length,
-                                                                              ffmpeg_bin=self.ffmpeg_bin,
-                                                                              spectrogramHeight=self.spectrogramHeight,
-                                                                              spectrogram_color_map=self.spectrogram_color_map)
-
-                if process:
-                    w.show()
-                    while 1:
-                        app.processEvents()
-                        if not process.is_alive():
-                            w.hide()
-                            break
-                '''
 
             else:
                 QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media_file_path))
@@ -2682,12 +2651,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # beep every
         preferencesWindow.sbBeepEvery.setValue(self.beep_every)
 
-        # embed player
-        if sys.platform == "darwin":
-            self.embedPlayer = False
-            preferencesWindow.cbEmbedPlayer.setEnabled(False)
-
-        preferencesWindow.cbEmbedPlayer.setChecked(self.embedPlayer)
         # alert no focal subject
         preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
         # tracking cursor above event
@@ -2758,8 +2721,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
 
             self.beep_every = preferencesWindow.sbBeepEvery.value()
-
-            self.embedPlayer = preferencesWindow.cbEmbedPlayer.isChecked()
 
             self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
 
@@ -3300,7 +3261,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug("media file: {}".format(mediaFile))
 
                 media_full_path = project_functions.media_full_path(mediaFile, self.projectFileName)
-                media = self.instance.media_new(media_full_path)
+                logging.debug("media_full_path: {}".format(media_full_path))
+                media = self.instance.media_new("file:///" + media_full_path)
                 media.parse()
 
                 # media duration
@@ -4384,15 +4346,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.confirmSound = False
 
-            self.embedPlayer = True
-            try:
-                self.embedPlayer = (settings.value("embed_player") == "true")
-            except Exception:
-                self.embedPlayer = True
-
-            if sys.platform == "darwin":
-                self.embedPlayer = False
-
             self.alertNoFocalSubject = False
             try:
                 self.alertNoFocalSubject = (settings.value('alert_nosubject') == "true")
@@ -4556,7 +4509,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("close_the_same_current_event", self.close_the_same_current_event)
         settings.setValue("confirm_sound", self.confirmSound)
         settings.setValue("beep_every", self.beep_every)
-        settings.setValue("embed_player", self.embedPlayer)
         settings.setValue("alert_nosubject", self.alertNoFocalSubject)
         settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
         settings.setValue("check_for_new_version", self.checkForNewVersion)
@@ -9563,8 +9515,16 @@ item []:
 
         # check if re-encoding
         if self.processes:
-            QMessageBox.warning(self, programName, "BORIS is re-encoding/resizing a video. Please wait before closing.")
-            event.ignore()
+            if dialog.MessageDialog(programName, "BORIS is doing some job. What do you want to do?",
+                                    ["Wait", "Quit BORIS"]) == "Wait":
+                event.ignore()
+                return
+            for ps in self.processes:
+                ps[0].terminate()
+                # Wait for Xms and then elevate the situation to terminate
+                if not ps[0].waitForFinished(5000):
+                    ps[0].kill()
+
 
         if self.projectChanged:
             response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])

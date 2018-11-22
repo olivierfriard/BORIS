@@ -453,7 +453,6 @@ class Observation(QDialog, Ui_Form):
                 w.setWindowTitle("BORIS")
                 w.label.setText("Generating spectrogram...")
 
-
                 for row in range(self.twVideo1.rowCount()):
                     # check if player 1
                     if self.twVideo1.cellWidget(row, 0).currentText() != "1":
@@ -475,22 +474,6 @@ class Observation(QDialog, Ui_Form):
                                                                                       spectrogramHeight=self.spectrogramHeight,
                                                                                       spectrogram_color_map=self.spectrogram_color_map)
                         w.hide()
-
-                        '''
-                        process = plot_spectrogram.create_spectrogram_multiprocessing(mediaFile=media_file_path,
-                                                                                      tmp_dir=tmp_dir,
-                                                                                      chunk_size=self.chunk_length,
-                                                                                      ffmpeg_bin=self.ffmpeg_bin,
-                                                                                      spectrogramHeight=self.spectrogramHeight,
-                                                                                      spectrogram_color_map=self.spectrogram_color_map)
-                        if process:
-                            w.show()
-                            while True:
-                                QApplication.processEvents()
-                                if not process.is_alive():
-                                    w.hide()
-                                    break
-                        '''
 
                         flag_spectro_produced = True
                     else:

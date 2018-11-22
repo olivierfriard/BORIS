@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -77,6 +77,9 @@ class Ui_prefDialog(object):
         self.leSeparator = QtWidgets.QLineEdit(self.tab)
         self.leSeparator.setObjectName("leSeparator")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.leSeparator)
+        self.cbCloseSameEvent = QtWidgets.QCheckBox(self.tab)
+        self.cbCloseSameEvent.setObjectName("cbCloseSameEvent")
+        self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.cbCloseSameEvent)
         self.cbConfirmSound = QtWidgets.QCheckBox(self.tab)
         self.cbConfirmSound.setObjectName("cbConfirmSound")
         self.formLayout.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.cbConfirmSound)
@@ -86,24 +89,18 @@ class Ui_prefDialog(object):
         self.sbBeepEvery = QtWidgets.QSpinBox(self.tab)
         self.sbBeepEvery.setObjectName("sbBeepEvery")
         self.formLayout.setWidget(8, QtWidgets.QFormLayout.FieldRole, self.sbBeepEvery)
-        self.cbEmbedPlayer = QtWidgets.QCheckBox(self.tab)
-        self.cbEmbedPlayer.setObjectName("cbEmbedPlayer")
-        self.formLayout.setWidget(9, QtWidgets.QFormLayout.SpanningRole, self.cbEmbedPlayer)
         self.cbAlertNoFocalSubject = QtWidgets.QCheckBox(self.tab)
         self.cbAlertNoFocalSubject.setObjectName("cbAlertNoFocalSubject")
-        self.formLayout.setWidget(10, QtWidgets.QFormLayout.LabelRole, self.cbAlertNoFocalSubject)
+        self.formLayout.setWidget(9, QtWidgets.QFormLayout.LabelRole, self.cbAlertNoFocalSubject)
         self.cbTrackingCursorAboveEvent = QtWidgets.QCheckBox(self.tab)
         self.cbTrackingCursorAboveEvent.setObjectName("cbTrackingCursorAboveEvent")
-        self.formLayout.setWidget(11, QtWidgets.QFormLayout.LabelRole, self.cbTrackingCursorAboveEvent)
+        self.formLayout.setWidget(10, QtWidgets.QFormLayout.LabelRole, self.cbTrackingCursorAboveEvent)
         self.cbCheckForNewVersion = QtWidgets.QCheckBox(self.tab)
         self.cbCheckForNewVersion.setObjectName("cbCheckForNewVersion")
-        self.formLayout.setWidget(12, QtWidgets.QFormLayout.LabelRole, self.cbCheckForNewVersion)
-        self.cbCloseSameEvent = QtWidgets.QCheckBox(self.tab)
-        self.cbCloseSameEvent.setObjectName("cbCloseSameEvent")
-        self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.cbCloseSameEvent)
+        self.formLayout.setWidget(11, QtWidgets.QFormLayout.LabelRole, self.cbCheckForNewVersion)
         self.cb_pause_before_addevent = QtWidgets.QCheckBox(self.tab)
         self.cb_pause_before_addevent.setObjectName("cb_pause_before_addevent")
-        self.formLayout.setWidget(13, QtWidgets.QFormLayout.LabelRole, self.cb_pause_before_addevent)
+        self.formLayout.setWidget(12, QtWidgets.QFormLayout.LabelRole, self.cb_pause_before_addevent)
         self.verticalLayout.addLayout(self.formLayout)
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtWidgets.QWidget()
@@ -256,7 +253,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -271,13 +268,12 @@ class Ui_prefDialog(object):
         self.label_6.setText(_translate("prefDialog", "Automatic backup every (minutes)"))
         self.label_3.setText(_translate("prefDialog", "Separator for behavioural strings (events export)"))
         self.leSeparator.setText(_translate("prefDialog", "|"))
+        self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers"))
         self.cbConfirmSound.setText(_translate("prefDialog", "Play sound when a key is pressed"))
         self.label_8.setText(_translate("prefDialog", "Beep every (seconds)"))
-        self.cbEmbedPlayer.setText(_translate("prefDialog", "Embed media player in main window (program must be restarted)"))
         self.cbAlertNoFocalSubject.setText(_translate("prefDialog", "Alert if focal subject is not set"))
         self.cbTrackingCursorAboveEvent.setText(_translate("prefDialog", "Tracking cursor above current event"))
         self.cbCheckForNewVersion.setText(_translate("prefDialog", "Check for new version and news"))
-        self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers"))
         self.cb_pause_before_addevent.setText(_translate("prefDialog", "Pause media before \"Add event\" command"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("prefDialog", "Project"))
         self.lbFFmpegPath.setText(_translate("prefDialog", "FFmpeg path:"))

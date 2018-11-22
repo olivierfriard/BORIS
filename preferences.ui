@@ -22,7 +22,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>2</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -152,6 +152,13 @@
              </property>
             </widget>
            </item>
+           <item row="6" column="0">
+            <widget class="QCheckBox" name="cbCloseSameEvent">
+             <property name="text">
+              <string>Close the same current event independently of modifiers</string>
+             </property>
+            </widget>
+           </item>
            <item row="7" column="0">
             <widget class="QCheckBox" name="cbConfirmSound">
              <property name="text">
@@ -169,42 +176,28 @@
            <item row="8" column="1">
             <widget class="QSpinBox" name="sbBeepEvery"/>
            </item>
-           <item row="9" column="0" colspan="2">
-            <widget class="QCheckBox" name="cbEmbedPlayer">
-             <property name="text">
-              <string>Embed media player in main window (program must be restarted)</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="0">
+           <item row="9" column="0">
             <widget class="QCheckBox" name="cbAlertNoFocalSubject">
              <property name="text">
               <string>Alert if focal subject is not set</string>
              </property>
             </widget>
            </item>
-           <item row="11" column="0">
+           <item row="10" column="0">
             <widget class="QCheckBox" name="cbTrackingCursorAboveEvent">
              <property name="text">
               <string>Tracking cursor above current event</string>
              </property>
             </widget>
            </item>
-           <item row="12" column="0">
+           <item row="11" column="0">
             <widget class="QCheckBox" name="cbCheckForNewVersion">
              <property name="text">
               <string>Check for new version and news</string>
              </property>
             </widget>
            </item>
-           <item row="6" column="0">
-            <widget class="QCheckBox" name="cbCloseSameEvent">
-             <property name="text">
-              <string>Close the same current event independently of modifiers</string>
-             </property>
-            </widget>
-           </item>
-           <item row="13" column="0">
+           <item row="12" column="0">
             <widget class="QCheckBox" name="cb_pause_before_addevent">
              <property name="text">
               <string>Pause media before &quot;Add event&quot; command</string>
