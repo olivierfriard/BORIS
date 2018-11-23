@@ -44,7 +44,8 @@ from config import *
 import utilities
 from utilities import *
 import dialog
-import plot_spectrogram
+'''import plot_spectrogram'''
+'''import plot_spectrogram_rt'''
 import plot_data_module
 import project_functions
 
@@ -438,8 +439,7 @@ class Observation(QDialog, Ui_Form):
                 return
 
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
-                                                  "Choose YES to generate the spectrogram.\n\n"
-                                                  "Spectrogram generation can take some time for long media, be patient"), [YES, NO]) == YES:
+                                                  "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
 
                 if not self.ffmpeg_cache_dir:
                     tmp_dir = tempfile.gettempdir()
@@ -451,28 +451,40 @@ class Observation(QDialog, Ui_Form):
                 w.resize(350, 100)
                 w.setWindowFlags(Qt.WindowStaysOnTopHint)
                 w.setWindowTitle("BORIS")
-                w.label.setText("Generating spectrogram...")
+                w.label.setText("Extracting WAV from media files...")
 
                 for row in range(self.twVideo1.rowCount()):
                     # check if player 1
                     if self.twVideo1.cellWidget(row, 0).currentText() != "1":
                         continue
 
-                    media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(), self.project_path)
+                    media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(),
+                                                                        self.project_path)
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
                         QMessageBox.critical(self, programName , "The media file {} do not seem to have audio".format(media_file_path))
-                        continue
+                        flag_spectro_produced = False
+                        break
 
                     if os.path.isfile(media_file_path):
                         w.show()
                         QApplication.processEvents()
 
+
+                        '''
                         _ = plot_spectrogram.create_spectrogram(mediaFile=media_file_path,
                                                                                       tmp_dir=tmp_dir,
                                                                                       chunk_size=self.chunk_length,
                                                                                       ffmpeg_bin=self.ffmpeg_bin,
                                                                                       spectrogramHeight=self.spectrogramHeight,
                                                                                       spectrogram_color_map=self.spectrogram_color_map)
+
+                        '''
+                        if utilities.extract_wav(self.ffmpeg_bin, media_file_path, tmp_dir) == "":
+                            QMessageBox.critical(self, programName ,
+                                                 "Error during extracting WAV of the media file {}".format(media_file_path))
+                            flag_spectro_produced = False
+                            break
+
                         w.hide()
 
                         flag_spectro_produced = True
@@ -783,6 +795,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = Observation("/tmp", converters)
     w.ffmpeg_bin="ffmpeg"
+    w.ffmpeg_cache_dir = "/tmp"
     w.mode = "new"
     w.pj = """{
  "time_format":"hh:mm:ss",

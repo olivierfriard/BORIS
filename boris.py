@@ -105,7 +105,8 @@ from matplotlib import dates
 matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
 import matplotlib.pyplot as plt
 import plot_events
-import plot_spectrogram
+'''import plot_spectrogram'''
+import plot_spectrogram_rt
 import observation
 import plot_data_module
 
@@ -1475,6 +1476,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if hasattr(self, "codingpad"):
             self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            if not self.codingpad.filtered_behaviors:
+                QMessageBox.warning(self, programName, "No behaviors to show!")
+                return
             self.codingpad.compose()
             self.codingpad.show()
             self.codingpad.setGeometry(self.codingpad_geometry_memory.x(),
@@ -1484,6 +1488,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         else:
             filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
+            if not filtered_behaviors:
+                QMessageBox.warning(self, programName, "No behaviors to show!")
+                return
             self.codingpad = coding_pad.CodingPad(self.pj, filtered_behaviors)
             self.codingpad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.codingpad.sendEventSignal.connect(self.signal_from_widget)
@@ -1507,6 +1514,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if hasattr(self, "subjects_pad"):
             self.subjects_pad.filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text()
                                                    for i in range(self.twSubjects.rowCount())]
+            if not self.subjects_pad.filtered_subjects:
+                QMessageBox.warning(self, programName, "No subjects to show")
+                return
             self.subjects_pad.compose()
             self.subjects_pad.show()
             self.subjects_pad.setGeometry(self.subjectspad_geometry_memory.x(),
@@ -1516,6 +1526,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text()
                                  for i in range(self.twSubjects.rowCount())]
+            if not filtered_subjects:
+                QMessageBox.warning(self, programName, "No subjects to show")
+                return
             self.subjects_pad = subjects_pad.SubjectsPad(self.pj, filtered_subjects)
             self.subjects_pad.setWindowFlags(Qt.WindowStaysOnTopHint)
             self.subjects_pad.sendEventSignal.connect(self.signal_from_subjects_pad)
@@ -1881,7 +1894,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.resize(350, 100)
         w.setWindowFlags(Qt.WindowStaysOnTopHint)
         w.setWindowTitle(programName)
-        w.label.setText("Generating spectrogram. Please wait...")
+        w.label.setText("Extracting WAV from media files...")
 
         for media in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
             media_file_path = project_functions.media_full_path(media, self.projectFileName)
@@ -1890,14 +1903,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 w.show()
                 QApplication.processEvents()
 
+                if utilities.extract_wav(self.ffmpeg_bin, media_file_path, tmp_dir) == "":
+                    QMessageBox.critical(self, programName ,
+                                         "Error during extracting WAV of the media file {}".format(media_file_path))
+                    break
+
+                '''
                 _ = plot_spectrogram.create_spectrogram(mediaFile=media_file_path,
                                                                               tmp_dir=tmp_dir,
                                                                               chunk_size=self.chunk_length,
                                                                               ffmpeg_bin=self.ffmpeg_bin,
                                                                               spectrogramHeight=self.spectrogramHeight,
                                                                               spectrogram_color_map=self.spectrogram_color_map)
+                '''
                 w.hide()
-
 
             else:
                 QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media_file_path))
@@ -1928,12 +1947,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pause_video()
 
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation.<br>"
-                                                  "Choose YES to generate the spectrogram.\n\n"
                                                   "Spectrogram generation can take some time for long media, be patient"),
                                     [YES, NO]) == YES:
 
                 self.generate_spectrogram()
 
+                if not self.ffmpeg_cache_dir:
+                    tmp_dir = tempfile.gettempdir()
+                else:
+                    tmp_dir = self.ffmpeg_cache_dir
+
+                wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
+                    urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                    ).name
+
+
+                self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
+
+                self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                self.spectro.interval = 12
+                self.spectro.cursor_color = "red"
+
+                r = self.spectro.load_wav(str(wav_file_path))
+                if "error" in r:
+                    print(r["error"])
+                    del self.spectro
+                    return
+
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM] = True
+                self.spectro.sendEvent.connect(self.signal_from_widget)
+                self.spectro.show()
+                self.timer_spectro.start()
+
+
+                '''
                 if not self.ffmpeg_cache_dir:
                     tmp_dir = tempfile.gettempdir()
                 else:
@@ -1955,6 +2003,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.sendEvent.connect(self.signal_from_widget)
                 self.spectro.show()
                 self.timer_spectro.start()
+                '''
 
             if self.playerType == VLC and self.playMode == VLC and not flagPaused:
                 self.play_video()
@@ -1968,8 +2017,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not hasattr(self, "spectro"):
             return
 
-        if ("visualize_spectrogram" not in self.pj[OBSERVATIONS][self.observationId] or
-                not self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]):
+        if (VISUALIZE_SPECTROGRAM not in self.pj[OBSERVATIONS][self.observationId] or
+                not self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
             return
 
         if self.playerType == LIVE:
@@ -1978,13 +2027,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             if self.playMode == VLC:
-                currentMediaTime = self.dw_player[0].mediaplayer.get_time()
+                current_media_time = self.dw_player[0].mediaplayer.get_time() / 1000
 
             if self.playMode == FFMPEG:
                 # get time in current media
                 currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame,
                                                                               self.fps)
-                currentMediaTime = frameCurrentMedia / self.fps * 1000
+                current_media_time = frameCurrentMedia / self.fps
+
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
+
+            wav_file_path = str(pathlib.Path(tmp_dir) / pathlib.Path(self.dw_player[0].mediaplayer.get_media().get_mrl() + ".wav").name)
+
+            if self.spectro.wav_file_path == wav_file_path:
+                self.spectro.plot_spectro(current_media_time)
+            else:
+                print("media file changed. load wav")
+                r = self.spectro.load_wav(wav_file_path)
+                if "error" not in r:
+                    self.spectro.plot_spectro(current_media_time)
+                else:
+                    print("error", r["error"])
+
+
+
+        '''
 
         currentChunk = int(currentMediaTime / 1000 / self.chunk_length)
 
@@ -1994,10 +2061,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-            if not self.ffmpeg_cache_dir:
-                tmp_dir = tempfile.gettempdir()
-            else:
-                tmp_dir = self.ffmpeg_cache_dir
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
 
             currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl()))
 
@@ -2039,6 +2103,86 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.spectro.item.setPos(self.spectro.scene.width() // 2 - int(get_time * self.spectro.w), 0)
 
         self.spectro.memChunk = currentChunk
+        '''
+
+    '''
+    def timer_spectro_out_old(self):
+        """
+        timer for spectrogram visualization OLD NOT USED
+        """
+
+        if not hasattr(self, "spectro"):
+            return
+
+        if (VISUALIZE_SPECTROGRAM not in self.pj[OBSERVATIONS][self.observationId] or
+                not self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
+            return
+
+        if self.playerType == LIVE:
+            QMessageBox.warning(self, programName, "The spectrogram visualization is not available for live observations")
+            return
+
+        if self.playerType == VLC:
+            if self.playMode == VLC:
+                currentMediaTime = self.dw_player[0].mediaplayer.get_time()
+
+            if self.playMode == FFMPEG:
+                # get time in current media
+                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame,
+                                                                              self.fps)
+                currentMediaTime = frameCurrentMedia / self.fps * 1000
+
+        currentChunk = int(currentMediaTime / 1000 / self.chunk_length)
+
+        if currentChunk != self.spectro.memChunk:
+            try:
+                self.spectro.scene.removeItem(self.spectro.item)
+            except Exception:
+                pass
+
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
+
+            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl()))
+
+            currentChunkFileName = "{}.wav.{}-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
+                                                                               currentChunk * self.chunk_length,
+                                                                               (currentChunk + 1) * self.chunk_length,
+                                                                               self.spectrogram_color_map,
+                                                                               self.spectrogramHeight
+                                                                               )
+
+            if not os.path.isfile(currentChunkFileName):
+                self.timer_spectro.stop()
+
+                if dialog.MessageDialog(programName, ("Spectrogram file not found.<br>"
+                                                      "Do you want to generate it now?<br>"
+                                                      "Spectrogram generation can take some time for long media,"
+                                                      "be patient"), [YES, NO]) == YES:
+
+                    self.generate_spectrogram()
+                    self.timer_spectro.start()
+
+                return
+
+            logging.debug("current chunk file name: {}".format(currentChunkFileName))
+            self.spectro.pixmap.load(currentChunkFileName)
+
+            self.spectro.setWindowTitle("Spectrogram - {}".format(
+                os.path.basename(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl()))))
+
+            self.spectro.w, self.spectro.h = self.spectro.pixmap.width(), self.spectro.pixmap.height()
+
+            self.spectro.item = QGraphicsPixmapItem(self.spectro.pixmap)
+
+            self.spectro.scene.addItem(self.spectro.item)
+            self.spectro.item.setPos(self.spectro.scene.width() // 2, 0)
+
+        get_time = (currentMediaTime % (self.chunk_length * 1000) / (self.chunk_length * 1000))
+
+        self.spectro.item.setPos(self.spectro.scene.width() // 2 - int(get_time * self.spectro.w), 0)
+
+        self.spectro.memChunk = currentChunk
+    '''
 
 
     def show_data_files(self):
@@ -3295,7 +3439,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # add media list to media player list
             self.dw_player[i].mediaListPlayer.set_media_list(self.dw_player[i].media_list)
 
-            if sys.platform.startswith('linux'):  # for Linux using the X Server
+            if sys.platform.startswith("linux"):  # for Linux using the X Server
                 self.dw_player[i].mediaplayer.set_xwindow(self.dw_player[i].videoframe.winId())
             elif sys.platform == "win32":  # for Windows
                 self.dw_player[i].mediaplayer.set_hwnd(self.dw_player[i].videoframe.winId())
@@ -3351,8 +3495,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
         # spectrogram
-        if ("visualize_spectrogram" in self.pj[OBSERVATIONS][self.observationId] and
-                self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"]):
+        if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
+
+            if not self.ffmpeg_cache_dir:
+                tmp_dir = tempfile.gettempdir()
+            else:
+                tmp_dir = self.ffmpeg_cache_dir
+
+            wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
+                urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                ).name
+
+            if not wav_file_path.is_file():
+                self.generate_spectrogram()
+
+            self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
+
+            self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+            self.spectro.interval = 12
+            self.spectro.cursor_color = "red"
+
+            r = self.spectro.load_wav(str(wav_file_path))
+            if "error" in r:
+                print(r["error"])
+                del self.spectro
+                return
+
+            self.spectro.sendEvent.connect(self.signal_from_widget)
+            self.spectro.show()
+            self.timer_spectro.start()
+
+
+        '''
+        if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
 
             if not self.ffmpeg_cache_dir:
                 tmp_dir = tempfile.gettempdir()
@@ -3385,6 +3563,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.sendEvent.connect(self.signal_from_widget)
             self.spectro.show()
             self.timer_spectro.start()
+        '''
 
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
@@ -3825,8 +4004,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
-            if "visualize_spectrogram" in self.pj[OBSERVATIONS][obsId]:
-                observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId]["visualize_spectrogram"])
+            if VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][obsId]:
+                observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId][VISUALIZE_SPECTROGRAM])
 
             # plot data
             if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
@@ -3935,7 +4114,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
 
             # visualize spectrogram
-            self.pj[OBSERVATIONS][new_obs_id]["visualize_spectrogram"] = observationWindow.cbVisualizeSpectrogram.isChecked()
+            self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
 
             # plot data
             if observationWindow.tw_data_files.rowCount():

@@ -49,7 +49,6 @@ except ModuleNotFoundError:
 import os
 import wave
 import subprocess
-'''import multiprocessing'''
 import numpy as np
 import matplotlib
 
@@ -100,7 +99,6 @@ class Spectrogram(QWidget):
         self.setWindowTitle("Spectrogram")
 
         self.installEventFilter(self)
-
 
     def eventFilter(self, receiver, event):
         """

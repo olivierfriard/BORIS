@@ -42,6 +42,7 @@ from decimal import *
 import math
 import datetime
 import socket
+import pathlib
 import numpy as np
 
 from config import *
@@ -404,6 +405,47 @@ def check_txt_file(file_name):
             return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
     except Exception:
         return {"error": str(sys.exc_info()[1])}
+
+
+def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
+    """
+    extract wav from media file and save file in tmp_dir
+
+    Args:
+        media_file_path (str): media file path
+        tmp_dir (str): temporary dir where to save wav file
+
+    Returns:
+        str: wav file path or "" if error
+    """
+
+    '''
+    wav_file_path = "{tmp_dir}{sep}{mediaBaseName}.wav".format(tmp_dir=tmp_dir,
+                                                               sep=os.sep,
+                                                               mediaBaseName=os.path.basename(media_file_path))
+    '''
+
+    wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(media_file_path + ".wav").name
+
+    # if os.path.isfile(wav_file_path):
+    if wav_file_path.is_file():
+        return str(wav_file_path)
+    else:
+        p = subprocess.Popen('"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"'.format(ffmpeg_bin=ffmpeg_bin,
+                                                                                                           media_file_path=media_file_path,
+                                                                                                           wav_file_path=wav_file_path),
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             shell=True)
+        out, error = p.communicate()
+        out, error = out.decode("utf-8"), error.decode("utf-8")
+
+        if "does not contain any stream" not in error:
+            if wav_file_path.is_file():
+                return str(wav_file_path)
+            return ""
+        else:
+            return ""
 
 
 
