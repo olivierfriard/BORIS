@@ -50,7 +50,7 @@ def test_file_not_media(qtbot):
     w.ffmpeg_bin = "ffmpeg"
 
     w.leObservationId.setText("test")
-    media_file = "files/geese1.srt"
+    media_file = "files/test.boris"
     assert w.check_media("1", media_file, True) == False
 
 
