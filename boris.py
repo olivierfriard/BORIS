@@ -1393,7 +1393,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if action == "rotate":
 
                     # check bitrate
-                    r = accurate_media_analysis2(ffmpeg_bin, file_name)
+                    r = accurate_media_analysis(ffmpeg_bin, file_name)
                     if "error" not in r and r["bitrate"] != -1:
                         video_quality = r["bitrate"]
                     else:
@@ -3254,7 +3254,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
                 except Exception:
                     logging.debug("media_info key not found")
-                    r = utilities.accurate_media_analysis2(self.ffmpeg_bin, media_full_path)
+                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     if "error" not in r:
                         if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
                             self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
@@ -6780,7 +6780,7 @@ item []:
 
                 for filePath in self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]:
                     media_full_path = project_functions.media_full_path(filePath, self.projectFileName)
-                    r = utilities.accurate_media_analysis2(self.ffmpeg_bin, media_full_path)
+                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     nframes = r["frames_number"]
                     if "error" in r:
                         ffmpeg_output += "File path: {filePath}<br><br>{error}<br><br>".format(filePath=media_full_path,
@@ -6808,7 +6808,7 @@ item []:
 
         else:  # no open observation
 
-            fn = QFileDialog(self).getOpenFileName(self, "Select a media file", "", "Media files (*)")
+            fn = QFileDialog().getOpenFileName(self, "Select a media file", "", "Media files (*)")
             filePath = fn[0] if type(fn) is tuple else fn
 
             if filePath:
@@ -6816,7 +6816,7 @@ item []:
                 self.results.setWindowTitle(programName + " - Media file information")
                 self.results.ptText.setReadOnly(True)
                 self.results.ptText.appendHtml("<br><b>FFmpeg analysis</b><hr>")
-                r = utilities.accurate_media_analysis2(self.ffmpeg_bin, filePath)
+                r = utilities.accurate_media_analysis(self.ffmpeg_bin, filePath)
                 if "error" in r:
                     self.results.ptText.appendHtml("File path: {filePath}<br><br>{error}<br><br>".format(filePath=filePath,
                                                                                                          error=r["error"]))

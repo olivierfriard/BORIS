@@ -615,8 +615,7 @@ class Observation(QDialog, Ui_Form):
         """
         Close window and save observation
         """
-        r = self.check_parameters()
-        if r:
+        if self.check_parameters():
             self.state = "accepted"
             self.accept()
         else:
@@ -637,7 +636,7 @@ class Observation(QDialog, Ui_Form):
         """
 
         #nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, file_path)
-        r = utilities.accurate_media_analysis2(self.ffmpeg_bin, file_path)
+        r = utilities.accurate_media_analysis(self.ffmpeg_bin, file_path)
         if "error" in r:
             return False
         else:

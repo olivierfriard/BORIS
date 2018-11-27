@@ -370,7 +370,7 @@ def observation_total_length(observation):
                     mediaLength = observation["media_info"]["length"][mediaFile]
                 except Exception:
                     # nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
-                    r = utilities.accurate_media_analysis2(self.ffmpeg_bin, mediaFile)
+                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, mediaFile)
                     if "media_info" not in observation:
                         observation["media_info"] = {"length": {}, "fps": {}}
                         if "length" not in observation["media_info"]:
@@ -611,15 +611,11 @@ def open_project_json(projectFileName):
                     else:
                         ffmpeg_bin = msg
 
-                    r = utilities.accurate_media_analysis2(ffmpeg_bin, media_file_path)
-                    '''
-                    if "error" in r:
-                        return projectFileName, projectChanged, {"error": r["error"]}, ""
-                    '''
+                    r = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
 
                     if "duration" in r and r["duration"]:
-                        pj[OBSERVATIONS][obs]["media_info"]["length"][media_file_path] = r["duration"]
-                        pj[OBSERVATIONS][obs]["media_info"]["fps"][media_file_path] = r["fps"]
+                        pj[OBSERVATIONS][obs]["media_info"]["length"][media_file_path] = float(r["duration"])
+                        pj[OBSERVATIONS][obs]["media_info"]["fps"][media_file_path] = float(r["fps"])
                         pj[OBSERVATIONS][obs]["media_info"]["hasVideo"][media_file_path] = r["has_video"]
                         pj[OBSERVATIONS][obs]["media_info"]["hasAudio"][media_file_path] = r["has_audio"]
                         project_updated, projectChanged = True, True

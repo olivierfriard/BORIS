@@ -136,7 +136,7 @@ def video_rotate(video_paths: list,
     for video_path in video_paths:
 
         # check bitrate
-        r = accurate_media_analysis2(ffmpeg_bin, video_path)
+        r = accurate_media_analysis(ffmpeg_bin, video_path)
         if "error" not in r and r["bitrate"] != -1:
             quality = r["bitrate"]
 
@@ -898,7 +898,7 @@ def check_ffmpeg_path():
     return False, "FFmpeg is not available"
 
 
-def accurate_media_analysis2(ffmpeg_bin, file_name):
+def accurate_media_analysis(ffmpeg_bin, file_name):
     """
     analyse frame rate and video duration with ffmpeg
     Returns parameters: duration, duration_ms, bitrate, frames_number, fps, has_video (True/False), has_audio (True/False)
