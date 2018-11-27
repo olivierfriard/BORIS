@@ -232,9 +232,8 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
                         "WHERE observation = ? AND subject in ({}) "
                         "AND behavior in ({}) "
                         "ORDER BY start"
-                    ).format(
-                        ",".join(["?"] * len(parameters["selected subjects"])), ",".join(["?"] * len(parameters["selected behaviors"]))
-                    ),
+                    ).format(",".join(["?"] * len(parameters["selected subjects"])),
+                             ",".join(["?"] * len(parameters["selected behaviors"]))),
                     [obsId] + parameters["selected subjects"] + parameters["selected behaviors"],
                 )
 
@@ -274,6 +273,15 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
                     for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
                         end = init + pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
                         out = ""
+
+
+                        print(",".join(["?"] * len(parameters["selected subjects"])))
+
+
+                        print(",".join(["?"] * len(parameters["selected behaviors"])))
+
+                        print([obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"])
+
                         cursor.execute(
                             (
                                 "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
@@ -308,7 +316,7 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
                                 modifiers=modifiers_str,
                             )
 
-                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.PurePosixPath(mediaFile).name).with_suffix(".srt"))
+                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with_suffix(".srt"))
                         try:
                             with open(file_name, "w") as f:
                                 f.write(out)
@@ -320,6 +328,7 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
 
         return flag_ok, msg
     except Exception:
+        raise
         return False, str(sys.exc_info()[1])
 
 

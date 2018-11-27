@@ -934,7 +934,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
     try:
         for r in rows:
             if "Duration" in r:
-                duration = time2seconds(r.split('Duration: ')[1].split(',')[0].strip())
+                duration = time2seconds(r.split("Duration: ")[1].split(",")[0].strip())
                 break
     except Exception:
         duration = 0
@@ -943,7 +943,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
     try:
         for r in rows:
             if "bitrate:" in r:
-                re_results = re.search('bitrate: (.{1,10}) kb', r, re.IGNORECASE)
+                re_results = re.search("bitrate: (.{1,10}) kb", r, re.IGNORECASE)
                 if re_results:
                     bitrate = int(re_results.group(1).strip())
                 break
@@ -955,7 +955,7 @@ def accurate_media_analysis2(ffmpeg_bin, file_name):
     try:
         for r in rows:
             if " fps," in r:
-                re_results = re.search(', (.{1,10}) fps,', r, re.IGNORECASE)
+                re_results = re.search(", (.{1,10}) fps,", r, re.IGNORECASE)
                 if re_results:
                     fps = Decimal(re_results.group(1).strip())
                     break

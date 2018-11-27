@@ -116,7 +116,7 @@ class Observation(QDialog, Ui_Form):
             log_level: level of log
         """
 
-        super().__init__(parent)
+        super().__init__()
 
         self.tmp_dir = tmp_dir
         self.project_path = project_path
@@ -139,7 +139,7 @@ class Observation(QDialog, Ui_Form):
         self.pb_plot_data.clicked.connect(self.plot_data_file)
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
-        self.cbVisualizeSpectrogram.clicked.connect(self.generate_spectrogram)
+        self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
@@ -391,7 +391,7 @@ class Observation(QDialog, Ui_Form):
             file_parameters = utilities.check_txt_file(data_file_path)
             if "error" in file_parameters:
                 QMessageBox.critical(self, programName, "Error on file {}: {}".format(data_file_path,
-                                                                                    file_parameters["error"]))
+                                                                                      file_parameters["error"]))
                 return
             header = utilities.return_file_header(data_file_path)
 
@@ -419,9 +419,9 @@ class Observation(QDialog, Ui_Form):
             QMessageBox.warning(self, programName, "Select a data file")
 
 
-    def generate_spectrogram(self):
+    def extract_wav(self):
         """
-        generate spectrogram of all media files loaded in player #1
+        extract wav of all media files loaded in player #1
         """
 
 
@@ -445,7 +445,6 @@ class Observation(QDialog, Ui_Form):
                     tmp_dir = tempfile.gettempdir()
                 else:
                     tmp_dir = self.ffmpeg_cache_dir
-
 
                 w = dialog.Info_widget()
                 w.resize(350, 100)
@@ -548,8 +547,6 @@ class Observation(QDialog, Ui_Form):
             durations = []
             for i in players:
                 durations.append(sum(players[i]))
-            print(durations)
-
             if [x for x in durations[1:] if x > durations[0]]:
                 QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
                 return False
@@ -618,8 +615,12 @@ class Observation(QDialog, Ui_Form):
         """
         Close window and save observation
         """
-        if self.check_parameters():
+        r = self.check_parameters()
+        if r:
+            self.state = "accepted"
             self.accept()
+        else:
+            self.state = "refused"
 
 
     def check_media(self, n_player, file_path, flag_path):
@@ -627,6 +628,7 @@ class Observation(QDialog, Ui_Form):
         check media and add them to list view if duration > 0
 
         Args:
+            n_player (str): player to add media
             file_path (str): media file path to be checked
             flag_path (bool): True include full path of media else only basename
 
@@ -642,11 +644,11 @@ class Observation(QDialog, Ui_Form):
             if r["duration"] > 0:
                 if not flag_path:
                     file_path = str(Path(file_path).name)
-                self.mediaDurations[file_path] = r["duration"]
-                self.mediaFPS[file_path] = r["fps"]
+                self.mediaDurations[file_path] = float(r["duration"])
+                self.mediaFPS[file_path] = float(r["fps"])
                 self.mediaHasVideo[file_path] = r["has_video"]
                 self.mediaHasAudio[file_path] = r["has_audio"]
-                self.add_media_to_listview(n_player, file_path, "")
+                self.add_media_to_listview(n_player, file_path)
                 return True
             else:
                 return False
@@ -714,15 +716,20 @@ class Observation(QDialog, Ui_Form):
         # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
 
-    def add_media_to_listview(self, nPlayer, fileName, fileContentMD5):
+    def add_media_to_listview(self, nPlayer, fileName):
         """
         add media file path to list widget
         """
 
         self.twVideo1.setRowCount(self.twVideo1.rowCount() + 1)
 
-        for col_idx, s in enumerate([None, 0, fileName, seconds2time(self.mediaDurations[fileName]), self.mediaFPS[fileName],
-                                 self.mediaHasVideo[fileName], self.mediaHasAudio[fileName]]):
+        for col_idx, s in enumerate([None,
+                                     0,
+                                     fileName,
+                                     seconds2time(self.mediaDurations[fileName]),
+                                     "{:.3f}".format(self.mediaFPS[fileName]),
+                                     self.mediaHasVideo[fileName],
+                                     self.mediaHasAudio[fileName]]):
             if col_idx == 0: # player combobox
                 combobox = QComboBox()
                 combobox.addItems(ALL_PLAYERS)
@@ -797,7 +804,9 @@ if __name__ == '__main__':
     w.ffmpeg_bin="ffmpeg"
     w.ffmpeg_cache_dir = "/tmp"
     w.mode = "new"
-    w.pj = """{
+
+    true, false = True, False
+    w.pj = {
  "time_format":"hh:mm:ss",
  "project_date":"2018-05-23T14:05:50",
  "project_name":"",
@@ -966,7 +975,7 @@ if __name__ == '__main__':
 }
 
 
-"""
+
     w.show()
     w.exec_()
     sys.exit()

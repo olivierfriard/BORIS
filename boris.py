@@ -3854,7 +3854,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # label
                 item = QTableWidgetItem()
-                indepVarLabel = self.pj[INDEPENDENT_VARIABLES][i]['label']
+                indepVarLabel = self.pj[INDEPENDENT_VARIABLES][i]["label"]
                 item.setText(indepVarLabel)
                 item.setFlags(Qt.ItemIsEnabled)
                 observationWindow.twIndepVariables.setItem(observationWindow.twIndepVariables.rowCount() - 1, 0, item)
@@ -4156,6 +4156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
                                                                    "fps": observationWindow.mediaFPS}
+                # print("self.pj[OBSERVATIONS][new_obs_id][media_info]", self.pj[OBSERVATIONS][new_obs_id]["media_info"])
 
                 try:
                     self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
@@ -6465,7 +6466,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         parameters = self.choose_obs_subj_behav_category(selected_observations, 0)
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
-        export_dir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"),
+        export_dir = QFileDialog().getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"),
                                                             options=QFileDialog(self).ShowDirsOnly)
         if not export_dir:
             return
