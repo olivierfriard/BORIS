@@ -6,7 +6,8 @@ https://realpython.com/python-continuous-integration/
 
 import os
 import sys
-import decimal
+from decimal import Decimal
+import json
 
 
 sys.path.append("..")
@@ -17,8 +18,8 @@ import config
 class Test_accurate_media_analysis(object):
     def test_media_ok(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/geese1.mp4")
-        assert r == {'frames_number': 1548, 'duration_ms': decimal.Decimal('61920.00'),
-                    'duration': decimal.Decimal('61.92'), 'fps': decimal.Decimal('25'),
+        assert r == {'frames_number': 1548, 'duration_ms': Decimal('61920.00'),
+                    'duration': Decimal('61.92'), 'fps': Decimal('25'),
                     'has_video': True, 'has_audio': True, 'bitrate': 901}
 
     def test_no_media(self):
@@ -87,6 +88,16 @@ class Test_complete(object):
 
 
 
+class Test_convert_time_to_decimal(object):
+    def test_1(self):
+        pj = json.loads(open("files/test.boris").read())
+        r = utilities.convert_time_to_decimal(pj)
+
+
+        txt = open("files/test.txt").read()
+        pj_dec = eval(txt)
+        assert r == pj_dec
+
 
 class Test_polygon_area(object):
     def test_polygon(self):
@@ -105,29 +116,29 @@ class Test_url2path(object):
 
 class Test_time2seconds(object):
     def test_positive(self):
-        assert utilities.time2seconds("11:22:33.44") == decimal.Decimal(
+        assert utilities.time2seconds("11:22:33.44") == Decimal(
             "40953.44")
 
     def test_negative(self):
-        assert utilities.time2seconds("-11:22:33.44") == decimal.Decimal(
+        assert utilities.time2seconds("-11:22:33.44") == Decimal(
             "-40953.44")
 
     def test_zero(self):
-        assert utilities.time2seconds("00:00:00.000") == decimal.Decimal(
+        assert utilities.time2seconds("00:00:00.000") == Decimal(
             "0.000")
 
 
 class Test_seconds2time(object):
     def test_negative(self):
         assert utilities.seconds2time(
-            decimal.Decimal(-2.123)) == "-00:00:02.123"
+            Decimal(-2.123)) == "-00:00:02.123"
 
     def test_gt_86400(self):
         assert utilities.seconds2time(
-            decimal.Decimal(86400.999)) == "24:00:00.999"
+            Decimal(86400.999)) == "24:00:00.999"
 
     def test_10(self):
-        assert utilities.seconds2time(decimal.Decimal(10.0)) == "00:00:10.000"
+        assert utilities.seconds2time(Decimal(10.0)) == "00:00:10.000"
 
 
 class Test_safefilename(object):

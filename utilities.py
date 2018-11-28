@@ -162,7 +162,7 @@ def video_rotate(video_paths: list,
     return True
 
 
-def convert_time_to_decimal(pj):
+def convert_time_to_decimal(pj: dict) -> dict:
     """
     convert time from float to decimal
 
@@ -632,18 +632,16 @@ def bestTimeUnit(t: float):
     return t, unit
 '''
 
-def intfloatstr(s):
+def intfloatstr(s: str):
     """
     convert str in int or float or return str
     """
 
     try:
-        val = int(s)
-        return val
+        return int(s)
     except Exception:
         try:
-            val = float(s)
-            return "{:0.3f}".format(val)
+            return "{:0.3f}".format(float(s))
         except Exception:
             return s
 
