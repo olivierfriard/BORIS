@@ -33,7 +33,7 @@ import time
 import logging
 from decimal import Decimal
 
-from utilities import check_txt_file, txt2np_array
+from utilities import txt2np_array
 
 
 class MyMplCanvas(FigureCanvas):

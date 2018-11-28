@@ -8,9 +8,11 @@ import os
 import sys
 import decimal
 
+
 sys.path.append("..")
 
 import utilities
+import config
 
 class Test_accurate_media_analysis(object):
     def test_media_ok(self):
@@ -38,6 +40,52 @@ class Test_angle(object):
 
     def test_3(self):
         assert round(utilities.angle((0, 0), (90, 0), (0, 90)), 3) == 90.0
+
+
+class Test_behavior_color(object):
+    def test_idx0(self):
+        assert utilities.behavior_color(config.BEHAVIORS_PLOT_COLORS, 0) == "tab:blue"
+
+    def test_idx1000(self):
+        assert utilities.behavior_color(config.BEHAVIORS_PLOT_COLORS, 1000) == "midnightblue"
+
+
+class Test_bytes_to_str(object):
+    def test_bytes(self):
+        assert utilities.bytes_to_str(b"abc 2.3") == "abc 2.3"
+
+    def test_str(self):
+        assert utilities.bytes_to_str("abc 2.3") == "abc 2.3"
+
+class Test_check_txt_file(object):
+    def test_csv(self):
+        r = utilities.check_txt_file("files/test_check_txt_file_test_csv.csv")
+        assert r == {'homogeneous': True, 'fields number': 7, 'separator': ','}
+
+    def test_tsv(self):
+        r = utilities.check_txt_file("files/test_check_txt_file_test_tsv.tsv")
+        assert r =={'homogeneous': True, 'fields number': 5, 'separator': '\t'}
+
+    def test_no_homogeneous(self):
+        r = utilities.check_txt_file("files/test.boris")
+        assert r == {'homogeneous': False}
+
+    def test_file_does_not_exists(self):
+        r = utilities.check_txt_file("files/xxx")
+        assert r == {'error': "[Errno 2] No such file or directory: 'files/xxx'"}
+
+
+class Test_complete(object):
+    def test_list_3_to_8(self):
+        assert utilities.complete(["a","b","c"], 8) == ["a", "b", "c", "", "", "", "", ""]
+
+    def test_empty_list(self):
+        assert utilities.complete([], 4) == ["", "", "", ""]
+
+    def test_list_longer_then_max(self):
+        assert utilities.complete(["a","b","c","d"], 3) == ["a","b","c","d"]
+
+
 
 
 class Test_polygon_area(object):

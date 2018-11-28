@@ -390,8 +390,9 @@ class Observation(QDialog, Ui_Form):
 
             file_parameters = utilities.check_txt_file(data_file_path)
             if "error" in file_parameters:
-                QMessageBox.critical(self, programName, "Error on file {}: {}".format(data_file_path,
-                                                                                      file_parameters["error"]))
+                QMessageBox.critical(self, programName,
+                                     "Error on file {}: {}".format(data_file_path,
+                                                                   file_parameters["error"]))
                 return
             header = utilities.return_file_header(data_file_path)
 

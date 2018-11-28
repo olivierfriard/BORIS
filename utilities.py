@@ -69,7 +69,7 @@ def return_file_header(file_name, row_number=5):
     return header
 
 
-def bytes_to_str(b):
+def bytes_to_str(b: bytes) -> str:
     """
     Translate bytes to string.
 
@@ -357,7 +357,7 @@ def get_ip_address():
     return s.getsockname()[0]
 
 
-def check_txt_file(file_name):
+def check_txt_file(file_name: str) -> dict:
     """
     Extract parameters of txt file (test for tsv csv)
 
@@ -397,7 +397,7 @@ def check_txt_file(file_name):
             return {"error": "The file is empty"}
 
         if len(rows_len) == 1 and rows_len[0] >= 2:
-            return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter, "dialect": dialect}
+            return {"homogeneous": True, "fields number": rows_len[0], "separator": dialect.delimiter}
 
         if len(rows_len) > 1:
             return {"homogeneous": False}
@@ -560,11 +560,18 @@ def decimal_default(obj):
     raise TypeError
 
 
-def complete(l, max):
+def complete(l: list, max_: int):
     """
-    complete list with empty string until len = max
+    complete list with empty string ("") until len = max
+
+    Args:
+        l (list): list to complete
+        max_ (int): number of items to reach
+
+    Returns:
+        list: list completed to max_ items with empty string ("")
     """
-    while len(l) < max:
+    while len(l) < max_:
         l.append("")
     return l
 
@@ -578,13 +585,13 @@ def datetime_iso8601():
     """
     return datetime.datetime.now().isoformat().replace("T", "").split(".")[0]
 
-
+'''
 def behavior2color(behavior, behaviors):
     """
     return color for behavior
     """
     return PLOT_BEHAVIORS_COLORS[behaviors.index(behavior)]
-
+'''
 
 def replace_spaces(l):
     return [x.replace(" ", "_") for x in l]
