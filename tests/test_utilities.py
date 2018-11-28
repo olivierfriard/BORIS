@@ -93,7 +93,6 @@ class Test_convert_time_to_decimal(object):
         pj = json.loads(open("files/test.boris").read())
         r = utilities.convert_time_to_decimal(pj)
 
-
         txt = open("files/test.txt").read()
         pj_dec = eval(txt)
         assert r == pj_dec

@@ -813,6 +813,7 @@ def test_ffmpeg_path(FFmpegPath):
     return True, ""
 
 
+'''
 def playWithVLC(fileName):
     """
     play media in filename and return out, fps and has_vout (number of video)
@@ -846,7 +847,7 @@ def playWithVLC(fileName):
     mediaplayer.stop()
 
     return out, fps, nvout
-
+'''
 
 def check_ffmpeg_path():
     """
