@@ -50,6 +50,9 @@ class Test_load_events_in_db(object):
 
 
     def test_3(self):
+        """
+        no focal subject, observation with not paired events
+        """
 
         pj = json.loads(open("files/test.boris").read())
 

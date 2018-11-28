@@ -12,6 +12,22 @@ sys.path.append("..")
 
 import utilities
 
+class Test_accurate_media_analysis(object):
+    def test_media_ok(self):
+        r = utilities.accurate_media_analysis("ffmpeg", "files/geese1.mp4")
+        assert r == {'frames_number': 1548, 'duration_ms': decimal.Decimal('61920.00'),
+                    'duration': decimal.Decimal('61.92'), 'fps': decimal.Decimal('25'),
+                    'has_video': True, 'has_audio': True, 'bitrate': 901}
+
+    def test_no_media(self):
+        r = utilities.accurate_media_analysis("ffmpeg", "files/test.boris")
+        assert r == {'error': 'This file do not seem to be a media file'}
+
+    def test_media_does_not_exist(self):
+        r = utilities.accurate_media_analysis("ffmpeg", "files/xxx")
+        assert r == {'error': 'This file do not seem to be a media file'}
+
+
 
 class Test_angle(object):
     def test_1(self):

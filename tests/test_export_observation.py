@@ -1,7 +1,7 @@
 """
 module for testing export_observation.py
 """
-
+import pytest
 import sys
 import json
 import os
@@ -12,13 +12,19 @@ sys.path.append("..")
 import export_observation
 from config import *
 
-os.system("rm -rf output")
-os.system("mkdir output")
+#os.system("rm -rf output")
+#os.system("mkdir output")
+
+@pytest.fixture()
+def before():
+    print('\nbefore each test')
+    os.system("rm -rf output")
+    os.system("mkdir output")
 
 
 class Test_export_events(object):
 
-    
+    @pytest.mark.usefixtures("before")
     def test_export_tabular_tsv(self):
 
         pj = json.loads(open("files/test.boris").read())
@@ -38,6 +44,7 @@ class Test_export_events(object):
         assert open("files/test_export_events_tabular.tsv").read() == open("output/test_export_events_tabular.tsv").read()
 
 
+    @pytest.mark.usefixtures("before")
     def test_export_tabular_csv(self):
 
         pj = json.loads(open("files/test.boris").read())
@@ -55,7 +62,7 @@ class Test_export_events(object):
 
         assert open("files/test_export_events_tabular.csv").read() == open("output/test_export_events_tabular.csv").read()
 
-
+    @pytest.mark.usefixtures("before")
     def test_export_tabular_html(self):
 
         pj = json.loads(open("files/test.boris").read())
@@ -73,8 +80,8 @@ class Test_export_events(object):
                                                   output_format)
 
         assert open("files/test_export_events_tabular.html").read() == open("output/test_export_events_tabular.html").read()
-    
 
+    @pytest.mark.usefixtures("before")
     def test_export_tabular_xlsx(self):
 
         pj = json.loads(open("files/test.boris").read())
@@ -108,6 +115,7 @@ class Test_export_events(object):
 
 class Test_export_events_jwatcher(object):
 
+    @pytest.mark.usefixtures("before")
     def test_1(self):
 
         pj = json.loads(open("files/test.boris").read())
@@ -136,6 +144,7 @@ class Test_export_events_jwatcher(object):
         ref = [x for x in open("files/test_jwatcher_subject1.fmf").readlines() if not x.startswith("#")]
         out = [x for x in open("output/test_jwatcher_subject1.fmf").readlines() if not x.startswith("#")]
         assert ref == out
+
 
 
 class Test_events_to_behavioral_sequences(object):
@@ -235,7 +244,6 @@ class Test_events_to_behavioral_sequences(object):
                                                                 parameters,
                                                                 behav_seq_separator)
 
-        #open("1", "w").write(out)
         assert open("files/Test_events_to_behavioral_sequences_test_4_behaviors_with_modifiers").read() == out
 
 

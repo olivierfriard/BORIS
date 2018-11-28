@@ -603,12 +603,17 @@ def sorted_keys(d):
     return [str(x) for x in sorted([int(x) for x in d.keys()])]
 
 
-def bestTimeUnit(int):
+'''
+def bestTimeUnit(t: float):
     """
     Return time in best format
 
-    Keyword argument:
-    t -- time (in seconds)
+    Args:
+        t (float): time in seconds
+
+    Returns:
+
+
     """
     unit = "s"
     if t >= 60:
@@ -618,7 +623,7 @@ def bestTimeUnit(int):
         t = t / 60
         unit = "h"
     return t, unit
-
+'''
 
 def intfloatstr(s):
     """
