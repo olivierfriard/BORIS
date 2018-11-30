@@ -27,13 +27,14 @@ try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
     from preferences_ui5 import Ui_prefDialog
-except:
+except Exception:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
     from preferences_ui import Ui_prefDialog
 
 import os
 from config import BEHAVIORS_PLOT_COLORS
+
 
 class Preferences(QDialog, Ui_prefDialog):
 

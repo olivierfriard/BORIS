@@ -377,7 +377,7 @@ class FindReplaceEvents(QWidget):
     sendEventSignal = pyqtSignal(QEvent)
 
     def __init__(self):
-        super(FindReplaceEvents, self).__init__()
+        super().__init__()
 
         self.setWindowTitle("Find/Replace events")
 

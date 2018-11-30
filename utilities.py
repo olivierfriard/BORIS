@@ -1018,6 +1018,7 @@ def behavior_color(colors_list, idx):
     except Exception:
         return "darkgray"
 
-
+'''
 class ThreadSignal(QObject):
     sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
+'''

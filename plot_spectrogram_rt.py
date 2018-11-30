@@ -22,6 +22,7 @@ class Plot_spectrogram_RT(QWidget):
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
+
     def get_wav_info(self, wav_file):
         wav = wave.open(wav_file, "r")
         frames = wav.readframes(-1)
@@ -39,6 +40,8 @@ class Plot_spectrogram_RT(QWidget):
 
         self.cursor_color = "red"
 
+        self.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
+
         self.figure = Figure()
 
         self.canvas = FigureCanvas(self.figure)
@@ -48,6 +51,7 @@ class Plot_spectrogram_RT(QWidget):
         self.setLayout(layout)
 
         self.installEventFilter(self)
+
 
     def eventFilter(self, receiver, event):
         """
@@ -106,9 +110,10 @@ class Plot_spectrogram_RT(QWidget):
 
             Pxx, freqs, bins, im = ax.specgram(self.sound_info[: int((self.interval) * self.frame_rate)],
                                                mode="psd",
-                                               NFFT=1024,
+                                               #NFFT=1024,
                                                Fs=self.frame_rate,
-                                               noverlap=900)
+                                               #noverlap=900,
+                                               cmap=self.spectro_color_map)
 
             ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
 
@@ -122,9 +127,10 @@ class Plot_spectrogram_RT(QWidget):
 
             Pxx, freqs, bins, im = ax.specgram(self.sound_info[i:],
                                                mode="psd",
-                                               NFFT=1024,
+                                               #NFFT=1024,
                                                Fs=self.frame_rate,
-                                               noverlap=900)
+                                               #noverlap=900,
+                                               cmap=self.spectro_color_map)
 
             lim1 = current_time - (self.media_length - self.interval / 2)
             lim2 = lim1 + self.interval
@@ -145,9 +151,10 @@ class Plot_spectrogram_RT(QWidget):
             Pxx, freqs, bins, im = ax.specgram(self.sound_info[int(round((current_time - self.interval / 2) * self.frame_rate, 0)):
                                                                int(round((current_time + self.interval / 2) * self.frame_rate, 0))],
                                                mode="psd",
-                                               NFFT=1024,
+                                               #NFFT=1024,
                                                Fs=self.frame_rate,
-                                               noverlap=900)
+                                               #noverlap=900,
+                                               cmap=self.spectro_color_map)
 
 
             ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in ax.get_xticks()])

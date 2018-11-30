@@ -3355,6 +3355,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.spectro.interval = 12
             self.spectro.cursor_color = "red"
+            try:
+                self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap(self.spectrogram_color_map)
+            except ValueError:
+                self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
 
             r = self.spectro.load_wav(str(wav_file_path))
             if "error" in r:
@@ -7392,7 +7396,7 @@ item []:
         filter coded events and subjects
         """
 
-        parameters = self.choose_obs_subj_behav_category([],  # empty slection of observations for selecting all subjects and behaviors
+        parameters = self.choose_obs_subj_behav_category([],  # empty selection of observations for selecting all subjects and behaviors
                                                          maxTime=0,
                                                          flagShowIncludeModifiers=False,
                                                          flagShowExcludeBehaviorsWoEvents=False,
@@ -9030,6 +9034,15 @@ item []:
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
+
+            # find only in filtered events
+            if self.filtered_subjects:
+                if self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_SUBJECT_FIELD_IDX] not in self.filtered_subjects:
+                    continue
+            if self.filtered_behaviors:
+                if self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_BEHAVIOR_FIELD_IDX] not in self.filtered_behaviors:
+                    continue
+
             if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and
                event_idx in self.find_dialog.rowsToFind)):
                 for idx in fields_list:
@@ -9095,6 +9108,15 @@ item []:
 
         number_replacement = 0
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+
+            # apply modif only to filtered subjects
+            if self.filtered_subjects:
+                if self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_SUBJECT_FIELD_IDX] not in self.filtered_subjects:
+                    continue
+            # apply modif only to filtered behaviors
+            if self.filtered_behaviors:
+                if self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_BEHAVIOR_FIELD_IDX] not in self.filtered_behaviors:
+                    continue
 
             if event_idx < self.find_replace_dialog.currentIdx:
                 continue

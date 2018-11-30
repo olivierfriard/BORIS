@@ -22,7 +22,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -405,6 +405,9 @@
              </item>
              <item>
               <widget class="QSpinBox" name="sbSpectrogramHeight">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
                <property name="minimum">
                 <number>80</number>
                </property>

@@ -219,6 +219,7 @@ class Ui_prefDialog(object):
         self.lbspectrogram.setObjectName(_fromUtf8("lbspectrogram"))
         self.horizontalLayout_6.addWidget(self.lbspectrogram)
         self.sbSpectrogramHeight = QtGui.QSpinBox(self.tab_4)
+        self.sbSpectrogramHeight.setEnabled(False)
         self.sbSpectrogramHeight.setMinimum(80)
         self.sbSpectrogramHeight.setMaximum(400)
         self.sbSpectrogramHeight.setSingleStep(80)
@@ -272,7 +273,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
