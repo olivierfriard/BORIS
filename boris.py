@@ -8862,7 +8862,11 @@ item []:
             QMessageBox.warning(self, programName, "No events to delete")
             return
 
-        if dialog.MessageDialog(programName, "Confirm the deletion of all events in the current observation?", [YES, NO]) == YES:
+        if dialog.MessageDialog(programName,
+                                ("Confirm the deletion of all events in the current observation?<br>"
+                                 "Filters do not apply!"),
+                                [YES, NO]) == YES:
+
             self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
