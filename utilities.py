@@ -469,7 +469,7 @@ def extract_frames(ffmpeg_bin: str,
         currentMedia (str): path for current media
         fps (float): number of frame by second
         imageDir (str): path of dir where to save frames
-        md5FileName (str): md5 of file name content
+        md5_media_path (str): md5 of file name content
         extension (str): image format
         frame_resize (int): horizontal resolution of frame
         number_of_seconds (int): number of seconds to extract

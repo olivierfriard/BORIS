@@ -4,6 +4,9 @@ module for testing utilities.py
 https://realpython.com/python-continuous-integration/
 """
 
+import pytest
+import hashlib
+import glob
 import os
 import sys
 from decimal import Decimal
@@ -14,6 +17,14 @@ sys.path.append("..")
 
 import utilities
 import config
+
+
+@pytest.fixture()
+def before():
+    print('\nbefore each test')
+    os.system("rm -rf output")
+    os.system("mkdir output")
+    
 
 class Test_accurate_media_analysis(object):
     def test_media_ok(self):
@@ -125,6 +136,47 @@ class Test_eol2space(object):
 
     def test_r(self):
         assert utilities.eol2space("aaa\rbbb") == "aaa bbb"
+
+
+class Test_extract_frames(object):
+    @pytest.mark.usefixtures("before")
+    def test_png(self):
+        utilities.extract_frames(ffmpeg_bin="ffmpeg",
+                                 start_frame=1,
+                                 second=2,
+                                 current_media_path="files/geese1.mp4",
+                                 fps=25,
+                                 imageDir="output",
+                                 md5_media_path=hashlib.md5("files/geese1.mp4".encode("utf-8")).hexdigest(),
+                                 extension="png",
+                                 frame_resize=256,
+                                 number_of_seconds=2)
+        files_list = sorted(glob.glob("output/*.png"))
+        assert len(files_list) == 52
+        assert files_list[0] == "output/BORIS@040d8545ab408b6c5f87b6316da9e4bf_00000001.png"
+
+    @pytest.mark.usefixtures("before")
+    def test_jpg(self):
+        utilities.extract_frames(ffmpeg_bin="ffmpeg",
+                                 start_frame=1,
+                                 second=2,
+                                 current_media_path="files/geese1.mp4",
+                                 fps=25,
+                                 imageDir="output",
+                                 md5_media_path=hashlib.md5("files/geese1.mp4".encode("utf-8")).hexdigest(),
+                                 extension="jpg",
+                                 frame_resize=256,
+                                 number_of_seconds=2)
+        files_list = sorted(glob.glob("output/*.jpg"))
+        assert len(files_list) == 52
+        assert files_list[0] == "output/BORIS@040d8545ab408b6c5f87b6316da9e4bf_00000001.jpg"
+
+
+
+
+
+
+
 
 
 class Test_polygon_area(object):
