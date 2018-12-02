@@ -576,14 +576,14 @@ def complete(l: list, max_: int):
     return l
 
 
-def datetime_iso8601():
+def datetime_iso8601(dt):
     """
     current date time in ISO8601 format
 
     Returns:
         str: date time in ISO8601 format
     """
-    return datetime.datetime.now().isoformat().replace("T", "").split(".")[0]
+    return dt.isoformat().replace("T", " ").split(".")[0]
 
 '''
 def behavior2color(behavior, behaviors):
@@ -648,11 +648,11 @@ def intfloatstr(s: str):
 
 def distance(p1, p2):
     """
-    distance between 2 points
+    euclidean distance between 2 points
     """
     x1, y1 = p1
     x2, y2 = p2
-    return ((x1 - x2)**2 + (y1 - y2)**2)**0.5
+    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
 def angle(p1, p2, p3):

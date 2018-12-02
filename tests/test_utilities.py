@@ -8,7 +8,7 @@ import os
 import sys
 from decimal import Decimal
 import json
-
+import datetime
 
 sys.path.append("..")
 
@@ -58,6 +58,7 @@ class Test_bytes_to_str(object):
     def test_str(self):
         assert utilities.bytes_to_str("abc 2.3") == "abc 2.3"
 
+
 class Test_check_txt_file(object):
     def test_csv(self):
         r = utilities.check_txt_file("files/test_check_txt_file_test_csv.csv")
@@ -96,6 +97,34 @@ class Test_convert_time_to_decimal(object):
         txt = open("files/test.txt").read()
         pj_dec = eval(txt)
         assert r == pj_dec
+
+
+class Test_datetime_iso8601(object):
+    def test_1(self):
+        r = utilities.datetime_iso8601(datetime.datetime(2018, 12, 1, 22, 36, 7, 652523))
+        assert r == "2018-12-01 22:36:07"
+
+
+class Test_decimal_default(object):
+    def test_1(self):
+        assert utilities.decimal_default(Decimal("1.456")) == 1.456
+        assert isinstance(utilities.decimal_default(Decimal("1.456")), float)
+
+
+class Test_distance(object):
+    def test_1(self):
+        utilities.distance((10, 10), (80, 120)) == 130.38404810405297
+
+
+class Test_eol2space(object):
+    def test_rn(self):
+        assert utilities.eol2space("aaa\r\nbbb") == "aaa bbb"
+
+    def test_n(self):
+        assert utilities.eol2space("aaa\nbbb") == "aaa bbb"
+
+    def test_r(self):
+        assert utilities.eol2space("aaa\rbbb") == "aaa bbb"
 
 
 class Test_polygon_area(object):

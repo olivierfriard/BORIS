@@ -287,18 +287,85 @@ class Click_label(QLabel):
 
 
 class Video_frame(QFrame):
+    """
+    QFrame class for visualizing video with VLC
+    """
+
+    view_signal = pyqtSignal(str)
+    x_click = 0
+    y_click = 0
+
     def sizeHint(self):
         return QtCore.QSize(150, 75)
+
+    def mousePressEvent(self, QMouseEvent):
+        print(self.geometry())
+        print("cf", QMouseEvent.pos())
+
+        xm, ym = QMouseEvent.x(), QMouseEvent.y()
+        xf, yf = self.geometry().width(), self.geometry().height()
+
+        if xf / yf >= self.h_resolution / self.v_resolution:
+            yv = yf
+            xv = int(yf * self.h_resolution / self.v_resolution)
+            x_start_video = int((xf - xv) / 2)
+            y_start_video = 0
+            x_end_video = x_start_video + xv
+            y_end_video = yv
+            
+            print("x_start_video, x_end_video", x_start_video, x_end_video)
+            if xm < x_start_video or xm > x_end_video:
+                print("out of video")
+                self.view_signal.emit("clicked_out_of_video")
+                return
+
+            x_click_video = xm - x_start_video
+            y_click_video = ym
+
+        if xf / yf < self.h_resolution / self.v_resolution:
+            xv = xf
+            yv = int(xf / (self.h_resolution / self.v_resolution))
+            print("xv, yv", xv, yv)
+            y_start_video = int((yf - yv) / 2)
+            x_start_video = 0
+            y_end_video = y_start_video + yv
+            x_end_video = xv
+            
+            print("y_start_video, y_end_video", y_start_video, y_end_video)
+            if ym < y_start_video or ym > y_end_video:
+                print("out of video")
+                self.view_signal.emit("clicked_out_of_video")
+                return
+
+            y_click_video = ym - y_start_video
+            x_click_video = xm
+
+
+        self.x_click = int(x_click_video / xv * self.h_resolution)
+        self.y_click = int(y_click_video / yv * self.v_resolution)
+
+        self.view_signal.emit("clicked")
+
+
+
+
+
+
+    def resizeEvent(self, a):
+        print("resized", a)
+        self.view_signal.emit("resized")
 
 
 class DW(QDockWidget):
 
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
+    view_signal = pyqtSignal(int, str)
 
     def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
+        self.zoomed = False
         self.setWindowTitle("Player #{}".format(id_ + 1))
         self.setObjectName("player{}".format(id_ + 1))
 
@@ -307,6 +374,7 @@ class DW(QDockWidget):
         self.hlayout = QHBoxLayout()
 
         self.videoframe = Video_frame()
+        self.videoframe.view_signal.connect(self.view_signal_triggered)
         self.palette = self.videoframe.palette()
         self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.videoframe.setPalette(self.palette)
@@ -348,6 +416,11 @@ class DW(QDockWidget):
         """
         self.key_pressed_signal.emit(event)
 
+    def view_signal_triggered(self, msg):
+        """
+        trasmit signal received by video frame
+        """
+        self.view_signal.emit(self.id_, msg)
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -3224,8 +3297,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
 
-            # for receiving event from colume slider
+            # for receiving event from volume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
+            
+            #for receiving event resize and clicked
+            self.dw_player[i].view_signal.connect(self.signal_from_dw)
 
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
 
@@ -3300,6 +3376,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                     break
             self.dw_player[i].mediaplayer.set_time(0)
+            
+            print("size", type(self.dw_player[i].mediaplayer.video_get_size(0)))
+            (self.dw_player[i].videoframe.h_resolution,
+             self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
 
         self.initialize_video_tab()
 
@@ -3518,7 +3598,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except:
             pass
 
-
         return True
 
 
@@ -3530,12 +3609,63 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         w.update_plot(self.getLaps())
 
 
-
     def signal_from_widget(self, event):
         """
         receive signal from widget
         """
         self.keyPressEvent(event)
+
+
+    def signal_from_dw(self, id_, msg):
+        """
+        receive signal from dw clicked or resized
+        """
+        print(id_, msg)
+
+        if msg == "clicked_out_of_video":
+            self.dw_player[id_].mediaplayer.video_set_crop_geometry(None)
+            self.dw_player[id_].zoomed = False
+            return
+
+        x_center = self.dw_player[id_].videoframe.x_click
+        y_center = self.dw_player[id_].videoframe.y_click
+        print("video position", x_center, y_center)
+
+        fw = self.dw_player[id_].videoframe.geometry().width()
+        fh = self.dw_player[id_].videoframe.geometry().height()
+
+        print(type(x_center))
+        print(type(fw))
+        left = int(x_center - fw / 2)
+        top = int(y_center - fh / 2)
+
+        right = left + fw
+        bottom = top + fh
+
+        '''
+        left = self.dw_player[id_].videoframe.x
+        top = self.dw_player[id_].videoframe.y
+        print("video position", left, top)
+
+        fw = self.dw_player[id_].videoframe.geometry().width()
+        fh = self.dw_player[id_].videoframe.geometry().height()
+
+        right = left + fw
+        bottom = top + fh
+        '''
+        if msg == "clicked":
+            if not self.dw_player[id_].zoomed:
+                self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
+                self.dw_player[id_].zoomed = True
+            else:
+                self.dw_player[id_].mediaplayer.video_set_crop_geometry(None)
+                self.dw_player[id_].zoomed = False
+
+        elif msg == "resized":
+            if self.dw_player[id_].zoomed:
+                self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
+
+        # print("crop geometry:", self.mediaplayer.video_get_crop_geometry())
 
 
     def eventFilter(self, source, event):
@@ -4305,6 +4435,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
+            try:
+                self.saved_state = settings.value("dockwidget_positions")
+            except Exception:
+                pass
+
+
             self.dwEthogram.setVisible(False)
             self.dwSubjects.setVisible(False)
             self.dwObservations.setVisible(False)
@@ -4517,6 +4653,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings = QSettings(iniFilePath, QSettings.IniFormat)
 
         settings.setValue("geometry", self.saveGeometry())
+        settings.setValue("dockwidget_positions", self.saved_state)
 
         '''
         settings.setValue("MainWindow/Size", self.size())
@@ -6509,7 +6646,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if outputFormat == "sds":  # SDIS format
-            out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
+            out = ("% SDIS file created by BORIS (www.boris.unito.it) "
+                   "at {}\nTimed <seconds>;\n").format(datetime_iso8601(datetime.datetime.now()))
             for obsId in selectedObservations:
                 # observation id
                 out += "\n<{}>\n".format(obsId)
@@ -6539,7 +6677,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
                     with open(fileName, "wb") as f:
                         f.write(str.encode(out))
-                    out = "% SDIS file created by BORIS (www.boris.unito.it) at {}\nTimed <seconds>;\n".format(datetime_iso8601())
+                    out = ("% SDIS file created by BORIS (www.boris.unito.it) "
+                           "at {}\nTimed <seconds>;\n").format(datetime_iso8601(datetime.datetime.now()))
 
             if flag_group:
                 with open(fileName, "wb") as f:
@@ -9666,7 +9805,7 @@ item []:
 
                             if diag_result == "Rename observation":
                                 self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId,
-                                                                                   datetime_iso8601()
+                                                                                   datetime_iso8601(datetime.datetime.now())
                                                                                    )] = dict(fromProject[OBSERVATIONS][obsId])
                                 flagImported = True
                         else:
