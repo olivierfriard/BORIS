@@ -272,12 +272,17 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 
 
 class Click_label(QLabel):
-
+    """
+    QLabel class for visualiziong frames (frame-by-frame mode)
+    Label emits a signal when clicked
+    """
     mouse_pressed_signal = pyqtSignal(int, QEvent)
+
 
     def __init__(self, id_, parent=None):
         QLabel.__init__(self, parent)
         self.id_ = id_
+
 
     def mousePressEvent(self, event):
         """
@@ -289,18 +294,21 @@ class Click_label(QLabel):
 class Video_frame(QFrame):
     """
     QFrame class for visualizing video with VLC
+    Frame emits a signal when clicked or resized
     """
 
     view_signal = pyqtSignal(str)
-    x_click = 0
-    y_click = 0
+    x_click, y_click = 0, 0
+
 
     def sizeHint(self):
         return QtCore.QSize(150, 75)
 
+
     def mousePressEvent(self, QMouseEvent):
-        print(self.geometry())
-        print("cf", QMouseEvent.pos())
+        """
+        emits signal when mouse pressed on video
+        """
 
         xm, ym = QMouseEvent.x(), QMouseEvent.y()
         xf, yf = self.geometry().width(), self.geometry().height()
@@ -312,10 +320,10 @@ class Video_frame(QFrame):
             y_start_video = 0
             x_end_video = x_start_video + xv
             y_end_video = yv
-            
-            print("x_start_video, x_end_video", x_start_video, x_end_video)
+
+            '''print("x_start_video, x_end_video", x_start_video, x_end_video)'''
             if xm < x_start_video or xm > x_end_video:
-                print("out of video")
+                '''print("out of video")'''
                 self.view_signal.emit("clicked_out_of_video")
                 return
 
@@ -325,21 +333,20 @@ class Video_frame(QFrame):
         if xf / yf < self.h_resolution / self.v_resolution:
             xv = xf
             yv = int(xf / (self.h_resolution / self.v_resolution))
-            print("xv, yv", xv, yv)
+            '''print("xv, yv", xv, yv)'''
             y_start_video = int((yf - yv) / 2)
             x_start_video = 0
             y_end_video = y_start_video + yv
             x_end_video = xv
-            
-            print("y_start_video, y_end_video", y_start_video, y_end_video)
+
+            '''print("y_start_video, y_end_video", y_start_video, y_end_video)'''
             if ym < y_start_video or ym > y_end_video:
-                print("out of video")
+                '''print("out of video")'''
                 self.view_signal.emit("clicked_out_of_video")
                 return
 
             y_click_video = ym - y_start_video
             x_click_video = xm
-
 
         self.x_click = int(x_click_video / xv * self.h_resolution)
         self.y_click = int(y_click_video / yv * self.v_resolution)
@@ -347,12 +354,11 @@ class Video_frame(QFrame):
         self.view_signal.emit("clicked")
 
 
+    def resizeEvent(self, dummy):
+        """
+        emits signal when video resized
+        """
 
-
-
-
-    def resizeEvent(self, a):
-        print("resized", a)
         self.view_signal.emit("resized")
 
 
@@ -3229,6 +3235,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.memPoints = []
 
+        else:  # no measurements
+            QMessageBox.warning(self, programName,
+                                "The Focus area function is not yet available in frame-by-frame mode.",
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
 
     def initialize_video_tab(self):
 
@@ -3299,7 +3310,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # for receiving event from volume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
-            
+
             #for receiving event resize and clicked
             self.dw_player[i].view_signal.connect(self.signal_from_dw)
 
@@ -3376,7 +3387,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                     break
             self.dw_player[i].mediaplayer.set_time(0)
-            
+
             print("size", type(self.dw_player[i].mediaplayer.video_get_size(0)))
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
