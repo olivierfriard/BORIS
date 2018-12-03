@@ -3315,6 +3315,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].view_signal.connect(self.signal_from_dw)
 
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
+            self.dw_player[i].mediaplayer.video_set_key_input(False)
+            self.dw_player[i].mediaplayer.video_set_mouse_input(False)
 
             self.dw_player[i].mediaListPlayer = self.instance.media_list_player_new()
 
@@ -3629,9 +3631,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def signal_from_dw(self, id_, msg):
         """
-        receive signal from dw clicked or resized
+        receive signal from dw: clicked or resized
         """
-        print(id_, msg)
 
         if msg == "clicked_out_of_video":
             self.dw_player[id_].mediaplayer.video_set_crop_geometry(None)
@@ -3640,30 +3641,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         x_center = self.dw_player[id_].videoframe.x_click
         y_center = self.dw_player[id_].videoframe.y_click
-        print("video position", x_center, y_center)
+        # print("video position", x_center, y_center)
 
         fw = self.dw_player[id_].videoframe.geometry().width()
         fh = self.dw_player[id_].videoframe.geometry().height()
 
-        print(type(x_center))
-        print(type(fw))
         left = int(x_center - fw / 2)
         top = int(y_center - fh / 2)
 
         right = left + fw
         bottom = top + fh
 
-        '''
-        left = self.dw_player[id_].videoframe.x
-        top = self.dw_player[id_].videoframe.y
-        print("video position", left, top)
-
-        fw = self.dw_player[id_].videoframe.geometry().width()
-        fh = self.dw_player[id_].videoframe.geometry().height()
-
-        right = left + fw
-        bottom = top + fh
-        '''
         if msg == "clicked":
             if not self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
@@ -3676,7 +3664,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
 
-        # print("crop geometry:", self.mediaplayer.video_get_crop_geometry())
 
 
     def eventFilter(self, source, event):
