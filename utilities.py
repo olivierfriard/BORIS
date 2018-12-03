@@ -183,13 +183,15 @@ def convert_time_to_decimal(pj: dict) -> dict:
     return pj
 
 
-def file_content_md5(file_name):
+def file_content_md5(file_name: str) -> str:
     hash_md5 = hashlib.md5()
-    with open(file_name, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-    return hash_md5.hexdigest()
-
+    try:
+        with open(file_name, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
+    except FileNotFoundError:
+        return ""
 
 def txt2np_array(file_name, columns_str, substract_first_value, converters={}, column_converter={}):
     """read a txt file (tsv or csv) and return np array with passed columns
@@ -291,9 +293,9 @@ def state_behavior_codes(ethogram):
 def get_current_states_by_subject(state_behaviors_codes: list,
                                   events: list,
                                   subjects: dict,
-                                  time: Decimal):
+                                  time: Decimal) -> dict:
     """
-    get current states for subjects at given time
+    get current states for subjects at given time (modifiers are not returned)
     Args:
         state_behaviors_codes (list): list of behavior codes defined as STATE event
         events (list): list of events
@@ -316,7 +318,11 @@ def get_current_states_by_subject(state_behaviors_codes: list,
     return current_states
 
 
-def get_current_points_by_subject(point_behaviors_codes, events, subjects, time, tolerance):
+def get_current_points_by_subject(point_behaviors_codes: list,
+                                  events: list,
+                                  subjects: dict,
+                                  time: Decimal,
+                                  tolerance: Decimal) -> dict:
     """
     get near point events for subjects at given time
     Args:
@@ -593,11 +599,16 @@ def behavior2color(behavior, behaviors):
     return PLOT_BEHAVIORS_COLORS[behaviors.index(behavior)]
 '''
 
+'''
 def replace_spaces(l):
+    """
+    replace sapces with _ in strings contained in list
+    """
+
     return [x.replace(" ", "_") for x in l]
+'''
 
-
-def sorted_keys(d):
+def sorted_keys(d: dict) -> list:
     """
     return list of sorted keys of provided dictionary
 

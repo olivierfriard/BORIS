@@ -2,6 +2,9 @@
 module for testing utilities.py
 
 https://realpython.com/python-continuous-integration/
+
+
+pytest -s -vv test_utilities.py
 """
 
 import pytest
@@ -24,7 +27,7 @@ def before():
     print('\nbefore each test')
     os.system("rm -rf output")
     os.system("mkdir output")
-    
+
 
 class Test_accurate_media_analysis(object):
     def test_media_ok(self):
@@ -172,7 +175,141 @@ class Test_extract_frames(object):
         assert files_list[0] == "output/BORIS@040d8545ab408b6c5f87b6316da9e4bf_00000001.jpg"
 
 
+    # add test for dimensions
 
+class Test_extract_wav(object):
+
+    @pytest.mark.usefixtures("before")
+    def test_wav_from_mp4(self):
+        r = utilities.extract_wav(ffmpeg_bin="ffmpeg",
+                                  media_file_path="files/geese1.mp4",
+                                  tmp_dir="output")
+        assert r == "output/geese1.mp4.wav"
+        assert os.path.isfile("output/geese1.mp4.wav")
+
+
+class Test_file_content_md5(object):
+
+    def test_file(self):
+        r = utilities.file_content_md5(file_name="files/geese1.mp4")
+        assert r == "66e19a1e182b7564c4e8c2b1874623b8"
+
+    def test_file_not_existing(self):
+        r = utilities.file_content_md5(file_name="files/xxx")
+        assert r == ""
+
+
+class Test_float2decimal(object):
+
+    def test_1(self):
+        r = utilities.float2decimal(0.001)
+        assert r == Decimal(str(0.001))
+
+
+class Test_get_current_points_by_subject(object):
+
+    def test_no_events(self):
+        pj = json.loads(open("files/test.boris").read())
+        r = utilities.get_current_points_by_subject(point_behaviors_codes=["p"],
+                                  events=pj["observations"]["observation #1"]["events"],
+                                  subjects=pj["subjects_conf"],
+                                  time=Decimal("3"),
+                                  tolerance=Decimal("3"))
+        assert r == {'0': [], '1': []}
+
+    def test_events(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_points_by_subject(point_behaviors_codes=["p"],
+                                  events=pj["observations"]["offset positif"]["events"],
+                                  subjects={"0":{"key":"", "name": "", "description":"no focal subject"}},
+                                  time=Decimal("22.6"),
+                                  tolerance=Decimal("1"))
+        assert r == {'0': [['p', '']]}
+
+
+
+class Test_get_current_states_by_subject(object):
+    def test_t0(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+                                                events=pj["observations"]["observation #1"]["events"],
+                                                subjects=pj["subjects_conf"],
+                                                time=Decimal("0"))
+        assert r == {'0': [], '1': []}
+
+
+    def test_t4(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+                                                events=pj["observations"]["observation #1"]["events"],
+                                                subjects=pj["subjects_conf"],
+                                                time=Decimal("4.0"))
+        assert r == {'0': ['s'], '1': []}
+
+
+    def test_t8(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+                                                events=pj["observations"]["observation #1"]["events"],
+                                                subjects=pj["subjects_conf"],
+                                                time=Decimal("8.0"))
+        assert r == {'0': [], '1': []}
+
+
+    def test_t_neg(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+                                                events=pj["observations"]["observation #1"]["events"],
+                                                subjects=pj["subjects_conf"],
+                                                time=Decimal("-12.456"))
+        # print(r)
+        assert r == {'0': [], '1': []}
+
+
+    def test_no_state_events(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+                                                events=pj["observations"]["offset positif"]["events"],
+                                                subjects=pj["subjects_conf"],
+                                                time=Decimal("30"))
+        #print(r)
+        assert r == {'0': [], '1': []}
+
+
+    def test_events_with_modifiers(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_by_subject(state_behaviors_codes=["r","s"],
+                                                events=pj["observations"]["modifiers"]["events"],
+                                                subjects={"0":{"key":"", "name": "", "description":"no focal subject"}},
+                                                time=Decimal("20"))
+        #print(r)
+        assert r == {'0': ['r']}
+
+
+
+'''
+class Test_get_ip_address(object):
+    def test_1(self):
+        print(utilities.get_ip_address())
+'''
+
+
+class Test_intfloatstr(object):
+    def test_str(self):
+        assert utilities.intfloatstr("abc") == "abc"
+
+    def test_int(self):
+        assert utilities.intfloatstr("8") == 8
+
+    def test_float(self):
+        assert utilities.intfloatstr("1.458") == "1.458"
 
 
 
@@ -188,10 +325,47 @@ class Test_polygon_area(object):
             utilities.polygon_area([(0, 0), (90, 0), (0, 90), (90, 90)])) == 0
 
 
-class Test_url2path(object):
-    def test_1(self):
-        assert utilities.url2path(
-            "file:///home/olivier/v%C3%A9lo/test") == "/home/olivier/vélo/test"
+class Test_return_file_header(object):
+    def test_file_ok(self):
+        r = utilities.return_file_header("files/test_export_events_tabular.tsv")
+        # print(r)
+        assert r == ['Observation id\tobservation #1\t\t\t\t\t\t\t\n',
+        '\t\t\t\t\t\t\t\t\n',
+        'Media file(s)\t\t\t\t\t\t\t\t\n',
+        '\t\t\t\t\t\t\t\t\n',
+        'Player #1\tvideo_test_25fps_360s.mp4\t\t\t\t\t\t\t\n']
+
+    def test_no_file(self):
+        r = utilities.return_file_header("files/xxx")
+        assert r == []
+
+    def test_short_file(self):
+        r = utilities.return_file_header("files/Test_events_to_behavioral_sequences_test_5_observation_not_paired")
+        assert r == ['p|s|s+p|s+p|p|s|s+p|s|s', '', '', '', '']
+
+
+
+class Test_safefilename(object):
+    def test_filename_with_spaces(self):
+        assert utilities.safeFileName("aaa bbb.ccc") == "aaa bbb.ccc"
+
+    def test_filename_with_forbidden_chars(self):
+        # ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
+        assert utilities.safeFileName("aaa/bb\\b.c:cc ddd* ? \"www\" <> |"
+                                      ) == "aaa_bb_b.c_cc ddd_ _ _www_ __ _"
+
+
+class Test_seconds2time(object):
+    def test_negative(self):
+        assert utilities.seconds2time(
+            Decimal(-2.123)) == "-00:00:02.123"
+
+    def test_gt_86400(self):
+        assert utilities.seconds2time(
+            Decimal(86400.999)) == "24:00:00.999"
+
+    def test_10(self):
+        assert utilities.seconds2time(Decimal(10.0)) == "00:00:10.000"
 
 
 class Test_time2seconds(object):
@@ -208,24 +382,9 @@ class Test_time2seconds(object):
             "0.000")
 
 
-class Test_seconds2time(object):
-    def test_negative(self):
-        assert utilities.seconds2time(
-            Decimal(-2.123)) == "-00:00:02.123"
-
-    def test_gt_86400(self):
-        assert utilities.seconds2time(
-            Decimal(86400.999)) == "24:00:00.999"
-
-    def test_10(self):
-        assert utilities.seconds2time(Decimal(10.0)) == "00:00:10.000"
+class Test_url2path(object):
+    def test_1(self):
+        assert utilities.url2path(
+            "file:///home/olivier/v%C3%A9lo/test") == "/home/olivier/vélo/test"
 
 
-class Test_safefilename(object):
-    def test_filename_with_spaces(self):
-        assert utilities.safeFileName("aaa bbb.ccc") == "aaa bbb.ccc"
-
-    def test_filename_with_forbidden_chars(self):
-        # ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
-        assert utilities.safeFileName("aaa/bb\\b.c:cc ddd* ? \"www\" <> |"
-                                      ) == "aaa_bb_b.c_cc ddd_ _ _www_ __ _"
