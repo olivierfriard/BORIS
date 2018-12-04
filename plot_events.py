@@ -523,11 +523,11 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
 
 
 def create_events_plot(pj,
-                            selected_observations,
-                            parameters,
-                            plot_colors=BEHAVIORS_PLOT_COLORS,
-                            plot_directory="",
-                            file_format="png"):
+                       selected_observations,
+                       parameters,
+                       plot_colors=BEHAVIORS_PLOT_COLORS,
+                       plot_directory="",
+                       file_format="png"):
 
 
     selected_subjects = parameters["selected subjects"]

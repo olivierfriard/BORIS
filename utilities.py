@@ -89,8 +89,11 @@ def bytes_to_str(b: bytes) -> str:
     else:
         return b
 
-
-def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
+'''
+def video_resize_reencode(video_paths: list,
+                          horiz_resol: int,
+                          ffmpeg_bin: str,
+                          quality: int=2000) -> bool:
     """
     resize and recode one or more video with ffmpeg
 
@@ -115,8 +118,10 @@ def video_resize_reencode(video_paths, horiz_resol, ffmpeg_bin, quality=2000):
         p.communicate()
 
     return True
+'''
 
 
+'''
 def video_rotate(video_paths: list,
                  rotation_idx: int,
                  ffmpeg_bin: str,
@@ -160,7 +165,7 @@ def video_rotate(video_paths: list,
         p.communicate()
 
     return True
-
+'''
 
 def convert_time_to_decimal(pj: dict) -> dict:
     """
@@ -193,8 +198,10 @@ def file_content_md5(file_name: str) -> str:
     except FileNotFoundError:
         return ""
 
+
 def txt2np_array(file_name, columns_str, substract_first_value, converters={}, column_converter={}):
-    """read a txt file (tsv or csv) and return np array with passed columns
+    """
+    read a txt file (tsv or csv) and return np array with passed columns
 
     Args:
         file_name (str): path of the file to load in numpy array
@@ -246,7 +253,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters={}, c
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
     except Exception:
-        return False, sys.exc_info()[1], np.array([])
+        return False, "{}".format(sys.exc_info()[1]), np.array([])
 
     try:
         data = np.loadtxt(file_name,
@@ -255,7 +262,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters={}, c
                           skiprows=has_header,
                           converters=np_converters)
     except Exception:
-        return False, sys.exc_info()[1], np.array([])
+        return False, "{}".format(sys.exc_info()[1]), np.array([])
 
     # check if first value must be substracted
     if substract_first_value == "True":
@@ -264,7 +271,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters={}, c
     return True, "", data
 
 
-def versiontuple(version_str):
+def versiontuple(version_str: str) -> tuple:
     """Convert version from text to tuple
 
     Args:
@@ -481,8 +488,6 @@ def extract_frames(ffmpeg_bin: str,
         number_of_seconds (int): number of seconds to extract
 
     """
-
-    print(f"start_frame: {start_frame} second: {second}")
 
     if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(
             imageDir=imageDir,

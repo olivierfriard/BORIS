@@ -1359,8 +1359,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             s.close
 
 
-
-
     def ffmpeg_process(self, action: str):
         """
         launch ffmpeg process

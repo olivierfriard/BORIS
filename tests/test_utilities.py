@@ -15,6 +15,7 @@ import sys
 from decimal import Decimal
 import json
 import datetime
+import numpy as np
 
 sys.path.append("..")
 
@@ -24,7 +25,6 @@ import config
 
 @pytest.fixture()
 def before():
-    print('\nbefore each test')
     os.system("rm -rf output")
     os.system("mkdir output")
 
@@ -313,9 +313,6 @@ class Test_intfloatstr(object):
 
 
 
-
-
-
 class Test_polygon_area(object):
     def test_polygon(self):
         assert round(utilities.polygon_area([(0, 0), (90, 0), (0, 90)])) == 4050
@@ -368,6 +365,44 @@ class Test_seconds2time(object):
         assert utilities.seconds2time(Decimal(10.0)) == "00:00:10.000"
 
 
+class Test_sorted_keys(object):
+    def test_numeric_keys(self):
+        r = utilities.sorted_keys({5: "a", 4: "7", 0: "z", 6: "a"})
+        #print(r)
+        assert r == ['0', '4', '5', '6']
+
+    def test_str_keys(self):
+        r = utilities.sorted_keys({"10": "x", "0": "x", "1": "x", "11": "x", "05": "x"})
+        #print(r)
+        assert r == ['0', '1', '5', '10', '11']
+
+
+class Test_state_behavior_codes(object):
+
+    def test_1(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        r = utilities.state_behavior_codes(pj_float["behaviors_conf"])
+        # print(r)
+        assert r == ['s', 'r', 'm']
+
+    def test_empty_ethogram(self):
+        r = utilities.state_behavior_codes({})
+        assert r == []
+
+
+class Test_test_ffmpeg_path(object):
+
+    def test_path_ok(self):
+        r = utilities.test_ffmpeg_path("ffmpeg")
+        # print(r)
+        assert r == (True, '')
+
+    def test_path_do_no_exist(self):
+        r = utilities.test_ffmpeg_path("xxx/ffmpeg")
+        # print(r)
+        assert r == (False, 'FFmpeg is required but it was not found...<br>See https://www.ffmpeg.org')
+
+
 class Test_time2seconds(object):
     def test_positive(self):
         assert utilities.time2seconds("11:22:33.44") == Decimal(
@@ -382,9 +417,65 @@ class Test_time2seconds(object):
             "0.000")
 
 
+class Test_txt2np_array(object):
+    def test_no_file(self):
+        r = utilities.txt2np_array(file_name="files/xxx",
+                                    columns_str="4,6",
+                                    substract_first_value="False",
+                                    converters={},
+                                    column_converter={})
+        # print(r)
+        assert r[0] == False
+        assert r[1] == "[Errno 2] No such file or directory: 'files/xxx'"
+        assert list(r[2].shape) == [0]
+
+    def test_file_csv_no_converter(self):
+        r = utilities.txt2np_array(file_name="files/test_check_txt_file_test_csv.csv",
+                                    columns_str="4,6",
+                                    substract_first_value="False",
+                                    converters={},
+                                    column_converter={})
+        assert r[0] == False
+        assert r[1] == "could not convert string to float: '14:38:58'"
+        assert list(r[2].shape) == [0]
+
+
+    def test_file_csv_converter(self):
+        r = utilities.txt2np_array(file_name="files/test_check_txt_file_test_csv.csv",
+                                    columns_str="4,6",
+                                    substract_first_value="False",
+                                    converters={
+  "HHMMSS_2_seconds":{
+   "name":"HHMMSS_2_seconds",
+   "description":"convert HH:MM:SS in seconds since 1970-01-01",
+   "code":"\nh, m, s = INPUT.split(':')\nOUTPUT = int(h) * 3600 + int(m) * 60 + int(s)\n\n"
+  }
+ },
+                                    column_converter={4: "HHMMSS_2_seconds"})
+        assert r[0] == True
+        assert r[1] == ""
+        assert r[2][0, 0] == 52738.0
+        assert r[2][1, 0] == 52740.0
+        assert r[2][0, 1] == 12.4144278
+        assert list(r[2].shape) == [10658, 2]
+
+
 class Test_url2path(object):
     def test_1(self):
         assert utilities.url2path(
             "file:///home/olivier/v%C3%A9lo/test") == "/home/olivier/vélo/test"
 
 
+class Test_versiontuple(object):
+
+    def test_1(self):
+        r = utilities.versiontuple("1.2.3")
+        assert r == (1,2,3)
+
+    def test_2(self):
+        r = utilities.versiontuple("1.2")
+        assert r == (1,2)
+
+    def test_3(self):
+        r = utilities.versiontuple("1")
+        assert r == (1,)
