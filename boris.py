@@ -438,6 +438,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     processes = [] # list of QProcess processes
 
+    saved_state = None
+
     observationId = ""   # current observation id
     timeOffset = 0.0
     wrongTimeResponse = ""
