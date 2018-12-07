@@ -313,6 +313,13 @@ class Video_frame(QFrame):
         xm, ym = QMouseEvent.x(), QMouseEvent.y()
         xf, yf = self.geometry().width(), self.geometry().height()
 
+        if not self.v_resolution:
+            QMessageBox.warning(self, programName,
+                                ("The focus video area is not available<br>"
+                                 "because the video resolution is not available.<br>"
+                                 "Try to re-encode the video (Tools > Resize/re-encode video)")
+                                ) 
+            return 
         if xf / yf >= self.h_resolution / self.v_resolution:
             yv = yf
             xv = int(yf * self.h_resolution / self.v_resolution)
