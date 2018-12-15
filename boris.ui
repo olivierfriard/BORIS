@@ -167,9 +167,16 @@
      </property>
      <addaction name="separator"/>
     </widget>
+    <widget class="QMenu" name="menuImport_project">
+     <property name="title">
+      <string>Import project from...</string>
+     </property>
+     <addaction name="actionNoldus_Observer_template"/>
+    </widget>
     <addaction name="actionNew_project"/>
     <addaction name="actionOpen_project"/>
     <addaction name="menuRecent_projects"/>
+    <addaction name="menuImport_project"/>
     <addaction name="actionEdit_project"/>
     <addaction name="actionCheck_project"/>
     <addaction name="actionSave_project"/>
@@ -1304,6 +1311,11 @@
   <action name="actionPaste_events">
    <property name="text">
     <string>Paste_events</string>
+   </property>
+  </action>
+  <action name="actionNoldus_Observer_template">
+   <property name="text">
+    <string>Noldus Observer XT template</string>
    </property>
   </action>
  </widget>

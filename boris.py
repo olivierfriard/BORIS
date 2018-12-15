@@ -109,6 +109,7 @@ import plot_events
 import plot_spectrogram_rt
 import observation
 import plot_data_module
+import otx_parser
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
@@ -780,6 +781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # menu file
         self.actionNew_project.triggered.connect(self.new_project_activated)
         self.actionOpen_project.triggered.connect(self.open_project_activated)
+        self.actionNoldus_Observer_template.triggered.connect(self.import_project_from_observer_template)
         self.actionEdit_project.triggered.connect(self.edit_project_activated)
         self.actionCheck_project.triggered.connect(self.check_project_integrity)
         self.actionSave_project.triggered.connect(self.save_project_activated)
@@ -5834,6 +5836,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_project(self, project_path, project_changed, pj):
         """
         load specified project
+        
+        Args:
+            project_path (str): path of project file
+            project_changed (bool): project has changed?
+            pj (dict): BORIS project
+            
+        Returns:
+            None
         """
         self.pj = copy.deepcopy(pj)
         memProjectChanged = project_changed
@@ -5930,6 +5940,40 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.load_project(project_path, project_changed, pj)
                 del pj
+
+
+    def import_project_from_observer_template(self):
+        """
+        import a project from a Noldus Observer template
+        """
+        # check if current observation
+        if self.observationId:
+            if dialog.MessageDialog(programName, "There is a current observation. What do you want to do?",
+                                    ["Close observation", "Continue observation"]) == "Close observation":
+                self.close_observation()
+            else:
+                return
+
+        if self.projectChanged:
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
+
+            if response == SAVE:
+                if self.save_project_activated() == "not saved":
+                    return
+
+            if response == CANCEL:
+                return
+
+        fn = QFileDialog().getOpenFileName(self, "Import project from template", "",
+                                           "Noldus Observer templates (*.otx);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+
+        if file_name:
+            pj = otx_parser.otx_to_boris(file_name)
+            if "error" in pj:
+                QMessageBox.critical(self, programName, boris_project["error"])
+            else:
+                self.load_project("", True, pj)
 
 
     def initialize_new_project(self, flag_new=True):
