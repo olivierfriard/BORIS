@@ -273,6 +273,7 @@ class EditSelectedEvents(QDialog):
 
         self.setLayout(hbox)
 
+
     def rb_changed(self):
 
         self.newText.setEnabled(not self.rbComment.isChecked())
@@ -313,7 +314,7 @@ class FindInEvents(QWidget):
     """
 
     clickSignal = pyqtSignal(str)
-    sendEventSignal = pyqtSignal(QEvent)
+    '''sendEventSignal = pyqtSignal(QEvent)'''
 
     currentIdx = -1
 
@@ -378,7 +379,7 @@ class FindReplaceEvents(QWidget):
     """
 
     clickSignal = pyqtSignal(str)
-    sendEventSignal = pyqtSignal(QEvent)
+    '''sendEventSignal = pyqtSignal(QEvent)'''
 
     def __init__(self):
         super().__init__()
@@ -443,6 +444,57 @@ class FindReplaceEvents(QWidget):
 
     def click(self, msg):
         self.clickSignal.emit(msg)
+
+
+class exlore_project_dialog(QDialog):
+    """
+    "explore project" dialog box
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("Explore project")
+
+        hbox = QVBoxLayout()
+
+        self.lb_subject = QLabel("Subject")
+        hbox.addWidget(self.lb_subject)
+        self.find_subject = QLineEdit()
+        hbox.addWidget(self.find_subject)
+
+        self.lb_behav = QLabel("Behaviors")
+        hbox.addWidget(self.lb_behav)
+        self.find_behavior = QLineEdit()
+        hbox.addWidget(self.find_behavior)
+
+        self.lb_modifier = QLabel("Modifier")
+        hbox.addWidget(self.lb_modifier)
+        self.find_modifier = QLineEdit()
+        hbox.addWidget(self.find_modifier)
+
+        self.lb_comment = QLabel("Comment")
+        hbox.addWidget(self.lb_comment)
+        self.find_comment = QLineEdit()
+        hbox.addWidget(self.find_comment)
+
+        self.cb_case_sensitive = QCheckBox("Case sensitive")
+        self.cb_case_sensitive.setChecked(False)
+        hbox.addWidget(self.cb_case_sensitive)
+
+        self.lb_message = QLabel()
+        hbox.addWidget(self.lb_message)
+
+        hbox2 = QHBoxLayout()
+        self.pbOK = QPushButton("Find")
+        self.pbOK.clicked.connect(self.accept)
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        hbox2.addWidget(self.pbCancel)
+        hbox2.addWidget(self.pbOK)
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
 
 
 class Results_dialog(QDialog):

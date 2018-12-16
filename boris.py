@@ -669,7 +669,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
                   self.actionClose_project, self.actionSend_project, self.actionNew_observation,
-                  self.actionRemove_path_from_media_files, self.action_obs_list, self.actionExport_observations_list]:
+                  self.actionRemove_path_from_media_files, self.action_obs_list, self.actionExport_observations_list,
+                  self.actionExplore_project, self.menuExport_events]:
             w.setEnabled(flag)
 
         # observations
@@ -826,6 +827,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCopy_events.triggered.connect(self.copy_selected_events)
         self.actionPaste_events.triggered.connect(self.paste_clipboard_to_events)
 
+        self.actionExplore_project.triggered.connect(self.explore_project)
         self.actionFind_events.triggered.connect(self.find_events)
         self.actionFind_replace_events.triggered.connect(self.find_replace_events)
         self.actionDelete_all_observations.triggered.connect(self.delete_all_events)
@@ -9259,6 +9261,49 @@ item []:
         else:
             if self.find_dialog.currentIdx == -1:
                 self.find_dialog.lb_message.setText("<b>{}</b> not found".format(self.find_dialog.findText.text()))
+
+
+    def explore_project(self):
+        """
+        search various elements in all observations
+        """
+        explore_dialog = dialog.exlore_project_dialog()
+        if explore_dialog.exec_():
+            results = []
+            nb_fields = ((explore_dialog.find_subject.text() != "") + 
+                         (explore_dialog.find_behavior.text() != "") + 
+                         (explore_dialog.find_modifier.text() != "") + 
+                         (explore_dialog.find_comment.text() != ""))
+            print(nb_fields)
+            for obs_id in self.pj[OBSERVATIONS]:
+                for event_idx, event in enumerate(self.pj[OBSERVATIONS][obs_id][EVENTS]):
+                    nb_results = 0
+                    for text, idx in [(explore_dialog.find_subject.text(), EVENT_SUBJECT_FIELD_IDX),
+                                      (explore_dialog.find_behavior.text(), EVENT_BEHAVIOR_FIELD_IDX),
+                                      (explore_dialog.find_modifier.text(), EVENT_MODIFIER_FIELD_IDX),
+                                      (explore_dialog.find_comment.text(), EVENT_COMMENT_FIELD_IDX)]:
+                        if text:
+                            if explore_dialog.cb_case_sensitive.isChecked() and text in event[idx]:
+                                nb_results += 1
+                            if not explore_dialog.cb_case_sensitive.isChecked() and text.upper() in event[idx].upper():
+                                nb_results += 1
+
+                    if nb_results == nb_fields:
+                        results.append((obs_id, event_idx))
+
+            if results:
+                results_dialog = dialog.Results_dialog()
+                results_dialog.setWindowTitle("Explore project results")
+                results_dialog.ptText.clear()
+                results_dialog.ptText.setReadOnly(True)
+                txt = ""
+                for result in results:
+                    txt += "obs id: {}  event # {}<br>".format(result[0], result[1])
+                results_dialog.ptText.appendHtml(txt)
+                results_dialog.exec_()
+            else:
+                QMessageBox.information(self, programName, "No events found")
+
 
 
     def find_events(self):
