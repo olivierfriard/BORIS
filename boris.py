@@ -5965,14 +5965,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         fn = QFileDialog().getOpenFileName(self, "Import project from template", "",
-                                           "Noldus Observer templates (*.otx);;All files (*)")
+                                           "Noldus Observer templates (*.otx *.otb);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
             pj = otx_parser.otx_to_boris(file_name)
             if "error" in pj:
-                QMessageBox.critical(self, programName, boris_project["error"])
+                QMessageBox.critical(self, programName, pj["error"])
             else:
+                if "msg" in pj:
+                    QMessageBox.warning(self, programName, pj["msg"])
+                    del pj["msg"]
                 self.load_project("", True, pj)
 
 

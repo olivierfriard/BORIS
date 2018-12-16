@@ -48,6 +48,8 @@ def otx_to_boris(file_path: str) -> dict:
     else:
         return {"error": "file must be .otb or .otx"}
 
+    flag_long_key = False
+
     # metadata
     itemlist = xmldoc.getElementsByTagName('MET_METADATA')
     for item in itemlist:
@@ -97,6 +99,9 @@ def otx_to_boris(file_path: str) -> dict:
             modifiers[modif_parent_id]["values"].append(modif_code)
         else:
             #modifiers_set[modif_id]
+            if len(key) > 1:
+                key = ""
+                flag_long_key = True
             modifiers[modif_id] = { "set_name": modif_code, "key": key, "description": description, "values": []}
 
     # print("modifiers")
@@ -150,6 +155,11 @@ def otx_to_boris(file_path: str) -> dict:
             modifiers_ = ""
 
         if parent_name:
+
+            if len(key) > 1:
+                key = ""
+                flag_long_key = True
+
             behaviors[str(len(behaviors))] = {"id": int(behav_id),"code": behav_code,
                       "key": key, "description": description, "modifiers": modifiers_,
                       "category": parent_name}
@@ -242,9 +252,12 @@ def otx_to_boris(file_path: str) -> dict:
                 "converters": {}
                 }
 
+    if flag_long_key:
+        project["msg"] = "The keys longer than one char were deleted"
+
     return project
 
-
+'''
 if __name__ == "__main__":
     import json
 
@@ -256,7 +269,7 @@ if __name__ == "__main__":
         filename_replace_ext = filename.with_suffix('.boris')
         with open(filename_replace_ext, "w") as f_out:
             f_out.write(json.dumps(boris_project))
-
+'''
 
 
 

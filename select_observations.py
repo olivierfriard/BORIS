@@ -27,7 +27,7 @@ Copyright 2012-2018 Olivier Friard
 try:
     from PyQt5.QtCore import *
     from PyQt5.QtWidgets import *
-except:
+except ModuleNotFoundError:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *
 
@@ -46,6 +46,9 @@ def select_observations(pj, mode):
         pj (dict): BORIS project dictionary
         mode (str): mode foe selection: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
 
+    Returns:
+        str: selected mode: OPEN, EDIT, VIEW
+        list: list os selected observations
     """
 
     obsListFields = ["id", "date", "description", "subjects", "media"]
