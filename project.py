@@ -1214,7 +1214,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == CANCEL:
                 return
 
-        fn = QFileDialog(self).getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
+        fn = QFileDialog().getOpenFileName(self, "Import behaviors from JWatcher", "", "Global Definition File (*.gdf);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:

@@ -9241,7 +9241,8 @@ item []:
             if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and
                event_idx in self.find_dialog.rowsToFind)):
                 for idx in fields_list:
-                    if self.find_dialog.findText.text() in event[idx]:
+                    if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in event[idx]) \
+                       or (not self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text().upper() in event[idx].upper()):
                         self.find_dialog.currentIdx = event_idx
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
@@ -9260,10 +9261,9 @@ item []:
                 self.find_dialog.lb_message.setText("<b>{}</b> not found".format(self.find_dialog.findText.text()))
 
 
-
     def find_events(self):
         """
-        find  in events
+        find in events
         """
 
         self.find_dialog = dialog.FindInEvents()
@@ -9302,6 +9302,7 @@ item []:
             fields_list.append(EVENT_COMMENT_FIELD_IDX)
 
         number_replacement = 0
+        insensitive_re = re.compile(re.escape(self.find_replace_dialog.findText.text()), re.IGNORECASE)
         for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
 
             # apply modif only to filtered subjects
@@ -9321,13 +9322,21 @@ item []:
                 for idx1 in fields_list:
                     if idx1 <= self.find_replace_dialog.currentIdx_idx:
                         continue
-                    if self.find_replace_dialog.findText.text() in event[idx1]:
+                    '''if self.find_replace_dialog.findText.text() in event[idx1]:'''
+
+                    if ((self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text() in event[idx1]) 
+                       or (not self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text().upper() in event[idx1].upper())):
+
                         number_replacement += 1
                         self.find_replace_dialog.currentIdx = event_idx
                         self.find_replace_dialog.currentIdx_idx = idx1
-                        event[idx1] = event[idx1].replace(
-                            self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()
-                        )
+                        if self.find_replace_dialog.cb_case_sensitive.isChecked():
+                            event[idx1] = event[idx1].replace(
+                                self.find_replace_dialog.findText.text(), self.find_replace_dialog.replaceText.text()
+                            )
+                        if not self.find_replace_dialog.cb_case_sensitive.isChecked():
+                            event[idx1] = insensitive_re.sub(self.find_replace_dialog.replaceText.text(), event[idx1])
+
                         self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx] = event
                         self.loadEventsInTW(self.observationId)
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))

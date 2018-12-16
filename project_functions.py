@@ -731,7 +731,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
         obsId (str): id of observation to check
         ethogram (dict): ethogram of project
         observation (dict): observation to be checked
-        time_firmat (str): time format
+        time_format (str): time format
 
     Returns:
         set (bool, str): if OK True else False , message
@@ -845,7 +845,7 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     return closing_events_to_add
 
 
-def check_project_integrity(pj, time_format: str, project_file_name: str) -> str:
+def check_project_integrity(pj: dict, time_format: str, project_file_name: str) -> str:
     """
     check project integrity
     check if behaviors in observations are in ethogram

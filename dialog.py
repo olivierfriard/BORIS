@@ -350,6 +350,10 @@ class FindInEvents(QWidget):
         self.cbFindInSelectedEvents.setChecked(False)
         hbox.addWidget(self.cbFindInSelectedEvents)
 
+        self.cb_case_sensitive = QCheckBox("Case sensitive")
+        self.cb_case_sensitive.setChecked(False)
+        hbox.addWidget(self.cb_case_sensitive)
+
         self.lb_message = QLabel()
         hbox.addWidget(self.lb_message)
 
@@ -415,6 +419,10 @@ class FindReplaceEvents(QWidget):
         self.cbFindInSelectedEvents = QCheckBox("Find/Replace in selected events")
         self.cbFindInSelectedEvents.setChecked(False)
         hbox.addWidget(self.cbFindInSelectedEvents)
+
+        self.cb_case_sensitive = QCheckBox("Case sensitive")
+        self.cb_case_sensitive.setChecked(False)
+        hbox.addWidget(self.cb_case_sensitive)
 
         hbox2 = QHBoxLayout()
 
