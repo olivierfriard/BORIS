@@ -14,7 +14,7 @@ import pathlib
 def otx_to_boris(file_path: str) -> dict:
     """
     convert otx/otb file in a BORIS project
-    
+
     Args:
         file_path (str): path to otx/otb file
 
@@ -113,6 +113,7 @@ def otx_to_boris(file_path: str) -> dict:
         connections[ item.attributes['CDS_ELEMENT_ID'].value ] =  item.attributes['CDS_MODIFIER_ID'].value
     #print("connections", connections)
 
+    # behaviors
     behaviors = {}
     behaviors_list = []
     behav_category = []
@@ -189,12 +190,38 @@ def otx_to_boris(file_path: str) -> dict:
                                                              "values": modifiers[modif_key]["values"]
                                                             }
                                                       }
-
         else:
             behaviors_boris[k]["modifiers"] = {}
 
+
+    # subjects
+    subjects = {}
+    itemlist = xmldoc.getElementsByTagName("CDS_SUBJECT")
+    for item in itemlist:
+        subject = minidom.parseString(item.toxml())
+        subject_name = re.sub('<[^>]*>', '', subject.getElementsByTagName("CDS_ELE_NAME")[0].toxml())
+        try:
+            key = re.sub('<[^>]*>', '', subject.getElementsByTagName("CDS_ELE_START_KEYCODE")[0].toxml())
+        except:
+            key = ""
+        try:
+            parent_name = re.sub("<[^>]*>", "",subject.getElementsByTagName("CDS_ELE_PARENT_NAME")[0].toxml())
+        except:
+            parent_name = ""
+
+        if parent_name:
+            if len(key) > 1:
+                key = ""
+                flag_long_key = True
+            subjects[str(len(subjects))] = {"key": key,
+                                            "name": subject_name,
+                                            "description": ""
+                                            }
+
+
+    # independent variables
     variables = {}
-    itemlist = xmldoc.getElementsByTagName('VL_VARIABLE')
+    itemlist = xmldoc.getElementsByTagName("VL_VARIABLE")
 
     for item in itemlist:
 
@@ -244,7 +271,7 @@ def otx_to_boris(file_path: str) -> dict:
                 "project_format_version": "7.0",
                 "project_description": project_description,
                 "behavioral_categories": behav_category,
-                "subjects_conf": {},
+                "subjects_conf": subjects,
                 "coding_map": {},
                 "behaviors_coding_map": {},
                 "observations": {},
@@ -266,7 +293,7 @@ if __name__ == "__main__":
         print(boris_project["error"])
     else:
         filename = pathlib.Path(sys.argv[1])
-        filename_replace_ext = filename.with_suffix('.boris')
+        filename_replace_ext = filename.with_suffix(".boris")
         with open(filename_replace_ext, "w") as f_out:
             f_out.write(json.dumps(boris_project))
 '''
