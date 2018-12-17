@@ -319,8 +319,8 @@ class Video_frame(QFrame):
                                 ("The focus video area is not available<br>"
                                  "because the video resolution is not available.<br>"
                                  "Try to re-encode the video (Tools > Resize/re-encode video)")
-                                ) 
-            return 
+                                )
+            return
         if xf / yf >= self.h_resolution / self.v_resolution:
             yv = yf
             xv = int(yf * self.h_resolution / self.v_resolution)
@@ -5838,12 +5838,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def load_project(self, project_path, project_changed, pj):
         """
         load specified project
-        
+
         Args:
             project_path (str): path of project file
             project_changed (bool): project has changed?
             pj (dict): BORIS project
-            
+
         Returns:
             None
         """
@@ -9265,17 +9265,18 @@ item []:
 
     def explore_project(self):
         """
-        search various elements in all observations
+        search various elements (subjects, behaviors, modifiers, comments) in all observations
         """
+
         explore_dialog = dialog.exlore_project_dialog()
         if explore_dialog.exec_():
             results = []
-            nb_fields = ((explore_dialog.find_subject.text() != "") + 
-                         (explore_dialog.find_behavior.text() != "") + 
-                         (explore_dialog.find_modifier.text() != "") + 
+            nb_fields = ((explore_dialog.find_subject.text() != "") +
+                         (explore_dialog.find_behavior.text() != "") +
+                         (explore_dialog.find_modifier.text() != "") +
                          (explore_dialog.find_comment.text() != ""))
 
-            for obs_id in self.pj[OBSERVATIONS]:
+            for obs_id in sorted(self.pj[OBSERVATIONS]):
                 for event_idx, event in enumerate(self.pj[OBSERVATIONS][obs_id][EVENTS]):
                     nb_results = 0
                     for text, idx in [(explore_dialog.find_subject.text(), EVENT_SUBJECT_FIELD_IDX),
@@ -9307,17 +9308,6 @@ item []:
 
                 self.results_dialog.show()
 
-                '''
-                results_dialog = dialog.Results_dialog()
-                results_dialog.setWindowTitle("Explore project results")
-                results_dialog.ptText.clear()
-                results_dialog.ptText.setReadOnly(True)
-                txt = ""
-                for result in results:
-                    txt += "obs id: {}  event # {}<br>".format(result[0], result[1])
-                results_dialog.ptText.appendHtml(txt)
-                results_dialog.exec_()
-                '''
             else:
                 QMessageBox.information(self, programName, "No events found")
 
@@ -9394,7 +9384,7 @@ item []:
                         continue
                     '''if self.find_replace_dialog.findText.text() in event[idx1]:'''
 
-                    if ((self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text() in event[idx1]) 
+                    if ((self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text() in event[idx1])
                        or (not self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text().upper() in event[idx1].upper())):
 
                         number_replacement += 1
