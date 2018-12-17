@@ -280,6 +280,12 @@ class Observation(QDialog, Ui_Form):
             flag_path (bool): True to store path of data file else False
         """
 
+        # check if project saved
+        if (not flag_path) and (not self.project_file_name):
+            QMessageBox.critical(self, programName, ("It is not possible to add data file without full path "
+                                                     "if the project is not saved"))
+            return
+
         # limit to 2 files
         if self.tw_data_files.rowCount() >= 2:
             QMessageBox.warning(self, programName , ("It is not yet possible to plot more than 2 external data sources"
@@ -660,8 +666,16 @@ class Observation(QDialog, Ui_Form):
 
         Args:
             n_player (str): player
-            flag_path (bool): True include full path of media else only basename
+            flag_path (bool): if True include full path of media else only basename
         """
+
+        # check if project saved
+        if (not flag_path) and (not self.project_file_name):
+            QMessageBox.critical(self, programName, ("It is not possible to add media without full path "
+                                                     "if the project is not saved"))
+            return
+
+
         # check if more media in player1 before adding media to player2
         if n_player == PLAYER2 and self.twVideo1.rowCount() > 1:
             QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
@@ -677,8 +691,8 @@ class Observation(QDialog, Ui_Form):
         if file_paths:
             for file_path in file_paths:
                 if not self.check_media(n_player, file_path, flag_path):
-                    QMessageBox.critical(self, programName, "The <b>{file_path}</b> file does not seem to be a media file.".format(
-                                 file_path=file_path))
+                    QMessageBox.critical(self, programName,
+                                         "The <b>{file_path}</b> file does not seem to be a media file.".format(file_path=file_path))
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         # disabled due to problem when video goes back
@@ -694,7 +708,13 @@ class Observation(QDialog, Ui_Form):
             flag_path (bool): True include full path of media else only basename
         """
 
-        fd = QFileDialog(self)
+        # check if project saved
+        if (not flag_path) and (not self.project_file_name):
+            QMessageBox.critical(self, programName, ("It is not possible to add media without full path "
+                                                     "if the project is not saved"))
+            return
+
+        fd = QFileDialog()
         fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
 
         dir_name = fd.getExistingDirectory(self, "Select directory")

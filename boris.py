@@ -147,8 +147,6 @@ if options.version:
 logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
 
 video, live = 0, 1
-FLAG_MATPLOTLIB_INSTALLED = True
-
 
 class ProjectServerThread(QThread):
     """
@@ -766,7 +764,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
         # plot events
-        self.menuPlot_events.setEnabled(FLAG_MATPLOTLIB_INSTALLED and self.pj[OBSERVATIONS] != {})
+        self.menuPlot_events.setEnabled(self.pj[OBSERVATIONS] != {})
         # IRR
         self.menuInter_rater_reliability.setEnabled(self.pj[OBSERVATIONS] != {})
 
@@ -3821,10 +3819,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.chunk_length = self.chunk_length
         observationWindow.ffmpeg_cache_dir = self.ffmpeg_cache_dir
         observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
-        observationWindow.FLAG_MATPLOTLIB_INSTALLED = FLAG_MATPLOTLIB_INSTALLED
         observationWindow.ffmpeg_bin = self.ffmpeg_bin
-        observationWindow.spectrogramHeight = self.spectrogramHeight
-        observationWindow.spectrogram_color_map = self.spectrogram_color_map
+        observationWindow.project_file_name = self.projectFileName
 
         # add indepvariables
         if INDEPENDENT_VARIABLES in self.pj:
@@ -4037,8 +4033,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
             #    observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
 
-        # spectrogram
-        # observationWindow.cbVisualizeSpectrogram.setEnabled(FLAG_MATPLOTLIB_INSTALLED)
 
         rv = observationWindow.exec_()
 
@@ -10218,13 +10212,6 @@ if __name__ == "__main__":
         sys.exit(3)
     else:
         ffmpeg_bin = msg
-
-    # check matplotlib
-    if not FLAG_MATPLOTLIB_INSTALLED:
-        QMessageBox.warning(None, programName,
-                            ("Some functions (plot events and spectrogram) require the Matplotlib module."
-                             """<br>See <a href="http://matplotlib.org">http://matplotlib.org</a>"""),
-                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
     app.setApplicationName(programName)
     window = MainWindow(ffmpeg_bin)
