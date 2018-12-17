@@ -662,3 +662,48 @@ class View_data_head(QDialog):
         self.setLayout(vbox)
 
         self.resize(540, 640)
+
+
+class View_explore_project_results(QWidget):
+    """
+    widget for visualizing results of explore project
+    """
+
+    double_click_signal = pyqtSignal(str, int)
+
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("")
+
+        vbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        vbox.addWidget(self.lb)
+
+        self.tw = QTableWidget()
+        self.tw.setSelectionBehavior(QTableView.SelectRows)
+        self.tw.cellDoubleClicked[int, int].connect(self.tw_cellDoubleClicked)
+        vbox.addWidget(self.tw)
+
+        hbox2 = QHBoxLayout()
+
+        '''
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        hbox2.addWidget(self.pbCancel)
+        '''
+
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.close)
+        hbox2.addWidget(self.pbOK)
+
+        vbox.addLayout(hbox2)
+
+        self.setLayout(vbox)
+
+        #self.resize(540, 640)
+
+    def tw_cellDoubleClicked(self, r, c):
+
+        self.double_click_signal.emit(self.tw.item(r, 0).text(), int(self.tw.item(r, 1).text()))

@@ -9274,7 +9274,7 @@ item []:
                          (explore_dialog.find_behavior.text() != "") + 
                          (explore_dialog.find_modifier.text() != "") + 
                          (explore_dialog.find_comment.text() != ""))
-            print(nb_fields)
+
             for obs_id in self.pj[OBSERVATIONS]:
                 for event_idx, event in enumerate(self.pj[OBSERVATIONS][obs_id][EVENTS]):
                     nb_results = 0
@@ -9289,9 +9289,25 @@ item []:
                                 nb_results += 1
 
                     if nb_results == nb_fields:
-                        results.append((obs_id, event_idx))
+                        results.append((obs_id, event_idx + 1))
 
             if results:
+                self.results_dialog = dialog.View_explore_project_results()
+                self.results_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+                self.results_dialog.double_click_signal.connect(self.double_click_explore_project)
+                self.results_dialog.lb.setText("{} results".format(len(results)))
+                self.results_dialog.tw.setColumnCount(2)
+                self.results_dialog.tw.setRowCount(len(results))
+                self.results_dialog.tw.setHorizontalHeaderLabels(["Observation id", "row index"])
+
+                for row, result in enumerate(results):
+                    for i in range(0, 2):
+                        self.results_dialog.tw.setItem(row, i, QTableWidgetItem(str(result[i])))
+                        self.results_dialog.tw.item(row, i).setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+
+                self.results_dialog.show()
+
+                '''
                 results_dialog = dialog.Results_dialog()
                 results_dialog.setWindowTitle("Explore project results")
                 results_dialog.ptText.clear()
@@ -9301,9 +9317,18 @@ item []:
                     txt += "obs id: {}  event # {}<br>".format(result[0], result[1])
                 results_dialog.ptText.appendHtml(txt)
                 results_dialog.exec_()
+                '''
             else:
                 QMessageBox.information(self, programName, "No events found")
 
+
+    def double_click_explore_project(self, obs_id, event_idx):
+        """
+        manage double-click on tablewidget of explore project results
+        """
+        self.load_observation(obs_id, VIEW)
+        self.twEvents.scrollToItem(self.twEvents.item(event_idx - 1, 0))
+        self.twEvents.selectRow(event_idx - 1)
 
 
     def find_events(self):
