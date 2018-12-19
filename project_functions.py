@@ -755,7 +755,8 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 
         for behavior in sorted(set(behaviors)):
             if behavior not in ethogram_behaviors:
-                return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
+                # return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
+                continue
             else:
                 if STATE in event_type(behavior, ethogram).upper():
                     flagStateEvent = True
@@ -845,13 +846,36 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     return closing_events_to_add
 
 
-def check_project_integrity(pj: dict, time_format: str, project_file_name: str) -> str:
+def check_coded_behaviors(pj: dict):
+    """
+    check if behaviors coded in evwnts are defined in ethogram
+    """
+
+    # set of behaviors defined in ethogram
+    ethogram_behavior_codes = {pj[ETHOGRAM][idx]["code"] for idx in pj[ETHOGRAM]}
+    behaviors_not_defined = []
+
+    for obs_id in pj[OBSERVATIONS]:
+        for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+            if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+    return set(sorted(behaviors_not_defined))
+
+
+def check_project_integrity(pj: dict,
+                            time_format: str,
+                            project_file_name: str,
+                            media_file_available: bool=True) -> str:
+
     """
     check project integrity
     check if behaviors in observations are in ethogram
 
     Args:
         pj (dict): BORIS project
+        time_format (str): time format
+        project_file_name (str): project file name
+        media_file_access(bool): check if media file are available
 
     Returns:
         str: message
@@ -862,6 +886,11 @@ def check_project_integrity(pj: dict, time_format: str, project_file_name: str) 
     # remove because already tested bt check_state_events_obs function
 
     try:
+        # check if coded behaviors are defined in ethogram
+        r = check_coded_behaviors(pj)
+        if r:
+            out += "The following behaviors are not defined in the ethogram: <b>{}</b><br>".format(", ".join(r))
+
         # check for unpaired state events
         for obs_id in pj[OBSERVATIONS]:
             ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
@@ -883,12 +912,13 @@ def check_project_integrity(pj: dict, time_format: str, project_file_name: str) 
                         ).format(pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
 
         # check if all media are available
-        for obs_id in pj[OBSERVATIONS]:
-            ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
-            if not ok:
-                if out:
-                    out += "<br><br>"
-                out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+        if media_file_available:
+            for obs_id in pj[OBSERVATIONS]:
+                ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
+                if not ok:
+                    if out:
+                        out += "<br><br>"
+                    out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
 
         return out
     except Exception:

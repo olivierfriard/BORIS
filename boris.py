@@ -1081,7 +1081,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def check_project_integrity(self):
-        msg = project_functions.check_project_integrity(self.pj, self.timeFormat, self.projectFileName)
+        """
+        launch check project integrity function
+        """
+
+        ib = dialog.Input_dialog("Select the elements to be checked",
+                                 [("cb", "Test media file accessibility", True),
+                                 ])
+        if not ib.exec_():
+            return
+
+        msg = project_functions.check_project_integrity(self.pj, self.timeFormat, self.projectFileName,
+                                                        media_file_available=ib.elements["Test media file accessibility"].isChecked())
         if msg:
             msg = "Some issues were found in the project<br><br>" + msg
             self.results = dialog.ResultsWidget()
@@ -1417,6 +1428,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if fileNames:
             if action == "reencode_resize":
+                current_bitrate = 2000
+                current_resolution = 1024
+
+                if len(fileNames) == 1:
+                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
+                    print(r)
+                    if "error" in r:
+                        QMessageBox.warning(self, programName, "{} does not seem a media file".format(fileNames[0]))
+                    elif r["has_video"]:
+                        try:
+                            current_bitrate = r["bitrate"]
+                        except:
+                            pass
+                        try:
+                            current_resolution = int(r["resolution"].split("x")[0])
+                        except:
+                            pass
+
+
+                ib = dialog.Input_dialog("Set the parameters for re-encoding / resizing",
+                                 [("sb", "Horizontal resolution (in pixel)", 352, 3840, 100, current_resolution),
+                                  ("sb", "Video quality (bitrate)", 100, 1000000, 500, current_bitrate),
+                                 ])
+                if not ib.exec_():
+                    return
+
+                horiz_resol = ib.elements["Horizontal resolution (in pixel)"].value()
+                video_quality = ib.elements["Video quality (bitrate)"].value()
+
+                '''
                 horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\nThe aspect ratio will be maintained"),
                                                       1024, 352, 2048, 20)
                 if not ok:
@@ -1425,6 +1466,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 video_quality, ok = QInputDialog.getInt(self, "", "Video quality (bitrate)", 2000, 1000, 20000, 1000)
                 if not ok:
                     return
+                '''
 
             if action == "rotate":
                 rotation_items = ("Rotate 90 clockwise", "Rotate 90 counter clockwise", "rotate 180")
@@ -6910,7 +6952,6 @@ item []:
 
             tot_output = ""
 
-            '''for i in range(N_PLAYER):'''
             for i, player in enumerate(self.dw_player):
                 if not (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -9097,7 +9138,7 @@ item []:
         elif len(rows_to_edit) == 1:  # 1 event selected
             self.edit_event()
         else:  # editing of more events
-            dialogWindow = EditSelectedEvents()
+            dialogWindow = EditSelectedEvents(1)
             dialogWindow.all_behaviors = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
             dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)][SUBJECT_NAME]

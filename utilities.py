@@ -991,13 +991,19 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
 
     # check for video stream
     hasVideo = False
+    resolution = None
     try:
         for r in rows:
             if "Stream #" in r and "Video:" in r:
                 hasVideo = True
+                # get resolution \d{3,5}x\d{3,5}
+                re_results = re.search("\d{3,5}x\d{3,5}", r, re.IGNORECASE)
+                if re_results:
+                    resolution = re_results.group(0)
                 break
     except Exception:
         hasVideo = None
+        resolution = None
 
     # check for audio stream
     hasAudio = False
@@ -1018,7 +1024,8 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
             "fps": fps,
             "has_video": hasVideo,
             "has_audio": hasAudio,
-            "bitrate": bitrate}
+            "bitrate": bitrate,
+            "resolution": resolution}
 
 
 
