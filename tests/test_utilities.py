@@ -30,11 +30,13 @@ def before():
 
 
 class Test_accurate_media_analysis(object):
+
     def test_media_ok(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/geese1.mp4")
         assert r == {'frames_number': 1548, 'duration_ms': Decimal('61920.00'),
                     'duration': Decimal('61.92'), 'fps': Decimal('25'),
-                    'has_video': True, 'has_audio': True, 'bitrate': 901}
+                    'has_video': True, 'has_audio': True, 'bitrate': 901,
+                    'resolution': '640x480'}
 
     def test_no_media(self):
         r = utilities.accurate_media_analysis("ffmpeg", "files/test.boris")
