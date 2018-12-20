@@ -1391,9 +1391,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if action not in ["reencode_resize", "rotate"]:
             return
 
-        def readStdOutput(idx):
 
-            # print(str(self.process1.readAllStandardError()))
+        def readStdOutput(idx):
 
             self.processes_widget.label.setText(("This operation can be long. Be patient...\n\n"
                                                  "Done: {done} of {tot}"
@@ -1431,20 +1430,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 current_bitrate = 2000
                 current_resolution = 1024
 
-                if len(fileNames) == 1:
-                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
-                    print(r)
-                    if "error" in r:
-                        QMessageBox.warning(self, programName, "{} does not seem a media file".format(fileNames[0]))
-                    elif r["has_video"]:
-                        try:
-                            current_bitrate = r["bitrate"]
-                        except:
-                            pass
-                        try:
-                            current_resolution = int(r["resolution"].split("x")[0])
-                        except:
-                            pass
+                r = utilities.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
+                if "error" in r:
+                    QMessageBox.warning(self, programName, "{} does not seem a media file".format(fileNames[0]))
+                elif r["has_video"]:
+                    try:
+                        current_bitrate = r["bitrate"]
+                    except:
+                        pass
+                    try:
+                        current_resolution = int(r["resolution"].split("x")[0])
+                    except:
+                        pass
 
 
                 ib = dialog.Input_dialog("Set the parameters for re-encoding / resizing",
@@ -1453,6 +1450,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  ])
                 if not ib.exec_():
                     return
+
+                if len(fileNames) > 1:
+                    if dialog.MessageDialog(programName,
+                                            "All the selected video files will be re-encoded / resized with these parameters",
+                                            [OK, CANCEL]) == CANCEL:
+                        return
+
 
                 horiz_resol = ib.elements["Horizontal resolution (in pixel)"].value()
                 video_quality = ib.elements["Video quality (bitrate)"].value()
