@@ -1168,7 +1168,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               flagShowIncludeModifiers=True,
                                                               flagShowExcludeBehaviorsWoEvents=False)
 
-        if not plot_parameters["selected subjects"] or not plot_parameters["selected behaviors"]:
+        if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
 
         # ask for time slice
@@ -1178,15 +1178,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         interval = float2decimal(i)
 
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
-                                                                          plot_parameters["selected subjects"],
+                                                                          plot_parameters[SELECTED_SUBJECTS],
                                                                           selected_observations,
-                                                                          plot_parameters["selected behaviors"])
+                                                                          plot_parameters[SELECTED_BEHAVIORS])
 
         cursor = db_connector.cursor()
         out = ("Index of Inter-rater Reliability - Cohen's Kappa\n\n"
                "Interval time: {interval:.3f} s\n"
                "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
-                                                                    selected_subjects=", ".join(plot_parameters["selected subjects"]))
+                                                                    selected_subjects=", ".join(plot_parameters[SELECTED_SUBJECTS]))
         mem_done = []
         irr_results = np.ones((len(selected_observations), len(selected_observations)))
 
@@ -1198,8 +1198,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     K, msg = irr.cohen_kappa(cursor,
                                              obs_id1, obs_id2,
                                              interval,
-                                             plot_parameters["selected subjects"],
-                                             plot_parameters["include modifiers"])
+                                             plot_parameters[SELECTED_SUBJECTS],
+                                             plot_parameters[INCLUDE_MODIFIERS])
                     irr_results[selected_observations.index(obs_id1), selected_observations.index(obs_id2)] = K
                     irr_results[selected_observations.index(obs_id2), selected_observations.index(obs_id1)] = K
                     out += msg + "\n=============\n"
@@ -5240,7 +5240,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     parameters[SELECTED_SUBJECTS],
                                                     selectedObservations,
                                                     parameters[SELECTED_BEHAVIORS],
-                                                    time_interval)
+                                                    time_interval=TIME_FULL_OBS)
 
             total_observation_time = 0
             for obsId in selectedObservations:
