@@ -496,7 +496,7 @@ def time_budget_analysis(ethogram: dict,
 
                     rows = list(cursor.fetchall())
                     if not len(rows):
-                        if not parameters["exclude behaviors"]:  # include behaviors without events
+                        if not parameters[EXCLUDE_BEHAVIORS]:  # include behaviors without events
                             out.append({"subject": subject, "behavior": behavior,
                                         "modifiers": "-", "duration": 0, "duration_mean": 0,
                                         "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",

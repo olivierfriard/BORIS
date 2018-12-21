@@ -1887,7 +1887,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
-        exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to extract events",
+        exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
                                                            os.path.expanduser("~"),
                                                            options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
@@ -1907,8 +1907,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         flagUnpairedEventFound = False
 
-        cursor = db_functions.load_events_in_db(self.pj, parameters[SELECTED_SUBJECTS],
-                                                selected_observations, parameters[SELECTED_BEHAVIORS])
+        cursor = db_functions.load_events_in_db(self.pj,
+                                                parameters[SELECTED_SUBJECTS],
+                                                selected_observations,
+                                                parameters[SELECTED_BEHAVIORS],
+                                                time_interval=TIME_FULL_OBS)
 
         ffmpeg_extract_command = ('"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} -acodec copy -vcodec copy '
                                   ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
@@ -1917,7 +1920,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         for obsId in selected_observations:
 
-            # for nplayer in [PLAYER1, PLAYER2]:
             for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
 
                 if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
@@ -5121,6 +5123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mode (str): ["by_behavior", "by_category"]
         """
 
+        '''
         def default_value(behav, param):
             """
             return value for duration in case of point event
@@ -5153,6 +5156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             behaviors[subj][behav][modif][param[0]] = default_value(behav, param[0])
 
             return behaviors
+        '''
 
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -5232,8 +5236,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if time_budget window must be used
         if flagGroup or len(selectedObservations) == 1:
 
-            cursor = db_functions.load_events_in_db(self.pj, parameters[SELECTED_SUBJECTS],
-                                                    selectedObservations, parameters[SELECTED_BEHAVIORS])
+            cursor = db_functions.load_events_in_db(self.pj,
+                                                    parameters[SELECTED_SUBJECTS],
+                                                    selectedObservations,
+                                                    parameters[SELECTED_BEHAVIORS],
+                                                    time_interval)
 
             total_observation_time = 0
             for obsId in selectedObservations:
@@ -5249,17 +5256,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if parameters["time"] == TIME_EVENTS:
                     try:
-                        min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])
+                        min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])  # first event
                     except Exception:
                         min_time = float(0)
                     try:
-                        max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
+                        max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])  # last event
                     except Exception:
                         max_time = float(obs_length)
 
                 if parameters["time"] == TIME_ARBITRARY_INTERVAL:
-                    min_time = float(parameters["start time"])
-                    max_time = float(parameters["end time"])
+                    min_time = float(parameters[START_TIME])
+                    max_time = float(parameters[END_TIME])
 
                     # check intervals
                     for subj in parameters[SELECTED_SUBJECTS]:
@@ -6838,7 +6845,8 @@ item []:
             cursor = db_functions.load_events_in_db(self.pj,
                                                     plot_parameters["selected subjects"],
                                                     selectedObservations,
-                                                    plot_parameters["selected behaviors"])
+                                                    plot_parameters["selected behaviors"],
+                                                    time_interval=TIME_FULL_OBS)
 
             cursor.execute(
                 ("SELECT count(distinct subject) FROM events "

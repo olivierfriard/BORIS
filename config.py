@@ -196,6 +196,8 @@ SELECTED_SUBJECTS = "selected subjects"
 INCLUDE_MODIFIERS = "include modifiers"
 EXCLUDE_BEHAVIORS = "exclude behaviors"
 EXCLUDED_BEHAVIORS = "excluded behaviors"
+START_TIME = "start time"
+END_TIME = "end time"
 
 # indep variables
 NUMERIC = "numeric"

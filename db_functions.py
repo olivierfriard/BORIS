@@ -29,7 +29,11 @@ import project_functions
 import time
 
 
-def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehaviors):
+def load_events_in_db(pj: dict,
+                      selectedSubjects: list,
+                      selectedObservations: list,
+                      selectedBehaviors: list,
+                      time_interval: str=TIME_FULL_OBS):
     """
     populate a memory sqlite database with events from selectedObservations,
     selectedSubjects and selectedBehaviors
@@ -39,6 +43,7 @@ def load_events_in_db(pj, selectedSubjects, selectedObservations, selectedBehavi
         selectedObservations (list):
         selectedSubjects (list):
         selectedBehaviors (list):
+        time_interval (str): time interval for loading events (TIME_FULL_OBS / TIME_EVENTS / TIME_ARBITRARY_INTERVAL)
 
     Returns:
         database cursor:
@@ -126,7 +131,7 @@ def load_aggregated_events_in_db(pj: dict,
 
     # if no subject selected select all
     if not selectedSubjects:
-        selectedSubjects = sorted([pj[SUBJECTS][x]["name"] for x in pj[SUBJECTS]] + [NO_FOCAL_SUBJECT])
+        selectedSubjects = sorted([pj[SUBJECTS][x][SUBJECT_NAME] for x in pj[SUBJECTS]] + [NO_FOCAL_SUBJECT])
 
     # if no behavior selected select all
     if not selectedBehaviors:
