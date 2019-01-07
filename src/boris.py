@@ -453,6 +453,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     confirmSound = False               # if True each keypress will be confirmed by a beep
 
     spectrogramHeight = 80
+    spectrogram_time_interval = 10
     spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
 
     frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
@@ -2102,7 +2103,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-                self.spectro.interval = 12
+                self.spectro.interval = self.spectrogram_time_interval
                 self.spectro.cursor_color = "red"
 
                 r = self.spectro.load_wav(str(wav_file_path))
@@ -2113,6 +2114,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM] = True
                 self.spectro.sendEvent.connect(self.signal_from_widget)
+                self.spectro.sb_freq_min.setValue(0)
+                self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
                 self.spectro.show()
                 self.timer_spectro.start()
 
@@ -3503,7 +3506,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-            self.spectro.interval = 12
+            self.spectro.interval = self.spectrogram_time_interval
             self.spectro.cursor_color = "red"
             try:
                 self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap(self.spectrogram_color_map)
@@ -3517,6 +3520,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             self.spectro.sendEvent.connect(self.signal_from_widget)
+            self.spectro.sb_freq_min.setValue(0)
+            self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
             self.spectro.show()
             self.timer_spectro.start()
 
@@ -4641,13 +4646,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
 
             # spectrogram
+
             self.spectrogramHeight = 80
+            '''
             try:
                 self.spectrogramHeight = int(settings.value("spectrogram_height"))
                 if not self.spectrogramHeight:
                     self.spectrogramHeight = 80
             except Exception:
                 self.spectrogramHeight = 80
+            '''
 
             try:
                 self.spectrogram_color_map = settings.value("spectrogram_color_map")
@@ -4655,6 +4663,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
             except Exception:
                 self.spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
+
+            try:
+                self.spectrogram_time_interval = int(settings.value("spectrogram_time_interval"))
+                if not self.spectrogram_time_interval:
+                    self.spectrogram_time_interval = 10
+            except Exception:
+                self.spectrogram_time_interval = 10
+
 
             # plot colors
             try:
@@ -4736,8 +4752,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
         settings.setValue("frame_cache_size", self.fbf_cache_size)
         # spectrogram
-        settings.setValue("spectrogram_height", self.spectrogramHeight)
+        '''settings.setValue("spectrogram_height", self.spectrogramHeight)'''
         settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
+        settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
         # plot colors
         settings.setValue("plot_colors", "|".join(self.plot_colors))
 

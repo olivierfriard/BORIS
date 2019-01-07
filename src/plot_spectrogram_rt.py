@@ -52,7 +52,7 @@ class Plot_spectrogram_RT(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.interval = 12  # interval of visualization (in seconds)
+        self.interval = 10  # interval of visualization (in seconds)
         self.time_mem = -1
 
         self.cursor_color = "red"
@@ -62,9 +62,35 @@ class Plot_spectrogram_RT(QWidget):
         self.figure = Figure()
 
         self.canvas = FigureCanvas(self.figure)
-        layout = QVBoxLayout()
 
+        layout = QVBoxLayout()
         layout.addWidget(self.canvas)
+
+        hlayout1 = QHBoxLayout()
+        hlayout1.addWidget(QLabel("Time interval"))
+        button_time_inc = QPushButton("+", self)
+        button_time_inc.clicked.connect(lambda: self.time_interval_changed(1))
+        button_time_dec = QPushButton("-", self)
+        button_time_dec.clicked.connect(lambda: self.time_interval_changed(-1))
+        hlayout1.addWidget(button_time_inc)
+        hlayout1.addWidget(button_time_dec)
+        layout.addLayout(hlayout1)
+
+        hlayout2 = QHBoxLayout()
+        hlayout2.addWidget(QLabel("Frequency interval"))
+        self.sb_freq_min = QSpinBox()
+        self.sb_freq_min.setRange(0, 200000)
+        self.sb_freq_min.setSingleStep(100)
+        self.sb_freq_min.valueChanged.connect(self.frequency_interval_changed)
+        self.sb_freq_max = QSpinBox()
+        self.sb_freq_max.setRange(0, 200000)
+        self.sb_freq_max.setSingleStep(100)
+        self.sb_freq_max.valueChanged.connect(self.frequency_interval_changed)
+        hlayout2.addWidget(self.sb_freq_min)
+        hlayout2.addWidget(self.sb_freq_max)
+        layout.addLayout(hlayout2)
+
+
         self.setLayout(layout)
 
         self.installEventFilter(self)
@@ -79,6 +105,26 @@ class Plot_spectrogram_RT(QWidget):
             return True
         else:
             return False
+
+
+    def time_interval_changed(self, action: int):
+        """
+        change the time interval for plotting spectrogram
+
+        Args:
+            action (int): -1 decrease time interval, +1 increase time interval
+        """
+        if action == -1 and self.interval <= 5:
+            return
+        self.interval += (5 * action)
+        self.plot_spectro(current_time=self.time_mem, force_plot=True)
+
+
+    def frequency_interval_changed(self):
+        """
+        change the frequency interval for plotting spectrogram
+        """
+        self.plot_spectro(current_time=self.time_mem, force_plot=True)
 
 
     def load_wav(self, wav_file_path: str) -> dict:
@@ -105,7 +151,7 @@ class Plot_spectrogram_RT(QWidget):
                 "frame_rate": self.frame_rate}
 
 
-    def plot_spectro(self, current_time: float):
+    def plot_spectro(self, current_time: float, force_plot: bool=False):
         """
         plot sound spectrogram centered on the current time
 
@@ -113,7 +159,7 @@ class Plot_spectrogram_RT(QWidget):
             current_time (float): time for displaying spectrogram
         """
 
-        if current_time == self.time_mem:
+        if not force_plot and current_time == self.time_mem:
             return
 
         self.time_mem = current_time
@@ -133,6 +179,7 @@ class Plot_spectrogram_RT(QWidget):
                                                cmap=self.spectro_color_map)
 
             ax.set_xlim(current_time - self.interval / 2, current_time + self.interval / 2)
+
 
             # cursor
             ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
@@ -178,6 +225,8 @@ class Plot_spectrogram_RT(QWidget):
 
             # cursor
             ax.axvline(x=self.interval / 2, color=self.cursor_color, linestyle="-")
+
+        ax.set_ylim(self.sb_freq_min.value(), self.sb_freq_max.value())
 
         self.figure.subplots_adjust(wspace=0, hspace=0)
 
