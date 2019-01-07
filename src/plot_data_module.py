@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -505,8 +505,8 @@ if __name__ == '__main__':
     5 column_converter
 
     examples:
-    python3.6 plot_data_module.py /home/olivier/src/python/pyobserver/dev/data_txt/kara/161007_BATHY_2_n.csv 4,6 True 60 "{4:'hhmmss_2_seconds'}"
-    python3.6 plot_data_module.py /home/olivier/src/python/pyobserver/dev/data_txt/ecg/2017_11_24__10_39_59_ECG.csv 1,2 True 60 "{1:'convert_time_ecg'}"
+    python3.6 plot_data_module.py data_file.csv 4,6 True 60 "{4:'hhmmss_2_seconds'}"
+    python3.6 plot_data_module.py data_file.csv 1,2 True 60 "{1:'convert_time_ecg'}"
 
     """
 
