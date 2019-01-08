@@ -277,7 +277,6 @@ class Click_label(QLabel):
     """
     mouse_pressed_signal = pyqtSignal(int, QEvent)
 
-
     def __init__(self, id_, parent=None):
         QLabel.__init__(self, parent)
         self.id_ = id_
@@ -364,8 +363,9 @@ class Video_frame(QFrame):
         """
         emits signal when video resized
         """
-
+        logging.debug("video frame resized")
         self.view_signal.emit("resized")
+
 
 
 class DW(QDockWidget):
@@ -430,7 +430,7 @@ class DW(QDockWidget):
 
     def view_signal_triggered(self, msg):
         """
-        trasmit signal received by video frame
+        transmit signal received by video frame
         """
         self.view_signal.emit(self.id_, msg)
 
@@ -3526,43 +3526,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.timer_spectro.start()
 
 
-        '''
-        if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
-                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
-
-            if not self.ffmpeg_cache_dir:
-                tmp_dir = tempfile.gettempdir()
-            else:
-                tmp_dir = self.ffmpeg_cache_dir
-
-            currentMediaTmpPath = tmp_dir + os.sep + os.path.basename(
-                urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())))
-
-            if not os.path.isfile("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
-                                                                             self.chunk_length,
-                                                                             self.spectrogram_color_map,
-                                                                             self.spectrogramHeight)):
-                if dialog.MessageDialog(programName, ("Spectrogram file not found.\n"
-                                                      "Do you want to generate it now?\n"
-                                                      "Spectrogram generation can take some time for long media, be patient"),
-                                        [YES, NO]) == YES:
-
-                    self.generate_spectrogram()
-                else:
-                    self.pj[OBSERVATIONS][self.observationId]["visualize_spectrogram"] = False
-                    return True
-
-            self.spectro = plot_spectrogram.Spectrogram("{}.wav.0-{}.{}.{}.spectrogram.png".format(currentMediaTmpPath,
-                                                                                                   self.chunk_length,
-                                                                                                   self.spectrogram_color_map,
-                                                                                                   self.spectrogramHeight))
-            # connect signal from spectrogram class to testsignal function to receive keypress events
-            self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
-            self.spectro.sendEvent.connect(self.signal_from_widget)
-            self.spectro.show()
-            self.timer_spectro.start()
-        '''
-
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
@@ -3667,11 +3630,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
         # restore windows state: dockwidget positions ...
+
+
+        if self.saved_state is None:
+            self.saved_state = self.saveState()
+            self.restoreState(self.saved_state)
+            print("self.saved_state", self.saved_state)
+        else:
+            self.restoreState(self.saved_state)
+
+        '''
         try:
             #self.restoreGeometry(self.saved_geometry)
-            self.restoreState(self.saved_state)
+            if self.saved_state:
+                self.restoreState(self.saved_state)
         except:
+            print("state not restored")
             pass
+        '''
 
         return True
 
@@ -3693,7 +3669,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def signal_from_dw(self, id_, msg):
         """
-        receive signal from dw: clicked or resized
+        receive signal from doxk widget: clicked or resized
         """
 
         if msg == "clicked_out_of_video":
@@ -3723,15 +3699,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[id_].zoomed = False
 
         elif msg == "resized":
+
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
-
 
 
     def eventFilter(self, source, event):
         """
         send event from widget to mainwindow
         """
+
+        #logging.debug("event filter {}".format(event.type()))
 
         if event.type() == QtCore.QEvent.KeyPress:
             key = event.key()
@@ -3808,11 +3786,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.w_live.setVisible(True)
 
-        '''self.textButton = QPushButton("Start live observation")'''
         self.pb_live_obs.setMinimumHeight(60)
-        '''self.textButton.clicked.connect(self.start_live_observation)'''
-
-        '''self.verticalLayout_3.addWidget(self.textButton)'''
 
         # font = QFont("Monospace")
         font = QFont()
@@ -3837,11 +3811,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveTimer.stop()
 
         # restore windows state: dockwidget positions ...
+        if self.saved_state is None:
+            self.saved_state = self.saveState()
+            self.restoreState(self.saved_state)
+            print("self.saved_state", self.saved_state)
+        else:
+            self.restoreState(self.saved_state)
+        '''
         try:
             #self.restoreGeometry(self.saved_geometry)
-            self.restoreState(self.saved_state)
+            if self.saved_state:
+                self.restoreState(self.saved_state)
         except:
             pass
+        '''
 
 
     def new_observation_triggered(self):
@@ -4329,7 +4312,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.saved_geometry = self.saveGeometry()
         self.saved_state = self.saveState()
 
-
         if self.playerType == VLC:
             self.timer.stop()
             self.timer_spectro.stop()
@@ -4482,20 +4464,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
 
+
             try:
                 self.restoreGeometry(settings.value("geometry"))
             except Exception:
                 pass
+
+            '''
             try:
                 self.restoreState(settings.value("windowState"))
             except Exception:
                 pass
+            '''
 
             try:
                 self.saved_state = settings.value("dockwidget_positions")
             except Exception:
                 pass
-
 
             self.dwEthogram.setVisible(False)
             self.dwSubjects.setVisible(False)
@@ -4648,14 +4633,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # spectrogram
 
             self.spectrogramHeight = 80
-            '''
-            try:
-                self.spectrogramHeight = int(settings.value("spectrogram_height"))
-                if not self.spectrogramHeight:
-                    self.spectrogramHeight = 80
-            except Exception:
-                self.spectrogramHeight = 80
-            '''
 
             try:
                 self.spectrogram_color_map = settings.value("spectrogram_color_map")
@@ -4720,12 +4697,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings = QSettings(iniFilePath, QSettings.IniFormat)
 
         settings.setValue("geometry", self.saveGeometry())
-        settings.setValue("dockwidget_positions", self.saved_state)
 
-        '''
-        settings.setValue("MainWindow/Size", self.size())
-        settings.setValue("MainWindow/Position", self.pos())
-        '''
+        if self.saved_state:
+            settings.setValue("dockwidget_positions", self.saved_state)
+
         settings.setValue("Time/Format", self.timeFormat)
         settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
         settings.setValue("Time/fast_forward_speed", self.fast)
@@ -4752,7 +4727,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
         settings.setValue("frame_cache_size", self.fbf_cache_size)
         # spectrogram
-        '''settings.setValue("spectrogram_height", self.spectrogramHeight)'''
         settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
         settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
         # plot colors
@@ -8227,6 +8201,8 @@ item []:
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
+            '''
+            # DISABLED because it is not working well
             if ((self.memMedia and mediaName != self.memMedia)
                     or (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive())):
 
@@ -8250,8 +8226,6 @@ item []:
                                     if ev[EVENT_BEHAVIOR_FIELD_IDX] == behav:   # code
                                         cm = ev[EVENT_MODIFIER_FIELD_IDX]
 
-                            '''event = {"subject": subjName, "code": behav, "modifiers": cm, "comment": "", "excluded": ""}'''
-
                             end_time = currentTime / 1000 - Decimal("0.001")
 
                             self.pj[OBSERVATIONS][self.observationId][EVENTS].append([end_time, subjName, behav, cm, ""])
@@ -8262,11 +8236,8 @@ item []:
                             self.projectChanged = True
 
             self.memMedia = mediaName
+            '''
 
-            '''
-            if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended:
-                self.timer.stop()
-            '''
 
 
     def load_behaviors_in_twEthogram(self, behaviorsToShow):
@@ -9891,6 +9862,8 @@ item []:
                 if not ps[0].waitForFinished(5000):
                     ps[0].kill()
 
+        if self.observationId:
+            self.close_observation()
 
         if self.projectChanged:
             response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
