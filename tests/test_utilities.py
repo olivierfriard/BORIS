@@ -17,7 +17,7 @@ import json
 import datetime
 import numpy as np
 
-sys.path.append("..")
+sys.path.append("../src")
 
 import utilities
 import config

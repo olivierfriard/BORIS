@@ -1,19 +1,24 @@
 """
 module for testing time budget analysis
+
+pytest -s -vv test_time_budget.py
 """
 
+import pytest
 import sys
 import json
 import os
-sys.path.append("..")
+sys.path.append("../src")
 
 import time_budget_functions
 import db_functions
 from config import *
 
-os.system("rm -rf output")
-os.system("mkdir output")
 
+@pytest.fixture()
+def before():
+    os.system("rm -rf output")
+    os.system("mkdir output")
 
 class Test_time_budget(object):
 
@@ -36,11 +41,11 @@ class Test_time_budget(object):
                                                 parameters[SELECTED_BEHAVIORS])
 
         out, categories = time_budget_functions.time_budget_analysis(ethogram,
-                                                           cursor,
-                                                  selected_observations,
-                                                  parameters,
-                                                  by_category=False)
+                                                                     cursor,
+                                                                     selected_observations,
+                                                                     parameters,
+                                                                     by_category=False)
 
-        #open("test_tb", "w").write(json.dumps(out))
+        #open("files/test_time_budget1.json", "w").write(json.dumps(out))
         assert json.loads(open("files/test_time_budget1.json").read()) == out
 

@@ -5,7 +5,7 @@ import sys
 import os
 from PyQt5.QtCore import *
 
-sys.path.append("..")
+sys.path.append("../src")
 
 import observation
 import config

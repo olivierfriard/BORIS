@@ -12,9 +12,8 @@ import os
 import sys
 import json
 
-sys.path.append("..")
+sys.path.append("../src")
 import db_functions
-
 
 
 class Test_load_events_in_db(object):

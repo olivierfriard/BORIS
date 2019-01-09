@@ -453,7 +453,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     confirmSound = False               # if True each keypress will be confirmed by a beep
 
     spectrogramHeight = 80
-    spectrogram_time_interval = 10
+    spectrogram_time_interval = SPECTROGRAM_DEFAULT_TIME_INTERVAL
     spectrogram_color_map = SPECTROGRAM_DEFAULT_COLOR_MAP
 
     frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
@@ -2803,13 +2803,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(FRAME_DEFAULT_BITMAP_FORMAT))
 
         # spectrogram
-        preferencesWindow.sbSpectrogramHeight.setValue(self.spectrogramHeight)
+        #preferencesWindow.sbSpectrogramHeight.setValue(self.spectrogramHeight)
         preferencesWindow.cbSpectrogramColorMap.clear()
         preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
         try:
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
         except Exception:
             preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+
+        try:
+            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+        except Exception:
+            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+
+        try:
+            preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
+        except Exception:
+            preferencesWindow.sb_time_interval.setValue(SPECTROGRAM_DEFAULT_TIME_INTERVAL)
 
         # plot colors
         if not self.plot_colors:
@@ -2884,7 +2894,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # spectrogram
             self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
-            self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
+            # self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
+            self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
 
             if self.playMode == FFMPEG:
                 self.FFmpegGlobalFrame -= 1
@@ -2898,7 +2909,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.saveConfigFile()
 
 
-    def getCurrentMediaByFrame(self, player, requiredFrame, fps):
+    def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float):
         """
         Args:
             player (str): player
@@ -3637,18 +3648,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.restoreState(self.saved_state)
             print("self.saved_state", self.saved_state)
         else:
-            self.restoreState(self.saved_state)
-
-        '''
-        try:
-            #self.restoreGeometry(self.saved_geometry)
-            if self.saved_state:
+            try:
                 self.restoreState(self.saved_state)
-        except:
-            print("state not restored")
-            pass
-        '''
-
+            except TypeError:
+                logging.critical("state not restored: Type error")
+                self.saved_state = self.saveState()
+                self.restoreState(self.saved_state)
         return True
 
 
@@ -4470,28 +4475,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-            '''
-            try:
-                self.restoreState(settings.value("windowState"))
-            except Exception:
-                pass
-            '''
-
-            try:
-                self.saved_state = settings.value("dockwidget_positions")
-            except Exception:
-                pass
+            self.saved_state = settings.value("dockwidget_positions")
+            if not isinstance(self.saved_state, QByteArray):
+                self.saved_state = None
+            logging.debug("saved state: {} {}".format(self.saved_state, type(self.saved_state)))
 
             self.dwEthogram.setVisible(False)
             self.dwSubjects.setVisible(False)
             self.dwObservations.setVisible(False)
-
-            '''
-            size = settings.value("MainWindow/Size")
-            if size:
-                self.resize(size)
-                self.move(settings.value("MainWindow/Position"))
-            '''
 
             self.timeFormat = HHMMSS
             try:
@@ -4502,7 +4493,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.fast = 10
             try:
                 self.fast = int(settings.value("Time/fast_forward_speed"))
-
             except Exception:
                 self.fast = 10
 
@@ -4644,9 +4634,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 self.spectrogram_time_interval = int(settings.value("spectrogram_time_interval"))
                 if not self.spectrogram_time_interval:
-                    self.spectrogram_time_interval = 10
+                    self.spectrogram_time_interval = SPECTROGRAM_DEFAULT_TIME_INTERVAL
             except Exception:
-                self.spectrogram_time_interval = 10
+                self.spectrogram_time_interval = SPECTROGRAM_DEFAULT_TIME_INTERVAL
 
 
             # plot colors

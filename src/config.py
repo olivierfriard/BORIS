@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 This file is part of BORIS.
 
@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 """
 
-programName = "BORIS"
+programName: str = "BORIS"
 
 project_format_version = "7.0"
 
@@ -49,9 +49,9 @@ EVENTS = "events"
 TIME_OFFSET = "time offset"
 
 CODING_MAP = "coding_map"
-BEHAVIORS_CODING_MAP = 'behaviors_coding_map'
-SUBJECTS = 'subjects_conf'
-ETHOGRAM = 'behaviors_conf'
+BEHAVIORS_CODING_MAP = "behaviors_coding_map"
+SUBJECTS = "subjects_conf"
+ETHOGRAM = "behaviors_conf"
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
 CONVERTERS = "converters"
 
@@ -65,11 +65,11 @@ POINT_EVENT_PLOT_COLOR = "black"
 
 CHAR_FORBIDDEN_IN_MODIFIERS = "(|),`~"
 
-subjects_config = ['key', 'id']
+subjects_config = ["key", "id"]
 
 subjectsFields = ["key", SUBJECT_NAME, "description"]
 
-UNPAIRED = 'UNPAIRED'
+UNPAIRED = "UNPAIRED"
 
 YES = "Yes"
 NO = "No"
@@ -80,7 +80,7 @@ DISCARD = "Discard"
 OK = "OK"
 OVERWRITE = "Overwrite"
 
-NO_FOCAL_SUBJECT = 'No focal subject'
+NO_FOCAL_SUBJECT = "No focal subject"
 
 TYPE = "type"
 FILE = "file"
@@ -115,7 +115,7 @@ BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
 # fields for event configuration
-fields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
+fields = {"type": 0, "key": 1, "code": 2, "description": 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 
 behav_fields_in_mainwindow = {0: "key", 1: "code", 2: "type", 3: "description", 4: "category", 5: "modifiers", 6: "excluded"}
 
@@ -265,6 +265,8 @@ CATEGORY_COLORS_LIST = ["#FF96CC", "#96FF9C", "#CCFFFE", "#EEFF70", "#FF4F64", "
 
 SPECTROGRAM_COLOR_MAPS = ['viridis', 'inferno', 'plasma', 'magma', "gray", "YlOrRd"]
 SPECTROGRAM_DEFAULT_COLOR_MAP = 'viridis'
+SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
+
 
 # see matplotlib.colors.cnames.keys()
 # https://xkcd.com/color/rgb/

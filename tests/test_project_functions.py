@@ -1,5 +1,8 @@
 """
 module for testing project_functions.py
+
+
+pytest -s -vv test_project_functions.py
 """
 
 import os
@@ -7,7 +10,7 @@ import sys
 import json
 from decimal import Decimal
 
-sys.path.append("..")
+sys.path.append("../src")
 
 import project_functions
 from config import *

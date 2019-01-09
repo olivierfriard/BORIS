@@ -7,7 +7,7 @@ import json
 import os
 from openpyxl import load_workbook
 
-sys.path.append("..")
+sys.path.append("../src")
 
 import export_observation
 from config import *
@@ -17,7 +17,6 @@ from config import *
 
 @pytest.fixture()
 def before():
-    print('\nbefore each test')
     os.system("rm -rf output")
     os.system("mkdir output")
 
