@@ -17,5 +17,7 @@
 <file alias="frame_mode">icons/glyphicons_008_film.png</file>
 <file alias="frame_backward">icons/glyphicons_210_left_arrow.png</file>
 <file alias="frame_forward">icons/glyphicons_211_right_arrow.png</file>
+<file alias="beep">sounds/beep.wav</file>
+<file alias="key_sound">sounds/key_sound.wav</file>
 </qresource>
 </RCC>

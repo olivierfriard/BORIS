@@ -8638,7 +8638,7 @@ item []:
             sound_type (str): type of sound
         """
 
-        QSound.play("{}.wav".format(sound_type))
+        QSound.play(":/{}".format(sound_type))
 
 
     def is_playing(self):
