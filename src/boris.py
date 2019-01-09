@@ -50,6 +50,7 @@ try:
     from PyQt5.QtCore import *
     from PyQt5.QtGui import *
     from PyQt5.QtWidgets import *
+    from PyQt5.QtMultimedia import QSound
     from boris_ui5 import *
     import qrc_boris5
 except ModuleNotFoundError:
@@ -2930,6 +2931,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return currentMedia, round(frameCurrentMedia)
 
 
+    '''
+    # NOT IN USE
     def getCurrentMediaByTime(self, player, obsId, globalTime):
         """
         get:
@@ -2950,6 +2953,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
 
         return currentMedia, round(currentMediaTime / 1000, 3)
+    '''
 
 
     def ffmpegTimerOut(self):
@@ -6440,7 +6444,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]:
             if self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
                 if int(currentTime) % self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"] == 0:
-                    app.beep()
+                    self.beep("beep")
                     self.liveTimer.stop()
                     self.pb_live_obs.setText("Live observation stopped (scan sampling)")
 
@@ -7845,7 +7849,6 @@ item []:
         """
 
         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-
             if self.playerType == VLC and self.playMode == VLC:
                 sliderPos = self.video_slider.value() / (slider_maximum - 1)
                 videoPosition = sliderPos * self.dw_player[0].mediaplayer.get_length()
@@ -8072,7 +8075,7 @@ item []:
 
             if self.beep_every:
                 if currentTime % (self.beep_every * 1000) <= 300:
-                    self.beep(" -f 555 -l 460")
+                    self.beep("beep")
 
             # current media time
             try:
@@ -8627,15 +8630,16 @@ item []:
             self.ffmpegTimerOut()
 
 
-    def beep(self, parameters):
+    def beep(self, sound_type: str):
         """
         emit beep on various platform
+
+        Args:
+            sound_type (str): type of sound
         """
-        if sys.platform.startswith("linux"):
-            # os.system("beep {}".format(parameters))
-            app.beep()
-        else:
-            app.beep()
+
+        QSound.play("{}.wav".format(sound_type))
+
 
     def is_playing(self):
         """
@@ -8683,7 +8687,7 @@ item []:
 
         # beep
         if self.confirmSound:
-            self.beep("")
+            self.beep("key_sound")
 
         flagPlayerPlaying = self.is_playing()
 
