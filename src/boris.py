@@ -1694,6 +1694,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         allow user to filter behaviors in ethogram widget
 
         Args:
+            title (str): title of dialog box
+            text (str): text of dialog box
             table (str): table where behaviors will be filtered
         """
 
@@ -9509,7 +9511,7 @@ item []:
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
-        filediag_func = QFileDialog(self).getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog().getSaveFileName
 
         if mode == "tabular":
             if len(selectedObservations) > 1:  # choose directory for exporting observations
@@ -9552,8 +9554,6 @@ item []:
                                                     "The file {} already exists.".format(fileName),
                                                     [CANCEL, OVERWRITE]) == CANCEL:
                                 return
-
-
 
         if mode == "jwatcher":
             exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events",

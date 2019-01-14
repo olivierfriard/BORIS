@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -349,7 +349,8 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     header = ["Time"]
     header.extend(["Media file path", "Total length", "FPS"])
 
-    header.extend(["Subject", "Behavior"])
+    header.extend(["Subject", "Behavior", "Behavioral category"])
+
     for x in range(1, max_modifiers + 1):
         header.append("Modifier {}".format(x))
     header.extend(["Comment", "Status"])
@@ -391,12 +392,24 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
             fields.append(event[EVENT_SUBJECT_FIELD_IDX])
             fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
-            modifiers = event[EVENT_MODIFIER_FIELD_IDX].split("|")
-            while len(modifiers) < max_modifiers:
-                modifiers.append("")
+            # behavioral category
+            try:
+                behav_category = [ethogram[idx]["category"] for idx in ethogram
+                                  if "category" in ethogram[idx] and ethogram[idx][BEHAVIOR_CODE] == event[EVENT_BEHAVIOR_FIELD_IDX]][0]
+            except IndexError:
+                behav_category = ""
+            fields.append(behav_category)
 
-            for m in modifiers:
-                fields.append(m)
+            # modifiers
+            if max_modifiers:
+                modifiers = event[EVENT_MODIFIER_FIELD_IDX].split("|")
+                while len(modifiers) < max_modifiers:
+                    modifiers.append("")
+
+                for m in modifiers:
+                    fields.append(m)
+
+            # comment
             fields.append(event[EVENT_COMMENT_FIELD_IDX].replace(os.linesep, " "))
             # status
             fields.append(event[-1])
@@ -411,10 +424,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     if output_format in ["xls", "xlsx"]:
         for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
             data.title = data.title.replace(forbidden_char, " ")
-
-    if output_format in ["xls"]:
-        if len(data.title) > 31:
-            data.title = data.title[0:31]
+        if output_format in ["xls"]:
+            if len(data.title) > 31:
+                data.title = data.title[0:31]
 
     for row in rows:
         data.append(utilities.complete(row, maxLen))
