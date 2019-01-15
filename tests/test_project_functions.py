@@ -44,6 +44,15 @@ class Test_check_if_media_available(object):
         assert project_functions.check_if_media_available(pj[OBSERVATIONS]["live"],
                                                           'files/test.boris') == (True, "")
 
+    '''
+    def test_media_available(self):
+        pj = json.loads(open("files/test_without_media_files_paths.boris").read())
+
+        assert project_functions.check_if_media_available(pj[OBSERVATIONS]["geese1"],
+                                                          'files/test.boris') == (True, "")
+    '''
+
+
 
 class Test_check_project_integrity(object):
 
@@ -56,6 +65,7 @@ class Test_check_project_integrity(object):
                                                             media_file_available=False)
 
         assert results == '''Observation: <b>live not paired</b><br>The behavior <b>s</b>  is not PAIRED for subject "<b>No focal subject</b>" at <b>00:00:26.862</b><br>'''
+
 
 
 class Test_check_state_events_obs(object):
