@@ -12,8 +12,6 @@ sys.path.append("../src")
 import export_observation
 from config import *
 
-#os.system("rm -rf output")
-#os.system("mkdir output")
 
 @pytest.fixture()
 def before():
@@ -275,8 +273,8 @@ class Test_events_to_behavioral_sequences(object):
 
 
 
-'''
 
+'''
 open("1", "w").write(out)
 
 a= Test_export_events()

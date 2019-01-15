@@ -1079,7 +1079,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return
 
-            project_functions.export_observations_list(self.pj, file_name, output_format)
+            if not project_functions.export_observations_list(self.pj, file_name, output_format):
+                QMessageBox.warning(self, programName, "File not created due to an error")
+
 
 
     def check_project_integrity(self):
@@ -6546,7 +6548,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         export aggregated events.
         Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
-        format is selected using the filename extension
         """
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
@@ -6653,7 +6654,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
                 header.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
-        header.extend(["Subject", "Behavior"])
+        header.extend(["Subject", "Behavior", "Behavioral category"])
         header.extend(["Modifiers"])
         header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
 

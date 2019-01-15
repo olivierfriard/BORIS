@@ -16,7 +16,7 @@ a	12
 b	text value for b							
 c	111							
 								
-Time	Media file path	Total length	FPS	Subject	Behavior	Comment	Status	
+Time	Media file path	Total length	FPS	Subject	Behavior	Behavioral category	Comment	Status
 3.300	video_test_25fps_360s.mp4	359.960	25.0	subject1	s			START
 7.750	video_test_25fps_360s.mp4	359.960	25.0	subject1	s			STOP
 9.900	video_test_25fps_360s.mp4	359.960	25.0	subject1	s			START

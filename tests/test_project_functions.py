@@ -16,6 +16,77 @@ import project_functions
 from config import *
 
 
+class Test_behavior_category(object):
+
+    def test_1(self):
+        pj = json.loads(open("files/test.boris").read())
+        assert project_functions.behavior_category(pj[ETHOGRAM]) == {'p': '', 's': '', 'q': '', 'r': '', 'm': ''}
+
+
+class Test_check_coded_behaviors(object):
+
+    def test_1(self):
+        pj = json.loads(open("files/test.boris").read())
+        assert project_functions.check_coded_behaviors(pj) == set()
+
+
+class Test_check_if_media_available(object):
+
+    def test_media_not_available(self):
+        pj = json.loads(open("files/test.boris").read())
+
+        assert project_functions.check_if_media_available(pj[OBSERVATIONS]["offset positif"],
+                                                          'files/test.boris') == (False, 'Media file <b>video_test_25fps_360s.mp4</b> not found')
+
+    def test_live_observation(self):
+        pj = json.loads(open("files/test.boris").read())
+
+        assert project_functions.check_if_media_available(pj[OBSERVATIONS]["live"],
+                                                          'files/test.boris') == (True, "")
+
+
+class Test_check_project_integrity(object):
+
+    def test_1(self):
+        pj = json.loads(open("files/test.boris").read())
+
+        results = project_functions.check_project_integrity(pj,
+                                                            HHMMSS,
+                                                           'files/test.boris',
+                                                            media_file_available=False)
+
+        assert results == '''Observation: <b>live not paired</b><br>The behavior <b>s</b>  is not PAIRED for subject "<b>No focal subject</b>" at <b>00:00:26.862</b><br>'''
+
+
+class Test_check_state_events_obs(object):
+
+    def test_observation_ok(self):
+        pj = json.loads(open("files/test.boris").read())
+
+        results = project_functions.check_state_events_obs("offset positif",
+                                                            pj[ETHOGRAM],
+                                                            pj[OBSERVATIONS]["offset positif"],
+                                                            HHMMSS)
+        # print(results)
+
+        assert results == (True, 'No problem detected')
+
+
+    def test_observation_not_paired(self):
+        pj = json.loads(open("files/test.boris").read())
+
+        results = project_functions.check_state_events_obs("live not paired",
+                                                            pj[ETHOGRAM],
+                                                            pj[OBSERVATIONS]["live not paired"],
+                                                            HHMMSS)
+        # print(results)
+
+        assert results == (False, 'The behavior <b>s</b>  is not PAIRED for subject "<b>No focal subject</b>" at <b>00:00:26.862</b><br>')
+
+
+
+
+
 class Test_remove_media_files_path(object):
 
     def test_1(self):
@@ -27,6 +98,7 @@ class Test_remove_media_files_path(object):
         pj_wo_media_files_paths = project_functions.remove_media_files_path(pj)
 
         assert pj_wo_media_files_paths == json.loads(open("files/test_without_media_files_paths.boris").read())
+
 
 
 class Test_media_full_path(object):

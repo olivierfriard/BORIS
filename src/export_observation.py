@@ -351,6 +351,8 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     header.extend(["Subject", "Behavior", "Behavioral category"])
 
+    behavioral_category = project_functions.behavior_category(ethogram)
+
     for x in range(1, max_modifiers + 1):
         header.append("Modifier {}".format(x))
     header.extend(["Comment", "Status"])
@@ -393,10 +395,10 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
             fields.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
             # behavioral category
+
             try:
-                behav_category = [ethogram[idx]["category"] for idx in ethogram
-                                  if "category" in ethogram[idx] and ethogram[idx][BEHAVIOR_CODE] == event[EVENT_BEHAVIOR_FIELD_IDX]][0]
-            except IndexError:
+                behav_category = behavioral_category[event[EVENT_BEHAVIOR_FIELD_IDX]]
+            except Exception:
                 behav_category = ""
             fields.append(behav_category)
 
@@ -526,6 +528,8 @@ def export_aggregated_events(pj, parameters, obsId):
     if not ok:
         data
 
+    behavioral_category = project_functions.behavior_category(pj[ETHOGRAM])
+
     cursor = connector.cursor()
 
     for subject in parameters["selected subjects"]:
@@ -577,6 +581,7 @@ def export_aggregated_events(pj, parameters, obsId):
 
                         row_data.extend([subject,
                                          behavior,
+                                         behavioral_category[behavior],
                                          row["modifiers"].strip(),
                                          POINT,
                                          "{0:.3f}".format(row["start"]),  # start
@@ -606,6 +611,7 @@ def export_aggregated_events(pj, parameters, obsId):
 
                             row_data.extend([subject,
                                              behavior,
+                                             behavioral_category[behavior],
                                              row["modifiers"].strip(),
                                              STATE,
                                              "{0:.3f}".format(row["start"]),

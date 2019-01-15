@@ -36,124 +36,49 @@ import utilities
 import select_observations
 
 
-def export_observations_list(pj, file_name, output_format):
+def behavior_category(ethogram: dict) -> dict:
     """
-    export a list of selected observations
+    returns a dictionary containing the behavioral category of each behavior
+
+    Args:
+        ethogram (dict): ethogram
+
+    Returns:
+        dict: dictionary containing behavioral category (value) for each behavior code (key)
+    """
+
+    behavioral_category = {}
+    for idx in ethogram:
+        if BEHAVIOR_CATEGORY in ethogram[idx]:
+            behavioral_category[ethogram[idx][BEHAVIOR_CODE]] = ethogram[idx][BEHAVIOR_CATEGORY]
+        else:
+            behavioral_category[ethogram[idx][BEHAVIOR_CODE]] = ""
+    return behavioral_category
+
+
+def check_coded_behaviors(pj: dict) -> set:
+    """
+    check if behaviors coded in events are defined in ethogram
 
     Args:
         pj (dict): project dictionary
-        file_name (str): path of file to save list of observations
-        output_format (str): format output
-    """
-
-    resultStr, selected_observations = select_observations.select_observations(pj, MULTIPLE)
-    if not selected_observations:
-        return
-
-    data = tablib.Dataset()
-    data.headers = ["Observation id", "Date", "Description", "Subjects", "Media files/LIVE"]
-
-    indep_var_header = []
-    if INDEPENDENT_VARIABLES in pj:
-        for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
-            indep_var_header.append(pj[INDEPENDENT_VARIABLES][idx]["label"])
-    data.headers.extend(indep_var_header)
-
-    for obs_id in selected_observations:
-
-        subjects = ", ".join(sorted(list(set([x[EVENT_SUBJECT_FIELD_IDX] for x in pj[OBSERVATIONS][obs_id][EVENTS]]))))
-        if pj[OBSERVATIONS][obs_id][TYPE] == "LIVE":
-            media_files = ["LIVE"]
-        elif pj[OBSERVATIONS][obs_id][TYPE] == "MEDIA":
-            media_files = []
-            if pj[OBSERVATIONS][obs_id][FILE]:
-                for player in sorted(pj[OBSERVATIONS][obs_id][FILE].keys()):
-                    for media in pj[OBSERVATIONS][obs_id][FILE][player]:
-                        media_files.append("#{0}: {1}".format(player, media))
-
-        # independent variables
-        indep_var = []
-        if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:
-            for var_label in indep_var_header:
-                if var_label in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
-                    indep_var.append(pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][var_label])
-                else:
-                    indep_var.append("")
-
-        data.append(
-            [obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(media_files)] +
-            indep_var
-        )
-
-    if output_format in ["tsv", "csv", "html"]:
-        with open(file_name, "wb") as f:
-            f.write(str.encode(data.export(output_format)))
-    if output_format in ["ods", "xlsx", "xls"]:
-        with open(file_name, "wb") as f:
-            f.write(data.export(output_format))
-
-
-def remove_media_files_path(pj):
-    """
-    remove path from media files
-    tested
-
-    Args:
-        pj (dict): project file
 
     Returns:
-        dict: project without media file paths
+        set: behaviors present in observations that are not define in ethogram
     """
+
+    # set of behaviors defined in ethogram
+    ethogram_behavior_codes = {pj[ETHOGRAM][idx]["code"] for idx in pj[ETHOGRAM]}
+    behaviors_not_defined = []
 
     for obs_id in pj[OBSERVATIONS]:
-        if pj[OBSERVATIONS][obs_id][TYPE] not in [MEDIA]:
-            continue
-        for n_player in ALL_PLAYERS:
-            if n_player in pj[OBSERVATIONS][obs_id][FILE]:
-                for idx, media_file in enumerate(pj[OBSERVATIONS][obs_id][FILE][n_player]):
-                    p = str(pathlib.Path(media_file).name)
-                    if p != media_file:
-                        pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
-                        if "media_info" in pj[OBSERVATIONS][obs_id]:
-                            for info in ["length", "hasAudio", "hasVideo", "fps"]:
-                                if (
-                                    info in pj[OBSERVATIONS][obs_id]["media_info"] and
-                                    media_file in pj[OBSERVATIONS][obs_id]["media_info"][info]
-                                ):
-                                    pj[OBSERVATIONS][obs_id]["media_info"][info][p] = pj[OBSERVATIONS][obs_id]["media_info"][info][
-                                        media_file
-                                    ]
-                                    del pj[OBSERVATIONS][obs_id]["media_info"][info][media_file]
-
-    return copy.deepcopy(pj)
+        for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+            if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+    return set(sorted(behaviors_not_defined))
 
 
-def media_full_path(media_file: str, project_file_name: str) -> str:
-    """
-    media full path
-    add path of BORIS project if media without path
-
-    Args:
-        media_file (str): media file path
-        project_file_name (str): project file name
-
-    Returns:
-        str: media full path
-    """
-
-    media_path = pathlib.Path(media_file)
-    if media_path.exists():
-        return str(media_path)
-    else:
-        project_path = pathlib.Path(project_file_name)
-        p = project_path.parent / media_path.name
-        if p.exists():
-            return str(p)
-        else:
-            return ""
-
-
-def check_if_media_available(observation, project_file_name):
+def check_if_media_available(observation: dict, project_file_name: str) -> bool:
     """
     check if media files available
 
@@ -161,8 +86,9 @@ def check_if_media_available(observation, project_file_name):
         observation (dict): observation to be checked
 
     Returns:
-         bool: True if media files found or for live observation
+        bool: True if media files found or for live observation
                else False
+        str: error message
     """
     if observation[TYPE] in [LIVE]:
         return True, ""
@@ -177,7 +103,160 @@ def check_if_media_available(observation, project_file_name):
     return True, ""
 
 
-def create_subtitles(pj, selected_observations, parameters, export_dir):
+def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = HHMMSS) -> tuple:
+    """
+    check state events for the observation obsId
+    check if behaviors in observation are defined in ethogram
+    check if number is odd
+
+    Args:
+        obsId (str): id of observation to check
+        ethogram (dict): ethogram of project
+        observation (dict): observation to be checked
+        time_format (str): time format
+
+    Returns:
+        tuple (bool, str): if OK True else False , message
+    """
+
+    out = ""
+
+    # check if behaviors are defined as "state event"
+    event_types = {ethogram[idx]["type"] for idx in ethogram}
+
+    if not event_types or event_types == {"Point event"}:
+        return (True, "No behavior is defined as `State event`")
+
+    flagStateEvent = False
+    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
+    ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
+
+    for subject in sorted(set(subjects)):
+
+        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
+
+        for behavior in sorted(set(behaviors)):
+            if behavior not in ethogram_behaviors:
+                # return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
+                continue
+            else:
+                if STATE in event_type(behavior, ethogram).upper():
+                    flagStateEvent = True
+                    lst, memTime = [], {}
+                    for event in [
+                        event
+                        for event in observation[EVENTS]
+                        if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
+                    ]:
+
+                        behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
+
+                        if behav_modif in lst:
+                            lst.remove(behav_modif)
+                            del memTime[str(behav_modif)]
+                        else:
+                            lst.append(behav_modif)
+                            memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
+
+                    for event in lst:
+                        out += (
+                            """The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
+                            """ "<b>{subject}</b>" at <b>{time}</b><br>"""
+                        ).format(
+                            behavior=behavior,
+                            modifier=("(modifier " + event[1] + ") ") if event[1] else "",
+                            subject=subject if subject else NO_FOCAL_SUBJECT,
+                            time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]),
+                        )
+
+    return (False, out) if out else (True, "No problem detected")
+
+'''
+def check_events(obsId, ethogram, observation):
+    """
+    Check if coded events are in ethogram
+
+    Args:
+        obsId (str): id of observation to check
+        ethogram (dict): ethogram of project
+        observation (dict): observation to be checked
+
+    Returns:
+        list: list of behaviors found in observations but not in ethogram
+    """
+
+    coded_behaviors = {event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]}
+    behaviors_in_ethogram = [ethogram[idx][BEHAVIOR_CODE] for idx in ethogram]
+
+    not_in_ethogram = [coded_behavior for coded_behavior in coded_behaviors if coded_behavior not in behaviors_in_ethogram]
+    return not_in_ethogram
+'''
+
+
+def check_project_integrity(pj: dict,
+                            time_format: str,
+                            project_file_name: str,
+                            media_file_available: bool=True) -> str:
+
+    """
+    check project integrity
+    check if behaviors in observations are in ethogram
+
+    Args:
+        pj (dict): BORIS project
+        time_format (str): time format
+        project_file_name (str): project file name
+        media_file_access(bool): check if media file are available
+
+    Returns:
+        str: message
+    """
+    out = ""
+
+    # check for behavior not in ethogram
+    # remove because already tested bt check_state_events_obs function
+
+    try:
+        # check if coded behaviors are defined in ethogram
+        r = check_coded_behaviors(pj)
+        if r:
+            out += "The following behaviors are not defined in the ethogram: <b>{}</b><br>".format(", ".join(r))
+
+        # check for unpaired state events
+        for obs_id in pj[OBSERVATIONS]:
+            ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
+            if not ok:
+                if out:
+                    out += "<br><br>"
+                out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+
+        # check if behavior belong to category that is not in categories list
+        for idx in pj[ETHOGRAM]:
+            if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]:
+                if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]:
+                    if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
+                        if out:
+                            out += "<br><br>"
+                        out += (
+                            "The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
+                            "that is no more in behavioral categories list."
+                        ).format(pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
+
+        # check if all media are available
+        if media_file_available:
+            for obs_id in pj[OBSERVATIONS]:
+                ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
+                if not ok:
+                    if out:
+                        out += "<br><br>"
+                    out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+
+        return out
+    except Exception:
+        return str(sys.exc_info()[1])
+
+
+def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple:
     """
     create subtitles for selected observations, subjects and behaviors
 
@@ -330,6 +409,136 @@ def create_subtitles(pj, selected_observations, parameters, export_dir):
     except Exception:
         raise
         return False, str(sys.exc_info()[1])
+
+
+def export_observations_list(pj: dict, file_name: str, output_format: str) -> bool:
+    """
+    create file with a list of selected observations
+
+    Args:
+        pj (dict): project dictionary
+        file_name (str): path of file to save list of observations
+        output_format (str): format output
+
+    Returns:
+        bool: True of OK else False
+    """
+
+    resultStr, selected_observations = select_observations.select_observations(pj, MULTIPLE)
+    if not selected_observations:
+        return
+
+    data = tablib.Dataset()
+    data.headers = ["Observation id", "Date", "Description", "Subjects", "Media files/LIVE"]
+
+    indep_var_header = []
+    if INDEPENDENT_VARIABLES in pj:
+        for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
+            indep_var_header.append(pj[INDEPENDENT_VARIABLES][idx]["label"])
+    data.headers.extend(indep_var_header)
+
+    for obs_id in selected_observations:
+
+        subjects = ", ".join(sorted(list(set([x[EVENT_SUBJECT_FIELD_IDX] for x in pj[OBSERVATIONS][obs_id][EVENTS]]))))
+        if pj[OBSERVATIONS][obs_id][TYPE] == "LIVE":
+            media_files = ["LIVE"]
+        elif pj[OBSERVATIONS][obs_id][TYPE] == "MEDIA":
+            media_files = []
+            if pj[OBSERVATIONS][obs_id][FILE]:
+                for player in sorted(pj[OBSERVATIONS][obs_id][FILE].keys()):
+                    for media in pj[OBSERVATIONS][obs_id][FILE][player]:
+                        media_files.append("#{0}: {1}".format(player, media))
+
+        # independent variables
+        indep_var = []
+        if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:
+            for var_label in indep_var_header:
+                if var_label in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
+                    indep_var.append(pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][var_label])
+                else:
+                    indep_var.append("")
+
+        data.append(
+            [obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(media_files)] +
+            indep_var
+        )
+
+    if output_format in ["tsv", "csv", "html"]:
+        try:
+            with open(file_name, "wb") as f:
+                f.write(str.encode(data.export(output_format)))
+        except Exception:
+            return False
+    if output_format in ["ods", "xlsx", "xls"]:
+        try:
+            with open(file_name, "wb") as f:
+                f.write(data.export(output_format))
+        except:
+            return False
+
+    return True
+
+
+def remove_media_files_path(pj):
+    """
+    remove path from media files
+    tested
+
+    Args:
+        pj (dict): project file
+
+    Returns:
+        dict: project without media file paths
+    """
+
+    for obs_id in pj[OBSERVATIONS]:
+        if pj[OBSERVATIONS][obs_id][TYPE] not in [MEDIA]:
+            continue
+        for n_player in ALL_PLAYERS:
+            if n_player in pj[OBSERVATIONS][obs_id][FILE]:
+                for idx, media_file in enumerate(pj[OBSERVATIONS][obs_id][FILE][n_player]):
+                    p = str(pathlib.Path(media_file).name)
+                    if p != media_file:
+                        pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
+                        if "media_info" in pj[OBSERVATIONS][obs_id]:
+                            for info in ["length", "hasAudio", "hasVideo", "fps"]:
+                                if (
+                                    info in pj[OBSERVATIONS][obs_id]["media_info"] and
+                                    media_file in pj[OBSERVATIONS][obs_id]["media_info"][info]
+                                ):
+                                    pj[OBSERVATIONS][obs_id]["media_info"][info][p] = pj[OBSERVATIONS][obs_id]["media_info"][info][
+                                        media_file
+                                    ]
+                                    del pj[OBSERVATIONS][obs_id]["media_info"][info][media_file]
+
+    return copy.deepcopy(pj)
+
+
+def media_full_path(media_file: str, project_file_name: str) -> str:
+    """
+    media full path
+    add path of BORIS project if media without path
+
+    Args:
+        media_file (str): media file path
+        project_file_name (str): project file name
+
+    Returns:
+        str: media full path
+    """
+
+    media_path = pathlib.Path(media_file)
+    if media_path.exists():
+        return str(media_path)
+    else:
+        project_path = pathlib.Path(project_file_name)
+        p = project_path.parent / media_path.name
+        if p.exists():
+            return str(p)
+        else:
+            return ""
+
+
 
 
 def observation_total_length(observation):
@@ -701,94 +910,6 @@ def event_type(code: str, ethogram: dict) -> str:
     return None
 
 
-def check_events(obsId, ethogram, observation):
-    """
-    Check if coded events are in ethogram
-
-    Args:
-        obsId (str): id of observation to check
-        ethogram (dict): ethogram of project
-        observation (dict): observation to be checked
-
-    Returns:
-        list: list of behaviors found in observations but not in ethogram
-    """
-
-    coded_behaviors = {event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]}
-    behaviors_in_ethogram = [ethogram[idx][BEHAVIOR_CODE] for idx in ethogram]
-
-    not_in_ethogram = [coded_behavior for coded_behavior in coded_behaviors if coded_behavior not in behaviors_in_ethogram]
-    return not_in_ethogram
-
-
-def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_format: str = HHMMSS) -> tuple:
-    """
-    check state events for the observation obsId
-    check if behaviors in observation are defined in ethogram
-    check if number is odd
-
-    Args:
-        obsId (str): id of observation to check
-        ethogram (dict): ethogram of project
-        observation (dict): observation to be checked
-        time_format (str): time format
-
-    Returns:
-        set (bool, str): if OK True else False , message
-    """
-
-    out = ""
-
-    # check if behaviors are defined as "state event"
-    event_types = {ethogram[idx]["type"] for idx in ethogram}
-
-    if not event_types or event_types == {"Point event"}:
-        return (True, "No behavior is defined as `State event`")
-
-    flagStateEvent = False
-    subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
-    ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
-
-    for subject in sorted(set(subjects)):
-
-        behaviors = [event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS] if event[EVENT_SUBJECT_FIELD_IDX] == subject]
-
-        for behavior in sorted(set(behaviors)):
-            if behavior not in ethogram_behaviors:
-                # return (False, "The behaviour <b>{}</b> is not defined in the ethogram.<br>".format(behavior))
-                continue
-            else:
-                if STATE in event_type(behavior, ethogram).upper():
-                    flagStateEvent = True
-                    lst, memTime = [], {}
-                    for event in [
-                        event
-                        for event in observation[EVENTS]
-                        if event[EVENT_BEHAVIOR_FIELD_IDX] == behavior and event[EVENT_SUBJECT_FIELD_IDX] == subject
-                    ]:
-
-                        behav_modif = [event[EVENT_BEHAVIOR_FIELD_IDX], event[EVENT_MODIFIER_FIELD_IDX]]
-
-                        if behav_modif in lst:
-                            lst.remove(behav_modif)
-                            del memTime[str(behav_modif)]
-                        else:
-                            lst.append(behav_modif)
-                            memTime[str(behav_modif)] = event[EVENT_TIME_FIELD_IDX]
-
-                    for event in lst:
-                        out += (
-                            """The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
-                            """ "<b>{subject}</b>" at <b>{time}</b><br>"""
-                        ).format(
-                            behavior=behavior,
-                            modifier=("(modifier " + event[1] + ") ") if event[1] else "",
-                            subject=subject if subject else NO_FOCAL_SUBJECT,
-                            time=memTime[str(event)] if time_format == S else utilities.seconds2time(memTime[str(event)]),
-                        )
-
-    return (False, out) if out else (True, "No problem detected")
-
 
 def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     """
@@ -846,80 +967,3 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     return closing_events_to_add
 
 
-def check_coded_behaviors(pj: dict):
-    """
-    check if behaviors coded in evwnts are defined in ethogram
-    """
-
-    # set of behaviors defined in ethogram
-    ethogram_behavior_codes = {pj[ETHOGRAM][idx]["code"] for idx in pj[ETHOGRAM]}
-    behaviors_not_defined = []
-
-    for obs_id in pj[OBSERVATIONS]:
-        for event in pj[OBSERVATIONS][obs_id][EVENTS]:
-            if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
-                behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
-    return set(sorted(behaviors_not_defined))
-
-
-def check_project_integrity(pj: dict,
-                            time_format: str,
-                            project_file_name: str,
-                            media_file_available: bool=True) -> str:
-
-    """
-    check project integrity
-    check if behaviors in observations are in ethogram
-
-    Args:
-        pj (dict): BORIS project
-        time_format (str): time format
-        project_file_name (str): project file name
-        media_file_access(bool): check if media file are available
-
-    Returns:
-        str: message
-    """
-    out = ""
-
-    # check for behavior not in ethogram
-    # remove because already tested bt check_state_events_obs function
-
-    try:
-        # check if coded behaviors are defined in ethogram
-        r = check_coded_behaviors(pj)
-        if r:
-            out += "The following behaviors are not defined in the ethogram: <b>{}</b><br>".format(", ".join(r))
-
-        # check for unpaired state events
-        for obs_id in pj[OBSERVATIONS]:
-            ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
-            if not ok:
-                if out:
-                    out += "<br><br>"
-                out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
-
-        # check if behavior belong to category that is not in categories list
-        for idx in pj[ETHOGRAM]:
-            if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]:
-                if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]:
-                    if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
-                        if out:
-                            out += "<br><br>"
-                        out += (
-                            "The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
-                            "that is no more in behavioral categories list."
-                        ).format(pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
-
-        # check if all media are available
-        if media_file_available:
-            for obs_id in pj[OBSERVATIONS]:
-                ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
-                if not ok:
-                    if out:
-                        out += "<br><br>"
-                    out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
-
-        return out
-    except Exception:
-        return str(sys.exc_info()[1])
