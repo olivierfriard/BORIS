@@ -830,9 +830,9 @@ class Ui_MainWindow(object):
         self.actionFilter_events.setText(_translate("MainWindow", "Filter events", None))
         self.actionShow_all_events.setText(_translate("MainWindow", "Show all events", None))
         self.actionShow_all_events.setToolTip(_translate("MainWindow", "Show all events", None))
-        self.actionEdit_event_time.setText(_translate("MainWindow", "Edit time of selected event(s)", None))
+        self.actionEdit_event_time.setText(_translate("MainWindow", "Shift time of selected event(s)", None))
         self.actionCopy_events.setText(_translate("MainWindow", "Copy events", None))
-        self.actionPaste_events.setText(_translate("MainWindow", "Paste_events", None))
+        self.actionPaste_events.setText(_translate("MainWindow", "Paste events", None))
         self.actionNoldus_Observer_template.setText(_translate("MainWindow", "Noldus Observer XT template", None))
         self.actionExplore_project.setText(_translate("MainWindow", "Explore project", None))
 

@@ -3,7 +3,7 @@ BORIS CLI
 
 Behavioral Observation Research Interactive Software Command Line Interface
 
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

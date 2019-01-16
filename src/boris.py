@@ -149,6 +149,7 @@ logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
 
 video, live = 0, 1
 
+
 class ProjectServerThread(QThread):
     """
     thread for serving project to BORIS mobile app
@@ -443,13 +444,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     pj = dict(EMPTY_PROJECT)
     project = False
 
-    processes = [] # list of QProcess processes
+    processes = []  # list of QProcess processes
 
     saved_state = None
 
     observationId = ""   # current observation id
     timeOffset = 0.0
-    wrongTimeResponse = ""
 
     confirmSound = False               # if True each keypress will be confirmed by a beep
 
@@ -480,8 +480,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     projectFileName = ""
     mediaTotalLength = None
-
-    saveMediaFilePath = True
 
     beep_every = 0
 
@@ -1440,11 +1438,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 elif r["has_video"]:
                     try:
                         current_bitrate = r["bitrate"]
-                    except:
+                    except Exception:
                         pass
                     try:
                         current_resolution = int(r["resolution"].split("x")[0])
-                    except:
+                    except Exception:
                         pass
 
 
@@ -1519,11 +1517,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for file_name in fileNames:
 
                 if action == "reencode_resize":
-                    args =  ["-y",
-                             "-i", '{file_name}'.format(file_name=file_name),
-                             "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
-                             "-b:v", "{video_quality}k".format(video_quality=video_quality),
-                             '{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi'.format(file_name=file_name,
+                    args = ["-y",
+                            "-i", '{file_name}'.format(file_name=file_name),
+                            "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
+                            "-b:v", "{video_quality}k".format(video_quality=video_quality),
+                            '{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi'.format(file_name=file_name,
                                                                                                   horiz_resol=horiz_resol,
                                                                                                   video_quality=video_quality)
                              ]
@@ -2046,7 +2044,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QApplication.processEvents()
 
                 if utilities.extract_wav(self.ffmpeg_bin, media_file_path, tmp_dir) == "":
-                    QMessageBox.critical(self, programName ,
+                    QMessageBox.critical(self, programName,
                                          "Error during extracting WAV of the media file {}".format(media_file_path))
                     break
 
@@ -2808,7 +2806,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(FRAME_DEFAULT_BITMAP_FORMAT))
 
         # spectrogram
-        #preferencesWindow.sbSpectrogramHeight.setValue(self.spectrogramHeight)
         preferencesWindow.cbSpectrogramColorMap.clear()
         preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
         try:
@@ -2968,7 +2965,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("FFmpegTimerOut function")
 
-
         logging.debug("fps {}".format(self.fps))
 
         frameMs = 1000 / self.fps
@@ -3003,8 +2999,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # plot spectro
             self.timer_spectro_out()
 
-            md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
+            # update data plot
+            current_time = self.getLaps()
+            for idx in self.plot_data:
+                self.plot_data[idx].update_plot(current_time)
 
+            md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
 
             frame_image_path = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
                                                                                                sep=os.sep,
@@ -3390,7 +3390,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # for receiving event from volume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
 
-            #for receiving event resize and clicked
+            # for receiving event resize and clicked
             self.dw_player[i].view_signal.connect(self.signal_from_dw)
 
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
@@ -3594,7 +3594,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ext_data_timer_list.append(QTimer())
                     self.ext_data_timer_list[-1].setInterval(w1.time_out)
                     self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w1))
-                    self.ext_data_timer_list[-1].start()
+                    self.timer_plot_data_out(w1)
+                    # self.ext_data_timer_list[-1].start()
 
                     self.plot_data[count] = w1
 
@@ -3637,7 +3638,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ext_data_timer_list.append(QTimer())
                     self.ext_data_timer_list[-1].setInterval(w2.time_out)
                     self.ext_data_timer_list[-1].timeout.connect(lambda: self.timer_plot_data_out(w2))
-                    self.ext_data_timer_list[-1].start()
+                    self.timer_plot_data_out(w2)
+                    # self.ext_data_timer_list[-1].start()
 
                     self.plot_data[count] = w2
 
@@ -3654,7 +3656,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.saved_state is None:
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
-            print("self.saved_state", self.saved_state)
         else:
             try:
                 self.restoreState(self.saved_state)
@@ -3827,17 +3828,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.saved_state is None:
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
-            print("self.saved_state", self.saved_state)
         else:
             self.restoreState(self.saved_state)
-        '''
-        try:
-            #self.restoreGeometry(self.saved_geometry)
-            if self.saved_state:
-                self.restoreState(self.saved_state)
-        except:
-            pass
-        '''
 
 
     def new_observation_triggered(self):
@@ -4703,7 +4695,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("Time/Repositioning_time_offset", self.repositioningTimeOffset)
         settings.setValue("Time/fast_forward_speed", self.fast)
         settings.setValue("Time/play_rate_step", self.play_rate_step)
-        settings.setValue("Save_media_file_path", self.saveMediaFilePath)
+        '''settings.setValue("Save_media_file_path", self.saveMediaFilePath)'''
         settings.setValue("Automatic_backup", self.automaticBackup)
         settings.setValue("behavioural_strings_separator", self.behaviouralStringsSeparator)
         settings.setValue("close_the_same_current_event", self.close_the_same_current_event)
@@ -6217,8 +6209,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
 
-                #newProjectWindow.twBehaviors.resizeColumnsToContents()
-
             # load independent variables
             if INDEPENDENT_VARIABLES in newProjectWindow.pj:
                 for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):
@@ -6715,7 +6705,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             event_stop = "{0:.3f}".format(float(event[stop_idx]))
 
-                        bs_timed = ["{subject}_{behavior}".format(subject=subject, behavior=behavior)] * round( (float(event_stop) - float(event_start)) * 100)
+                        bs_timed = (["{subject}_{behavior}".format(subject=subject, behavior=behavior)] *
+                                    round((float(event_stop) - float(event_start)) * 100))
                         out += "|".join(bs_timed)
 
                 out += "\n"
@@ -7098,7 +7089,6 @@ item []:
 
             self.timer_out()
 
-            '''for n_player in range(N_PLAYER):'''
             for n_player, player in enumerate(self.dw_player):
                 if (str(n_player + 1) not in self.pj[OBSERVATIONS][self.observationId][FILE]
                    or not self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
@@ -7121,7 +7111,6 @@ item []:
             # FIXME check if FPS are compatible for frame-by-frame mode
 
             all_fps = []
-            '''for i in range(N_PLAYER):'''
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -7146,12 +7135,6 @@ item []:
                 player.frame_viewer.setVisible(True)
                 player.videoframe.setVisible(False)
                 player.volume_slider.setVisible(False)
-            '''
-            for i in range(N_PLAYER):
-                self.dw_player[i].frame_viewer.setVisible(True)
-                self.dw_player[i].videoframe.setVisible(False)
-                self.dw_player[i].volume_slider.setVisible(False)
-            '''
 
             # check temp dir for images from ffmpeg
             if not self.ffmpeg_cache_dir:
@@ -7374,7 +7357,7 @@ item []:
             self.currentStates = self.get_current_states_by_subject(
                 state_behavior_codes(self.pj[ETHOGRAM]),
                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                dict(self.pj[SUBJECTS], **{"": {"name": ""}}), # add no focal subject
+                dict(self.pj[SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
                 newTime
             )
 
@@ -7522,91 +7505,96 @@ item []:
             self.no_observation()
             return
 
-        if self.twEvents.selectedItems():
-
-            editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
-                                      current_time=self.getLaps(),
-                                      time_format=self.timeFormat,
-                                      show_set_current_time=True)
-            editWindow.setWindowTitle("Edit event")
-
-            row = self.twEvents.selectedItems()[0].row()
-
-            # mem_event = self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
-            # print("mem_event", mem_event)
-
-            editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]),
-                                                              HHMMSSZZZ))
-            editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
-
-            sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
-
-            editWindow.cobSubject.addItems(sortedSubjects)
-
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
-                editWindow.cobSubject.setCurrentIndex(sortedSubjects.index(self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                                                                                  [row][EVENT_SUBJECT_FIELD_IDX]))
-            else:
-                QMessageBox.warning(self,
-                                    programName,
-                                    "The subject <b>{}</b> does not exist more in the subject's list".format(
-                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX])
-                                    )
-                editWindow.cobSubject.setCurrentIndex(0)
-
-            sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
-            editWindow.cobCode.addItems(sortedCodes)
-
-            # check if selected code is in code's list (no modification of codes)
-            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
-                editWindow.cobCode.setCurrentIndex(
-                    sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
-                                      [EVENT_BEHAVIOR_FIELD_IDX]))
-            else:
-                logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
-                )
-                QMessageBox.warning(self,
-                                    programName,
-                                    "The behaviour <b>{}</b> does not exist more in the ethogram".format(
-                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
-                editWindow.cobCode.setCurrentIndex(0)
-
-            logging.debug("original modifiers: {}".format(
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX])
-            )
-
-            # comment
-            editWindow.leComment.setPlainText(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
-
-            if editWindow.exec_():  # button OK
-
-                self.projectChanged = True
-
-                if self.timeFormat == HHMMSS:
-                    newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
-                if self.timeFormat == S:
-                    newTime = Decimal(str(editWindow.dsbTime.value()))
-
-                for key in self.pj[ETHOGRAM]:
-                    if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
-                        event = self.full_event(key)
-                        event["subject"] = editWindow.cobSubject.currentText()
-                        '''
-                        print([newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3])
-                        # check if edited event has changed
-                        if [newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3]:
-                        '''
-
-                        event["comment"] = editWindow.leComment.toPlainText()
-                        event["row"] = row
-                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
-
-                        self.writeEvent(event, newTime)
-                        break
-
-        else:
+        if not self.twEvents.selectedItems():
             QMessageBox.warning(self, programName, "Select an event to edit")
+            return
+
+        editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
+                                  current_time=self.getLaps(),
+                                  time_format=self.timeFormat,
+                                  show_set_current_time=True)
+        editWindow.setWindowTitle("Edit event")
+
+        twEvents_row = self.twEvents.selectedItems()[0].row()
+
+        tsb_to_edit = [time2seconds(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text())
+                                   if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text()),
+                        self.twEvents.item(twEvents_row, EVENT_SUBJECT_FIELD_IDX).text(),
+                        self.twEvents.item(twEvents_row, EVENT_BEHAVIOR_FIELD_IDX).text()]
+
+        row = [idx for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+               if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] == tsb_to_edit][0]
+
+        editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]),
+                                                          HHMMSSZZZ))
+        editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
+
+        sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
+
+        editWindow.cobSubject.addItems(sortedSubjects)
+
+        if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
+            editWindow.cobSubject.setCurrentIndex(sortedSubjects.index(self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                                                                              [row][EVENT_SUBJECT_FIELD_IDX]))
+        else:
+            QMessageBox.warning(self,
+                                programName,
+                                "The subject <b>{}</b> does not exist more in the subject's list".format(
+                                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX])
+                                )
+            editWindow.cobSubject.setCurrentIndex(0)
+
+        sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
+        editWindow.cobCode.addItems(sortedCodes)
+
+        # check if selected code is in code's list (no modification of codes)
+        if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
+            editWindow.cobCode.setCurrentIndex(
+                sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
+                                  [EVENT_BEHAVIOR_FIELD_IDX]))
+        else:
+            logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
+                self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
+            )
+            QMessageBox.warning(self,
+                                programName,
+                                "The behaviour <b>{}</b> does not exist more in the ethogram".format(
+                                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+            editWindow.cobCode.setCurrentIndex(0)
+
+        logging.debug("original modifiers: {}".format(
+            self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX])
+        )
+
+        # comment
+        editWindow.leComment.setPlainText(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
+
+        if editWindow.exec_():  # button OK
+
+            self.projectChanged = True
+
+            if self.timeFormat == HHMMSS:
+                newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
+            if self.timeFormat == S:
+                newTime = Decimal(str(editWindow.dsbTime.value()))
+
+            for key in self.pj[ETHOGRAM]:
+                if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
+                    event = self.full_event(key)
+                    event["subject"] = editWindow.cobSubject.currentText()
+                    '''
+                    print([newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3])
+                    # check if edited event has changed
+                    if [newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3]:
+                    '''
+
+                    event["comment"] = editWindow.leComment.toPlainText()
+                    event["row"] = row
+                    event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
+
+                    self.writeEvent(event, newTime)
+                    break
+
 
 
     def show_all_events(self):
@@ -7623,7 +7611,7 @@ item []:
         """
         filter coded events and subjects
         """
-
+        print("self.filtered_subjects", self.filtered_subjects)
         parameters = self.choose_obs_subj_behav_category([],  # empty selection of observations for selecting all subjects and behaviors
                                                          maxTime=0,
                                                          flagShowIncludeModifiers=False,
@@ -8068,6 +8056,7 @@ item []:
         triggered by timer
         """
 
+        print("timer out")
         if not self.observationId:
             return
 
@@ -8523,8 +8512,9 @@ item []:
                 return None
 
 
-    def getLaps(self, n_player=0):
-        """Cumulative laps time from begining of observation
+    def getLaps(self, n_player: int=0) -> Decimal:
+        """
+        Cumulative laps time from begining of observation
         no more add time offset!
 
         Args:
@@ -9076,45 +9066,60 @@ item []:
 
     def delete_all_events(self):
         """
-        delete all events in current observation
+        delete all (filtered) events in current observation
         """
 
         if not self.observationId:
             self.no_observation()
             return
 
-        if not self.pj[OBSERVATIONS][self.observationId][EVENTS]:
+        if not self.twEvents.rowCount():
             QMessageBox.warning(self, programName, "No events to delete")
             return
 
         if dialog.MessageDialog(programName,
-                                ("Confirm the deletion of all events in the current observation?<br>"
+                                ("Confirm the deletion of all (filtered) events in the current observation?<br>"
                                  "Filters do not apply!"),
                                 [YES, NO]) == YES:
+            rows_to_delete = []
+            for row in range(self.twEvents.rowCount()):
+                rows_to_delete.append([time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
+                                       if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
+                                       self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
+                                       self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
 
-            self.pj[OBSERVATIONS][self.observationId][EVENTS] = []
+            self.pj[OBSERVATIONS][self.observationId][EVENTS] = [
+                    event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                    if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] not in rows_to_delete
+                ]
+
             self.projectChanged = True
             self.loadEventsInTW(self.observationId)
 
 
     def delete_selected_events(self):
         """
-        delete selected observations
+        delete selected events
         """
 
         if not self.observationId:
             self.no_observation()
             return
-
         if not self.twEvents.selectedIndexes():
             QMessageBox.warning(self, programName, "No event selected!")
         else:
             # list of rows to delete (set for unique)
             try:
-                rows = set([item.row() for item in self.twEvents.selectedIndexes()])
+                rows_to_delete = []
+                for row in set([item.row() for item in self.twEvents.selectedIndexes()]):
+                    rows_to_delete.append([time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
+                                           if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
+                                           self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
+                                           self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
+
                 self.pj[OBSERVATIONS][self.observationId][EVENTS] = [
-                    event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId]
-                                                      [EVENTS]) if idx not in rows
+                    event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                    if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] not in rows_to_delete
                 ]
 
                 self.projectChanged = True
@@ -9128,22 +9133,30 @@ item []:
         edit one or more selected events for subject, behavior and/or comment
         """
         # list of rows to edit
-        rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
+        twEvents_rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
 
-        if not len(rows_to_edit):
+        if not len(twEvents_rows_to_edit):
             QMessageBox.warning(self, programName, "No event selected!")
-        elif len(rows_to_edit) == 1:  # 1 event selected
+        elif len(twEvents_rows_to_edit) == 1:  # 1 event selected
             self.edit_event()
         else:  # editing of more events
-            dialogWindow = EditSelectedEvents(1)
+            dialogWindow = EditSelectedEvents()
             dialogWindow.all_behaviors = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
             dialogWindow.all_subjects = [self.pj[SUBJECTS][str(k)][SUBJECT_NAME]
                                          for k in sorted([int(x) for x in self.pj[SUBJECTS].keys()])]
 
             if dialogWindow.exec_():
+
+                tsb_to_edit = []
+                for row in twEvents_rows_to_edit:
+                    tsb_to_edit.append([time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
+                                           if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
+                                           self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
+                                           self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
+
                 for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                    if idx in rows_to_edit:
+                    if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] in tsb_to_edit:
                         if dialogWindow.rbSubject.isChecked():
                             event[EVENT_SUBJECT_FIELD_IDX] = dialogWindow.newText.selectedItems()[0].text()
                         if dialogWindow.rbBehavior.isChecked():
@@ -9161,9 +9174,9 @@ item []:
         edit time of one or more selected events
         """
         # list of rows to edit
-        rows_to_edit = set([item.row() for item in self.twEvents.selectedIndexes()])
+        twEvents_rows_to_shift = set([item.row() for item in self.twEvents.selectedIndexes()])
 
-        if not len(rows_to_edit):
+        if not len(twEvents_rows_to_shift):
             QMessageBox.warning(self, programName, "No event selected!")
             return
 
@@ -9171,13 +9184,21 @@ item []:
         if ok and d:
             if dialog.MessageDialog(programName,
                                     ("Confirm the {} of {} seconds "
-                                    "to all selected events in the current observation?").format("addition" if d > 0 else "subtraction",
-                                                                                                 abs(d)),
+                                     "to all selected events in the current observation?").format("addition" if d > 0 else "subtraction",
+                                                                                                  abs(d)),
                                     [YES, NO]) == NO:
                 return
 
-            for idx, _ in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-                if idx in rows_to_edit:
+            tsb_to_shift = []
+            for row in twEvents_rows_to_shift:
+                tsb_to_shift.append([time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
+                                     if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
+                                     self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
+                                     self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
+
+            for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+                '''if idx in rows_to_edit:'''
+                if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] in tsb_to_shift:
                     self.pj[OBSERVATIONS][self.observationId][EVENTS][idx][EVENT_TIME_FIELD_IDX] += Decimal("{:.3f}".format(d))
                     self.projectChanged = True
 
@@ -9189,17 +9210,25 @@ item []:
         """
         copy selected events to clipboard
         """
-        rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
-        if not len(rows_to_copy):
+        twEvents_rows_to_copy = set([item.row() for item in self.twEvents.selectedIndexes()])
+        if not len(twEvents_rows_to_copy):
             QMessageBox.warning(self, programName, "No event selected!")
             return
+
+        tsb_to_copy = []
+        for row in twEvents_rows_to_copy:
+            tsb_to_copy.append([time2seconds(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text())
+                                 if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
+                                 self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
+                                 self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
+
         copied_events = []
         for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
-            if idx in rows_to_copy:
+            if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] in tsb_to_copy:
                 copied_events.append("\t".join([str(x) for x in self.pj[OBSERVATIONS][self.observationId][EVENTS][idx]]))
 
         cb = QApplication.clipboard()
-        cb.clear(mode=cb.Clipboard )
+        cb.clear(mode=cb.Clipboard)
         cb.setText("\n".join(copied_events), mode=cb.Clipboard)
 
 
@@ -9232,8 +9261,6 @@ item []:
         self.loadEventsInTW(self.observationId)
 
 
-
-
     def click_signal_find_in_events(self, msg):
         """
         find in events when "Find" button of find dialog box is pressed
@@ -9250,9 +9277,12 @@ item []:
         if self.find_dialog.cbBehavior.isChecked():
             fields_list.append(EVENT_BEHAVIOR_FIELD_IDX)
         if self.find_dialog.cbModifier.isChecked():
-            fields_list.append(EVENT_MODIFIER_FIELD_IDX)
+            '''fields_list.append(EVENT_MODIFIER_FIELD_IDX )'''
+            fields_list.append(4)
+
         if self.find_dialog.cbComment.isChecked():
-            fields_list.append(EVENT_COMMENT_FIELD_IDX)
+            '''fields_list.append(EVENT_COMMENT_FIELD_IDX)'''
+            fields_list.append(5)
         if not fields_list:
             self.find_dialog.lb_message.setText('<font color="red">No fields selected!</font>')
             return
@@ -9260,23 +9290,34 @@ item []:
             self.find_dialog.lb_message.setText('<font color="red">Nothing to search!</font>')
             return
 
-        for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
+        '''for event_idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):'''
+        for event_idx in range(self.twEvents.rowCount()):
             if event_idx <= self.find_dialog.currentIdx:
                 continue
 
             # find only in filtered events
+            '''
             if self.filtered_subjects:
                 if self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_SUBJECT_FIELD_IDX] not in self.filtered_subjects:
                     continue
             if self.filtered_behaviors:
                 if self.pj[OBSERVATIONS][self.observationId][EVENTS][event_idx][EVENT_BEHAVIOR_FIELD_IDX] not in self.filtered_behaviors:
                     continue
+            '''
 
-            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked()) or (self.find_dialog.cbFindInSelectedEvents.isChecked() and
-               event_idx in self.find_dialog.rowsToFind)):
+            if ((not self.find_dialog.cbFindInSelectedEvents.isChecked())
+                or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind)):
+
                 for idx in fields_list:
+                    '''
                     if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in event[idx]) \
-                       or (not self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text().upper() in event[idx].upper()):
+                       or (not self.find_dialog.cb_case_sensitive.isChecked() and
+                           self.find_dialog.findText.text().upper() in event[idx].upper()):
+                    '''
+                    if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()) \
+                       or (not self.find_dialog.cb_case_sensitive.isChecked() and
+                           self.find_dialog.findText.text().upper() in self.twEvents.item(event_idx, idx).text().upper()):
+
                         self.find_dialog.currentIdx = event_idx
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
                         self.twEvents.selectRow(event_idx)
@@ -9414,10 +9455,10 @@ item []:
                 for idx1 in fields_list:
                     if idx1 <= self.find_replace_dialog.currentIdx_idx:
                         continue
-                    '''if self.find_replace_dialog.findText.text() in event[idx1]:'''
 
                     if ((self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text() in event[idx1])
-                       or (not self.find_replace_dialog.cb_case_sensitive.isChecked() and self.find_replace_dialog.findText.text().upper() in event[idx1].upper())):
+                       or (not self.find_replace_dialog.cb_case_sensitive.isChecked() and
+                       self.find_replace_dialog.findText.text().upper() in event[idx1].upper())):
 
                         number_replacement += 1
                         self.find_replace_dialog.currentIdx = event_idx
@@ -9986,7 +10027,6 @@ item []:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
                     return False
 
-                '''for i in range(N_PLAYER):'''
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -9994,6 +10034,11 @@ item []:
 
                 self.timer.start(VLC_TIMER_OUT)
                 self.timer_spectro.start()
+
+                # start all timer for plotting data
+                for data_timer in self.ext_data_timer_list:
+                    data_timer.start()
+
                 self.actionPlay.setIcon(QIcon(":/pause"))
                 return True
 
@@ -10008,7 +10053,6 @@ item []:
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.stop()
             else:
-                '''for i in range(N_PLAYER):'''
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                        self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -10016,6 +10060,11 @@ item []:
 
                             self.timer.stop()
                             self.timer_spectro.stop()
+                            # stop all timer for plotting data
+
+                            for data_timer in self.ext_data_timer_list:
+                                data_timer.stop()
+
                             player.mediaListPlayer.pause()
                             # wait until video is paused or ended
                             while True:
