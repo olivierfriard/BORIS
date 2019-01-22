@@ -2596,8 +2596,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 "The indicated position is behind the total media duration ({})".format(
                                     seconds2time(sum(self.dw_player[0].media_durations) / 1000)))
 
-                    self.timer_out()
-                    self.timer_spectro_out()
+                    self.update_visualizations()
 
 
     def previous_media_file(self):
@@ -2642,8 +2641,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media()) == 0:
                             self.statusbar.showMessage("The first media is playing", 5000)
 
-                self.timer_out()
-                self.timer_spectro_out()
+                self.update_visualizations()
 
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
@@ -2698,8 +2696,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.dw_player[0].media_list.count() - 1):
                             self.statusbar.showMessage("The last media is playing", 5000)
 
-                self.timer_out()
-                self.timer_spectro_out()
+                self.update_visualizations()
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -2991,8 +2988,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug("current media 1: {}".format(currentMedia))
             logging.debug("frame current media 1: {}".format(frameCurrentMedia))
 
-            # plot spectro
+            # update spectro plot
             self.timer_spectro_out()
+            # update data plot
+            for idx in self.plot_data:
+                self.timer_plot_data_out(self.plot_data[idx])
+            
 
             # update data plot
             current_time = self.getLaps()
@@ -7836,8 +7837,8 @@ item []:
                 sliderPos = self.video_slider.value() / (slider_maximum - 1)
                 videoPosition = sliderPos * self.dw_player[0].mediaplayer.get_length()
                 self.dw_player[0].mediaplayer.set_time(int(videoPosition))
-                self.timer_out(scroll_slider=False)
-                self.timer_spectro_out()
+
+                self.update_visualizations(scroll_slider=False)
 
 
     def get_events_current_row(self):
@@ -8968,8 +8969,7 @@ item []:
 
                         tot += d
 
-                self.timer_out()
-                self.timer_spectro_out()
+                self.update_visualizations()
 
 
             if self.playMode == FFMPEG:
@@ -10066,6 +10066,9 @@ item []:
                 self.timer_out()
 
             self.timer_spectro_out()
+            for idx in self.plot_data:
+                self.timer_plot_data_out(self.plot_data[idx])
+
             self.actionPlay.setIcon(QIcon(":/play"))
 
 
@@ -10139,9 +10142,8 @@ item []:
                 else:
                     self.no_media()
 
-                self.timer_out()
-                self.timer_spectro_out()
-
+                self.update_visualizations()
+    
                 # no subtitles
                 # self.mediaplayer.video_set_spu(0)
 
@@ -10211,8 +10213,17 @@ item []:
                 else:
                     self.no_media()
 
-                self.timer_out()
-                self.timer_spectro_out()
+                self.update_visualizations()
+
+
+    def update_visualizations(self, scroll_slider=False):
+        """
+        update visualization of video position, spectrogram and data
+        """
+        self.timer_out(scroll_slider)
+        self.timer_spectro_out()
+        for idx in self.plot_data:
+            self.timer_plot_data_out(self.plot_data[idx])
 
 
     def reset_activated(self):
@@ -10242,8 +10253,7 @@ item []:
 
                 self.dw_player[0].mediaplayer.set_time(0)
 
-                self.timer_out()
-                self.timer_spectro_out()
+                self.update_visualizations()
 
 
     def changedFocusSlot(self, old, now):
