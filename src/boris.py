@@ -328,9 +328,7 @@ class Video_frame(QFrame):
             x_end_video = x_start_video + xv
             y_end_video = yv
 
-            '''print("x_start_video, x_end_video", x_start_video, x_end_video)'''
             if xm < x_start_video or xm > x_end_video:
-                '''print("out of video")'''
                 self.view_signal.emit("clicked_out_of_video")
                 return
 
@@ -340,15 +338,12 @@ class Video_frame(QFrame):
         if xf / yf < self.h_resolution / self.v_resolution:
             xv = xf
             yv = int(xf / (self.h_resolution / self.v_resolution))
-            '''print("xv, yv", xv, yv)'''
             y_start_video = int((yf - yv) / 2)
             x_start_video = 0
             y_end_video = y_start_video + yv
             x_end_video = xv
 
-            '''print("y_start_video, y_end_video", y_start_video, y_end_video)'''
             if ym < y_start_video or ym > y_end_video:
-                '''print("out of video")'''
                 self.view_signal.emit("clicked_out_of_video")
                 return
 
@@ -3469,7 +3464,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     break
             self.dw_player[i].mediaplayer.set_time(0)
 
-            print("size", type(self.dw_player[i].mediaplayer.video_get_size(0)))
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
 
@@ -3693,7 +3687,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         x_center = self.dw_player[id_].videoframe.x_click
         y_center = self.dw_player[id_].videoframe.y_click
-        # print("video position", x_center, y_center)
 
         fw = self.dw_player[id_].videoframe.geometry().width()
         fh = self.dw_player[id_].videoframe.geometry().height()
@@ -4173,7 +4166,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
                                                                    "fps": observationWindow.mediaFPS}
-                # print("self.pj[OBSERVATIONS][new_obs_id][media_info]", self.pj[OBSERVATIONS][new_obs_id]["media_info"])
 
                 try:
                     self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
@@ -5305,7 +5297,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if element["subject"] not in excl_behaviors_total_time:
                     excl_behaviors_total_time[element["subject"]] = 0
                 if element["behavior"] in parameters[EXCLUDED_BEHAVIORS]:
-                    excl_behaviors_total_time[element["subject"]] += element["duration"] if element["duration"] != "NA" else 0
+                    excl_behaviors_total_time[element["subject"]] += element["duration"] if not isinstance(element["duration"], str) else 0
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
@@ -8056,7 +8048,6 @@ item []:
         triggered by timer
         """
 
-        print("timer out")
         if not self.observationId:
             return
 
