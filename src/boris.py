@@ -2829,9 +2829,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug("flag refresh ")
                 self.config_param["refresh_preferences"] = True
                 self.close()
-                if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
-                    os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
-                sys.exit()
+                # check if refresh canceled for not saved project
+                if "refresh_preferences" in self.config_param:
+                    if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
+                        os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
+                    sys.exit()
 
 
             if preferencesWindow.cbTimeFormat.currentIndex() == 0:
@@ -9923,6 +9925,7 @@ item []:
                     event.ignore()
 
             if response == CANCEL:
+                del self.config_param["refresh_preferences"]
                 event.ignore()
 
         if "refresh_preferences" not in self.config_param:
