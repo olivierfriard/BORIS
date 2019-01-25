@@ -258,6 +258,9 @@ class Ui_prefDialog(object):
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         spacerItem3 = QtGui.QSpacerItem(241, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem3)
+        self.pb_refresh = QtGui.QPushButton(prefDialog)
+        self.pb_refresh.setObjectName(_fromUtf8("pb_refresh"))
+        self.horizontalLayout_2.addWidget(self.pb_refresh)
         self.pbCancel = QtGui.QPushButton(prefDialog)
         self.pbCancel.setObjectName(_fromUtf8("pbCancel"))
         self.horizontalLayout_2.addWidget(self.pbCancel)
@@ -268,7 +271,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(3)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):
@@ -307,6 +310,7 @@ class Ui_prefDialog(object):
         self.label_10.setText(_translate("prefDialog", "List of colors to be used in plot. See <a href=\"https://matplotlib.org/api/colors_api.html\">matplotlib colors</a>", None))
         self.pb_reset_colors.setText(_translate("prefDialog", "Reset colors to default", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), _translate("prefDialog", "Plot colors", None))
+        self.pb_refresh.setText(_translate("prefDialog", "Refresh", None))
         self.pbCancel.setText(_translate("prefDialog", "Cancel", None))
         self.pbOK.setText(_translate("prefDialog", "OK", None))
 
