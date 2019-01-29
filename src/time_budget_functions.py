@@ -231,8 +231,9 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
                 for excluded_behav in parameters_obs[EXCLUDED_BEHAVIORS]:
                     cursor.execute(("SELECT SUM(stop-start) "
                                     "FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ?"),
-                                   (obs_id, subject, excluded_behav,))
+                                    "WHERE observation = ? AND subject = ? AND behavior = ? "
+                                    "AND start BETWEEN ? AND ? and stop BETWEEN ? AND ?"),
+                                   (obs_id, subject, excluded_behav, min_time, max_time, min_time, max_time,))
                     for row in cursor.fetchall():
                         time_to_subtract = row[0]
 
@@ -242,8 +243,9 @@ def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs:
 
                 cursor.execute(("SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
                                 "FROM aggregated_events "
-                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                               (obs_id, subject, behavior, modifiers,))
+                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ? "
+                                "AND start BETWEEN ? AND ? and stop BETWEEN ? AND ?"),
+                               (obs_id, subject, behavior, modifiers, min_time, max_time, min_time, max_time,))
 
 
                 for row in cursor.fetchall():
