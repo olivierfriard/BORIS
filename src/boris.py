@@ -302,7 +302,7 @@ class Video_frame(QFrame):
 
 
     def sizeHint(self):
-        return QtCore.QSize(150, 75)
+        return QtCore.QSize(150, 200)
 
 
     def mousePressEvent(self, QMouseEvent):
@@ -631,6 +631,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.twEvents.setHorizontalHeaderLabels(tw_events_fields)
 
         self.FFmpegGlobalFrame = 0
+
+        self.config_param = {}
 
         self.menu_options()
         self.connections()
@@ -2644,7 +2646,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.update_visualizations()
 
                 # no subtitles
-                # self.mediaplayer.video_set_spu(0)
+                self.mediaplayer.video_set_spu(0)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -2822,6 +2824,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if preferencesWindow.exec_():
 
+            if preferencesWindow.flag_refresh:
+                # refresh preferences remove the config file
+                logging.debug("flag refresh ")
+                self.config_param["refresh_preferences"] = True
+                self.close()
+                # check if refresh canceled for not saved project
+                if "refresh_preferences" in self.config_param:
+                    if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
+                        os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
+                    sys.exit()
+
+
             if preferencesWindow.cbTimeFormat.currentIndex() == 0:
                 self.timeFormat = S
 
@@ -2993,7 +3007,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # update data plot
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
-            
+
 
             # update data plot
             current_time = self.getLaps()
@@ -3316,12 +3330,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
+    '''
     def initialize_video_tab(self):
 
         self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
         self.video_slider.setMaximum(slider_maximum)
         self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
         self.verticalLayout_3.addWidget(self.video_slider)
+    '''
 
 
     def initialize_new_observation_vlc(self):
@@ -3392,6 +3408,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
             self.dw_player[i].mediaplayer.video_set_key_input(False)
             self.dw_player[i].mediaplayer.video_set_mouse_input(False)
+
+            self.dw_player[i].mediaplayer.video_set_spu(0)
 
             self.dw_player[i].mediaListPlayer = self.instance.media_list_player_new()
 
@@ -3468,7 +3486,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
 
-        self.initialize_video_tab()
+        # self.initialize_video_tab()
+        # initialize video slider
+        self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
+        self.video_slider.setMaximum(slider_maximum)
+        self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
+        self.verticalLayout_3.addWidget(self.video_slider)
+
 
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.ffmpegTimerOut)
@@ -3646,8 +3670,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.load_behaviors_in_twEthogram(self.pj[OBSERVATIONS][self.observationId][FILTERED_BEHAVIORS])
 
         # restore windows state: dockwidget positions ...
-
-
         if self.saved_state is None:
             self.saved_state = self.saveState()
             self.restoreState(self.saved_state)
@@ -3658,6 +3680,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.critical("state not restored: Type error")
                 self.saved_state = self.saveState()
                 self.restoreState(self.saved_state)
+
+        for player in self.dw_player:
+            player.setVisible(True)
+
         return True
 
 
@@ -4222,6 +4248,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close tool windows: spectrogram, measurements, coding pad
         """
 
+        logging.debug("function: close_tool_windows")
         '''
         for w in [self.measurement_w, self.codingpad, self.subjects_pad, self.spectro,
                   self.frame_viewer1, self.frame_viewer2, self.results,
@@ -4462,7 +4489,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
 
-
             try:
                 self.restoreGeometry(settings.value("geometry"))
             except Exception:
@@ -4674,7 +4700,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save config file
         """
 
-        logging.info("save config file")
+        logging.debug("function: save config file")
 
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
         settings = QSettings(iniFilePath, QSettings.IniFormat)
@@ -4716,7 +4742,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("plot_colors", "|".join(self.plot_colors))
 
         # recent projects
-        logging.info("save recent projects")
+        logging.debug("save recent projects")
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
         settings = QSettings(iniFilePath, QSettings.IniFormat)
         settings.setValue("recent_projects", "|||".join(self.recent_projects))
@@ -7604,7 +7630,6 @@ item []:
         """
         filter coded events and subjects
         """
-        print("self.filtered_subjects", self.filtered_subjects)
         parameters = self.choose_obs_subj_behav_category([],  # empty selection of observations for selecting all subjects and behaviors
                                                          maxTime=0,
                                                          flagShowIncludeModifiers=False,
@@ -8642,6 +8667,7 @@ item []:
             return flag_is_playing
         else:
             return False
+
 
     def keyPressEvent(self, event):
 
@@ -9876,6 +9902,7 @@ item []:
         close spectrogram window if it exists
          and close program
         """
+        logging.debug("function: closeEvent")
 
         # check if re-encoding
         if self.processes:
@@ -9900,9 +9927,11 @@ item []:
                     event.ignore()
 
             if response == CANCEL:
+                del self.config_param["refresh_preferences"]
                 event.ignore()
 
-        self.saveConfigFile()
+        if "refresh_preferences" not in self.config_param:
+            self.saveConfigFile()
 
         self.close_tool_windows()
 
@@ -10143,9 +10172,9 @@ item []:
                     self.no_media()
 
                 self.update_visualizations()
-    
+
                 # no subtitles
-                # self.mediaplayer.video_set_spu(0)
+                self.mediaplayer.video_set_spu(0)
 
 
     def jumpForward_activated(self):

@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 This file is part of BORIS.
 
@@ -33,7 +33,8 @@ except Exception:
     from preferences_ui import Ui_prefDialog
 
 import os
-from config import BEHAVIORS_PLOT_COLORS
+from config import CANCEL, BEHAVIORS_PLOT_COLORS
+from dialog import MessageDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):
@@ -46,8 +47,18 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
         self.pb_reset_colors.clicked.connect(self.reset_colors)
 
-        self.pbOK.clicked.connect(self.ok)
+        self.pb_refresh.clicked.connect(self.refresh_preferences)
+        self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
+
+        self.flag_refresh = False
+
+
+    def refresh_preferences(self):
+        if MessageDialog("BORIS", "Refresh will re-initialize all your preferences and close BORIS",
+                         [CANCEL, "Refresh preferences"]) == "Refresh preferences":
+            self.flag_refresh = True
+            self.accept()
 
 
     def browseFFmpegCacheDir(self):
@@ -64,5 +75,3 @@ class Preferences(QDialog, Ui_prefDialog):
         self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
 
 
-    def ok(self):
-        self.accept()
