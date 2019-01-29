@@ -2646,7 +2646,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.update_visualizations()
 
                 # no subtitles
-                # self.mediaplayer.video_set_spu(0)
+                self.mediaplayer.video_set_spu(0)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -3408,6 +3408,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
             self.dw_player[i].mediaplayer.video_set_key_input(False)
             self.dw_player[i].mediaplayer.video_set_mouse_input(False)
+
+            self.dw_player[i].mediaplayer.video_set_spu(0)
 
             self.dw_player[i].mediaListPlayer = self.instance.media_list_player_new()
 
@@ -10172,7 +10174,7 @@ item []:
                 self.update_visualizations()
 
                 # no subtitles
-                # self.mediaplayer.video_set_spu(0)
+                self.mediaplayer.video_set_spu(0)
 
 
     def jumpForward_activated(self):
