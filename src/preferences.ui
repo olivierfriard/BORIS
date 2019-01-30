@@ -197,10 +197,17 @@
              </property>
             </widget>
            </item>
-           <item row="12" column="0">
+           <item row="13" column="0">
             <widget class="QCheckBox" name="cb_pause_before_addevent">
              <property name="text">
               <string>Pause media before &quot;Add event&quot; command</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="0">
+            <widget class="QCheckBox" name="cb_display_subtitles">
+             <property name="text">
+              <string>Display subtitles</string>
              </property>
             </widget>
            </item>

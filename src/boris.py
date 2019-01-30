@@ -533,6 +533,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     filtered_subjects = []
     filtered_behaviors = []
 
+    dw_player = []
+
 
     def __init__(self, ffmpeg_bin, parent=None):
 
@@ -632,7 +634,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.FFmpegGlobalFrame = 0
 
-        self.config_param = {}
+        self.config_param = {"display_subtiles": False}
 
         self.menu_options()
         self.connections()
@@ -2645,8 +2647,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.update_visualizations()
 
-                # no subtitles
-                self.mediaplayer.video_set_spu(0)
+                # subtitles
+                st_track_number = 0 if self.config_param["display_subtitles"] else -1
+                for player in self.dw_player:
+                     player.mediaplayer.video_set_spu(st_track_number)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -2776,7 +2780,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
         # check for new version
         preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
-
+        # display subtitles
+        preferencesWindow.cb_display_subtitles.setChecked(self.config_param["display_subtitles"])
         # pause before add event
         preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
@@ -2867,6 +2872,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
 
             self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
+
+            self.config_param["display_subtitles"] = preferencesWindow.cb_display_subtitles.isChecked()
+            st_track_number = 0 if self.config_param["display_subtitles"] else -1
+            for player in self.dw_player:
+                 player.mediaplayer.video_set_spu(st_track_number)
 
             self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
 
@@ -3409,7 +3419,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaplayer.video_set_key_input(False)
             self.dw_player[i].mediaplayer.video_set_mouse_input(False)
 
-            self.dw_player[i].mediaplayer.video_set_spu(0)
+
+            if self.config_param["display_subtitles"]:
+                self.dw_player[i].mediaplayer.video_set_spu(0)
+            else:
+                self.dw_player[i].mediaplayer.video_set_spu(-1)
 
             self.dw_player[i].mediaListPlayer = self.instance.media_list_player_new()
 
@@ -4586,6 +4600,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.checkForNewVersion = False
 
+            # dsiplay subtitles
+            self.config_param["display_subtitles"] = False
+            try:
+                self.config_param["display_subtitles"] = (settings.value("display_subtitles") == 'true')
+            except Exception:
+                self.config_param["display_subtitles"] = False
+
+
             # pause before add event
             self.pause_before_addevent = False
             try:
@@ -4723,6 +4745,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("alert_nosubject", self.alertNoFocalSubject)
         settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
         settings.setValue("check_for_new_version", self.checkForNewVersion)
+        settings.setValue("display_subtitles", self.config_param["display_subtitles"])
         settings.setValue("pause_before_addevent", self.pause_before_addevent)
 
         if lastCheckForNewVersion:
@@ -10137,8 +10160,10 @@ item []:
 
                 self.update_visualizations()
 
-                # no subtitles
-                self.mediaplayer.video_set_spu(0)
+                # subtitles
+                st_track_number = 0 if self.config_param["display_subtitles"] else -1
+                for player in self.dw_player:
+                     player.mediaplayer.video_set_spu(st_track_number)
 
 
     def jumpForward_activated(self):
