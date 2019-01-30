@@ -5103,7 +5103,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             results.setWindowTitle("Synthetic time budget")
             results.ptText.clear()
             results.ptText.setReadOnly(True)
-            results.ptText.appendHtml(msg)
+            results.ptText.appendHtml(msg.replace("\n", "<br>"))
             results.exec_()
             return
 
@@ -5122,42 +5122,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Args:
             mode (str): ["by_behavior", "by_category"]
         """
-
-        '''
-        def default_value(behav, param):
-            """
-            return value for duration in case of point event
-            """
-            default_value_ = 0
-            if ({self.pj[ETHOGRAM][idx]["type"] for idx in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][idx]["code"] == behav} == {"Point event"}
-                    and param in ["duration"]):
-                default_value_ = "-"
-            return default_value_
-
-
-        def init_behav_modif():
-            """
-            initialize dictionary with subject, behaviors and modifiers
-            """
-            behaviors = {}
-            for subj in plot_parameters[SELECTED_SUBJECTS]:
-                behaviors[subj] = {}
-                for behav_modif in distinct_behav_modif:
-                    behav, modif = behav_modif
-                    if behav not in behaviors[subj]:
-                        behaviors[subj][behav] = {}
-                    if not plot_parameters[INCLUDE_MODIFIERS]:
-                        for param in parameters:
-                            behaviors[subj][behav][param[0]] = default_value(behav, param[0])
-
-                    if plot_parameters[INCLUDE_MODIFIERS]:
-                        behaviors[subj][behav][modif] = {}
-                        for param in parameters:
-                            behaviors[subj][behav][modif][param[0]] = default_value(behav, param[0])
-
-            return behaviors
-        '''
-
 
         result, selectedObservations = self.selectObservations(MULTIPLE)
         if not selectedObservations:
