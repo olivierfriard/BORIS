@@ -634,7 +634,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.FFmpegGlobalFrame = 0
 
-        self.config_param = {"display_subtiles": False}
+        self.config_param = {DISPLAY_SUBTITLES: False}
 
         self.menu_options()
         self.connections()
@@ -2648,7 +2648,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.update_visualizations()
 
                 # subtitles
-                st_track_number = 0 if self.config_param["display_subtitles"] else -1
+                st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
                 for player in self.dw_player:
                      player.mediaplayer.video_set_spu(st_track_number)
 
@@ -2781,7 +2781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check for new version
         preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
         # display subtitles
-        preferencesWindow.cb_display_subtitles.setChecked(self.config_param["display_subtitles"])
+        preferencesWindow.cb_display_subtitles.setChecked(self.config_param[DISPLAY_SUBTITLES])
         # pause before add event
         preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
@@ -2873,8 +2873,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
 
-            self.config_param["display_subtitles"] = preferencesWindow.cb_display_subtitles.isChecked()
-            st_track_number = 0 if self.config_param["display_subtitles"] else -1
+            self.config_param[DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
+            st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
             for player in self.dw_player:
                  player.mediaplayer.video_set_spu(st_track_number)
 
@@ -3420,7 +3420,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaplayer.video_set_mouse_input(False)
 
 
-            if self.config_param["display_subtitles"]:
+            if self.config_param[DISPLAY_SUBTITLES]:
                 self.dw_player[i].mediaplayer.video_set_spu(0)
             else:
                 self.dw_player[i].mediaplayer.video_set_spu(-1)
@@ -4601,11 +4601,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.checkForNewVersion = False
 
             # dsiplay subtitles
-            self.config_param["display_subtitles"] = False
+            self.config_param[DISPLAY_SUBTITLES] = False
             try:
-                self.config_param["display_subtitles"] = (settings.value("display_subtitles") == 'true')
+                self.config_param[DISPLAY_SUBTITLES] = (settings.value(DISPLAY_SUBTITLES) == 'true')
             except Exception:
-                self.config_param["display_subtitles"] = False
+                self.config_param[DISPLAY_SUBTITLES] = False
 
 
             # pause before add event
@@ -4745,7 +4745,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("alert_nosubject", self.alertNoFocalSubject)
         settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
         settings.setValue("check_for_new_version", self.checkForNewVersion)
-        settings.setValue("display_subtitles", self.config_param["display_subtitles"])
+        settings.setValue(DISPLAY_SUBTITLES, self.config_param[DISPLAY_SUBTITLES])
         settings.setValue("pause_before_addevent", self.pause_before_addevent)
 
         if lastCheckForNewVersion:
@@ -10161,7 +10161,7 @@ item []:
                 self.update_visualizations()
 
                 # subtitles
-                st_track_number = 0 if self.config_param["display_subtitles"] else -1
+                st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
                 for player in self.dw_player:
                      player.mediaplayer.video_set_spu(st_track_number)
 

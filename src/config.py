@@ -70,6 +70,7 @@ subjects_config = ["key", "id"]
 subjectsFields = ["key", SUBJECT_NAME, "description"]
 
 UNPAIRED = "UNPAIRED"
+DISPLAY_SUBTITLES = "display_subtitles"
 
 YES = "Yes"
 NO = "No"
