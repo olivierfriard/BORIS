@@ -9671,7 +9671,9 @@ item []:
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=True,
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                              maxTime=0,
+                                                              flagShowIncludeModifiers=True,
                                                               flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:

@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@ import config
 from utilities import *
 
 commands_index = {"Start": 2, "Edit": 3, "View": 4}
+
 
 class MyTableWidgetItem(QTableWidgetItem):
     def __init__(self, text, sortKey):
@@ -148,11 +149,17 @@ class observationsList_widget(QDialog):
                 self.view.setItem(r, c, self.set_item(r, c))
 
         self.view.resizeColumnsToContents()
+        '''
+        hh = self.view.horizontalHeader()
+        hh.setSectionResizeMode(2, QHeaderView.Stretch)
+        '''
 
         self.comboBox.addItems(header)
 
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
+
+        #self.view.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
 
     '''

@@ -706,10 +706,10 @@ def open_project_json(projectFileName):
 
     try:
         pj = json.loads(s)
-    except JSONDecodeError:
+    except json.decoder.JSONDecodeError:
         return projectFileName, projectChanged, {"error": "This project file seems corrupted"}, msg
     except Exception:
-        return projectFileName, projectChanged, {"error": "Error on file {}: {}".format(projectFileName, sys.exc_info()[1])}, msg
+        return projectFileName, projectChanged, {"error": "This project file seems corruptedError on file {}: {}".format(projectFileName, sys.exc_info()[1])}, msg
 
     # transform time to decimal
     pj = utilities.convert_time_to_decimal(pj)
