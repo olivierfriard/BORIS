@@ -9690,10 +9690,14 @@ item []:
                         # observation id
                         outFile.write("\n# observation id: {}\n".format(obs_id))
                         # observation description
-                        outFile.write("# observation description: {}\n".format(
-                            #self.pj[OBSERVATIONS][obs_id]["description"].replace(os.linesep, " "))
-                            utilities.eol2space(self.pj[OBSERVATIONS][obs_id]["description"]))
-                        )
+                        descr = self.pj[OBSERVATIONS][obs_id]["description"]
+                        if "\r\n" in descr:
+                            descr = descr.replace("\r\n", "\r\n# ")
+                        elif "\n" in descr:
+                            descr = descr.replace("\n", "\n# ")
+                        elif "\r" in descr:
+                            descr = descr.replace("\r", "\r# ")
+                        outFile.write("# observation description: {}\n".format(descr))
                         # media file name
                         if self.pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
                             outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x)

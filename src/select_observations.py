@@ -62,7 +62,7 @@ def select_observations(pj, mode):
     data = []
     for obs in sorted(list(pj[OBSERVATIONS].keys())):
         date = pj[OBSERVATIONS][obs]["date"].replace("T", " ")
-        descr = pj[OBSERVATIONS][obs]["description"]
+        descr = utilities.eol2space(pj[OBSERVATIONS][obs]["description"])
 
         # subjects
         observedSubjects = project_functions.extract_observed_subjects(pj, [obs])
@@ -138,7 +138,7 @@ def select_observations(pj, mode):
 
     obsList.view.sortItems(0, Qt.AscendingOrder)
     for row in range(obsList.view.rowCount()):
-        obsList.view.resizeRowToContents(row) 
+        obsList.view.resizeRowToContents(row)
 
     selectedObs = []
 
