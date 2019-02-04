@@ -5140,7 +5140,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def observation_length(self, selected_observations):
         """
         max length of selected observations
-        total media length 
+        total media length
         """
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
@@ -9689,9 +9689,10 @@ item []:
                     for obs_id in selectedObservations:
                         # observation id
                         outFile.write("\n# observation id: {}\n".format(obs_id))
-                        # observation descrition
+                        # observation description
                         outFile.write("# observation description: {}\n".format(
-                            self.pj[OBSERVATIONS][obs_id]["description"].replace(os.linesep, " "))
+                            #self.pj[OBSERVATIONS][obs_id]["description"].replace(os.linesep, " "))
+                            utilities.eol2space(self.pj[OBSERVATIONS][obs_id]["description"]))
                         )
                         # media file name
                         if self.pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:

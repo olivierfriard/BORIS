@@ -795,9 +795,15 @@ def safeFileName(s):
     return fileName
 
 
-def eol2space(s):
+def eol2space(s: str) -> str:
     """
     replace EOL char by space for all platforms
+
+    Args:
+        s (str): string to be converted
+
+    Returns:
+        str: string where /rn /r /n are converted in space
     """
     return s.replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ')
 

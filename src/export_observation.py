@@ -508,9 +508,9 @@ def export_aggregated_events(pj, parameters, obsId):
 
     """
     interval = parameters["time"]
-    start_time = parameters["start time"]
-    end_time = parameters["end time"]
-    
+    start_time = parameters[START_TIME]
+    end_time = parameters[END_TIME]
+
     data = tablib.Dataset()
     observation = pj[OBSERVATIONS][obsId]
 
@@ -670,7 +670,7 @@ def events_to_behavioral_sequences(pj,
                                    parameters: dict,
                                    behav_seq_separator: str) -> str:
     """
-    return the behavioral string for subject in obsId
+    return the behavioral sequence (behavioral string) for subject in obsId
 
     Args:
         pj (dict): project

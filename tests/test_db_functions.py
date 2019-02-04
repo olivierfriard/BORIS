@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 module for testing db_functions.py
 
@@ -65,6 +65,7 @@ class Test_load_events_in_db(object):
         REF = """2.718\n10.478\n12.926\n17.47\n19.502\n24.318\n26.862\n"""
 
         assert out ==  REF
+
 
 
 class Test_load_aggregated_events_in_db(object):

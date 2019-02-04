@@ -1,5 +1,11 @@
 """
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2019 Olivier Friard
+
 module for testing export_observation.py
+
+pytest -vv test_export_observation.py
 """
 import pytest
 import sys
@@ -8,9 +14,9 @@ import os
 from openpyxl import load_workbook
 
 sys.path.append("../src")
-
-import export_observation
 from config import *
+import export_observation
+import tablib
 
 
 @pytest.fixture()
@@ -107,6 +113,174 @@ class Test_export_events(object):
             test_all_cells.extend([cell.value for row in wb[ws_name].rows for cell in row])
 
         assert ref_all_cells == test_all_cells
+
+
+class Test_export_aggregated_events(object):
+    @pytest.mark.usefixtures("before")
+    def test_full_1(self):
+        """
+        export aggregated events:
+        no time interval restriction
+        all subjects
+        all behaviors
+        """
+        pj = json.loads(open("files/test.boris").read())
+        obs_id = "observation #2"
+        parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
+                      "selected behaviors": ["p", "s"],
+                      "time": TIME_FULL_OBS,
+                      START_TIME: 0,
+                      END_TIME: 9*60}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+
+        '''
+        print(tablib_dataset_tsv)
+        open("files/test_export_aggregated_events_test_full_1.tsv","w").write(tablib_dataset_tsv)
+        '''
+
+        ref = open("files/test_export_aggregated_events_test_full_1.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
+
+
+    @pytest.mark.usefixtures("before")
+    def test_full_2(self):
+        """
+        export aggregated events:
+        no time interval restriction
+        1 subject / 2
+        all behaviors
+        """
+        pj = json.loads(open("files/test.boris").read())
+        obs_id = "observation #2"
+        parameters = {"selected subjects": ["subject1"],
+                      "selected behaviors": ["p", "s"],
+                      "time": TIME_FULL_OBS,
+                      START_TIME: 0,
+                      END_TIME: 9*60}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+        '''
+        print(tablib_dataset_json)
+        open("files/test_export_aggregated_events_test_full_2.tsv","w").write(tablib_dataset_tsv)
+        '''
+
+        ref = open("files/test_export_aggregated_events_test_full_2.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
+
+
+    @pytest.mark.usefixtures("before")
+    def test_full_3(self):
+        """
+        export aggregated events:
+        no time interval restriction
+        all subjects
+        1 behavior / 2
+        """
+        pj = json.loads(open("files/test.boris").read())
+        obs_id = "observation #2"
+        parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
+                      "selected behaviors": ["s"],
+                      "time": TIME_FULL_OBS,
+                      START_TIME: 0,
+                      END_TIME: 9*60}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+        print(tablib_dataset_tsv)
+        open("files/test_export_aggregated_events_test_full_3.tsv","w").write(tablib_dataset_tsv)
+
+        ref = open("files/test_export_aggregated_events_test_full_3.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
+
+
+    @pytest.mark.usefixtures("before")
+    def test_partial_4(self):
+        """
+        export aggregated events:
+        time interval restriction: 0 - 60 s
+        all subjects
+        all behaviors
+        """
+        pj = json.loads(open("files/test.boris").read())
+        obs_id = "observation #2"
+        parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
+                      "selected behaviors": ["s", "p"],
+                      "time": TIME_ARBITRARY_INTERVAL,
+                      START_TIME: 0,
+                      END_TIME: 1 * 60}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+        '''
+        print(tablib_dataset_tsv)
+        open("files/test_export_aggregated_events_test_full_4.tsv","w").write(tablib_dataset_tsv)
+        '''
+
+        ref = open("files/test_export_aggregated_events_test_full_4.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
+
+
+    @pytest.mark.usefixtures("before")
+    def test_partial_5(self):
+        """
+        export aggregated events:
+        time interval restriction: 5 - 30 s
+        all subjects
+        all behaviors
+        """
+        pj = json.loads(open("files/test.boris").read())
+        obs_id = "observation #2"
+        parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
+                      "selected behaviors": ["s", "p"],
+                      "time": TIME_ARBITRARY_INTERVAL,
+                      START_TIME: 5,
+                      END_TIME: 30}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+        '''
+        print(tablib_dataset_tsv)
+        open("files/test_export_aggregated_events_test_full_5.tsv","w").write(tablib_dataset_tsv)
+        '''
+
+        ref = open("files/test_export_aggregated_events_test_full_5.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
+
+    @pytest.mark.usefixtures("before")
+    def test_partial_6(self):
+        """
+        export aggregated events: No events
+        time interval restriction: 60 - 180 s
+        all subjects
+        all behaviors
+        """
+        pj = json.loads(open("files/test.boris").read())
+        obs_id = "observation #2"
+        parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
+                      "selected behaviors": ["s", "p"],
+                      "time": TIME_ARBITRARY_INTERVAL,
+                      START_TIME: 60,
+                      END_TIME: 180}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+        '''
+        print(tablib_dataset_tsv)
+        open("files/test_export_aggregated_events_test_full_6.tsv","w").write(tablib_dataset_tsv)
+        '''
+
+
+        ref = open("files/test_export_aggregated_events_test_full_6.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
 
 
 
