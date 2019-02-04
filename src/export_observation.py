@@ -794,3 +794,72 @@ def events_to_timed_behavioral_sequences(pj: dict,
     print(out)
 
     return out
+
+
+def observation_to_behavioral_sequences(pj,
+                                        selected_observations,
+                                        parameters,
+                                        behaviors_separator,
+                                        timed,
+                                        file_name):
+
+    try:
+        with open(file_name, "w", encoding="utf-8") as out_file:
+            for obs_id in selected_observations:
+                # observation id
+                out_file.write("\n# observation id: {}\n".format(obs_id))
+                # observation description
+                descr = pj[OBSERVATIONS][obs_id]["description"]
+                if "\r\n" in descr:
+                    descr = descr.replace("\r\n", "\r\n# ")
+                elif "\n" in descr:
+                    descr = descr.replace("\n", "\n# ")
+                elif "\r" in descr:
+                    descr = descr.replace("\r", "\r# ")
+                out_file.write("# observation description: {}\n".format(descr))
+                # media file name
+                if pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
+                    out_file.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x)
+                                                                                   for x in pj[OBSERVATIONS]
+                                                                                   [obs_id]
+                                                                                   [FILE][PLAYER1]]),
+                                                                        os.linesep))
+                if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
+                    out_file.write("# Live observation{0}{0}".format(os.linesep))
+
+                # independent variables
+                if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:
+                    out_file.write("# Independent variables\n")
+
+                    for variable in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
+                        out_file.write("# {0}: {1}\n".format(variable,
+                                                             pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][variable]))
+                out_file.write("\n")
+
+                # selected subjects
+                for subject in parameters[SELECTED_SUBJECTS]:
+                    out_file.write("\n# {}:\n".format(subject if subject else NO_FOCAL_SUBJECT))
+
+                    if not timed:
+                        out = events_to_behavioral_sequences(pj,
+                                                             obs_id,
+                                                             subject,
+                                                             parameters,
+                                                             behaviors_separator)
+                    if timed:
+                        out = events_to_timed_behavioral_sequences(pj,
+                                                                   obs_id,
+                                                                   subject,
+                                                                   parameters,
+                                                                   0.001,
+                                                                   behaviors_separator)
+
+                    if out:
+                        out_file.write(out + "\n")
+            return True, ""
+    except:
+        return False, str(sys.exc_info()[1])
+
+
+
+

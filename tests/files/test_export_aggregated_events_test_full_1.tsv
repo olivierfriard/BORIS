@@ -1,0 +1,18 @@
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	subject1	s			STATE	266.165	276.690	10.525		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	subject1	s			STATE	280.965	294.215	13.250		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	subject2	p			POINT	314.490	314.490	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	subject2	p			POINT	316.065	316.065	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	subject2	s			STATE	286.215	292.065	5.850		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	subject2	s			STATE	317.390	320.365	2.975		
+observation #2	2016-12-01 23:01:31	video_test_25fps_180s.mp4	539.920	25.0	123	some text	333	No focal subject	p			POINT	32.825	32.825	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_180s.mp4	539.920	25.0	123	some text	333	No focal subject	p			POINT	34.150	34.150	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_180s.mp4	539.920	25.0	123	some text	333	No focal subject	p			POINT	34.925	34.925	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	No focal subject	p			POINT	299.715	299.715	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	No focal subject	p			POINT	301.340	301.340	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	No focal subject	p			POINT	303.240	303.240	NA		
+observation #2	2016-12-01 23:01:31	video_test_25fps_180s.mp4	539.920	25.0	123	some text	333	No focal subject	s			STATE	1.800	8.125	6.325		
+observation #2	2016-12-01 23:01:31	video_test_25fps_180s.mp4	539.920	25.0	123	some text	333	No focal subject	s			STATE	10.250	23.350	13.100		
+observation #2	2016-12-01 23:01:31	video_test_25fps_180s.mp4	539.920	25.0	123	some text	333	No focal subject	s			STATE	26.775	31.475	4.700		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	No focal subject	s			STATE	227.765	253.490	25.725		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	No focal subject	s			STATE	255.340	261.140	5.800		
+observation #2	2016-12-01 23:01:31	video_test_25fps_360s.mp4	539.920	25.0	123	some text	333	No focal subject	s			STATE	303.790	307.765	3.975		

@@ -104,7 +104,7 @@ class Test_remove_media_files_path(object):
         test the deletion of the media files path in project
         """
 
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(open("files/test2.boris").read())
         pj_wo_media_files_paths = project_functions.remove_media_files_path(pj)
 
         assert pj_wo_media_files_paths == json.loads(open("files/test_without_media_files_paths.boris").read())

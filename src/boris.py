@@ -9667,81 +9667,42 @@ item []:
         """
 
         # ask user for observations to analyze
-        result, selectedObservations = self.selectObservations(MULTIPLE)
-        if not selectedObservations:
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
-                                                              maxTime=0,
-                                                              flagShowIncludeModifiers=True,
-                                                              flagShowExcludeBehaviorsWoEvents=False)
+        parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                         maxTime=0,
+                                                         flagShowIncludeModifiers=True,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
 
-        if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
         fn = QFileDialog().getSaveFileName(self, "Export events as behavioral sequences", "", "Text files (*.txt);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
+        file_name = fn[0] if type(fn) is tuple else fn
 
-        if fileName:
+        if file_name:
+
+            r, msg = export_observation.observation_to_behavioral_sequences(pj=self.pj,
+                                                                            selected_observations=selected_observations,
+                                                                            parameters=parameters,
+                                                                            behaviors_separator=self.behaviouralStringsSeparator,
+                                                                            timed=timed,
+                                                                            file_name=file_name)
+            if not r:
+                logging.critical("Error while exporting events as behavioral sequences: {}".format(msg))
+                QMessageBox.critical(None, programName, "Error while exporting events as behavioral sequences:<br>{}".format(msg),
+                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             # response = dialog.MessageDialog(programName, "Include observation(s) information?", [YES, NO])
-
+            '''
             try:
-                with open(fileName, "w", encoding="utf-8") as outFile:
-                    for obs_id in selectedObservations:
-                        # observation id
-                        outFile.write("\n# observation id: {}\n".format(obs_id))
-                        # observation description
-                        descr = self.pj[OBSERVATIONS][obs_id]["description"]
-                        if "\r\n" in descr:
-                            descr = descr.replace("\r\n", "\r\n# ")
-                        elif "\n" in descr:
-                            descr = descr.replace("\n", "\n# ")
-                        elif "\r" in descr:
-                            descr = descr.replace("\r", "\r# ")
-                        outFile.write("# observation description: {}\n".format(descr))
-                        # media file name
-                        if self.pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
-                            outFile.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x)
-                                                                                           for x in self.pj[OBSERVATIONS]
-                                                                                           [obs_id]
-                                                                                           [FILE][PLAYER1]]), os.linesep))
-                        if self.pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
-                            outFile.write("# Live observation{0}{0}".format(os.linesep))
-
-                        # independent variables
-                        if "independent_variables" in self.pj[OBSERVATIONS][obs_id]:
-                            outFile.write("# Independent variables\n")
-
-                            for variable in self.pj[OBSERVATIONS][obs_id]["independent_variables"]:
-                                outFile.write("# {0}: {1}\n".format(variable,
-                                                                    self.pj[OBSERVATIONS][obs_id]["independent_variables"][variable]))
-                        outFile.write("\n")
-
-                        # selected subjects
-                        for subject in plot_parameters[SELECTED_SUBJECTS]:
-                            outFile.write("\n# {}:\n".format(subject if subject else NO_FOCAL_SUBJECT))
-
-                            if not timed:
-                                out = export_observation.events_to_behavioral_sequences(self.pj,
-                                                                                        obs_id,
-                                                                                        subject,
-                                                                                        plot_parameters,
-                                                                                        self.behaviouralStringsSeparator)
-                            if timed:
-                                out = export_observation.events_to_timed_behavioral_sequences(self.pj,
-                                                                                              obs_id,
-                                                                                              subject,
-                                                                                              plot_parameters,
-                                                                                              0.001,
-                                                                                              self.behaviouralStringsSeparator)
-
-                            if out:
-                                outFile.write(out + "\n")
 
             except Exception:
                 logging.critical(sys.exc_info()[1])
                 QMessageBox.critical(None, programName, str(sys.exc_info()[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            '''
 
 
     def transitions_matrix(self, mode):

@@ -192,8 +192,10 @@ class Test_export_aggregated_events(object):
         tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
         tablib_dataset_tsv = tablib_dataset.tsv
 
+        '''
         print(tablib_dataset_tsv)
         open("files/test_export_aggregated_events_test_full_3.tsv","w").write(tablib_dataset_tsv)
+        '''
 
         ref = open("files/test_export_aggregated_events_test_full_3.tsv").read()
         assert tablib_dataset_tsv.replace("\r", "") == ref
@@ -253,6 +255,7 @@ class Test_export_aggregated_events(object):
 
         ref = open("files/test_export_aggregated_events_test_full_5.tsv").read()
         assert tablib_dataset_tsv.replace("\r", "") == ref
+
 
     @pytest.mark.usefixtures("before")
     def test_partial_6(self):
@@ -445,6 +448,63 @@ class Test_events_to_behavioral_sequences(object):
         assert open("files/Test_events_to_behavioral_sequences_test_5_observation_not_paired").read() == out
 
 
+    @pytest.mark.usefixtures("before")
+    def test_6_multirow_description(self):
+
+        pj = json.loads(open("files/test.boris").read())
+
+        obs_id = "live export behavioral sequences"
+        parameters = {"selected subjects": [""],
+                      "selected behaviors": ["p", "s"],
+                      INCLUDE_MODIFIERS: False,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "|"
+
+        r, msg = export_observation.observation_to_behavioral_sequences(pj,
+                                        selected_observations=[obs_id],
+                                        parameters=parameters,
+                                        behaviors_separator=behav_seq_separator,
+                                        timed=False,
+                                        file_name="output/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt")
+
+
+        assert (open("output/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt").read()
+                == open("files/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt").read())
+
+
+    @pytest.mark.usefixtures("before")
+    def test_7_all_subjects_2_observations(self):
+        """
+        all subjects
+        2 observations
+        2 behaviors
+        """
+
+        pj = json.loads(open("files/test.boris").read())
+
+        observations = ["live export behavioral sequences", "observation #1"]
+        parameters = {"selected subjects": ["", "subject1", "subject2"],
+                      "selected behaviors": ["p", "s"],
+                      INCLUDE_MODIFIERS: False,
+                      EXCLUDE_BEHAVIORS: False,
+                      "start time": 0,
+                      "end time": 100.0}
+
+        behav_seq_separator = "|"
+
+        r, msg = export_observation.observation_to_behavioral_sequences(pj,
+                                        selected_observations=observations,
+                                        parameters=parameters,
+                                        behaviors_separator=behav_seq_separator,
+                                        timed=False,
+                                        file_name="output/Test_events_to_behavioral_sequences_test_7.txt")
+
+
+        assert (open("output/Test_events_to_behavioral_sequences_test_7.txt").read()
+                == open("files/Test_events_to_behavioral_sequences_test_7.txt").read())
 
 
 

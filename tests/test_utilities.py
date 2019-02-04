@@ -107,7 +107,7 @@ class Test_complete(object):
 
 class Test_convert_time_to_decimal(object):
     def test_1(self):
-        pj = json.loads(open("files/test.boris").read())
+        pj = json.loads(open("files/test2.boris").read())
         r = utilities.convert_time_to_decimal(pj)
 
         txt = open("files/test.txt").read()

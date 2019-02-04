@@ -1,0 +1,47 @@
+
+# observation id: live export behavioral sequences
+# observation description: row #1
+# 
+# row # 2
+# 
+# Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+# incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
+# 
+# exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+# 
+# Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+# 
+# Live observation
+
+# Independent variables
+# a: 
+# b: 
+# c: 111
+
+
+# No focal subject:
+s|s+p|s+p|s+p|s
+
+# subject1:
+s|p|p|p|s|s+p|s+p|s+p
+
+# subject2:
+s|p|p|p|p|p|s|s|s
+
+# observation id: observation #1
+# observation description: 
+# Media file name: video_test_25fps_360s.mp4
+
+# Independent variables
+# a: 12
+# b: text value for b
+# c: 111
+
+
+# No focal subject:
+
+# subject1:
+s|s|s
+
+# subject2:
+s
