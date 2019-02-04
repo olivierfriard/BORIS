@@ -213,7 +213,6 @@ def load_aggregated_events_in_db(pj: dict,
                                                 (obsId, subject, behavior, STATE, distinct_modifiers,
                                                  row["occurence"], rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
 
-
     db.commit()
 
     return True, "", db

@@ -507,6 +507,10 @@ def export_aggregated_events(pj, parameters, obsId):
         tablib.Dataset:
 
     """
+    interval = parameters["time"]
+    start_time = parameters["start time"]
+    end_time = parameters["end time"]
+    
     data = tablib.Dataset()
     observation = pj[OBSERVATIONS][obsId]
 
@@ -522,21 +526,56 @@ def export_aggregated_events(pj, parameters, obsId):
     total_length = "{0:.3f}".format(project_functions.observation_total_length(observation))
 
     ok, msg, connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                   parameters["selected subjects"],
+                                                                   parameters[SELECTED_SUBJECTS],
                                                                    [obsId],
-                                                                   parameters["selected behaviors"])
+                                                                   parameters[SELECTED_BEHAVIORS])
     if not ok:
         data
 
+    # time
+    cursor = connector.cursor()
+    obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
+    if obs_length == -1:
+        obs_length = 0
+
+    if interval == TIME_FULL_OBS:
+        min_time = float(0)
+        max_time = float(obs_length)
+
+    if interval == TIME_EVENTS:
+        try:
+            min_time = float(pj[OBSERVATIONS][obsId][EVENTS][0][0])
+        except Exception:
+            min_time = float(0)
+        try:
+            max_time = float(pj[OBSERVATIONS][obsId][EVENTS][-1][0])
+        except Exception:
+            max_time = float(obs_length)
+
+    if interval == TIME_ARBITRARY_INTERVAL:
+        min_time = float(start_time)
+        max_time = float(end_time)
+
+    # adapt start and stop to the selected time interval
+    cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                   (min_time, obsId, min_time, min_time, max_time, ))
+    cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                   (max_time, obsId, max_time, min_time, max_time, ))
+
+    cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                   (min_time, max_time, obsId, min_time, max_time, ))
+
+    cursor.execute("DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
+                   (obsId, min_time, min_time, max_time, max_time, ))
+
+
     behavioral_category = project_functions.behavior_category(pj[ETHOGRAM])
 
-    cursor = connector.cursor()
+    for subject in parameters[SELECTED_SUBJECTS]:
 
-    for subject in parameters["selected subjects"]:
+        for behavior in parameters[SELECTED_BEHAVIORS]:
 
-        for behavior in parameters["selected behaviors"]:
-
-            cursor.execute("select distinct modifiers from aggregated_events where subject=? AND behavior=? order by modifiers",
+            cursor.execute("SELECT distinct modifiers FROM aggregated_events where subject=? AND behavior=? order by modifiers",
                            (subject, behavior,))
             rows_distinct_modifiers = list(x[0].strip() for x in cursor.fetchall())
 

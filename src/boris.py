@@ -5137,6 +5137,36 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             with open(file_name, "wb") as f:
                 f.write(data_report.export(output_format))
 
+    def observation_length(self, selected_observations):
+        """
+        max length of selected observations
+        total media length 
+        """
+        selectedObsTotalMediaLength = Decimal("0.0")
+        max_obs_length = 0
+        for obs_id in selected_observations:
+            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
+            if obs_length in [0, -1]:
+                selectedObsTotalMediaLength = -1
+                break
+            max_obs_length = max(max_obs_length, obs_length)
+            selectedObsTotalMediaLength += obs_length
+
+        # an observation media length is not available
+        if selectedObsTotalMediaLength == -1:
+            # propose to user to use max event time
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?",
+                                    [YES, NO]) == YES:
+                maxTime = 0  # max length for all events all subjects
+                for obs_id in selected_observations:
+                    if self.pj[OBSERVATIONS][obs_id][EVENTS]:
+                        maxTime += max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0]
+                logging.debug("max time all events all subjects: {}".format(maxTime))
+                selectedObsTotalMediaLength = maxTime
+            else:
+                selectedObsTotalMediaLength = 0
+        return max_obs_length, selectedObsTotalMediaLength
+
 
     def time_budget(self, mode: str):
         """
@@ -5176,40 +5206,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if len(selectedObservations) > 1:
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
 
-        selectedObsTotalMediaLength = Decimal("0.0")
-        max_obs_length = 0
-        for obsId in selectedObservations:
-            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
-
-            if obs_length in [0, -1]:
-                selectedObsTotalMediaLength = -1
-                break
-            max_obs_length = max(max_obs_length, obs_length)
-
-            selectedObsTotalMediaLength += obs_length
-
-        # an observation media length is not available
-        if selectedObsTotalMediaLength == -1:
-            # propose to user to use max event time
-            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?",
-                                    [YES, NO]) == YES:
-                maxTime = 0  # max length for all events all subjects
-                for obsId in selectedObservations:
-                    if self.pj[OBSERVATIONS][obsId][EVENTS]:
-                        maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                logging.debug("max time all events all subjects: {}".format(maxTime))
-                selectedObsTotalMediaLength = maxTime
-            else:
-                selectedObsTotalMediaLength = 0
-
-        if len(selectedObservations) > 1:
-            parameters = self.choose_obs_subj_behav_category(selectedObservations,
-                                                             maxTime=max_obs_length,
-                                                             by_category=(mode == "by_category"))
-        else:
+        max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+        '''if len(selectedObservations) > 1:'''
+        parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                         maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
+                                                         by_category=(mode == "by_category"))
+        '''else:
             parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                              maxTime=selectedObsTotalMediaLength,
                                                              by_category=(mode == "by_category"))
+        '''
 
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
@@ -5297,7 +5303,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 total_observation_time += (max_time - min_time)
 
                 # delete all events out of time interval from db
-                cursor.execute("DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)", (obsId, min_time, max_time))
+                cursor.execute("DELETE FROM events WHERE observation = ? AND (occurence < ? OR occurence > ?)",
+                               (obsId, min_time, max_time))
 
             out, categories = time_budget_functions.time_budget_analysis(self.pj[ETHOGRAM],
                                                                          cursor,
@@ -5479,7 +5486,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             for obsId in selectedObservations:
 
-                cursor = db_functions.load_events_in_db(self.pj, parameters[SELECTED_SUBJECTS], [obsId],
+                cursor = db_functions.load_events_in_db(self.pj,
+                                                        parameters[SELECTED_SUBJECTS],
+                                                        [obsId],
                                                         parameters[SELECTED_BEHAVIORS])
 
                 obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
@@ -6566,7 +6575,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.show()
             return
 
-        parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False,
+
+        max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+
+        parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                         maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
+                                                         #  maxTime=0,
+                                                         flagShowIncludeModifiers=False,
                                                          flagShowExcludeBehaviorsWoEvents=False)
 
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
