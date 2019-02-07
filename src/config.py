@@ -198,6 +198,7 @@ SELECTED_SUBJECTS = "selected subjects"
 INCLUDE_MODIFIERS = "include modifiers"
 EXCLUDE_BEHAVIORS = "exclude behaviors"
 EXCLUDED_BEHAVIORS = "excluded behaviors"
+TIME_INTERVAL = "time"
 START_TIME = "start time"
 END_TIME = "end time"
 

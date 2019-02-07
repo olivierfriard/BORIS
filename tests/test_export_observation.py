@@ -120,7 +120,7 @@ class Test_export_aggregated_events(object):
     def test_full_1(self):
         """
         export aggregated events:
-        no time interval restriction
+        no time interval restriction: 9 min
         all subjects
         all behaviors
         """
@@ -149,7 +149,7 @@ class Test_export_aggregated_events(object):
     def test_full_2(self):
         """
         export aggregated events:
-        no time interval restriction
+        no time interval restriction: 9 min
         1 subject / 2
         all behaviors
         """
@@ -177,7 +177,7 @@ class Test_export_aggregated_events(object):
     def test_full_3(self):
         """
         export aggregated events:
-        no time interval restriction
+        no time interval restriction: 9 min
         all subjects
         1 behavior / 2
         """
@@ -280,7 +280,6 @@ class Test_export_aggregated_events(object):
         print(tablib_dataset_tsv)
         open("files/test_export_aggregated_events_test_full_6.tsv","w").write(tablib_dataset_tsv)
         '''
-
 
         ref = open("files/test_export_aggregated_events_test_full_6.tsv").read()
         assert tablib_dataset_tsv.replace("\r", "") == ref
@@ -453,7 +452,7 @@ class Test_events_to_behavioral_sequences(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        obs_id = "live export behavioral sequences"
+        observations = ["live export behavioral sequences"]
         parameters = {"selected subjects": [""],
                       "selected behaviors": ["p", "s"],
                       INCLUDE_MODIFIERS: False,
@@ -464,7 +463,7 @@ class Test_events_to_behavioral_sequences(object):
         behav_seq_separator = "|"
 
         r, msg = export_observation.observation_to_behavioral_sequences(pj,
-                                        selected_observations=[obs_id],
+                                        selected_observations=observations,
                                         parameters=parameters,
                                         behaviors_separator=behav_seq_separator,
                                         timed=False,

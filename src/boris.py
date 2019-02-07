@@ -1676,7 +1676,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show all behaviors in ethogram
         """
-        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]])
+        self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
 
 
     def show_all_subjects(self):
@@ -1688,7 +1688,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def filter_behaviors(self, title="Select the behaviors to show in the ethogram table",
                          text="Behaviors to show in ethogram list",
-                         table=ETHOGRAM):
+                         table=ETHOGRAM,
+                         behavior_type=[STATE_EVENT, POINT_EVENT]):
         """
         allow user to filter behaviors in ethogram widget
 
@@ -1700,6 +1701,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not self.pj[ETHOGRAM]:
             return
+
+        behavior_type = [x.upper() for x in behavior_type]
 
         paramPanelWindow = param_panel.Param_panel()
         paramPanelWindow.resize(800, 600)
@@ -1719,8 +1722,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
-            if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM]
-                      if "category" in self.pj[ETHOGRAM][idx]]:
+            if "" in [self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] for idx in self.pj[ETHOGRAM]
+                      if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx]]:
                 categories += [""]
         else:
             categories = ["###no category###"]
@@ -1744,12 +1747,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted_keys(self.pj[ETHOGRAM])]:
+            # check if behavior type must be shown
+            for behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in sorted_keys(self.pj[ETHOGRAM])]:
+                if project_functions.event_type(behavior, self.pj[ETHOGRAM]) not in behavior_type:
+                    continue
+
 
                 if ((categories == ["###no category###"]) or
-                   (behavior in [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]
-                                 if "category" in self.pj[ETHOGRAM][x] and
-                                    self.pj[ETHOGRAM][x]["category"] == category])):
+                   (behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]
+                                 if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][x] and
+                                    self.pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category])):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in filtered_behaviors:
@@ -2226,7 +2233,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         codes_list = []
         for key in self.pj[ETHOGRAM]:
-            codes_list.append(self.pj[ETHOGRAM][key]["code"])
+            codes_list.append(self.pj[ETHOGRAM][key][BEHAVIOR_CODE])
 
         self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(codes_list)
         self.mapCreatorWindow.signal_add_to_project.connect(self.behaviors_coding_map_creator_signal_addtoproject)
@@ -2482,18 +2489,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-        result, selectedObs = self.selectObservations(SINGLE)
+        result, selected_obs = self.selectObservations(SINGLE)
 
-        if selectedObs:
+        if selected_obs:
             if result == OPEN:
-                self.load_observation(selectedObs[0], "start")
+                self.load_observation(selected_obs[0], "start")
 
             if result == VIEW:
-                self.load_observation(selectedObs[0], VIEW)
+                self.load_observation(selected_obs[0], VIEW)
 
             if result == EDIT:
-                if self.observationId != selectedObs[0]:
-                    self.new_observation(mode=EDIT, obsId=selectedObs[0])   # observation id to edit
+                if self.observationId != selected_obs[0]:
+                    self.new_observation(mode=EDIT, obsId=selected_obs[0])   # observation id to edit
                 else:
                     QMessageBox.warning(self, programName,
                                         ("The observation <b>{}</b> is running!<br>"
@@ -3819,9 +3826,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         """
-        resultStr, selectedObs = select_observations.select_observations(self.pj, mode)
+        result_str, selected_obs = select_observations.select_observations(self.pj, mode)
 
-        return resultStr, selectedObs
+        return result_str, selected_obs
 
 
     def initialize_new_live_observation(self):
@@ -4923,7 +4930,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observedBehaviors = self.extract_observed_behaviors(selected_observations, selectedSubjects)  # not sorted
         else:
             # load all behaviors
-            observedBehaviors = [self.pj[ETHOGRAM][x]["code"] for x in self.pj[ETHOGRAM]]
+            observedBehaviors = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]]
 
         logging.debug('observed behaviors: {0}'.format(observedBehaviors))
 
@@ -4957,7 +4964,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
-            for behavior in [self.pj[ETHOGRAM][x]["code"] for x in sorted_keys(self.pj[ETHOGRAM])]:
+            for behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in sorted_keys(self.pj[ETHOGRAM])]:
 
                 if ((categories == ["###no category###"])
                     or (behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]
@@ -5207,15 +5214,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
 
         max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
-        '''if len(selectedObservations) > 1:'''
+
         parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                          maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
                                                          by_category=(mode == "by_category"))
-        '''else:
-            parameters = self.choose_obs_subj_behav_category(selectedObservations,
-                                                             maxTime=selectedObsTotalMediaLength,
-                                                             by_category=(mode == "by_category"))
-        '''
 
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
@@ -5224,7 +5226,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         parameters[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
                                                                text=("The duration of the selected behaviors will "
                                                                      "be subtracted from the total time"),
-                                                               table="")
+                                                               table="",
+                                                               behavior_type=[STATE_EVENT])
 
         # check if time_budget window must be used
         if flagGroup or len(selectedObservations) == 1:
@@ -5243,11 +5246,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if obs_length == -1:
                     obs_length = 0
 
-                if parameters["time"] == TIME_FULL_OBS:
+                if parameters[TIME_INTERVAL] == TIME_FULL_OBS:
                     min_time = float(0)
                     max_time = float(obs_length)
 
-                if parameters["time"] == TIME_EVENTS:
+                if parameters[TIME_INTERVAL] == TIME_EVENTS:
                     try:
                         min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])  # first event
                     except Exception:
@@ -5257,7 +5260,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     except Exception:
                         max_time = float(obs_length)
 
-                if parameters["time"] == TIME_ARBITRARY_INTERVAL:
+                if parameters[TIME_INTERVAL] == TIME_ARBITRARY_INTERVAL:
                     min_time = float(parameters[START_TIME])
                     max_time = float(parameters[END_TIME])
 
@@ -7705,7 +7708,7 @@ item []:
 
         for code in behavior_codes_list:
             try:
-                behavior_idx = [key for key in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key]["code"] == code][0]
+                behavior_idx = [key for key in self.pj[ETHOGRAM] if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == code][0]
             except Exception:
                 QMessageBox.critical(self,
                                      programName,
@@ -8252,7 +8255,7 @@ item []:
         self.twEthogram.setRowCount(0)
         if self.pj[ETHOGRAM]:
             for idx in sorted_keys(self.pj[ETHOGRAM]):
-                if self.pj[ETHOGRAM][idx]["code"] in behaviorsToShow:
+                if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] in behaviorsToShow:
                     self.twEthogram.setRowCount(self.twEthogram.rowCount() + 1)
                     for col in sorted(behav_fields_in_mainwindow.keys()):
                         field = behav_fields_in_mainwindow[col]
@@ -8514,7 +8517,7 @@ item []:
         for idx in self.pj[ETHOGRAM]:
             if self.pj[ETHOGRAM][idx]["key"] == obs_key:
 
-                code_descr = self.pj[ETHOGRAM][idx]["code"]
+                code_descr = self.pj[ETHOGRAM][idx][BEHAVIOR_CODE]
                 if self.pj[ETHOGRAM][idx]["description"]:
                     code_descr += " - " + self.pj[ETHOGRAM][idx]["description"]
                 items.append(code_descr)
@@ -8830,7 +8833,7 @@ item []:
 
                 else:  # behavior
                     for idx in self.pj[ETHOGRAM]:
-                        if self.pj[ETHOGRAM][idx]["code"] == event.text():
+                        if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] == event.text():
                             ethogram_idx = idx
                             count += 1
             else:
@@ -9942,7 +9945,7 @@ item []:
                     flagImported = False
 
                     # set of behaviors in current projet ethogram
-                    behav_set = set([self.pj[ETHOGRAM][idx]["code"] for idx in self.pj[ETHOGRAM]])
+                    behav_set = set([self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]])
 
                     # set of subjects in current projet
                     subjects_set = set([self.pj[SUBJECTS][idx]["name"] for idx in self.pj[SUBJECTS]])

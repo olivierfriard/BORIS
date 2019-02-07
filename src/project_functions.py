@@ -901,7 +901,7 @@ def event_type(code: str, ethogram: dict) -> str:
         code (str): behavior code
 
     Returns:
-        str: STATE, POINT or None if code not found in ethogram
+        str: "STATE EVENT", "POINT EVENT" or None if code not found in ethogram
     """
 
     for idx in ethogram:
