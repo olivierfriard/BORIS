@@ -6185,14 +6185,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
 
-                    item = QTableWidgetItem(obs)
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 0, item)
-
-                    item = QTableWidgetItem(newProjectWindow.pj[OBSERVATIONS][obs]["date"].replace("T", " "))
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 1, item)
-
-                    item = QTableWidgetItem(newProjectWindow.pj[OBSERVATIONS][obs]["description"])
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 2, item)
+                    # observation id
+                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                            0,
+                                                            QTableWidgetItem(obs))
+                    # observation date
+                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                            1,
+                                                            QTableWidgetItem(
+                                                                newProjectWindow.pj[OBSERVATIONS][obs]["date"].replace("T", " ")))
+                    # observation description
+                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                            2,
+                                                            QTableWidgetItem(
+                                                                utilities.eol2space(newProjectWindow.pj[OBSERVATIONS][obs]["description"])))
 
                     mediaList = []
                     if newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
@@ -6203,14 +6209,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     elif newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                         mediaList = [LIVE]
 
-                    item = QTableWidgetItem("\n".join(mediaList))
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1, 3, item)
+                    media_separator = " " if len(mediaList) > 8 else "\n"
+                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                            3,
+                                                            QTableWidgetItem(media_separator.join(mediaList)))
 
                 newProjectWindow.twObservations.resizeColumnsToContents()
+                newProjectWindow.twObservations.resizeRowsToContents()
 
             # configuration of behaviours
             if newProjectWindow.pj[ETHOGRAM]:
-
                 for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):
                     newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
                     for field in behavioursFields:

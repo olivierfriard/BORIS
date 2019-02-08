@@ -37,7 +37,7 @@ import utilities
 import project_functions
 
 
-def select_observations(pj, mode):
+def select_observations(pj: dict, mode: str) -> tuple:
     """
     allow user to select observations
     mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
@@ -48,7 +48,7 @@ def select_observations(pj, mode):
 
     Returns:
         str: selected mode: OPEN, EDIT, VIEW
-        list: list os selected observations
+        list: list of selected observations
     """
 
     obsListFields = ["id", "date", "description", "subjects", "media"]
@@ -79,8 +79,11 @@ def select_observations(pj, mode):
                     for media in pj[OBSERVATIONS][obs][FILE][player]:
                         mediaList.append("#{0}: {1}".format(player, media))
 
-            #media = os.linesep.join(mediaList)
-            media = "\n".join(mediaList)
+            if len(mediaList) > 8:
+                media = " ".join(mediaList)
+            else:
+                media = "\n".join(mediaList)
+
         elif pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
             media = LIVE
 

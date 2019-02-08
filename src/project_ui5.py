@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'project.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -313,10 +313,13 @@ class Ui_dlgProject(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.twObservations = QtWidgets.QTableWidget(self.tabObservations)
+        self.twObservations.setAutoScroll(False)
         self.twObservations.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.twObservations.setDragDropOverwriteMode(False)
         self.twObservations.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
         self.twObservations.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.twObservations.setTextElideMode(QtCore.Qt.ElideRight)
+        self.twObservations.setWordWrap(True)
         self.twObservations.setObjectName("twObservations")
         self.twObservations.setColumnCount(4)
         self.twObservations.setRowCount(0)
@@ -482,7 +485,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(1)
+        self.tabProject.setCurrentIndex(4)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):

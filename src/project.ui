@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>2</number>
+        <number>4</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -723,6 +723,9 @@ from a BORIS project</string>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
             <widget class="QTableWidget" name="twObservations">
+             <property name="autoScroll">
+              <bool>false</bool>
+             </property>
              <property name="editTriggers">
               <set>QAbstractItemView::NoEditTriggers</set>
              </property>
@@ -734,6 +737,12 @@ from a BORIS project</string>
              </property>
              <property name="selectionBehavior">
               <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="textElideMode">
+              <enum>Qt::ElideRight</enum>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
              </property>
              <column>
               <property name="text">

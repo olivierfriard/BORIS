@@ -111,12 +111,6 @@ class observationsList_widget(QDialog):
         self.pbCancel = QPushButton("Cancel")
         hbox2.addWidget(self.pbCancel)
 
-        '''
-        self.pbExportList = QPushButton("Export list")
-        self.pbExportList.clicked.connect(self.pbExportList_clicked)
-        hbox2.addWidget(self.pbExportList)
-        '''
-
         self.pbOpen = QPushButton("Start")
         hbox2.addWidget(self.pbOpen)
 
@@ -213,14 +207,18 @@ class observationsList_widget(QDialog):
     def pbOk_clicked(self):
         self.done(1)
 
+
     def pbOpen_clicked(self):
         self.done(2)
+
 
     def pbEdit_clicked(self):
         self.done(3)
 
+
     def pbView_clicked(self):
         self.done(4)
+
 
     def set_item(self, r, c):
 
