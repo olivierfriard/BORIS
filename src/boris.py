@@ -1053,6 +1053,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export the list of observations
         """
 
+        resultStr, selected_observations = select_observations.select_observations(pj, MULTIPLE)
+        if not resultStr or not selected_observations:
+            return
+
         extended_file_formats = ["Tab Separated Values (*.tsv)",
                                  "Comma Separated Values (*.csv)",
                                  "Open Document Spreadsheet ODS (*.ods)",
@@ -1076,7 +1080,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return
 
-            if not project_functions.export_observations_list(self.pj, file_name, output_format):
+            if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
                 QMessageBox.warning(self, programName, "File not created due to an error")
 
 

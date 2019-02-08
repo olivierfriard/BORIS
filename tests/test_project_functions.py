@@ -5,6 +5,7 @@ module for testing project_functions.py
 pytest -s -vv test_project_functions.py
 """
 
+import pytest
 import os
 import sys
 import json
@@ -14,6 +15,11 @@ sys.path.append("../src")
 
 import project_functions
 from config import *
+
+@pytest.fixture()
+def before():
+    os.system("rm -rf output")
+    os.system("mkdir output")
 
 
 class Test_behavior_category(object):
@@ -94,6 +100,33 @@ class Test_check_state_events_obs(object):
         assert results == (False, 'The behavior <b>s</b>  is not PAIRED for subject "<b>No focal subject</b>" at <b>00:00:26.862</b><br>')
 
 
+class Test_export_observations_list(object):
+
+    @pytest.mark.usefixtures("before")
+    def test1(self):
+        pj = json.loads(open("files/test2.boris").read())
+        selected_observations = [x for x in pj[OBSERVATIONS]]
+
+        result = project_functions.export_observations_list(pj=pj,
+                                                            file_name="output/export_observations_list_test1.tsv",
+                                                            selected_observations = selected_observations,
+                                                            output_format="tsv"
+                                                            )
+        assert result == True
+        assert open("files/export_observations_list_test1.tsv").read() == open("output/export_observations_list_test1.tsv").read()
+
+
+class Test_media_full_path(object):
+
+    def test_file_and_dir(self):
+        assert project_functions.media_full_path("geese1.mp4", os.getcwd() + "/files/test.boris") == os.getcwd() + "/files/geese1.mp4"
+
+    def test_file_not_found(self):
+        assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.boris") == ""
+
+
+    def test_project_file_not_found(self):
+        assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.xxx.boris") == ""
 
 
 
@@ -111,17 +144,10 @@ class Test_remove_media_files_path(object):
 
 
 
-class Test_media_full_path(object):
-
-    def test_file_and_dir(self):
-        assert project_functions.media_full_path("geese1.mp4", os.getcwd() + "/files/test.boris") == os.getcwd() + "/files/geese1.mp4"
-
-    def test_file_not_found(self):
-        assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.boris") == ""
 
 
-    def test_project_file_not_found(self):
-        assert project_functions.media_full_path("geese1.xxx", os.getcwd() + "/files/test.xxx.boris") == ""
+
+
 '''
 
 def test_observation_total_length1():

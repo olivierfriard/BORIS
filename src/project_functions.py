@@ -407,16 +407,19 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
 
         return flag_ok, msg
     except Exception:
-        raise
         return False, str(sys.exc_info()[1])
 
 
-def export_observations_list(pj: dict, file_name: str, output_format: str) -> bool:
+def export_observations_list(pj: dict,
+                             selected_observations: list,
+                             file_name: str,
+                             output_format: str) -> bool:
     """
     create file with a list of selected observations
 
     Args:
         pj (dict): project dictionary
+        selected_observations (list): list of observations to export
         file_name (str): path of file to save list of observations
         output_format (str): format output
 
@@ -424,12 +427,8 @@ def export_observations_list(pj: dict, file_name: str, output_format: str) -> bo
         bool: True of OK else False
     """
 
-    resultStr, selected_observations = select_observations.select_observations(pj, MULTIPLE)
-    if not selected_observations:
-        return
-
     data = tablib.Dataset()
-    data.headers = ["Observation id", "Date", "Description", "Subjects", "Media files/LIVE"]
+    data.headers = ["Observation id", "Date", "Description", "Subjects", "Media files/Live observation"]
 
     indep_var_header = []
     if INDEPENDENT_VARIABLES in pj:
@@ -439,10 +438,15 @@ def export_observations_list(pj: dict, file_name: str, output_format: str) -> bo
 
     for obs_id in selected_observations:
 
-        subjects = ", ".join(sorted(list(set([x[EVENT_SUBJECT_FIELD_IDX] for x in pj[OBSERVATIONS][obs_id][EVENTS]]))))
-        if pj[OBSERVATIONS][obs_id][TYPE] == "LIVE":
-            media_files = ["LIVE"]
-        elif pj[OBSERVATIONS][obs_id][TYPE] == "MEDIA":
+        subjects_list = sorted(list(set([x[EVENT_SUBJECT_FIELD_IDX] for x in pj[OBSERVATIONS][obs_id][EVENTS]])))
+        if "" in subjects_list:
+            subjects_list = [NO_FOCAL_SUBJECT] + subjects_list
+            subjects_list.remove("")
+        subjects = ", ".join(subjects_list)
+
+        if pj[OBSERVATIONS][obs_id][TYPE] == LIVE:
+            media_files = ["Live observation"]
+        elif pj[OBSERVATIONS][obs_id][TYPE] == MEDIA:
             media_files = []
             if pj[OBSERVATIONS][obs_id][FILE]:
                 for player in sorted(pj[OBSERVATIONS][obs_id][FILE].keys()):
