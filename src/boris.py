@@ -3000,10 +3000,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
-        '''
         logging.debug("required frame 1: {}".format(requiredFrame))
+
         logging.debug("sum self.duration1 {}".format(sum(self.dw_player[0].media_durations)))
-        '''
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.dw_player[0].media_durations):
@@ -3029,7 +3028,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
-
             # update data plot
             current_time = self.getLaps()
             for idx in self.plot_data:
@@ -3043,6 +3041,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                                frame=frameCurrentMedia,
                                                                                                extension=self.frame_bitmap_format.lower())
 
+            logging.debug(f"frame_image_path: {frame_image_path}")
+            logging.debug(f"frame_image_path is file: {os.path.isfile(frame_image_path)}")
+
             if os.path.isfile(frame_image_path):
                 self.pixmap = QPixmap(frame_image_path)
                 # check if jpg filter available if not use png
@@ -3053,6 +3054,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.iw.lwi.setVisible(False)
                 self.iw.resize(350, 200)
                 self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                logging.debug(f"extracting frame")
+
                 self.iw.setWindowTitle("Extracting frames...")
                 self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
                 self.iw.show()
@@ -3382,11 +3386,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.playerType = VIEWER
             self.playMode = ""
             self.dwObservations.setVisible(True)
+            self.dwEthogram.setVisible(True)
+            self.dwSubjects.setVisible(True)
             return True
 
         self.playerType, self.playMode = VLC, VLC
         self.fps = 0
         self.dwObservations.setVisible(True)
+        self.dwEthogram.setVisible(True)
+        self.dwSubjects.setVisible(True)
 
         self.w_obs_info.setVisible(True)
         self.w_live.setVisible(False)
