@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2015 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 This file is part of BORIS.
 
@@ -44,8 +44,6 @@ class wgMeasurement(QWidget):
 
     def __init__(self, log_level):
         super().__init__()
-
-        logging.basicConfig(level=log_level)
 
         self.setWindowTitle("Geometric measurement")
 

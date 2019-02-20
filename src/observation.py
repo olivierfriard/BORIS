@@ -122,9 +122,6 @@ class Observation(QDialog, Ui_Form):
         self.project_path = project_path
         self.converters = converters
 
-        if log_level:
-            logging.basicConfig(level=log_level)
-
         self.setupUi(self)
 
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=True))

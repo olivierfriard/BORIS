@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 
+import logging
 
 try:
     from PyQt5.QtGui import *
@@ -29,14 +30,15 @@ try:
     from PyQt5.QtWidgets import *
     from edit_event_ui5 import Ui_Form
 except ModuleNotFoundError:
-    print("Module PyQt5 not found")
+    logging.critical("Module PyQt5 not found")
     try:
         from PyQt4.QtGui import *
         from PyQt4.QtCore import *
         from edit_event_ui import Ui_Form
     except ModuleNotFoundError:
-        print("Module PyQt4 not found")
+        logging.critical("Module PyQt4 not found")
         sys.exit()
+
 
 from config import HHMMSS, S, HHMMSSZZZ
 from utilities import seconds2time

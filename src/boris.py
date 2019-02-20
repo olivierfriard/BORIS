@@ -106,7 +106,6 @@ from matplotlib import dates
 matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
 import matplotlib.pyplot as plt
 import plot_events
-'''import plot_spectrogram'''
 import plot_spectrogram_rt
 import observation
 import plot_data_module
@@ -127,7 +126,7 @@ if sys.platform == "darwin":  # for MacOS
 usage = "usage: %prog [options] [-p PROJECT_PATH] [-o \"OBSERVATION ID\"]"
 parser = OptionParser(usage=usage)
 
-parser.add_option("-d", "--debug", action="store_true", default=False, dest="debug", help="Verbose mode for debugging")
+parser.add_option("-d", "--debug", action="store", default="one", dest="debug", help="one: log to BORIS.log, new: log to new file")
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 parser.add_option("-p", "--project", action="store", help="Project file")
@@ -136,8 +135,23 @@ parser.add_option("-o", "--observation", action="store", help="Observation id")
 (options, args) = parser.parse_args()
 
 # set logging parameters
-if options.debug:
-    logging.basicConfig(level=logging.DEBUG)
+if options.debug in ["one", "new", "stdout"]:
+    if options.debug == "new":
+        log_file_name = "BORIS_" + datetime.datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".log"
+        file_mode = "w"
+    if options.debug == "one":
+        log_file_name = "BORIS.log"
+        file_mode = "a"
+    if options.debug in ["one", "new"]:
+        logging.basicConfig(filename=log_file_name,
+                            filemode=file_mode,
+                            format='%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s',
+                            datefmt='%H:%M:%S',
+                            level=logging.DEBUG)
+    if options.debug in ["stdout"]:
+        logging.basicConfig(format='%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s',
+                            datefmt='%H:%M:%S',
+                            level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.INFO)
 
@@ -145,7 +159,11 @@ if options.version:
     print("version {0} release date: {1}".format(__version__, __version_date__))
     sys.exit(0)
 
-logging.debug("VLC version {}".format(vlc.libvlc_get_version().decode("utf-8")))
+logging.debug("")
+logging.debug("========================================================")
+logging.debug("BORIS started")
+logging.debug(f"BORIS version {__version__} release date: {__version_date__}")
+logging.debug(f"VLC version {vlc.libvlc_get_version().decode('utf-8')}")
 
 video, live = 0, 1
 
@@ -4523,8 +4541,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
 
             try:
+                logging.debug("restore geometry")
                 self.restoreGeometry(settings.value("geometry"))
+                logging.debug("geometry restored")
             except Exception:
+                logging.debug("Error trying to restore geometry")
                 pass
 
             self.saved_state = settings.value("dockwidget_positions")
@@ -4542,31 +4563,39 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.timeFormat = HHMMSS
 
+            logging.debug(f"time format: {self.timeFormat}")
+
             self.fast = 10
             try:
                 self.fast = int(settings.value("Time/fast_forward_speed"))
             except Exception:
                 self.fast = 10
 
+            logging.debug(f"Time/fast_forward_speed: {self.fast}")
+
             self.repositioningTimeOffset = 0
             try:
                 self.repositioningTimeOffset = int(settings.value("Time/Repositioning_time_offset"))
-
             except Exception:
                 self.repositioningTimeOffset = 0
+
+            logging.debug(f"Time/Repositioning_time_offset: {self.repositioningTimeOffset}")
 
             self.play_rate_step = 0.1
             try:
                 self.play_rate_step = float(settings.value("Time/play_rate_step"))
-
             except Exception:
                 self.play_rate_step = 0.1
+
+            logging.debug(f"Time/play_rate_step: {self.play_rate_step}")
 
             self.automaticBackup = 0
             try:
                 self.automaticBackup = int(settings.value("Automatic_backup"))
             except Exception:
                 self.automaticBackup = 0
+
+            logging.debug(f"Automatic_backup: {self.automaticBackup}")
 
             self.behaviouralStringsSeparator = "|"
             try:
@@ -4576,11 +4605,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.behaviouralStringsSeparator = "|"
 
+            logging.debug(f"behavioural_strings_separator: {self.behaviouralStringsSeparator}")
+
             self.close_the_same_current_event = False
             try:
                 self.close_the_same_current_event = (settings.value("close_the_same_current_event") == "true")
             except Exception:
                 self.close_the_same_current_event = False
+
+            logging.debug(f"close_the_same_current_event: {self.close_the_same_current_event}")
 
             self.confirmSound = False
             try:
@@ -4588,22 +4621,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.confirmSound = False
 
+            logging.debug(f"confirm_sound: {self.confirmSound}")
+
             self.alertNoFocalSubject = False
             try:
-                self.alertNoFocalSubject = (settings.value('alert_nosubject') == "true")
+                self.alertNoFocalSubject = (settings.value("alert_nosubject") == "true")
             except Exception:
                 self.alertNoFocalSubject = False
+            logging.debug(f"alert_nosubject: {self.alertNoFocalSubject}")
 
             try:
                 self.beep_every = int(settings.value("beep_every"))
             except Exception:
                 self.beep_every = 0
+            logging.debug(f"beep_every: {self.beep_every}")
 
             self.trackingCursorAboveEvent = False
             try:
-                self.trackingCursorAboveEvent = (settings.value('tracking_cursor_above_event') == "true")
+                self.trackingCursorAboveEvent = (settings.value("tracking_cursor_above_event") == "true")
             except Exception:
                 self.trackingCursorAboveEvent = False
+            logging.debug(f"tracking_cursor_above_event: {self.trackingCursorAboveEvent}")
 
             # check for new version
             self.checkForNewVersion = False
@@ -4618,6 +4656,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.checkForNewVersion = (settings.value("check_for_new_version") == "true")
             except Exception:
                 self.checkForNewVersion = False
+            logging.debug(f"check_for_new_version: {self.checkForNewVersion}")
 
             # dsiplay subtitles
             self.config_param[DISPLAY_SUBTITLES] = False
@@ -4625,7 +4664,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.config_param[DISPLAY_SUBTITLES] = (settings.value(DISPLAY_SUBTITLES) == 'true')
             except Exception:
                 self.config_param[DISPLAY_SUBTITLES] = False
-
+            logging.debug(f"{DISPLAY_SUBTITLES}: {self.config_param[DISPLAY_SUBTITLES]}")
 
             # pause before add event
             self.pause_before_addevent = False
@@ -4633,14 +4672,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pause_before_addevent = (settings.value("pause_before_addevent") == 'true')
             except Exception:
                 self.pause_before_addevent = False
+            logging.debug(f"pause_before_addevent: {self.pause_before_addevent}")
+
 
             if self.checkForNewVersion:
-
                 if (settings.value("last_check_for_new_version")
                         and (int(time.mktime(time.localtime())) - int(
                             settings.value("last_check_for_new_version")) >
                             CHECK_NEW_VERSION_DELAY)):
                     self.actionCheckUpdate_activated(flagMsgOnlyIfNew=True)
+            logging.debug(f"last_check_for_new_version: {settings.value('last_check_for_new_version')}")
 
             self.ffmpeg_cache_dir = ""
             try:
@@ -4649,6 +4690,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ffmpeg_cache_dir = ""
             except Exception:
                 self.ffmpeg_cache_dir = ""
+            logging.debug(f"ffmpeg_cache_dir: {self.ffmpeg_cache_dir}")
 
             self.ffmpeg_cache_dir_max_size = 0
             try:
@@ -4657,6 +4699,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.ffmpeg_cache_dir_max_size = 0
             except Exception:
                 self.ffmpeg_cache_dir_max_size = 0
+            logging.debug(f"ffmpeg_cache_dir_max_size: {self.ffmpeg_cache_dir_max_size}")
 
             # frame-by-frame
             try:
@@ -4665,6 +4708,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.frame_resize = 0
             except Exception:
                 self.frame_resize = 0
+            logging.debug(f"frame_resize: {self.frame_resize}")
 
             try:
                 self.frame_bitmap_format = settings.value("frame_bitmap_format")
@@ -4672,6 +4716,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
             except Exception:
                 self.frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
+            logging.debug(f"frame_bitmap_format: {self.frame_bitmap_format}")
 
             try:
                 self.fbf_cache_size = int(settings.value("frame_cache_size"))
@@ -4679,9 +4724,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
             except Exception:
                 self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
+            logging.debug(f"frame_cache_size: {self.fbf_cache_size}")
 
             # spectrogram
-
             self.spectrogramHeight = 80
 
             try:
@@ -4715,6 +4760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         else:  # no .boris file found
+            logging.info("No config file found")
             # ask user for checking for new version
             self.checkForNewVersion = (dialog.MessageDialog(programName, ("Allow BORIS to automatically check for new version?\n"
                                                                           "(An internet connection is required)\n"

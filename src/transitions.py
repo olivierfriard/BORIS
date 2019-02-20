@@ -24,6 +24,7 @@ This file is part of BORIS.
 
 import os
 import sys
+import logging
 
 
 def behavioral_strings_analysis(strings, behaviouralStringsSeparator):
@@ -62,7 +63,8 @@ def observed_transitions_matrix(sequences, behaviours, mode="frequency"):
     * frequencies_after_behaviors
     """
 
-    print("behaviours", behaviours)
+    logging.debug("function: observed_transitions_matrix")
+    logging.debug(f"behaviours: {behaviours}")
 
     if "" in behaviours:
         behaviours.remove("")

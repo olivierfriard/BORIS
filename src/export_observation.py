@@ -791,7 +791,7 @@ def events_to_timed_behavioral_sequences(pj: dict,
 
         t += delta
 
-    print(out)
+    #print(out)
 
     return out
 

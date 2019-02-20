@@ -293,8 +293,6 @@ class projectDialog(QDialog, Ui_dlgProject):
     def __init__(self, log_level="", parent=None):
 
         super().__init__()
-        if log_level:
-            logging.basicConfig(level=log_level)
 
         self.setupUi(self)
 

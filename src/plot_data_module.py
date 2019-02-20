@@ -68,9 +68,6 @@ class Plot_data(QWidget):
 
         super().__init__()
 
-        if log_level:
-            logging.basicConfig(level=log_level)
-
         self.installEventFilter(self)
 
         self.setWindowTitle("External data: " + plot_title)

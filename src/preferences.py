@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 
+import logging
 try:
     from PyQt5.QtGui import *
     from PyQt5.QtCore import *
@@ -72,6 +73,10 @@ class Preferences(QDialog, Ui_prefDialog):
 
 
     def reset_colors(self):
+        """
+        reset behavior colors to default
+        """
         self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
+        logging.debug("reset behaviors colors to default")
 
 

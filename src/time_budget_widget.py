@@ -59,7 +59,6 @@ class timeBudgetResults(QWidget):
     def __init__(self, log_level, pj):
         super().__init__()
 
-        logging.basicConfig(level=log_level)
         self.pj = pj
 
         hbox = QVBoxLayout(self)
