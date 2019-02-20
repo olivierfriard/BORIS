@@ -252,14 +252,16 @@ class TempDirCleanerThread(QThread):
 
     def run(self):
         while self.exiting is False:
-            if sum(os.path.getsize(self.tempdir + f) for f in os.listdir(self.tempdir)
-                    if "BORIS@" in f and os.path.isfile(self.tempdir + f)) > self.ffmpeg_cache_dir_max_size:
+            boris_frames_total_size = sum(os.path.getsize(self.tempdir + f) for f in os.listdir(self.tempdir)
+                                          if "BORIS@" in f and os.path.isfile(self.tempdir + f))
+            if boris_frames_total_size > self.ffmpeg_cache_dir_max_size:
                 fl = sorted((os.path.getctime(self.tempdir + f), self.tempdir + f) for f in os.listdir(self.tempdir)
                             if "BORIS@" in f and os.path.isfile(self.tempdir + f))
                 for ts, f in fl[0:int(len(fl) / 10)]:
                     os.remove(f)
             time.sleep(30)
-            logging.debug("cleaning frame cache directory")
+            logging.debug((f"Cleaning frame cache directory. ffmpeg_cache_dir_max_size: {self.ffmpeg_cache_dir_max_size} "
+                           f"boris_frames_total_size: {boris_frames_total_size}"))
 
 
 ROW = -1  # red triangle
