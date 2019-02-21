@@ -3075,7 +3075,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.iw.resize(350, 200)
                 self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-                logging.debug(f"extracting frame")
+                logging.debug(f"Extracting frame")
 
                 self.iw.setWindowTitle("Extracting frames...")
                 self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
@@ -3095,9 +3095,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.iw.hide()
 
                 if not os.path.isfile(frame_image_path):
-                    logging.warning("frame not found: {} {} {}".format(frame_image_path,
-                                                                       frameCurrentMedia,
-                                                                       int(frameCurrentMedia / self.fps)))
+                    logging.warning(f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.fps)}")
                     return
 
                 self.pixmap = QPixmap(frame_image_path)
@@ -3111,6 +3109,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
                 if self.measurement_w.cbPersistentMeasurements.isChecked():
+                    logging.debug("Redraw measurements")
                     for frame in self.measurement_w.draw_mem:
 
                         if frame == self.FFmpegGlobalFrame + 1:
@@ -3148,10 +3147,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.measurement_w.draw_mem = []
 
         self.FFmpegGlobalFrame = requiredFrame
-        '''
-        if self.second_player():
-            self.FFmpegGlobalFrame2 = requiredFrame2
-        '''
 
         currentTime = self.getLaps() * 1000
 
@@ -3162,6 +3157,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentFrame=round(self.FFmpegGlobalFrame))
         self.lbTime.setText(time_str)
         self.lb_current_media_time.setText(time_str)
+
+        # video slider
+        self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
 
         # extract State events
         StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in [y for y in self.pj[ETHOGRAM]
@@ -3180,7 +3178,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # add states for all configured subjects
         for idx in self.pj[SUBJECTS]:
-
             # add subject index
             self.currentStates[idx] = []
             for sbc in StateBehaviorsCodes:
@@ -3375,15 +3372,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-    '''
-    def initialize_video_tab(self):
-
-        self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
-        self.video_slider.setMaximum(slider_maximum)
-        self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
-        self.verticalLayout_3.addWidget(self.video_slider)
-    '''
-
 
     def initialize_new_observation_vlc(self):
         """
@@ -3542,10 +3530,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # self.initialize_video_tab()
         # initialize video slider
         self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
+        self.video_slider.setFocusPolicy(Qt.NoFocus)
         self.video_slider.setMaximum(slider_maximum)
         self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
+        self.video_slider.sliderReleased.connect(self.video_slider_sliderReleased)
         self.verticalLayout_3.addWidget(self.video_slider)
-
 
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.ffmpegTimerOut)
@@ -7930,13 +7919,45 @@ item []:
         adjust media position
         """
 
-        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-            if self.playerType == VLC and self.playMode == VLC:
-                sliderPos = self.video_slider.value() / (slider_maximum - 1)
-                videoPosition = sliderPos * self.dw_player[0].mediaplayer.get_length()
-                self.dw_player[0].mediaplayer.set_time(int(videoPosition))
+        logging.debug(f"video_slider moved: {self.video_slider.value() / (slider_maximum - 1)}")
 
-                self.update_visualizations(scroll_slider=False)
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+            if self.playerType == VLC:
+
+                if self.playMode == VLC:
+                    sliderPos = self.video_slider.value() / (slider_maximum - 1)
+                    videoPosition = sliderPos * self.dw_player[0].mediaplayer.get_length()
+                    self.dw_player[0].mediaplayer.set_time(int(videoPosition))
+                    self.update_visualizations(scroll_slider=False)
+
+                '''
+                if self.playMode == FFMPEG:
+                    sliderPos = self.video_slider.value() / (slider_maximum - 1)
+                    media_position_s = sliderPos * self.dw_player[0].mediaplayer.get_length() / 1000
+                    frame_to_display = round(media_position_s * self.fps)
+                    logging.debug(f"video slider moved: Frame to display: {frame_to_display}")
+                    self.FFmpegGlobalFrame = frame_to_display - 1
+                    self.ffmpegTimerOut()
+                '''
+
+
+    def video_slider_sliderReleased(self):
+        """
+        adjust frame when slider is moved by user
+        """
+
+        logging.debug(f"video_slider released: {self.video_slider.value() / (slider_maximum - 1)}")
+
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+            if self.playerType == VLC:
+
+                if self.playMode == FFMPEG:
+                    sliderPos = self.video_slider.value() / (slider_maximum - 1)
+                    media_position_s = sliderPos * self.dw_player[0].mediaplayer.get_length() / 1000
+                    frame_to_display = round(media_position_s * self.fps)
+                    logging.debug(f"video slider released: Frame to display: {frame_to_display}")
+                    self.FFmpegGlobalFrame = frame_to_display - 1
+                    self.ffmpegTimerOut()
 
 
     def get_events_current_row(self):
@@ -8147,6 +8168,7 @@ item []:
         triggered by timer
         """
 
+        #logging.debug("function: timer_out")
         if not self.observationId:
             return
 
@@ -8803,12 +8825,12 @@ item []:
         if self.playMode == FFMPEG:
             if ek == 47 or ek == Qt.Key_Left:   # /   one frame back
 
-                logging.debug("current frame {0}".format(self.FFmpegGlobalFrame))
+                logging.debug(f"Current frame {self.FFmpegGlobalFrame}")
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
                     newTime = 1000 * self.FFmpegGlobalFrame / self.fps
                     self.ffmpegTimerOut()
-                    logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
+                    logging.debug(f"New frame {self.FFmpegGlobalFrame}")
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
@@ -8876,7 +8898,6 @@ item []:
             if (ek in function_keys):
                 ek_unichr = function_keys[ek]
             elif ek != Qt.Key_Enter:
-                '''ek_unichr = chr(ek)'''
                 ek_unichr = ek_text
             elif (ek == Qt.Key_Enter and event.text()):  # click from coding pad or subjects pad
                 ek_unichr = ek_text
