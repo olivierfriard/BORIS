@@ -9417,7 +9417,7 @@ item []:
             '''
 
             if ((not self.find_dialog.cbFindInSelectedEvents.isChecked())
-                or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind)):
+                 or (self.find_dialog.cbFindInSelectedEvents.isChecked() and event_idx in self.find_dialog.rowsToFind)):
 
                 for idx in fields_list:
                     '''
@@ -9425,9 +9425,10 @@ item []:
                        or (not self.find_dialog.cb_case_sensitive.isChecked() and
                            self.find_dialog.findText.text().upper() in event[idx].upper()):
                     '''
-                    if (self.find_dialog.cb_case_sensitive.isChecked() and self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()) \
-                       or (not self.find_dialog.cb_case_sensitive.isChecked() and
-                           self.find_dialog.findText.text().upper() in self.twEvents.item(event_idx, idx).text().upper()):
+                    if (self.find_dialog.cb_case_sensitive.isChecked() and \
+                        self.find_dialog.findText.text() in self.twEvents.item(event_idx, idx).text()) \
+                        or (not self.find_dialog.cb_case_sensitive.isChecked() and
+                            self.find_dialog.findText.text().upper() in self.twEvents.item(event_idx, idx).text().upper()):
 
                         self.find_dialog.currentIdx = event_idx
                         self.twEvents.scrollToItem(self.twEvents.item(event_idx, 0))
@@ -10238,7 +10239,7 @@ item []:
                 # subtitles
                 st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
                 for player in self.dw_player:
-                     player.mediaplayer.video_set_spu(st_track_number)
+                    player.mediaplayer.video_set_spu(st_track_number)
 
 
     def jumpForward_activated(self):
