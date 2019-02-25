@@ -1708,27 +1708,61 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # Ethogram
         # coding maps in ethogram
-        code_with_leading_trailing_spaces = ""
+
+        # check for leading/trailing space in behaviors and modifiers
+        code_with_leading_trailing_spaces, modifiers_with_leading_trailing_spaces = "", []
         for r in range(self.twBehaviors.rowCount()):
+
             if self.twBehaviors.item(r, behavioursFields["code"]).text() != self.twBehaviors.item(
                     r, behavioursFields["code"]).text().strip():
-                code_with_leading_trailing_spaces += '"{}" '.format(self.twBehaviors.item(r, behavioursFields["code"]).text())
+                code_with_leading_trailing_spaces += f'"{self.twBehaviors.item(r, behavioursFields["code"]).text()}" '
+
+            try:
+                modifiers_dict = eval(self.twBehaviors.item(r, behavioursFields["modifiers"]).text())
+                for k in modifiers_dict:
+                    for value in modifiers_dict[k]["values"]:
+                        modif_code = value.split(" (")[0]
+                        if modif_code.strip() != modif_code:
+                            modifiers_with_leading_trailing_spaces.append(modif_code)
+            except:
+                raise
+
+            '''
+            if self.twBehaviors.item(r, behavioursFields["modifiers"]).text() != self.twBehaviors.item(
+                    r, behavioursFields["modifiers"]).text().strip():
+                modifiers_with_leading_trailing_spaces += f'"{self.twBehaviors.item(r, behavioursFields["modifiers"]).text()}" '
+            '''
 
         remove_leading_trailing_spaces = NO
         if code_with_leading_trailing_spaces:
-
             remove_leading_trailing_spaces = dialog.MessageDialog(
                 programName,
                 (
-                    "Attention! Some leading and/or trailing spaces are present"
-                    " in the following <b>behaviors code(s)</b>:<br>"
-                    "<b>{}</b><br><br>"
-                    "Do you want to remove the leading and trailing spaces?<br><br>"
+                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
+                    " in the following behaviors code(s):<br>"
+                    f"<b>{code_with_leading_trailing_spaces}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces from behaviors?<br><br>"
                     """<font color="red"><b>Be careful with this option"""
                     """ if you have already done observations!</b></font>"""
-                ).format(code_with_leading_trailing_spaces),
+                ),
                 [YES, NO],
             )
+
+        remove_leading_trailing_spaces_in_modifiers = NO
+        if modifiers_with_leading_trailing_spaces:
+            remove_leading_trailing_spaces_in_modifiers = dialog.MessageDialog(
+                programName,
+                (
+                    "<b>Warning!</b> Some leading and/or trailing spaces are present"
+                    " in the following modifier(s):<br>"
+                    f"<b>{set(modifiers_with_leading_trailing_spaces)}</b><br><br>"
+                    "Do you want to remove the leading and trailing spaces from modifiers?<br><br>"
+                    """<font color="red"><b>Be careful with this option"""
+                    """ if you have already done observations!</b></font>"""
+                ),
+                [YES, NO],
+            )
+
 
         codingMapsList = []
         for r in range(self.twBehaviors.rowCount()):
@@ -1749,7 +1783,19 @@ class projectDialog(QDialog, Ui_dlgProject):
                         row[field] = self.twBehaviors.item(r, behavioursFields[field]).text()
 
                     if field == "modifiers" and row["modifiers"]:
-                        row["modifiers"] = eval(row["modifiers"])
+
+                        if remove_leading_trailing_spaces_in_modifiers == YES:
+                            try:
+                                modifiers_dict = eval(row["modifiers"])
+                                for k in modifiers_dict:
+                                    for idx, value in enumerate(modifiers_dict[k]["values"]):
+                                        modif_code = value.split(" (")[0]
+                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k]["values"][idx].replace(modif_code, modif_code.strip())
+                                row["modifiers"] = dict(modifiers_dict)
+                            except:
+                                raise
+                        else:
+                            row["modifiers"] = eval(row["modifiers"])
                 else:
                     row[field] = ""
 
