@@ -86,7 +86,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         # create tab
         for idx in sorted_keys(self.modifiers_sets_dict):
-            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
+            self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{int(idx) + 1}")
 
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             for w in [self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers, self.pbMoveUp,
@@ -121,7 +121,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         """
         if not self.modifiers_sets_dict:
             self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
-        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["name"] = self.leSetName.text()
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["name"] = self.leSetName.text().strip()
 
 
     def type_changed(self):
@@ -204,7 +204,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         # no modifiers set
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": []}
-            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(len(self.modifiers_sets_dict)))
+            self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{len(self.modifiers_sets_dict)}")
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
@@ -218,7 +218,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         if len(self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]):
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = {"name": "", "type": SINGLE_SELECTION, "values": []}
-            self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(len(self.modifiers_sets_dict)))
+            self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{len(self.modifiers_sets_dict)}")
             self.tabWidgetModifiersSets.setCurrentIndex(self.tabWidgetModifiersSets.count() - 1)
             self.tabMem = self.tabWidgetModifiersSets.currentIndex()
 
@@ -247,7 +247,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
                 # recreate tabs
                 for idx in sorted_keys(self.modifiers_sets_dict):
-                    self.tabWidgetModifiersSets.addTab(QWidget(), "Set #{}".format(int(idx) + 1))
+                    self.tabWidgetModifiersSets.addTab(QWidget(), f"Set #{int(idx) + 1}")
 
                 # set not visible and not available buttons and others elements
                 if self.tabWidgetModifiersSets.currentIndex() == -1:
@@ -299,13 +299,13 @@ class addModifierDialog(QDialog, Ui_Dialog):
         add a modifier to set
         """
 
-        txt = self.leModifier.text()
+        txt = self.leModifier.text().strip()
         for c in CHAR_FORBIDDEN_IN_MODIFIERS:
             if c in txt:
                 QMessageBox.critical(self, programName,
-                                     ("The character <b>{}</b> is not allowed.<br>"
+                                     (f"The character <b>{c}</b> is not allowed.<br>"
                                       "The following characters are not allowed in modifiers:<br>"
-                                      "<b>{}</b>").format(c, CHAR_FORBIDDEN_IN_MODIFIERS))
+                                      f"<b>{CHAR_FORBIDDEN_IN_MODIFIERS}</b>"))
                 self.leModifier.setFocus()
                 return
 
@@ -313,18 +313,18 @@ class addModifierDialog(QDialog, Ui_Dialog):
             if not self.modifiers_sets_dict:
                 self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
 
-            if len(self.leCode.text()) > 1:
-                if self.leCode.text().upper() not in function_keys.values():  #  ["F" + str(i) for i in range(1, 13)]:
+            if len(self.leCode.text().strip()) > 1:
+                if self.leCode.text().strip().upper() not in function_keys.values():
                     QMessageBox.critical(self, programName,
                                          "The modifier key code can not exceed one key\nSelect one key or a function key (F1, F2 ... F12)")
                     self.leCode.setFocus()
                     return
 
-            if self.leCode.text():
+            if self.leCode.text().strip():
                 for c in CHAR_FORBIDDEN_IN_MODIFIERS:
-                    if c in self.leCode.text():
+                    if c in self.leCode.text().strip():
                         QMessageBox.critical(self, programName,
-                                             "The modifier key code is not allowed {}!".format(CHAR_FORBIDDEN_IN_MODIFIERS))
+                                             f"The modifier key code is not allowed {CHAR_FORBIDDEN_IN_MODIFIERS}!")
                         self.leCode.setFocus()
                         return
 
@@ -334,14 +334,15 @@ class addModifierDialog(QDialog, Ui_Dialog):
                                                                                                  "type": SINGLE_SELECTION,
                                                                                                  "values": []}
 
-                if "(" + self.leCode.text() + ")" in " ".join(
+                if "(" + self.leCode.text().strip() + ")" in " ".join(
                     self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"]
                 ):
 
-                    QMessageBox.critical(self, programName, "The shortcut code <b>{}</b> already exists!".format(self.leCode.text()))
+                    QMessageBox.critical(self, programName,
+                                         f"The shortcut code <b>{self.leCode.text().strip()}</b> already exists!")
                     self.leCode.setFocus()
                     return
-                txt += " ({})".format(self.leCode.text())
+                txt += f" ({self.leCode.text().strip()})"
 
             if self.itemPositionMem != -1:
                 self.lwModifiers.insertItem(self.itemPositionMem, txt)
