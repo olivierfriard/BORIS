@@ -1634,7 +1634,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             QMessageBox.warning(self, programName, self.lbSubjectsState.text())
             return
 
-        self.pj["project_name"] = self.leProjectName.text()
+        self.pj["project_name"] = self.leProjectName.text().strip()
         self.pj["project_date"] = self.dteDate.dateTime().toString(Qt.ISODate)
         self.pj["project_description"] = self.teDescription.toPlainText()
 
