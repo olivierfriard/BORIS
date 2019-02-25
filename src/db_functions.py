@@ -159,6 +159,8 @@ def load_aggregated_events_in_db(pj: dict,
                                     and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selectedBehaviors]
 
     db = sqlite3.connect(":memory:")
+    #db = sqlite3.connect("/tmp/2.sqlite", isolation_level=None)
+
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()
     cursor2.execute("""CREATE TABLE aggregated_events
@@ -186,8 +188,10 @@ def load_aggregated_events_in_db(pj: dict,
             for behavior in selectedBehaviors:
 
                 cursor1.execute("SELECT DISTINCT modifiers FROM events WHERE observation=? AND subject=? AND code=? ORDER BY modifiers",
-                                (obsId, subject, behavior,))
-                rows_distinct_modifiers = list(x[0].strip() for x in cursor1.fetchall())
+                                (obsId, subject, behavior, ))
+                '''rows_distinct_modifiers = list(x[0].strip() for x in cursor1.fetchall())'''
+
+                rows_distinct_modifiers = list(x[0] for x in cursor1.fetchall())
 
                 for distinct_modifiers in rows_distinct_modifiers:
 

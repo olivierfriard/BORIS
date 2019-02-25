@@ -494,7 +494,7 @@ def dataset_write(dataset, file_name, output_format):
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj: dict, parameters: list, obsId: str):
+def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     """
     export aggregated events
 
@@ -577,7 +577,8 @@ def export_aggregated_events(pj: dict, parameters: list, obsId: str):
 
             cursor.execute("SELECT distinct modifiers FROM aggregated_events where subject=? AND behavior=? order by modifiers",
                            (subject, behavior,))
-            rows_distinct_modifiers = list(x[0].strip() for x in cursor.fetchall())
+
+            rows_distinct_modifiers = list(x[0] for x in cursor.fetchall())
 
             for distinct_modifiers in rows_distinct_modifiers:
 
@@ -621,7 +622,7 @@ def export_aggregated_events(pj: dict, parameters: list, obsId: str):
                         row_data.extend([subject,
                                          behavior,
                                          behavioral_category[behavior],
-                                         row["modifiers"].strip(),
+                                         row["modifiers"],
                                          POINT,
                                          "{0:.3f}".format(row["start"]),  # start
                                          "{0:.3f}".format(row["stop"]),  # stop
@@ -651,7 +652,7 @@ def export_aggregated_events(pj: dict, parameters: list, obsId: str):
                             row_data.extend([subject,
                                              behavior,
                                              behavioral_category[behavior],
-                                             row["modifiers"].strip(),
+                                             row["modifiers"],
                                              STATE,
                                              "{0:.3f}".format(row["start"]),
                                              "{0:.3f}".format(row["stop"]),
@@ -790,8 +791,6 @@ def events_to_timed_behavioral_sequences(pj: dict,
                 current = [csbs]
 
         t += delta
-
-    #print(out)
 
     return out
 
