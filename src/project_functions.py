@@ -235,12 +235,21 @@ def check_project_integrity(pj: dict,
             if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]:
                 if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]:
                     if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
-                        if out:
-                            out += "<br><br>"
+                        out += "<br><br>" if out else ""
                         out += (
                             "The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
                             "that is no more in behavioral categories list."
                         ).format(pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
+
+        # check for leading/trailing spaces in modifiers defined in ethogram
+        for idx in pj[ETHOGRAM]:
+            for k in pj[ETHOGRAM][idx][MODIFIERS]:
+                for value in pj[ETHOGRAM][idx][MODIFIERS][k]["values"]:
+                    modifier_code = value.split(" (")[0]
+                    if modifier_code.strip() != modifier_code:
+                        out += "<br><br>" if out else ""
+                        out += ("The following modifier defined in ethogram "
+                                f"has leading/trailing spaces: <b>{modifier_code.replace(' ', '&#9608;')}</b>")
 
         # check if all media are available
         if media_file_available:

@@ -494,7 +494,7 @@ def dataset_write(dataset, file_name, output_format):
         return False, str(sys.exc_info()[1])
 
 
-def export_aggregated_events(pj, parameters, obsId):
+def export_aggregated_events(pj: dict, parameters: list, obsId: str):
     """
     export aggregated events
 
