@@ -156,7 +156,7 @@ class Test_extract_frames(object):
                                  frame_resize=256,
                                  number_of_seconds=2)
         files_list = sorted(glob.glob("output/*.png"))
-        assert len(files_list) == 52
+        assert len(files_list) == 50
         assert files_list[0] == "output/BORIS@040d8545ab408b6c5f87b6316da9e4bf_00000001.png"
 
     @pytest.mark.usefixtures("before")
@@ -172,7 +172,7 @@ class Test_extract_frames(object):
                                  frame_resize=256,
                                  number_of_seconds=2)
         files_list = sorted(glob.glob("output/*.jpg"))
-        assert len(files_list) == 52
+        assert len(files_list) == 50
         assert files_list[0] == "output/BORIS@040d8545ab408b6c5f87b6316da9e4bf_00000001.jpg"
 
 
