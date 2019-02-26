@@ -3,7 +3,6 @@ module for testing utilities.py
 
 https://realpython.com/python-continuous-integration/
 
-
 pytest -s -vv test_utilities.py
 """
 
