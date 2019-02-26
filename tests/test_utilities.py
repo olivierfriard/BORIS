@@ -1,4 +1,8 @@
 """
+BORIS
+Behavioral Observation Research Interactive Software
+Copyright 2012-2019 Olivier Friard
+
 module for testing utilities.py
 
 https://realpython.com/python-continuous-integration/
