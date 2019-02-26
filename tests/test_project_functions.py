@@ -62,7 +62,10 @@ class Test_check_if_media_available(object):
 
 class Test_check_project_integrity(object):
 
-    def test_1(self):
+    def test_observation_not_paired(self):
+        """
+        one observation not paired
+        """
         pj = json.loads(open("files/test.boris").read())
 
         results = project_functions.check_project_integrity(pj,
@@ -72,6 +75,21 @@ class Test_check_project_integrity(object):
 
         assert results == '''Observation: <b>live not paired</b><br>The behavior <b>s</b>  is not PAIRED for subject "<b>No focal subject</b>" at <b>00:00:26.862</b><br>'''
 
+
+    def test_modifiers_with_trailing_spaces(self):
+        """
+        Project containing some modifiers with trailing spaces
+        """
+
+        pj = json.loads(open("files/test_with_leading_trailing_spaces_in_modifiers.boris").read())
+
+        results = project_functions.check_project_integrity(pj,
+                                                            HHMMSS,
+                                                           "files/test_with_leading_trailing_spaces_in_modifiers.boris",
+                                                            media_file_available=False)
+
+        #print(results)
+        assert results == '''The following modifier defined in ethogram has leading/trailing spaces: <b>a&#9608;&#9608;&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>c&#9608;&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>c&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>d&#9608;&#9608;</b>'''
 
 
 class Test_check_state_events_obs(object):
