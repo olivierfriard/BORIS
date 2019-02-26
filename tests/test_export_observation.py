@@ -203,6 +203,34 @@ class Test_export_aggregated_events(object):
 
 
     @pytest.mark.usefixtures("before")
+    def test_full_with_trailing_spaces_in_modifiers(self):
+        """
+        some modifiers were configured with trailing spaces
+        """
+        pj = json.loads(open("files/test_with_leading_trailing_spaces_in_modifiers.boris").read())
+        obs_id = "test1 live"
+        parameters = {"selected subjects": ["No focal subject"],
+                      "selected behaviors": ["p", "r"],
+                      "time": TIME_FULL_OBS,
+                      START_TIME: 0,
+                      END_TIME: 2*60}
+
+        tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
+        tablib_dataset_tsv = tablib_dataset.tsv
+
+
+        '''
+        print(tablib_dataset_tsv)
+        open("files/test_export_aggregated_events_test_full_with_trailing_spaces_in_modifiers.tsv", "w").write(tablib_dataset_tsv)
+        '''
+
+
+        ref = open("files/test_export_aggregated_events_test_full_with_trailing_spaces_in_modifiers.tsv").read()
+        assert tablib_dataset_tsv.replace("\r", "") == ref
+
+
+
+    @pytest.mark.usefixtures("before")
     def test_partial_4(self):
         """
         export aggregated events:
