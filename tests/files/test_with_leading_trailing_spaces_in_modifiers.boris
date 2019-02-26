@@ -1,0 +1,97 @@
+{
+ "time_format":"hh:mm:ss",
+ "project_date":"2019-02-25T13:21:06",
+ "project_name":"",
+ "project_description":"",
+ "project_format_version":"7.0",
+ "subjects_conf":{},
+ "behaviors_conf":{
+  "0":{
+   "type":"Point event",
+   "key":"p",
+   "code":"p",
+   "description":"",
+   "category":"",
+   "modifiers":{
+    "0":{
+     "name":"test 1",
+     "type":0,
+     "values":[
+      "a    (a)",
+      "c  ",
+      "d"
+     ]
+    },
+    "1":{
+     "name":"test 2 ",
+     "type":0,
+     "values":[
+      "111",
+      "c  (c)",
+      "d  "
+     ]
+    }
+   },
+   "excluded":"",
+   "coding map":""
+  },
+  "1":{
+   "type":"Point event",
+   "key":"r",
+   "code":"r",
+   "description":"",
+   "category":"",
+   "modifiers":"",
+   "excluded":"",
+   "coding map":""
+  }
+ },
+ "observations":{
+  "test1 live":{
+   "file":{},
+   "type":"LIVE",
+   "date":"2019-02-26T10:30:23",
+   "description":"",
+   "time offset":0.0,
+   "events":[
+    [
+     4.151,
+     "",
+     "p",
+     "a   |c ",
+     ""
+    ],
+    [
+     12.663,
+     "",
+     "p",
+     "a   |None",
+     ""
+    ],
+    [
+     20.135,
+     "",
+     "p",
+     "None|111",
+     ""
+    ],
+    [
+     26.007,
+     "",
+     "p",
+     "None|c ",
+     ""
+    ]
+   ],
+   "independent_variables":{},
+   "visualize_spectrogram":false,
+   "close_behaviors_between_videos":false,
+   "scan_sampling_time":0
+  }
+ },
+ "behavioral_categories":[],
+ "independent_variables":{},
+ "coding_map":{},
+ "behaviors_coding_map":[],
+ "converters":{}
+}
