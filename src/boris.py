@@ -126,7 +126,7 @@ if sys.platform == "darwin":  # for MacOS
 usage = "usage: %prog [options] [-p PROJECT_PATH] [-o \"OBSERVATION ID\"]"
 parser = OptionParser(usage=usage)
 
-parser.add_option("-d", "--debug", action="store", default="one", dest="debug", help="one: log to BORIS.log, new: log to new file")
+parser.add_option("-d", "--debug", action="store", default="", dest="debug", help="one: log to BORIS.log, new: log to new file")
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 parser.add_option("-p", "--project", action="store", help="Project file")
@@ -134,13 +134,15 @@ parser.add_option("-o", "--observation", action="store", help="Observation id")
 
 (options, args) = parser.parse_args()
 
+print("options.debug", options.debug)
+
 # set logging parameters
 if options.debug in ["one", "new", "stdout"]:
     if options.debug == "new":
-        log_file_name = "BORIS_" + datetime.datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".log"
+        log_file_name = str(pathlib.Path(os.path.expanduser("~")) / "BORIS_" + datetime.datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".log")
         file_mode = "w"
     if options.debug == "one":
-        log_file_name = "BORIS.log"
+        log_file_name = str(pathlib.Path(os.path.expanduser("~")) / "BORIS.log")
         file_mode = "a"
     if options.debug in ["one", "new"]:
         logging.basicConfig(filename=log_file_name,
@@ -153,7 +155,9 @@ if options.debug in ["one", "new", "stdout"]:
                             datefmt='%H:%M:%S',
                             level=logging.DEBUG)
 else:
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(format='%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s',
+                        datefmt='%H:%M:%S',
+                        level=logging.INFO)
 
 if options.version:
     print("version {0} release date: {1}".format(__version__, __version_date__))
