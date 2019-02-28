@@ -134,8 +134,6 @@ parser.add_option("-o", "--observation", action="store", help="Observation id")
 
 (options, args) = parser.parse_args()
 
-print("options.debug", options.debug)
-
 # set logging parameters
 if options.debug in ["one", "new", "stdout"]:
     if options.debug == "new":
