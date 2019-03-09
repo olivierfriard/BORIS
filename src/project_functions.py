@@ -552,9 +552,7 @@ def media_full_path(media_file: str, project_file_name: str) -> str:
             return ""
 
 
-
-
-def observation_total_length(observation):
+def observation_total_length(observation: dict):
     """
     Total length of observation
     tested
@@ -580,32 +578,38 @@ def observation_total_length(observation):
         return totalMediaLength
 
     if observation[TYPE] == MEDIA:
-        totalMediaLength, totalMediaLength1, totalMediaLength2 = Decimal("0.0"), Decimal("0.0"), Decimal("0.0")
+        totalMediaLength = Decimal("0.0")
 
         total_media_length = {}
 
-        for player in [PLAYER1, PLAYER2]:
-            total_media_length[player] = Decimal("0.0")
-            for mediaFile in observation[FILE][player]:
+        for nplayer in observation[FILE]:
+            if not observation[FILE][nplayer]:
+                continue
+
+            total_media_length[nplayer] = Decimal("0.0")
+            for mediaFile in observation[FILE][nplayer]:
                 mediaLength = 0
                 try:
                     mediaLength = observation["media_info"]["length"][mediaFile]
                 except Exception:
-                    # nframe, videoTime, videoDuration, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, mediaFile)
-                    r = utilities.accurate_media_analysis(self.ffmpeg_bin, mediaFile)
+                    print("media file", mediaFile)
+                    mediaLength = -1
+                    # r = utilities.accurate_media_analysis(ffmpeg_bin, mediaFile)
                     if "media_info" not in observation:
                         observation["media_info"] = {"length": {}, "fps": {}}
                         if "length" not in observation["media_info"]:
                             observation["media_info"]["length"] = {}
                         if "fps" not in observation["media_info"]:
                             observation["media_info"]["fps"] = {}
-
-                    observation["media_info"]["length"][mediaFile] = r["duration"]
-                    observation["media_info"]["fps"][mediaFile] = r["fps"]
-
-                    mediaLength = r["duration"]
-
-                total_media_length[player] += Decimal(mediaLength)
+                    '''
+                    if "error" not in r:
+                        observation["media_info"]["length"][mediaFile] = r["duration"]
+                        observation["media_info"]["fps"][mediaFile] = r["fps"]
+                        mediaLength = r["duration"]
+                    else:
+                        mediaLength = -1
+                    '''
+                total_media_length[nplayer] += Decimal(mediaLength)
 
         if -1 in [total_media_length[x] for x in total_media_length]:
             return -1

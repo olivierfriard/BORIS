@@ -5195,6 +5195,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             with open(file_name, "wb") as f:
                 f.write(data_report.export(output_format))
 
+
     def observation_length(self, selected_observations):
         """
         max length of selected observations
@@ -5213,7 +5214,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # an observation media length is not available
         if selectedObsTotalMediaLength == -1:
             # propose to user to use max event time
-            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?",
+            if dialog.MessageDialog(programName,
+                                    (f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
+                                     "Use last event time as media length?"),
                                     [YES, NO]) == YES:
                 maxTime = 0  # max length for all events all subjects
                 for obs_id in selected_observations:
@@ -6901,7 +6904,7 @@ item []:
 """
 
             flagUnpairedEventFound = False
-            '''TO BE REMOVED  totalMediaDuration = round(self.observationTotalMediaLength(obsId), 3)'''
+
             totalMediaDuration = round(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]), 3)
 
             cursor = db_functions.load_events_in_db(self.pj,

@@ -523,7 +523,11 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
         except Exception:
             duration1 = []
 
-    total_length = "{0:.3f}".format(project_functions.observation_total_length(observation))
+    obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
+    if obs_length == -1:
+        obs_length = 0
+
+    total_length = "{0:.3f}".format(obs_length)
 
     ok, msg, connector = db_functions.load_aggregated_events_in_db(pj,
                                                                    parameters[SELECTED_SUBJECTS],
@@ -534,9 +538,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
     # time
     cursor = connector.cursor()
-    obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
-    if obs_length == -1:
-        obs_length = 0
 
     if interval == TIME_FULL_OBS:
         min_time = float(0)
