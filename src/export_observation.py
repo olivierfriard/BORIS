@@ -539,7 +539,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
     obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
     if obs_length == Decimal("-1"): # media length not available
-        # obs_length = Decimal("0")
         interval = TIME_EVENTS
 
     logging.debug(f"obs_length: {obs_length}")

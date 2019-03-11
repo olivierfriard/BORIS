@@ -2025,7 +2025,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                      float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
                                         # check if start after length of media
-                                        if start > self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS]
+                                        if start > self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][self.pj[OBSERVATIONS]
                                                                                                                [obsId][FILE]
                                                                                                                [nplayer]
                                                                                                                [mediaFileIdx]]:
@@ -5261,12 +5261,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if state events are paired
         out = ""  # will contain the output
         not_paired_obs_list = []
-        for obsId in selectedObservations:
-            r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obsId], self.timeFormat)
+        for obs_id in selectedObservations:
+            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id], self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
-                not_paired_obs_list.append(obsId)
+                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+                not_paired_obs_list.append(obs_id)
 
         if out:
             out = "Some selected observations have issues:<br><br>" + out
@@ -5285,6 +5285,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
 
         max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+        if max_obs_length == -1: # media length not available, user choose to not use events
+            return
+
+        logging.debug(f"max_obs_length: {max_obs_length}, selectedObsTotalMediaLength: {selectedObsTotalMediaLength}")
 
         parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                          maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
@@ -5314,8 +5318,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
 
-                if obs_length == -1:
-                    obs_length = 0
+                if obs_length == Decimal("-1"): # media length not available
+                    parameters[TIME_INTERVAL] = TIME_EVENTS
 
                 if parameters[TIME_INTERVAL] == TIME_FULL_OBS:
                     min_time = float(0)
@@ -5323,11 +5327,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if parameters[TIME_INTERVAL] == TIME_EVENTS:
                     try:
-                        min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])  # first event
+                        min_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][0][0])  # first event
                     except Exception:
                         min_time = float(0)
                     try:
-                        max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])  # last event
+                        max_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0])  # last event
                     except Exception:
                         max_time = float(obs_length)
 
@@ -5807,9 +5811,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         plot_directory = ""
         file_format = "png"
         if len(selected_observations) > 1:
-            plot_directory = QFileDialog(self).getExistingDirectory(self, "Choose a directory to save the plots",
-                                                                    os.path.expanduser("~"),
-                                                                    options=QFileDialog(self).ShowDirsOnly)
+            plot_directory = QFileDialog().getExistingDirectory(self, "Choose a directory to save the plots",
+                                                                os.path.expanduser("~"),
+                                                                options=QFileDialog(self).ShowDirsOnly)
 
             if not plot_directory:
                 return
@@ -5821,6 +5825,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return
 
+
+        max_obs_length, selectedObsTotalMediaLength = self.observation_length(selected_observations)
+        if max_obs_length == -1: # media length not available, user choose to not use events
+            return
+
+        '''
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
         for obs_id in selected_observations:
@@ -5831,6 +5841,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if obs_length in [0, -1]:
                 selectedObsTotalMediaLength = -1
                 break
+
             max_obs_length = max(max_obs_length, obs_length)
             selectedObsTotalMediaLength += obs_length
         # an observation media length is not available
@@ -5846,13 +5857,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 selectedObsTotalMediaLength = maxTime
             else:
                 selectedObsTotalMediaLength = 0
+        '''
 
         parameters = self.choose_obs_subj_behav_category(selected_observations,
                                                          maxTime=max_obs_length,
                                                          flagShowExcludeBehaviorsWoEvents=True,
                                                          by_category=False)
 
-        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
 

@@ -533,9 +533,9 @@ def create_events_plot(pj,
     selected_subjects = parameters["selected subjects"]
     selected_behaviors = parameters["selected behaviors"]
     include_modifiers = parameters["include modifiers"]
-    interval = parameters["time"]
-    start_time = parameters["start time"]
-    end_time = parameters["end time"]
+    interval = parameters[TIME_INTERVAL]
+    start_time = parameters[START_TIME]
+    end_time = parameters[END_TIME]
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                        selected_subjects,
@@ -605,8 +605,8 @@ def create_events_plot(pj,
 
         # time
         obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
-        if obs_length == -1:
-            obs_length = 0
+        if obs_length == -1: # media length not available
+            interval = TIME_EVENTS
 
         if interval == TIME_FULL_OBS:
             min_time = float(0)
