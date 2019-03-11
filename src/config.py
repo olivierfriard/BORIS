@@ -229,6 +229,8 @@ VLC = "vlc"
 FFMPEG = "ffmpeg"
 
 MEDIA_FILE_INFO = "media_file_info"
+MEDIA_INFO = "media_info"
+LENGTH = "length"
 
 STATE = "STATE"
 POINT = "POINT"

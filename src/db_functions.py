@@ -23,6 +23,7 @@ Copyright 2012-2019 Olivier Friard
 
 import sqlite3
 import os
+import logging
 from config import *
 import project_functions
 
@@ -124,6 +125,8 @@ def load_aggregated_events_in_db(pj: dict,
         database connector: db connector if bool True else None
 
     """
+
+    logging.debug(f"function: load_aggregated_events_in_db")
 
     # if no observation selected select all
     if not selectedObservations:

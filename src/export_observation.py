@@ -310,8 +310,10 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     # media file name
     if observation["type"] in [MEDIA]:
         rows.append(["Media file(s)"])
-    else:
+    elif observation["type"] in [LIVE]:
         rows.append(["Live observation"])
+    else:
+        rows.append(["?"])
     rows.append([""])
 
     if observation[TYPE] in [MEDIA]:
@@ -381,10 +383,18 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
                 if time_ < 0:
                     time_ = 0
 
-                mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
-                fields.append(utilities.intfloatstr(str(observation[FILE][PLAYER1][mediaFileIdx])))
-                fields.append(total_length)
-                fields.append(observation["media_info"]["fps"][observation[FILE][PLAYER1][mediaFileIdx]])  # fps
+                if duration1:
+                    mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if time_ >= sum(duration1[0:idx1])][-1]
+                    fields.append(observation[FILE][PLAYER1][mediaFileIdx])
+                    fields.append(total_length)
+                    # FPS
+                    try:
+                        fields.append(observation[MEDIA_INFO]["fps"][observation[FILE][PLAYER1][mediaFileIdx]])  # fps
+                    except KeyError:
+                        fields.append("NA")
+                else:
+                    fields.append("NA") # media file
+                    fields.append("NA") # FPS
 
             if observation["type"] in [LIVE]:
                 fields.append(LIVE)  # media
@@ -507,6 +517,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
         tablib.Dataset:
 
     """
+    logging.debug(f"function: export aggregated events {parameters} {obsId}")
+
     interval = parameters["time"]
     start_time = parameters[START_TIME]
     end_time = parameters[END_TIME]
@@ -514,27 +526,31 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     data = tablib.Dataset()
     observation = pj[OBSERVATIONS][obsId]
 
+
     duration1 = []   # in seconds
     if observation[TYPE] in [MEDIA]:
         try:
             for mediaFile in observation[FILE][PLAYER1]:
-                if "media_info" in observation:
+                if MEDIA_INFO in observation:
                     duration1.append(observation["media_info"]["length"][mediaFile])
         except Exception:
             duration1 = []
 
-    obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
-    if obs_length == -1:
-        obs_length = 0
 
-    total_length = "{0:.3f}".format(obs_length)
+    obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
+    if obs_length == Decimal("-1"): # media length not available
+        # obs_length = Decimal("0")
+        interval = TIME_EVENTS
+
+    logging.debug(f"obs_length: {obs_length}")
 
     ok, msg, connector = db_functions.load_aggregated_events_in_db(pj,
                                                                    parameters[SELECTED_SUBJECTS],
                                                                    [obsId],
                                                                    parameters[SELECTED_BEHAVIORS])
-    if not ok:
-        data
+    if connector is None:
+        logging.critical(f"error when loading aggregated events in DB")
+        return data
 
     # time
     cursor = connector.cursor()
@@ -594,9 +610,18 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         if duration1:
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1) if row["start"] >= sum(duration1[0:idx1])][-1]
                             mediaFileString = observation[FILE][PLAYER1][mediaFileIdx]
-                            fpsString = observation["media_info"]["fps"][observation[FILE][PLAYER1][mediaFileIdx]]
+                            try:
+                                fpsString = observation[MEDIA_INFO]["fps"][observation[FILE][PLAYER1][mediaFileIdx]]
+                            except Exception:
+                                fpsString = "NA"
                         else:
-                            mediaFileString = "-"
+                            try:
+                                if len(observation[FILE][PLAYER1]) == 1:
+                                    mediaFileString = observation[FILE][PLAYER1][0]
+                                else:
+                                    mediaFileString = "NA"
+                            except Exception:
+                                mediaFileString = "NA"
                             fpsString = "NA"
 
                     if observation[TYPE] in [LIVE]:
@@ -609,7 +634,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         row_data.extend([obsId,
                                          observation["date"].replace("T", " "),
                                          mediaFileString,
-                                         total_length,
+                                         f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA",
                                          fpsString])
 
                         # independent variables
@@ -639,7 +664,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                             row_data.extend([obsId,
                                              observation["date"].replace("T", " "),
                                              mediaFileString,
-                                             total_length,
+                                             f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA",
                                              fpsString])
 
                             # independent variables

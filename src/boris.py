@@ -1953,83 +1953,47 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                   ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
                                   '-{globalStop}{extension}" ')
 
+        try:
+            for obsId in selected_observations:
 
-        for obsId in selected_observations:
+                for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
 
-            for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
+                    if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                        continue
 
-                if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    continue
+                    duration1 = []   # in seconds
+                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                        duration1.append(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])
 
-                duration1 = []   # in seconds
-                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    duration1.append(self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])
+                    for subject in parameters[SELECTED_SUBJECTS]:
 
-                for subject in parameters[SELECTED_SUBJECTS]:
+                        for behavior in parameters[SELECTED_BEHAVIORS]:
 
-                    for behavior in parameters[SELECTED_BEHAVIORS]:
+                            cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                                           (obsId, subject, behavior))
+                            rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
-                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
-                                       (obsId, subject, behavior))
-                        rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
+                            behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
+                            if STATE in behavior_state and len(rows) % 2:  # unpaired events
+                                flagUnpairedEventFound = True
+                                continue
 
-                        behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
-                        if STATE in behavior_state and len(rows) % 2:  # unpaired events
-                            flagUnpairedEventFound = True
-                            continue
+                            for idx, row in enumerate(rows):
 
-                        for idx, row in enumerate(rows):
+                                mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
+                                                if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
-                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
-                                            if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                                globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
+                                    row["occurence"] - timeOffset, 3)
+                                start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                if start < timeOffset:
+                                    start = Decimal("0.000")
 
-                            globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
-                                row["occurence"] - timeOffset, 3)
-                            start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-                            if start < timeOffset:
-                                start = Decimal("0.000")
+                                if POINT in behavior_state:
 
-                            if POINT in behavior_state:
+                                    globalStop = round(row["occurence"] + timeOffset, 3)
 
-                                globalStop = round(row["occurence"] + timeOffset, 3)
-
-                                stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-
-                                ffmpeg_command = ffmpeg_extract_command.format(
-                                    ffmpeg_bin=ffmpeg_bin,
-                                    input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
-                                                                             self.projectFileName),
-                                    start=start,
-                                    stop=stop,
-                                    globalStart=globalStart,
-                                    globalStop=globalStop,
-                                    dir_=exportDir,
-                                    sep=os.sep,
-                                    obsId=obsId,
-                                    player="PLAYER{}".format(nplayer),
-                                    subject=subject,
-                                    behavior=behavior,
-                                    extension=".mp4")
-
-                                logging.debug("ffmpeg command: {}".format(ffmpeg_command))
-                                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                     shell=True)
-                                out, error = p.communicate()
-
-                            if STATE in behavior_state:
-                                if idx % 2 == 0:
-
-                                    globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
-
-                                    stop = round(rows[idx + 1]["occurence"] + timeOffset -
-                                                 float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-
-                                    # check if start after length of media
-                                    if start > self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS]
-                                                                                                           [obsId][FILE]
-                                                                                                           [nplayer]
-                                                                                                           [mediaFileIdx]]:
-                                        continue
+                                    stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
                                     ffmpeg_command = ffmpeg_extract_command.format(
                                         ffmpeg_bin=ffmpeg_bin,
@@ -2051,6 +2015,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                          shell=True)
                                     out, error = p.communicate()
+
+                                if STATE in behavior_state:
+                                    if idx % 2 == 0:
+
+                                        globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
+
+                                        stop = round(rows[idx + 1]["occurence"] + timeOffset -
+                                                     float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+
+                                        # check if start after length of media
+                                        if start > self.pj[OBSERVATIONS][obsId]["media_info"]["length"][self.pj[OBSERVATIONS]
+                                                                                                               [obsId][FILE]
+                                                                                                               [nplayer]
+                                                                                                               [mediaFileIdx]]:
+                                            continue
+
+                                        ffmpeg_command = ffmpeg_extract_command.format(
+                                            ffmpeg_bin=ffmpeg_bin,
+                                            input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                                     self.projectFileName),
+                                            start=start,
+                                            stop=stop,
+                                            globalStart=globalStart,
+                                            globalStop=globalStop,
+                                            dir_=exportDir,
+                                            sep=os.sep,
+                                            obsId=obsId,
+                                            player="PLAYER{}".format(nplayer),
+                                            subject=subject,
+                                            behavior=behavior,
+                                            extension=".mp4")
+
+                                        logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+                                        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                             shell=True)
+                                        out, error = p.communicate()
+        except Exception:
+            logging.critical(f"Error during subvideo extraction. {sys.exc_info()[1]}")
+            QMessageBox.critical(None, programName, f"Error during subvideo extraction. {sys.exc_info()[1]}",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def generate_spectrogram(self):
@@ -5196,16 +5200,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 f.write(data_report.export(output_format))
 
 
-    def observation_length(self, selected_observations):
+    def observation_length(self, selected_observations: list):
         """
         max length of selected observations
         total media length
+
+        Args:
+            selected_observations (list): list of selected observations
+
+        Returns:
+            float: maximum media length for all observations
+            float: total media length for all observations
         """
         selectedObsTotalMediaLength = Decimal("0.0")
         max_obs_length = 0
         for obs_id in selected_observations:
             obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obs_id])
-            if obs_length in [0, -1]:
+            if obs_length in [Decimal("0"), Decimal("-1")]:
                 selectedObsTotalMediaLength = -1
                 break
             max_obs_length = max(max_obs_length, obs_length)
@@ -5219,13 +5230,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                      "Use last event time as media length?"),
                                     [YES, NO]) == YES:
                 maxTime = 0  # max length for all events all subjects
+                max_length = 0
                 for obs_id in selected_observations:
                     if self.pj[OBSERVATIONS][obs_id][EVENTS]:
                         maxTime += max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0]
+                        max_length = max(max_length, max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0])
                 logging.debug("max time all events all subjects: {}".format(maxTime))
+                max_obs_length = max_length
                 selectedObsTotalMediaLength = maxTime
+
             else:
-                selectedObsTotalMediaLength = 0
+                max_obs_length = -1
+                selectedObsTotalMediaLength = Decimal("-1")
+
         return max_obs_length, selectedObsTotalMediaLength
 
 
@@ -6610,8 +6627,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         ok, msg = project_functions.create_subtitles(self.pj, selected_observations, parameters, export_dir)
         if not ok:
-            logging.critical(msg)
-            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            logging.critical(f"Error creating subtitles. {msg}")
+            QMessageBox.critical(None, programName, f"Error creating subtitles: {msg}",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
     def export_aggregated_events(self):
@@ -6642,10 +6660,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+        logging.debug(f"max_obs_length:{max_obs_length}  selectedObsTotalMediaLength:{selectedObsTotalMediaLength}")
+        if max_obs_length == -1:
+            return
 
         parameters = self.choose_obs_subj_behav_category(selectedObservations,
                                                          maxTime=max_obs_length if len(selectedObservations) > 1 else selectedObsTotalMediaLength,
-                                                         #  maxTime=0,
                                                          flagShowIncludeModifiers=False,
                                                          flagShowExcludeBehaviorsWoEvents=False)
 

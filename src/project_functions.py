@@ -213,9 +213,6 @@ def check_project_integrity(pj: dict,
     """
     out = ""
 
-    # check for behavior not in ethogram
-    # remove because already tested bt check_state_events_obs function
-
     try:
         # check if coded behaviors are defined in ethogram
         r = check_coded_behaviors(pj)
@@ -226,8 +223,7 @@ def check_project_integrity(pj: dict,
         for obs_id in pj[OBSERVATIONS]:
             ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
             if not ok:
-                if out:
-                    out += "<br><br>"
+                out += "<br><br>" if out else ""
                 out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
 
         # check if behavior belong to category that is not in categories list
@@ -256,16 +252,31 @@ def check_project_integrity(pj: dict,
             for obs_id in pj[OBSERVATIONS]:
                 ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
                 if not ok:
-                    if out:
-                        out += "<br><br>"
+                    out += "<br><br>" if out else ""
                     out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+
+        # check if media length available
+        for obs_id in pj[OBSERVATIONS]:
+            if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
+                continue
+            for nplayer in ALL_PLAYERS:
+                if nplayer in pj[OBSERVATIONS][obs_id][FILE]:
+                    for media_file in pj[OBSERVATIONS][obs_id][FILE][nplayer]:
+                        try:
+                            pj[OBSERVATIONS][obs_id][MEDIA_INFO][LENGTH][media_file]
+                        except KeyError:
+                            out += "<br><br>" if out else ""
+                            out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
 
         return out
     except Exception:
         return str(sys.exc_info()[1])
 
 
-def create_subtitles(pj: dict, selected_observations: list, parameters: dict, export_dir: str) -> tuple:
+def create_subtitles(pj: dict,
+                     selected_observations: list,
+                     parameters: dict,
+                     export_dir: str) -> tuple:
     """
     create subtitles for selected observations, subjects and behaviors
 
@@ -359,12 +370,13 @@ def create_subtitles(pj: dict, selected_observations: list, parameters: dict, ex
                         continue
                     init = 0
                     for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                        end = init + pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
+                        try:
+                            end = init + pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
+                        except KeyError:
+                            return False, f"The length for media file {mediaFile} is not available"
                         out = ""
 
-
                         print(",".join(["?"] * len(parameters["selected subjects"])))
-
 
                         print(",".join(["?"] * len(parameters["selected behaviors"])))
 
@@ -554,7 +566,7 @@ def media_full_path(media_file: str, project_file_name: str) -> str:
 
 def observation_total_length(observation: dict):
     """
-    Total length of observation
+    Total length of media file(s) for observation
     tested
 
     media: if media length not available return 0
@@ -572,56 +584,48 @@ def observation_total_length(observation: dict):
 
     if observation[TYPE] == LIVE:
         if observation[EVENTS]:
-            totalMediaLength = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
+            obs_length = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
         else:
-            totalMediaLength = Decimal("0.0")
-        return totalMediaLength
+            obs_length = Decimal("0.0")
+        return obs_length
 
     if observation[TYPE] == MEDIA:
-        totalMediaLength = Decimal("0.0")
+        media_max_total_length = Decimal("0.0")
 
-        total_media_length = {}
+        media_total_length = {}
 
         for nplayer in observation[FILE]:
             if not observation[FILE][nplayer]:
                 continue
 
-            total_media_length[nplayer] = Decimal("0.0")
+            media_total_length[nplayer] = Decimal("0.0")
             for mediaFile in observation[FILE][nplayer]:
                 mediaLength = 0
                 try:
                     mediaLength = observation["media_info"]["length"][mediaFile]
+                    media_total_length[nplayer] += Decimal(mediaLength)
                 except Exception:
-                    print("media file", mediaFile)
+                    logging.critical(f"media length not found for {mediaFile}")
                     mediaLength = -1
-                    # r = utilities.accurate_media_analysis(ffmpeg_bin, mediaFile)
-                    if "media_info" not in observation:
-                        observation["media_info"] = {"length": {}, "fps": {}}
-                        if "length" not in observation["media_info"]:
-                            observation["media_info"]["length"] = {}
-                        if "fps" not in observation["media_info"]:
-                            observation["media_info"]["fps"] = {}
-                    '''
-                    if "error" not in r:
-                        observation["media_info"]["length"][mediaFile] = r["duration"]
-                        observation["media_info"]["fps"][mediaFile] = r["fps"]
-                        mediaLength = r["duration"]
-                    else:
-                        mediaLength = -1
-                    '''
-                total_media_length[nplayer] += Decimal(mediaLength)
+                    media_total_length[nplayer] = -1
+                    break
 
-        if -1 in [total_media_length[x] for x in total_media_length]:
-            return -1
+        if -1 in [media_total_length[x] for x in media_total_length]:
+            return Decimal("-1")
 
-        totalMediaLength = max([total_media_length[x] for x in total_media_length])
+        # totalMediaLength = max([total_media_length[x] for x in total_media_length])
 
+        media_max_total_length = max([media_total_length[x] for x in media_total_length])
+
+        '''
         if observation[EVENTS]:
             if max(observation[EVENTS])[EVENT_TIME_FIELD_IDX] > totalMediaLength:
-                totalMediaLength = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
+                media_max_total_length = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
+        '''
 
-        return totalMediaLength
+        return media_max_total_length
 
+    logging.critical("observation not LIVE nor MEDIA")
     return Decimal("0.0")
 
 
