@@ -40,13 +40,19 @@ class Plot_spectrogram_RT(QWidget):
     sendEvent = pyqtSignal(QEvent)
 
 
-    def get_wav_info(self, wav_file):
-        wav = wave.open(wav_file, "r")
-        frames = wav.readframes(-1)
-        sound_info = np.fromstring(frames, "Int16")
-        frame_rate = wav.getframerate()
-        wav.close()
-        return sound_info, frame_rate
+    def get_wav_info(self, wav_file: str):
+        """
+        read wav file and extract information
+        """
+        try:
+            wav = wave.open(wav_file, "r")
+            frames = wav.readframes(-1)
+            sound_info = np.fromstring(frames, "Int16")
+            frame_rate = wav.getframerate()
+            wav.close()
+            return sound_info, frame_rate
+        except Exception:
+            return np.array([]), 0
 
 
     def __init__(self):
@@ -140,8 +146,10 @@ class Plot_spectrogram_RT(QWidget):
 
         try:
             self.sound_info, self.frame_rate = self.get_wav_info(wav_file_path)
+            if not self.frame_rate:
+                return {"error": f"unknown format for file {wav_file_path}"}
         except FileNotFoundError:
-            return {"error": "File not found: {}".format(wav_file_path)}
+            return {"error": f"File not found: {wav_file_path}"}
 
         self.media_length = len(self.sound_info) / self.frame_rate
 

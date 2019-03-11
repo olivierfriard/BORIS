@@ -452,6 +452,7 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
                              shell=True)
         out, error = p.communicate()
         out, error = out.decode("utf-8"), error.decode("utf-8")
+        logging.debug(f"{out}, {error}")
 
         if "does not contain any stream" not in error:
             if wav_file_path.is_file():

@@ -2148,6 +2148,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 r = self.spectro.load_wav(str(wav_file_path))
                 if "error" in r:
                     logging.warning("spectro_load_wav error: {}".format(r["error"]))
+                    QMessageBox.warning(self, programName, "Error in spectrogram generation: " + r["error"],
+                                        QMessageBox.Ok | QMessageBox.Default,
+                                        QMessageBox.NoButton)
                     del self.spectro
                     return
 
@@ -3602,6 +3605,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             r = self.spectro.load_wav(str(wav_file_path))
             if "error" in r:
                 logging.warning("spectro_load_wav error: {}".format(r["error"]))
+                QMessageBox.warning(self, programName, "Error in spectrogram generation: " + r["error"],
+                                    QMessageBox.Ok | QMessageBox.Default,
+                                    QMessageBox.NoButton)
                 del self.spectro
                 return
 
