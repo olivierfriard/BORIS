@@ -4154,26 +4154,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         try:
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem(
-                                    str(self.pj[OBSERVATIONS][obsId]["media_info"]["offset"][player])))
+                                    str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["offset"][player])))
                         except Exception:
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0"))
 
                         try:
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 3, QTableWidgetItem(seconds2time(
-                                    self.pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile])))
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["length"][mediaFile])))
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 4, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId]["media_info"]["fps"][mediaFile])))
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["fps"][mediaFile])))
                         except Exception:
                             pass
                         try:
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 5, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"][mediaFile])))
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasVideo"][mediaFile])))
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 6, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"][mediaFile])))
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"][mediaFile])))
                         except Exception:
                             pass
 
