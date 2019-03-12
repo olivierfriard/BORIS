@@ -436,34 +436,32 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
 
     wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(media_file_path + ".wav").name
 
-    if wav_file_path.is_file():
+    # check if media file is a wav file
+    try:
+        wav = wave.open(media_file_path, "r")
+        wav.close()
+        logging.debug(f"{media_file_path} is a WAV file. Copying in the temp directory...")
+        copyfile(media_file_path, wav_file_path)
+        logging.debug(f"{media_file_path} copied in {wav_file_path}")
         return str(wav_file_path)
-    else:
-
-        # check if media file is a wav file
-        try:
-            wav = wave.open(media_file_path, "r")
-            wav.close()
-            logging.debug(f"{media_file_path} is a WAV file. Copying in the temp directory...")
-            copyfile(media_file_path, wav_file_path)
-            logging.debug(f"{media_file_path} copied in {wav_file_path}")
+    except Exception:
+        if wav_file_path.is_file():
             return str(wav_file_path)
-        except Exception:
-            # extract wav file using FFmpeg
-            p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 shell=True)
-            out, error = p.communicate()
-            out, error = out.decode("utf-8"), error.decode("utf-8")
-            logging.debug(f"{out}, {error}")
+        # extract wav file using FFmpeg
+        p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             shell=True)
+        out, error = p.communicate()
+        out, error = out.decode("utf-8"), error.decode("utf-8")
+        logging.debug(f"{out}, {error}")
 
-            if "does not contain any stream" not in error:
-                if wav_file_path.is_file():
-                    return str(wav_file_path)
-                return ""
-            else:
-                return ""
+        if "does not contain any stream" not in error:
+            if wav_file_path.is_file():
+                return str(wav_file_path)
+            return ""
+        else:
+            return ""
 
 
 '''
