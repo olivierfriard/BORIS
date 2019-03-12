@@ -39,7 +39,6 @@ class Plot_spectrogram_RT(QWidget):
     # send keypress event to mainwindow
     sendEvent = pyqtSignal(QEvent)
 
-
     def get_wav_info(self, wav_file: str):
         """
         read wav file and extract information

@@ -2059,7 +2059,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def generate_spectrogram(self):
         """
-        generate spectrogram of all media files loaded in player #1
+        extract wav from all media files loaded in player #1
         """
 
         # check temp dir for images from ffmpeg
@@ -2134,7 +2134,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
                     ).name
 
-
                 self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
 
                 self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -2157,6 +2156,71 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
                 self.spectro.show()
                 self.timer_spectro.start()
+
+            if self.playerType == VLC and self.playMode == VLC and not flagPaused:
+                self.play_video()
+
+
+    def show_waveform(self):
+        """
+        show waveform window if any
+        """
+
+        if self.playerType == LIVE:
+            QMessageBox.warning(self, programName, "The waveform visualization is not available for live observations")
+            return
+
+        if self.playerType == VIEWER:
+            QMessageBox.warning(self, programName, "The waveform visualization is not available in <b>VIEW</b> mode")
+            return
+
+        if hasattr(self, "waveform"):
+            self.waveform.show()
+        else:
+            logging.debug("waveform not shown")
+
+            # remember if player paused
+            if self.playerType == VLC and self.playMode == VLC:
+                flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+
+            self.pause_video()
+
+            if dialog.MessageDialog(programName, ("You choose to visualize the waveform during this observation.<br>"
+                                                  "Spectrogram generation can take some time for long media, be patient"),
+                                    [YES, NO]) == YES:
+
+                self.generate_spectrogram()
+
+                tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+                wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
+                    urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                    ).name
+
+                self.waveform = plot_waveform_rt.Plot_waveform_RT()
+
+                self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                self.waveform.interval = self.spectrogram_time_interval
+                self.waveform.cursor_color = "red"
+
+                r = self.waveform.load_wav(str(wav_file_path))
+                if "error" in r:
+                    logging.warning("waveform_load_wav error: {}".format(r["error"]))
+                    QMessageBox.warning(self, programName, "Error in waveform generation: " + r["error"],
+                                        QMessageBox.Ok | QMessageBox.Default,
+                                        QMessageBox.NoButton)
+                    del self.waveform
+                    return
+
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM] = True
+                self.waveform.sendEvent.connect(self.signal_from_widget)
+                '''
+                self.waveform.sb_freq_min.setValue(0)
+                self.waveform.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
+                '''
+                self.waveform.show()
+                self.timer_waveform.start()
 
             if self.playerType == VLC and self.playMode == VLC and not flagPaused:
                 self.play_video()
@@ -2200,6 +2264,46 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.spectro.plot_spectro(current_media_time)
                 else:
                     logging.warning("spectro_load_wav error: {}".format(r["error"]))
+
+
+    def timer_waveform_out(self):
+        """
+        timer for waveform visualization
+        """
+
+        if not hasattr(self, "spectro"):
+            return
+
+        if (VISUALIZE_SPECTROGRAM not in self.pj[OBSERVATIONS][self.observationId] or
+                not self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
+            return
+
+        if self.playerType == LIVE:
+            QMessageBox.warning(self, programName, "The waveform visualization is not available for live observations")
+            return
+
+        if self.playerType == VLC:
+            if self.playMode == VLC:
+                current_media_time = self.dw_player[0].mediaplayer.get_time() / 1000
+
+            if self.playMode == FFMPEG:
+                # get time in current media
+                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame,
+                                                                              self.fps)
+                current_media_time = float(frameCurrentMedia / self.fps)
+
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+            wav_file_path = str(pathlib.Path(tmp_dir) / pathlib.Path(self.dw_player[0].mediaplayer.get_media().get_mrl() + ".wav").name)
+
+            if self.waveform.wav_file_path == wav_file_path:
+                self.waveform.plot_waveform(current_media_time)
+            else:
+                r = self.waveform.load_wav(wav_file_path)
+                if "error" not in r:
+                    self.waveform.plot_waveform(current_media_time)
+                else:
+                    logging.warning("waveform_load_wav error: {}".format(r["error"]))
 
 
     def show_data_files(self):
@@ -3608,7 +3712,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.show()
             self.timer_spectro.start()
 
-
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
@@ -4384,6 +4487,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
             self.timer.stop()
             self.timer_spectro.stop()
+            self.timer_waveform.stop()
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                         and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):

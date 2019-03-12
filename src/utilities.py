@@ -448,6 +448,12 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
         if wav_file_path.is_file():
             return str(wav_file_path)
         # extract wav file using FFmpeg
+
+        '''
+        p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"'.format(ffmpeg_bin=ffmpeg_bin,
+                                                                                                            media_file_path=media_file_path,
+                                                                                                            wav_file_path=wav_file_path),
+        '''
         p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
