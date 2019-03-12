@@ -31,6 +31,7 @@ except ModuleNotFoundError:
 import math
 import csv
 import re
+import wave
 import subprocess
 import hashlib
 import urllib.parse
@@ -39,6 +40,7 @@ import os
 import logging
 import subprocess
 from decimal import *
+from shutil import copyfile
 import math
 import datetime
 import socket
@@ -432,34 +434,36 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
         str: wav file path or "" if error
     """
 
-    '''
-    wav_file_path = "{tmp_dir}{sep}{mediaBaseName}.wav".format(tmp_dir=tmp_dir,
-                                                               sep=os.sep,
-                                                               mediaBaseName=os.path.basename(media_file_path))
-    '''
-
     wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(media_file_path + ".wav").name
 
-    # if os.path.isfile(wav_file_path):
     if wav_file_path.is_file():
         return str(wav_file_path)
     else:
-        p = subprocess.Popen('"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"'.format(ffmpeg_bin=ffmpeg_bin,
-                                                                                                           media_file_path=media_file_path,
-                                                                                                           wav_file_path=wav_file_path),
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             shell=True)
-        out, error = p.communicate()
-        out, error = out.decode("utf-8"), error.decode("utf-8")
-        logging.debug(f"{out}, {error}")
 
-        if "does not contain any stream" not in error:
-            if wav_file_path.is_file():
-                return str(wav_file_path)
-            return ""
-        else:
-            return ""
+        # check if media file is a wav file
+        try:
+            wav = wave.open(media_file_path, "r")
+            wav.close()
+            logging.debug(f"{media_file_path} is a WAV file. Copying in the temp directory...")
+            copyfile(media_file_path, wav_file_path)
+            logging.debug(f"{media_file_path} copied in {wav_file_path}")
+            return str(wav_file_path)
+        except Exception:
+            # extract wav file using FFmpeg
+            p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
+            out, error = p.communicate()
+            out, error = out.decode("utf-8"), error.decode("utf-8")
+            logging.debug(f"{out}, {error}")
+
+            if "does not contain any stream" not in error:
+                if wav_file_path.is_file():
+                    return str(wav_file_path)
+                return ""
+            else:
+                return ""
 
 
 '''

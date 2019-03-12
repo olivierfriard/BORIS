@@ -428,7 +428,6 @@ class Observation(QDialog, Ui_Form):
         extract wav of all media files loaded in player #1
         """
 
-
         if self.cbVisualizeSpectrogram.isChecked():
             flag_spectro_produced = False
             # check if player 1 is selected
@@ -444,11 +443,6 @@ class Observation(QDialog, Ui_Form):
 
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
                                                   "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
-
-                if not self.ffmpeg_cache_dir:
-                    tmp_dir = tempfile.gettempdir()
-                else:
-                    tmp_dir = self.ffmpeg_cache_dir
 
                 w = dialog.Info_widget()
                 w.resize(350, 100)
@@ -472,17 +466,7 @@ class Observation(QDialog, Ui_Form):
                         w.show()
                         QApplication.processEvents()
 
-
-                        '''
-                        _ = plot_spectrogram.create_spectrogram(mediaFile=media_file_path,
-                                                                                      tmp_dir=tmp_dir,
-                                                                                      chunk_size=self.chunk_length,
-                                                                                      ffmpeg_bin=self.ffmpeg_bin,
-                                                                                      spectrogramHeight=self.spectrogramHeight,
-                                                                                      spectrogram_color_map=self.spectrogram_color_map)
-
-                        '''
-                        if utilities.extract_wav(self.ffmpeg_bin, media_file_path, tmp_dir) == "":
+                        if utilities.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
                             QMessageBox.critical(self, programName ,
                                                  "Error during extracting WAV of the media file {}".format(media_file_path))
                             flag_spectro_produced = False

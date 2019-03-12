@@ -2063,7 +2063,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         # check temp dir for images from ffmpeg
-        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
+        tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
         w = dialog.Info_widget()
         w.lwi.setVisible(False)
@@ -2128,10 +2128,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.generate_spectrogram()
 
-                if not self.ffmpeg_cache_dir:
-                    tmp_dir = tempfile.gettempdir()
-                else:
-                    tmp_dir = self.ffmpeg_cache_dir
+                tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
                 wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
                     urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
@@ -2191,7 +2188,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                               self.fps)
                 current_media_time = float(frameCurrentMedia / self.fps)
 
-            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir()
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
             wav_file_path = str(pathlib.Path(tmp_dir) / pathlib.Path(self.dw_player[0].mediaplayer.get_media().get_mrl() + ".wav").name)
 
@@ -2933,10 +2930,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # delete files in imageDirectory f frame_resize changed
             if self.frame_resize != mem_frame_resize:
                 # check temp dir for images from ffmpeg
-                if not self.ffmpeg_cache_dir:
-                    self.imageDirectory = tempfile.gettempdir()
-                else:
-                    self.imageDirectory = self.ffmpeg_cache_dir
+                self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
                 for f in [x for x in os.listdir(self.imageDirectory)
                           if "BORIS@" in x and os.path.isfile(self.imageDirectory + os.sep + x)]:
@@ -3579,10 +3573,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
                 self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
 
-            if not self.ffmpeg_cache_dir:
-                tmp_dir = tempfile.gettempdir()
-            else:
-                tmp_dir = self.ffmpeg_cache_dir
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
             wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
                 urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
@@ -3923,7 +3914,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.close_observation()
 
 
-        observationWindow = observation.Observation(self.ffmpeg_cache_dir if self.ffmpeg_cache_dir else tempfile.gettempdir(),
+        observationWindow = observation.Observation(tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)) else tempfile.gettempdir(),
                                                     project_path=self.projectFileName,
                                                     converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
                                                     log_level=logging.getLogger().getEffectiveLevel())
@@ -3932,7 +3923,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow.mode = mode
         observationWindow.mem_obs_id = obsId
         observationWindow.chunk_length = self.chunk_length
-        observationWindow.ffmpeg_cache_dir = self.ffmpeg_cache_dir
         observationWindow.dteDate.setDateTime(QDateTime.currentDateTime())
         observationWindow.ffmpeg_bin = self.ffmpeg_bin
         observationWindow.project_file_name = self.projectFileName
@@ -7261,10 +7251,13 @@ item []:
                 player.volume_slider.setVisible(False)
 
             # check temp dir for images from ffmpeg
+            '''
             if not self.ffmpeg_cache_dir:
                 self.imageDirectory = tempfile.gettempdir()
             else:
                 self.imageDirectory = self.ffmpeg_cache_dir
+            '''
+            self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
             globalTime = (sum(
                 self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
