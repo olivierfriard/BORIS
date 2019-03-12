@@ -242,6 +242,7 @@ PLAYER1, PLAYER2 = "1", "2"
 ALL_PLAYERS = [str(x + 1) for x in range(N_PLAYER)]
 
 VISUALIZE_SPECTROGRAM = "visualize_spectrogram"
+VISUALIZE_WAVEFORM = "visualize_waveform"
 
 POINT_EVENT_ST_DURATION = 0.5
 

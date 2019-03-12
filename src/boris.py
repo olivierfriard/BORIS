@@ -4193,6 +4193,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][obsId]:
                 observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId][VISUALIZE_SPECTROGRAM])
 
+            # waveform
+            observationWindow.cb_visualize_waveform.setEnabled(True)
+            if VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][obsId]:
+                observationWindow.cb_visualize_waveform.setChecked(self.pj[OBSERVATIONS][obsId][VISUALIZE_WAVEFORM])
+
+
             # plot data
             if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
                 if self.pj[OBSERVATIONS][obsId][PLOT_DATA]:
@@ -4487,7 +4493,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
             self.timer.stop()
             self.timer_spectro.stop()
-            self.timer_waveform.stop()
+
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                         and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):

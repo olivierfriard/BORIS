@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'observation.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -182,6 +182,9 @@ class Ui_Form(object):
         self.cbVisualizeSpectrogram = QtWidgets.QCheckBox(self.layoutWidget4)
         self.cbVisualizeSpectrogram.setObjectName("cbVisualizeSpectrogram")
         self.verticalLayout.addWidget(self.cbVisualizeSpectrogram)
+        self.cb_visualize_waveform = QtWidgets.QCheckBox(self.layoutWidget4)
+        self.cb_visualize_waveform.setObjectName("cb_visualize_waveform")
+        self.verticalLayout.addWidget(self.cb_visualize_waveform)
         self.cbCloseCurrentBehaviorsBetweenVideo = QtWidgets.QCheckBox(self.layoutWidget4)
         self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName("cbCloseCurrentBehaviorsBetweenVideo")
         self.verticalLayout.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
@@ -303,7 +306,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -345,6 +348,7 @@ class Ui_Form(object):
         self.pbAddMediaFromDir.setText(_translate("Form", "Add all media from directory"))
         self.pb_add_all_media_from_dir_without_path.setText(_translate("Form", "Add all media from dir without path"))
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram for the player #1"))
+        self.cb_visualize_waveform.setText(_translate("Form", "Visualize the waveform for the player #1"))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_player_1), _translate("Form", "Media files"))
         self.label_7.setText(_translate("Form", "Data files to plot"))

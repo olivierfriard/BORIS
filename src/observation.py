@@ -137,6 +137,7 @@ class Observation(QDialog, Ui_Form):
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
 
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
+        self.cb_visualize_waveform.clicked.connect(self.extract_wav)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
@@ -147,6 +148,7 @@ class Observation(QDialog, Ui_Form):
         self.mediaDurations, self.mediaFPS, self.mediaHasVideo, self.mediaHasAudio = {}, {}, {}, {}
 
         self.cbVisualizeSpectrogram.setEnabled(False)
+        self.cb_visualize_waveform.setEnabled(False)
         # disabled due to problem when video goes back
         self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
@@ -428,8 +430,8 @@ class Observation(QDialog, Ui_Form):
         extract wav of all media files loaded in player #1
         """
 
-        if self.cbVisualizeSpectrogram.isChecked():
-            flag_spectro_produced = False
+        if self.cbVisualizeSpectrogram.isChecked() or self.cb_visualize_waveform.isChecked():
+            flag_wav_produced = False
             # check if player 1 is selected
             flag_player1 = False
             for row in range(self.twVideo1.rowCount()):
@@ -439,9 +441,10 @@ class Observation(QDialog, Ui_Form):
             if not flag_player1:
                 QMessageBox.critical(self, programName , "The player #1 is not selected")
                 self.cbVisualizeSpectrogram.setChecked(False)
+                self.cb_visualize_waveform.setChecked(False)
                 return
 
-            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram for the media in player #1.<br>"
+            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram or waveform for the media in player #1.<br>"
                                                   "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
 
                 w = dialog.Info_widget()
@@ -459,7 +462,7 @@ class Observation(QDialog, Ui_Form):
                                                                         self.project_path)
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
                         QMessageBox.critical(self, programName , "The media file {} do not seem to have audio".format(media_file_path))
-                        flag_spectro_produced = False
+                        flag_wav_produced = False
                         break
 
                     if os.path.isfile(media_file_path):
@@ -469,19 +472,21 @@ class Observation(QDialog, Ui_Form):
                         if utilities.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
                             QMessageBox.critical(self, programName ,
                                                  "Error during extracting WAV of the media file {}".format(media_file_path))
-                            flag_spectro_produced = False
+                            flag_wav_produced = False
                             break
 
                         w.hide()
 
-                        flag_spectro_produced = True
+                        flag_wav_produced = True
                     else:
                         QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media_file_path))
 
-                if not flag_spectro_produced:
+                if not flag_wav_produced:
                     self.cbVisualizeSpectrogram.setChecked(False)
+                    self.cb_visualize_waveform.setChecked(False)
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
+                self.cb_visualize_waveform.setChecked(False)
 
 
     def pbCancel_clicked(self):
@@ -676,6 +681,7 @@ class Observation(QDialog, Ui_Form):
                                          "The <b>{file_path}</b> file does not seem to be a media file.".format(file_path=file_path))
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+        self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)
         # disabled due to problem when video goes back
         # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
@@ -713,6 +719,7 @@ class Observation(QDialog, Ui_Form):
 
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+        self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)
         # disabled due to problem when video goes back
         # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
 
@@ -776,6 +783,7 @@ class Observation(QDialog, Ui_Form):
                         pass
 
             self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
+            self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)
             # disabled due to problem when video goes back
             # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
         else:
