@@ -27,6 +27,7 @@ import matplotlib
 matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import *
+from PyQt5.QtCore import pyqtSignal, QEvent
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 

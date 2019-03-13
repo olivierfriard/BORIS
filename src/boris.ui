@@ -327,6 +327,7 @@
      <addaction name="action_create_modifiers_coding_map"/>
     </widget>
     <addaction name="actionShow_spectrogram"/>
+    <addaction name="actionShow_the_sound_waveform"/>
     <addaction name="actionShow_data_files"/>
     <addaction name="actionDistance"/>
     <addaction name="actionBehaviors_coding_map"/>
@@ -934,7 +935,7 @@
   </action>
   <action name="actionShow_spectrogram">
    <property name="text">
-    <string>Show spectrogram</string>
+    <string>Show the sound spectrogram</string>
    </property>
   </action>
   <action name="actionExport_events_as_Praat_TextGrid">
@@ -1322,6 +1323,11 @@
   <action name="actionExplore_project">
    <property name="text">
     <string>Explore project</string>
+   </property>
+  </action>
+  <action name="actionShow_the_sound_waveform">
+   <property name="text">
+    <string>Show the sound waveform</string>
    </property>
   </action>
  </widget>

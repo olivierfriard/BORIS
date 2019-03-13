@@ -107,6 +107,7 @@ matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
 import matplotlib.pyplot as plt
 import plot_events
 import plot_spectrogram_rt
+import plot_waveform_rt
 import observation
 import plot_data_module
 import otx_parser
@@ -625,22 +626,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Statusbar initialisation
         # add label to status bar
+        '''
         self.lbTime = QLabel()
         self.lbTime.setFrameStyle(QFrame.StyledPanel)
         self.lbTime.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTime)
+        '''
 
         # current subjects
+        '''
         self.lbSubject = QLabel()
         self.lbSubject.setFrameStyle(QFrame.StyledPanel)
         self.lbSubject.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbSubject)
+        '''
 
         # time offset
+
         self.lbTimeOffset = QLabel()
         self.lbTimeOffset.setFrameStyle(QFrame.StyledPanel)
         self.lbTimeOffset.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
+
 
         # speed
         self.lbSpeed = QLabel()
@@ -774,6 +781,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Tools
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
+        self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
         self.actionShow_data_files.setEnabled(self.playerType == VLC)
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
@@ -792,7 +800,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # statusbar label
-        for w in [self.lbTime, self.lbSubject, self.lbTimeOffset, self.lbSpeed]:
+        #for w in [self.lbTime, self.lbSubject, self.lbTimeOffset, self.lbSpeed]:
+        for w in [self.lbTimeOffset, self.lbSpeed]:
             w.setVisible(self.playerType == VLC)
 
 
@@ -880,7 +889,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
 
-        self.actionShow_spectrogram.triggered.connect(self.show_spectrogram)
+        self.actionShow_spectrogram.triggered.connect(lambda: self.show_sound_signal_widget("spectrogram"))
+        self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_sound_signal_widget("waveform"))
         self.actionShow_data_files.triggered.connect(self.show_data_files)
         self.actionDistance.triggered.connect(self.distance)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
@@ -1029,10 +1039,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer.timeout.connect(self.timer_out)
 
         # timer for spectrogram visualization
-        self.timer_spectro = QTimer(self)
+        self.timer_sound_signal = QTimer(self)
         # TODO check value of interval
-        self.timer_spectro.setInterval(SPECTRO_TIMER)
-        self.timer_spectro.timeout.connect(self.timer_spectro_out)
+        self.timer_sound_signal.setInterval(SPECTRO_TIMER)
+        self.timer_sound_signal.timeout.connect(self.timer_sound_signal_out)
 
         # timer for timing the live observation
         self.liveTimer = QTimer(self)
@@ -2057,7 +2067,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-    def generate_spectrogram(self):
+    def generate_wav_file_from_media(self):
         """
         extract wav from all media files loaded in player #1
         """
@@ -2098,67 +2108,123 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media_file_path))
 
 
-    def show_spectrogram(self):
+    def show_sound_signal_widget(self, plot_type):
         """
         show spectrogram window if any
         """
+        if plot_type not in ["waveform", "spectrogram"]:
+            logging.critical("error on plot type")
+            return
 
         if self.playerType == LIVE:
-            QMessageBox.warning(self, programName, "The spectrogram visualization is not available for live observations")
+            QMessageBox.warning(self, programName, "The sound signal visualization is not available for live observations")
             return
 
         if self.playerType == VIEWER:
-            QMessageBox.warning(self, programName, "The spectrogram visualization is not available in <b>VIEW</b> mode")
+            QMessageBox.warning(self, programName, "The sound signal visualization is not available in <b>VIEW</b> mode")
             return
 
-        if hasattr(self, "spectro"):
-            self.spectro.show()
-        else:
-            logging.debug("spectro show not OK")
-
-            # remember if player paused
-            if self.playerType == VLC and self.playMode == VLC:
-                flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
-
-            self.pause_video()
-
-            if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation.<br>"
-                                                  "Spectrogram generation can take some time for long media, be patient"),
-                                    [YES, NO]) == YES:
-
-                self.generate_spectrogram()
-
-                tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-                wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
-                    urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
-                    ).name
-
-                self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
-
-                self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-                self.spectro.interval = self.spectrogram_time_interval
-                self.spectro.cursor_color = "red"
-
-                r = self.spectro.load_wav(str(wav_file_path))
-                if "error" in r:
-                    logging.warning("spectro_load_wav error: {}".format(r["error"]))
-                    QMessageBox.warning(self, programName, "Error in spectrogram generation: " + r["error"],
-                                        QMessageBox.Ok | QMessageBox.Default,
-                                        QMessageBox.NoButton)
-                    del self.spectro
-                    return
-
-                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM] = True
-                self.spectro.sendEvent.connect(self.signal_from_widget)
-                self.spectro.sb_freq_min.setValue(0)
-                self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
+        if plot_type == "spectrogram":
+            if hasattr(self, "spectro"):
                 self.spectro.show()
-                self.timer_spectro.start()
+            else:
+                logging.debug("spectro show not OK")
 
-            if self.playerType == VLC and self.playMode == VLC and not flagPaused:
-                self.play_video()
+                # remember if player paused
+                if self.playerType == VLC and self.playMode == VLC:
+                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+
+                self.pause_video()
+
+                if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram during this observation.<br>"
+                                                      "Spectrogram generation can take some time for long media, be patient"),
+                                        [YES, NO]) == YES:
+
+                    self.generate_wav_file_from_media()
+
+                    tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+                    wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
+                        urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                        ).name
+
+                    self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
+
+                    self.spectro.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                    self.spectro.interval = self.spectrogram_time_interval
+                    self.spectro.cursor_color = "red"
+
+                    r = self.spectro.load_wav(str(wav_file_path))
+                    if "error" in r:
+                        logging.warning("spectro_load_wav error: {}".format(r["error"]))
+                        QMessageBox.warning(self, programName, "Error in spectrogram generation: " + r["error"],
+                                            QMessageBox.Ok | QMessageBox.Default,
+                                            QMessageBox.NoButton)
+                        del self.spectro
+                        return
+
+                    self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM] = True
+                    self.spectro.sendEvent.connect(self.signal_from_widget)
+                    self.spectro.sb_freq_min.setValue(0)
+                    self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
+                    self.spectro.show()
+                    self.timer_sound_signal.start()
+
+                if self.playerType == VLC and self.playMode == VLC and not flagPaused:
+                    self.play_video()
+
+        if plot_type == "waveform":
+            if hasattr(self, "waveform"):
+                self.waveform.show()
+            else:
+                logging.debug("waveform not shown")
+
+                # remember if player paused
+                if self.playerType == VLC and self.playMode == VLC:
+                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+
+                self.pause_video()
+
+                if dialog.MessageDialog(programName, ("You choose to visualize the waveform during this observation.<br>"
+                                                      "The waveform generation can take some time for long media, be patient"),
+                                        [YES, NO]) == YES:
+
+                    self.generate_wav_file_from_media()
+
+                    tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+                    wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
+                        urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                        ).name
+
+                    self.waveform = plot_waveform_rt.Plot_waveform_RT()
+
+                    self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                    self.waveform.interval = self.spectrogram_time_interval
+                    self.waveform.cursor_color = "red"
+
+                    r = self.waveform.load_wav(str(wav_file_path))
+                    if "error" in r:
+                        logging.warning("waveform_load_wav error: {}".format(r["error"]))
+                        QMessageBox.warning(self, programName, "Error in waveform generation: " + r["error"],
+                                            QMessageBox.Ok | QMessageBox.Default,
+                                            QMessageBox.NoButton)
+                        del self.waveform
+                        return
+
+                    self.pj[OBSERVATIONS][self.observationId][VISUALIZE_WAVEFORM] = True
+                    self.waveform.sendEvent.connect(self.signal_from_widget)
+                    '''
+                    self.waveform.sb_freq_min.setValue(0)
+                    self.waveform.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
+                    '''
+                    self.waveform.show()
+                    self.timer_sound_signal.start()
+
+                if self.playerType == VLC and self.playMode == VLC and not flagPaused:
+                    self.play_video()
 
 
     def show_waveform(self):
@@ -2189,7 +2255,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                   "Spectrogram generation can take some time for long media, be patient"),
                                     [YES, NO]) == YES:
 
-                self.generate_spectrogram()
+                self.generate_wav_file_from_media()
 
                 tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
@@ -2226,20 +2292,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.play_video()
 
 
-    def timer_spectro_out(self):
+    def timer_sound_signal_out(self):
         """
-        timer for spectrogram visualization
+        timer for sound signal visualization: spectrogram and/or waveform
         """
 
-        if not hasattr(self, "spectro"):
-            return
-
+        '''
         if (VISUALIZE_SPECTROGRAM not in self.pj[OBSERVATIONS][self.observationId] or
                 not self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
             return
+        '''
 
         if self.playerType == LIVE:
-            QMessageBox.warning(self, programName, "The spectrogram visualization is not available for live observations")
+            QMessageBox.warning(self, programName, "The sound signal visualization is not available for live observations")
             return
 
         if self.playerType == VLC:
@@ -2256,54 +2321,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             wav_file_path = str(pathlib.Path(tmp_dir) / pathlib.Path(self.dw_player[0].mediaplayer.get_media().get_mrl() + ".wav").name)
 
-            if self.spectro.wav_file_path == wav_file_path:
-                self.spectro.plot_spectro(current_media_time)
-            else:
-                r = self.spectro.load_wav(wav_file_path)
-                if "error" not in r:
-                    self.spectro.plot_spectro(current_media_time)
-                else:
-                    logging.warning("spectro_load_wav error: {}".format(r["error"]))
+            # waveform
+            if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False):
 
+                if not hasattr(self, "waveform"):
+                    return
 
-    def timer_waveform_out(self):
-        """
-        timer for waveform visualization
-        """
-
-        if not hasattr(self, "spectro"):
-            return
-
-        if (VISUALIZE_SPECTROGRAM not in self.pj[OBSERVATIONS][self.observationId] or
-                not self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM]):
-            return
-
-        if self.playerType == LIVE:
-            QMessageBox.warning(self, programName, "The waveform visualization is not available for live observations")
-            return
-
-        if self.playerType == VLC:
-            if self.playMode == VLC:
-                current_media_time = self.dw_player[0].mediaplayer.get_time() / 1000
-
-            if self.playMode == FFMPEG:
-                # get time in current media
-                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(PLAYER1, self.FFmpegGlobalFrame,
-                                                                              self.fps)
-                current_media_time = float(frameCurrentMedia / self.fps)
-
-            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-            wav_file_path = str(pathlib.Path(tmp_dir) / pathlib.Path(self.dw_player[0].mediaplayer.get_media().get_mrl() + ".wav").name)
-
-            if self.waveform.wav_file_path == wav_file_path:
-                self.waveform.plot_waveform(current_media_time)
-            else:
-                r = self.waveform.load_wav(wav_file_path)
-                if "error" not in r:
+                if self.waveform.wav_file_path == wav_file_path:
                     self.waveform.plot_waveform(current_media_time)
                 else:
-                    logging.warning("waveform_load_wav error: {}".format(r["error"]))
+                    r = self.waveform.load_wav(wav_file_path)
+                    if "error" not in r:
+                        self.waveform.plot_waveform(current_media_time)
+                    else:
+                        logging.warning("waveform_load_wav error: {}".format(r["error"]))
+
+            # spectrogram
+            if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
+
+                if not hasattr(self, "spectro"):
+                    return
+
+                if self.spectro.wav_file_path == wav_file_path:
+                    self.spectro.plot_spectro(current_media_time)
+                else:
+                    r = self.spectro.load_wav(wav_file_path)
+                    if "error" not in r:
+                        self.spectro.plot_spectro(current_media_time)
+                    else:
+                        logging.warning("spectro_load_wav error: {}".format(r["error"]))
 
 
     def show_data_files(self):
@@ -2877,14 +2923,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Args:
             subject (str): subject
         """
-        if (not subject) or (subject == NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
-            self.currentSubject = ""
-            self.lbSubject.setText("<b>{}</b>".format(NO_FOCAL_SUBJECT))
-            self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
-        else:
-            self.currentSubject = subject
-            self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))
-            self.lbFocalSubject.setText(" Focal subject: <b>{}</b>".format(self.currentSubject))
+        try:
+            if (not subject) or (subject == NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
+                self.currentSubject = ""
+                '''self.lbSubject.setText("<b>{}</b>".format(NO_FOCAL_SUBJECT))'''
+                self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
+            else:
+                self.currentSubject = subject
+                '''self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))'''
+                self.lbFocalSubject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
+        except Exception:
+            logging.critical("error in update_subject function")
 
 
     def preferences(self):
@@ -3150,7 +3199,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             logging.debug("frame current media 1: {}".format(frameCurrentMedia))
 
             # update spectro plot
-            self.timer_spectro_out()
+            self.timer_sound_signal_out()
             # update data plot
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
@@ -3262,7 +3311,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTime=self.convertTime(currentTime / 1000),
             totalTime=self.convertTime(Decimal(self.dw_player[0].mediaplayer.get_length() / 1000)),
             currentFrame=round(self.FFmpegGlobalFrame))
-        self.lbTime.setText(time_str)
+        '''self.lbTime.setText(time_str)'''
         self.lb_current_media_time.setText(time_str)
 
         # video slider
@@ -3580,21 +3629,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # media duration
                 try:
-                    mediaLength = self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] * 1000
-                    mediaFPS = self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile]
+                    mediaLength = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"][mediaFile] * 1000
+                    mediaFPS = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["fps"][mediaFile]
                 except Exception:
                     logging.debug("media_info key not found")
                     r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     if "error" not in r:
-                        if "media_info" not in self.pj[OBSERVATIONS][self.observationId]:
-                            self.pj[OBSERVATIONS][self.observationId]["media_info"] = {"length": {}, "fps": {}}
-                            if "length" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
-                                self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"] = {}
-                            if "fps" not in self.pj[OBSERVATIONS][self.observationId]["media_info"]:
-                                self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"] = {}
+                        if MEDIA_INFO not in self.pj[OBSERVATIONS][self.observationId]:
+                            self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO] = {"length": {}, "fps": {}}
+                            if "length" not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
+                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"] = {}
+                            if "fps" not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
+                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["fps"] = {}
 
-                        self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile] = r["duration"]
-                        self.pj[OBSERVATIONS][self.observationId]["media_info"]["fps"][mediaFile] = r["fps"]
+                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"][mediaFile] = r["duration"]
+                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["fps"][mediaFile] = r["fps"]
 
                         mediaLength = r["duration"] * 1000
                         mediaFPS = r["fps"]
@@ -3684,7 +3733,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 ).name
 
             if not wav_file_path.is_file():
-                self.generate_spectrogram()
+                self.generate_wav_file_from_media()
 
             self.spectro = plot_spectrogram_rt.Plot_spectrogram_RT()
 
@@ -3710,7 +3759,53 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.spectro.sb_freq_min.setValue(0)
             self.spectro.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
             self.spectro.show()
-            self.timer_spectro.start()
+            self.timer_sound_signal.start()
+
+        # waveform
+        if (VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][self.observationId] and
+                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_WAVEFORM]):
+
+            tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+            wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
+                urllib.parse.unquote(url2path(self.dw_player[0].mediaplayer.get_media().get_mrl())) + ".wav"
+                ).name
+
+            if not wav_file_path.is_file():
+                self.generate_wav_file_from_media()
+
+            self.waveform = plot_waveform_rt.Plot_waveform_RT()
+
+            self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+            # TODO fix time interval
+            self.waveform.interval = self.spectrogram_time_interval
+            self.waveform.cursor_color = "red"
+            '''
+            try:
+                self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap(self.spectrogram_color_map)
+            except ValueError:
+                self.spectro.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
+            '''
+
+            r = self.waveform.load_wav(str(wav_file_path))
+            if "error" in r:
+                logging.warning("waveform_load_wav error: {}".format(r["error"]))
+                QMessageBox.warning(self, programName, "Error in waveform generation: " + r["error"],
+                                    QMessageBox.Ok | QMessageBox.Default,
+                                    QMessageBox.NoButton)
+                del self.waveform
+                return
+
+            self.waveform.sendEvent.connect(self.signal_from_widget)
+            '''
+            self.waveform.sb_freq_min.setValue(0)
+            self.waveform.sb_freq_max.setValue(int(self.waveform.frame_rate / 2))
+            '''
+            self.waveform.show()
+            self.timer_sound_signal.start()
+
+
 
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
@@ -4108,17 +4203,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.teDescription.setPlainText(self.pj[OBSERVATIONS][obsId]["description"])
 
             try:
-                observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId]["media_info"]["length"]
-                observationWindow.mediaFPS = self.pj[OBSERVATIONS][obsId]["media_info"]["fps"]
+                observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["length"]
+                observationWindow.mediaFPS = self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["fps"]
             except Exception:
                 observationWindow.mediaDurations = {}
                 observationWindow.mediaFPS = {}
 
             try:
-                if "hasVideo" in self.pj[OBSERVATIONS][obsId]["media_info"]:
-                    observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId]["media_info"]["hasVideo"]
-                if "hasAudio" in self.pj[OBSERVATIONS][obsId]["media_info"]:
-                    observationWindow.mediaHasAudio = self.pj[OBSERVATIONS][obsId]["media_info"]["hasAudio"]
+                if "hasVideo" in self.pj[OBSERVATIONS][obsId][MEDIA_INFO]:
+                    observationWindow.mediaHasVideo = self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasVideo"]
+                if "hasAudio" in self.pj[OBSERVATIONS][obsId][MEDIA_INFO]:
+                    observationWindow.mediaHasAudio = self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"]
             except Exception:
                 logging.info("No Video/Audio information")
 
@@ -4161,10 +4256,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         try:
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 3, QTableWidgetItem(seconds2time(
-                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["length"][mediaFile])))
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])))
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 4, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["fps"][mediaFile])))
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][mediaFile])))
                         except Exception:
                             pass
                         try:
@@ -4305,6 +4400,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
+            # visualize spectrogram
+            self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
+
 
             # plot data
             if observationWindow.tw_data_files.rowCount():
@@ -4344,19 +4442,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # media
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [MEDIA]:
 
-                self.pj[OBSERVATIONS][new_obs_id]["media_info"] = {"length": observationWindow.mediaDurations,
-                                                                   "fps": observationWindow.mediaFPS}
+                self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO] = {LENGTH: observationWindow.mediaDurations,
+                                                                 FPS: observationWindow.mediaFPS}
 
                 try:
-                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasVideo"] = observationWindow.mediaHasVideo
-                    self.pj[OBSERVATIONS][new_obs_id]["media_info"]["hasAudio"] = observationWindow.mediaHasAudio
+                    self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]["hasVideo"] = observationWindow.mediaHasVideo
+                    self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]["hasAudio"] = observationWindow.mediaHasAudio
                 except Exception:
                     logging.info("error with media_info information")
 
-                self.pj[OBSERVATIONS][new_obs_id]["media_info"]["offset"] = {}
+                self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]["offset"] = {}
 
 
-                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id]["media_info"]))
+                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]))
 
                 for i in range(N_PLAYER):
                     self.pj[OBSERVATIONS][new_obs_id][FILE][str(i + 1)] = []
@@ -4366,7 +4464,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         observationWindow.twVideo1.item(row, 2).text()
                     )
                     # store offset for media player
-                    self.pj[OBSERVATIONS][new_obs_id]["media_info"][
+                    self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO][
                         "offset"
                     ][observationWindow.twVideo1.cellWidget(row, 0).currentText()] = float(observationWindow.twVideo1.item(row, 1).text())
 
@@ -4459,6 +4557,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
+        if hasattr(self, "waveform"):
+            try:
+                self.waveform.close()
+                del self.waveform
+            except Exception:
+                pass
+
+
 
         if hasattr(self, "results"):
             try:
@@ -4492,7 +4598,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             self.timer.stop()
-            self.timer_spectro.stop()
+            self.timer_sound_signal.stop()
 
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -4606,12 +4712,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.twEvents.setRowCount(0)
 
-        self.lbTime.clear()
+        '''self.lbTime.clear()'''
         self.lb_current_media_time.clear()
-        self.lbSubject.clear()
+        '''self.lbSubject.clear()'''
         self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
 
         self.lbTimeOffset.clear()
+
+        self.play_rate = 1
         self.lbSpeed.clear()
 
         self.playerType = ""
@@ -7467,13 +7575,12 @@ item []:
 
         if self.playerType == VLC and self.playMode == VLC:
             self.play_rate = 1
-            '''for i in range(N_PLAYER):'''
             for i, player in enumerate(self.dw_player):
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     player.mediaplayer.set_rate(self.play_rate)
             self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
-            logging.info('play rate: {:.3f}'.format(self.play_rate))
+            logging.debug('play rate: {:.3f}'.format(self.play_rate))
 
 
     def video_faster_activated(self):
@@ -7485,8 +7592,6 @@ item []:
 
             if self.play_rate + self.play_rate_step <= 8:
                 self.play_rate += self.play_rate_step
-
-                '''for i in range(N_PLAYER):'''
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                             self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -7645,7 +7750,7 @@ item []:
 
             # TODO: check for 2nd player
             for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]:
-                durations.append(self.pj[OBSERVATIONS][self.observationId]["media_info"]["length"][mediaFile])
+                durations.append(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"][mediaFile])
 
             mediaFileIdx_s = [idx1 for idx1, x in enumerate(durations) if eventtime_s >= sum(durations[0:idx1])][-1]
             media_path_s = self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1][mediaFileIdx_s]
@@ -8201,18 +8306,18 @@ item []:
         if self.dw_player[n_player].media_list.count() == 1:
 
                 # try:
-                if self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)]:
+                if self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)]:
 
-                    if self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] > 0:
+                    if self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] > 0:
 
-                        if new_time < self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] * 1000:
+                        if new_time < self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] * 1000:
                             # hide video if time < offset
                             self.dw_player[n_player].frame_viewer.setVisible(True)
                             self.dw_player[n_player].videoframe.setVisible(False)
                             self.dw_player[n_player].volume_slider.setVisible(False)
                         else:
 
-                            if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                            if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                    ["offset"][str(n_player + 1)] * 1000) > sum(
                                                        self.dw_player[n_player].media_durations)):
                                 # hide video if required time > video time + offset
@@ -8226,12 +8331,12 @@ item []:
                                 self.dw_player[n_player].videoframe.setVisible(True)
                                 self.dw_player[n_player].volume_slider.setVisible(True)
                                 self.dw_player[n_player].mediaplayer.set_time(
-                                    new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                    new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                        ["offset"][str(n_player + 1)] * 1000))
 
-                    elif self.pj[OBSERVATIONS][self.observationId]["media_info"]["offset"][str(n_player + 1)] < 0:
+                    elif self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] < 0:
 
-                        if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                        if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                ["offset"][str(n_player + 1)] * 1000) > sum(
                                                    self.dw_player[n_player].media_durations)):
                             # hide video if required time > video time + offset
@@ -8244,7 +8349,7 @@ item []:
                             self.dw_player[n_player].volume_slider.setVisible(True)
 
                             self.dw_player[n_player].mediaplayer.set_time(
-                                new_time - Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                                new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                    ["offset"][str(n_player + 1)] * 1000))
 
                 else:
@@ -8357,7 +8462,7 @@ item []:
                         ct = self.getLaps(n_player=i) * 1000
 
                         if abs(ct0 -
-                               (ct + Decimal(self.pj[OBSERVATIONS][self.observationId]["media_info"]
+                               (ct + Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                              ["offset"][str(i + 1)]) * 1000)) >= 300:
                             self.sync_time(i, ct0)
 
@@ -8435,7 +8540,7 @@ item []:
 
                 if msg:
                     # show time
-                    self.lbTime.setText(msg)
+                    '''self.lbTime.setText(msg)'''
                     self.lb_current_media_time.setText(msg)
 
                     # set video scroll bar
@@ -10262,7 +10367,7 @@ item []:
                         player.mediaListPlayer.play()
 
                 self.timer.start(VLC_TIMER_OUT)
-                self.timer_spectro.start()
+                self.timer_sound_signal.start()
 
                 # start all timer for plotting data
                 for data_timer in self.ext_data_timer_list:
@@ -10288,7 +10393,7 @@ item []:
                         if player.mediaListPlayer.get_state() != vlc.State.Paused:
 
                             self.timer.stop()
-                            self.timer_spectro.stop()
+                            self.timer_sound_signal.stop()
                             # stop all timer for plotting data
 
                             for data_timer in self.ext_data_timer_list:
@@ -10303,7 +10408,7 @@ item []:
                 time.sleep(1)
                 self.timer_out()
 
-            self.timer_spectro_out()
+            self.timer_sound_signal_out()
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
@@ -10392,6 +10497,7 @@ item []:
         """
         forward from current position
         """
+        logging.debug("function: jumpForward_activated")
 
         if self.playerType == VLC:
 
@@ -10419,6 +10525,7 @@ item []:
 
                 elif self.dw_player[0].media_list.count() > 1:
 
+                    logging.debug(f"media list count: {self.dw_player[0].media_list.count()}")
                     newTime = (sum(
                         self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
                                                           index_of_item(self.dw_player[0].
@@ -10433,7 +10540,7 @@ item []:
                         for idx, d in enumerate(self.dw_player[0].media_durations):
                             if tot <= newTime < tot + d:
                                 self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
-                                app.processEvents()
+                                # app.processEvents()
                                 # wait until media is played
                                 while True:
                                     if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
@@ -10442,7 +10549,7 @@ item []:
                                 if flagPaused:
                                     self.dw_player[0].mediaListPlayer.pause()
 
-                                    self.dw_player[0].mediaplayer.set_time(newTime - sum(
+                                self.dw_player[0].mediaplayer.set_time(newTime - sum(
                                         self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
                                                                           index_of_item(self.dw_player[0].
                                                                                         mediaplayer.get_media())]))
@@ -10461,7 +10568,7 @@ item []:
         update visualization of video position, spectrogram and data
         """
         self.timer_out(scroll_slider)
-        self.timer_spectro_out()
+        self.timer_sound_signal_out()
         for idx in self.plot_data:
             self.timer_plot_data_out(self.plot_data[idx])
 
@@ -10492,7 +10599,7 @@ item []:
                         break
 
                 self.dw_player[0].mediaplayer.set_time(0)
-
+                self.video_slider.setValue(0)
                 self.update_visualizations()
 
 

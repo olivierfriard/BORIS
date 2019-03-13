@@ -347,7 +347,7 @@ class Ui_Form(object):
         self.pbRemoveVideo.setText(_translate("Form", "Remove selected media"))
         self.pbAddMediaFromDir.setText(_translate("Form", "Add all media from directory"))
         self.pb_add_all_media_from_dir_without_path.setText(_translate("Form", "Add all media from dir without path"))
-        self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize spectrogram for the player #1"))
+        self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize the sound spectrogram for the player #1"))
         self.cb_visualize_waveform.setText(_translate("Form", "Visualize the waveform for the player #1"))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_player_1), _translate("Form", "Media files"))

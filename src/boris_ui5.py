@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -485,6 +485,8 @@ class Ui_MainWindow(object):
         self.actionNoldus_Observer_template.setObjectName("actionNoldus_Observer_template")
         self.actionExplore_project = QtWidgets.QAction(MainWindow)
         self.actionExplore_project.setObjectName("actionExplore_project")
+        self.actionShow_the_sound_waveform = QtWidgets.QAction(MainWindow)
+        self.actionShow_the_sound_waveform.setObjectName("actionShow_the_sound_waveform")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -585,6 +587,7 @@ class Ui_MainWindow(object):
         self.menu_coding_map_creator.addAction(self.action_create_behaviors_coding_map)
         self.menu_coding_map_creator.addAction(self.action_create_modifiers_coding_map)
         self.menuTools.addAction(self.actionShow_spectrogram)
+        self.menuTools.addAction(self.actionShow_the_sound_waveform)
         self.menuTools.addAction(self.actionShow_data_files)
         self.menuTools.addAction(self.actionDistance)
         self.menuTools.addAction(self.actionBehaviors_coding_map)
@@ -741,7 +744,7 @@ class Ui_MainWindow(object):
         self.actionCheckStateEvents.setText(_translate("MainWindow", "Check state events"))
         self.actionRunEventOutside.setText(_translate("MainWindow", "Run external program with selected event(s)"))
         self.actionEdit_selected_events.setText(_translate("MainWindow", "Edit selected event(s)"))
-        self.actionShow_spectrogram.setText(_translate("MainWindow", "Show spectrogram"))
+        self.actionShow_spectrogram.setText(_translate("MainWindow", "Show the sound spectrogram"))
         self.actionExport_events_as_Praat_TextGrid.setText(_translate("MainWindow", "as Praat TextGrid"))
         self.actionExtract_events_from_media_files.setText(_translate("MainWindow", "Extract sequences from media files"))
         self.actionDistance.setText(_translate("MainWindow", "Geometric measurement"))
@@ -816,4 +819,5 @@ class Ui_MainWindow(object):
         self.actionPaste_events.setText(_translate("MainWindow", "Paste events"))
         self.actionNoldus_Observer_template.setText(_translate("MainWindow", "Noldus Observer XT template"))
         self.actionExplore_project.setText(_translate("MainWindow", "Explore project"))
+        self.actionShow_the_sound_waveform.setText(_translate("MainWindow", "Show the sound waveform"))
 

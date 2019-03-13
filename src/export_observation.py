@@ -365,7 +365,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     if observation["type"] in [MEDIA]:
         try:
             for mediaFile in observation[FILE][PLAYER1]:
-                duration1.append(observation["media_info"]["length"][mediaFile])
+                duration1.append(observation[MEDIA_INFO]["length"][mediaFile])
         except KeyError:
             pass
 
@@ -532,7 +532,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
         try:
             for mediaFile in observation[FILE][PLAYER1]:
                 if MEDIA_INFO in observation:
-                    duration1.append(observation["media_info"]["length"][mediaFile])
+                    duration1.append(observation[MEDIA_INFO]["length"][mediaFile])
         except Exception:
             duration1 = []
 

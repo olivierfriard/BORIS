@@ -339,7 +339,7 @@
                    <item>
                     <widget class="QCheckBox" name="cbVisualizeSpectrogram">
                      <property name="text">
-                      <string>Visualize spectrogram for the player #1</string>
+                      <string>Visualize the sound spectrogram for the player #1</string>
                      </property>
                     </widget>
                    </item>
