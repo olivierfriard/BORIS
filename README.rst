@@ -18,6 +18,10 @@ http://boris.readthedocs.io/
 
 The documentation provides a good starting point for learning how to use BORIS.
 
+Some video tutorials are available:
+https://www.youtube.com/channel/UCo-Jyvzawwp0bRMEor4aLVQ
+
+
 Bug reports and feature requests
 --------------------------------------
 
