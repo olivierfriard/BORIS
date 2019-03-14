@@ -1,0 +1,10 @@
+Observation id	Date	Description	Subjects	Media files/Live observation	a	b	c
+offset positif	2016-12-10T15:44:57		No focal subject	#1: video_test_25fps_360s.mp4, #2: video_test_25fps_180s.mp4			111
+offset neg	2016-12-11T00:58:15		No focal subject	#1: video_test_25fps_360s.mp4, #2: video_test_25fps_180s.mp4			111
+observation #1	2016-11-27T01:57:26		subject1, subject2	#1: video_test_25fps_360s.mp4	12	text value for b	111
+observation #2	2016-12-01T23:01:31	Description of observation #2	No focal subject, subject1, subject2	#1: video_test_25fps_180s.mp4, #1: video_test_25fps_360s.mp4	123	some text	333
+live not paired	2018-02-20T15:34:38		No focal subject	Live observation			111
+live	2018-02-27T15:39:40		No focal subject, subject2	Live observation			111
+modifiers	2018-02-28T15:25:10		No focal subject	#1: video_test_25fps_180s.mp4			111
+2 video	2018-05-29T11:01:03			#1: /home/user/video/video1.mp4, #2: /home/user/video/video2.mp4			111
+2 video avi	2018-05-29T11:08:25			#1: /home/user/video/video1.mp4.re-encoded.640px.avi, #2: /home/user/video/video2.mp4.re-encoded.640px.avi			111
