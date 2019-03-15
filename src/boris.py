@@ -46,23 +46,12 @@ import socket
 import copy
 import pathlib
 
-try:
-    from PyQt5.QtCore import *
-    from PyQt5.QtGui import *
-    from PyQt5.QtWidgets import *
-    from PyQt5.QtMultimedia import QSound
-    from boris_ui5 import *
-    import qrc_boris5
-except ModuleNotFoundError:
-    logging.info("PyQt5 not installed!\nTrying with PyQt4")
-    try:
-        from PyQt4.QtCore import *
-        from PyQt4.QtGui import *
-        from boris_ui import *
-        import qrc_boris
-    except ModuleNotFoundError:
-        logging.critical("PyQt4 not installed!")
-        sys.exit()
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtMultimedia import QSound
+from boris_ui5 import *
+import qrc_boris5
 
 import select_observations
 import dialog
@@ -103,7 +92,7 @@ import matplotlib
 import matplotlib.transforms as mtransforms
 from matplotlib import dates
 
-matplotlib.use("Qt4Agg" if QT_VERSION_STR[0] == "4" else "Qt5Agg")
+matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 import plot_events
 import plot_spectrogram_rt
@@ -10141,8 +10130,8 @@ item []:
         create dot script (graphviz language) from transitions frequencies matrix
         """
 
-        fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "",
-                                                "Transitions matrix files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getOpenFileNames(self, "Select one or more transitions matrix files", "",
+                                            "Transitions matrix files (*.txt *.tsv);;All files (*)")
         fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""

@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify
@@ -23,13 +23,9 @@ Copyright 2012-2018 Olivier Friard
 
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ModuleNotFoundError:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import os
 import time
@@ -44,18 +40,13 @@ from config import *
 import utilities
 from utilities import *
 import dialog
-'''import plot_spectrogram'''
-'''import plot_spectrogram_rt'''
 import plot_data_module
 import project_functions
 
 MEDIA_FILE_PATH_IDX = 2
 HAS_AUDIO_IDX = 6
 
-if QT_VERSION_STR[0] == "4":
-    from observation_ui import Ui_Form
-else:
-    from observation_ui5 import Ui_Form
+from observation_ui5 import Ui_Form
 
 out = ""
 fps = 0

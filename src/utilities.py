@@ -1050,7 +1050,9 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
 
     """
 
-    command = '"{0}" -i "{1}" > {2}'.format(ffmpeg_bin, file_name, "NUL" if sys.platform.startswith("win") else "/dev/null")
+    command = '"{ffmpeg_bin}" -i "{file_name}" > {null_output}'.format(ffmpeg_bin=ffmpeg_bin,
+                                                                       file_name=file_name,
+                                                                       null_output="NUL" if sys.platform.startswith("win") else "/dev/null")
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
