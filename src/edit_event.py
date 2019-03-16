@@ -24,21 +24,11 @@ This file is part of BORIS.
 
 import logging
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    from edit_event_ui5 import Ui_Form
-except ModuleNotFoundError:
-    logging.critical("Module PyQt5 not found")
-    try:
-        from PyQt4.QtGui import *
-        from PyQt4.QtCore import *
-        from edit_event_ui import Ui_Form
-    except ModuleNotFoundError:
-        logging.critical("Module PyQt4 not found")
-        sys.exit()
 
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from edit_event_ui5 import Ui_Form
 
 from config import HHMMSS, S, HHMMSSZZZ
 from utilities import seconds2time
@@ -49,7 +39,6 @@ class DlgEditEvent(QDialog, Ui_Form):
     def __init__(self, log_level, current_time, time_format, show_set_current_time=False, parent=None):
 
         super().__init__(parent)
-        '''logging.basicConfig(level=log_level)'''
         self.setupUi(self)
 
         self.pb_set_to_current_time.setVisible(show_set_current_time)

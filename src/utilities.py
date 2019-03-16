@@ -21,12 +21,9 @@ Copyright 2012-2019 Olivier Friard
   MA 02110-1301, USA.
 """
 
-try:
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ModuleNotFoundError:
-    from PyQt4.QtCore import *
-    from PyQt4.QtGui import *
+
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import math
 import csv
@@ -91,83 +88,6 @@ def bytes_to_str(b: bytes) -> str:
     else:
         return b
 
-'''
-def video_resize_reencode(video_paths: list,
-                          horiz_resol: int,
-                          ffmpeg_bin: str,
-                          quality: int=2000) -> bool:
-    """
-    resize and recode one or more video with ffmpeg
-
-    Args:
-        video_paths (list): list of video paths
-        horiz_resol (int): horizontal resolution (in pixels)
-        ffmpeg_bin (str): path of ffmpeg program
-        quality (int): ffmpeg bitrate
-
-    Returns:
-        bool: True
-    """
-
-    for video_path in video_paths:
-        ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                          '-vf scale={horiz_resol}:-1 -b:v {quality}k '
-                          '"{input_}.re-encoded.{horiz_resol}px.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                               input_=video_path,
-                                                                               quality=quality,
-                                                                               horiz_resol=horiz_resol)
-        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        p.communicate()
-
-    return True
-'''
-
-
-'''
-def video_rotate(video_paths: list,
-                 rotation_idx: int,
-                 ffmpeg_bin: str,
-                 quality:int=2000) -> bool:
-    """
-    rotate a video using ffmpeg at same bitrate (quality)
-
-    Args:
-        video_paths (list): list of video paths
-        rotation_idx (int): type of rotation: 1 = 90 clockwise, 2 = 90 counter clockwise, 3 = 180
-        ffmpeg_bin (str): path of ffmpeg program
-        quality (int): ffmpeg bitrate / 1000 (k)
-    Returns:
-        bool: True
-
-    """
-    for video_path in video_paths:
-
-        # check bitrate
-        r = accurate_media_analysis(ffmpeg_bin, video_path)
-        if "error" not in r and r["bitrate"] != -1:
-            quality = r["bitrate"]
-
-        if rotation_idx in [1, 2]:
-            ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                              '-vf "transpose={rotation_idx}" -codec:a copy -b:v {quality}k '
-                              '"{input_}.rotated{rotation}.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                          input_=video_path,
-                                                                          quality=quality,
-                                                                          rotation_idx=rotation_idx,
-                                                                          rotation=["", "90", "-90"][rotation_idx]
-                                                                          )
-        if rotation_idx == 3:  # 180
-            ffmpeg_command = ('"{ffmpeg_bin}" -y -i "{input_}" '
-                              '-vf "transpose=2,transpose=2" -codec:a copy -b:v {quality}k '
-                              '"{input_}.rotated180.avi" ').format(ffmpeg_bin=ffmpeg_bin,
-                                                                   input_=video_path,
-                                                                   quality=quality)
-
-        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        p.communicate()
-
-    return True
-'''
 
 def convert_time_to_decimal(pj: dict) -> dict:
     """
@@ -1154,7 +1074,3 @@ def behavior_color(colors_list, idx):
     except Exception:
         return "darkgray"
 
-'''
-class ThreadSignal(QObject):
-    sig = pyqtSignal(int, float, float, float, bool, bool, str, str, str)
-'''

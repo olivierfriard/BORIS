@@ -22,13 +22,10 @@ This file is part of BORIS.
 
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except Exception:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import decimal
 from decimal import getcontext
@@ -550,9 +547,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     # draw polygon a red polygon
 
 
-                    self.closedPolygon = QGraphicsPolygonItem(
-                        newPolygon, None,
-                        None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem(newPolygon)
+                    self.closedPolygon = QGraphicsPolygonItem(newPolygon)
 
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
                     self.closedPolygon.setBrush(self.areaColor)
@@ -698,7 +693,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     newPolygon.append(QPoint(p[0], p[1]))
 
                 # draw polygon
-                polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()
+                '''polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()'''
+                polygon = QGraphicsPolygonItem()
                 polygon.setPolygon(newPolygon)
                 clr = QColor()
                 clr.setRgba(self.codingMap["areas"][key]["color"])

@@ -22,13 +22,10 @@ This file is part of BORIS.
 
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import decimal
 from decimal import getcontext
@@ -415,10 +412,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                         newPolygon.append(QPoint(p[0], p[1]))
 
                     # draw polygon a red polygon
-                    if QT_VERSION_STR[0] == "4":
-                        self.closedPolygon = QGraphicsPolygonItem(newPolygon, None, None)
-                    else:
-                        self.closedPolygon = QGraphicsPolygonItem(newPolygon)
+                    self.closedPolygon = QGraphicsPolygonItem(newPolygon)
 
                     self.closedPolygon.setPen(QPen(designColor, penWidth, penStyle, Qt.RoundCap, Qt.RoundJoin))
 
@@ -526,9 +520,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
             if response == "Cancel":
                 return
 
-
-
-        fn = QFileDialog(self).getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
+        fn = QFileDialog().getOpenFileName(self, 'Open a coding map', '', 'BORIS coding map (*.boris_map);;All files (*)')
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
@@ -574,14 +566,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 clr.setRgba( self.areasList[ areaCode ]['color'] )
 
                 # draw polygon
-                '''
-                if QT_VERSION_STR[0] == "4":
-                    polygon = QGraphicsPolygonItem(None, None)
-                else:
-                    polygon = QGraphicsPolygonItem()
-                '''
-
-                polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()
+                polygon = QGraphicsPolygonItem()
 
 
                 polygon.setPolygon(newPolygon)
@@ -593,8 +578,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.view.scene().addItem( polygon )
                 self.polygonsList2[ areaCode ] = polygon
 
-
-            '''self.btCancelMap.setVisible(True)'''
             self.btNewArea.setVisible(True)
 
             self.btLoad.setVisible(False)
@@ -653,13 +636,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
         else:
             self.fileName = fn
 
-        '''
-        if QT_VERSION_STR[0] == "4":
-            self.fileName = QFileDialog(self).getSaveFileName(self, "Save modifiers map as", "", filters)
-        else:
-            self.fileName, _ = QFileDialog(self).getSaveFileName(self, "Save modifiers map as", "", filters)
-        '''
-
         if self.fileName:
             if os.path.splitext(self.fileName)[1] != '.boris_map':
                 self.fileName += '.boris_map'
@@ -676,15 +652,6 @@ class ModifiersMapCreatorWindow(QMainWindow):
                 self.fileName, _ = fn
             else:
                 self.fileName = fn
-
-
-            '''
-            if QT_VERSION_STR[0] == "4":
-                self.fileName = QFileDialog(self).getSaveFileName(self, 'Save modifiers map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
-            else:
-                self.fileName, _ = QFileDialog(self).getSaveFileName(self, 'Save modifiers map', self.mapName + '.boris_map' , 'BORIS MAP (*.boris_map);;All files (*)')
-            '''
-
 
             if self.fileName and os.path.splitext(self.fileName)[1] != '.boris_map':
                 self.fileName += '.boris_map'
@@ -878,10 +845,8 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
         maxSize = 512
 
-        if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
-        else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
+        fn = QFileDialog().getOpenFileName(self, "Load bitmap", "", "bitmap files (*.png *.jpg);;All files (*)")
+        fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
             self.bitmapFileName = fileName
@@ -890,7 +855,7 @@ class ModifiersMapCreatorWindow(QMainWindow):
 
             if self.pixmap.size().width() > maxSize or self.pixmap.size().height() > maxSize:
                 self.pixmap = self.pixmap.scaled (maxSize, maxSize, Qt.KeepAspectRatio)
-                QMessageBox.information(self, programName , 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' % ( self.pixmap.size().width(), self.pixmap.size().height() ) )
+                QMessageBox.information(self, programName , 'The bitmap was resized to %d x %d pixels\nThe original file was not modified' % (self.pixmap.size().width(), self.pixmap.size().height() ) )
 
             # scale image
             # pixmap = pixmap.scaled (256, 256, Qt.KeepAspectRatio)

@@ -23,15 +23,11 @@ This file is part of BORIS.
 """
 
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    from project_ui5 import Ui_dlgProject
-except ModuleNotFoundError:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
-    from project_ui import Ui_dlgProject
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from project_ui5 import Ui_dlgProject
 
 import logging
 import json
@@ -526,10 +522,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        if QT_VERSION_STR[0] == "4":
-            filediag_func = QFileDialog(self).getSaveFileNameAndFilter
-        else:
-            filediag_func = QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog().getSaveFileName
 
         fileName, filter_ = filediag_func(self, "Export ethogram", "", ";;".join(extended_file_formats))
         if not fileName:
@@ -539,20 +532,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         if pathlib.Path(fileName).suffix != "." + outputFormat:
             fileName = str(pathlib.Path(fileName)) + "." + outputFormat
 
-        '''
-        outputFormat = ""
-        availableFormats = ("tsv", "csv", "xls", "ods", "html")
-        for fileExtension in availableFormats:
-            if fileExtension in filter_:
-                outputFormat = fileExtension
-                if not fileName.upper().endswith("." + fileExtension.upper()):
-                    fileName += "." + fileExtension
-
-        if not outputFormat:
-            QMessageBox.warning(self, programName, "Choose a file format", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        else:
-            break
-        '''
 
         ethogram_data = tablib.Dataset()
         ethogram_data.title = "Ethogram"
@@ -934,12 +913,9 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         import subjects from another project
         """
-        if QT_VERSION_STR[0] == "4":
-            fileName = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "",
-                                                         "Project files (*.boris);;All files (*)")
-        else:
-            fileName, _ = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "",
-                                                            "Project files (*.boris);;All files (*)")
+
+        fileName, _ = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "",
+                                                        "Project files (*.boris);;All files (*)")
 
         if fileName:
 

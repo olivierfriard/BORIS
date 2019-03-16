@@ -24,13 +24,10 @@ This file is part of BORIS.
 
 codeSeparator = ","
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import json
 import binascii
@@ -150,13 +147,7 @@ class ModifiersCodingMapWindowClass(QDialog):
             clr.setRgba( self.areasList["areas"][ area]['color'] )
 
             # draw polygon
-            #polygon = QGraphicsPolygonItem( None, None)
-            #polygon.setPolygon(newPolygon)
-
-            if QT_VERSION_STR[0] == "4":
-                polygon = QGraphicsPolygonItem(newPolygon, None, None)
-            else:
-                polygon = QGraphicsPolygonItem(newPolygon)
+            polygon = QGraphicsPolygonItem(newPolygon)
 
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
 

@@ -22,13 +22,10 @@ This file is part of BORIS.
 
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except Exception:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import json
 import binascii
@@ -38,11 +35,6 @@ import config
 codeSeparator = ","
 penWidth = 0
 penStyle = Qt.NoPen
-'''
-selectedBrush = QBrush()
-selectedBrush.setStyle(Qt.SolidPattern)
-selectedBrush.setColor(QColor(255, 255, 0, 255))
-'''
 
 
 class BehaviorsCodingMapWindowClass(QWidget):
@@ -52,16 +44,6 @@ class BehaviorsCodingMapWindowClass(QWidget):
         mousePress = pyqtSignal(QMouseEvent)
         mouseMove = pyqtSignal(QMouseEvent)
 
-        '''
-        def mousePressEvent(self, event):
-            print("mouse press")
-            self.mousePress.emit(event)
-        '''
-
-        '''
-        def mouseMoveEvent(self, event):
-            print(event)
-        '''
         def eventFilter(self, source, event):
             if (event.type() == QEvent.MouseMove):
                 self.mouseMove.emit(event)
@@ -122,6 +104,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
         self.setLayout(Vlayout)
 
         self.loadMap()
+
 
     def closeEvent(self, event):
         self.close_signal.emit(self.codingMap["name"])
@@ -191,7 +174,7 @@ class BehaviorsCodingMapWindowClass(QWidget):
                 newPolygon.append(QPoint(p[0], p[1]))
 
             # draw polygon
-            polygon = QGraphicsPolygonItem(None, None) if QT_VERSION_STR[0] == "4" else QGraphicsPolygonItem()
+            polygon = QGraphicsPolygonItem()
             polygon.setPolygon(newPolygon)
             clr = QColor()
             clr.setRgba(self.codingMap["areas"][key]["color"])

@@ -23,18 +23,10 @@ This file is part of BORIS.
 """
 
 import sys
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ModuleNotFoundError:
-    print("Module PyQt 5 not found. Try PyQt4.")
-    try:
-        from PyQt4.QtGui import *
-        from PyQt4.QtCore import *
-    except ModuleNotFoundError:
-        print("Module PyQt4 not found")
-        sys.exit()
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import config
 

@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,13 +21,10 @@ Copyright 2012-2018 Olivier Friard
   MA 02110-1301, USA.
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except Exception:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import sys
 from config import *

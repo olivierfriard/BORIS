@@ -23,18 +23,13 @@ This file is part of BORIS.
 """
 
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    from add_modifier_ui5 import Ui_Dialog
-except ModuleNotFoundError:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
-    from add_modifier_ui import Ui_Dialog
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from add_modifier_ui5 import Ui_Dialog
 
 import copy
-
 import dialog
 from config import *
 from utilities import sorted_keys

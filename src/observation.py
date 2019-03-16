@@ -452,7 +452,7 @@ class Observation(QDialog, Ui_Form):
                     media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(),
                                                                         self.project_path)
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
-                        QMessageBox.critical(self, programName , "The media file {} do not seem to have audio".format(media_file_path))
+                        QMessageBox.critical(self, programName , f"The media file {media_file_path} do not seem to have audio")
                         flag_wav_produced = False
                         break
 
@@ -462,7 +462,7 @@ class Observation(QDialog, Ui_Form):
 
                         if utilities.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
                             QMessageBox.critical(self, programName ,
-                                                 "Error during extracting WAV of the media file {}".format(media_file_path))
+                                                 f"Error during extracting WAV of the media file {media_file_path}")
                             flag_wav_produced = False
                             break
 
@@ -470,7 +470,7 @@ class Observation(QDialog, Ui_Form):
 
                         flag_wav_produced = True
                     else:
-                        QMessageBox.warning(self, programName , "<b>{}</b> file not found".format(media_file_path))
+                        QMessageBox.warning(self, programName , f"<b>{media_file_path}</b> file not found")
 
                 if not flag_wav_produced:
                     self.cbVisualizeSpectrogram.setChecked(False)

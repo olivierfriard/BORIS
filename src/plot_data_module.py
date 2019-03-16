@@ -477,7 +477,6 @@ class Plotter(QObject):
         logging.debug("self.min_time_step: {}".format(self.min_time_step))
 
         x = np.arange(current_time - self.interval // 2, current_time + self.interval // 2, self.min_time_step)
-        #x = np.arange(round(current_discrete_time - self.interval//2,2), round(current_discrete_time + self.interval//2, 2), self.min_time_step)
 
         logging.debug("len x 1: {}".format(len(x)))
 
@@ -563,11 +562,5 @@ if __name__ == '__main__':
     win.plot_data_timer.setInterval(win.time_out)
     win.plot_data_timer.timeout.connect(lambda: win.timer_plot_data_out(get_time()))
     win.plot_data_timer.start()
-    '''
-    app.plot_data_timer = QTimer()
-    app.plot_data_timer.setInterval(win.time_out)
-    app.plot_data_timer.timeout.connect(win.timer_plot_data_out)
-    app.plot_data_timer.start()
-    '''
 
     sys.exit(app.exec_())

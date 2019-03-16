@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 This file is part of BORIS.
 
@@ -23,18 +23,11 @@ This file is part of BORIS.
 """
 
 import sys
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    from param_panel_ui5 import Ui_Dialog
-except ModuleNotFoundError:
-    try:
-        from PyQt4.QtGui import *
-        from PyQt4.QtCore import *
-        from param_panel_ui import Ui_Dialog
-    except ModuleNotFoundError:
-        sys.exit()
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from param_panel_ui5 import Ui_Dialog
 
 import os
 import logging

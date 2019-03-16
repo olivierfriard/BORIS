@@ -68,7 +68,7 @@ def check_coded_behaviors(pj: dict) -> set:
     """
 
     # set of behaviors defined in ethogram
-    ethogram_behavior_codes = {pj[ETHOGRAM][idx]["code"] for idx in pj[ETHOGRAM]}
+    ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
     behaviors_not_defined = []
 
     for obs_id in pj[OBSERVATIONS]:
@@ -129,7 +129,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 
     flagStateEvent = False
     subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
-    ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
+    ethogram_behaviors = {ethogram[idx][BEHAVIOR_CODE] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
 
@@ -171,26 +171,6 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 
     return (False, out) if out else (True, "No problem detected")
 
-'''
-def check_events(obsId, ethogram, observation):
-    """
-    Check if coded events are in ethogram
-
-    Args:
-        obsId (str): id of observation to check
-        ethogram (dict): ethogram of project
-        observation (dict): observation to be checked
-
-    Returns:
-        list: list of behaviors found in observations but not in ethogram
-    """
-
-    coded_behaviors = {event[EVENT_BEHAVIOR_FIELD_IDX] for event in observation[EVENTS]}
-    behaviors_in_ethogram = [ethogram[idx][BEHAVIOR_CODE] for idx in ethogram]
-
-    not_in_ethogram = [coded_behavior for coded_behavior in coded_behaviors if coded_behavior not in behaviors_in_ethogram]
-    return not_in_ethogram
-'''
 
 
 def check_project_integrity(pj: dict,
@@ -371,7 +351,7 @@ def create_subtitles(pj: dict,
                     init = 0
                     for mediaFile in pj[OBSERVATIONS][obsId][FILE][nplayer]:
                         try:
-                            end = init + pj[OBSERVATIONS][obsId]["media_info"]["length"][mediaFile]
+                            end = init + pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile]
                         except KeyError:
                             return False, f"The length for media file {mediaFile} is not available"
                         out = ""
@@ -525,16 +505,16 @@ def remove_media_files_path(pj):
                     p = str(pathlib.Path(media_file).name)
                     if p != media_file:
                         pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
-                        if "media_info" in pj[OBSERVATIONS][obs_id]:
-                            for info in ["length", "hasAudio", "hasVideo", "fps"]:
+                        if MEDIA_INFO in pj[OBSERVATIONS][obs_id]:
+                            for info in [LENGTH, "hasAudio", "hasVideo", "fps"]:
                                 if (
-                                    info in pj[OBSERVATIONS][obs_id]["media_info"] and
-                                    media_file in pj[OBSERVATIONS][obs_id]["media_info"][info]
+                                    info in pj[OBSERVATIONS][obs_id][MEDIA_INFO] and
+                                    media_file in pj[OBSERVATIONS][obs_id][MEDIA_INFO][info]
                                 ):
-                                    pj[OBSERVATIONS][obs_id]["media_info"][info][p] = pj[OBSERVATIONS][obs_id]["media_info"][info][
+                                    pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][p] = pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][
                                         media_file
                                     ]
-                                    del pj[OBSERVATIONS][obs_id]["media_info"][info][media_file]
+                                    del pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][media_file]
 
     return copy.deepcopy(pj)
 
@@ -602,7 +582,7 @@ def observation_total_length(observation: dict):
             for mediaFile in observation[FILE][nplayer]:
                 mediaLength = 0
                 try:
-                    mediaLength = observation["media_info"]["length"][mediaFile]
+                    mediaLength = observation[MEDIA_INFO][LENGTH][mediaFile]
                     media_total_length[nplayer] += Decimal(mediaLength)
                 except Exception:
                     logging.critical(f"media length not found for {mediaFile}")
@@ -826,12 +806,12 @@ def open_project_json(projectFileName):
 
     # if one file is present in player #1 -> set "media_info" key with value of media_file_info
     for obs in pj[OBSERVATIONS]:
-        if pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and "media_info" not in pj[OBSERVATIONS][obs]:
-            pj[OBSERVATIONS][obs]["media_info"] = {"length": {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
+        if pj[OBSERVATIONS][obs][TYPE] in [MEDIA] and MEDIA_INFO not in pj[OBSERVATIONS][obs]:
+            pj[OBSERVATIONS][obs][MEDIA_INFO] = {LENGTH: {}, "fps": {}, "hasVideo": {}, "hasAudio": {}}
             for player in [PLAYER1, PLAYER2]:
                 # fix bug Anne Maijer 2017-07-17
-                if pj[OBSERVATIONS][obs]["file"] == []:
-                    pj[OBSERVATIONS][obs]["file"] = {"1": [], "2": []}
+                if pj[OBSERVATIONS][obs][FILE] == []:
+                    pj[OBSERVATIONS][obs][FILE] = {"1": [], "2": []}
 
                 for media_file_path in pj[OBSERVATIONS][obs]["file"][player]:
                     # FIX: ffmpeg path
@@ -844,46 +824,46 @@ def open_project_json(projectFileName):
                     r = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
 
                     if "duration" in r and r["duration"]:
-                        pj[OBSERVATIONS][obs]["media_info"]["length"][media_file_path] = float(r["duration"])
-                        pj[OBSERVATIONS][obs]["media_info"]["fps"][media_file_path] = float(r["fps"])
-                        pj[OBSERVATIONS][obs]["media_info"]["hasVideo"][media_file_path] = r["has_video"]
-                        pj[OBSERVATIONS][obs]["media_info"]["hasAudio"][media_file_path] = r["has_audio"]
+                        pj[OBSERVATIONS][obs][MEDIA_INFO][LENGTH][media_file_path] = float(r["duration"])
+                        pj[OBSERVATIONS][obs][MEDIA_INFO][FPS][media_file_path] = float(r["fps"])
+                        pj[OBSERVATIONS][obs][MEDIA_INFO]["hasVideo"][media_file_path] = r["has_video"]
+                        pj[OBSERVATIONS][obs][MEDIA_INFO]["hasAudio"][media_file_path] = r["has_audio"]
                         project_updated, projectChanged = True, True
                     else:  # file path not found
                         if (
                             "media_file_info" in pj[OBSERVATIONS][obs] and
                             len(pj[OBSERVATIONS][obs]["media_file_info"]) == 1 and
-                            len(pj[OBSERVATIONS][obs]["file"][PLAYER1]) == 1 and
-                            len(pj[OBSERVATIONS][obs]["file"][PLAYER2]) == 0
+                            len(pj[OBSERVATIONS][obs][FILE][PLAYER1]) == 1 and
+                            len(pj[OBSERVATIONS][obs][FILE][PLAYER2]) == 0
                         ):
                             media_md5_key = list(pj[OBSERVATIONS][obs]["media_file_info"].keys())[0]
                             # duration
-                            pj[OBSERVATIONS][obs]["media_info"] = {
-                                "length": {media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000}
+                            pj[OBSERVATIONS][obs][MEDIA_INFO] = {
+                                LENGTH: {media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000}
                             }
                             projectChanged = True
 
                             # FPS
                             if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
-                                pj[OBSERVATIONS][obs]["media_info"]["fps"] = {
+                                pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {
                                     media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["nframe"] /
                                     (pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000)
                                 }
                             else:
-                                pj[OBSERVATIONS][obs]["media_info"]["fps"] = {media_file_path: 0}
+                                pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {media_file_path: 0}
 
     # update project to v.7 for time offset second player
     project_lowerthan7 = False
     for obs in pj[OBSERVATIONS]:
         if "time offset second player" in pj[OBSERVATIONS][obs]:
-            if "media_info" not in pj[OBSERVATIONS][obs]:
-                pj[OBSERVATIONS][obs]["media_info"] = {}
-            if "offset" not in pj[OBSERVATIONS][obs]["media_info"]:
-                pj[OBSERVATIONS][obs]["media_info"]["offset"] = {}
+            if MEDIA_INFO not in pj[OBSERVATIONS][obs]:
+                pj[OBSERVATIONS][obs][MEDIA_INFO] = {}
+            if "offset" not in pj[OBSERVATIONS][obs][MEDIA_INFO]:
+                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"] = {}
             for player in pj[OBSERVATIONS][obs][FILE]:
-                pj[OBSERVATIONS][obs]["media_info"]["offset"][player] = 0.0
+                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"][player] = 0.0
             if pj[OBSERVATIONS][obs]["time offset second player"]:
-                pj[OBSERVATIONS][obs]["media_info"]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
+                pj[OBSERVATIONS][obs][MEDIA_INFO]["offset"]["2"] = float(pj[OBSERVATIONS][obs]["time offset second player"])
 
             del pj[OBSERVATIONS][obs]["time offset second player"]
             project_lowerthan7 = True
@@ -950,7 +930,7 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
     closing_events_to_add = []
     flagStateEvent = False
     subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in observation[EVENTS]]
-    ethogram_behaviors = {ethogram[idx]["code"] for idx in ethogram}
+    ethogram_behaviors = {ethogram[idx][BEHAVIOR_CODE] for idx in ethogram}
 
     for subject in sorted(set(subjects)):
 

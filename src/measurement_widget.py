@@ -23,13 +23,10 @@ This file is part of BORIS.
 """
 
 import logging
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 from config import *
 import dialog
@@ -117,7 +114,8 @@ class wgMeasurement(QWidget):
 
     def pbClose_clicked(self):
         if not self.flagSaved:
-            response = dialog.MessageDialog(programName, "The current results are not saved. Do you want to save results before closing?", [YES, NO, CANCEL])
+            response = dialog.MessageDialog(programName, "The current results are not saved. Do you want to save results before closing?",
+                                            [YES, NO, CANCEL])
             if response == YES:
                 self.pbSave_clicked()
             if response == CANCEL:

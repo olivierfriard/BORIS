@@ -99,7 +99,7 @@ def test_cancel(qtbot):
 
 
 
-def test_extract_wav(qtbot):
+def test_extract_wav_from_video(qtbot):
 
     try:
         os.remove("/tmp/geese1.mp4.wav")
@@ -123,4 +123,26 @@ def test_extract_wav(qtbot):
     w.extract_wav()
 
     assert os.path.isfile("/tmp/geese1.mp4.wav")
+
+
+def test_extract_wav_from_wav(qtbot):
+
+    w = observation.Observation("/tmp")
+    
+    w.show()
+    qtbot.addWidget(w)
+    w.mode = "new"
+    w.pj = config.EMPTY_PROJECT
+    w.ffmpeg_bin = "ffmpeg"
+    w.ffmpeg_cache_dir = "/tmp"
+
+    media_file = "files/test.wav"
+    w.leObservationId.setText("test")
+    w.check_media("1", media_file, True)
+    w.add_media_to_listview("1", media_file)
+
+    w.cbVisualizeSpectrogram.setChecked(True)
+    w.extract_wav()
+
+    assert os.path.isfile("/tmp/test.wav.wav")
 

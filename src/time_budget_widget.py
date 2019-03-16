@@ -23,18 +23,10 @@ This file is part of BORIS.
 """
 
 import sys
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ModuleNotFoundError:
-    print("Module PyQt5 not found")
-    try:
-        from PyQt4.QtGui import *
-        from PyQt4.QtCore import *
-    except ModuleNotFoundError:
-        print("Module PyQt4 not found")
-        sys.exit()
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import logging
 import os
@@ -131,7 +123,7 @@ class timeBudgetResults(QWidget):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
+        filediag_func = QFileDialog().getSaveFileName
 
         file_name, filter_ = filediag_func(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
 

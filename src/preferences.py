@@ -23,15 +23,11 @@ This file is part of BORIS.
 """
 
 import logging
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    from preferences_ui5 import Ui_prefDialog
-except Exception:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
-    from preferences_ui import Ui_prefDialog
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from preferences_ui5 import Ui_prefDialog
 
 import os
 from config import CANCEL, BEHAVIORS_PLOT_COLORS

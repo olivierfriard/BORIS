@@ -3618,21 +3618,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # media duration
                 try:
-                    mediaLength = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"][mediaFile] * 1000
-                    mediaFPS = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["fps"][mediaFile]
+                    mediaLength = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][LENGTH][mediaFile] * 1000
+                    mediaFPS = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][FPS][mediaFile]
                 except Exception:
                     logging.debug("media_info key not found")
                     r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     if "error" not in r:
                         if MEDIA_INFO not in self.pj[OBSERVATIONS][self.observationId]:
-                            self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO] = {"length": {}, "fps": {}}
-                            if "length" not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
-                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"] = {}
-                            if "fps" not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
-                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["fps"] = {}
+                            self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO] = {LENGTH: {}, FPS: {}}
+                            if LENGTH not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
+                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][LENGTH] = {}
+                            if FPS not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
+                                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][FPS] = {}
 
-                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["length"][mediaFile] = r["duration"]
-                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["fps"][mediaFile] = r["fps"]
+                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][LENGTH][mediaFile] = r["duration"]
+                        self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][FPS][mediaFile] = r["fps"]
 
                         mediaLength = r["duration"] * 1000
                         mediaFPS = r["fps"]

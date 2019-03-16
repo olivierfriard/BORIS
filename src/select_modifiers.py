@@ -21,13 +21,10 @@ This file is part of BORIS.
 
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except ModuleNotFoundError:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import re
 from config import *
@@ -71,7 +68,7 @@ class ModifiersList(QDialog):
                 if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
                     item = QListWidgetItem("None")
                     lw.addItem(item)
-                    lw.setItemSelected(item, True) if QT_VERSION_STR[0] == "4" else item.setSelected(True)
+                    item.setSelected(True)
 
                 for modifier in self.modifiers_dict[idx]["values"]:
                     item = QListWidgetItem(modifier)
@@ -90,10 +87,7 @@ class ModifiersList(QDialog):
                     if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:
                         try:
                             if currentModifierList != [""] and re.sub(" \(.\)", "", modifier) == currentModifierList[int(idx)]:
-                                if QT_VERSION_STR[0] == "4":
-                                    lw.setItemSelected(item, True)
-                                else:
-                                    item.setSelected(True)
+                                item.setSelected(True)
                         except Exception:  # for old projects due to a fixed bug
                             pass
                 V2layout.addWidget(lw)
@@ -156,10 +150,7 @@ class ModifiersList(QDialog):
 
                         if ek in function_keys:
                             if "({})".format(function_keys[ek]) in widget.item(index).text().upper():
-                                if QT_VERSION_STR[0] == "4":
-                                    widget.setItemSelected(widget.item(index), True)
-                                else:
-                                    widget.item(index).setSelected(True)
+                                widget.item(index).setSelected(True)
 
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
@@ -167,16 +158,13 @@ class ModifiersList(QDialog):
 
                         if ek < 1114112 and "({})".format(ek_text) in widget.item(index).text():
 
-                            if QT_VERSION_STR[0] == "4":
-                                widget.setItemSelected(widget.item(index), True)
-                            else:
-                                if "({})".format(SINGLE_SELECTION) in widget.objectName():
-                                    widget.item(index).setSelected(True)
-                                if "({})".format(MULTI_SELECTION) in widget.objectName():
-                                    if widget.item(index).checkState() == Qt.Checked:
-                                        widget.item(index).setCheckState(Qt.Unchecked)
-                                    else:
-                                        widget.item(index).setCheckState(Qt.Checked)
+                            if "({})".format(SINGLE_SELECTION) in widget.objectName():
+                                widget.item(index).setSelected(True)
+                            if "({})".format(MULTI_SELECTION) in widget.objectName():
+                                if widget.item(index).checkState() == Qt.Checked:
+                                    widget.item(index).setCheckState(Qt.Unchecked)
+                                else:
+                                    widget.item(index).setCheckState(Qt.Checked)
 
                             # close dialog if one set of modifiers
                             if self.modifiersSetNumber == 1:

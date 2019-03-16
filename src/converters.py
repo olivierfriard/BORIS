@@ -22,15 +22,11 @@ This file is part of BORIS.
 
 """
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-    from converters_ui5 import Ui_converters
-except ModuleNotFoundError:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
-    from converters_ui import Ui_converters
+
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from converters_ui5 import Ui_converters
 
 import os
 import dialog
@@ -309,8 +305,9 @@ class Converters(QDialog, Ui_converters):
                         try:
                             exec(function)
                         except:
-                            QMessageBox.critical(self, "BORIS", "The code of {} converter produces an error:<br><b>{}</b>".format(converter_name,
-                                                                                                                                  sys.exc_info()[1]))
+                            QMessageBox.critical(self, "BORIS",
+                                                 (f"The code of {converter_name} converter "
+                                                  f"produces an error:<br><b>{sys.exc_info()[1]}</b>"))
 
                         self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,
