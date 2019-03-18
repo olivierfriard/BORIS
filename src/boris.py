@@ -8499,7 +8499,8 @@ item []:
 
                 txt = ", ".join(txt)
 
-                self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
+                #self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
+                self.lbCurrentStates.setText(txt)
 
                 # show current states in subjects table
                 self.show_current_states_in_subjects_table()
