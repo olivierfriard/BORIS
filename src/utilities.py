@@ -218,7 +218,7 @@ def state_behavior_codes(ethogram):
     """
     return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if "STATE" in ethogram[x][TYPE].upper()]
 
-
+'''
 def get_current_states_by_subject(state_behaviors_codes: list,
                                   events: list,
                                   subjects: dict,
@@ -239,10 +239,54 @@ def get_current_states_by_subject(state_behaviors_codes: list,
         current_states[idx] = []
         for sbc in state_behaviors_codes:
             if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
                     and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
                     and x[EVENT_TIME_FIELD_IDX] <= time]) % 2:  # test if odd
                 current_states[idx].append(sbc)
+
+    return current_states
+'''
+
+def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
+                                            events: list,
+                                            subjects: dict,
+                                            time: Decimal,
+                                            include_modifiers: bool=False) -> dict:
+    """
+    get current states and modifiers (if requested) for subjects at given time
+    Args:
+        state_behaviors_codes (list): list of behavior codes defined as STATE event
+        events (list): list of events
+        subjects (dict): dictionary of subjects
+        time (Decimal): time
+        include_modifiers (bool): include modifier if True (default: False)
+
+    Returns:
+        dict: current states by subject. dict of list
+    """
+    current_states = {}
+
+    if include_modifiers:
+        for idx in subjects:
+            current_states[idx] = []
+            for sbc in state_behaviors_codes:
+                bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
+                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
+                        and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                        and x[EVENT_TIME_FIELD_IDX] <= time]
+
+                if len(bl) % 2:  # test if odd
+                    current_states[idx].append(bl[-1][0] + f" ({bl[-1][1]})" * (bl[-1][1] != ""))
+
+    else:
+        for idx in subjects:
+            current_states[idx] = []
+            for sbc in state_behaviors_codes:
+                if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
+                        and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                        and x[EVENT_TIME_FIELD_IDX] <= time]) % 2:  # test if odd
+                    current_states[idx].append(sbc)
 
     return current_states
 

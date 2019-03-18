@@ -2915,12 +2915,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             if (not subject) or (subject == NO_FOCAL_SUBJECT) or (self.currentSubject == subject):
                 self.currentSubject = ""
-                '''self.lbSubject.setText("<b>{}</b>".format(NO_FOCAL_SUBJECT))'''
                 self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
             else:
                 self.currentSubject = subject
-                '''self.lbSubject.setText("Subject: <b>{}</b>".format(self.currentSubject))'''
                 self.lbFocalSubject.setText(f" Focal subject: <b>{self.currentSubject}</b>")
+            self.timer_out()
         except Exception:
             logging.critical("error in update_subject function")
 
@@ -3307,11 +3306,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
 
         # extract State events
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in [y for y in self.pj[ETHOGRAM]
-                               if "State" in self.pj[ETHOGRAM][y][TYPE]]]
+        StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
 
         self.currentStates = {}
+        self.currentStates = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
+                                                                             self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                             dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                             currentTime / 1000,
+                                                                             include_modifiers=True)
 
+
+        '''
         # add states for no focal subject
         self.currentStates[""] = []
         for sbc in StateBehaviorsCodes:
@@ -3331,14 +3336,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         x[pj_obs_fields["code"]] == sbc and
                         x[pj_obs_fields["time"]] <= currentTime / 1000]) % 2:  # test if odd
                     self.currentStates[idx].append(sbc)
+        '''
 
         # show current states
+        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+        self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
+
+        '''
         if self.currentSubject:
             # get index of focal subject (by name)
             idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[idx])))
         else:
             self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
+        '''
 
         # show selected subjects
         self.show_current_states_in_subjects_table()
@@ -4073,6 +4084,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == S:
             self.lb_current_media_time.setText("0.000")
 
+        self.lbCurrentStates.setText("")
+
         self.liveStartTime = None
         self.liveTimer.stop()
 
@@ -4693,18 +4706,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.dwObservations.setVisible(False)
 
         self.w_obs_info.setVisible(False)
-        '''
-        self.lb_current_media_time.setVisible(False)
-        self.lbFocalSubject.setVisible(False)
-        self.lbCurrentStates.setVisible(False)
-        '''
 
         self.twEvents.setRowCount(0)
 
-        '''self.lbTime.clear()'''
         self.lb_current_media_time.clear()
-        '''self.lbSubject.clear()'''
+        self.currentSubject = ""
         self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
+
+        # clear current state(s) column in subjects table
+        for i in range(self.twSubjects.rowCount()):
+            self.twSubjects.item(i, len(subjectsFields)).setText("")
 
         self.lbTimeOffset.clear()
 
@@ -6703,46 +6714,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lb_current_media_time.setText(self.convertTime(currentTime))
 
         # extract State events
-        StateBehaviorsCodes = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE]
-                               for x in [y for y in self.pj[ETHOGRAM]
-                               if "State" in self.pj[ETHOGRAM][y][TYPE]]]
 
         self.currentStates = {}
         # add states for no focal subject
 
-        self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes,
-                                                                self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                                                                dict(self.pj[SUBJECTS], **{"": {SUBJECT_NAME: ""}}),
-                                                                currentTime)
-
-
-        # add states for all configured subjects
-        for idx in self.pj[SUBJECTS]:
-            # add subject index
-            self.currentStates[idx] = []
-            for sbc in StateBehaviorsCodes:
-                if (
-                    len(
-                        [
-                            x[pj_obs_fields[BEHAVIOR_CODE]]
-                            for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                            if x[pj_obs_fields["subject"]] == self.pj[SUBJECTS][idx][SUBJECT_NAME]
-                            and x[pj_obs_fields["code"]] == sbc
-                            and x[pj_obs_fields["time"]] <= currentTime
-                        ]
-                    )
-                    % 2
-                ):  # test if odd
-                    self.currentStates[idx].append(sbc)
+        self.currentStates = utilities.get_current_states_modifiers_by_subject(utilities.state_behavior_codes(self.pj[ETHOGRAM]),
+                                                                               self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                               dict(self.pj[SUBJECTS], **{"": {SUBJECT_NAME: ""}}),
+                                                                               currentTime,
+                                                                               include_modifiers=True)
 
         # show current states
-        if self.currentSubject:
-            # get index of focal subject (by name)
-            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx][SUBJECT_NAME] == self.currentSubject][0]
-            self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
-        else:
-            self.lbCurrentStates.setText(", ".join(self.currentStates[""]))
-
+        # index of current subject
+        idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+        self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
         self.show_current_states_in_subjects_table()
 
         # check scan sampling
@@ -7675,14 +7660,20 @@ item []:
                     self.writeEvent(event, newTime)
                     break
 
-            self.currentStates = self.get_current_states_by_subject(
+            self.currentStates = utilities.get_current_states_modifiers_by_subject(
                 state_behavior_codes(self.pj[ETHOGRAM]),
                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
                 dict(self.pj[SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
-                newTime
+                newTime,
+                include_modifiers=True
             )
 
+            subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+            self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
+
+            '''
             # show current subject
+
             cm = {}
             if self.currentSubject:
                 # get index of focal subject (by name)
@@ -7702,6 +7693,7 @@ item []:
                 txt.append(cs + " ({}) ".format(cm[cs]) * (cm[cs] != ""))
             txt = ", ".join(txt)
             self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
+            '''
 
             self.show_current_states_in_subjects_table()
 
@@ -8230,45 +8222,10 @@ item []:
                 self.twEvents.scrollToItem(self.twEvents.item(ROW, 0), QAbstractItemView.EnsureVisible)
 
 
-    def get_current_states_by_subject(self, stateBehaviorsCodes, events, subjects, time):
-        """
-        get current states for subjects at given time
-        Args:
-            stateBehaviorsCodes (list): list of behavior codes defined as STATE event
-            events (list): list of events
-            subjects (list): list of subjects
-            time (Decimal): time
-
-        Returns:
-            dict: current states by subject. dict of list
-        """
-        currentStates = {}
-        for idx in subjects:
-            currentStates[idx] = []
-            for sbc in stateBehaviorsCodes:
-
-                if len([
-                        x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"] and
-                        x[EVENT_BEHAVIOR_FIELD_IDX] == sbc and x[EVENT_TIME_FIELD_IDX] <= time
-                ]) % 2:  # test if odd
-                    currentStates[idx].append(sbc)
-
-        return currentStates
-
-
     def show_current_states_in_subjects_table(self):
         """
         show current state(s) for all subjects (including "No focal subject") in subjects widget
         """
-        '''
-        for idx in sorted_keys(self.pj[SUBJECTS]):
-            for j in range(self.twSubjects.rowCount()):
-                if self.twSubjects.item(j, 1).text() == self.pj[SUBJECTS][idx]["name"]:
-                    self.twSubjects.item(j, len(subjectsFields)).setText(",".join(self.currentStates[idx]))
-        '''
-
-        '''self.subject_name_index = dict([(self.pj[SUBJECTS][x]["name"], x) for x in self.pj[SUBJECTS]])'''
 
         for i in range(self.twSubjects.rowCount()):
             try:
@@ -8471,36 +8428,16 @@ item []:
 
                 self.currentStates = {}
 
-                # add current states for all subject and for "no focal subject"
-                self.currentStates = self.get_current_states_by_subject(StateBehaviorsCodes,
-                                                                        self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                                                                        dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                                        currentTimeOffset)
+                # index of current subject
+                subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
-                # show current subject
-                cm = {}
-                if self.currentSubject:
-                    # get index of focal subject (by name)
-                    idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
-                else:
-                    idx = ""
+                self.currentStates = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
+                                                                             self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                             dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                             currentTimeOffset,
+                                                                             include_modifiers=True)
 
-                # show current state(s)
-                txt = []
-                for cs in self.currentStates[idx]:
-                    for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                        if ev[EVENT_TIME_FIELD_IDX] > currentTimeOffset:
-                            break
-                        if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
-                            if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
-                                cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
-                    # state and modifiers (if any)
-                    txt.append(cs + " ({}) ".format(cm[cs]) * (cm[cs] != ""))
-
-                txt = ", ".join(txt)
-
-                #self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
-                self.lbCurrentStates.setText(txt)
+                self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
 
                 # show current states in subjects table
                 self.show_current_states_in_subjects_table()
@@ -8515,12 +8452,6 @@ item []:
                                                                               time=self.convertTime(Decimal(mediaTime / 1000)),
                                                                               total_time=self.convertTime(Decimal(self.mediaTotalLength)))
 
-                    '''
-                    if self.dw_player[0].media_list.count() > 1:
-                        msg += " | total: <b>%s / %s</b>" % ((self.convertTime(Decimal(currentTime / 1000)),
-                                                               self.convertTime(Decimal(totalGlobalTime / 1000))))
-                    '''
-
                     if self.dw_player[0].media_list.count() > 1:
                         msg += " | total: <b>{} / {}</b>".format(self.convertTime(Decimal(currentTime / 1000)),
                                                                  self.convertTime(Decimal(totalGlobalTime / 1000)))
@@ -8530,7 +8461,6 @@ item []:
 
                 if msg:
                     # show time
-                    '''self.lbTime.setText(msg)'''
                     self.lb_current_media_time.setText(msg)
 
                     # set video scroll bar
@@ -9344,7 +9274,7 @@ item []:
 
     def twSubjects_doubleClicked(self):
         """
-        select subject by double-click
+        select subject by double-click on the subjects table
         """
 
         if self.observationId:

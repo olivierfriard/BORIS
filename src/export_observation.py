@@ -802,9 +802,11 @@ def events_to_timed_behavioral_sequences(pj: dict,
         if out:
             out += behav_seq_separator
         '''
-        csbs = utilities.get_current_states_by_subject(state_behaviors_codes,
-                                                       pj[OBSERVATIONS][obs_id][EVENTS],
-                                                       {"": {"name": subject}}, t)[""]
+        csbs = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes,
+                                                                 pj[OBSERVATIONS][obs_id][EVENTS],
+                                                                 {"": {"name": subject}},
+                                                                 t,
+                                                                 include_modifiers=False)[""]
         if csbs:
             if current:
                 if csbs == current[-1]:
