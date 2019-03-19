@@ -9989,7 +9989,7 @@ item []:
             return
 
         flagMulti = False
-        if len(plot_parameters["selected subjects"]) == 1:
+        if len(plot_parameters[SELECTED_SUBJECTS]) == 1:
 
             fn = QFileDialog().getSaveFileName(self, "Create matrix of transitions " + mode, "",
                                                "Transitions matrix files (*.txt *.tsv);;All files (*)")
@@ -10003,9 +10003,9 @@ item []:
             flagMulti = True
 
         flag_overwrite_all = False
-        for subject in plot_parameters["selected subjects"]:
+        for subject in plot_parameters[SELECTED_SUBJECTS]:
 
-            logging.debug("subjects: {}".format(subject))
+            logging.debug(f"subjects: {subject}")
 
             strings_list = []
             for obsId in selectedObservations:
@@ -10018,25 +10018,22 @@ item []:
 
             observed_matrix = transitions.observed_transitions_matrix(sequences,
                                                                       sorted(list(set(observed_behaviors +
-                                                                                      plot_parameters["selected behaviors"]))),
+                                                                                      plot_parameters[SELECTED_BEHAVIORS]))),
                                                                       mode=mode)
 
             if not observed_matrix:
-                QMessageBox.warning(self, programName, "No transitions found for <b>{}</b>".format(subject))
+                QMessageBox.warning(self, programName, f"No transitions found for <b>{subject}</b>")
                 continue
 
-            logging.debug("observed_matrix {}:\n{}".format(mode, observed_matrix))
+            logging.debug(f"observed_matrix {mode}:\n{observed_matrix}")
 
             if flagMulti:
                 try:
 
-                    nf = "{exportDir}{sep}{subject}_transitions_{mode}_matrix.tsv".format(exportDir=exportDir,
-                                                                                          sep=os.sep,
-                                                                                          subject=subject,
-                                                                                          mode=mode)
+                    nf = f"{exportDir}{os.sep}{subject}_transitions_{mode}_matrix.tsv"
 
                     if os.path.isfile(nf) and not flag_overwrite_all:
-                        answer = dialog.MessageDialog(programName, "A file with same name already exists.<br><b>{}</b>".format(nf),
+                        answer = dialog.MessageDialog(programName, f"A file with same name already exists.<br><b>{nf}</b>",
                                                       ["Overwrite", "Overwrite all", CANCEL])
                         if answer == CANCEL:
                             continue
@@ -10046,7 +10043,7 @@ item []:
                     with open(nf, "w") as outfile:
                         outfile.write(observed_matrix)
                 except Exception:
-                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(nf))
+                    QMessageBox.critical(self, programName, f"The file {nf} can not be saved")
             else:
                 try:
                     with open(fileName, "w") as outfile:
@@ -10119,9 +10116,9 @@ item []:
                                                                                              os.sep + os.path.basename(fileName) +
                                                                                              ".tmp.gv"))
                     if not result:
-                        out += "<b>{}</b> created<br>".format(fileName + ".png")
+                        out += f"<b>{fileName}.png</b> created<br>"
                     else:
-                        out += "Problem with <b>{}</b><br>".format(fileName)
+                        out += "Problem with <b>{fileName}</b><br>"
                 except Exception:
                     QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[1])))
 
