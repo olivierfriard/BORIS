@@ -1433,7 +1433,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if fileName:
                 new_map = json.loads(open(fileName, "r").read())
-                self.pj["coding_map"][new_map["name"]] = new_map
+                self.pj[CODING_MAP][new_map["name"]] = new_map
 
                 # add modifiers from coding map areas
                 modifstr = str({"0": {"name": new_map["name"], "type": MULTI_SELECTION, "values": list(sorted(new_map['areas'].keys()))}})
@@ -1787,12 +1787,12 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # remove coding map from project if not in ethogram
         cmToDelete = []
-        for cm in self.pj["coding_map"]:
+        for cm in self.pj[CODING_MAP]:
             if cm not in codingMapsList:
                 cmToDelete.append(cm)
 
         for cm in cmToDelete:
-            del self.pj["coding_map"][cm]
+            del self.pj[CODING_MAP][cm]
 
         if missing_data:
             QMessageBox.warning(self, programName, "Missing data in ethogram at row{} !".format(",".join(missing_data)))
@@ -1811,7 +1811,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                  ("The behavioral categorie(s) "
                                   f"{', '.join(set(['<b>' + x[1]  + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
                                   "are no more defined in behavioral categories list"),
-                                 ["Add behavioral category/ies", "Ignore", CANCEL])
+                                 ["Add behavioral category/ies", CANCEL])
             if response == "Add behavioral category/ies":
                 [self.pj[BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
             if response == CANCEL:

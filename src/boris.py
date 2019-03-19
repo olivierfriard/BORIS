@@ -8863,7 +8863,7 @@ item []:
                         self.pause_video()
 
             self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
-                self.pj["coding_map"][self.pj[ETHOGRAM][behavior_idx]["coding map"]])
+                self.pj[CODING_MAP][self.pj[ETHOGRAM][behavior_idx]["coding map"]])
 
             self.codingMapWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
             if self.codingMapWindowGeometry:
