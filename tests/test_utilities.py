@@ -235,43 +235,48 @@ class Test_get_current_points_by_subject(object):
 
 
 class Test_get_current_states_by_subject(object):
+
     def test_t0(self):
         pj_float = json.loads(open("files/test.boris").read())
         pj = utilities.convert_time_to_decimal(pj_float)
-        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["s"],
                                                 events=pj["observations"]["observation #1"]["events"],
                                                 subjects=pj["subjects_conf"],
-                                                time=Decimal("0"))
+                                                time=Decimal("0"),
+                                                include_modifiers=False)
         assert r == {'0': [], '1': []}
 
 
     def test_t4(self):
         pj_float = json.loads(open("files/test.boris").read())
         pj = utilities.convert_time_to_decimal(pj_float)
-        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["s"],
                                                 events=pj["observations"]["observation #1"]["events"],
                                                 subjects=pj["subjects_conf"],
-                                                time=Decimal("4.0"))
+                                                time=Decimal("4.0"),
+                                                include_modifiers=False)
         assert r == {'0': ['s'], '1': []}
 
 
     def test_t8(self):
         pj_float = json.loads(open("files/test.boris").read())
         pj = utilities.convert_time_to_decimal(pj_float)
-        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["s"],
                                                 events=pj["observations"]["observation #1"]["events"],
                                                 subjects=pj["subjects_conf"],
-                                                time=Decimal("8.0"))
+                                                time=Decimal("8.0"),
+                                                include_modifiers=False)
         assert r == {'0': [], '1': []}
 
 
     def test_t_neg(self):
         pj_float = json.loads(open("files/test.boris").read())
         pj = utilities.convert_time_to_decimal(pj_float)
-        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["s"],
                                                 events=pj["observations"]["observation #1"]["events"],
                                                 subjects=pj["subjects_conf"],
-                                                time=Decimal("-12.456"))
+                                                time=Decimal("-12.456"),
+                                                include_modifiers=False)
         # print(r)
         assert r == {'0': [], '1': []}
 
@@ -279,25 +284,36 @@ class Test_get_current_states_by_subject(object):
     def test_no_state_events(self):
         pj_float = json.loads(open("files/test.boris").read())
         pj = utilities.convert_time_to_decimal(pj_float)
-        r = utilities.get_current_states_by_subject(state_behaviors_codes=["s"],
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["s"],
                                                 events=pj["observations"]["offset positif"]["events"],
                                                 subjects=pj["subjects_conf"],
-                                                time=Decimal("30"))
+                                                time=Decimal("30"),
+                                                include_modifiers=False)
         #print(r)
         assert r == {'0': [], '1': []}
 
 
-    def test_events_with_modifiers(self):
+    def test_events_with_modifiers_not_required(self):
         pj_float = json.loads(open("files/test.boris").read())
         pj = utilities.convert_time_to_decimal(pj_float)
-        r = utilities.get_current_states_by_subject(state_behaviors_codes=["r","s"],
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["r", "s"],
                                                 events=pj["observations"]["modifiers"]["events"],
                                                 subjects={"0":{"key":"", "name": "", "description":"no focal subject"}},
-                                                time=Decimal("20"))
+                                                time=Decimal("20"),
+                                                include_modifiers=False)
         #print(r)
         assert r == {'0': ['r']}
 
-
+    def test_events_with_modifiers_required(self):
+        pj_float = json.loads(open("files/test.boris").read())
+        pj = utilities.convert_time_to_decimal(pj_float)
+        r = utilities.get_current_states_modifiers_by_subject(state_behaviors_codes=["r", "s"],
+                                                events=pj["observations"]["modifiers"]["events"],
+                                                subjects={"0":{"key":"", "name": "", "description":"no focal subject"}},
+                                                time=Decimal("20"),
+                                                include_modifiers=True)
+        #print(r)
+        assert r == {'0': ['r (m1)']}
 
 '''
 class Test_get_ip_address(object):

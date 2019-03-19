@@ -1811,7 +1811,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                  ("The behavioral categorie(s) "
                                   f"{', '.join(set(['<b>' + x[1]  + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
                                   "are no more defined in behavioral categories list"),
-                                 ["Add behavioral category/ies", CANCEL])
+                                 ["Add behavioral category/ies", "Ignore", CANCEL])
             if response == "Add behavioral category/ies":
                 [self.pj[BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
             if response == CANCEL:
