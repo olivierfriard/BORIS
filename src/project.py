@@ -1641,7 +1641,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 """ if you have already done observations!</b></font>"""
             ).format(subjects_name_with_leading_trailing_spaces), [YES, NO])
 
-
+        # check subjects
         for row in range(self.twSubjects.rowCount()):
             # check key
             if self.twSubjects.item(row, 0):
@@ -1797,6 +1797,25 @@ class projectDialog(QDialog, Ui_dlgProject):
         if missing_data:
             QMessageBox.warning(self, programName, "Missing data in ethogram at row{} !".format(",".join(missing_data)))
             return
+
+        # check if behavior belong to category that is not in categories list
+        behavior_category = []
+        for idx in self.obs:
+            if BEHAVIOR_CATEGORY in self.obs[idx]:
+                if self.obs[idx][BEHAVIOR_CATEGORY]:
+                    if self.obs[idx][BEHAVIOR_CATEGORY] not in self.pj[BEHAVIORAL_CATEGORIES]:
+                        behavior_category.append((self.obs[idx][BEHAVIOR_CODE], self.obs[idx][BEHAVIOR_CATEGORY]))
+        if behavior_category:
+
+            response = dialog.MessageDialog(f"{programName} - Behavioral categories",
+                                 ("The behavioral categorie(s) "
+                                  f"{', '.join(set(['<b>' + x[1]  + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
+                                  "are no more defined in behavioral categories list"),
+                                 ["Add behavioral category/ies", "Ignore", CANCEL])
+            if response == "Add behavioral category/ies":
+                [self.pj[BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
+            if response == CANCEL:
+                return
 
         # delete coding maps loaded in pj and not cited in ethogram
         self.pj[ETHOGRAM] = dict(self.obs)

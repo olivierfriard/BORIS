@@ -6441,8 +6441,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow.obs = newProjectWindow.pj[ETHOGRAM]
         newProjectWindow.subjects_conf = newProjectWindow.pj[SUBJECTS]
 
-        newProjectWindow.rbSeconds.setChecked(newProjectWindow.pj["time_format"] == S)
-        newProjectWindow.rbHMS.setChecked(newProjectWindow.pj["time_format"] == HHMMSS)
+        newProjectWindow.rbSeconds.setChecked(newProjectWindow.pj[TIME_FORMAT] == S)
+        newProjectWindow.rbHMS.setChecked(newProjectWindow.pj[TIME_FORMAT] == HHMMSS)
 
         if mode == NEW:
             newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
@@ -6450,16 +6450,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == EDIT:
 
-            if newProjectWindow.pj["project_name"]:
-                newProjectWindow.leProjectName.setText(newProjectWindow.pj["project_name"])
+            if newProjectWindow.pj[PROJECT_NAME]:
+                newProjectWindow.leProjectName.setText(newProjectWindow.pj[PROJECT_NAME])
 
             newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName)
 
-            if newProjectWindow.pj["project_description"]:
-                newProjectWindow.teDescription.setPlainText(newProjectWindow.pj["project_description"])
+            if newProjectWindow.pj[PROJECT_DESCRIPTION]:
+                newProjectWindow.teDescription.setPlainText(newProjectWindow.pj[PROJECT_DESCRIPTION])
 
-            if newProjectWindow.pj["project_date"]:
-                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj["project_date"], "yyyy-MM-ddThh:mm:ss"))
+            if newProjectWindow.pj[PROJECT_DATE]:
+                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE], "yyyy-MM-ddThh:mm:ss"))
             else:
                 newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
@@ -8224,7 +8224,7 @@ item []:
 
     def show_current_states_in_subjects_table(self):
         """
-        show current state(s) for all subjects (including "No focal subject") in subjects widget
+        show current state(s) for all subjects (including "No focal subject") in subjects table
         """
 
         for i in range(self.twSubjects.rowCount()):

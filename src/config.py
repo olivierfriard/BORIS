@@ -44,6 +44,8 @@ PROJECT_NAME = "project_name"
 PROJECT_DATE = "project_date"
 PROJECT_DESCRIPTION = "project_description"
 
+TIME_FORMAT = "time_format"
+
 OBSERVATIONS = "observations"
 EVENTS = "events"
 TIME_OFFSET = "time offset"
