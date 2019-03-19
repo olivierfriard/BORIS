@@ -798,7 +798,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # menu file
         self.actionNew_project.triggered.connect(self.new_project_activated)
-        self.actionOpen_project.triggered.connect(lambda: self.open_project_activated(""))
+        self.actionOpen_project.triggered.connect(self.open_project_activated)
         self.actionNoldus_Observer_template.triggered.connect(self.import_project_from_observer_template)
         self.actionEdit_project.triggered.connect(self.edit_project_activated)
         self.actionCheck_project.triggered.connect(self.check_project_integrity)
@@ -6206,7 +6206,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_options()
 
 
-    def open_project_activated(self, arg):
+    def open_project_activated(self):
         """
         open a project
         triggered by Open project menu and recent projects submenu
@@ -6214,7 +6214,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         action = self.sender()
 
-        # check if current observation
+         # check if current observation
         if self.observationId:
             if dialog.MessageDialog(programName, "There is a current observation. What do you want to do?",
                                     ["Close observation", "Continue observation"]) == "Close observation":
@@ -6281,7 +6281,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         for idx in pj[SUBJECTS]:
                             pj[SUBJECTS][idx]["key"] = pj[SUBJECTS][idx]["key"].lower()
-
 
                 self.load_project(project_path, project_changed, pj)
                 del pj
