@@ -1708,7 +1708,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show all subjects in subjects list
         """
-        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+        self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
 
     def filter_behaviors(self, title="Select the behaviors to show in the ethogram table",
@@ -1832,7 +1832,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # subjects filtered
         filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())]
 
-        for subject in [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]:
+        for subject in [self.pj[SUBJECTS][x][SUBJECT_NAME] for x in sorted_keys(self.pj[SUBJECTS])]:
 
             paramPanelWindow.item = QListWidgetItem(subject)
             if subject in filtered_subjects:
@@ -3299,7 +3299,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             currentTime=self.convertTime(currentTime / 1000),
             totalTime=self.convertTime(Decimal(self.dw_player[0].mediaplayer.get_length() / 1000)),
             currentFrame=round(self.FFmpegGlobalFrame))
-        '''self.lbTime.setText(time_str)'''
+
         self.lb_current_media_time.setText(time_str)
 
         # video slider
@@ -3316,40 +3316,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                              include_modifiers=True)
 
 
-        '''
-        # add states for no focal subject
-        self.currentStates[""] = []
-        for sbc in StateBehaviorsCodes:
-            if len([x[pj_obs_fields[BEHAVIOR_CODE]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                    if x[pj_obs_fields["subject"]] == "" and
-                    x[pj_obs_fields[BEHAVIOR_CODE]] == sbc and
-                    x[pj_obs_fields["time"]] <= currentTime / 1000]) % 2:  # test if odd
-                self.currentStates[""].append(sbc)
-
-        # add states for all configured subjects
-        for idx in self.pj[SUBJECTS]:
-            # add subject index
-            self.currentStates[idx] = []
-            for sbc in StateBehaviorsCodes:
-                if len([x[pj_obs_fields[BEHAVIOR_CODE]] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                        if x[pj_obs_fields["subject"]] == self.pj[SUBJECTS][idx]["name"] and
-                        x[pj_obs_fields["code"]] == sbc and
-                        x[pj_obs_fields["time"]] <= currentTime / 1000]) % 2:  # test if odd
-                    self.currentStates[idx].append(sbc)
-        '''
-
         # show current states
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
         self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
-
-        '''
-        if self.currentSubject:
-            # get index of focal subject (by name)
-            idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
-            self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[idx])))
-        else:
-            self.lbCurrentStates.setText("%s" % (", ".join(self.currentStates[""])))
-        '''
 
         # show selected subjects
         self.show_current_states_in_subjects_table()
@@ -5167,7 +5136,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observedSubjects = project_functions.extract_observed_subjects(self.pj, selected_observations)
         else:
             # load all subjects and "No focal subject"
-            observedSubjects = [self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]] + [""]
+            observedSubjects = [self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]] + [""]
         selectedSubjects = []
 
         # add 'No focal subject'
@@ -5180,7 +5149,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.ch.setChecked(True)
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-        all_subjects = [self.pj[SUBJECTS][x]["name"] for x in sorted_keys(self.pj[SUBJECTS])]
+        all_subjects = [self.pj[SUBJECTS][x][SUBJECT_NAME] for x in sorted_keys(self.pj[SUBJECTS])]
 
         for subject in all_subjects:
             paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
@@ -7630,7 +7599,7 @@ item []:
         editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ))
         editWindow.dsbTime.setValue(float(laps))
 
-        sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x]["name"] for x in self.pj[SUBJECTS]])
+        sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
         editWindow.cobSubject.addItems(sortedSubjects)
         editWindow.cobSubject.setCurrentIndex(editWindow.cobSubject.findText(self.currentSubject, Qt.MatchFixedString))
@@ -7669,30 +7638,6 @@ item []:
 
             subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
             self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
-
-            '''
-            # show current subject
-
-            cm = {}
-            if self.currentSubject:
-                # get index of focal subject (by name)
-                idx = [idx for idx in self.pj[SUBJECTS] if self.pj[SUBJECTS][idx]["name"] == self.currentSubject][0]
-            else:
-                idx = ""
-            # show current state(s)
-            txt = []
-            for cs in self.currentStates[idx]:
-                for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-                    if ev[EVENT_TIME_FIELD_IDX] > newTime:
-                        break
-                    if ev[EVENT_SUBJECT_FIELD_IDX] == self.currentSubject:
-                        if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
-                            cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
-                # state and modifiers (if any)
-                txt.append(cs + " ({}) ".format(cm[cs]) * (cm[cs] != ""))
-            txt = ", ".join(txt)
-            self.lbCurrentStates.setText(re.sub(" \(.*\)", "", txt))
-            '''
 
             self.show_current_states_in_subjects_table()
 
@@ -8547,9 +8492,9 @@ item []:
         if self.pj[SUBJECTS]:
             for idx in sorted_keys(self.pj[SUBJECTS]):
 
-                self.subject_name_index[self.pj[SUBJECTS][idx]["name"]] = idx
+                self.subject_name_index[self.pj[SUBJECTS][idx][SUBJECT_NAME]] = idx
 
-                if self.pj[SUBJECTS][idx]["name"] in subjects_to_show:
+                if self.pj[SUBJECTS][idx][SUBJECT_NAME] in subjects_to_show:
 
                     self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
@@ -8700,7 +8645,7 @@ item []:
                 if self.currentSubject:
                     csj = []
                     for idx in self.currentStates:
-                        if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx]["name"] == self.currentSubject:
+                        if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx][SUBJECT_NAME] == self.currentSubject:
                             csj = self.currentStates[idx]
                             break
 
@@ -8785,7 +8730,7 @@ item []:
 
         items.sort()
 
-        dbc = dialog.DuplicateBehaviorCode("The <b>{}</b> key codes more behaviors.<br>Choose the correct one:".format(obs_key), items)
+        dbc = dialog.DuplicateBehaviorCode(f"The <b>{obs_key}</b> key codes more behaviors.<br>Choose the correct one:", items)
         if dbc.exec_():
             code = dbc.getCode()
             if code:
@@ -9079,7 +9024,7 @@ item []:
 
                 if "#subject#" in event.text():
                     for idx in self.pj[SUBJECTS]:
-                        if self.pj[SUBJECTS][idx]["name"] == event.text().replace("#subject#", ""):
+                        if self.pj[SUBJECTS][idx][SUBJECT_NAME] == event.text().replace("#subject#", ""):
                             subj_idx = idx
                             '''
                             if self.currentSubject == self.pj[SUBJECTS][subj_idx]["name"]:
@@ -9087,7 +9032,7 @@ item []:
                             else:
                                 self.update_subject(self.pj[SUBJECTS][subj_idx]["name"])
                             '''
-                            self.update_subject(self.pj[SUBJECTS][subj_idx]["name"])
+                            self.update_subject(self.pj[SUBJECTS][subj_idx][SUBJECT_NAME])
                             return
 
                 else:  # behavior
@@ -9176,7 +9121,7 @@ item []:
                             else:
                                 self.update_subject(self.pj[SUBJECTS][idx]["name"])
                             '''
-                            self.update_subject(self.pj[SUBJECTS][idx]["name"])
+                            self.update_subject(self.pj[SUBJECTS][idx][SUBJECT_NAME])
 
                 if not flag_subject:
                     logging.debug("Key not assigned ({})".format(ek_unichr))
@@ -10204,7 +10149,7 @@ item []:
                     behav_set = set([self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]])
 
                     # set of subjects in current projet
-                    subjects_set = set([self.pj[SUBJECTS][idx]["name"] for idx in self.pj[SUBJECTS]])
+                    subjects_set = set([self.pj[SUBJECTS][idx][SUBJECT_NAME] for idx in self.pj[SUBJECTS]])
 
                     for obsId in selected_observations:
 

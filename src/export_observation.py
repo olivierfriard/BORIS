@@ -72,31 +72,31 @@ def export_events_jwatcher(parameters: list,
 
         rows = ["FirstLineOfData"]  # to be completed
         rows.append("#-----------------------------------------------------------")
-        rows.append("# Name: {}".format(pathlib.Path(file_name_subject).name))
+        rows.append(f"# Name: {pathlib.Path(file_name_subject).name}")
         rows.append("# Format: Focal Data File 1.0")
-        rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+        rows.append(f"# Updated: {datetime.datetime.now().isoformat()}")
         rows.append("#-----------------------------------------------------------")
         rows.append("")
-        rows.append("FocalMasterFile={}".format(pathlib.Path(file_name_subject).with_suffix(".fmf")))
+        rows.append(f"FocalMasterFile={pathlib.Path(file_name_subject).with_suffix('.fmf')}")
         rows.append("")
 
-        rows.append("# Observation started: {}".format(observation["date"]))
+        rows.append(f"# Observation started: {observation['date']}")
         try:
             start_time = datetime.datetime.strptime(observation["date"], '%Y-%m-%dT%H:%M:%S')
         except ValueError:
             start_time = datetime.datetime(1970, 1, 1, 0, 0)
         start_time_epoch = int((start_time - datetime.datetime(1970, 1, 1, 0, 0)).total_seconds() * 1000)
-        rows.append("StartTime={}".format(start_time_epoch))
+        rows.append(f"StartTime={start_time_epoch}")
 
         stop_time = (start_time + datetime.timedelta(seconds=float(total_length))).isoformat()
         stop_time_epoch = int(start_time_epoch + float(total_length) * 1000)
 
-        rows.append("# Observation stopped: {}".format(stop_time))
-        rows.append("StopTime={}".format(stop_time_epoch))
+        rows.append(f"# Observation stopped: {stop_time}")
+        rows.append(f"StopTime={stop_time_epoch}")
 
         rows.extend([""] * 3)
         rows.append("#BEGIN DATA")
-        rows[0] = "FirstLineOfData={}".format(len(rows) + 1)
+        rows[0] = f"FirstLineOfData={len(rows) + 1}"
 
         all_observed_behaviors = []
         mem_number_of_state_events = {}
@@ -123,7 +123,7 @@ def export_events_jwatcher(parameters: list,
             with open(file_name_subject, "w") as f_out:
                 f_out.write("\n".join(rows))
         except Exception:
-            return False, "File DAT not created for subject {}: {}".format(subject, sys.exc_info()[1])
+            return False, f"File DAT not created for subject {subject}: {sys.exc_info()[1]}"
 
         # create fmf file
         fmf_file_path = pathlib.Path(file_name_subject).with_suffix(".fmf")
@@ -131,8 +131,8 @@ def export_events_jwatcher(parameters: list,
         if fmf_file_path.exists():
             fmf_creation_answer = dialog.MessageDialog(
                 programName,
-                ("The {} file already exists.<br>"
-                 "What do you want to do?").format(fmf_file_path),
+                (f"The {fmf_file_path} file already exists.<br>"
+                 "What do you want to do?"),
                 [OVERWRITE, "Skip file creation", CANCEL])
 
             if fmf_creation_answer == CANCEL:

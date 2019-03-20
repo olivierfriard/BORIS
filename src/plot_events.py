@@ -568,7 +568,6 @@ def create_events_plot(pj,
     init = dt.datetime(2017, 1, 1)
 
     for obs_id in selected_observations:
-        print(obs_id)
 
         if len(selected_subjects) > 1:
             fig, axs = plt.subplots(figsize=(20, 8), nrows=len(selected_subjects), ncols=1, sharex=True)
@@ -690,7 +689,7 @@ def create_events_plot(pj,
 
                 i += 1
 
-            axs[ax_idx].set_ylim(ymin=0, ymax=(max_len * par1) + par1)
+            axs[ax_idx].set_ylim(bottom=0, top=(max_len * par1) + par1)
             pos = np.arange(par1, max_len * par1 + par1 + 1, par1)
             axs[ax_idx].set_yticks(pos[:len(ylabels)])
 
@@ -698,8 +697,8 @@ def create_events_plot(pj,
 
             axs[ax_idx].set_ylabel("Behaviors" + " (modifiers)" * include_modifiers, fontdict={"fontsize": 10})
 
-            axs[ax_idx].set_xlim(xmin=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
-                                 xmax=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
+            axs[ax_idx].set_xlim(left=matplotlib.dates.date2num(init + dt.timedelta(seconds=min_time)),
+                                 right=matplotlib.dates.date2num(init + dt.timedelta(seconds=max_time + 1)))
 
             axs[ax_idx].grid(color="g", linestyle=":")
             axs[ax_idx].xaxis_date()
