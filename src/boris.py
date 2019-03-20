@@ -9144,7 +9144,7 @@ item []:
                 if not self.currentSubject and self.alertNoFocalSubject:
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
-                            if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused]:
+                            if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing]:
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
@@ -9307,7 +9307,8 @@ item []:
             return timeSeconds
 
         if self.twEvents.rowCount():
-            text, ok = QInputDialog.getText(self, "Select events in time interval", "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
+            text, ok = QInputDialog.getText(self, "Select events in time interval",
+                                            "Interval: (example: 12.5-14.7 or 02:45.780-03:15.120)",
                                             QLineEdit.Normal, "")
 
             if ok and text != '':
@@ -9322,11 +9323,11 @@ item []:
                 from_, to_ = text.split("-")[0:2]
                 from_sec = parseTime(from_)
                 if not from_sec:
-                    QMessageBox.critical(self, programName, "Time value not recognized: {}".format(from_))
+                    QMessageBox.critical(self, programName, f"Time value not recognized: {from_}")
                     return
                 to_sec = parseTime(to_)
                 if not to_sec:
-                    QMessageBox.critical(self, programName, "Time value not recognized: {}".format(to_))
+                    QMessageBox.critical(self, programName, f"Time value not recognized: {to_}")
                     return
                 if to_sec < from_sec:
                     QMessageBox.critical(self, programName, "The initial time is greater than the final time")
@@ -9607,7 +9608,7 @@ item []:
 
         if msg != "FIND_FROM_BEGINING":
             if dialog.MessageDialog(programName,
-                                    "<b>{}</b> not found. Search from beginning?".format(self.find_dialog.findText.text()),
+                                    f"<b>{self.find_dialog.findText.text()}</b> not found. Search from beginning?",
                                     [YES, NO]) == YES:
                 self.find_dialog.currentIdx = -1
                 self.click_signal_find_in_events("FIND_FROM_BEGINING")
@@ -9765,9 +9766,7 @@ item []:
 
         if msg == "FIND_REPLACE":
             if dialog.MessageDialog(programName,
-                                    "{} not found.\nRestart find/replace from the beginning?".format(
-                                        self.find_replace_dialog.findText.text()
-                                    ),
+                                    f"{self.find_replace_dialog.findText.text()} not found.\nRestart find/replace from the beginning?",
                                     [YES, NO]) == YES:
                 self.find_replace_dialog.currentIdx = -1
             else:
@@ -9898,7 +9897,7 @@ item []:
                     if mem_command == "Skip all":
                         continue
                     mem_command = dialog.MessageDialog(programName,
-                                                       "The file {} already exists.".format(fileName),
+                                                       f"The file {fileName} already exists.",
                                                        [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
