@@ -105,10 +105,10 @@ def cohen_kappa(cursor,
                                                                                                (obsid1, obsid2)).fetchone()[0]
 
     if first_event is None:
-        logging.debug("An observation has no recorded events: {} or {}".format(obsid1, obsid2))
-        return -100, "An observation has no recorded events: {} {}".format(obsid1, obsid2)
+        logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
+        return -100, f"An observation has no recorded events: {obsid1} {obsid2}"
 
-    logging.debug("first_event: {}".format(first_event))
+    logging.debug(f"first_event: {first_event}")
     last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
                                  "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
                                                                                              (obsid1, obsid2)).fetchone()[0]
@@ -135,26 +135,26 @@ def cohen_kappa(cursor,
                 if s not in total_states:
                     total_states.append(s)
 
-                logging.debug("{} {} {} {}".format(obsid, subject, currentTime, s))
+                logging.debug(f"{obsid} {subject} {currentTime} {s}")
 
         currentTime += interval
 
 
     total_states = sorted(total_states)
 
-    logging.debug("total_states: {} len:{}".format(total_states, len(total_states)))
+    logging.debug(f"total_states: {total_states} len:{len(total_states)}")
 
     contingency_table = np.zeros((len(total_states), len(total_states)))
 
     currentTime = Decimal(str(first_event))
-    while currentTime < last_event:
+    while currentTime <= last_event:
 
         for subject in selected_subjects:
 
             s1 = subj_behav_modif(cursor, obsid1, subject, currentTime, include_modifiers)
             s2 = subj_behav_modif(cursor, obsid2, subject, currentTime, include_modifiers)
 
-            logging.debug("currentTime: {} s1:{} s2:{}".format(currentTime, s1, s2))
+            logging.debug(f"currentTime: {currentTime} s1:{s1} s2:{s2}")
 
             try:
                 contingency_table[total_states.index(s1), total_states.index(s2)] += 1
@@ -181,17 +181,17 @@ def cohen_kappa(cursor,
     rows_sums = contingency_table.sum(axis=1)
     overall_total = contingency_table.sum()
 
-    logging.debug("overall_total: {}".format(overall_total))
+    logging.debug(f"overall_total: {overall_total}")
 
     agreements = sum(contingency_table.diagonal())
 
-    logging.debug("agreements: {}".format(agreements))
+    logging.debug(f"agreements: {agreements}")
 
     sum_ef = 0
     for idx in range(len(total_states)):
         sum_ef += rows_sums[idx] * cols_sums[idx] / overall_total
 
-    logging.debug("sum_ef {}".format(sum_ef))
+    logging.debug(f"sum_ef {sum_ef}")
 
     if not (overall_total - sum_ef):
         K = 1
@@ -206,6 +206,7 @@ def cohen_kappa(cursor,
                           K=K
                           )
 
+    logging.debug(f"K: {K}")
     return K, out
 
 
