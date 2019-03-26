@@ -7629,7 +7629,7 @@ item []:
                     break
 
             self.currentStates = utilities.get_current_states_modifiers_by_subject(
-                state_behavior_codes(self.pj[ETHOGRAM]),
+                utilities.state_behavior_codes(self.pj[ETHOGRAM]),
                 self.pj[OBSERVATIONS][self.observationId][EVENTS],
                 dict(self.pj[SUBJECTS], **{"": {"name": ""}}),  # add no focal subject
                 newTime,
@@ -8368,7 +8368,7 @@ item []:
 
                 # current state(s)
                 # extract State events
-                StateBehaviorsCodes = state_behavior_codes(self.pj[ETHOGRAM])
+                StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
 
                 self.currentStates = {}
 
@@ -8641,20 +8641,36 @@ item []:
 
             # update current state
             # TODO: verify event["subject"] / self.currentSubject
+            
+            # extract State events
+            StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
+
+            # index of current subject
+            subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+
+            current_states = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
+                                                                         self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                         dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                         memTime,
+                                                                         include_modifiers=False)
+
+            logging.debug(f"self.currentSubject {self.currentSubject}")
+            logging.debug(f"current_states {current_states}")
             if "row" not in event:  # no editing
                 if self.currentSubject:
                     csj = []
-                    for idx in self.currentStates:
+                    for idx in current_states:
                         if idx in self.pj[SUBJECTS] and self.pj[SUBJECTS][idx][SUBJECT_NAME] == self.currentSubject:
-                            csj = self.currentStates[idx]
+                            csj = current_states[idx]
                             break
 
                 else:  # no focal subject
                     try:
-                        csj = self.currentStates[""]
+                        csj = current_states[""]
                     except Exception:
                         csj = []
 
+                logging.debug(f"csj {csj}")
                 cm = {}  # modifiers for current behaviors
                 for cs in csj:
                     for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
@@ -8665,6 +8681,7 @@ item []:
                             if ev[EVENT_BEHAVIOR_FIELD_IDX] == cs:
                                 cm[cs] = ev[EVENT_MODIFIER_FIELD_IDX]
 
+                logging.debug(f"cm {cm}")
                 for cs in csj:
                     # close state if same state without modifier
                     if (self.close_the_same_current_event and
@@ -10101,7 +10118,10 @@ item []:
                     event.ignore()
 
             if response == CANCEL:
-                del self.config_param["refresh_preferences"]
+                try:
+                    del self.config_param["refresh_preferences"]
+                except KeyError:
+                    logging.warning("no refresh_preferences key")
                 event.ignore()
 
         if "refresh_preferences" not in self.config_param:
