@@ -228,7 +228,7 @@ def needleman_wunsch_identity(cursor,
                               selected_subjects,
                               include_modifiers):
     """
-    Needleman - Wunsch alignment
+    Needleman - Wunsch identity between 2 observations
 
     Args:
         cursor (sqlite3.cursor): cursor to aggregated events db
