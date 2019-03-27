@@ -1121,7 +1121,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         msg = project_functions.check_project_integrity(self.pj, self.timeFormat, self.projectFileName,
                                                         media_file_available=ib.elements["Test media file accessibility"].isChecked())
         if msg:
-            msg = "Some issues were found in the project<br><br>" + msg
+            msg = f"Some issues were found in the project<br><br>{msg}"
             self.results = dialog.ResultsWidget()
             self.results.setWindowTitle("Check project integrity")
             self.results.ptText.clear()
@@ -1249,7 +1249,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def needleman_wunch(self):
         """
-        calculate the Needleman and Wunsch identity for 2 or more observations
+        calculate the Needleman-Wunsch similarity for 2 or more observations
         """
 
         # ask user observations to analyze
@@ -1257,7 +1257,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
         if len(selected_observations) < 2:
-            QMessageBox.information(self, programName, "Select almost 2 observations for IRR analysis")
+            QMessageBox.information(self, programName, "Select almost 2 observations for Needleman-Wunsch similarity")
             return
 
         # check if state events are paired
@@ -1300,7 +1300,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # ask for time slice
 
-        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
+        i, ok = QInputDialog.getDouble(self, "Needleman-Wunsch similarity", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
@@ -1312,35 +1312,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                           plot_parameters[SELECTED_BEHAVIORS])
 
         cursor = db_connector.cursor()
-        out = ("Identity of Needleman - Wunsch\n\n"
-               "Interval time: {interval:.3f} s\n"
-               "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
-                                                                    selected_subjects=", ".join(plot_parameters[SELECTED_SUBJECTS]))
+        out = ("Needleman-Wunsch similarity\n\n"
+               f"Time unit: {interval:.3f} s\n"
+               f"Selected subjects: {', '.join(plot_parameters[SELECTED_SUBJECTS])}\n\n")
         mem_done = []
-        irr_results = np.ones((len(selected_observations), len(selected_observations)))
+        nws_results = np.ones((len(selected_observations), len(selected_observations)))
 
         for obs_id1 in selected_observations:
             for obs_id2 in selected_observations:
                 if obs_id1 == obs_id2:
                     continue
                 if set([obs_id1, obs_id2]) not in mem_done:
-                    K, msg = irr.needleman_wunsch_identity(cursor,
-                                             obs_id1, obs_id2,
-                                             interval,
-                                             plot_parameters[SELECTED_SUBJECTS],
-                                             plot_parameters[INCLUDE_MODIFIERS])
-                    irr_results[selected_observations.index(obs_id1), selected_observations.index(obs_id2)] = K
-                    irr_results[selected_observations.index(obs_id2), selected_observations.index(obs_id1)] = K
+                    similarity, msg = irr.needleman_wunsch_identity(cursor,
+                                                                    obs_id1, obs_id2,
+                                                                    interval,
+                                                                    plot_parameters[SELECTED_SUBJECTS],
+                                                                    plot_parameters[INCLUDE_MODIFIERS])
+                    nws_results[selected_observations.index(obs_id1), selected_observations.index(obs_id2)] = similarity
+                    nws_results[selected_observations.index(obs_id2), selected_observations.index(obs_id1)] = similarity
                     out += msg + "\n=============\n"
                     mem_done.append(set([obs_id1, obs_id2]))
 
         out2 = "\t{}\n".format("\t".join(list(selected_observations)))
-        for r in range(irr_results.shape[0]):
-            out2 += "{}\t".format(selected_observations[r])
-            out2 += "\t".join(["%8.6f" % x for x in irr_results[r, :]]) + "\n"
+        for r in range(nws_results.shape[0]):
+            out2 += f"{selected_observations[r]}\t"
+            out2 += "\t".join([f"{x:8.6f}" for x in nws_results[r, :]]) + "\n"
 
         self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle(programName + " - Identity of Needleman - Wunsch results")
+        self.results.setWindowTitle(programName + " - Needleman-Wunsch similarity")
         self.results.ptText.setReadOnly(True)
         if len(selected_observations) == 2:
             self.results.ptText.appendPlainText(out)
@@ -4423,17 +4422,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.projectChanged = True
 
-            new_obs_id = observationWindow.leObservationId.text()
+            new_obs_id = observationWindow.leObservationId.text().strip()
 
             if mode == NEW:
                 self.observationId = new_obs_id
-                self.pj[OBSERVATIONS][self.observationId] = {FILE: [], TYPE: "", "date": "", "description": "",
-                                                             "time offset": 0, "events": []}
+                self.pj[OBSERVATIONS][self.observationId] = {FILE: [],
+                                                             TYPE: "",
+                                                             "date": "",
+                                                             "description": "",
+                                                             "time offset": 0,
+                                                             "events": []}
 
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
 
-                logging.info("observation id {} changed in {}".format(obsId, new_obs_id))
+                logging.info(f"observation id {obsId} changed in {new_obs_id}")
 
                 self.pj[OBSERVATIONS][new_obs_id] = self.pj[OBSERVATIONS][obsId]
                 del self.pj[OBSERVATIONS][obsId]
@@ -4476,7 +4479,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
-
 
             # plot data
             if observationWindow.tw_data_files.rowCount():
@@ -4528,7 +4530,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]["offset"] = {}
 
 
-                logging.debug("media_info: {0}".format(self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]))
+                logging.debug(f"media_info: {self.pj[OBSERVATIONS][new_obs_id][MEDIA_INFO]}")
 
                 for i in range(N_PLAYER):
                     self.pj[OBSERVATIONS][new_obs_id][FILE][str(i + 1)] = []
@@ -4550,7 +4552,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.observationId = new_obs_id
 
                 # title of dock widget
-                self.dwObservations.setWindowTitle("""Events for "{}" observation""".format(self.observationId))
+                self.dwObservations.setWindowTitle(f'Events for "{self.observationId}" observation')
 
                 if self.pj[OBSERVATIONS][self.observationId][TYPE] in [LIVE]:
 
@@ -4638,8 +4640,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-
-
         if hasattr(self, "results"):
             try:
                 self.results.close()
@@ -4665,9 +4665,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         close current observation
         """
 
-        logging.info("Close observation {}".format(self.playerType))
+        logging.info(f"Close observation {self.playerType}")
 
-        # self.saved_geometry = self.saveGeometry()
         self.saved_state = self.saveState()
 
         if self.playerType == VLC:
@@ -4697,7 +4696,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not flag_ok:
 
-            out = "The current observation has state event(s) that are not PAIRED:<br><br>" + msg
+            out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
             results = dialog.Results_dialog()
             results.setWindowTitle(programName + " - Check selected observations")
             results.ptText.setReadOnly(True)
@@ -5265,7 +5264,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
 
-        logging.debug('selectedSubjects: {0}'.format(selectedSubjects))
+        logging.debug(f'selectedSubjects: {selectedSubjects}')
 
         if selected_observations:
             observedBehaviors = self.extract_observed_behaviors(selected_observations, selectedSubjects)  # not sorted
@@ -5273,7 +5272,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # load all behaviors
             observedBehaviors = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]]
 
-        logging.debug('observed behaviors: {0}'.format(observedBehaviors))
+        logging.debug(f'observed behaviors: {observedBehaviors}')
 
         if BEHAVIORAL_CATEGORIES in self.pj:
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
@@ -5334,8 +5333,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         selectedSubjects = paramPanelWindow.selectedSubjects
         selectedBehaviors = paramPanelWindow.selectedBehaviors
 
-        logging.debug("selected subjects: {}".format(selectedSubjects))
-        logging.debug("selected behaviors: {}".format(selectedBehaviors))
+        logging.debug(f"selected subjects: {selectedSubjects}")
+        logging.debug(f"selected behaviors: {selectedBehaviors}")
 
         if self.timeFormat == HHMMSS:
             startTime = time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
@@ -5381,7 +5380,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.pj[OBSERVATIONS][obs_id],
                                                               self.timeFormat)
             if not r:
-                out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obs_id)
 
         if out:
@@ -5405,7 +5404,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for obsId in selected_observations:
             obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
 
-            logging.debug("media length for {0}: {1}".format(obsId, obs_length))
+            logging.debug(f"media length for {obsId}: {obs_length}")
 
             if obs_length in [0, -1]:
                 selectedObsTotalMediaLength = -1
@@ -5422,7 +5421,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for obsId in selected_observations:
                     if self.pj[OBSERVATIONS][obsId][EVENTS]:
                         maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
-                logging.debug("max time all events all subjects: {}".format(maxTime))
+
+                logging.debug(f"max time all events all subjects: {maxTime}")
+
                 selectedObsTotalMediaLength = maxTime
             else:
                 selectedObsTotalMediaLength = 0
@@ -5454,7 +5455,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             if pathlib.Path(file_name).is_file():
                     if dialog.MessageDialog(programName,
-                                            "The file {} already exists.".format(file_name),
+                                            f"The file {file_name} already exists.",
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return
 
