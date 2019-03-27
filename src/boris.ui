@@ -265,12 +265,19 @@
      </property>
      <addaction name="actionCohen_s_kappa"/>
     </widget>
+    <widget class="QMenu" name="menuSimilarities">
+     <property name="title">
+      <string>Similarities</string>
+     </property>
+     <addaction name="actionNeedleman_Wunsch"/>
+    </widget>
     <addaction name="actionTime_budget"/>
     <addaction name="actionTime_budget_report"/>
     <addaction name="actionTime_budget_by_behaviors_category"/>
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="actionTest_stb2"/>
+    <addaction name="menuSimilarities"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1328,6 +1335,11 @@
   <action name="actionShow_the_sound_waveform">
    <property name="text">
     <string>Show the sound waveform</string>
+   </property>
+  </action>
+  <action name="actionNeedleman_Wunsch">
+   <property name="text">
+    <string>Needleman - Wunsch</string>
    </property>
   </action>
  </widget>
