@@ -863,6 +863,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
 
         self.actionCohen_s_kappa.triggered.connect(self.irr_cohen_kappa)
+        self.actionNeedleman_Wunsch.triggered.connect(self.needleman_wunch)
 
         self.actionAll_transitions.triggered.connect(lambda: self.transitions_matrix("frequency"))
         self.actionNumber_of_transitions.triggered.connect(lambda: self.transitions_matrix("number"))
@@ -1147,7 +1148,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def irr_cohen_kappa(self):
         """
-        calculate the Inter-Rater Reliability index - Cohen's Kappa of 2 observations
+        calculate the Inter-Rater Reliability index - Cohen's Kappa of 2 or more observations
         https://en.wikipedia.org/wiki/Cohen%27s_kappa
         """
 
@@ -1238,6 +1239,108 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.results = dialog.ResultsWidget()
         self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa (time-unit) analysis results")
+        self.results.ptText.setReadOnly(True)
+        if len(selected_observations) == 2:
+            self.results.ptText.appendPlainText(out)
+        else:
+            self.results.ptText.appendPlainText(out2)
+        self.results.show()
+
+
+    def needleman_wunch(self):
+        """
+        calculate the Needleman and Wunsch identity for 2 or more observations
+        """
+
+        # ask user observations to analyze
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+        if len(selected_observations) < 2:
+            QMessageBox.information(self, programName, "Select almost 2 observations for IRR analysis")
+            return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obsId,
+                                                              self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
+
+            if not r:
+                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName + " - Check selected observations")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+
+            if not results.exec_():
+                return
+
+        # remove observations with unpaired state events
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
+        plot_parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                              maxTime=0,
+                                                              flagShowIncludeModifiers=True,
+                                                              flagShowExcludeBehaviorsWoEvents=False)
+
+        if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
+            return
+
+        # ask for time slice
+
+        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
+        if not ok:
+            return
+        interval = float2decimal(i)
+
+
+        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
+                                                                          plot_parameters[SELECTED_SUBJECTS],
+                                                                          selected_observations,
+                                                                          plot_parameters[SELECTED_BEHAVIORS])
+
+        cursor = db_connector.cursor()
+        out = ("Identity of Needleman - Wunsch\n\n"
+               "Interval time: {interval:.3f} s\n"
+               "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
+                                                                    selected_subjects=", ".join(plot_parameters[SELECTED_SUBJECTS]))
+        mem_done = []
+        irr_results = np.ones((len(selected_observations), len(selected_observations)))
+
+        for obs_id1 in selected_observations:
+            for obs_id2 in selected_observations:
+                if obs_id1 == obs_id2:
+                    continue
+                if set([obs_id1, obs_id2]) not in mem_done:
+                    K, msg = irr.needleman_wunsch_identity(cursor,
+                                             obs_id1, obs_id2,
+                                             interval,
+                                             plot_parameters[SELECTED_SUBJECTS],
+                                             plot_parameters[INCLUDE_MODIFIERS])
+                    irr_results[selected_observations.index(obs_id1), selected_observations.index(obs_id2)] = K
+                    irr_results[selected_observations.index(obs_id2), selected_observations.index(obs_id1)] = K
+                    out += msg + "\n=============\n"
+                    mem_done.append(set([obs_id1, obs_id2]))
+
+        out2 = "\t{}\n".format("\t".join(list(selected_observations)))
+        for r in range(irr_results.shape[0]):
+            out2 += "{}\t".format(selected_observations[r])
+            out2 += "\t".join(["%8.6f" % x for x in irr_results[r, :]]) + "\n"
+
+        self.results = dialog.ResultsWidget()
+        self.results.setWindowTitle(programName + " - Identity of Needleman - Wunsch results")
         self.results.ptText.setReadOnly(True)
         if len(selected_observations) == 2:
             self.results.ptText.appendPlainText(out)
@@ -8641,7 +8744,7 @@ item []:
 
             # update current state
             # TODO: verify event["subject"] / self.currentSubject
-            
+
             # extract State events
             StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
 

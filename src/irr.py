@@ -251,9 +251,9 @@ def needleman_wunsch_identity(cursor,
                 retval[-1].append(0)
         return retval
 
-    match_award      = 1
+    match_award = 1
     mismatch_penalty = -1
-    gap_penalty      = -1 # both for opening and extanding
+    gap_penalty = -1
 
 
     def match_score(alpha, beta):
@@ -266,8 +266,8 @@ def needleman_wunsch_identity(cursor,
 
 
     def finalize(align1, align2):
-        align1 = align1[::-1]    #reverse sequence 1
-        align2 = align2[::-1]    #reverse sequence 2
+        align1 = align1[::-1]
+        align2 = align2[::-1]
 
         i,j = 0,0
 
@@ -381,39 +381,14 @@ def needleman_wunsch_identity(cursor,
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
                                                                                        (obsid2,)).fetchone()[0]
 
-    # check number of different states
-    '''
-    total_states = []
+
+    seq1, seq2 = {}, {}
 
     currentTime = Decimal(str(first_event))
     while currentTime <= last_event:
 
-        for obsid in [obsid1, obsid2]:
-            for subject in selected_subjects:
+        seq1[currentTime], seq2[currentTime] = [], []
 
-                s = subj_behav_modif(cursor, obsid, subject, currentTime, interval, include_modifiers)
-
-                if s not in total_states:
-                    total_states.append(s)
-
-                logging.debug(f"{obsid} {subject} {currentTime} {s}")
-
-        currentTime += interval
-
-    total_states = sorted(total_states)
-
-    logging.debug(f"total_states: {total_states} len:{len(total_states)}")
-
-    contingency_table = np.zeros((len(total_states), len(total_states)))
-    '''
-
-    seq1 = {}
-    seq2 = {}
-    currentTime = Decimal(str(first_event))
-    while currentTime <= last_event:
-
-        seq1[currentTime] = []
-        seq2[currentTime] = []
         for subject in selected_subjects:
 
             s1 = subj_behav_modif(cursor, obsid1, subject, currentTime, interval, include_modifiers)
@@ -424,27 +399,18 @@ def needleman_wunsch_identity(cursor,
 
             logging.debug(f"currentTime: {currentTime} s1:{s1} s2:{s2}")
 
-            '''
-            try:
-                contingency_table[total_states.index(s1), total_states.index(s2)] += 1
-            except:
-                return -100, "Error with contingency table"
-            '''
-
         currentTime += interval
 
     logging.debug(f"seq1:\n {list(seq1.values())}")
     logging.debug(f"seq2:\n {list(seq2.values())}")
 
-    '''logging.debug("contingency_table:\n {}".format(contingency_table))'''
-
-    r = needle(list(seq1.values()),list(seq2.values()) )
+    r = needle(list(seq1.values()), list(seq2.values()) )
 
     out = (f"Observation: {obsid1}\n"
            f"number of events: {nb_events1}\n\n"
            f"Observation: {obsid2}\n"
            f"number of events: {nb_events2:.0f}\n\n"
-           f"identity = {r['identity']:.3f}")
+           f"identity = {r['identity']:.3f} %")
 
     logging.debug(f"identity: {r['identity']}")
     return r['identity'], out
