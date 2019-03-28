@@ -1955,10 +1955,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.subjects_pad.compose()
 
 
+    #def events_snapshots(self):
     def extract_events(self):
         """
-        extract sequences from media files corresponding to coded events with FFmpeg
-        in case of point event, from -n to +n seconds are extracted (n = self.repositioningTimeOffset)
+        create snapshots corresponding to coded events
         """
 
         result, selected_observations = self.selectObservations(MULTIPLE)
@@ -1997,13 +1997,203 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obsId)
 
         if out:
             out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
             results = dialog.Results_dialog()
-            results.setWindowTitle(programName + " - Check selected observations")
+            results.setWindowTitle(f"{programName} - Check selected observations")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+
+            if not results.exec_():
+                return
+
+        # remove observations with unpaired state events
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
+        parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=0,
+                                                         flagShowIncludeModifiers=False,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
+
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
+            return
+
+        exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
+                                                           os.path.expanduser("~"),
+                                                           options=QFileDialog(self).ShowDirsOnly)
+        if not exportDir:
+            return
+
+        cursor = db_functions.load_events_in_db(self.pj,
+                                                parameters[SELECTED_SUBJECTS],
+                                                selected_observations,
+                                                parameters[SELECTED_BEHAVIORS],
+                                                time_interval=TIME_FULL_OBS)
+
+
+        timeOffset = 0
+
+        for obsId in selected_observations:
+
+            for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
+                print(nplayer)
+
+                if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                    continue
+                duration1 = []   # in seconds
+                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                    duration1.append(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])
+
+                for subject in parameters[SELECTED_SUBJECTS]:
+
+                    for behavior in parameters[SELECTED_BEHAVIORS]:
+
+                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                                       (obsId, subject, behavior))
+                        rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
+
+                        behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
+                        if STATE in behavior_state and len(rows) % 2:  # unpaired events
+                            flagUnpairedEventFound = True
+                            continue
+
+                        for idx, row in enumerate(rows):
+
+                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
+                                            if row["occurence"] >= sum(duration1[0:idx1])][-1]
+
+                            globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
+                                row["occurence"] - timeOffset, 3)
+                            start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                            if start < timeOffset:
+                                start = Decimal("0.000")
+
+                            if POINT in behavior_state:
+
+                                globalStop = round(row["occurence"] + timeOffset, 3)
+
+                                stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+
+                                media_path=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                             self.projectFileName)
+
+                                extension = "png"
+                                ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
+                                                      '-loglevel quiet '
+                                                      f'-i "{media_path}" '
+                                                      f'-start_number 1 '
+                                                      f'-vframes 1 '
+                                                      #f'-vf scale=1024{frame_resize}:-1 '
+                                                      f'"{exportDir}{os.sep}{obsId}_{start:.3f}_%08d.{extension}"')
+
+
+                                logging.debug(f"ffmpeg command: {ffmpeg_command}")
+
+                                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                     shell=True)
+                                out, error = p.communicate()
+
+                            '''
+                            if STATE in behavior_state:
+                                if idx % 2 == 0:
+
+                                    globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
+
+                                    stop = round(rows[idx + 1]["occurence"] + timeOffset -
+                                                 float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+
+                                    # check if start after length of media
+                                    if start > self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][self.pj[OBSERVATIONS]
+                                                                                                           [obsId][FILE]
+                                                                                                           [nplayer]
+                                                                                                           [mediaFileIdx]]:
+                                        continue
+
+                                    ffmpeg_command = ffmpeg_extract_command.format(
+                                        ffmpeg_bin=ffmpeg_bin,
+                                        input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                                 self.projectFileName),
+                                        start=start,
+                                        stop=stop,
+                                        globalStart=globalStart,
+                                        globalStop=globalStop,
+                                        dir_=exportDir,
+                                        sep=os.sep,
+                                        obsId=obsId,
+                                        player="PLAYER{}".format(nplayer),
+                                        subject=subject,
+                                        behavior=behavior,
+                                        extension=".mp4")
+
+                                    logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+                                    p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                         shell=True)
+                                    out, error = p.communicate()
+                            '''
+
+        '''
+        except Exception:
+            logging.critical(f"Error during subvideo extraction. {sys.exc_info()[1]}")
+            QMessageBox.critical(None, programName, f"Error during subvideo extraction. {sys.exc_info()[1]}",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        '''
+
+
+    def extract_events_2(self):
+        """
+        extract sub-sequences from media files corresponding to coded events with FFmpeg
+        in case of point event, from -n to +n seconds are extracted (n is asked to user)
+        """
+
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+
+        # check if obs are MEDIA
+        live_obs_list = []
+        for obs_id in selected_observations:
+            if self.pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
+                live_obs_list.append(obs_id)
+        if live_obs_list:
+            out = "The following observations are live observations and will be removed from analysis<br><br>"
+            out += "<br>".join(live_obs_list)
+            results = dialog.Results_dialog()
+            results.setWindowTitle(programName)
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+            if not results.exec_():
+                return
+
+        # remove live  observations
+        selected_observations = [x for x in selected_observations if x not in live_obs_list]
+        if not selected_observations:
+            return
+
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obsId,
+                                                              self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
+
+            if not r:
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
+                not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            results = dialog.Results_dialog()
+            results.setWindowTitle(f"{programName} - Check selected observations")
             results.ptText.setReadOnly(True)
             results.ptText.appendHtml(out)
             results.pbSave.setVisible(False)
@@ -2112,7 +2302,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         behavior=behavior,
                                         extension=".mp4")
 
-                                    logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+                                    logging.debug(f"ffmpeg command: {ffmpeg_command}")
+
                                     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                          shell=True)
                                     out, error = p.communicate()
@@ -2182,17 +2373,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if utilities.extract_wav(self.ffmpeg_bin, media_file_path, tmp_dir) == "":
                     QMessageBox.critical(self, programName,
-                                         "Error during extracting WAV of the media file {}".format(media_file_path))
+                                         f"Error during extracting WAV of the media file {media_file_path}")
                     break
 
-                '''
-                _ = plot_spectrogram.create_spectrogram(mediaFile=media_file_path,
-                                                                              tmp_dir=tmp_dir,
-                                                                              chunk_size=self.chunk_length,
-                                                                              ffmpeg_bin=self.ffmpeg_bin,
-                                                                              spectrogramHeight=self.spectrogramHeight,
-                                                                              spectrogram_color_map=self.spectrogram_color_map)
-                '''
                 w.hide()
 
             else:
@@ -7560,7 +7743,7 @@ item []:
 
     def snapshot(self):
         """
-        take snapshot of current video
+        take snapshot of current video at current position
         snapshot is saved on media path
         """
 
@@ -7583,13 +7766,12 @@ item []:
 
                 elif self.playMode == VLC:
 
-                    '''for i in range(N_PLAYER):'''
                     for i, player in enumerate(self.dw_player):
                         if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                                 self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                             current_media_path = url2path(player.mediaplayer.get_media().get_mrl())
                             p = pathlib.Path(current_media_path)
-                            snapshot_file_path = str(p.parent / "{}_{}.png".format(p.stem, player.mediaplayer.get_time()))
+                            snapshot_file_path = str(p.parent / f"{p.stem}_{player.mediaplayer.get_time()}.png")
                             player.mediaplayer.video_take_snapshot(0, snapshot_file_path, 0, 0)
 
 

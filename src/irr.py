@@ -230,6 +230,8 @@ def needleman_wunsch_identity(cursor,
     """
     Needleman - Wunsch identity between 2 observations
 
+    see http://anhaidgroup.github.io/py_stringmatching/v0.4.1/NeedlemanWunsch.html#
+
     Args:
         cursor (sqlite3.cursor): cursor to aggregated events db
         obsid1 (str): id of observation #1
