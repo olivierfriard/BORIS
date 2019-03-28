@@ -1955,8 +1955,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.subjects_pad.compose()
 
 
-    #def events_snapshots(self):
-    def extract_events(self):
+    def events_snapshots(self):
         """
         create snapshots corresponding to coded events
         """
@@ -2145,7 +2144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         '''
 
 
-    def extract_events_2(self):
+    def extract_events(self):
         """
         extract sub-sequences from media files corresponding to coded events with FFmpeg
         in case of point event, from -n to +n seconds are extracted (n is asked to user)
