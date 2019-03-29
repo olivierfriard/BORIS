@@ -88,7 +88,9 @@ class StdevFunc:
 
 
 
-def synthetic_time_budget(pj: dict, selected_observations: list, parameters_obs: dict):
+def synthetic_time_budget(pj: dict,
+                          selected_observations: list,
+                          parameters_obs: dict):
     """
     create a synthetic time budget
 
@@ -339,7 +341,7 @@ def time_budget_analysis(ethogram: dict,
 
                             out.append({"subject": subject,
                                         "behavior": behavior,
-                                        "modifiers": "-",
+                                        "modifiers": "",
                                         "duration": 0,
                                         "duration_mean": 0,
                                         "duration_stdev": "NA",
@@ -349,7 +351,7 @@ def time_budget_analysis(ethogram: dict,
                         else:  # point
                             out.append({"subject": subject,
                                         "behavior": behavior,
-                                        "modifiers": "-",
+                                        "modifiers": "",
                                         "duration": 0,
                                         "duration_mean": 0,
                                         "duration_stdev": "NA",
@@ -489,7 +491,7 @@ def time_budget_analysis(ethogram: dict,
                     out_cat.append({
                         "subject": subject,
                         "behavior": behavior,
-                        "modifiers": "-",
+                        "modifiers": "",
                         "duration": 0,
                         "duration_mean": 0,
                         "duration_stdev": 0,
@@ -512,13 +514,13 @@ def time_budget_analysis(ethogram: dict,
                     if not len(rows):
                         if not parameters[EXCLUDE_BEHAVIORS]:  # include behaviors without events
                             out.append({"subject": subject, "behavior": behavior,
-                                        "modifiers": "-", "duration": 0, "duration_mean": 0,
+                                        "modifiers": "", "duration": 0, "duration_mean": 0,
                                         "duration_stdev": "NA", "number": 0, "inter_duration_mean": "-",
                                         "inter_duration_stdev": "-"})
                         continue
 
                     if len(rows) % 2:
-                        out.append({"subject": subject, "behavior": behavior, "modifiers": "NA",
+                        out.append({"subject": subject, "behavior": behavior, "modifiers": "",
                                     "duration": UNPAIRED, "duration_mean": UNPAIRED, "duration_stdev": UNPAIRED,
                                     "number": UNPAIRED, "inter_duration_mean": UNPAIRED,
                                     "inter_duration_stdev": UNPAIRED})
@@ -543,7 +545,7 @@ def time_budget_analysis(ethogram: dict,
                             "behavior":
                             behavior,
                             "modifiers":
-                            "-",
+                            "",
                             "duration": round(sum(all_event_durations), 3),
                             "duration_mean": round(statistics.mean(all_event_durations), 3)
                             if len(all_event_durations) else "NA",
