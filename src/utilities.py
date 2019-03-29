@@ -852,7 +852,7 @@ def seconds2time(sec):
     return "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs)
 
 
-def safeFileName(s):
+def safeFileName(s:str): -> str
     """
     replace characters not allowed in file name by _
     """
