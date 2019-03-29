@@ -861,6 +861,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
 
         self.actionExtract_events_from_media_files.triggered.connect(self.extract_events)
+        self.actionExtract_frames_from_media_files.triggered.connect(self.events_snapshots)
 
         self.actionCohen_s_kappa.triggered.connect(self.irr_cohen_kappa)
         self.actionNeedleman_Wunsch.triggered.connect(self.needleman_wunch)
@@ -1958,6 +1959,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def events_snapshots(self):
         """
         create snapshots corresponding to coded events
+        if observations are from media file and media files have video
         """
 
         result, selected_observations = self.selectObservations(MULTIPLE)
@@ -2023,6 +2025,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
+        # Ask for time interval around the event
+        while True:
+            text, ok = QInputDialog.getDouble(self, "Time interval around the events",
+                                              "Time (in seconds):", 0.0, 0.0, 86400, 1)
+            if not ok:
+                return
+            try:
+                time_interval = float2decimal(text)
+                break
+            except Exception:
+                QMessageBox.warning(self, programName, f"<b>{text}</b> is not recognized as time")
+
+        # directory for saving frames
         exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
                                                            os.path.expanduser("~"),
                                                            options=QFileDialog(self).ShowDirsOnly)
@@ -2036,12 +2051,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 time_interval=TIME_FULL_OBS)
 
 
-        timeOffset = 0
+        timeOffset = time_interval
 
         for obsId in selected_observations:
 
             for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
-                print(nplayer)
 
                 if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
                     continue
@@ -2057,39 +2071,66 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                        (obsId, subject, behavior))
                         rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
+
                         behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
+                        '''
                         if STATE in behavior_state and len(rows) % 2:  # unpaired events
                             flagUnpairedEventFound = True
                             continue
+                        '''
 
                         for idx, row in enumerate(rows):
 
                             mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
                                             if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
-                            globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
-                                row["occurence"] - timeOffset, 3)
-                            start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-                            if start < timeOffset:
+                            # check if media has video
+                            try:
+                                if not self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
+                                    logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
+                                    continue
+                            except Exception:
+                                logging.debug(f"has_video not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+                                continue
+
+                            # check FPS
+                            try:
+                                if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
+                                    mediafile_fps = float2decimal(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
+                                else:
+                                    logging.debug(f"FPS not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+                                    continue
+                            except Exception:
+                                logging.debug(f"FPS not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+                                continue
+
+
+                            globalStart = Decimal("0.000") if row["occurence"] < time_interval else round(
+                                row["occurence"] - time_interval, 3)
+                            start = round(row["occurence"] - time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                            if start < time_interval:
                                 start = Decimal("0.000")
 
                             if POINT in behavior_state:
 
-                                globalStop = round(row["occurence"] + timeOffset, 3)
+                                '''
+                                globalStop = round(row["occurence"] + time_interval, 3)
+                                stop = round(row["occurence"] + time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                '''
 
-                                stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
-                                media_path=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                                                              self.projectFileName)
 
                                 extension = "png"
+                                vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
                                 ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
                                                       '-loglevel quiet '
                                                       f'-i "{media_path}" '
-                                                      f'-start_number 1 '
-                                                      f'-vframes 1 '
+                                                      #f'-start_number 3 '
+                                                      f'-vframes {vframes} '
                                                       #f'-vf scale=1024{frame_resize}:-1 '
-                                                      f'"{exportDir}{os.sep}{obsId}_{start:.3f}_%08d.{extension}"')
+                                                      f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
 
 
                                 logging.debug(f"ffmpeg command: {ffmpeg_command}")
@@ -2098,43 +2139,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                      shell=True)
                                 out, error = p.communicate()
 
-                            '''
+
                             if STATE in behavior_state:
                                 if idx % 2 == 0:
 
-                                    globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
+                                    globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
 
-                                    stop = round(rows[idx + 1]["occurence"] + timeOffset -
+                                    stop = round(rows[idx + 1]["occurence"] + time_interval -
                                                  float2decimal(sum(duration1[0:mediaFileIdx])), 3)
 
                                     # check if start after length of media
-                                    if start > self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][self.pj[OBSERVATIONS]
+                                    try:
+                                        if start > self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][self.pj[OBSERVATIONS]
                                                                                                            [obsId][FILE]
                                                                                                            [nplayer]
                                                                                                            [mediaFileIdx]]:
+                                            continue
+                                    except Exception:
                                         continue
 
-                                    ffmpeg_command = ffmpeg_extract_command.format(
-                                        ffmpeg_bin=ffmpeg_bin,
-                                        input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
-                                                                                 self.projectFileName),
-                                        start=start,
-                                        stop=stop,
-                                        globalStart=globalStart,
-                                        globalStop=globalStop,
-                                        dir_=exportDir,
-                                        sep=os.sep,
-                                        obsId=obsId,
-                                        player="PLAYER{}".format(nplayer),
-                                        subject=subject,
-                                        behavior=behavior,
-                                        extension=".mp4")
+                                    media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                                 self.projectFileName)
+
+                                    extension = "png"
+                                    vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
+                                    ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
+                                                          '-loglevel quiet '
+                                                          f'-i "{media_path}" '
+                                                          #f'-start_number 3 '
+                                                          f'-vframes {vframes} '
+                                                          #f'-vf scale=1024{frame_resize}:-1 '
+                                                          f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
 
                                     logging.debug("ffmpeg command: {}".format(ffmpeg_command))
                                     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                          shell=True)
                                     out, error = p.communicate()
-                            '''
 
         '''
         except Exception:
@@ -2219,17 +2259,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not exportDir:
             return
 
-        # check self.repositioningTimeOffset
+        # Ask for time interval around the event
         while True:
-            text, ok = QInputDialog.getDouble(self, "Offset to substract/add to start/stop times",
-                                              "Time offset (in seconds):", 0.0, 0.0, 86400, 1)
+            text, ok = QInputDialog.getDouble(self, "Time interval around the events",
+                                              "Time (in seconds):", 0.0, 0.0, 86400, 1)
             if not ok:
                 return
             try:
                 timeOffset = float2decimal(text)
                 break
             except Exception:
-                QMessageBox.warning(self, programName, "<b>{}</b> is not recognized as time offset".format(text))
+                QMessageBox.warning(self, programName, f"<b>{text}</b> is not recognized as time")
 
         flagUnpairedEventFound = False
 
@@ -2273,6 +2313,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
                                                 if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
+                                # check if media has video
+                                try:
+                                    if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
+                                        extension = ".mp4"
+                                    else:
+                                        extension = ".wav"
+                                        logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
+                                except Exception:
+                                    logging.debug(f"has_video not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+                                    continue
+
                                 globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
                                     row["occurence"] - timeOffset, 3)
                                 start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
@@ -2299,7 +2350,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         player="PLAYER{}".format(nplayer),
                                         subject=subject,
                                         behavior=behavior,
-                                        extension=".mp4")
+                                        extension=extension)
 
                                     logging.debug(f"ffmpeg command: {ffmpeg_command}")
 
@@ -2336,7 +2387,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             player="PLAYER{}".format(nplayer),
                                             subject=subject,
                                             behavior=behavior,
-                                            extension=".mp4")
+                                            extension=extension)
 
                                         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

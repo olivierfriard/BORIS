@@ -243,6 +243,7 @@
     <addaction name="separator"/>
     <addaction name="menuCreate_subtitles_2"/>
     <addaction name="actionExtract_events_from_media_files"/>
+    <addaction name="actionExtract_frames_from_media_files"/>
     <addaction name="separator"/>
     <addaction name="menuCreate_transitions_matrix"/>
    </widget>
@@ -1340,6 +1341,11 @@
   <action name="actionNeedleman_Wunsch">
    <property name="text">
     <string>Needleman - Wunsch</string>
+   </property>
+  </action>
+  <action name="actionExtract_frames_from_media_files">
+   <property name="text">
+    <string>Extract frames from media files</string>
    </property>
   </action>
  </widget>

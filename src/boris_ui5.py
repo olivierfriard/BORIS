@@ -491,6 +491,8 @@ class Ui_MainWindow(object):
         self.actionShow_the_sound_waveform.setObjectName("actionShow_the_sound_waveform")
         self.actionNeedleman_Wunsch = QtWidgets.QAction(MainWindow)
         self.actionNeedleman_Wunsch.setObjectName("actionNeedleman_Wunsch")
+        self.actionExtract_frames_from_media_files = QtWidgets.QAction(MainWindow)
+        self.actionExtract_frames_from_media_files.setObjectName("actionExtract_frames_from_media_files")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -552,6 +554,7 @@ class Ui_MainWindow(object):
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_subtitles_2)
         self.menuObservations.addAction(self.actionExtract_events_from_media_files)
+        self.menuObservations.addAction(self.actionExtract_frames_from_media_files)
         self.menuObservations.addSeparator()
         self.menuObservations.addAction(self.menuCreate_transitions_matrix.menuAction())
         self.menuPlot_events.addAction(self.actionPlot_events1)
@@ -828,4 +831,5 @@ class Ui_MainWindow(object):
         self.actionExplore_project.setText(_translate("MainWindow", "Explore project"))
         self.actionShow_the_sound_waveform.setText(_translate("MainWindow", "Show the sound waveform"))
         self.actionNeedleman_Wunsch.setText(_translate("MainWindow", "Needleman - Wunsch"))
+        self.actionExtract_frames_from_media_files.setText(_translate("MainWindow", "Extract frames from media files"))
 

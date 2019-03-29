@@ -234,6 +234,8 @@ MEDIA_FILE_INFO = "media_file_info"
 MEDIA_INFO = "media_info"
 LENGTH = "length"
 FPS = "fps"
+HAS_AUDIO = "hasAudio"
+HAS_VIDEO = "hasVideo"
 
 STATE = "STATE"
 POINT = "POINT"
