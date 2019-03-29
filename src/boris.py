@@ -2382,8 +2382,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         if mediaFileIdx != [idx1 for idx1, x in enumerate(duration1)
                                                             if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][-1]:
                                             response = dialog.MessageDialog(programName,
-                                                                ("The following media file do not have video.<br>"
-                                                                 f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
+                                                                ("The event extends on 2 video. "
+                                                                 " At the moment it no possible to extract this type of event.<br>"),
                                                                 [OK, "Abort"])
                                             if response == OK:
                                                 continue
