@@ -2050,135 +2050,94 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 parameters[SELECTED_BEHAVIORS],
                                                 time_interval=TIME_FULL_OBS)
 
+        try:
+            for obsId in selected_observations:
 
-        timeOffset = time_interval
+                for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
 
-        for obsId in selected_observations:
+                    if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                        continue
+                    duration1 = []   # in seconds
+                    for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
+                        duration1.append(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])
 
-            for nplayer in self.pj[OBSERVATIONS][obsId][FILE]:
+                    for subject in parameters[SELECTED_SUBJECTS]:
 
-                if not self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    continue
-                duration1 = []   # in seconds
-                for mediaFile in self.pj[OBSERVATIONS][obsId][FILE][nplayer]:
-                    duration1.append(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])
+                        for behavior in parameters[SELECTED_BEHAVIORS]:
 
-                for subject in parameters[SELECTED_SUBJECTS]:
-
-                    for behavior in parameters[SELECTED_BEHAVIORS]:
-
-                        cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
-                                       (obsId, subject, behavior))
-                        rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
+                            cursor.execute("SELECT occurence FROM events WHERE observation = ? AND subject = ? AND code = ?",
+                                           (obsId, subject, behavior))
+                            rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
 
-                        behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
-                        '''
-                        if STATE in behavior_state and len(rows) % 2:  # unpaired events
-                            flagUnpairedEventFound = True
-                            continue
-                        '''
+                            behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
+                            '''
+                            if STATE in behavior_state and len(rows) % 2:  # unpaired events
+                                flagUnpairedEventFound = True
+                                continue
+                            '''
 
-                        for idx, row in enumerate(rows):
+                            for idx, row in enumerate(rows):
 
-                            mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
-                                            if row["occurence"] >= sum(duration1[0:idx1])][-1]
+                                mediaFileIdx = [idx1 for idx1, x in enumerate(duration1)
+                                                if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
-                            # check if media has video
-                            flag_no_video = False
-                            try:
-                                flag_no_video = not self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]
-                            except Exception:
-                                flag_no_video = True
+                                # check if media has video
+                                flag_no_video = False
+                                try:
+                                    flag_no_video = not self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]
+                                except Exception:
+                                    flag_no_video = True
 
-                            if flag_no_video:
-                                logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
-                                flag_no_video = True
-                                response = dialog.MessageDialog(programName,
-                                                                ("The following media file do not have video.<br>"
-                                                                 f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
-                                                                [OK, "Abort"])
-                                if response == OK:
-                                    continue
-                                if response == "Abort":
-                                    return
-
-                            # check FPS
-                            try:
-                                if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
-                                    mediafile_fps = float2decimal(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
-                            except Exception:
-                                    mediafile_fps = 0
-
-                            if not mediafile_fps:
-                                logging.debug(f"FPS not found for {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
-                                response = dialog.MessageDialog(programName,
-                                                                ("The FPS was not found for the following media file:<br>"
-                                                                 f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
-                                                                [OK, "Abort"])
-                                if response == OK:
-                                    continue
-                                if response == "Abort":
-                                    return
-
-                            globalStart = Decimal("0.000") if row["occurence"] < time_interval else round(
-                                row["occurence"] - time_interval, 3)
-                            start = round(row["occurence"] - time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-                            if start < time_interval:
-                                start = Decimal("0.000")
-
-                            if POINT in behavior_state:
-
-                                '''
-                                globalStop = round(row["occurence"] + time_interval, 3)
-                                stop = round(row["occurence"] + time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-                                '''
-
-
-                                media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
-                                                                             self.projectFileName)
-
-                                extension = "png"
-                                vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
-                                ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
-                                                      '-loglevel quiet '
-                                                      f'-i "{media_path}" '
-                                                      #f'-start_number 3 '
-                                                      f'-vframes {vframes} '
-                                                      #f'-vf scale=1024{frame_resize}:-1 '
-                                                      f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
-
-
-                                logging.debug(f"ffmpeg command: {ffmpeg_command}")
-
-                                p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                                     shell=True)
-                                out, error = p.communicate()
-
-
-                            if STATE in behavior_state:
-                                if idx % 2 == 0:
-
-                                    globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
-
-                                    stop = round(rows[idx + 1]["occurence"] + time_interval -
-                                                 float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-
-                                    # check if start after length of media
-                                    try:
-                                        if start > self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][self.pj[OBSERVATIONS]
-                                                                                                           [obsId][FILE]
-                                                                                                           [nplayer]
-                                                                                                           [mediaFileIdx]]:
-                                            continue
-                                    except Exception:
+                                if flag_no_video:
+                                    logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
+                                    flag_no_video = True
+                                    response = dialog.MessageDialog(programName,
+                                                                    ("The following media file do not have video.<br>"
+                                                                     f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
+                                                                    [OK, "Abort"])
+                                    if response == OK:
                                         continue
+                                    if response == "Abort":
+                                        return
+
+                                # check FPS
+                                try:
+                                    if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
+                                        mediafile_fps = float2decimal(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
+                                except Exception:
+                                        mediafile_fps = 0
+
+                                if not mediafile_fps:
+                                    logging.debug(f"FPS not found for {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+                                    response = dialog.MessageDialog(programName,
+                                                                    ("The FPS was not found for the following media file:<br>"
+                                                                     f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
+                                                                    [OK, "Abort"])
+                                    if response == OK:
+                                        continue
+                                    if response == "Abort":
+                                        return
+
+                                globalStart = Decimal("0.000") if row["occurence"] < time_interval else round(
+                                    row["occurence"] - time_interval, 3)
+                                start = round(row["occurence"] - time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                if start < time_interval:
+                                    start = Decimal("0.000")
+
+                                if POINT in behavior_state:
+
+                                    '''
+                                    globalStop = round(row["occurence"] + time_interval, 3)
+                                    stop = round(row["occurence"] + time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                    '''
+
 
                                     media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                                                                  self.projectFileName)
 
                                     extension = "png"
-                                    vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
+                                    vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
                                     ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
                                                           '-loglevel quiet '
                                                           f'-i "{media_path}" '
@@ -2187,17 +2146,66 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                           #f'-vf scale=1024{frame_resize}:-1 '
                                                           f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
 
-                                    logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+
+                                    logging.debug(f"ffmpeg command: {ffmpeg_command}")
+
                                     p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                          shell=True)
                                     out, error = p.communicate()
 
-        '''
+
+                                if STATE in behavior_state:
+                                    if idx % 2 == 0:
+
+                                        # check if stop is on same media file
+                                        if mediaFileIdx != [idx1 for idx1, x in enumerate(duration1)
+                                                            if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][-1]:
+                                            response = dialog.MessageDialog(programName,
+                                                                ("The event extends on 2 video. "
+                                                                 " At the moment it no possible to extract frames this type of event.<br>"),
+                                                                [OK, "Abort"])
+                                            if response == OK:
+                                                continue
+                                            if response == "Abort":
+                                                return
+
+                                        globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
+
+                                        stop = round(rows[idx + 1]["occurence"] + time_interval -
+                                                     float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+
+                                        # check if start after length of media
+                                        try:
+                                            if start > self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][self.pj[OBSERVATIONS]
+                                                                                                               [obsId][FILE]
+                                                                                                               [nplayer]
+                                                                                                               [mediaFileIdx]]:
+                                                continue
+                                        except Exception:
+                                            continue
+
+                                        media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
+                                                                                     self.projectFileName)
+
+                                        extension = "png"
+                                        vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
+                                        ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
+                                                              '-loglevel quiet '
+                                                              f'-i "{media_path}" '
+                                                              #f'-start_number 3 '
+                                                              f'-vframes {vframes} '
+                                                              #f'-vf scale=1024{frame_resize}:-1 '
+                                                              f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
+
+                                        logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+                                        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                             shell=True)
+                                        out, error = p.communicate()
+
         except Exception:
-            logging.critical(f"Error during subvideo extraction. {sys.exc_info()[1]}")
-            QMessageBox.critical(None, programName, f"Error during subvideo extraction. {sys.exc_info()[1]}",
+            logging.critical(f"Error during frames extraction. {sys.exc_info()[1]}")
+            QMessageBox.critical(None, programName, f"Error during frames extraction. {sys.exc_info()[1]}",
                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        '''
 
 
     def extract_events(self):
