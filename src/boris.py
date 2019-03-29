@@ -2139,12 +2139,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     extension = "png"
                                     vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
                                     ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
-                                                          '-loglevel quiet '
                                                           f'-i "{media_path}" '
                                                           #f'-start_number 3 '
                                                           f'-vframes {vframes} '
                                                           #f'-vf scale=1024{frame_resize}:-1 '
-                                                          f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
+                                                          f'"{exportDir}{os.sep}'
+                                                          f'{utilities.safeFileName(obsId)}'
+                                                          f'_PLAYER{nplayer}'
+                                                          f'_{utilities.safeFileName(subject)}'
+                                                          f'_{utilities.safeFileName(behavior)}'
+                                                          f'_{start:.3f}_%08d.{extension}"')
 
 
                                     logging.debug(f"ffmpeg command: {ffmpeg_command}")
@@ -2190,12 +2194,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         extension = "png"
                                         vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
                                         ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
-                                                              '-loglevel quiet '
                                                               f'-i "{media_path}" '
                                                               #f'-start_number 3 '
                                                               f'-vframes {vframes} '
                                                               #f'-vf scale=1024{frame_resize}:-1 '
-                                                              f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
+                                                              f'"{exportDir}{os.sep}'
+                                                              f'{utilities.safeFileName(obsId)}'
+                                                              f'_PLAYER{nplayer}'
+                                                              f'_{utilities.safeFileName(subject)}'
+                                                              f'_{utilities.safeFileName(behavior)}'
+                                                              f'_{start:.3f}_%08d.{extension}"')
+
+                                                              #f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
 
                                         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -2371,10 +2381,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         globalStop=globalStop,
                                         dir_=exportDir,
                                         sep=os.sep,
-                                        obsId=obsId,
+                                        obsId=utilities.safeFileName(obsId),
                                         player="PLAYER{}".format(nplayer),
-                                        subject=subject,
-                                        behavior=behavior,
+                                        subject=utilities.safeFileName(subject),
+                                        behavior=utilities.safeFileName(behavior),
                                         extension=extension)
 
                                     logging.debug(f"ffmpeg command: {ffmpeg_command}")
@@ -2420,16 +2430,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             globalStop=globalStop,
                                             dir_=exportDir,
                                             sep=os.sep,
-                                            obsId=obsId,
+                                            obsId=utilities.safeFileName(obsId),
                                             player=f"PLAYER{nplayer}",
-                                            subject=subject,
-                                            behavior=behavior,
+                                            subject=utilities.safeFileName(subject),
+                                            behavior=utilities.safeFileName(behavior),
                                             extension=extension)
 
                                         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                              shell=True)
                                         out, error = p.communicate()
+
         except Exception:
             logging.critical(f"Error during subvideo extraction. {sys.exc_info()[1]}")
             QMessageBox.critical(None, programName, f"Error during subvideo extraction. {sys.exc_info()[1]}",

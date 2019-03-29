@@ -852,12 +852,12 @@ def seconds2time(sec):
     return "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs)
 
 
-def safeFileName(s:str): -> str
+def safeFileName(s:str) -> str:
     """
     replace characters not allowed in file name by _
     """
     fileName = s
-    notAllowedChars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
+    notAllowedChars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|", "\n", "\r",]
     for char in notAllowedChars:
         fileName = fileName.replace(char, "_")
 
