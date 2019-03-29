@@ -2085,25 +2085,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             if row["occurence"] >= sum(duration1[0:idx1])][-1]
 
                             # check if media has video
+                            flag_no_video = False
                             try:
-                                if not self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
-                                    logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
-                                    continue
+                                flag_no_video = not self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]
                             except Exception:
-                                logging.debug(f"has_video not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
-                                continue
+                                flag_no_video = True
+
+                            if flag_no_video:
+                                logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
+                                flag_no_video = True
+                                response = dialog.MessageDialog(programName,
+                                                                ("The following media file do not have video.<br>"
+                                                                 f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
+                                                                [OK, "Abort"])
+                                if response == OK:
+                                    continue
+                                if response == "Abort":
+                                    return
 
                             # check FPS
                             try:
                                 if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
                                     mediafile_fps = float2decimal(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
-                                else:
-                                    logging.debug(f"FPS not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
-                                    continue
                             except Exception:
-                                logging.debug(f"FPS not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
-                                continue
+                                    mediafile_fps = 0
 
+                            if not mediafile_fps:
+                                logging.debug(f"FPS not found for {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+                                response = dialog.MessageDialog(programName,
+                                                                ("The FPS was not found for the following media file:<br>"
+                                                                 f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
+                                                                [OK, "Abort"])
+                                if response == OK:
+                                    continue
+                                if response == "Abort":
+                                    return
 
                             globalStart = Decimal("0.000") if row["occurence"] < time_interval else round(
                                 row["occurence"] - time_interval, 3)
@@ -2253,12 +2269,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
-        exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
-                                                           os.path.expanduser("~"),
-                                                           options=QFileDialog(self).ShowDirsOnly)
-        if not exportDir:
-            return
-
         # Ask for time interval around the event
         while True:
             text, ok = QInputDialog.getDouble(self, "Time interval around the events",
@@ -2270,6 +2280,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
             except Exception:
                 QMessageBox.warning(self, programName, f"<b>{text}</b> is not recognized as time")
+
+        exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
+                                                           os.path.expanduser("~"),
+                                                           options=QFileDialog(self).ShowDirsOnly)
+        if not exportDir:
+            return
+
 
         flagUnpairedEventFound = False
 
@@ -2361,6 +2378,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if STATE in behavior_state:
                                     if idx % 2 == 0:
 
+                                        # check if stop is on same media file
+                                        if mediaFileIdx != [idx1 for idx1, x in enumerate(duration1)
+                                                            if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][-1]:
+                                            response = dialog.MessageDialog(programName,
+                                                                ("The following media file do not have video.<br>"
+                                                                 f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
+                                                                [OK, "Abort"])
+                                            if response == OK:
+                                                continue
+                                            if response == "Abort":
+                                                return
+
                                         globalStop = round(rows[idx + 1]["occurence"] + timeOffset, 3)
 
                                         stop = round(rows[idx + 1]["occurence"] + timeOffset -
@@ -2384,7 +2413,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             dir_=exportDir,
                                             sep=os.sep,
                                             obsId=obsId,
-                                            player="PLAYER{}".format(nplayer),
+                                            player=f"PLAYER{nplayer}",
                                             subject=subject,
                                             behavior=behavior,
                                             extension=extension)
