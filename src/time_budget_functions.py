@@ -145,7 +145,7 @@ def synthetic_time_budget(pj: dict,
         # add selected behaviors that are not observed
         for behav in selected_behaviors:
             if [x for x in distinct_behav_modif if x[0] == behav] == []:
-                distinct_behav_modif.append([behav, "-"])
+                distinct_behav_modif.append([behav, ""])
 
         behaviors = init_behav_modif(pj[ETHOGRAM],
                                      selected_subjects,
@@ -278,9 +278,7 @@ def synthetic_time_budget(pj: dict,
                                 0 if row[0] is None
                                 else "{:.3f}".format(row[0] / (max_time - min_time)))
 
-
-
-            columns = [obs_id, "{:0.3f}".format(max_time - min_time)]
+            columns = [obs_id, f"{max_time - min_time:0.3f}"]
             for subj in selected_subjects:
                 for behavior_modifiers in distinct_behav_modif:
                     behavior, modifiers = behavior_modifiers
