@@ -2136,7 +2136,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                                                                  self.projectFileName)
 
-                                    extension = "png"
                                     vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
                                     ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
                                                           f'-i "{media_path}" '
@@ -2148,7 +2147,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                           f'_PLAYER{nplayer}'
                                                           f'_{utilities.safeFileName(subject)}'
                                                           f'_{utilities.safeFileName(behavior)}'
-                                                          f'_{start:.3f}_%08d.{extension}"')
+                                                          f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
 
 
                                     logging.debug(f"ffmpeg command: {ffmpeg_command}")
@@ -2203,7 +2202,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               f'_PLAYER{nplayer}'
                                                               f'_{utilities.safeFileName(subject)}'
                                                               f'_{utilities.safeFileName(behavior)}'
-                                                              f'_{start:.3f}_%08d.{extension}"')
+                                                              f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
 
                                                               #f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
 
@@ -3347,7 +3346,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
         # FFmpeg for frame by frame mode
-        preferencesWindow.lbFFmpegPath.setText("FFmpeg path: {}".format(self.ffmpeg_bin))
+        preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
         preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
         preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
 
