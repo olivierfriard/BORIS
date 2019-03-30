@@ -710,6 +710,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJWatcher.setEnabled(flag)
 
         self.actionExtract_events_from_media_files.setEnabled(flag)
+        self.actionExtract_frames_from_media_files.setEnabled(flag)
 
         self.actionDelete_all_observations.setEnabled(flagObs)
         self.actionSelect_observations.setEnabled(flagObs)
