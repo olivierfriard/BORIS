@@ -452,6 +452,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     project = False
 
     processes = []  # list of QProcess processes
+    frames_cache = {}
 
     saved_state = None
 
@@ -3506,32 +3507,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return currentMedia, round(frameCurrentMedia)
 
 
-    '''
-    # NOT IN USE
-    def getCurrentMediaByTime(self, player, obsId, globalTime):
-        """
-        get:
-        player
-        globalTime
 
-        returns:
-        currentMedia
-        frameCurrentMedia
-        """
-        currentMedia, currentMediaTime = '', 0
-        globalTimeMs = globalTime * 1000
-
-        for idx, media in enumerate(self.pj[OBSERVATIONS][obsId][FILE][player]):
-            if globalTimeMs < sum(self.dw_player[int(player) - 1].media_durations[0:idx + 1]):
-                currentMedia = media
-                currentMediaTime = globalTimeMs - sum(self.dw_player[int(player) - 1].media_durations[0:idx])
-                break
-
-        return currentMedia, round(currentMediaTime / 1000, 3)
-    '''
-
-
-    def ffmpegTimerOut(self):
+    def ffmpegTimerOut2(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
@@ -3631,6 +3608,182 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.frame_bitmap_format = "PNG"
 
             player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
+
+            # redraw measurements from previous frames
+
+            if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
+                if self.measurement_w.cbPersistentMeasurements.isChecked():
+                    logging.debug("Redraw measurements")
+                    for frame in self.measurement_w.draw_mem:
+
+                        if frame == self.FFmpegGlobalFrame + 1:
+                            elementsColor = ACTIVE_MEASUREMENTS_COLOR
+                        else:
+                            elementsColor = PASSIVE_MEASUREMENTS_COLOR
+
+                        for element in self.measurement_w.draw_mem[frame]:
+                            if element[0] == i:
+                                if element[1] == "line":
+                                    x1, y1, x2, y2 = element[2:]
+                                    self.draw_line(x1, y1, x2, y2, elementsColor, n_player=i)
+                                    self.draw_point(x1, y1, elementsColor, n_player=i)
+                                    self.draw_point(x2, y2, elementsColor, n_player=i)
+                                if element[1] == "angle":
+                                    x1, y1 = element[2][0]
+                                    x2, y2 = element[2][1]
+                                    x3, y3 = element[2][2]
+                                    self.draw_line(x1, y1, x2, y2, elementsColor, n_player=i)
+                                    self.draw_line(x1, y1, x3, y3, elementsColor, n_player=i)
+                                    self.draw_point(x1, y1, elementsColor, n_player=i)
+                                    self.draw_point(x2, y2, elementsColor, n_player=i)
+                                    self.draw_point(x3, y3, elementsColor, n_player=i)
+                                if element[1] == "polygon":
+                                    polygon = QPolygon()
+                                    for point in element[2]:
+                                        polygon.append(QPoint(point[0], point[1]))
+                                    painter = QPainter()
+                                    painter.begin(self.dw_player[i].frame_viewer.pixmap())
+                                    painter.setPen(QColor(elementsColor))
+                                    painter.drawPolygon(polygon)
+                                    painter.end()
+                                    self.dw_player[i].frame_viewer.update()
+                else:
+                    self.measurement_w.draw_mem = []
+
+        self.FFmpegGlobalFrame = requiredFrame
+
+        currentTime = self.getLaps() * 1000
+
+        time_str = "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
+            currentMediaName=os.path.basename(currentMedia),
+            currentTime=self.convertTime(currentTime / 1000),
+            totalTime=self.convertTime(Decimal(self.dw_player[0].mediaplayer.get_length() / 1000)),
+            currentFrame=round(self.FFmpegGlobalFrame))
+
+        self.lb_current_media_time.setText(time_str)
+
+        # video slider
+        self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+
+        # extract State events
+        StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
+
+        self.currentStates = {}
+        self.currentStates = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
+                                                                             self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                             dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                             currentTime / 1000,
+                                                                             include_modifiers=True)
+
+
+        # show current states
+        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+        self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
+
+        # show selected subjects
+        self.show_current_states_in_subjects_table()
+
+        # show tracking cursor
+        self.get_events_current_row()
+
+
+    def ffmpegTimerOut(self):
+        """
+        triggered when frame-by-frame mode is activated:
+        read next frame and update image
+        """
+
+        logging.debug("FFmpegTimerOut function")
+
+        logging.debug("fps {}".format(self.fps))
+
+        frameMs = 1000 / self.fps
+
+        logging.debug("frame Ms {}".format(frameMs))
+
+        requiredFrame = self.FFmpegGlobalFrame + 1
+
+        logging.debug("required frame: {}".format(requiredFrame))
+
+        # logging.debug("sum self.duration {}".format(sum(self.dw_player[0].media_durations)))
+
+        # check if end of last media
+        if requiredFrame * frameMs >= sum(self.dw_player[0].media_durations):
+            logging.debug("end of last media 1 frame: {}".format(requiredFrame))
+            return
+
+        for i, player in enumerate(self.dw_player):
+            n_player = str(i + 1)
+            if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
+               or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
+                continue
+
+            currentMedia, frame_current_media = self.getCurrentMediaByFrame(n_player, requiredFrame, self.fps)
+
+            current_media_full_path = project_functions.media_full_path(currentMedia, self.projectFileName)
+
+            logging.debug("current media: {}".format(currentMedia))
+            logging.debug("frame current media: {}".format(frame_current_media))
+
+            # update spectro plot
+            self.timer_sound_signal_out()
+            # update data plot
+            for idx in self.plot_data:
+                self.timer_plot_data_out(self.plot_data[idx])
+
+            # update data plot
+            current_time = self.getLaps()
+            for idx in self.plot_data:
+                self.plot_data[idx].update_plot(current_time)
+
+            logging.debug(f"frame current media: {frame_current_media}")
+
+            if not (current_media_full_path in self.frames_cache and \
+                frame_current_media in self.frames_cache[current_media_full_path]):
+
+                '''
+                self.iw = dialog.Info_widget()
+                self.iw.lwi.setVisible(False)
+                self.iw.resize(350, 200)
+                self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                logging.debug(f"Extracting frame")
+
+                self.iw.setWindowTitle("Extracting frames...")
+                self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
+                self.iw.show()
+                '''
+                self.statusbar.showMessage("Extracting frames", 0)
+                app.processEvents()
+                
+
+                print(player.frame_viewer.size().width(), player.frame_viewer.size().height())
+                print(player.videoframe.h_resolution, player.videoframe.v_resolution)
+                r = utilities.extract_frames_mem(self.ffmpeg_bin,
+                                         frame_current_media,
+                                         (frame_current_media - 1) / self.fps,
+                                         current_media_full_path,
+                                         round(self.fps),
+                                         #(player.frame_viewer.size().width(), player.frame_viewer.size().height()),
+                                         (player.videoframe.h_resolution, player.videoframe.v_resolution),
+                                         self.fbf_cache_size)
+
+                if current_media_full_path not in self.frames_cache:
+                    self.frames_cache[current_media_full_path] =  {}
+                for idx, f in enumerate(r):
+                    self.frames_cache[current_media_full_path][frame_current_media + idx] = f
+
+                print("frames cache mem size:", sum([len(self.frames_cache[k].keys()) * 3 * player.videoframe.h_resolution * player.videoframe.v_resolution for k in self.frames_cache]))
+
+                '''self.iw.hide()'''
+                self.statusbar.showMessage("", 0)
+
+
+            print(list(self.frames_cache[current_media_full_path].keys()))
+            #self.label.setPixmap(self.frames_cache[frame_current_media])
+
+            #player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
+            player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frame_current_media].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
             # redraw measurements from previous frames
 

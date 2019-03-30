@@ -23,6 +23,7 @@ Copyright 2012-2019 Olivier Friard
 
 
 from PyQt5.QtCore import *
+from PyQt5.QtGui import QPixmap, qRgb, QImage
 from PyQt5.QtWidgets import *
 
 import math
@@ -565,15 +566,6 @@ def extract_frames(ffmpeg_bin: str,
 
     """
 
-    '''
-    if not os.path.isfile(f"{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(
-            imageDir=imageDir,
-            sep=os.sep,
-            md5_media_path=md5_media_path,
-            frame=start_frame + 1,
-            extension=extension)):
-    '''
-
     ffmpeg_command = (f'"{ffmpeg_bin}" -ss {second:.3f} '
                       '-loglevel quiet '
                       f'-i "{current_media_path}" '
@@ -581,19 +573,6 @@ def extract_frames(ffmpeg_bin: str,
                       f'-vframes {number_of_seconds * fps} '
                       f'-vf scale={frame_resize}:-1 '
                       f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"')
-    '''
-                       .format(
-                          ffmpeg_bin=ffmpeg_bin,
-                          second=second,
-                          current_media_path=current_media_path,
-                          start_number=start_frame,
-                          number_of_frames=number_of_seconds * fps,
-                          imageDir=imageDir,
-                          sep=os.sep,
-                          md5_media_path=md5_media_path,
-                          extension=extension,
-                          frame_resize=frame_resize)
-    '''
 
     logging.debug(f"ffmpeg command: {ffmpeg_command}")
 
@@ -632,6 +611,75 @@ def extract_frames(ffmpeg_bin: str,
             logging.debug("ffmpeg error: {}".format(error))
 
 
+def extract_frames_mem(ffmpeg_bin: str,
+                   start_frame: int,
+                   second: float,
+                   current_media_path,
+                   fps,
+                   resolution,
+                   number_of_seconds):
+    """
+    extract frames from media file and save them in imageDir directory
+
+    Args:
+        ffmpeg_bin (str): path for ffmpeg
+        start_frame (int): extract frames from frame
+        second (float): second to begin extraction of frames
+        currentMedia (str): path for current media
+        fps (float): number of frame by second
+        frame_resize (int): horizontal resolution of frame
+        number_of_seconds (int): number of seconds to extract
+    """
+
+    def toQImage(frame, copy=False):
+    
+        gray_color_table = [qRgb(i, i, i) for i in range(256)]
+        if frame is None:
+            return QImage()
+    
+        im = np.asarray(frame)
+        if im.dtype == np.uint8:
+            if len(im.shape) == 2:
+                qim = QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_Indexed8)
+                qim.setColorTable(gray_color_table)
+                return qim.copy() if copy else qim
+            elif len(im.shape) == 3:
+                if im.shape[2] == 3:
+                    qim = QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_RGB888)
+                    return qim.copy() if copy else qim
+                elif im.shape[2] == 4:
+                    qim = QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_ARGB32)
+                    return qim.copy() if copy else qim
+
+    ffmpeg_command = [ "ffmpeg", "-loglevel", "info",
+        '-i', current_media_path,
+        '-hide_banner',
+        '-ss', str((start_frame - 1) / fps),
+        '-vframes', str(int(fps * number_of_seconds)),
+        '-s', f'{resolution[0]}x{resolution[1]}',
+        #'-s', '1280x860',
+        '-f', 'image2pipe',
+        '-pix_fmt', 'rgb24',
+        '-vcodec', 'rawvideo', '-',
+        ]
+    pipe = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+
+    # print("stderr", self.pipe.stderr)
+
+    frames = []
+    for f in range(start_frame, start_frame + 25):
+        raw_image = pipe.stdout.read(resolution[0] * resolution[1] * 3)
+        if not len(raw_image):
+            print("frames finished")
+            return
+
+        #self.frames_cache[f] = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3))))
+        frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3)))))
+
+    
+
+    return frames
+
 
 
 def decimal_default(obj):
@@ -653,6 +701,7 @@ def complete(l: list, max_: int):
     """
     while len(l) < max_:
         l.append("")
+    # l.extend([""] * (max_ - len(l)))
     return l
 
 
