@@ -3508,10 +3508,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def ffmpegTimerOut2(self):
+    def ffmpegTimerOut(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
+        frames are read from disk
         """
 
         logging.debug("FFmpegTimerOut function")
@@ -3687,10 +3688,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.get_events_current_row()
 
 
-    def ffmpegTimerOut(self):
+    def ffmpegTimerOut_future(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
+        frames are loaded from disctionary
         """
 
         logging.debug("FFmpegTimerOut function")
@@ -3741,24 +3743,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not (current_media_full_path in self.frames_cache and \
                 frame_current_media in self.frames_cache[current_media_full_path]):
 
-                '''
-                self.iw = dialog.Info_widget()
-                self.iw.lwi.setVisible(False)
-                self.iw.resize(350, 200)
-                self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-                logging.debug(f"Extracting frame")
-
-                self.iw.setWindowTitle("Extracting frames...")
-                self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
-                self.iw.show()
-                '''
                 self.statusbar.showMessage("Extracting frames", 0)
                 app.processEvents()
-                
 
                 print(player.frame_viewer.size().width(), player.frame_viewer.size().height())
                 print(player.videoframe.h_resolution, player.videoframe.v_resolution)
+
                 r = utilities.extract_frames_mem(self.ffmpeg_bin,
                                          frame_current_media,
                                          (frame_current_media - 1) / self.fps,
@@ -3775,14 +3765,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 print("frames cache mem size:", sum([len(self.frames_cache[k].keys()) * 3 * player.videoframe.h_resolution * player.videoframe.v_resolution for k in self.frames_cache]))
 
-                '''self.iw.hide()'''
                 self.statusbar.showMessage("", 0)
 
 
             print(list(self.frames_cache[current_media_full_path].keys()))
-            #self.label.setPixmap(self.frames_cache[frame_current_media])
 
-            #player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
             player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frame_current_media].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
             # redraw measurements from previous frames
