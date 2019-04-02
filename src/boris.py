@@ -2123,33 +2123,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 globalStart = Decimal("0.000") if row["occurence"] < time_interval else round(
                                     row["occurence"] - time_interval, 3)
-                                start = round(row["occurence"] - time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                start = round(row["occurence"] - time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3) - self.pj[OBSERVATIONS][obsId][TIME_OFFSET]
                                 if start < time_interval:
                                     start = Decimal("0.000")
 
                                 if POINT in behavior_state:
 
-                                    '''
-                                    globalStop = round(row["occurence"] + time_interval, 3)
-                                    stop = round(row["occurence"] + time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
-                                    '''
-
-
                                     media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
-                                                                                 self.projectFileName)
+                                                                                   self.projectFileName)
 
                                     vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
-                                    ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
-                                                          f'-i "{media_path}" '
-                                                          #f'-start_number 3 '
-                                                          f'-vframes {vframes} '
-                                                          #f'-vf scale=1024{frame_resize}:-1 '
-                                                          f'"{exportDir}{os.sep}'
-                                                          f'{utilities.safeFileName(obsId)}'
-                                                          f'_PLAYER{nplayer}'
-                                                          f'_{utilities.safeFileName(subject)}'
-                                                          f'_{utilities.safeFileName(behavior)}'
-                                                          f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
+                                    ffmpeg_command = (f'"{ffmpeg_bin}" '
+                                                      f'-ss {start:.3f} '
+                                                      f'-i "{media_path}" '
+                                                      #f'-start_number 3 '
+                                                      f'-vframes {vframes} '
+                                                      #f'-vf scale=1024{frame_resize}:-1 '
+                                                      f'"{exportDir}{os.sep}'
+                                                      f'{utilities.safeFileName(obsId)}'
+                                                      f'_PLAYER{nplayer}'
+                                                      f'_{utilities.safeFileName(subject)}'
+                                                      f'_{utilities.safeFileName(behavior)}'
+                                                      f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
 
 
                                     logging.debug(f"ffmpeg command: {ffmpeg_command}")
@@ -2176,8 +2171,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                         globalStop = round(rows[idx + 1]["occurence"] + time_interval, 3)
 
-                                        stop = round(rows[idx + 1]["occurence"] + time_interval -
-                                                     float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                        stop = round(rows[idx + 1]["occurence"]
+                                                     + time_interval
+                                                     - float2decimal(sum(duration1[0:mediaFileIdx]))
+                                                     - self.pj[OBSERVATIONS][obsId][TIME_OFFSET],
+                                                     3)
 
                                         # check if start after length of media
                                         try:
@@ -2196,7 +2194,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
                                         ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
                                                               f'-i "{media_path}" '
-                                                              #f'-start_number 3 '
                                                               f'-vframes {vframes} '
                                                               #f'-vf scale=1024{frame_resize}:-1 '
                                                               f'"{exportDir}{os.sep}'
@@ -2205,8 +2202,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               f'_{utilities.safeFileName(subject)}'
                                                               f'_{utilities.safeFileName(behavior)}'
                                                               f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
-
-                                                              #f'"{exportDir}{os.sep}{obsId}_{subject}_{behavior}_{start:.3f}_%08d.{extension}"')
 
                                         logging.debug("ffmpeg command: {}".format(ffmpeg_command))
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -4851,8 +4846,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                              TYPE: "",
                                                              "date": "",
                                                              "description": "",
-                                                             "time offset": 0,
-                                                             "events": []}
+                                                             TIME_OFFSET: 0,
+                                                             EVENTS: []}
 
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
