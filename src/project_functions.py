@@ -229,7 +229,7 @@ def check_project_integrity(pj: dict,
                     modifier_code = value.split(" (")[0]
                     if modifier_code.strip() != modifier_code:
                         out += "<br><br>" if out else ""
-                        out += ("The following modifier defined in ethogram "
+                        out += ("The following <b>modifier</b> defined in ethogram "
                                 "has leading/trailing spaces or special chars: "
                                 f"<b>{modifier_code.replace(' ', '&#9608;')}</b>")
 
@@ -258,7 +258,7 @@ def check_project_integrity(pj: dict,
         for obs_id in pj[OBSERVATIONS]:
             if obs_id != obs_id.strip():
                 out += "<br><br>" if out else ""
-                out += ("The following observation id "
+                out += ("The following <b>observation id</b> "
                         "has leading/trailing spaces or special chars: "
                         f"<b>{obs_id}</b>")
 
