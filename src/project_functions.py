@@ -181,6 +181,11 @@ def check_project_integrity(pj: dict,
     """
     check project integrity
     check if behaviors in observations are in ethogram
+    check unpaired state events
+    check if behavior belong to behavioral category that do not more exists
+    check for leading and trialing spaces and special chars in modifiers
+    check if media file are available
+    check if media length available
 
     Args:
         pj (dict): BORIS project
@@ -217,7 +222,7 @@ def check_project_integrity(pj: dict,
                             "that is no more in behavioral categories list."
                         ).format(pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
 
-        # check for leading/trailing spaces in modifiers defined in ethogram
+        # check for leading/trailing spaces/special chars in modifiers defined in ethogram
         for idx in pj[ETHOGRAM]:
             for k in pj[ETHOGRAM][idx][MODIFIERS]:
                 for value in pj[ETHOGRAM][idx][MODIFIERS][k]["values"]:
@@ -225,7 +230,8 @@ def check_project_integrity(pj: dict,
                     if modifier_code.strip() != modifier_code:
                         out += "<br><br>" if out else ""
                         out += ("The following modifier defined in ethogram "
-                                f"has leading/trailing spaces: <b>{modifier_code.replace(' ', '&#9608;')}</b>")
+                                "has leading/trailing spaces or special chars: "
+                                f"<b>{modifier_code.replace(' ', '&#9608;')}</b>")
 
         # check if all media are available
         if media_file_available:
@@ -247,6 +253,14 @@ def check_project_integrity(pj: dict,
                         except KeyError:
                             out += "<br><br>" if out else ""
                             out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
+
+        # check for leading/trailing spaces/special chars in observation id 
+        for obs_id in pj[OBSERVATIONS]:
+            if obs_id != obs_id.strip():
+                out += "<br><br>" if out else ""
+                out += ("The following observation id "
+                        "has leading/trailing spaces or special chars: "
+                        f"<b>{obs_id}</b>")
 
         return out
     except Exception:
