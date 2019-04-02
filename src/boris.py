@@ -1974,7 +1974,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
                 live_obs_list.append(obs_id)
         if live_obs_list:
-            out = "The following observations are live observations and will be removed from analysis<br><br>"
+            out = "The following observations are live observations and will be removed from the analysis<br><br>"
             out += "<br>".join(live_obs_list)
             results = dialog.Results_dialog()
             results.setWindowTitle(programName)
@@ -2041,8 +2041,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # directory for saving frames
         exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
-                                                           os.path.expanduser("~"),
-                                                           options=QFileDialog(self).ShowDirsOnly)
+                                                       os.path.expanduser("~"),
+                                                       options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
             return
 
@@ -2071,13 +2071,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            (obsId, subject, behavior))
                             rows = [{"occurence": float2decimal(r["occurence"])} for r in cursor.fetchall()]
 
-
                             behavior_state = project_functions.event_type(behavior, self.pj[ETHOGRAM])
-                            '''
-                            if STATE in behavior_state and len(rows) % 2:  # unpaired events
-                                flagUnpairedEventFound = True
-                                continue
-                            '''
 
                             for idx, row in enumerate(rows):
 
@@ -2123,7 +2117,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 globalStart = Decimal("0.000") if row["occurence"] < time_interval else round(
                                     row["occurence"] - time_interval, 3)
-                                start = round(row["occurence"] - time_interval - float2decimal(sum(duration1[0:mediaFileIdx])), 3) - self.pj[OBSERVATIONS][obsId][TIME_OFFSET]
+                                start = round(row["occurence"]
+                                              - time_interval
+                                              - float2decimal(sum(duration1[0:mediaFileIdx]))
+                                              - self.pj[OBSERVATIONS][obsId][TIME_OFFSET],
+                                              3)
                                 if start < time_interval:
                                     start = Decimal("0.000")
 
@@ -2136,7 +2134,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     ffmpeg_command = (f'"{ffmpeg_bin}" '
                                                       f'-ss {start:.3f} '
                                                       f'-i "{media_path}" '
-                                                      #f'-start_number 3 '
                                                       f'-vframes {vframes} '
                                                       #f'-vf scale=1024{frame_resize}:-1 '
                                                       f'"{exportDir}{os.sep}'
@@ -2161,9 +2158,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         if mediaFileIdx != [idx1 for idx1, x in enumerate(duration1)
                                                             if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][-1]:
                                             response = dialog.MessageDialog(programName,
-                                                                ("The event extends on 2 video. "
-                                                                 " At the moment it no possible to extract frames this type of event.<br>"),
-                                                                [OK, "Abort"])
+                                                                            ("The event extends on 2 video. "
+                                                                             "At the moment it no possible to extract frames "
+                                                                             "for this type of event.<br>"),
+                                                                             [OK, "Abort"])
                                             if response == OK:
                                                 continue
                                             if response == "Abort":
@@ -2203,7 +2201,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               f'_{utilities.safeFileName(behavior)}'
                                                               f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
 
-                                        logging.debug("ffmpeg command: {}".format(ffmpeg_command))
+                                        logging.debug(f"ffmpeg command: {ffmpeg_command}")
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                              shell=True)
                                         out, error = p.communicate()
@@ -2357,7 +2355,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
                                     row["occurence"] - timeOffset, 3)
-                                start = round(row["occurence"] - timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                start = round(row["occurence"]
+                                              - timeOffset
+                                              - float2decimal(sum(duration1[0:mediaFileIdx]))
+                                              - self.pj[OBSERVATIONS][obsId][TIME_OFFSET],
+                                              3)
                                 if start < timeOffset:
                                     start = Decimal("0.000")
 
@@ -2365,7 +2367,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                     globalStop = round(row["occurence"] + timeOffset, 3)
 
-                                    stop = round(row["occurence"] + timeOffset - float2decimal(sum(duration1[0:mediaFileIdx])), 3)
+                                    stop = round(row["occurence"]
+                                                 + timeOffset
+                                                 - float2decimal(sum(duration1[0:mediaFileIdx]))
+                                                 - self.pj[OBSERVATIONS][obsId][TIME_OFFSET],
+                                                 3)
 
                                     ffmpeg_command = ffmpeg_extract_command.format(
                                         ffmpeg_bin=ffmpeg_bin,
