@@ -2479,7 +2479,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 w.hide()
 
             else:
-                QMessageBox.warning(self, programName, "<b>{}</b> file not found".format(media_file_path))
+                QMessageBox.warning(self, programName, f"<b>{media_file_path}</b> file not found")
 
 
     def show_sound_signal_widget(self, plot_type):
@@ -2531,8 +2531,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     r = self.spectro.load_wav(str(wav_file_path))
                     if "error" in r:
-                        logging.warning("spectro_load_wav error: {}".format(r["error"]))
-                        QMessageBox.warning(self, programName, "Error in spectrogram generation: " + r["error"],
+                        logging.warning(f"spectro_load_wav error: {r['error']}")
+                        QMessageBox.warning(self, programName, f"Error in spectrogram generation: {r['error']}",
                                             QMessageBox.Ok | QMessageBox.Default,
                                             QMessageBox.NoButton)
                         del self.spectro
@@ -2581,8 +2581,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     r = self.waveform.load_wav(str(wav_file_path))
                     if "error" in r:
-                        logging.warning("waveform_load_wav error: {}".format(r["error"]))
-                        QMessageBox.warning(self, programName, "Error in waveform generation: " + r["error"],
+                        logging.warning(f"waveform_load_wav error: {r['error']}")
+                        QMessageBox.warning(self, programName, f"Error in waveform generation: {r['error']}",
                                             QMessageBox.Ok | QMessageBox.Default,
                                             QMessageBox.NoButton)
                         del self.waveform
@@ -2763,14 +2763,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if [bcm for bcm in self.pj["behaviors_coding_map"] if bcm["name"] == behav_coding_map["name"]]:
             QMessageBox.critical(self, programName, ("The current project already contains a behaviors coding map "
-                                                     "with the same name (<b>{}</b>)").format(behav_coding_map["name"]),
+                                                     f"with the same name (<b>{behav_coding_map['name']}</b>)"),
                                  QMessageBox.Ok | QMessageBox.Default,
                                  QMessageBox.NoButton)
             return
 
         self.pj["behaviors_coding_map"].append(behav_coding_map)
         QMessageBox.information(self, programName,
-                                "The behaviors coding map <b>{}</b> was added to current project".format(behav_coding_map["name"]))
+                                f"The behaviors coding map <b>{behav_coding_map['name']}</b> was added to current project")
         self.projectChanged = True
 
 
@@ -2836,7 +2836,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.menu_options()
             # title of dock widget  “  ”
-            self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
+            self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
             return ""
 
         else:
@@ -2907,7 +2907,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId:
                 r, msg = project_functions.check_state_events_obs(self.observationId, self.pj[ETHOGRAM],
                                                                   self.pj[OBSERVATIONS][self.observationId], self.timeFormat)
-                tot_out = "Observation: <strong>{}</strong><br>{}<br><br>".format(self.observationId, msg)
+                tot_out = f"Observation: <strong>{self.observationId}</strong><br>{msg}<br><br>"
 
         if mode == "all":
             if not self.pj[OBSERVATIONS]:
@@ -2925,7 +2925,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
                                                                   self.pj[OBSERVATIONS][obsId], self.timeFormat)
 
-                tot_out += "<strong>{}</strong><br>{}<br>".format(obsId, msg)
+                tot_out += f"<strong>{obsId}</strong><br>{msg}<br>"
 
         results = dialog.Results_dialog()
         results.setWindowTitle("Check state events")
@@ -3008,10 +3008,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
                                                                           self.pj[OBSERVATIONS][obs_id])
                         if "NOT PAIRED" in msg.upper():
-                            out += "The observation <b>{}</b> can not be automatically fixed.<br><br>".format(obs_id)
+                            out += f"The observation <b>{obs_id}</b> can not be automatically fixed.<br><br>"
                             self.pj[OBSERVATIONS][obs_id][EVENTS] = events_backup
                         else:
-                            out += "<b>{}</b><br>".format(obs_id)
+                            out += f"<b>{obs_id}</b><br>"
                             self.projectChanged = True
             if out:
                 out = "The following observations were modified to fix the unpaired state events:<br><br>" + out
