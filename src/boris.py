@@ -547,6 +547,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     filtered_behaviors = []
 
     dw_player = []
+    
+    save_project_json_started = False
 
 
     def __init__(self, ffmpeg_bin, parent=None):
@@ -3402,7 +3404,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
                         os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
                     sys.exit()
-
 
             if preferencesWindow.cbTimeFormat.currentIndex() == 0:
                 self.timeFormat = S
@@ -7116,7 +7117,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             str:
         """
 
-        logging.debug("save project json {0}:".format(projectFileName))
+        logging.debug(f"save project json {projectFileName}:")
+        if self.save_project_json_started:
+            logging.warning(f"Function save_project_json already launched")
+            return
+
+        self.save_project_json_started = True
 
         self.pj["project_format_version"] = project_format_version
 
@@ -7126,11 +7132,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             f.close()
 
             self.projectChanged = False
+            self.save_project_json_started = False
             return ""
 
         except Exception:
             logging.critical("The project file can not be saved.\nError: {}".format(sys.exc_info()[1]))
             QMessageBox.critical(self, programName, "The project file can not be saved! {}".format(sys.exc_info()[1]))
+            self.save_project_json_started = False
             return "not saved"
 
 
@@ -7138,10 +7146,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project asking for a new file name
         """
+        logging.debug("function: save_project_as_activated")
 
-        func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog().getSaveFileName
-        project_new_file_name, filtr = func(self, "Save project as", os.path.dirname(self.projectFileName),
-                                            "Projects file (*.boris);;All files (*)")
+        project_new_file_name, filtr = QFileDialog().getSaveFileName(self, "Save project as", os.path.dirname(self.projectFileName),
+                                                                     "Projects file (*.boris);;All files (*)")
 
         if not project_new_file_name:
             return "Not saved"
@@ -7165,6 +7173,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         save current project
         """
+        logging.debug("function: save project activated")
         logging.debug("Project file name: {}".format(self.projectFileName))
 
         if not self.projectFileName:
@@ -7174,9 +7183,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 txt = self.pj["project_name"] + ".boris"
             os.chdir(os.path.expanduser("~"))
 
-            func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog().getSaveFileName
-
-            self.projectFileName, filtr = func(self, "Save project", txt, "Projects file (*.boris);;All files (*)")
+            self.projectFileName, filtr = QFileDialog().getSaveFileName(self, "Save project", txt,
+                                                                        "Projects file (*.boris);;All files (*)")
 
             if not self.projectFileName:
                 return "not saved"
@@ -8557,8 +8565,8 @@ item []:
         else:
             ffmpeg_true_path = self.ffmpeg_bin
         programs_versions.extend(["\nFFmpeg",
-                                  subprocess.getoutput('"{}" -version'.format(self.ffmpeg_bin)).split("\n")[0],
-                                  "Path: {}".format(ffmpeg_true_path),
+                                  subprocess.getoutput(f'"{self.ffmpeg_bin}" -version').split("\n")[0],
+                                  f"Path: {ffmpeg_true_path}",
                                   "https://www.ffmpeg.org"])
 
         # matplotlib
