@@ -811,7 +811,20 @@
    "date":"2018-05-29T11:01:03",
    "description":"",
    "time offset":0.0,
-   "events":[],
+   "events":[[
+     10.0,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     170.0,
+     "subject1",
+     "s",
+     "",
+     ""
+    ]],
    "independent_variables":{
     "a":"",
     "b":"",

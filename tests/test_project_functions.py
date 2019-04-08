@@ -89,8 +89,8 @@ class Test_check_project_integrity(object):
                                                             media_file_available=False)
 
         #print(results)
-        assert results == '''The following modifier defined in ethogram has leading/trailing spaces: <b>a&#9608;&#9608;&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>c&#9608;&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>c&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>d&#9608;&#9608;</b>'''
-
+        #assert results == '''The following modifier defined in ethogram has leading/trailing spaces: <b>a&#9608;&#9608;&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>c&#9608;&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>c&#9608;</b><br><br>The following modifier defined in ethogram has leading/trailing spaces: <b>d&#9608;&#9608;</b>'''
+        assert results == '''The following <b>modifier</b> defined in ethogram has leading/trailing spaces or special chars: <b>a&#9608;&#9608;&#9608;</b><br><br>The following <b>modifier</b> defined in ethogram has leading/trailing spaces or special chars: <b>c&#9608;&#9608;</b><br><br>The following <b>modifier</b> defined in ethogram has leading/trailing spaces or special chars: <b>c&#9608;</b><br><br>The following <b>modifier</b> defined in ethogram has leading/trailing spaces or special chars: <b>d&#9608;&#9608;</b>'''
 
 class Test_check_state_events_obs(object):
 
