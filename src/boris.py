@@ -547,7 +547,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     filtered_behaviors = []
 
     dw_player = []
-    
+
     save_project_json_started = False
 
 
@@ -3284,10 +3284,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def automatic_backup(self):
         """
-        save project every x minutes if current observation
+        save project every x minutes if observation is running
+        and if the project file name is defined
         """
 
-        if self.observationId:
+        if self.observationId and self.projectFileName:
             logging.info("automatic backup")
             self.save_project_activated()
 
@@ -7179,8 +7180,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return "Not saved"
 
-            self.save_project_json(project_new_file_name)
             self.projectFileName = project_new_file_name
+            self.save_project_json(self.projectFileName)
 
 
     def save_project_activated(self):
