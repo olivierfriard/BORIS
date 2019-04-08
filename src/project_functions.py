@@ -254,7 +254,7 @@ def check_project_integrity(pj: dict,
                             out += "<br><br>" if out else ""
                             out += f"Observation: <b>{obs_id}</b><br>Length not available for media file <b>{media_file}</b>"
 
-        # check for leading/trailing spaces/special chars in observation id 
+        # check for leading/trailing spaces/special chars in observation id
         for obs_id in pj[OBSERVATIONS]:
             if obs_id != obs_id.strip():
                 out += "<br><br>" if out else ""
@@ -564,7 +564,8 @@ def observation_total_length(observation: dict):
     tested
 
     media: if media length not available return 0
-            if more media are queued, return sum of media length
+           if more media are queued, return sum of media length
+           if the last event is recorded after the length of media returns the last event time
 
     live: return last event time
 
@@ -611,11 +612,9 @@ def observation_total_length(observation: dict):
 
         media_max_total_length = max([media_total_length[x] for x in media_total_length])
 
-        '''
         if observation[EVENTS]:
-            if max(observation[EVENTS])[EVENT_TIME_FIELD_IDX] > totalMediaLength:
+            if max(observation[EVENTS])[EVENT_TIME_FIELD_IDX] > media_max_total_length:
                 media_max_total_length = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
-        '''
 
         return media_max_total_length
 

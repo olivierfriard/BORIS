@@ -5909,7 +5909,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 f.write(data_report.export(output_format))
 
 
-    def observation_length(self, selected_observations: list):
+    def observation_length(self, selected_observations: list) -> tuple:
         """
         max length of selected observations
         total media length
@@ -6032,7 +6032,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if parameters[TIME_INTERVAL] == TIME_FULL_OBS:
                     min_time = float(0)
-                    max_time = float(obs_length)
+                    # check if the last event is recorded after media file length
+                    try:
+                        if float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0]) > float(obs_length):
+                            max_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0])
+                        else:
+                            max_time = float(obs_length)
+                    except Exception:
+                        max_time = float(obs_length)
 
                 if parameters[TIME_INTERVAL] == TIME_EVENTS:
                     try:
@@ -6285,7 +6292,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if parameters["time"] == TIME_FULL_OBS:
                     min_time = float(0)
-                    max_time = float(obs_length)
+                    # check if the last event is recorded after media file length
+                    try:
+                        if float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0]) > float(obs_length):
+                            max_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0])
+                        else:
+                            max_time = float(obs_length)
+                    except Exception:
+                        max_time = float(obs_length)
 
                 if parameters["time"] == TIME_EVENTS:
                     try:
