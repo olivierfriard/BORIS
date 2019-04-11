@@ -10379,9 +10379,9 @@ item []:
                                 return
 
         if mode == "jwatcher":
-            exportDir = QFileDialog(self).getExistingDirectory(self, "Choose a directory to export events",
-                                                               os.path.expanduser("~"),
-                                                               options=QFileDialog.ShowDirsOnly)
+            exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to export events",
+                                                           os.path.expanduser("~"),
+                                                           options=QFileDialog.ShowDirsOnly)
             if not exportDir:
                 return
 
