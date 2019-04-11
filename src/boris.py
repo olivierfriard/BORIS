@@ -1594,16 +1594,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 horiz_resol = ib.elements["Horizontal resolution (in pixel)"].value()
                 video_quality = ib.elements["Video quality (bitrate)"].value()
 
-                '''
-                horiz_resol, ok = QInputDialog.getInt(self, "", ("Horizontal resolution (in pixels)\nThe aspect ratio will be maintained"),
-                                                      1024, 352, 2048, 20)
-                if not ok:
-                    return
-
-                video_quality, ok = QInputDialog.getInt(self, "", "Video quality (bitrate)", 2000, 1000, 20000, 1000)
-                if not ok:
-                    return
-                '''
 
             if action == "rotate":
                 rotation_items = ("Rotate 90 clockwise", "Rotate 90 counter clockwise", "rotate 180")

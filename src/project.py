@@ -1150,31 +1150,34 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             if response == YES:
 
-                # extract all codes to delete
-                codesToDelete = []
-                row_mem = {}
-                for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
-                    if self.twBehaviors.item(r, 2).text():
-                        codesToDelete.append(self.twBehaviors.item(r, 2).text())
-                        row_mem[self.twBehaviors.item(r, 2).text()] = r
+                try:
+                    # extract all codes to delete
+                    codesToDelete = []
+                    row_mem = {}
+                    for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
+                        if self.twBehaviors.item(r, 2).text():
+                            codesToDelete.append(self.twBehaviors.item(r, 2).text())
+                            row_mem[self.twBehaviors.item(r, 2).text()] = r
 
-                # extract all codes used in observations
-                codesInObs = []
-                for obs in self.pj[OBSERVATIONS]:
-                    events = self.pj[OBSERVATIONS][obs]['events']
-                    for event in events:
-                        codesInObs.append(event[2])
+                    # extract all codes used in observations
+                    codesInObs = []
+                    for obs in self.pj[OBSERVATIONS]:
+                        events = self.pj[OBSERVATIONS][obs]['events']
+                        for event in events:
+                            codesInObs.append(event[2])
 
-                for codeToDelete in codesToDelete:
-                    # if code to delete used in obs ask confirmation
-                    if codeToDelete in codesInObs:
-                        response = dialog.MessageDialog(programName,
-                                                        "The code <b>{}</b> is used in observations!".format(codeToDelete),
-                                                        ['Remove', CANCEL])
-                        if response == "Remove":
+                    for codeToDelete in codesToDelete:
+                        # if code to delete used in obs ask confirmation
+                        if codeToDelete in codesInObs:
+                            response = dialog.MessageDialog(programName,
+                                                            "The code <b>{}</b> is used in observations!".format(codeToDelete),
+                                                            ['Remove', CANCEL])
+                            if response == "Remove":
+                                self.twBehaviors.removeRow(row_mem[codeToDelete])
+                        else:   # remove without asking
                             self.twBehaviors.removeRow(row_mem[codeToDelete])
-                    else:   # remove without asking
-                        self.twBehaviors.removeRow(row_mem[codeToDelete])
+                except Exception:
+                    QMessageBox.warning(self, programName, "Error during deleting behaviors")
 
 
     def pbImportFromJWatcher_clicked(self):
