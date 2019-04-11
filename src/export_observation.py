@@ -64,6 +64,9 @@ def export_events_jwatcher(parameters: list,
             if event[SUBJECT_EVENT_FIELD] == subject or (subject == "No focal subject" and event[SUBJECT_EVENT_FIELD] == ""):
                 events.append(event)
 
+        if not events:
+            continue
+
         total_length = 0   # in seconds
         if observation[EVENTS]:
             total_length = observation[EVENTS][-1][0] - observation[EVENTS][0][0]  # last event time - first event time
@@ -117,7 +120,7 @@ def export_events_jwatcher(parameters: list,
             if (event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key) not in all_observed_behaviors:
                 all_observed_behaviors.append((event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key))
 
-        rows.append("{}, {}".format(int(events[-1][0] * 1000), "EOF\n"))
+        rows.append(f"{int(events[-1][0] * 1000)}, EOF\n")
 
         try:
             with open(file_name_subject, "w") as f_out:
