@@ -5469,10 +5469,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
-            self.recent_projects = settings.value("recent_projects").split("|||")
-            while "" in self.recent_projects:
-                self.recent_projects.remove("")
-            self.set_recent_projects_menu()
+            try:
+                self.recent_projects = settings.value("recent_projects").split("|||")
+                while "" in self.recent_projects:
+                    self.recent_projects.remove("")
+                self.set_recent_projects_menu()
+            except Exception:
+                self.recent_projects = []
         else:
             self.recent_projects = []
 

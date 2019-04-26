@@ -59,7 +59,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pbMoveSetLeft.clicked.connect(self.moveSetLeft)
         self.pbMoveSetRight.clicked.connect(self.moveSetRight)
         self.pbRemoveModifier.clicked.connect(self.removeModifier)
+        self.pb_sort_modifiers.clicked.connect(self.sort_modifiers)
         self.pb_add_subjects.clicked.connect(self.add_subjects)
+        self.pb_load_file.clicked.connect(self.add_modifiers_from_file)
 
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
@@ -86,9 +88,9 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if self.tabWidgetModifiersSets.currentIndex() == -1:
             for w in [self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers, self.pbMoveUp,
                       self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft, self.pbMoveSetRight,
-                      ]:
+                      self.pb_add_subjects, self.pb_load_file, self.pb_sort_modifiers]:
                 w.setVisible(False)
-            for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier, self.pb_add_subjects]:
+            for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
                 w.setEnabled(False)
 
         # set first tab as active
@@ -105,6 +107,44 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 self.lwModifiers.insertItem(self.itemPositionMem, subject)
             else:
                 self.lwModifiers.addItem(subject)
+
+        self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text()
+                                                                                               for x in range(self.lwModifiers.count())]
+
+
+    def add_modifiers_from_file(self):
+        """
+        add modifiers from file
+        """
+
+        fn = QFileDialog().getOpenFileName(self, "Load modifiers from file", "",
+                                           "All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        if file_name:
+            with open(file_name) as f_in:
+                for line in f_in:
+                    if line.strip():
+                        if self.itemPositionMem != -1:
+                            self.lwModifiers.insertItem(self.itemPositionMem, line.strip())
+                        else:
+                            self.lwModifiers.addItem(line.strip())
+    
+            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text()
+                                                                                                   for x in range(self.lwModifiers.count())]
+
+
+    def sort_modifiers(self):
+        """
+        sort modifiers
+        """
+
+        modifiers = sorted([self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())])
+        self.lwModifiers.clear()
+        for modifier in modifiers:
+            if self.itemPositionMem != -1:
+                self.lwModifiers.insertItem(self.itemPositionMem, modifier)
+            else:
+                self.lwModifiers.addItem(modifier)
 
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text()
                                                                                                for x in range(self.lwModifiers.count())]
@@ -129,7 +169,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         # disable if modifier numeric
         for obj in [self.lbValues, self.lwModifiers, self.leModifier, self.leCode, self.lbModifier, self.lbCode, self.lbCodeHelp,
                     self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pb_add_subjects,
-                    self.pbAddModifier, self.pbModifyModifier]:
+                    self.pbAddModifier, self.pbModifyModifier, self.pb_load_file, self.pb_sort_modifiers]:
             obj.setEnabled(self.cbType.currentIndex() != NUMERIC_MODIFIER)
 
 
@@ -205,7 +245,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
             # set visible and available buttons and others elements
             for w in [self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers, self.pbMoveUp,
-                      self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft, self.pbMoveSetRight]:
+                      self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft, self.pbMoveSetRight,
+                      self.pb_add_subjects, self.pb_load_file, self.pb_sort_modifiers]:
                 w.setVisible(True)
             for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
                 w.setEnabled(True)

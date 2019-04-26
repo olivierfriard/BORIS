@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'add_modifier.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -95,6 +95,9 @@ class Ui_Dialog(object):
         self.pbRemoveModifier = QtWidgets.QPushButton(Dialog)
         self.pbRemoveModifier.setObjectName("pbRemoveModifier")
         self.verticalLayout.addWidget(self.pbRemoveModifier)
+        self.pb_sort_modifiers = QtWidgets.QPushButton(Dialog)
+        self.pb_sort_modifiers.setObjectName("pb_sort_modifiers")
+        self.verticalLayout.addWidget(self.pb_sort_modifiers)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.pbAddSet = QtWidgets.QPushButton(Dialog)
@@ -116,6 +119,9 @@ class Ui_Dialog(object):
         self.pb_add_subjects = QtWidgets.QPushButton(Dialog)
         self.pb_add_subjects.setObjectName("pb_add_subjects")
         self.verticalLayout.addWidget(self.pb_add_subjects)
+        self.pb_load_file = QtWidgets.QPushButton(Dialog)
+        self.pb_load_file.setObjectName("pb_load_file")
+        self.verticalLayout.addWidget(self.pb_load_file)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem2)
         self.horizontalLayout_5.addLayout(self.verticalLayout)
@@ -142,7 +148,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Set modifiers"))
         self.lbModifier.setText(_translate("Dialog", "Modifier"))
         self.lbCode.setText(_translate("Dialog", "Key code"))
-        self.lbCodeHelp.setText(_translate("Dialog", "Key code is case insensitive. Type one character or a function key (F1, F2... F12)"))
+        self.lbCodeHelp.setText(_translate("Dialog", "Key code is case sensitive. Type one character or a function key (F1, F2... F12)"))
         self.lbSetName.setText(_translate("Dialog", "Set name"))
         self.lbType.setText(_translate("Dialog", "Modifier type"))
         self.cbType.setItemText(0, _translate("Dialog", "Single selection"))
@@ -152,11 +158,13 @@ class Ui_Dialog(object):
         self.pbMoveUp.setText(_translate("Dialog", "Move modifier up"))
         self.pbMoveDown.setText(_translate("Dialog", "Move modifier down"))
         self.pbRemoveModifier.setText(_translate("Dialog", "Remove modifier"))
+        self.pb_sort_modifiers.setText(_translate("Dialog", "Sort modifiers"))
         self.pbAddSet.setText(_translate("Dialog", "Add set of modifiers"))
         self.pbRemoveSet.setText(_translate("Dialog", "Remove set of modifiers"))
         self.pbMoveSetLeft.setText(_translate("Dialog", "Move set left"))
         self.pbMoveSetRight.setText(_translate("Dialog", "Move set right"))
         self.pb_add_subjects.setText(_translate("Dialog", "Add subjects as modifiers"))
+        self.pb_load_file.setText(_translate("Dialog", "Load modifiers from file"))
         self.pbCancel.setText(_translate("Dialog", "Cancel"))
         self.pbOK.setText(_translate("Dialog", "OK"))
 

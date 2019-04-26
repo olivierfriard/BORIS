@@ -43,7 +43,7 @@
          <item>
           <widget class="QLabel" name="lbCodeHelp">
            <property name="text">
-            <string>Key code is case insensitive. Type one character or a function key (F1, F2... F12)</string>
+            <string>Key code is case sensitive. Type one character or a function key (F1, F2... F12)</string>
            </property>
            <property name="wordWrap">
             <bool>true</bool>
@@ -195,6 +195,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pb_sort_modifiers">
+           <property name="text">
+            <string>Sort modifiers</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QPushButton" name="pbAddSet">
@@ -234,6 +241,13 @@
           <widget class="QPushButton" name="pb_add_subjects">
            <property name="text">
             <string>Add subjects as modifiers</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_load_file">
+           <property name="text">
+            <string>Load modifiers from file</string>
            </property>
           </widget>
          </item>
