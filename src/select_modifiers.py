@@ -148,6 +148,18 @@ class ModifiersList(QDialog):
 
             for widget in self.children():
                 if "lw_modifiers" in widget.objectName():
+                    
+                    if self.modifiersSetNumber == 1:
+                        for index in range(widget.count()):
+                            if "(" in widget.item(index).text():
+                                break
+                        else:
+                            for index in range(widget.count()):
+                                if widget.item(index).text().upper().startswith(ek_text.upper()):
+                                    widget.item(index).setSelected(True)
+                                    widget.scrollToItem(widget.item(index), QAbstractItemView.EnsureVisible)
+                                    return True
+                    
                     for index in range(widget.count()):
 
                         if ek in function_keys:
