@@ -32,6 +32,7 @@ from utilities import sorted_keys
 
 
 class ModifiersList(QDialog):
+
     def __init__(self, code, modifiers_dict, currentModifier):
 
         super().__init__()
@@ -135,11 +136,12 @@ class ModifiersList(QDialog):
         if (event.type() == QEvent.KeyPress):
             ek, ek_text = event.key(), event.text()
 
-            # close dialog if enter pressed
+            # reject and close dialog if escape pressed
             if ek == Qt.Key_Escape:  # close
                 self.reject()
                 return False
 
+            # accept and close dialog if enter pressed
             if ek == Qt.Key_Enter or ek == Qt.Key_Return:  # enter or enter from numeric pad
                 self.accept()
                 return True
@@ -149,18 +151,18 @@ class ModifiersList(QDialog):
                     for index in range(widget.count()):
 
                         if ek in function_keys:
-                            if "({})".format(function_keys[ek]) in widget.item(index).text().upper():
+                            if f"({function_keys[ek]})" in widget.item(index).text().upper():
                                 widget.item(index).setSelected(True)
 
                                 if self.modifiersSetNumber == 1:
                                     self.accept()
                                     return True
 
-                        if ek < 1114112 and "({})".format(ek_text) in widget.item(index).text():
+                        if ek < 1114112 and f"({ek_text})" in widget.item(index).text():
 
-                            if "({})".format(SINGLE_SELECTION) in widget.objectName():
+                            if f"({SINGLE_SELECTION})" in widget.objectName():
                                 widget.item(index).setSelected(True)
-                            if "({})".format(MULTI_SELECTION) in widget.objectName():
+                            if f"({MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
                                     widget.item(index).setCheckState(Qt.Unchecked)
                                 else:
