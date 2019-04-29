@@ -218,7 +218,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>0</number>
+              <number>1</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -471,6 +471,20 @@
                       </widget>
                      </item>
                      <item>
+                      <widget class="QPushButton" name="pb_remove_data_file">
+                       <property name="text">
+                        <string>Remove selected data file</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pb_record_value">
+                       <property name="text">
+                        <string>Record value</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
                       <widget class="QPushButton" name="pb_view_data_head">
                        <property name="text">
                         <string>View first rows</string>
@@ -481,13 +495,6 @@
                       <widget class="QPushButton" name="pb_plot_data">
                        <property name="text">
                         <string>Show plot</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="pb_remove_data_file">
-                       <property name="text">
-                        <string>Remove selected data file</string>
                        </property>
                       </widget>
                      </item>

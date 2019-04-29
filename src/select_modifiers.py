@@ -148,42 +148,71 @@ class ModifiersList(QDialog):
 
             for widget in self.children():
                 if "lw_modifiers" in widget.objectName():
-                    
+
                     if self.modifiersSetNumber == 1:
+                        # check if modifiers have code
                         for index in range(widget.count()):
                             if "(" in widget.item(index).text():
                                 break
                         else:
-                            for index in range(widget.count()):
-                                if widget.item(index).text().upper().startswith(ek_text.upper()):
-                                    widget.item(index).setSelected(True)
-                                    widget.scrollToItem(widget.item(index), QAbstractItemView.EnsureVisible)
-                                    return True
-                    
+                            # modifiers have no associated code: the modifier starting with hit key will be selected
+                            if ek not in [Qt.Key_Down, Qt.Key_Up]:
+
+                                if ek == Qt.Key_Space and f"({MULTI_SELECTION})" in widget.objectName(): # checking using SPACE bar
+                                    if widget.item(widget.currentRow()).checkState() == Qt.Checked:
+                                        widget.item(widget.currentRow()).setCheckState(Qt.Unchecked)
+                                    else:
+                                        widget.item(widget.currentRow()).setCheckState(Qt.Checked)
+
+                                else:
+                                    for index in range(widget.count()):
+                                        if widget.item(index).text().upper().startswith(ek_text.upper()):
+                                            #widget.item(index).setSelected(True)
+                                            widget.setCurrentRow(index)
+                                            widget.scrollToItem(widget.item(index), QAbstractItemView.EnsureVisible)
+                                            return True
+                            else: # up / down keys
+                                try:
+                                    if ek == Qt.Key_Down and widget.currentRow() < widget.count() - 1:
+                                        widget.setCurrentRow(widget.currentRow() + 1)
+                                    if ek == Qt.Key_Up and widget.currentRow() > 0:
+                                        widget.setCurrentRow(widget.currentRow() - 1)
+                                except Exception:
+                                    return
+
                     for index in range(widget.count()):
 
                         if ek in function_keys:
                             if f"({function_keys[ek]})" in widget.item(index).text().upper():
-                                widget.item(index).setSelected(True)
+                                if f"({SINGLE_SELECTION})" in widget.objectName():
+                                    widget.item(index).setSelected(True)
+                                    # close dialog if one set of modifiers
+                                    if self.modifiersSetNumber == 1:
+                                        self.accept()
+                                        return True
 
-                                if self.modifiersSetNumber == 1:
-                                    self.accept()
-                                    return True
+                                if f"({MULTI_SELECTION})" in widget.objectName():
+                                    if widget.item(index).checkState() == Qt.Checked:
+                                        widget.item(index).setCheckState(Qt.Unchecked)
+                                    else:
+                                        widget.item(index).setCheckState(Qt.Checked)
+
 
                         if ek < 1114112 and f"({ek_text})" in widget.item(index).text():
 
                             if f"({SINGLE_SELECTION})" in widget.objectName():
                                 widget.item(index).setSelected(True)
+                                # close dialog if one set of modifiers
+                                if self.modifiersSetNumber == 1:
+                                    self.accept()
+                                    return True
+
                             if f"({MULTI_SELECTION})" in widget.objectName():
                                 if widget.item(index).checkState() == Qt.Checked:
                                     widget.item(index).setCheckState(Qt.Unchecked)
                                 else:
                                     widget.item(index).setCheckState(Qt.Checked)
 
-                            # close dialog if one set of modifiers
-                            if self.modifiersSetNumber == 1:
-                                self.accept()
-                                return True
 
             return True
         else:

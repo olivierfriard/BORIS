@@ -42,6 +42,7 @@ from utilities import *
 import dialog
 import plot_data_module
 import project_functions
+import param_panel
 
 MEDIA_FILE_PATH_IDX = 2
 HAS_AUDIO_IDX = 6
@@ -123,9 +124,11 @@ class Observation(QDialog, Ui_Form):
 
         self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
         self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
+        self.pb_remove_data_file.clicked.connect(self.remove_data_file)
+        self.pb_record_value.clicked.connect(self.record_value)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
-        self.pb_remove_data_file.clicked.connect(self.remove_data_file)
+
 
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
@@ -146,23 +149,7 @@ class Observation(QDialog, Ui_Form):
 
         self.tabWidget.setCurrentIndex(0)
 
-    """
-    def processSpectrogramCompleted(self, fileName1stChunk):
-        '''
-        function triggered at the end of spectrogram creation
-        '''
 
-        print('fileName1stChunk',fileName1stChunk)
-        self.spectrogramFinished = True
-
-        self.infobutton.setText('Go!')
-
-        self.spectro = Spectrogram( fileName1stChunk )
-        self.spectro.show()
-        self.timer_spectro.start()
-
-        self.PlayPause()
-    """
 
     def tw_data_files_cellDoubleClicked(self, row, column):
         """
@@ -219,9 +206,9 @@ class Observation(QDialog, Ui_Form):
                 data_file_path = project_functions.media_full_path(filename, self.project_path)
 
                 if not data_file_path:
-                    QMessageBox.critical(self, programName, ("Data file not found:\n{}\n"
+                    QMessageBox.critical(self, programName, (f"Data file not found:\n{filename}\n"
                                                              "If the file path is not stored the data file "
-                                                             "must be in the same directory than your project").format(filename))
+                                                             "must be in the same directory than your project"))
                     return
 
                 self.test = plot_data_module.Plot_data(data_file_path,
@@ -238,16 +225,9 @@ class Observation(QDialog, Ui_Form):
                                                   )
 
                 if self.test.error_msg:
-                    QMessageBox.critical(self, programName, "Impossible to plot data:\n{}".format(self.test.error_msg))
+                    QMessageBox.critical(self, programName, f"Impossible to plot data:\n{self.test.error_msg}")
                     del self.test
                     return
-
-                '''
-                print(test.plotter.data)
-
-                print(Path(self.tmp_dir).joinpath(file_content_md5(filename)))
-                numpy.save(Path(self.tmp_dir).joinpath(file_content_md5(filename)), test.plotter.data)
-                '''
 
                 self.test.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.test.show()
@@ -371,6 +351,129 @@ class Observation(QDialog, Ui_Form):
             combobox.addItems(DATA_PLOT_STYLES)
             self.tw_data_files.setCellWidget(self.tw_data_files.rowCount() - 1, PLOT_DATA_PLOTCOLOR_IDX, combobox)
 
+
+    def select_behaviors(self, title="Record value from external data file",
+                         text="Behaviors",
+                         table=ETHOGRAM,
+                         behavior_type=[STATE_EVENT, POINT_EVENT]):
+        """
+        allow user to select behaviors for recording value from external data file
+
+        Args:
+            title (str): title of dialog box
+            text (str): text of dialog box
+            table (str): table where behaviors will be filtered
+        """
+
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.resize(800, 600)
+        paramPanelWindow.setWindowTitle(title)
+        paramPanelWindow.lbBehaviors.setText(text)
+        for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
+                  paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
+                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
+            w.setVisible(False)
+
+        #behaviors_list = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]]
+
+        if BEHAVIORAL_CATEGORIES in self.pj:
+            categories = self.pj[BEHAVIORAL_CATEGORIES][:]
+            # check if behavior not included in a category
+            if "" in [self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] for idx in self.pj[ETHOGRAM]
+                      if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx]]:
+                categories += [""]
+        else:
+            categories = ["###no category###"]
+
+        for category in categories:
+
+            if category != "###no category###":
+
+                if category == "":
+                    paramPanelWindow.item = QListWidgetItem("No category")
+                    paramPanelWindow.item.setData(34, "No category")
+                else:
+                    paramPanelWindow.item = QListWidgetItem(category)
+                    paramPanelWindow.item.setData(34, category)
+
+                font = QFont()
+                font.setBold(True)
+                paramPanelWindow.item.setFont(font)
+                paramPanelWindow.item.setData(33, "category")
+                paramPanelWindow.item.setData(35, False)
+
+                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+            # check if behavior type must be shown
+            for behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in sorted_keys(self.pj[ETHOGRAM])]:
+                '''
+                if project_functions.event_type(behavior, self.pj[ETHOGRAM]) not in behavior_type:
+                    continue
+                '''
+
+
+                if ((categories == ["###no category###"]) or
+                   (behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]
+                                 if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][x] and
+                                    self.pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category])):
+
+                    paramPanelWindow.item = QListWidgetItem(behavior)
+                    '''
+                    if behavior in filtered_behaviors:
+                        paramPanelWindow.item.setCheckState(Qt.Checked)
+                    else:
+                        paramPanelWindow.item.setCheckState(Qt.Unchecked)
+                    '''
+                    paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+                    if category != "###no category###":
+                        paramPanelWindow.item.setData(33, "behavior")
+                        if category == "":
+                            paramPanelWindow.item.setData(34, "No category")
+                        else:
+                            paramPanelWindow.item.setData(34, category)
+
+                    paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        if paramPanelWindow.exec_():
+
+            if table == ETHOGRAM:
+                return paramPanelWindow.selectedBehaviors
+
+        return []
+
+
+
+
+    def record_value(self):
+        """
+        let user select behavior for recording value from data file
+        """
+        if self.tw_data_files.selectedIndexes() or self.tw_data_files.rowCount() == 1:
+
+            if self.tw_data_files.rowCount() == 1:
+                row_idx = 0
+            else:
+                row_idx = self.tw_data_files.selectedIndexes()[0].row()
+
+            if not self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text():
+                QMessageBox.warning(self, programName, "You must define a variable name to record the data value.")
+                return
+            else:
+                behaviors_list = self.select_behaviors()
+                for idx in self.pj[ETHOGRAM]:
+                    if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] not in behaviors_list:
+                        continue
+                    if self.pj[ETHOGRAM][idx][MODIFIERS]:
+                        new_modifier_idx = str(max([x for x in sorted([int(x) for x in self.pj[ETHOGRAM][idx][MODIFIERS]])]) + 1)
+                    else:
+                        new_modifier_idx = "0"
+                        self.pj[ETHOGRAM][idx][MODIFIERS] = {}
+                    print(self.pj[ETHOGRAM][idx][MODIFIERS])
+                    print(new_modifier_idx)
+                    self.pj[ETHOGRAM][idx][MODIFIERS][new_modifier_idx] = {"name": self.tw_data_files.item(row_idx, PLOT_DATA_VARIABLENAME_IDX).text(),
+                                                                           "type": EXTERNAL_DATA_MODIFIER,
+                                                                           "values": []}
 
     def view_data_file_head(self):
         """
@@ -537,7 +640,8 @@ class Observation(QDialog, Ui_Form):
 
         # check time offset
         if not is_numeric(self.leTimeOffset.text()):
-            QMessageBox.critical(self, programName , "<b>{}</b> is not recognized as a valid time offset format".format(self.leTimeOffset.text()))
+            QMessageBox.critical(self, programName ,
+                                 f"<b>{self.leTimeOffset.text()}</b> is not recognized as a valid time offset format")
             return False
 
         # check if indep variables are correct type
@@ -545,7 +649,7 @@ class Observation(QDialog, Ui_Form):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
                 if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
                     QMessageBox.critical(self, programName,
-                                         "The <b>{}</b> variable must be numeric!".format(self.twIndepVariables.item(row, 0).text()))
+                                         f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
 
         # check if observation id not empty
@@ -557,9 +661,9 @@ class Observation(QDialog, Ui_Form):
         if (self.mode == "new") or (self.mode == "edit" and self.leObservationId.text() != self.mem_obs_id):
             if self.leObservationId.text() in self.pj[OBSERVATIONS]:
                 QMessageBox.critical(self, programName,
-                                     "The observation id <b>{0}</b> is already used!<br>{1}<br>{2}".format(self.leObservationId.text(),
-                                                                                                           self.pj['observations'][self.leObservationId.text()]['description'],
-                                                                                                           self.pj['observations'][self.leObservationId.text()]['date']))
+                                     (f"The observation id <b>{self.leObservationId.text(),}</b> is already used!<br>"
+                                      f"{self.pj[OBSERVATIONS][self.leObservationId.text()]['description']}<br>"
+                                      f"{self.pj[OBSERVATIONS][self.leObservationId.text()]['date']}"))
                 return False
 
         # check if media list #2 populated and media list #1 empty

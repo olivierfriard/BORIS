@@ -266,8 +266,12 @@ MODIFIERS = "modifiers"
 SINGLE_SELECTION = 0
 MULTI_SELECTION = 1
 NUMERIC_MODIFIER = 2
+EXTERNAL_DATA_MODIFIER = 3
 
-MODIFIERS_STR = {SINGLE_SELECTION: "Single item selection", MULTI_SELECTION: "Multiple items selection", NUMERIC_MODIFIER: "Numeric"}
+MODIFIERS_STR = {SINGLE_SELECTION: "Single item selection",
+                 MULTI_SELECTION: "Multiple items selection",
+                 NUMERIC_MODIFIER: "Numeric",
+                 EXTERNAL_DATA_MODIFIER: "Value from external data file"}
 
 # colors
 subtitlesColors = ['cyan', 'red', 'blue', 'yellow', 'fuchsia', 'orange', 'lime', 'green']

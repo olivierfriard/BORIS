@@ -157,6 +157,11 @@
              <string>Numeric</string>
             </property>
            </item>
+           <item>
+            <property name="text">
+             <string>Value from external data file</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item>

@@ -31,6 +31,7 @@ from add_modifier_ui5 import Ui_Dialog
 
 import copy
 import dialog
+import logging
 from config import *
 from utilities import sorted_keys
 
@@ -63,7 +64,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pb_add_subjects.clicked.connect(self.add_subjects)
         self.pb_load_file.clicked.connect(self.add_modifiers_from_file)
 
-        self.pbOK.clicked.connect(self.accept)
+        self.pbOK.clicked.connect(self.pb_ok)
         self.pbCancel.clicked.connect(self.reject)
 
         self.leSetName.textChanged.connect(self.set_name_changed)
@@ -74,6 +75,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
         modif_values = []
         for idx in sorted_keys(dummy_dict):
             modif_values.append(dummy_dict[idx])
+
 
         self.modifiers_sets_dict = {}
         for modif in modif_values:
@@ -97,6 +99,24 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.tabMem = 0
 
 
+    def pb_ok(self):
+        if self.leModifier.text():
+            if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
+                                                  "If you close the window it will be lost.<br>"
+                                                  "Do you want to change modifiers set"), ["Close", CANCEL]) == CANCEL:
+                return
+        self.accept()
+
+
+    def pb_cancel(self):
+        if self.leModifier.text():
+            if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
+                                                  "If you close the window it will be lost.<br>"
+                                                  "Do you want to change modifiers set"), ["Close", CANCEL]) == CANCEL:
+                return
+        self.reject()
+
+
     def add_subjects(self):
         """
         add subjects as modifiers
@@ -117,20 +137,35 @@ class addModifierDialog(QDialog, Ui_Dialog):
         add modifiers from file
         """
 
-        fn = QFileDialog().getOpenFileName(self, "Load modifiers from file", "",
-                                           "All files (*)")
+        fn = QFileDialog().getOpenFileName(self, "Load modifiers from file", "", "All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
         if file_name:
-            with open(file_name) as f_in:
-                for line in f_in:
-                    if line.strip():
-                        if self.itemPositionMem != -1:
-                            self.lwModifiers.insertItem(self.itemPositionMem, line.strip())
-                        else:
-                            self.lwModifiers.addItem(line.strip())
-    
-            self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text()
-                                                                                                   for x in range(self.lwModifiers.count())]
+            try:
+                with open(file_name) as f_in:
+                    for line in f_in:
+                        if line.strip():
+
+                            for c in CHAR_FORBIDDEN_IN_MODIFIERS:
+                                if c in line.strip():
+                                    QMessageBox.critical(self, programName,
+                                                         (f"The character <b>{c}</b> is not allowed.<br>"
+                                                          "The following characters are not allowed in modifiers:<br>"
+                                                          f"<b>{CHAR_FORBIDDEN_IN_MODIFIERS}</b>"))
+                                    break
+                            else:
+
+                                if line.strip() not in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
+
+                                    if self.itemPositionMem != -1:
+                                        self.lwModifiers.insertItem(self.itemPositionMem, line.strip())
+                                    else:
+                                        self.lwModifiers.addItem(line.strip())
+
+                self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text()
+                                                                                                       for x in range(self.lwModifiers.count())]
+            except Exception:
+                QMessageBox.warning(self, programName, f"Error reading modifiers from file:<br>{file_name}")
+                logging.warning(f"Error reading modifiers from file<br>{file_name}")
 
 
     def sort_modifiers(self):
@@ -166,11 +201,15 @@ class addModifierDialog(QDialog, Ui_Dialog):
         if not self.modifiers_sets_dict:
             self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["type"] = self.cbType.currentIndex()
-        # disable if modifier numeric
+        # disable if modifier numeric or value from external data file
         for obj in [self.lbValues, self.lwModifiers, self.leModifier, self.leCode, self.lbModifier, self.lbCode, self.lbCodeHelp,
                     self.pbMoveUp, self.pbMoveDown, self.pbRemoveModifier, self.pb_add_subjects,
                     self.pbAddModifier, self.pbModifyModifier, self.pb_load_file, self.pb_sort_modifiers]:
-            obj.setEnabled(self.cbType.currentIndex() != NUMERIC_MODIFIER)
+            obj.setEnabled(self.cbType.currentIndex() not in [NUMERIC_MODIFIER, EXTERNAL_DATA_MODIFIER])
+        if self.cbType.currentIndex() == EXTERNAL_DATA_MODIFIER:
+            self.lbSetName.setText("Variable name")
+        else:
+            self.lbSetName.setText("Set name")
 
 
     def moveSetLeft(self):
@@ -346,6 +385,12 @@ class addModifierDialog(QDialog, Ui_Dialog):
                 return
 
         if txt:
+
+            if txt in [self.lwModifiers.item(x).text() for x in range(self.lwModifiers.count())]:
+                QMessageBox.critical(self, programName,
+                                     f"The modifier <b>{txt}</b> is already in the list")
+                return
+
             if not self.modifiers_sets_dict:
                 self.modifiers_sets_dict["0"] = {"name": "", "type": SINGLE_SELECTION, "values": []}
 
