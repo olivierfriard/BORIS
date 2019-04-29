@@ -44,7 +44,7 @@ class ModifiersList(QDialog):
 
         V1layout = QVBoxLayout()
         label = QLabel()
-        label.setText("Choose the modifier{0} for <b>{1}</b> behavior".format("s" * (len(self.modifiers_dict) > 1), code))
+        label.setText(f"Choose the modifier{'s' * (len(self.modifiers_dict) > 1)} for <b>{code}</b> behavior")
         V1layout.addWidget(label)
 
         Hlayout = QHBoxLayout()
@@ -52,18 +52,21 @@ class ModifiersList(QDialog):
 
         for idx in sorted_keys(modifiers_dict):
 
+            if self.modifiers_dict[idx]["type"] not in [SINGLE_SELECTION, MULTI_SELECTION, NUMERIC_MODIFIER]:
+                continue
+
             V2layout = QVBoxLayout()
 
             self.modifiersSetNumber += 1
 
             lb = QLabel()
-            lb.setText("Modifier <b>{}</b>".format(self.modifiers_dict[idx]["name"]))
+            lb.setText(f"Modifier <b>{self.modifiers_dict[idx]['name']}</b>")
             V2layout.addWidget(lb)
 
             if self.modifiers_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
                 lw = QListWidget()
                 self.modifiers_dict[idx]["widget"] = lw
-                lw.setObjectName("lw_modifiers_({})".format(self.modifiers_dict[idx]["type"]))
+                lw.setObjectName(f"lw_modifiers_({self.modifiers_dict[idx]['type']})")
                 lw.installEventFilter(self)
 
                 if self.modifiers_dict[idx]["type"] == SINGLE_SELECTION:

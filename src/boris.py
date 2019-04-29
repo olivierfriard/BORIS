@@ -3547,9 +3547,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timer_plot_data_out(self.plot_data[idx])
 
             # update data plot
+            '''
             current_time = self.getLaps()
             for idx in self.plot_data:
                 self.plot_data[idx].update_plot(current_time)
+            '''
 
             md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
 
@@ -9135,6 +9137,15 @@ item []:
                 modifier_str = ""
 
                 if event["modifiers"]:
+
+                    # check if modifier from external data file
+                    variables_list = [event["modifiers"][x]["name"] for x in event["modifiers"] if event["modifiers"][x]["type"] == EXTERNAL_DATA_MODIFIER]
+                    if variables_list:
+                        pass
+                        for idx in self.plot_data:
+                            print(self.plot_data[idx].lb_value.text())
+                        #lb_value.setText
+
                     # pause media
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
