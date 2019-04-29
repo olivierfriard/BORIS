@@ -9140,53 +9140,62 @@ item []:
 
                     # check if modifier from external data file
                     variables_list = [event["modifiers"][x]["name"] for x in event["modifiers"] if event["modifiers"][x]["type"] == EXTERNAL_DATA_MODIFIER]
+
                     if variables_list:
-                        pass
+                        comment = event.get("comment", "")
                         for idx in self.plot_data:
-                            print(self.plot_data[idx].lb_value.text())
+                            if self.plot_data[idx].y_label in variables_list:
+                                print(f"{self.plot_data[idx].y_label} = {self.plot_data[idx].lb_value.text()}")
+                                if comment:
+                                    comment += ";"
+                                comment += f"{self.plot_data[idx].y_label} = {self.plot_data[idx].lb_value.text()}"
+                        event["comment"] = comment
                         #lb_value.setText
 
-                    # pause media
-                    if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-                        if self.playerType == VLC:
-                            if self.playMode == FFMPEG:
-                                memState = self.FFmpegTimer.isActive()
-                                if memState:
-                                    self.pause_video()
-                            elif self.playMode == VLC:
-                                memState = self.dw_player[0].mediaListPlayer.get_state()
-                                if memState == vlc.State.Playing:
-                                    self.pause_video()
+                    # check if modifiers are in single, multiple or numeric
+                    if len(event["modifiers"]) > len(variables_list):
 
-                    # check if editing (original_modifiers key)
-                    currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
+                        # pause media
+                        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                            if self.playerType == VLC:
+                                if self.playMode == FFMPEG:
+                                    memState = self.FFmpegTimer.isActive()
+                                    if memState:
+                                        self.pause_video()
+                                elif self.playMode == VLC:
+                                    memState = self.dw_player[0].mediaListPlayer.get_state()
+                                    if memState == vlc.State.Playing:
+                                        self.pause_video()
 
-                    modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
+                        # check if editing (original_modifiers key)
+                        currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                    r = modifierSelector.exec_()
-                    if r:
-                        selected_modifiers = modifierSelector.getModifiers()
+                        modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
 
-                        modifier_str = ""
-                        for idx in sorted_keys(selected_modifiers):
-                            if modifier_str:
-                                modifier_str += "|"
-                            if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
-                                modifier_str += ",".join(selected_modifiers[idx]["selected"])
-                            if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
-                                modifier_str += selected_modifiers[idx]["selected"]
+                        r = modifierSelector.exec_()
+                        if r:
+                            selected_modifiers = modifierSelector.getModifiers()
 
-                    # restart media
-                    if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
-                        if self.playerType == VLC:
-                            if self.playMode == FFMPEG:
-                                if memState:
-                                    self.play_video()
-                            else:
-                                if memState == vlc.State.Playing:
-                                    self.play_video()
-                    if not r:  # cancel button pressed
-                        return
+                            modifier_str = ""
+                            for idx in sorted_keys(selected_modifiers):
+                                if modifier_str:
+                                    modifier_str += "|"
+                                if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
+                                    modifier_str += ",".join(selected_modifiers[idx]["selected"])
+                                if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
+                                    modifier_str += selected_modifiers[idx]["selected"]
+
+                        # restart media
+                        if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                            if self.playerType == VLC:
+                                if self.playMode == FFMPEG:
+                                    if memState:
+                                        self.play_video()
+                                else:
+                                    if memState == vlc.State.Playing:
+                                        self.play_video()
+                        if not r:  # cancel button pressed
+                            return
 
             else:
                 modifier_str = event["from map"]
@@ -9250,8 +9259,10 @@ item []:
             # remove key code from modifiers
             modifier_str = re.sub(" \(.*\)", "", modifier_str)
 
-            comment = event["comment"] if "comment" in event else ""
-            subject = event["subject"] if "subject" in event else self.currentSubject
+            #comment = event["comment"] if "comment" in event else ""
+            comment = event.get("comment", "")
+            #subject = event["subject"] if "subject" in event else self.currentSubject
+            subject = event.get("subject", self.currentSubject)
 
             # add event to pj
             if "row" in event:
