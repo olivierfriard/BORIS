@@ -9133,22 +9133,25 @@ item []:
 
                 if event["modifiers"]:
 
-                    '''
-                    # check if modifier from external data file
-                    variables_list = [event["modifiers"][x]["name"] for x in event["modifiers"] if event["modifiers"][x]["type"] == EXTERNAL_DATA_MODIFIER]
-                    '''
 
-                    modifiers_external_data = {}
-                    if "row" not in event:
-                        for idx in event["modifiers"]:
+                    selected_modifiers, modifiers_external_data = {}, {}
+                    # check if modifiers are from external data
+                    for idx in event["modifiers"]:
 
-                            if event["modifiers"][idx]["type"] == EXTERNAL_DATA_MODIFIER:
+                        if event["modifiers"][idx]["type"] == EXTERNAL_DATA_MODIFIER:
 
+                            if "row" not in event:  # no edit
                                 for idx2 in self.plot_data:
                                     if self.plot_data[idx2].y_label.upper() == event["modifiers"][idx]["name"].upper():
                                         modifiers_external_data[idx] = dict(event["modifiers"][idx])
                                         modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
-                                        print(modifiers_external_data[idx])
+                            else:  # edit
+                                original_modifiers_list = event.get("original_modifiers", "").split("|")
+                                '''print("original_modifiers_list", original_modifiers_list)'''
+                                modifiers_external_data[idx] = dict(event["modifiers"][idx])
+                                modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
+
+                    '''print(f"modifiers_external_data: {modifiers_external_data}")'''
 
                     # check if modifiers are in single, multiple or numeric
                     if [x for x in event["modifiers"] if event["modifiers"][x]["type"] != EXTERNAL_DATA_MODIFIER]:
@@ -9166,27 +9169,15 @@ item []:
                                         self.pause_video()
 
                         # check if editing (original_modifiers key)
-                        currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
+                        '''currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""'''
+                        currentModifiers = event.get("original_modifiers", "")
+                        '''print("currentModifiers", currentModifiers)'''
 
                         modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
 
                         r = modifiers_selector.exec_()
                         if r:
                             selected_modifiers = modifiers_selector.get_modifiers()
-                            print("selected_modifiers 1", selected_modifiers)
-                            selected_modifiers = {**selected_modifiers, **modifiers_external_data}
-                            print("selected_modifiers 2", selected_modifiers)
-
-                            modifier_str = ""
-                            for idx in sorted_keys(selected_modifiers):
-                                if modifier_str:
-                                    modifier_str += "|"
-                                if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
-                                    modifier_str += ",".join(selected_modifiers[idx]["selected"])
-                                if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
-                                    modifier_str += selected_modifiers[idx]["selected"]
-                                if selected_modifiers[idx]["type"] in [EXTERNAL_DATA_MODIFIER]:
-                                    modifier_str += selected_modifiers[idx]["selected"]
 
                         # restart media
                         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -9199,6 +9190,19 @@ item []:
                                         self.play_video()
                         if not r:  # cancel button pressed
                             return
+
+                    '''print("selected_modifiers", selected_modifiers)'''
+                    all_modifiers = {**selected_modifiers, **modifiers_external_data}
+                    '''print("all_modifiers", all_modifiers)'''
+
+                    modifier_str = ""
+                    for idx in sorted_keys(all_modifiers):
+                        if modifier_str:
+                            modifier_str += "|"
+                        if all_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
+                            modifier_str += ",".join(all_modifiers[idx].get("selected", ""))
+                        if all_modifiers[idx]["type"] in [NUMERIC_MODIFIER, EXTERNAL_DATA_MODIFIER]:
+                            modifier_str += all_modifiers[idx]["selected"]
 
             else:
                 modifier_str = event["from map"]
