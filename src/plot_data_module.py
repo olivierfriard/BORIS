@@ -70,7 +70,7 @@ class Plot_data(QWidget):
 
         self.installEventFilter(self)
 
-        self.setWindowTitle("External data: " + plot_title)
+        self.setWindowTitle(f"External data: {plot_title}")
 
         d = {}
         # convert dict keys in int:

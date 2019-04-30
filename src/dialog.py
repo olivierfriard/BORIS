@@ -634,7 +634,7 @@ class ResultsWidget(QWidget):
         save content of self.ptText
         """
 
-        fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
@@ -642,7 +642,7 @@ class ResultsWidget(QWidget):
                 with open(file_name, "w") as f:
                     f.write(self.ptText.toPlainText())
             except Exception:
-                QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
+                QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
 '''
@@ -684,6 +684,11 @@ class View_data_head(QDialog):
 
         self.tw = QTableWidget()
         vbox.addWidget(self.tw)
+
+        '''
+        self.cb_header = QCheckBox("Data file contains an header")
+        vbox.addWidget(self.cb_header)
+        '''
 
         self.label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
         vbox.addWidget(self.label)

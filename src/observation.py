@@ -283,11 +283,11 @@ class Observation(QDialog, Ui_Form):
                 QMessageBox.critical(self, programName, "This file does not contain a constant number of columns")
                 return
 
-            header = utilities.return_file_header(file_name)
+            header = utilities.return_file_header(file_name, row_number=10)
 
             if header:
                 w = dialog.View_data_head()
-                w.setWindowTitle("Data file: {}".format(Path(file_name).name))
+                w.setWindowTitle(f"Data file: {Path(file_name).name}")
                 w.setWindowFlags(Qt.WindowStaysOnTopHint)
 
                 w.tw.setColumnCount(r["fields number"])
@@ -295,7 +295,9 @@ class Observation(QDialog, Ui_Form):
 
                 for row in range(len(header)):
                     for col, v in enumerate(header[row].split(r["separator"])):
-                        w.tw.setItem(row, col, QTableWidgetItem(v))
+                        item = QTableWidgetItem(v)
+                        item.setFlags(Qt.ItemIsEnabled)
+                        w.tw.setItem(row, col, item)
 
                 while True:
                     flag_ok = True
@@ -305,11 +307,11 @@ class Observation(QDialog, Ui_Form):
                             try:
                                 col_idx = int(col)
                             except ValueError:
-                                QMessageBox.critical(self, programName, "<b>{}</b> does not seem to be a column index".format(col))
+                                QMessageBox.critical(self, programName, f"<b>{col}</b> does not seem to be a column index")
                                 flag_ok = False
                                 break
                             if col_idx <= 0 or col_idx > r["fields number"]:
-                                QMessageBox.critical(self, programName, "<b>{}</b> is not a valid column index".format(col))
+                                QMessageBox.critical(self, programName, f"<b>{col}</b> is not a valid column index")
                                 flag_ok = False
                                 break
                         if flag_ok:
@@ -339,6 +341,7 @@ class Observation(QDialog, Ui_Form):
                 item = QTableWidgetItem(value)
                 if col_idx == PLOT_DATA_CONVERTERS_IDX:
                     item.setFlags(Qt.ItemIsEnabled)
+                    item.setBackground(QColor(230, 230, 230))
                 self.tw_data_files.setItem(self.tw_data_files.rowCount() - 1, col_idx, item)
 
             # substract first value
@@ -773,7 +776,7 @@ class Observation(QDialog, Ui_Form):
             for file_path in file_paths:
                 if not self.check_media(n_player, file_path, flag_path):
                     QMessageBox.critical(self, programName,
-                                         "The <b>{file_path}</b> file does not seem to be a media file.".format(file_path=file_path))
+                                         f"The <b>{file_path}</b> file does not seem to be a media file.")
 
         self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
         self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)

@@ -22,8 +22,6 @@ This file is part of BORIS.
 
 """
 
-
-
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -86,7 +84,6 @@ class ExclusionMatrix(QDialog):
         self.pb_uncheck_selected = QPushButton("Uncheck selected")
         self.pb_uncheck_selected.clicked.connect(lambda: self.pb_selected(False))
         hbox2.addWidget(self.pb_uncheck_selected)
-
 
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.reject)
@@ -378,8 +375,8 @@ class projectDialog(QDialog, Ui_dlgProject):
             w.setEnabled(False)
 
         # disable widget for indep var setting
-        for widget in [self.leLabel, self.le_converter_description, self.cbType,
-                       self.lePredefined, self.dte_default_date, self.leSetValues]:
+        for widget in [self.leLabel, self.le_converter_description, self.cbType, self.lePredefined, self.dte_default_date,
+                       self.leSetValues]:
             widget.setEnabled(False)
 
 
@@ -611,8 +608,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if self.twBehaviors.item(row, behavioursFields["category"]):
                         if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.renamed[0]:
                             self.twBehaviors.item(row, behavioursFields["category"]).setText(bc.renamed[1])
-
-
 
 
     def twBehaviors_cellDoubleClicked(self, row, column):

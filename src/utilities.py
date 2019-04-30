@@ -122,7 +122,11 @@ def file_content_md5(file_name: str) -> str:
         return ""
 
 
-def txt2np_array(file_name, columns_str, substract_first_value, converters={}, column_converter={}):
+def txt2np_array(file_name: str,
+                 columns_str: str,
+                 substract_first_value: str,
+                 converters={},
+                 column_converter={}):
     """
     read a txt file (tsv or csv) and return np array with passed columns
 
@@ -131,7 +135,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters={}, c
         columns_str (str): indexes of columns to be loaded. First columns must be the timestamp. Example: "4,5"
         substract_first_value (str): "True" or "False"
         converters (dict): dictionary containing converters
-        column_converter (dict): dcitionary key: column index, value: converter name
+        column_converter (dict): dictionary key: column index, value: converter name
 
     Returns:
         bool: True if data successfullly loaded, False if case of error
@@ -143,7 +147,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters={}, c
     try:
         columns = [int(x) - 1 for x in columns_str.split(",")]
     except Exception:
-        return False, "Problem with columns {}".format(columns_str), np.array([])
+        return False, f"Problem with columns {columns_str}", np.array([])
 
     # check converters
     np_converters = {}
@@ -176,7 +180,7 @@ def txt2np_array(file_name, columns_str, substract_first_value, converters={}, c
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
     except Exception:
-        return False, "{}".format(sys.exc_info()[1]), np.array([])
+        return False, f"{sys.exc_info()[1]}", np.array([])
 
     try:
         data = np.loadtxt(file_name,
@@ -357,14 +361,17 @@ def check_txt_file(file_name: str) -> dict:
             snif = csv.Sniffer()
             dialect = snif.sniff(buff)
             has_header = snif.has_header(buff)
-            logging.debug("dialect.delimiter: {}".format(dialect.delimiter))
+
+            logging.debug(f"dialect.delimiter: {dialect.delimiter}")
 
         csv.register_dialect("dialect", dialect)
         rows_len = []
         with open(file_name, "r") as f:
             reader = csv.reader(f, dialect="dialect")
             for row in reader:
-                logging.debug("row: {}".format(row))
+
+                logging.debug(f"row: {row}")
+
                 if not row:
                     continue
                 if len(row) not in rows_len:

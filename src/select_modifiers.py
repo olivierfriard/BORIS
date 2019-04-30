@@ -170,7 +170,6 @@ class ModifiersList(QDialog):
                                 else:
                                     for index in range(widget.count()):
                                         if widget.item(index).text().upper().startswith(ek_text.upper()):
-                                            #widget.item(index).setSelected(True)
                                             widget.setCurrentRow(index)
                                             widget.scrollToItem(widget.item(index), QAbstractItemView.EnsureVisible)
                                             return True
