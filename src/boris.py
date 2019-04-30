@@ -8382,11 +8382,6 @@ item []:
                 if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                     event = self.full_event(key)
                     event["subject"] = editWindow.cobSubject.currentText()
-                    '''
-                    print([newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3])
-                    # check if edited event has changed
-                    if [newTime, event["subject"], editWindow.cobCode.currentText()] == mem_event[:3]:
-                    '''
 
                     event["comment"] = editWindow.leComment.toPlainText()
                     event["row"] = row
@@ -9113,7 +9108,7 @@ item []:
 
         """
 
-        logging.debug("write event - event: {0}  memtime: {1}".format(event, memTime))
+        logging.debug(f"write event - event: {event}  memtime: {memTime}")
         try:
             if event is None:
                 return
@@ -9144,27 +9139,16 @@ item []:
                     '''
 
                     modifiers_external_data = {}
-                    for idx in event["modifiers"]:
+                    if "row" not in event:
+                        for idx in event["modifiers"]:
 
-                        if event["modifiers"][idx]["type"] == EXTERNAL_DATA_MODIFIER:
+                            if event["modifiers"][idx]["type"] == EXTERNAL_DATA_MODIFIER:
 
-                            for idx2 in self.plot_data:
-                                if self.plot_data[idx2].y_label.upper() == event["modifiers"][idx]["name"].upper():
-                                    # print(f"{self.plot_data[idx2].y_label} = {self.plot_data[idx2].lb_value.text()}")
-                                    modifiers_external_data[idx] = dict(event["modifiers"][idx])
-                                    modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
-                                    # print(modifiers_external_data[idx])
-
-                        '''
-                        comment = event.get("comment", "")
-                        for idx in self.plot_data:
-                            if self.plot_data[idx].y_label in variables_list:
-                                print(f"{self.plot_data[idx].y_label} = {self.plot_data[idx].lb_value.text()}")
-                                if comment:
-                                    comment += ";"
-                                comment += f"{self.plot_data[idx].y_label} = {self.plot_data[idx].lb_value.text()}"
-                        event["comment"] = comment
-                        '''
+                                for idx2 in self.plot_data:
+                                    if self.plot_data[idx2].y_label.upper() == event["modifiers"][idx]["name"].upper():
+                                        modifiers_external_data[idx] = dict(event["modifiers"][idx])
+                                        modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
+                                        print(modifiers_external_data[idx])
 
                     # check if modifiers are in single, multiple or numeric
                     if [x for x in event["modifiers"] if event["modifiers"][x]["type"] != EXTERNAL_DATA_MODIFIER]:
