@@ -151,29 +151,29 @@ class Plot_data(QWidget):
 
         # check if time is linear
         diff = set(np.round(np.diff(data, axis=0)[:, 0], 4))
+
         if min(diff) == 0:
             self.error_msg = "more values for same time"
             return
 
         logging.debug("diff: {}".format(diff))
+
         min_time_step = min(diff)
+
         logging.debug("min_time_step: {}".format(min_time_step))
 
         # check if sampling rate is not constant
         if len(diff) != 1:
+
             logging.debug("len diff != 1")
+
             min_time_step = min(diff)
+
             logging.debug("min_time_step: {}".format(min_time_step))
 
             # increase value for low sampling rate (> 1 s)
             if min_time_step > 1:
                 min_time_step = 1
-            '''
-            x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
-            y2 = np.interp(x2, data[:,0], data[:,1])
-            data = np.array((x2, y2)).T
-            del x2, y2
-            '''
 
             x2 = np.arange(min_time_value, max_time_value + min_time_step, min_time_step)
             data = np.array((x2, np.interp(x2, data[:, 0], data[:, 1]))).T
@@ -207,7 +207,6 @@ class Plot_data(QWidget):
         self.plotter.data = data
         self.plotter.max_frequency = max_frequency
 
-        #self.plotter.time_interval = time_interval
         self.plotter.min_value = min_var_value
         self.plotter.max_value = max_var_value
 
@@ -225,7 +224,7 @@ class Plot_data(QWidget):
         # connect signals
         self.send_fig.connect(self.plotter.replot)
         self.plotter.return_fig.connect(self.plot)
-        #move to thread and start
+        # move to thread and start
         self.plotter.moveToThread(self.thread)
         self.thread.start()
 
@@ -260,7 +259,6 @@ class Plot_data(QWidget):
 
 
     def timer_plot_data_out(self, time_):
-        #print(self.plot_title, time_)
         self.update_plot(time_)
 
 
