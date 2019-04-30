@@ -7069,6 +7069,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if mode == NEW:
             newProjectWindow.pj = copy.deepcopy(EMPTY_PROJECT)
 
+        # warning
+        if mode == EDIT and self.pj[OBSERVATIONS]:
+            QMessageBox.warning(self, programName,
+                                ("Please note that editing the project may interfere with the coded events in your previous observations.<br>"
+                                 "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
+                                 "can unvalidate your previous observations.<br>"
+                                 "Remember to make a backup of your project."))
+
+
         if newProjectWindow.exec_():  # button OK returns True
 
             if mode == NEW:
