@@ -222,7 +222,7 @@ class ModifiersList(QDialog):
             return False
 
 
-    def getModifiers(self):
+    def get_modifiers(self):
         """
         get modifiers
         returns list of selected modifiers
@@ -230,7 +230,8 @@ class ModifiersList(QDialog):
         modifiers = []
         for idx in sorted_keys(self.modifiers_dict):
 
-            self.modifiers_dict[idx]["selected"] = []
+            if self.modifiers_dict[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION, NUMERIC_MODIFIER]:
+                self.modifiers_dict[idx]["selected"] = []
 
             if self.modifiers_dict[idx]["type"] == MULTI_SELECTION:
                 for j in range(self.modifiers_dict[idx]["widget"].count()):

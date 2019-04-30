@@ -9138,10 +9138,24 @@ item []:
 
                 if event["modifiers"]:
 
+                    '''
                     # check if modifier from external data file
                     variables_list = [event["modifiers"][x]["name"] for x in event["modifiers"] if event["modifiers"][x]["type"] == EXTERNAL_DATA_MODIFIER]
+                    '''
 
-                    if variables_list:
+                    modifiers_external_data = {}
+                    for idx in event["modifiers"]:
+
+                        if event["modifiers"][idx]["type"] == EXTERNAL_DATA_MODIFIER:
+
+                            for idx2 in self.plot_data:
+                                if self.plot_data[idx2].y_label.upper() == event["modifiers"][idx]["name"].upper():
+                                    # print(f"{self.plot_data[idx2].y_label} = {self.plot_data[idx2].lb_value.text()}")
+                                    modifiers_external_data[idx] = dict(event["modifiers"][idx])
+                                    modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
+                                    # print(modifiers_external_data[idx])
+
+                        '''
                         comment = event.get("comment", "")
                         for idx in self.plot_data:
                             if self.plot_data[idx].y_label in variables_list:
@@ -9150,10 +9164,10 @@ item []:
                                     comment += ";"
                                 comment += f"{self.plot_data[idx].y_label} = {self.plot_data[idx].lb_value.text()}"
                         event["comment"] = comment
-                        #lb_value.setText
+                        '''
 
                     # check if modifiers are in single, multiple or numeric
-                    if len(event["modifiers"]) > len(variables_list):
+                    if [x for x in event["modifiers"] if event["modifiers"][x]["type"] != EXTERNAL_DATA_MODIFIER]:
 
                         # pause media
                         if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
@@ -9170,11 +9184,14 @@ item []:
                         # check if editing (original_modifiers key)
                         currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""
 
-                        modifierSelector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
+                        modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
 
-                        r = modifierSelector.exec_()
+                        r = modifiers_selector.exec_()
                         if r:
-                            selected_modifiers = modifierSelector.getModifiers()
+                            selected_modifiers = modifiers_selector.get_modifiers()
+                            print("selected_modifiers 1", selected_modifiers)
+                            selected_modifiers = {**selected_modifiers, **modifiers_external_data}
+                            print("selected_modifiers 2", selected_modifiers)
 
                             modifier_str = ""
                             for idx in sorted_keys(selected_modifiers):
@@ -9183,6 +9200,8 @@ item []:
                                 if selected_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
                                     modifier_str += ",".join(selected_modifiers[idx]["selected"])
                                 if selected_modifiers[idx]["type"] in [NUMERIC_MODIFIER]:
+                                    modifier_str += selected_modifiers[idx]["selected"]
+                                if selected_modifiers[idx]["type"] in [EXTERNAL_DATA_MODIFIER]:
                                     modifier_str += selected_modifiers[idx]["selected"]
 
                         # restart media
@@ -9217,6 +9236,7 @@ item []:
 
             logging.debug(f"self.currentSubject {self.currentSubject}")
             logging.debug(f"current_states {current_states}")
+
             if "row" not in event:  # no editing
                 if self.currentSubject:
                     csj = []
