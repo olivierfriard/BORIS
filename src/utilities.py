@@ -644,7 +644,6 @@ def extract_frames_mem(ffmpeg_bin: str,
     """
 
     def toQImage(frame, copy=False):
-    
         gray_color_table = [qRgb(i, i, i) for i in range(256)]
         if frame is None:
             return QImage()

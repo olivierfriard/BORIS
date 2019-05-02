@@ -3500,7 +3500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def ffmpegTimerOut(self):
+    def ffmpegTimerOut_old(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
@@ -3689,11 +3689,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.get_events_current_row()
 
 
-    def ffmpegTimerOut_future(self):
+    def ffmpegTimerOut(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
-        frames are loaded from disctionary
+        frames are loaded from dictionary
         """
 
         logging.debug("FFmpegTimerOut function")
