@@ -1685,7 +1685,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     return
 
                 if self.twSubjects.item(r, 0).text() in keys:
-                    self.lbSubjectsState.setText("""<font color="red">Key duplicated at row # {}</font>""".format(r + 1))
+                    self.lbSubjectsState.setText(f'<font color="red">Key duplicated at row # {r + 1}</font>')
                 else:
                     if self.twSubjects.item(r, 0).text():
                         keys.append(self.twSubjects.item(r, 0).text())
@@ -1693,7 +1693,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check subject
             if self.twSubjects.item(r, 1):
                 if self.twSubjects.item(r, 1).text() in subjects:
-                    self.lbSubjectsState.setText("""<font color="red">Subject duplicated at row # {}</font>""".format(r + 1))
+                    self.lbSubjectsState.setText(f'<font color="red">Subject duplicated at row # {r + 1}</font>')
                 else:
                     if self.twSubjects.item(r, 1).text():
                         subjects.append(self.twSubjects.item(r, 1).text())
@@ -1705,7 +1705,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         self.selected_twvariables_row = row
-        logging.debug("selected row: {}".format(self.selected_twvariables_row))
+        logging.debug(f"selected row: {self.selected_twvariables_row}")
 
         if self.selected_twvariables_row == -1:
             for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
@@ -1802,11 +1802,11 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             remove_leading_trailing_spaces = dialog.MessageDialog(programName, (
                 "Attention! Some leading and/or trailing spaces are present in the following <b>subject name(s)</b>:<br>"
-                "<b>{}</b><br><br>"
+                f"<b>{subjects_name_with_leading_trailing_spaces}</b><br><br>"
                 "Do you want to remove the leading and trailing spaces?<br><br>"
                 """<font color="red"><b>Be careful with this option"""
                 """ if you have already done observations!</b></font>"""
-            ).format(subjects_name_with_leading_trailing_spaces), [YES, NO])
+            ), [YES, NO])
 
         # check subjects
         for row in range(self.twSubjects.rowCount()):

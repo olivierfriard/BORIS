@@ -63,8 +63,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.pb_add_subjects.clicked.connect(self.add_subjects)
         self.pb_load_file.clicked.connect(self.add_modifiers_from_file)
 
-        self.pbOK.clicked.connect(self.pb_ok)
-        self.pbCancel.clicked.connect(self.reject)
+        self.pbOK.clicked.connect(lambda: self.pb_pushed("ok"))
+        self.pbCancel.clicked.connect(lambda: self.pb_pushed("cancel"))
 
         self.leSetName.textChanged.connect(self.set_name_changed)
 
@@ -97,23 +97,17 @@ class addModifierDialog(QDialog, Ui_Dialog):
         # set first tab as active
         self.tabMem = 0
 
+    def pb_pushed(self, button):
 
-    def pb_ok(self):
         if self.leModifier.text():
             if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
                                                   "If you close the window it will be lost.<br>"
                                                   "Do you want to change modifiers set"), ["Close", CANCEL]) == CANCEL:
                 return
-        self.accept()
-
-
-    def pb_cancel(self):
-        if self.leModifier.text():
-            if dialog.MessageDialog(programName, ("You are working on a behavior.<br>"
-                                                  "If you close the window it will be lost.<br>"
-                                                  "Do you want to change modifiers set"), ["Close", CANCEL]) == CANCEL:
-                return
-        self.reject()
+        if button == "ok":
+            self.accept()
+        if button == "cancel":
+            self.reject()
 
 
     def add_subjects(self):

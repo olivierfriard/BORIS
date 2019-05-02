@@ -3554,17 +3554,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
 
+            '''
             frame_image_path = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
                                                                                                sep=os.sep,
                                                                                                fileName=md5FileName,
                                                                                                frame=frameCurrentMedia,
                                                                                                extension=self.frame_bitmap_format.lower())
+            '''
+
+            frame_image_path = pathlib.Path(self.imageDirectory) / pathlib.Path((f"BORIS@{md5FileName}_{frameCurrentMedia:08}"
+                                                                                  f".{self.frame_bitmap_format.lower()}"))
 
             logging.debug(f"frame_image_path: {frame_image_path}")
             logging.debug(f"frame_image_path is file: {os.path.isfile(frame_image_path)}")
 
             if os.path.isfile(frame_image_path):
-                self.pixmap = QPixmap(frame_image_path)
+                self.pixmap = QPixmap(str(frame_image_path))
                 # check if jpg filter available if not use png
                 if self.pixmap.isNull():
                     self.frame_bitmap_format = "PNG"
@@ -3594,10 +3599,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.iw.hide()
 
                 if not os.path.isfile(frame_image_path):
+
                     logging.warning(f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.fps)}")
+
                     return
 
-                self.pixmap = QPixmap(frame_image_path)
+                self.pixmap = QPixmap(str(frame_image_path))
                 # check if jpg filter available if not use png
                 if self.pixmap.isNull():
                     self.frame_bitmap_format = "PNG"
@@ -4681,6 +4688,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check date format for old versions of BORIS app
             try:
+                import time
                 time.strptime(self.pj[OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
                 self.pj[OBSERVATIONS][obsId]["date"] = self.pj[OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
             except ValueError:

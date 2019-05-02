@@ -579,7 +579,9 @@ def extract_frames(ffmpeg_bin: str,
                       f'-start_number {start_frame} '
                       f'-vframes {number_of_seconds * fps} '
                       f'-vf scale={frame_resize}:-1 '
-                      f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"')
+                      # f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"'
+                      f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"'
+                      )
 
     logging.debug(f"ffmpeg command: {ffmpeg_command}")
 
@@ -591,7 +593,8 @@ def extract_frames(ffmpeg_bin: str,
         logging.debug(f"ffmpeg error: {error}")
 
     # check before frame
-    if start_frame - 1 > 0 and not os.path.isfile(f"{imageDir}{os.sep}BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"):
+    if (start_frame - 1 > 0 
+        and not os.path.isfile(pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"))):
 
         start_frame_before = max(1, round(start_frame - fps * number_of_seconds))
         second_before = (start_frame_before - 1) / fps
@@ -606,7 +609,9 @@ def extract_frames(ffmpeg_bin: str,
                           f'-start_number {start_frame_before} '
                           f'-vframes {number_of_frames} '
                           f'-vf scale={frame_resize}:-1 '
-                          f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"')
+                          # f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"'
+                          f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"'
+                          )
 
         logging.debug("ffmpeg command (before): {}".format(ffmpeg_command))
 
@@ -632,9 +637,9 @@ def extract_frames_mem(ffmpeg_bin: str,
         ffmpeg_bin (str): path for ffmpeg
         start_frame (int): extract frames from frame
         second (float): second to begin extraction of frames
-        currentMedia (str): path for current media
+        current_media_path (str): path for current media
         fps (float): number of frame by second
-        frame_resize (int): horizontal resolution of frame
+        resolution (list): resolution (w, h)
         number_of_seconds (int): number of seconds to extract
     """
 
@@ -682,8 +687,6 @@ def extract_frames_mem(ffmpeg_bin: str,
 
         #self.frames_cache[f] = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3))))
         frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3)))))
-
-    
 
     return frames
 
