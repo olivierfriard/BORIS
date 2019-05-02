@@ -128,6 +128,9 @@ class Ui_dlgProject(object):
         self.pbImportFromTextFile = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbImportFromTextFile.setObjectName("pbImportFromTextFile")
         self.verticalLayout_11.addWidget(self.pbImportFromTextFile)
+        self.pb_import_from_clipboard = QtWidgets.QPushButton(self.tabConfiguration)
+        self.pb_import_from_clipboard.setObjectName("pb_import_from_clipboard")
+        self.verticalLayout_11.addWidget(self.pb_import_from_clipboard)
         self.pbExportEthogram = QtWidgets.QPushButton(self.tabConfiguration)
         self.pbExportEthogram.setObjectName("pbExportEthogram")
         self.verticalLayout_11.addWidget(self.pbExportEthogram)
@@ -485,7 +488,7 @@ class Ui_dlgProject(object):
         self.verticalLayout_7.addLayout(self.verticalLayout_6)
 
         self.retranslateUi(dlgProject)
-        self.tabProject.setCurrentIndex(4)
+        self.tabProject.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(dlgProject)
 
     def retranslateUi(self, dlgProject):
@@ -528,6 +531,7 @@ class Ui_dlgProject(object):
 "from a BORIS project"))
         self.pbImportFromJWatcher.setText(_translate("dlgProject", "Import from JWatcher"))
         self.pbImportFromTextFile.setText(_translate("dlgProject", "Import from text file"))
+        self.pb_import_from_clipboard.setText(_translate("dlgProject", "Import from clipboard"))
         self.pbExportEthogram.setText(_translate("dlgProject", "Export Ethogram"))
         self.lbObservationsState.setText(_translate("dlgProject", "TextLabel"))
         self.tabProject.setTabText(self.tabProject.indexOf(self.tabConfiguration), _translate("dlgProject", "Ethogram"))

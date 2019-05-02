@@ -43,7 +43,6 @@ import glob
 import statistics
 import datetime
 import socket
-import copy
 import pathlib
 
 from PyQt5.QtCore import *
@@ -1485,7 +1484,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.show()
             app.processEvents()
 
-            cp_project = copy.deepcopy(self.pj)
+            cp_project = dict(self.pj)
             if include_obs == NO:
                 cp_project[OBSERVATIONS] = {}
 
@@ -4606,7 +4605,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                     converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
                                                     log_level=logging.getLogger().getEffectiveLevel())
 
-        observationWindow.pj = self.pj
+        observationWindow.pj = dict(self.pj)
         observationWindow.mode = mode
         observationWindow.mem_obs_id = obsId
         observationWindow.chunk_length = self.chunk_length
@@ -4676,13 +4675,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if mode == EDIT:
 
-            observationWindow.setWindowTitle("""Edit observation "{}" """.format(obsId))
+            observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
             mem_obs_id = obsId
             observationWindow.leObservationId.setText(obsId)
 
             # check date format for old versions of BORIS app
             try:
-                import time
                 time.strptime(self.pj[OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
                 self.pj[OBSERVATIONS][obsId]["date"] = self.pj[OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
             except ValueError:
@@ -5697,7 +5695,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             categories = self.pj[BEHAVIORAL_CATEGORIES][:]
             # check if behavior not included in a category
             try:
-                if "" in [self.pj[ETHOGRAM][idx]["category"] for idx in self.pj[ETHOGRAM] if "category" in self.pj[ETHOGRAM][idx]]:
+                if "" in [self.pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] for idx in self.pj[ETHOGRAM] if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][idx]]:
                     categories += [""]
             except Exception:
                 categories = ["###no category###"]
@@ -5727,7 +5725,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if ((categories == ["###no category###"])
                     or (behavior in [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]
-                        if "category" in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x]["category"] == category])):
+                        if BEHAVIOR_CATEGORY in self.pj[ETHOGRAM][x] and self.pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category])):
 
                     paramPanelWindow.item = QListWidgetItem(behavior)
                     if behavior in observedBehaviors:
@@ -5778,8 +5776,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
                 EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
                 "time": time_param,
-                "start time": startTime,
-                "end time": endTime
+                START_TIME: startTime,
+                END_TIME: endTime
                 }
 
 
@@ -6300,17 +6298,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if parameters["time"] == TIME_EVENTS:
                     try:
-                        min_time = float(self.pj[OBSERVATIONS][obsId]["events"][0][0])
+                        min_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][0][0])
                     except Exception:
                         min_time = float(0)
                     try:
-                        max_time = float(self.pj[OBSERVATIONS][obsId]["events"][-1][0])
+                        max_time = float(self.pj[OBSERVATIONS][obsId][EVENTS][-1][0])
                     except Exception:
                         max_time = float(obs_length)
 
                 if parameters["time"] == TIME_ARBITRARY_INTERVAL:
-                    min_time = float(parameters["start time"])
-                    max_time = float(parameters["end time"])
+                    min_time = float(parameters[START_TIME])
+                    max_time = float(parameters[END_TIME])
 
                     # check intervals
                     for subj in parameters[SELECTED_SUBJECTS]:
@@ -6677,8 +6675,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                        parameters["selected behaviors"],
                                        parameters["include modifiers"],
                                        parameters["time"],
-                                       parameters["start time"],
-                                       parameters["end time"],
+                                       parameters[START_TIME],
+                                       parameters[END_TIME],
                                        plot_directory,
                                        output_format
                                        )
@@ -6696,7 +6694,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Returns:
             None
         """
-        self.pj = copy.deepcopy(pj)
+        self.pj = dict(pj)
         memProjectChanged = project_changed
         self.initialize_new_project()
         self.projectChanged = True
@@ -6933,7 +6931,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
 
         # pass copy of self.pj
-        newProjectWindow.pj = copy.deepcopy(self.pj)
+        newProjectWindow.pj = dict(self.pj)
 
         if self.projectWindowGeometry:
             newProjectWindow.restoreGeometry(self.projectWindowGeometry)
@@ -7067,7 +7065,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
 
         if mode == NEW:
-            newProjectWindow.pj = copy.deepcopy(EMPTY_PROJECT)
+            newProjectWindow.pj = dict(EMPTY_PROJECT)
 
         # warning
         if mode == EDIT and self.pj[OBSERVATIONS]:
@@ -7089,7 +7087,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
 
             # retrieve project dict from window
-            self.pj = copy.deepcopy(newProjectWindow.pj)
+            self.pj = dict(newProjectWindow.pj)
             self.project = True
 
             # time format

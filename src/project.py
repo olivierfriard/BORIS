@@ -30,7 +30,6 @@ from project_ui5 import Ui_dlgProject
 import logging
 import json
 import tablib
-import copy
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -42,6 +41,7 @@ from config import *
 import add_modifier
 import dialog
 import export_observation
+import param_panel
 
 
 class ExclusionMatrix(QDialog):
@@ -308,7 +308,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         self.pbImportBehaviorsFromProject.clicked.connect(self.pbImportBehaviorsFromProject_clicked)
 
         self.pbImportFromJWatcher.clicked.connect(self.pbImportFromJWatcher_clicked)
-        self.pbImportFromTextFile.clicked.connect(self.pbImportFromTextFile_clicked)
+        self.pbImportFromTextFile.clicked.connect(self.import_from_text_file)
+        self.pb_import_from_clipboard.clicked.connect(self.import_from_clipboard)
 
         self.pbExportEthogram.clicked.connect(self.export_ethogram)
 
@@ -385,6 +386,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         convert behaviors key to lower case to help to migrate to v. 7
         """
 
+        if not self.twBehaviors.rowCount():
+            QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
         # check if some keys will be duplicated after conversion
         try:
             all_keys = [self.twBehaviors.item(row, behavioursFields["key"]).text() for row in range(self.twBehaviors.rowCount())]
@@ -459,18 +464,18 @@ class projectDialog(QDialog, Ui_dlgProject):
         Add a behaviors coding map from file
         """
 
-        fn = QFileDialog(self).getOpenFileName(self, "Open a behaviors coding map",
-                                               "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
+        fn = QFileDialog().getOpenFileName(self, "Open a behaviors coding map",
+                                           "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
         if fileName:
             try:
                 bcm = json.loads(open(fileName, "r").read())
             except Exception:
-                QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
+                QMessageBox.critical(self, programName, f"The file {fileName} seems not a behaviors coding map...")
                 return
 
             if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
-                QMessageBox.critical(self, programName, "The file {} seems not a BORIS behaviors coding map...".format(fileName))
+                QMessageBox.critical(self, programName, f"The file {fileName} seems not a BORIS behaviors coding map...")
 
             if BEHAVIORS_CODING_MAP not in self.pj:
                 self.pj[BEHAVIORS_CODING_MAP] = []
@@ -486,7 +491,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     ("The following behavior{} are not defined in the ethogram:<br>"
                                      "{}").format("s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)))
 
-            self.pj[BEHAVIORS_CODING_MAP].append(copy.deepcopy(bcm))
+            self.pj[BEHAVIORS_CODING_MAP].append(dict(bcm))
 
             self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
 
@@ -909,16 +914,13 @@ class projectDialog(QDialog, Ui_dlgProject):
         import subjects from another project
         """
 
-        fileName, _ = QFileDialog(self).getOpenFileName(self, "Import subjects from project file", "",
-                                                        "Project files (*.boris);;All files (*)")
+        fileName, _ = QFileDialog().getOpenFileName(self, "Import subjects from project file", "",
+                                                    "Project files (*.boris);;All files (*)")
 
         if fileName:
-
-            with open(fileName, "r") as infile:
-                s = infile.read()
-
             try:
-                project = json.loads(s)
+                with open(fileName, "r") as infile:
+                    project = json.loads(infile.read())
             except Exception:
                 QMessageBox.warning(None, programName, "Error while reading subjects from selected file",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -928,7 +930,6 @@ class projectDialog(QDialog, Ui_dlgProject):
             if project[SUBJECTS]:
 
                 if self.twSubjects.rowCount():
-
                     response = dialog.MessageDialog(programName,
                                                     ("There are subjects already configured. "
                                                      "Do you want to append subjects or replace them?"),
@@ -940,7 +941,14 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if response == CANCEL:
                         return
 
-                for idx in sorted(project[SUBJECTS].keys()):
+                '''
+                subjects_to_import = self.select_behaviors(title="Select the subjects to import",
+                                                           text="Subjects",
+                                                           behavioral_categories=[],
+                                                           ethogram=dict(project[SUBJECTS]))
+                '''
+
+                for idx in sorted_keys(project[SUBJECTS]):
 
                     self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
@@ -957,19 +965,98 @@ class projectDialog(QDialog, Ui_dlgProject):
                 QMessageBox.warning(self, programName, "No subjects configuration found in project")
 
 
-    def pbImportBehaviorsFromProject_clicked(self):
+    def select_behaviors(self, title="Record value from external data file",
+                         text="Behaviors",
+                         behavioral_categories=[],
+                         ethogram={}):
         """
-        import behaviors from another project
+        allow user to select behaviors to import
+
+        Args:
+            title (str): title of dialog box
+            text (str): text of dialog box
+            behavioral_categories (list): behavioral categories
+            ethogram (dict): ethogram 
+
         """
 
-        fn = QFileDialog(self).getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
+        paramPanelWindow = param_panel.Param_panel()
+        paramPanelWindow.resize(800, 600)
+        paramPanelWindow.setWindowTitle(title)
+        paramPanelWindow.lbBehaviors.setText(text)
+        for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
+                  paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
+                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
+            w.setVisible(False)
+
+        #behaviors_list = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]]
+
+        if behavioral_categories:
+            categories = behavioral_categories
+            # check if behavior not included in a category
+            if "" in [ethogram[idx][BEHAVIOR_CATEGORY] for idx in ethogram
+                      if BEHAVIOR_CATEGORY in ethogram[idx]]:
+                categories += [""]
+        else:
+            categories = ["###no category###"]
+
+        for category in categories:
+
+            if category != "###no category###":
+
+                if category == "":
+                    paramPanelWindow.item = QListWidgetItem("No category")
+                    paramPanelWindow.item.setData(34, "No category")
+                else:
+                    paramPanelWindow.item = QListWidgetItem(category)
+                    paramPanelWindow.item.setData(34, category)
+
+                font = QFont()
+                font.setBold(True)
+                paramPanelWindow.item.setFont(font)
+                paramPanelWindow.item.setData(33, "category")
+                paramPanelWindow.item.setData(35, False)
+
+                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+            # check if behavior type must be shown
+            for behavior in [ethogram[x][BEHAVIOR_CODE] for x in sorted_keys(ethogram)]:
+
+                if ((categories == ["###no category###"]) or
+                   (behavior in [ethogram[x][BEHAVIOR_CODE] for x in ethogram
+                                 if BEHAVIOR_CATEGORY in ethogram[x] and
+                                    ethogram[x][BEHAVIOR_CATEGORY] == category])):
+
+                    paramPanelWindow.item = QListWidgetItem(behavior)
+                    paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+                    if category != "###no category###":
+                        paramPanelWindow.item.setData(33, "behavior")
+                        if category == "":
+                            paramPanelWindow.item.setData(34, "No category")
+                        else:
+                            paramPanelWindow.item.setData(34, category)
+
+                    paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        if paramPanelWindow.exec_():
+            return paramPanelWindow.selectedBehaviors
+
+        return []
+
+
+    def pbImportBehaviorsFromProject_clicked(self):
+        """
+        import behaviors from another BORIS project
+        """
+
+        fn = QFileDialog().getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
-            with open(fileName, "r") as infile:
-                s = infile.read()
             try:
-                project = json.loads(s)
+                with open(fileName, "r") as infile:
+                    project = json.loads(infile.read())
             except Exception:
                 QMessageBox.warning(None, programName, "Error while reading behaviors from selected file",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -977,13 +1064,13 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # import behavioral_categories
             if BEHAVIORAL_CATEGORIES in project:
-                self.pj[BEHAVIORAL_CATEGORIES] = project[BEHAVIORAL_CATEGORIES]
+                self.pj[BEHAVIORAL_CATEGORIES] = list(project[BEHAVIORAL_CATEGORIES])
 
             # configuration of behaviours
             if project[ETHOGRAM]:
                 if self.twBehaviors.rowCount():
                     response = dialog.MessageDialog(programName,
-                                                    ("There are behaviors already configured. "
+                                                    ("Some behaviors are already configured. "
                                                      "Do you want to append behaviors or replace them?"),
                                                     ["Append", "Replace", CANCEL])
                     if response == "Replace":
@@ -991,7 +1078,16 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if response == CANCEL:
                         return
 
+                behaviors_to_import = self.select_behaviors(title="Select the behaviors to import",
+                                                            text="Behaviors",
+                                                            behavioral_categories=list(project[BEHAVIORAL_CATEGORIES]),
+                                                            ethogram=dict(project[ETHOGRAM]),
+                                                            behavior_type=[STATE_EVENT, POINT_EVENT])
+
                 for i in sorted_keys(project[ETHOGRAM]):
+                    
+                    if project[ETHOGRAM][i][BEHAVIOR_CODE] not in behaviors_to_import:
+                        continue
 
                     self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
@@ -1000,7 +1096,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                         item = QTableWidgetItem()
 
                         if field == TYPE:
-                            print(project[ETHOGRAM][i][field])
                             item.setText(project[ETHOGRAM][i][field])
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
@@ -1017,7 +1112,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                             item.setText(str(project[ETHOGRAM][i][field]))
 
-                            if field in ["modifiers", "excluded", "category", "coding map"]:
+                            if field not in ETHOGRAM_EDITABLE_FIELDS:
                                 item.setFlags(Qt.ItemIsEnabled)
                                 item.setBackground(QColor(230, 230, 230))
 
@@ -1040,7 +1135,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         for row in range(self.twBehaviors.rowCount()):
             if not self.twBehaviors.item(row, behavioursFields["code"]).text():
-                QMessageBox.critical(None, programName, "A behavior code is empty at row {}".format(row + 1),
+                QMessageBox.critical(None, programName, f"A behavior code is empty at row {row + 1}",
                                      QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
@@ -1071,15 +1166,15 @@ class projectDialog(QDialog, Ui_dlgProject):
                 if "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
                     stateBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
 
-        logging.debug("all behaviors: {}".format(allBehaviors))
-        logging.debug("stateBehaviors: {}".format(stateBehaviors))
+        logging.debug(f"all behaviors: {allBehaviors}")
+        logging.debug(f"stateBehaviors: {stateBehaviors}")
 
         if not stateBehaviors:
             QMessageBox.critical(None, programName, "State events not found in behaviors list!",
                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        logging.debug("exclusion matrix {0}".format(excl))
+        logging.debug(f"exclusion matrix {excl}")
 
         # first row contain state events
         ex.twExclusions.setColumnCount(len(stateBehaviors))
@@ -1101,16 +1196,16 @@ class projectDialog(QDialog, Ui_dlgProject):
                     flag_left_bottom = True
 
                 if c_name != r_name:
-                    ex.checkboxes["{}|{}".format(r_name, c_name)] = QCheckBox()
+                    ex.checkboxes[f"{r_name}|{c_name}"] = QCheckBox()
 
                     if flag_left_bottom:
                         # hide if cell in left-bottom part of table
-                        ex.checkboxes["{}|{}".format(r_name, c_name)].setEnabled(False)
+                        ex.checkboxes[f"{r_name}|{c_name}"].setEnabled(False)
 
-                    ex.checkboxes["{}|{}".format(r_name, c_name)].clicked.connect(ex.cb_clicked)
+                    ex.checkboxes[f"{r_name}|{c_name}"].clicked.connect(ex.cb_clicked)
                     if c_name in excl[r_name]:
-                        ex.checkboxes["{}|{}".format(r_name, c_name)].setChecked(True)
-                    ex.twExclusions.setCellWidget(r, c, ex.checkboxes["{}|{}".format(r_name, c_name)])
+                        ex.checkboxes[f"{r_name}|{c_name}"].setChecked(True)
+                    ex.twExclusions.setCellWidget(r, c, ex.checkboxes[f"{r_name}|{c_name}"])
 
         # check corresponding checkbox
         ex.cb_clicked()
@@ -1123,7 +1218,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             if c_name not in new_excl[r_name]:
                                 new_excl[r_name].append(c_name)
 
-            logging.debug("new exclusion matrix {0}".format(new_excl))
+            logging.debug(f"new exclusion matrix {new_excl}")
 
             # update excluded field
             for r in range(self.twBehaviors.rowCount()):
@@ -1141,31 +1236,34 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if self.twBehaviors.rowCount():
 
-            response = dialog.MessageDialog(programName, "Remove all behaviors?", [YES, CANCEL])
-
-            if response == YES:
+            if dialog.MessageDialog(programName, "Remove all behaviors?", [YES, CANCEL]) == YES:
 
                 try:
+                    # delete ethogram rows without behavior code
+                    for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
+                        if not self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
+                            self.twBehaviors.removeRow(r)
+                    
                     # extract all codes to delete
                     codesToDelete = []
                     row_mem = {}
                     for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
-                        if self.twBehaviors.item(r, 2).text():
-                            codesToDelete.append(self.twBehaviors.item(r, 2).text())
-                            row_mem[self.twBehaviors.item(r, 2).text()] = r
+                        if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
+                            codesToDelete.append(self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
+                            row_mem[self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text()] = r
 
                     # extract all codes used in observations
                     codesInObs = []
                     for obs in self.pj[OBSERVATIONS]:
-                        events = self.pj[OBSERVATIONS][obs]['events']
+                        events = self.pj[OBSERVATIONS][obs][EVENTS]
                         for event in events:
-                            codesInObs.append(event[2])
+                            codesInObs.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
                     for codeToDelete in codesToDelete:
                         # if code to delete used in obs ask confirmation
                         if codeToDelete in codesInObs:
                             response = dialog.MessageDialog(programName,
-                                                            "The code <b>{}</b> is used in observations!".format(codeToDelete),
+                                                            f"The code <b>{codeToDelete}</b> is used in observations!",
                                                             ['Remove', CANCEL])
                             if response == "Remove":
                                 self.twBehaviors.removeRow(row_mem[codeToDelete])
@@ -1241,7 +1339,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         return None, None
 
 
-    def pbImportFromTextFile_clicked(self):
+    def import_from_text_file(self):
         """
         import ethogram from text file
         ethogram must be organized like:
@@ -1256,73 +1354,140 @@ class projectDialog(QDialog, Ui_dlgProject):
             if response == CANCEL:
                 return
 
-        fn = QFileDialog(self).getOpenFileName(self, "Import behaviors from text file", "", "Text files (*.txt *.tsv *.csv);;All files (*)")
+        fn = QFileDialog().getOpenFileName(self, "Import behaviors from text file", "",
+                                               "Text files (*.txt *.tsv *.csv);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if fileName:
 
             if self.twBehaviors.rowCount() and response == "Replace":
                 self.twBehaviors.setRowCount(0)
+            try:
+                with open(fileName, mode="rb") as f:
+                    rows_b = f.read().splitlines()
+    
+                rows = []
+                idx = 1
+                for row in rows_b:
+                    try:
+                        rows.append(row.decode("utf-8"))
+                    except Exception:
+                        QMessageBox.critical(None, programName,
+                                             (f"Error while reading file\nThe line # {idx}\n"
+                                              f"{row}\ncontains characters that are not readable."),
+                                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                        return
+                    idx += 1
+    
+                fieldSeparator, fieldsNumber = self.check_text_file_type(rows)
+    
+                logging.debug(f"fields separator: {fieldSeparator}  fields number: {fieldsNumber}")
+    
+                if fieldSeparator is None:
+                    QMessageBox.critical(self, programName,
+                                         "Separator character not found! Use plain text file and TAB or comma as value separator")
+                else:
+    
+                    for row in rows:
+    
+                        type_, key, code, description = "", "", "", ""
+    
+                        if fieldsNumber == 3:  # fields: type, key, code
+                            type_, key, code = row.split(fieldSeparator)
+                            description = ""
+                        if fieldsNumber == 4:  # fields:  type, key, code, description
+                            type_, key, code, description = row.split(fieldSeparator)
+    
+                        if fieldsNumber > 4:
+                            type_, key, code, description = row.split(fieldSeparator)[:4]
+    
+                        behavior = {"key": key, "code": code, "description": description, "modifiers": "",
+                                    "excluded": "", "coding map": "", "category": ""}
+    
+                        self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+    
+                        for field_type in behavioursFields:
+                            if field_type == TYPE:
+                                item = QTableWidgetItem(DEFAULT_BEHAVIOR_TYPE)
+                                # add type combobox
+                                if POINT in type_.upper():
+                                    item = QTableWidgetItem(POINT_EVENT)
+                                if STATE in type_.upper():
+                                    item = QTableWidgetItem(STATE_EVENT)
+                            else:
+                                item = QTableWidgetItem(behavior[field_type])
+    
+                            if field_type not in ETHOGRAM_EDITABLE_FIELDS:
+                                item.setFlags(Qt.ItemIsEnabled)
+                                item.setBackground(QColor(230, 230, 230))
+    
+                            self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
+            except Exception:
+                QMessageBox.critical(None, programName,
+                                     "Error while reading file",
+                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-            with open(fileName, mode="rb") as f:
-                rows_b = f.read().splitlines()
+    def import_from_clipboard(self):
+        """
+        import ethogram from clipboard
+        """
+        cb = QApplication.clipboard()
+        cb_text = cb.text()
+        if not cb_text:
+            QMessageBox.warning(None, programName,
+                                 "The clipboard is empty",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
 
-            rows = []
-            idx = 1
-            for row in rows_b:
-                try:
-                    rows.append(row.decode("utf-8"))
-                except Exception:
-                    QMessageBox.critical(None, programName,
-                                         ("Error while reading file\nThe line # {}\n"
-                                          "{}\ncontains characters that are not readable.").format(idx, row),
-                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                    return
-                idx += 1
+        if self.twBehaviors.rowCount():
+            response = dialog.MessageDialog(programName,
+                                            "Some behaviors are already configured. Do you want to append behaviors or replace them?",
+                                            ["Append", "Replace", CANCEL])
+            if response == CANCEL:
+                return
 
-            fieldSeparator, fieldsNumber = self.check_text_file_type(rows)
+            if response == "Replace":
+               self.twBehaviors.setRowCount(0)
 
-            logging.debug("fields separator: {}  fields number: {}".format(fieldSeparator, fieldsNumber))
+        cb_text_splitted = cb_text.split("\n")
 
-            if fieldSeparator is None:
-                QMessageBox.critical(self, programName,
-                                     "Separator character not found! Use plain text file and TAB or comma as value separator")
-            else:
+        if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
+            QMessageBox.warning(None, programName,
+                                ("The clipboard content does not have a constant number of fields.<br>"
+                                 "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"),
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+            
+        for row in cb_text_splitted:
+            if set(row.split("\t")) != set([""]):
+                behavior = {"type": DEFAULT_BEHAVIOR_TYPE}
+                for idx, field in enumerate(row.split("\t")):
+                    if idx == 0:
+                        behavior["type"] = STATE_EVENT if STATE in field.upper() else (POINT_EVENT if POINT in field.upper() else "")
+                    if idx == 1:
+                        behavior["key"] = field.strip() if len(field.strip()) == 1 else ""
+                    if idx == 2:
+                        behavior["code"] = field.strip()
+                    if idx == 3:
+                        behavior["description"] = field.strip()
+                    if idx == 4:
+                        behavior["category"] = field.strip()
+    
+                self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+        
+                for field_type in behavioursFields:
+                    if field_type == TYPE:
+                        item = QTableWidgetItem(behavior.get("type", DEFAULT_BEHAVIOR_TYPE))
+                    else:
+                        item = QTableWidgetItem(behavior.get(field_type, ""))
+    
+                    if field_type not in ETHOGRAM_EDITABLE_FIELDS:  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
+                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setBackground(QColor(230, 230, 230))
+        
+                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
-                for row in rows:
 
-                    type_, key, code, description = "", "", "", ""
-
-                    if fieldsNumber == 3:  # fields: type, key, code
-                        type_, key, code = row.split(fieldSeparator)
-                        description = ""
-                    if fieldsNumber == 4:  # fields:  type, key, code, description
-                        type_, key, code, description = row.split(fieldSeparator)
-
-                    if fieldsNumber > 4:
-                        type_, key, code, description = row.split(fieldSeparator)[:4]
-
-                    behavior = {"key": key, "code": code, "description": description, "modifiers": "",
-                                "excluded": "", "coding map": "", "category": ""}
-
-                    self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-
-                    for field_type in behavioursFields:
-                        if field_type == TYPE:
-                            item = QTableWidgetItem(DEFAULT_BEHAVIOR_TYPE)
-                            # add type combobox
-                            if POINT in type_.upper():
-                                item = QTableWidgetItem("Point event")
-                            if STATE in type_.upper():
-                                item = QTableWidgetItem("State event")
-                        else:
-                            item = QTableWidgetItem(behavior[field_type])
-
-                        if field_type in [TYPE, "excluded", "coding map", "modifiers", "category"]:
-                            item.setFlags(Qt.ItemIsEnabled)
-                            item.setBackground(QColor(230, 230, 230))
-
-                        self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
 
     def twBehaviors_cellChanged(self, row, column):
@@ -1348,7 +1513,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check code
             if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX):
                 if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text() in codes:
-                    self.lbObservationsState.setText("""<font color="red">Code duplicated at line {} </font>""".format(r + 1))
+                    self.lbObservationsState.setText(f"""<font color="red">Code duplicated at line {r + 1} </font>""")
                 else:
                     if self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
                         codes.append(self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text())
@@ -1413,7 +1578,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     item.setBackground(QColor(230, 230, 230))
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
         except Exception:
-            QMessageBox.critical(self, "BORIS", ("Error:<br><b>{}</b>").format(sys.exc_info()[1]))
+            QMessageBox.critical(self, "BORIS", (f"Error:<br><b>{sys.exc_info()[1]}</b>"))
 
 
     def behaviorTypeChanged(self, row):
@@ -1423,14 +1588,18 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if "with coding map" in self.twBehaviors.item(row, behavioursFields[TYPE]).text():
             # let user select a coding maop
-            fn = QFileDialog(self).getOpenFileName(self,
-                                                   "Select a coding map for {} behavior".format(
-                                                       self.twBehaviors.item(row, behavioursFields['code']).text()),
-                                                   "", "BORIS map files (*.boris_map);;All files (*)")
+            fn = QFileDialog().getOpenFileName(self,
+                                               "Select a coding map for "
+                                               f"{self.twBehaviors.item(row, behavioursFields['code']).text()} behavior",
+                                               "", "BORIS map files (*.boris_map);;All files (*)")
             fileName = fn[0] if type(fn) is tuple else fn
 
             if fileName:
-                new_map = json.loads(open(fileName, "r").read())
+                try:
+                    new_map = json.loads(open(fileName, "r").read())
+                except Exception:
+                    QMessageBox.critical(self, programName, "Error reding the file")
+                    return
                 self.pj[CODING_MAP][new_map["name"]] = new_map
 
                 # add modifiers from coding map areas
@@ -1442,7 +1611,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 # if coding map already exists do not reset the behavior type if no filename selected
                 if not self.twBehaviors.item(row, behavioursFields["coding map"]).text():
-                    QMessageBox.critical(self, programName, """No coding map was selected.\nEvent type will be reset to "Point event" """)
+                    QMessageBox.critical(self, programName, 'No coding map was selected.\nEvent type will be reset to "Point event" ')
                     self.twBehaviors.item(row, behavioursFields["type"]).setText("Point event")
         else:
             self.twBehaviors.item(row, behavioursFields["coding map"]).setText("")

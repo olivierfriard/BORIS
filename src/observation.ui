@@ -478,13 +478,6 @@
                       </widget>
                      </item>
                      <item>
-                      <widget class="QPushButton" name="pb_record_value">
-                       <property name="text">
-                        <string>Record value</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
                       <widget class="QPushButton" name="pb_view_data_head">
                        <property name="text">
                         <string>View first rows</string>

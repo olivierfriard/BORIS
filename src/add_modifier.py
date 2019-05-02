@@ -29,7 +29,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from add_modifier_ui5 import Ui_Dialog
 
-import copy
 import dialog
 import logging
 from config import *
@@ -79,7 +78,7 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         self.modifiers_sets_dict = {}
         for modif in modif_values:
-            self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = copy.deepcopy(modif)
+            self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = dict(modif)
 
         self.tabWidgetModifiersSets.currentChanged.connect(self.tabWidgetModifiersSets_changed)
 

@@ -127,6 +127,9 @@ behav_fields_in_mainwindow = {0: "key", 1: "code", 2: "type", 3: "description", 
 # behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
 behavioursFields = {"type": 0, "key": 1, "code": 2, "description": 3, "category": 4, "modifiers": 5, "excluded": 6, "coding map": 7}
 
+ETHOGRAM_FIELDS = ["type", "key", "code", "description", "category", "modifiers", "excluded", "coding map"]
+ETHOGRAM_EDITABLE_FIELDS = ["key", "code", "description"]
+
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
 PROJECT_BEHAVIORS_CODE_FIELD_IDX = 2
 

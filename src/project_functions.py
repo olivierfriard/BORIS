@@ -27,7 +27,6 @@ import json
 import pathlib
 from shutil import copyfile
 from decimal import *
-import copy
 import tablib
 
 from config import *
@@ -530,7 +529,7 @@ def remove_media_files_path(pj):
                                     ]
                                     del pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][media_file]
 
-    return copy.deepcopy(pj)
+    return dict(pj)
 
 
 def media_full_path(media_file: str, project_file_name: str) -> str:
