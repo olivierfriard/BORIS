@@ -3107,7 +3107,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.second_player() and self.FFmpegGlobalFrame2 > 0:
                             self.FFmpegGlobalFrame2 -= 1
                         '''
-                    self.ffmpegTimerOut()
+                    self.ffmpeg_timer_out()
 
                 elif self.playMode == VLC:  # play mode VLC
 
@@ -3172,7 +3172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.FFmpegGlobalFrame = self.dw_player[0].media_durations[idx - 1]
                         break
                 self.FFmpegGlobalFrame -= 1
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
             elif self.playMode == VLC:
 
@@ -3224,7 +3224,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.FFmpegGlobalFrame = self.dw_player[0].media_durations[idx + 1]
                         break
                 self.FFmpegGlobalFrame -= 1
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
             elif self.playMode == VLC:
 
@@ -3468,7 +3468,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.playMode == FFMPEG:
                 self.FFmpegGlobalFrame -= 1
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
             # plot colors
             self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
@@ -3500,14 +3500,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
 
-    def ffmpegTimerOut_old(self):
+    def ffmpeg_timer_out(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
         frames are read from disk
         """
 
-        logging.debug("FFmpegTimerOut function")
+        logging.debug("ffmpeg_timer_out function")
 
         logging.debug("fps {}".format(self.fps))
 
@@ -3689,14 +3689,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.get_events_current_row()
 
 
-    def ffmpegTimerOut(self):
+    def ffmpeg_timer_out_future(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
         frames are loaded from dictionary
         """
 
-        logging.debug("FFmpegTimerOut function")
+        logging.debug("ffmpeg_timer_out function")
 
         logging.debug("fps {}".format(self.fps))
 
@@ -3858,7 +3858,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def clear_measurements(self):
         if self.FFmpegGlobalFrame > 1:
             self.FFmpegGlobalFrame -= 1
-            self.ffmpegTimerOut()
+            self.ffmpeg_timer_out()
 
 
     def distance(self):
@@ -4186,7 +4186,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.verticalLayout_3.addWidget(self.video_slider)
 
         self.FFmpegTimer = QTimer(self)
-        self.FFmpegTimer.timeout.connect(self.ffmpegTimerOut)
+        self.FFmpegTimer.timeout.connect(self.ffmpeg_timer_out)
         try:
             self.FFmpegTimerTick = int(1000 / self.fps)
         except Exception:
@@ -7993,7 +7993,7 @@ item []:
             if self.FFmpegGlobalFrame > 0:
                 self.FFmpegGlobalFrame -= 1
 
-            self.ffmpegTimerOut()
+            self.ffmpeg_timer_out()
 
             # set thread for cleaning temp directory
             if self.ffmpeg_cache_dir_max_size:
@@ -8666,7 +8666,7 @@ item []:
                     frame_to_display = round(media_position_s * self.fps)
                     logging.debug(f"video slider moved: Frame to display: {frame_to_display}")
                     self.FFmpegGlobalFrame = frame_to_display - 1
-                    self.ffmpegTimerOut()
+                    self.ffmpeg_timer_out()
                 '''
 
 
@@ -8686,7 +8686,7 @@ item []:
                     frame_to_display = round(media_position_s * self.fps)
                     logging.debug(f"video slider released: Frame to display: {frame_to_display}")
                     self.FFmpegGlobalFrame = frame_to_display - 1
-                    self.ffmpegTimerOut()
+                    self.ffmpeg_timer_out()
 
 
     def get_events_current_row(self):
@@ -9441,7 +9441,7 @@ item []:
             logging.debug("current frame {0}".format(self.FFmpegGlobalFrame))
             if self.FFmpegGlobalFrame > 1:
                 self.FFmpegGlobalFrame -= 2
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
                 logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
 
 
@@ -9450,7 +9450,7 @@ item []:
         go one frame forward
         """
         if self.playMode == FFMPEG:
-            self.ffmpegTimerOut()
+            self.ffmpeg_timer_out()
 
 
     def beep(self, sound_type: str):
@@ -9547,13 +9547,13 @@ item []:
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
                     newTime = 1000 * self.FFmpegGlobalFrame / self.fps
-                    self.ffmpegTimerOut()
+                    self.ffmpeg_timer_out()
                     logging.debug(f"New frame {self.FFmpegGlobalFrame}")
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
                 logging.debug("(next) current frame {0}".format(self.FFmpegGlobalFrame))
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
                 logging.debug("(next) new frame {0}".format(self.FFmpegGlobalFrame))
                 return
 
@@ -9816,7 +9816,7 @@ item []:
                 self.FFmpegGlobalFrame = currentFrame
                 if self.FFmpegGlobalFrame > 0:
                     self.FFmpegGlobalFrame -= 1
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
 
     def twSubjects_doubleClicked(self):
@@ -10904,7 +10904,7 @@ item []:
                     self.FFmpegGlobalFrame = int((currentTime - self.fast) * self.fps)
                 else:
                     self.FFmpegGlobalFrame = 0   # position to init
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
             elif self.playMode == VLC:
 
@@ -10980,7 +10980,7 @@ item []:
                 if self.FFmpegGlobalFrame > 0:
                     self.FFmpegGlobalFrame -= 1
 
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
             elif self.playMode == VLC:
                 if self.dw_player[0].media_list.count() == 1:
@@ -11050,7 +11050,7 @@ item []:
             self.pause_video()
             if self.playMode == FFMPEG:
                 self.FFmpegGlobalFrame = 0   # position to init
-                self.ffmpegTimerOut()
+                self.ffmpeg_timer_out()
 
             elif self.playMode == VLC:
 

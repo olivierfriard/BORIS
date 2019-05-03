@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>1</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -269,7 +269,7 @@ from a BORIS project</string>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pb_import_from_clipboard">
+                <widget class="QPushButton" name="pb_import_behaviors_from_clipboard">
                  <property name="text">
                   <string>Import from clipboard</string>
                  </property>
@@ -360,6 +360,13 @@ from a BORIS project</string>
                 </widget>
                </item>
                <item>
+                <widget class="QPushButton" name="pb_remove_all_subjects">
+                 <property name="text">
+                  <string>Remove all subjects</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QPushButton" name="pb_convert_subjects_key_to_lower">
                  <property name="text">
                   <string>Convert keys to lower case</string>
@@ -371,6 +378,13 @@ from a BORIS project</string>
                  <property name="text">
                   <string>Import subjects
 from a BORIS project</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pb_import_subjects_from_clipboard">
+                 <property name="text">
+                  <string>Import from clipboard</string>
                  </property>
                 </widget>
                </item>

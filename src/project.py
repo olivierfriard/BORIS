@@ -309,7 +309,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         self.pbImportFromJWatcher.clicked.connect(self.pbImportFromJWatcher_clicked)
         self.pbImportFromTextFile.clicked.connect(self.import_from_text_file)
-        self.pb_import_from_clipboard.clicked.connect(self.import_from_clipboard)
+        self.pb_import_behaviors_from_clipboard.clicked.connect(self.import_behaviors_from_clipboard)
 
         self.pbExportEthogram.clicked.connect(self.export_ethogram)
 
@@ -323,11 +323,14 @@ class projectDialog(QDialog, Ui_dlgProject):
         # subjects
         self.pbAddSubject.clicked.connect(self.pbAddSubject_clicked)
         self.pbRemoveSubject.clicked.connect(self.pbRemoveSubject_clicked)
+        self.pb_remove_all_subjects.clicked.connect(self.remove_all_subjects)
+
         self.twSubjects.cellChanged[int, int].connect(self.twSubjects_cellChanged)
 
         self.pb_convert_subjects_key_to_lower.clicked.connect(self.convert_subjects_keys_to_lower_case)
 
         self.pbImportSubjectsFromProject.clicked.connect(self.pbImportSubjectsFromProject_clicked)
+        self.pb_import_subjects_from_clipboard.clicked.connect(self.import_subjects_from_clipboard)
 
         # independent variables tab
         self.pbAddVariable.clicked.connect(self.pbAddVariable_clicked)
@@ -976,7 +979,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             title (str): title of dialog box
             text (str): text of dialog box
             behavioral_categories (list): behavioral categories
-            ethogram (dict): ethogram 
+            ethogram (dict): ethogram
 
         """
 
@@ -1085,7 +1088,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                             behavior_type=[STATE_EVENT, POINT_EVENT])
 
                 for i in sorted_keys(project[ETHOGRAM]):
-                    
+
                     if project[ETHOGRAM][i][BEHAVIOR_CODE] not in behaviors_to_import:
                         continue
 
@@ -1243,7 +1246,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     for r in range(self.twBehaviors.rowCount() - 1, -1, -1):
                         if not self.twBehaviors.item(r, PROJECT_BEHAVIORS_CODE_FIELD_IDX).text():
                             self.twBehaviors.removeRow(r)
-                    
+
                     # extract all codes to delete
                     codesToDelete = []
                     row_mem = {}
@@ -1365,7 +1368,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             try:
                 with open(fileName, mode="rb") as f:
                     rows_b = f.read().splitlines()
-    
+
                 rows = []
                 idx = 1
                 for row in rows_b:
@@ -1378,34 +1381,34 @@ class projectDialog(QDialog, Ui_dlgProject):
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                         return
                     idx += 1
-    
+
                 fieldSeparator, fieldsNumber = self.check_text_file_type(rows)
-    
+
                 logging.debug(f"fields separator: {fieldSeparator}  fields number: {fieldsNumber}")
-    
+
                 if fieldSeparator is None:
                     QMessageBox.critical(self, programName,
                                          "Separator character not found! Use plain text file and TAB or comma as value separator")
                 else:
-    
+
                     for row in rows:
-    
+
                         type_, key, code, description = "", "", "", ""
-    
+
                         if fieldsNumber == 3:  # fields: type, key, code
                             type_, key, code = row.split(fieldSeparator)
                             description = ""
                         if fieldsNumber == 4:  # fields:  type, key, code, description
                             type_, key, code, description = row.split(fieldSeparator)
-    
+
                         if fieldsNumber > 4:
                             type_, key, code, description = row.split(fieldSeparator)[:4]
-    
+
                         behavior = {"key": key, "code": code, "description": description, "modifiers": "",
                                     "excluded": "", "coding map": "", "category": ""}
-    
+
                         self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-    
+
                         for field_type in behavioursFields:
                             if field_type == TYPE:
                                 item = QTableWidgetItem(DEFAULT_BEHAVIOR_TYPE)
@@ -1416,18 +1419,19 @@ class projectDialog(QDialog, Ui_dlgProject):
                                     item = QTableWidgetItem(STATE_EVENT)
                             else:
                                 item = QTableWidgetItem(behavior[field_type])
-    
+
                             if field_type not in ETHOGRAM_EDITABLE_FIELDS:
                                 item.setFlags(Qt.ItemIsEnabled)
                                 item.setBackground(QColor(230, 230, 230))
-    
+
                             self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
             except Exception:
                 QMessageBox.critical(None, programName,
                                      "Error while reading file",
                                      QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-    def import_from_clipboard(self):
+
+    def import_behaviors_from_clipboard(self):
         """
         import ethogram from clipboard
         """
@@ -1457,7 +1461,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                  "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"),
                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
-            
+
         for row in cb_text_splitted:
             if set(row.split("\t")) != set([""]):
                 behavior = {"type": DEFAULT_BEHAVIOR_TYPE}
@@ -1472,21 +1476,69 @@ class projectDialog(QDialog, Ui_dlgProject):
                         behavior["description"] = field.strip()
                     if idx == 4:
                         behavior["category"] = field.strip()
-    
+
                 self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
-        
+
                 for field_type in behavioursFields:
                     if field_type == TYPE:
                         item = QTableWidgetItem(behavior.get("type", DEFAULT_BEHAVIOR_TYPE))
                     else:
                         item = QTableWidgetItem(behavior.get(field_type, ""))
-    
+
                     if field_type not in ETHOGRAM_EDITABLE_FIELDS:  # [TYPE, "excluded", "coding map", "modifiers", "category"]:
                         item.setFlags(Qt.ItemIsEnabled)
                         item.setBackground(QColor(230, 230, 230))
-        
+
                     self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
 
+
+    def import_subjects_from_clipboard(self):
+        """
+        import ethogram from clipboard
+        """
+        cb = QApplication.clipboard()
+        cb_text = cb.text()
+        if not cb_text:
+            QMessageBox.warning(None, programName,
+                                 "The clipboard is empty",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        if self.twSubjects.rowCount():
+            response = dialog.MessageDialog(programName,
+                                            "Some subjects are already configured. Do you want to append subjects or replace them?",
+                                            ["Append", "Replace", CANCEL])
+            if response == CANCEL:
+                return
+
+            if response == "Replace":
+               self.twSubjects.setRowCount(0)
+
+        cb_text_splitted = cb_text.split("\n")
+
+        if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
+            QMessageBox.warning(None, programName,
+                                ("The clipboard content does not have a constant number of fields.<br>"
+                                 "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"),
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+
+        for row in cb_text_splitted:
+            if set(row.split("\t")) != set([""]):
+                subject = {}
+                for idx, field in enumerate(row.split("\t")):
+                    if idx == 0:
+                        subject["key"] = field.strip() if len(field.strip()) == 1 else ""
+                    if idx == 1:
+                        subject[SUBJECT_NAME] = field.strip()
+                    if idx == 2:
+                        subject["description"] = field.strip()
+
+                self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
+
+                for idx, field_name in enumerate(subjectsFields):
+                    item = QTableWidgetItem(subject.get(field_name, ""))
+                    self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
 
 
 
@@ -1627,13 +1679,14 @@ class projectDialog(QDialog, Ui_dlgProject):
             item = QTableWidgetItem("")
             self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
 
+
     def pbRemoveSubject_clicked(self):
         """
         remove selected subject from subjects list
         control before if subject used in observations
         """
         if not self.twSubjects.selectedIndexes():
-            QMessageBox.warning(self, programName, "First select a subject to remove")
+            QMessageBox.warning(self, programName, "Select a subject to remove")
         else:
 
             if dialog.MessageDialog(programName, "Remove the selected subject?", [YES, CANCEL]) == YES:
@@ -1644,9 +1697,9 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     subjectsInObs = []
                     for obs in self.pj[OBSERVATIONS]:
-                        events = self.pj[OBSERVATIONS][obs]['events']
+                        events = self.pj[OBSERVATIONS][obs][EVENTS]
                         for event in events:
-                            subjectsInObs.append(event[1])  # 1: subject name
+                            subjectsInObs.append(event[EVENT_SUBJECT_FIELD_IDX])
                     if subjectToDelete in subjectsInObs:
                         if dialog.MessageDialog(programName, "The subject to remove is used in observations!", [REMOVE, CANCEL]) == REMOVE:
                             flagDel = True
@@ -1661,6 +1714,55 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twSubjects.removeRow(self.twSubjects.selectedIndexes()[0].row())
 
                 self.twSubjects_cellChanged(0, 0)
+
+
+    def remove_all_subjects(self):
+        """
+        remove all subjects.
+        Verify if they are used in observations
+        """
+        if self.twSubjects.rowCount():
+
+            if dialog.MessageDialog(programName, "Remove all subjects?", [YES, CANCEL]) == YES:
+
+                try:
+                    # delete ethogram rows without behavior code
+                    for r in range(self.twSubjects.rowCount() - 1, -1, -1):
+                        if not self.twSubjects.item(r, 1).text(): # no name
+                            self.twSubjects.removeRow(r)
+
+                    # extract all subjects names to delete
+                    namesToDelete = []
+                    row_mem = {}
+                    for r in range(self.twSubjects.rowCount() - 1, -1, -1):
+                        if self.twSubjects.item(r, 1).text():
+                            namesToDelete.append(self.twSubjects.item(r, 1).text())
+                            row_mem[self.twSubjects.item(r, 1).text()] = r
+
+                    # extract all subjects name used in observations
+                    namesInObs = []
+                    for obs in self.pj[OBSERVATIONS]:
+                        events = self.pj[OBSERVATIONS][obs][EVENTS]
+                        for event in events:
+                            namesInObs.append(event[EVENT_SUBJECT_FIELD_IDX])
+
+                    flag_force = False
+                    for nameToDelete in namesToDelete:
+                        # if name to delete used in obs ask confirmation
+                        if nameToDelete in namesInObs and not flag_force:
+                            response = dialog.MessageDialog(programName,
+                                                            f"The subject <b>{nameToDelete}</b> is used in observations!",
+                                                            ["Force removing of all subjects", REMOVE, CANCEL])
+                            if response == "Force removing of all subjects":
+                                flag_force = True
+                                self.twSubjects.removeRow(row_mem[nameToDelete])
+
+                            if response == REMOVE:
+                                self.twSubjects.removeRow(row_mem[nameToDelete])
+                        else:   # remove without asking
+                            self.twSubjects.removeRow(row_mem[nameToDelete])
+                except Exception:
+                    QMessageBox.warning(self, programName, "Error during deleting subjects")
 
 
     def twSubjects_cellChanged(self, row: int, column: int):
