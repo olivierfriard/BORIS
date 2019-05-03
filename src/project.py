@@ -2036,16 +2036,18 @@ class projectDialog(QDialog, Ui_dlgProject):
                                         modifiers_dict[k]["values"][idx] = modifiers_dict[k]["values"][idx].replace(modif_code, modif_code.strip())
                                 row["modifiers"] = dict(modifiers_dict)
                             except:
+
                                 logging.critical("Error removing leading/trailing spaces in modifiers")
-                                _ = dialog.MessageDialog(programName,
-                                                         "Error removing leading/trailing spaces in modifiers",
-                                                         [OK])
+
+                                QMessageBox.critical(self, programName, "Error removing leading/trailing spaces in modifiers")
+
                         else:
                             row["modifiers"] = eval(row["modifiers"])
                 else:
                     row[field] = ""
 
-            if (row["type"]) and (row["key"]) and (row["code"]):
+            #if (row["type"]) and (row["key"]) and (row["code"]):
+            if (row["type"]) and (row["code"]):
                 self.obs[str(len(self.obs))] = row
             else:
                 missing_data.append(str(r + 1))
@@ -2064,7 +2066,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             del self.pj[CODING_MAP][cm]
 
         if missing_data:
-            QMessageBox.warning(self, programName, "Missing data in ethogram at row{} !".format(",".join(missing_data)))
+            QMessageBox.warning(self, programName, f"Missing data in ethogram at row {','.join(missing_data)} !")
             return
 
         # check if behavior belong to category that is not in categories list
