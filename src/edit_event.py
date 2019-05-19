@@ -50,6 +50,7 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
 
+
     def set_to_current_time(self):
         """
         set time to current media time
