@@ -445,7 +445,7 @@ class DW(QDockWidget):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
-    instance = vlc.Instance()
+    instance = vlc.Instance()   # "--avcodec-hw=none"
 
     pj = dict(EMPTY_PROJECT)
     project = False
@@ -8329,6 +8329,11 @@ item []:
                                   time_format=self.timeFormat,
                                   show_set_current_time=True)
         editWindow.setWindowTitle("Edit event")
+
+
+        # add duration widget
+        import duration_widget
+        editWindow.horizontalLayout_2.insertWidget(0, duration_widget.Duration_widget())
 
         twEvents_row = self.twEvents.selectedItems()[0].row()
 
