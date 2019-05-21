@@ -1079,7 +1079,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export the list of observations
         """
 
-        resultStr, selected_observations = select_observations.select_observations(pj, MULTIPLE)
+        resultStr, selected_observations = select_observations.select_observations(self.pj, MULTIPLE)
         if not resultStr or not selected_observations:
             return
 
@@ -8332,8 +8332,10 @@ item []:
 
 
         # add duration widget
+        '''
         import duration_widget
         editWindow.horizontalLayout_2.insertWidget(0, duration_widget.Duration_widget())
+        '''
 
         twEvents_row = self.twEvents.selectedItems()[0].row()
 
