@@ -8331,12 +8331,6 @@ item []:
         editWindow.setWindowTitle("Edit event")
 
 
-        # add duration widget
-        '''
-        import duration_widget
-        editWindow.horizontalLayout_2.insertWidget(0, duration_widget.Duration_widget())
-        '''
-
         twEvents_row = self.twEvents.selectedItems()[0].row()
 
         tsb_to_edit = [time2seconds(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text())
@@ -8347,9 +8341,13 @@ item []:
         row = [idx for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
                if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] == tsb_to_edit][0]
 
+        '''
         editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]),
                                                           HHMMSSZZZ))
         editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
+        '''
+
+        editWindow.time_widget.set_time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
 
         sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
@@ -8395,10 +8393,13 @@ item []:
 
             self.projectChanged = True
 
+            '''
             if self.timeFormat == HHMMSS:
                 newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
             if self.timeFormat == S:
                 newTime = Decimal(str(editWindow.dsbTime.value()))
+            '''
+            newTime =  editWindow.time_widget.w1.time_value if editWindow.time_widget.w1.sign.text() == "+" else - editWindow.time_widget.w1.time_value
 
             for key in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():

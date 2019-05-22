@@ -46,8 +46,13 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
 
+        '''
         self.dsbTime.setVisible(time_format == S)
         self.teTime.setVisible(time_format == HHMMSS)
+        '''
+
+        self.dsbTime.setVisible(False)
+        self.teTime.setVisible(False)
 
         self.time_widget = duration_widget.Duration_widget()
 
@@ -62,8 +67,11 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         set time to current media time
         """
+
+        '''
         self.teTime.setTime(QTime.fromString(seconds2time(self.current_time), HHMMSSZZZ))
         self.dsbTime.setValue(float(self.current_time))
+        '''
 
         self.time_widget.set_time(float(self.current_time))
 
