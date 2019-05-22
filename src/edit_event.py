@@ -32,6 +32,9 @@ from edit_event_ui5 import Ui_Form
 from config import HHMMSS, S, HHMMSSZZZ
 from utilities import seconds2time
 
+import duration_widget
+
+
 
 class DlgEditEvent(QDialog, Ui_Form):
 
@@ -46,6 +49,10 @@ class DlgEditEvent(QDialog, Ui_Form):
         self.dsbTime.setVisible(time_format == S)
         self.teTime.setVisible(time_format == HHMMSS)
 
+        self.time_widget = duration_widget.Duration_widget()
+
+        self.horizontalLayout_2.insertWidget(0, self.time_widget)
+
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
         self.pbOK.clicked.connect(self.accept)
         self.pbCancel.clicked.connect(self.reject)
@@ -57,6 +64,8 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         self.teTime.setTime(QTime.fromString(seconds2time(self.current_time), HHMMSSZZZ))
         self.dsbTime.setValue(float(self.current_time))
+
+        self.time_widget.set_time(float(self.current_time))
 
 
 class EditSelectedEvents(QDialog):
@@ -140,3 +149,11 @@ class EditSelectedEvents(QDialog):
 
     def pbCancel_clicked(self):
         self.reject()
+
+
+if __name__ == '__main__':
+    import sys
+    app = QApplication(sys.argv)
+    w = DlgEditEvent(None, current_time=12, time_format=S, show_set_current_time=True)
+    w.show()
+    sys.exit(app.exec_())

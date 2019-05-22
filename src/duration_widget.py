@@ -23,9 +23,9 @@ class Duration_widget(QWidget):
 
             self.sign = QPushButton("+")
             self.sign.clicked.connect(self.change_sign)
-            self.sign.setStyleSheet('font-size:12px;') 
+            self.sign.setStyleSheet('font-size:12px;')
             lay.addWidget(self.sign)
-        
+
             self.hours = QSpinBox()
             self.hours.setValue(0)
             self.hours.setMinimum(0)
@@ -135,16 +135,11 @@ class Duration_widget(QWidget):
         lay.addItem(spacerItem)
 
 
-    def set_format_s(self):
+    def set_time(self, new_time):
 
-        self.w2.seconds2.setValue(- self.w1.time_value if self.w1.sign.text() == "-" else self.w1.time_value)
-        self.Stack.setCurrentIndex(1)
+        self.w1.sign.setText("-" if new_time < 0 else "+")
+        self.w1.time_value = abs(new_time)
 
-    def set_format_hhmmss(self):
-
-        self.w1.sign.setText("-" if self.w2.seconds2.value() < 0 else "+")
-        self.w1.time_value = abs(self.w2.seconds2.value())
-        print(self.w1.time_value)
 
         h = self.w1.time_value // 3600
         m = (self.w1.time_value - h * 3600) // 60
@@ -155,6 +150,34 @@ class Duration_widget(QWidget):
         self.w1.minutes.setValue(m)
         self.w1.seconds.setValue(s)
         self.w1.milliseconds.setValue(ms)
+
+        self.w2.seconds2.setValue(- self.w1.time_value if self.w1.sign.text() == "-" else self.w1.time_value)
+
+
+    def set_format_s(self):
+
+        self.w2.seconds2.setValue(- self.w1.time_value if self.w1.sign.text() == "-" else self.w1.time_value)
+        self.Stack.setCurrentIndex(1)
+
+    def set_format_hhmmss(self):
+
+        self.set_time(self.w2.seconds2.value())
+
+        '''
+        self.w1.sign.setText("-" if self.w2.seconds2.value() < 0 else "+")
+        self.w1.time_value = abs(self.w2.seconds2.value())
+        # print(self.w1.time_value)
+
+        h = self.w1.time_value // 3600
+        m = (self.w1.time_value - h * 3600) // 60
+        s = int((self.w1.time_value - h * 3600 - m * 60))
+        ms = (self.w1.time_value - h * 3600 - m * 60 - s) * 1000
+
+        self.w1.hours.setValue(h)
+        self.w1.minutes.setValue(m)
+        self.w1.seconds.setValue(s)
+        self.w1.milliseconds.setValue(ms)
+        '''
 
         self.Stack.setCurrentIndex(0)
 
