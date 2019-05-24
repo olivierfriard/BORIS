@@ -487,7 +487,7 @@ class Observation(QDialog, Ui_Form):
             except ValueError:
                 return False
 
-        if self.tabProjectType.currentIndex() == 0:
+        if self.tabProjectType.currentIndex() == 0:  # observation based on media file
             # check player number
             players_list = []
             players = {} # for storing duration
@@ -500,12 +500,20 @@ class Observation(QDialog, Ui_Form):
 
             # check if player#1 used
             if not players_list or min(players_list) > 1:
-                QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
+                # self.qm = QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
+                self.qm = QMessageBox()
+                self.qm.setIcon(QMessageBox.Critical)
+                self.qm.setText("A media file must be loaded in player #1")
+                self.qm.exec_()
                 return False
 
             # check if players are used in crescent order
             if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
-                QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media file")
+                # QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media files")
+                self.qm = QMessageBox()
+                self.qm.setIcon(QMessageBox.Critical)
+                self.qm.setText("Some player are not used. Please reorganize your media files")
+                self.qm.exec_()
                 return False
 
             # check that longuest media is in player #1
@@ -532,7 +540,12 @@ class Observation(QDialog, Ui_Form):
 
         # check if observation id not empty
         if not self.leObservationId.text():
-            QMessageBox.warning(self, programName , "The <b>observation id</b> is mandatory and must be unique!" )
+            #QMessageBox.warning(self, programName , "The <b>observation id</b> is mandatory and must be unique!" )
+            self.qm = QMessageBox()
+            self.qm.setIcon(QMessageBox.Critical)
+            self.qm.setText("The <b>observation id</b> is mandatory and must be unique!")
+            self.qm.exec_()
+
             return False
 
         # check if new obs and observation id already present or if edit obs and id changed

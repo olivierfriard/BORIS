@@ -1091,9 +1091,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
-
-        file_name, filter_ = filediag_func(self, "Export list of selected observations", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations", "", ";;".join(extended_file_formats))
 
         if file_name:
             output_format = file_formats[extended_file_formats.index(filter_)]

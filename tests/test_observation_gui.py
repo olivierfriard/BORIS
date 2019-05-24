@@ -1,6 +1,11 @@
 """
 module for testing observation GUI
+
+
+pytest -s -vv test_observation_gui.py
 """
+
+
 import sys
 import os
 from PyQt5.QtCore import *
@@ -15,13 +20,17 @@ def test_no_media_loaded(qtbot):
 
     w = observation.Observation("/tmp")
     w.show()
+    # w.testing = True
     qtbot.addWidget(w)
+
+    def handle_dialog():
+        qtbot.keyClick(w.qm, Qt.Key_Enter)
+
+    QTimer.singleShot(1000, handle_dialog)
 
     qtbot.mouseClick(w.pbSave, Qt.LeftButton)
 
     assert w.state == "refused"
-    #assert w.exec_() == QDialog.Accepted
-    # qtbot.keyPress(w, Qt.Key_Enter)
 
 
 def test_no_obs_id(qtbot):
@@ -35,12 +44,21 @@ def test_no_obs_id(qtbot):
     w.check_media("1", media_file, True)
     w.add_media_to_listview("1", media_file)
 
+    def handle_dialog():
+        qtbot.keyClick(w.qm, Qt.Key_Enter)
+        #qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
+
+    QTimer.singleShot(1000, handle_dialog)
+
     qtbot.mouseClick(w.pbSave, Qt.LeftButton)
 
     assert w.state == "refused"
 
 
 def test_file_not_media(qtbot):
+    """
+    test if the loaded file is a media file or not
+    """
 
     w = observation.Observation("/tmp")
     w.show()
@@ -52,6 +70,38 @@ def test_file_not_media(qtbot):
     w.leObservationId.setText("test")
     media_file = "files/test.boris"
     assert w.check_media("1", media_file, True) == False
+
+
+def test_players_in_crescent_order(qtbot):
+    """
+    test if players are used in crescent order
+    """
+
+    w = observation.Observation("/tmp")
+    w.show()
+    qtbot.addWidget(w)
+    #w.mode = "new"
+    w.pj = config.EMPTY_PROJECT
+    w.ffmpeg_bin = "ffmpeg"
+
+    #w.leObservationId.setText("test")
+    media_file1 = "files/geese1.mp4"
+    w.check_media("1", media_file1, True)
+    #w.add_media_to_listview("1", media_file1)
+
+    media_file2 = "files/geese1.mp4"
+    w.check_media("1", media_file2, True)
+    w.twVideo1.cellWidget(1, 0).setCurrentIndex(2)
+
+    def handle_dialog():
+        qtbot.keyClick(w.qm, Qt.Key_Enter)
+        #qtbot.mouseClick(w.qm.Ok, Qt.LeftButton)
+
+    QTimer.singleShot(1000, handle_dialog)
+
+    qtbot.mouseClick(w.pbSave, Qt.LeftButton)
+
+    assert w.state == "refused"
 
 
 def test_ok(qtbot):
@@ -128,7 +178,7 @@ def test_extract_wav_from_video(qtbot):
 def test_extract_wav_from_wav(qtbot):
 
     w = observation.Observation("/tmp")
-    
+
     w.show()
     qtbot.addWidget(w)
     w.mode = "new"
