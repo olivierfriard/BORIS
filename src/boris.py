@@ -9467,7 +9467,7 @@ item []:
             sound_type (str): type of sound
         """
 
-        QSound.play(":/{}".format(sound_type))
+        QSound.play(f":/{sound_type}")
 
 
     def is_playing(self):
@@ -9490,7 +9490,7 @@ item []:
 
     def keyPressEvent(self, event):
 
-        logging.debug("text #{0}#  event key: {1} ".format(event.text(), event.key()))
+        logging.debug(f"text #{event.text()}#  event key: {event.key()} ")
 
         '''
         if (event.modifiers() & Qt.ShiftModifier):   # SHIFT
@@ -9558,9 +9558,9 @@ item []:
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
-                logging.debug("(next) current frame {0}".format(self.FFmpegGlobalFrame))
+                logging.debug(f"(next) current frame {self.FFmpegGlobalFrame}")
                 self.ffmpeg_timer_out()
-                logging.debug("(next) new frame {0}".format(self.FFmpegGlobalFrame))
+                logging.debug(f"(next) new frame {self.FFmpegGlobalFrame}")
                 return
 
         if self.playerType == VLC:
@@ -9626,7 +9626,7 @@ item []:
             elif (ek == Qt.Key_Enter and event.text()):  # click from coding pad or subjects pad
                 ek_unichr = ek_text
 
-            logging.debug("ek_unichr {}".format(ek_unichr))
+            logging.debug(f"ek_unichr {ek_unichr}")
 
             if ek == Qt.Key_Enter and event.text():  # click from coding pad or subjects pad
                 ek_unichr = ""
@@ -9733,8 +9733,8 @@ item []:
                             self.update_subject(self.pj[SUBJECTS][idx][SUBJECT_NAME])
 
                 if not flag_subject:
-                    logging.debug("Key not assigned ({})".format(ek_unichr))
-                    self.statusbar.showMessage("Key not assigned ({})".format(ek_unichr), 5000)
+                    logging.debug(f"Key not assigned ({ek_unichr})")
+                    self.statusbar.showMessage(f"Key not assigned ({ek_unichr})", 5000)
 
 
     def twEvents_doubleClicked(self):
@@ -10170,7 +10170,7 @@ item []:
                 self.find_dialog.close()
         else:
             if self.find_dialog.currentIdx == -1:
-                self.find_dialog.lb_message.setText("<b>{}</b> not found".format(self.find_dialog.findText.text()))
+                self.find_dialog.lb_message.setText(f"<b>{self.find_dialog.findText.text()}</b> not found")
 
 
     def explore_project(self):
@@ -10206,7 +10206,7 @@ item []:
                 self.results_dialog = dialog.View_explore_project_results()
                 self.results_dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
                 self.results_dialog.double_click_signal.connect(self.double_click_explore_project)
-                self.results_dialog.lb.setText("{} results".format(len(results)))
+                self.results_dialog.lb.setText(f"{len(results)} results")
                 self.results_dialog.tw.setColumnCount(2)
                 self.results_dialog.tw.setRowCount(len(results))
                 self.results_dialog.tw.setHorizontalHeaderLabels(["Observation id", "row index"])
@@ -10326,7 +10326,7 @@ item []:
             else:
                 self.find_replace_dialog.close()
         if msg == "FIND_REPLACE_ALL":
-            dialog.MessageDialog(programName, "{} substitution(s).".format(number_replacement), [OK])
+            dialog.MessageDialog(programName, f"{number_replacement} substitution(s).", [OK])
             self.find_replace_dialog.close()
 
 
@@ -10365,7 +10365,7 @@ item []:
                                                               self.pj[OBSERVATIONS][obsId], self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obsId)
 
         if out:
@@ -10388,7 +10388,7 @@ item []:
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
-        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog().getSaveFileName
+        filediag_func = QFileDialog().getSaveFileName
 
         if mode == "tabular":
             if len(selectedObservations) > 1:  # choose directory for exporting observations
@@ -10428,7 +10428,7 @@ item []:
                     # check if file with new extension already exists
                     if pathlib.Path(fileName).is_file():
                             if dialog.MessageDialog(programName,
-                                                    "The file {} already exists.".format(fileName),
+                                                    f"The file {fileName} already exists.",
                                                     [CANCEL, OVERWRITE]) == CANCEL:
                                 return
 
@@ -10507,8 +10507,8 @@ item []:
                                                                             timed=timed,
                                                                             file_name=file_name)
             if not r:
-                logging.critical("Error while exporting events as behavioral sequences: {}".format(msg))
-                QMessageBox.critical(None, programName, "Error while exporting events as behavioral sequences:<br>{}".format(msg),
+                logging.critical(f"Error while exporting events as behavioral sequences: {msg}")
+                QMessageBox.critical(None, programName, f"Error while exporting events as behavioral sequences:<br>{msg}",
                                      QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
             # response = dialog.MessageDialog(programName, "Include observation(s) information?", [YES, NO])
@@ -10602,7 +10602,7 @@ item []:
                         outfile.write(observed_matrix)
 
                 except Exception:
-                    QMessageBox.critical(self, programName, "The file {} can not be saved".format(fileName))
+                    QMessageBox.critical(self, programName, f"The file {fileName} can not be saved")
 
 
     def transitions_dot_script(self):
@@ -10627,7 +10627,7 @@ item []:
 
                     out += "<b>{}</b> created<br>".format(fileName + ".gv")
                 except Exception:
-                    QMessageBox.information(self, programName, "Error during dot script creation.\n{}".format(str(sys.exc_info()[1])))
+                    QMessageBox.information(self, programName, f"Error during dot script creation.\n{str(sys.exc_info()[1])}")
 
         if out:
             QMessageBox.information(self, programName,
