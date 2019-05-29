@@ -3080,12 +3080,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         jt = dialog.JumpTo(self.timeFormat)
+        jt.time_widget.set_time(0)
+        if self.timeFormat == HHMMSS:
+            jt.time_widget.set_format_hhmmss()
+        else:
+            jt.time_widget.set_format_s()
 
         if jt.exec_():
+            '''
             if self.timeFormat == HHMMSS:
                 newTime = int(time2seconds(jt.te.time().toString(HHMMSSZZZ)) * 1000)
             else:
                 newTime = int(jt.te.value() * 1000)
+            '''
+            #newTime = int((jt.time_widget.w1.time_value if jt.time_widget.w1.sign.text() == "+" else - jt.time_widget.w1.time_value) * 1000)
+            newTime = int(jt.time_widget.get_time() * 1000)
+            print(newTime)
+            if newTime < 0:
+                return
+
 
             if self.playerType == VLC:
                 if self.playMode == FFMPEG:
@@ -3093,18 +3106,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     currentFrame = round(newTime / frameDuration)
                     self.FFmpegGlobalFrame = currentFrame
 
-                    '''
-                    if self.second_player():
-                        currentFrame2 = round(newTime / frameDuration)
-                        self.FFmpegGlobalFrame2 = currentFrame2
-                    '''
-
                     if self.FFmpegGlobalFrame > 0:
                         self.FFmpegGlobalFrame -= 1
-                        '''
-                        if self.second_player() and self.FFmpegGlobalFrame2 > 0:
-                            self.FFmpegGlobalFrame2 -= 1
-                        '''
                     self.ffmpeg_timer_out()
 
                 elif self.playMode == VLC:  # play mode VLC
@@ -8346,6 +8349,12 @@ item []:
         '''
 
         editWindow.time_widget.set_time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
+        '''
+        if self.timeFormat == HHMMSS:
+            editWindow.time_widget.set_format_hhmmss()
+        if self.timeFormat == S:
+            editWindow.time_widget.set_format_s()
+        '''
 
         sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
@@ -8397,7 +8406,11 @@ item []:
             if self.timeFormat == S:
                 newTime = Decimal(str(editWindow.dsbTime.value()))
             '''
-            newTime =  editWindow.time_widget.w1.time_value if editWindow.time_widget.w1.sign.text() == "+" else - editWindow.time_widget.w1.time_value
+            #newTime =  editWindow.time_widget.w1.time_value if editWindow.time_widget.w1.sign.text() == "+" else - editWindow.time_widget.w1.time_value
+            newTime = Decimal(editWindow.time_widget.get_time())
+            print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+            print("newTime", newTime)
+
 
             for key in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -8410,7 +8423,7 @@ item []:
 
                     self.writeEvent(event, newTime)
                     break
-
+            print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
 
 
     def show_all_events(self):

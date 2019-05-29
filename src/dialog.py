@@ -29,6 +29,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 import config
+import duration_widget
 
 '''
 class multi_values_dialog(QDialog):
@@ -288,7 +289,7 @@ class ChooseObservationsToImport(QDialog):
         return [item.text() for item in self.lw.selectedItems()]
 
 
-class JumpTo(QDialog):
+class JumpTo_old(QDialog):
     """
     "jump to" dialog box
     """
@@ -320,6 +321,48 @@ class JumpTo(QDialog):
         hbox.addLayout(self.hbox2)
         self.setLayout(hbox)
         self.setWindowTitle("Jump to specific time")
+
+
+class JumpTo(QDialog):
+    """
+    "jump to" dialog box
+    """
+
+    def __init__(self, timeFormat):
+        super(JumpTo, self).__init__()
+        hbox = QVBoxLayout(self)
+        self.label = QLabel()
+        self.label.setText("Go to time")
+        hbox.addWidget(self.label)
+        '''
+        if timeFormat == "hh:mm:ss":
+            self.te = QTimeEdit()
+            self.te.setDisplayFormat("hh:mm:ss.zzz")
+        else:
+            self.te = QDoubleSpinBox()
+            self.te.setMinimum(0)
+            self.te.setMaximum(86400)
+            self.te.setDecimals(3)
+
+        self.te.setStyleSheet("font-size:14px")
+        hbox.addWidget(self.te)
+        '''
+
+        self.time_widget = duration_widget.Duration_widget()
+        hbox.addWidget(self.time_widget)
+
+        self.pbOK = QPushButton("OK")
+        self.pbOK.clicked.connect(self.accept)
+        self.pbOK.setDefault(True)
+        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel.clicked.connect(self.reject)
+        self.hbox2 = QHBoxLayout(self)
+        self.hbox2.addWidget(self.pbCancel)
+        self.hbox2.addWidget(self.pbOK)
+        hbox.addLayout(self.hbox2)
+        self.setLayout(hbox)
+        self.setWindowTitle("Jump to specific time")
+
 
 
 class EditSelectedEvents(QDialog):
