@@ -108,7 +108,13 @@ class Duration_widget(QWidget):
             self.seconds2.setMinimum(-100_000_000)
             self.seconds2.setMaximum(100_000_000)
             self.seconds2.setDecimals(3)
+            #self.seconds2.valueChanged.connect(self.value_changed)
             lay.addWidget(self.seconds2)
+
+        '''
+        def value_changed(self, v):
+            self.time_value = v
+        '''
 
 
     def __init__(self, parent=None):
@@ -124,13 +130,13 @@ class Duration_widget(QWidget):
 
         lay.addWidget(self.Stack)
 
-        format_hhmmss = QRadioButton("hh:mm:ss")
-        format_hhmmss.setChecked(True)
-        format_hhmmss.clicked.connect(self.set_format_hhmmss)
-        lay.addWidget(format_hhmmss)
-        format_s = QRadioButton("seconds")
-        format_s.clicked.connect(self.set_format_s)
-        lay.addWidget(format_s)
+        self.format_hhmmss = QRadioButton("hh:mm:ss")
+        self.format_hhmmss.setChecked(True)
+        self.format_hhmmss.clicked.connect(self.set_format_hhmmss)
+        lay.addWidget(self.format_hhmmss)
+        self.format_s = QRadioButton("seconds")
+        self.format_s.clicked.connect(self.set_format_s)
+        lay.addWidget(self.format_s)
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         lay.addItem(spacerItem)
 
@@ -140,6 +146,7 @@ class Duration_widget(QWidget):
         self.w1.sign.setText("-" if new_time < 0 else "+")
         self.w1.time_value = abs(new_time)
 
+        print("self.w1.time_value", self.w1.time_value)
 
         h = self.w1.time_value // 3600
         m = (self.w1.time_value - h * 3600) // 60
@@ -156,30 +163,23 @@ class Duration_widget(QWidget):
 
     def set_format_s(self):
 
+        self.format_s.setChecked(True)
         self.w2.seconds2.setValue(- self.w1.time_value if self.w1.sign.text() == "-" else self.w1.time_value)
         self.Stack.setCurrentIndex(1)
 
     def set_format_hhmmss(self):
 
+        self.format_hhmmss.setChecked(True)
         self.set_time(self.w2.seconds2.value())
 
-        '''
-        self.w1.sign.setText("-" if self.w2.seconds2.value() < 0 else "+")
-        self.w1.time_value = abs(self.w2.seconds2.value())
-        # print(self.w1.time_value)
-
-        h = self.w1.time_value // 3600
-        m = (self.w1.time_value - h * 3600) // 60
-        s = int((self.w1.time_value - h * 3600 - m * 60))
-        ms = (self.w1.time_value - h * 3600 - m * 60 - s) * 1000
-
-        self.w1.hours.setValue(h)
-        self.w1.minutes.setValue(m)
-        self.w1.seconds.setValue(s)
-        self.w1.milliseconds.setValue(ms)
-        '''
-
         self.Stack.setCurrentIndex(0)
+
+
+    def get_time(self):
+        """
+        return time displayed by widget
+        """
+        return - self.w1.time_value if self.w1.sign.text() == "-" else self.w1.time_value
 
 
 if __name__ == '__main__':
