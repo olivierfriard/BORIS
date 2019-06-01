@@ -101,37 +101,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="rbAdd">
-            <property name="text">
-             <string>Add</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="rbSubstract">
-            <property name="text">
-             <string>Substract</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="leTimeOffset">
-            <property name="text">
-             <string>0</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QTimeEdit" name="teTimeOffset">
-            <property name="displayFormat">
-             <string>hh:mm:ss.zzz</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

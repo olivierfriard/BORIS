@@ -334,19 +334,6 @@ class JumpTo(QDialog):
         self.label = QLabel()
         self.label.setText("Go to time")
         hbox.addWidget(self.label)
-        '''
-        if timeFormat == "hh:mm:ss":
-            self.te = QTimeEdit()
-            self.te.setDisplayFormat("hh:mm:ss.zzz")
-        else:
-            self.te = QDoubleSpinBox()
-            self.te.setMinimum(0)
-            self.te.setMaximum(86400)
-            self.te.setDecimals(3)
-
-        self.te.setStyleSheet("font-size:14px")
-        hbox.addWidget(self.te)
-        '''
 
         self.time_widget = duration_widget.Duration_widget()
         hbox.addWidget(self.time_widget)

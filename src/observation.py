@@ -42,6 +42,7 @@ from utilities import *
 import dialog
 import plot_data_module
 import project_functions
+import duration_widget
 
 MEDIA_FILE_PATH_IDX = 2
 HAS_AUDIO_IDX = 6
@@ -115,6 +116,9 @@ class Observation(QDialog, Ui_Form):
 
         self.setupUi(self)
 
+        self.obs_time_offset = duration_widget.Duration_widget(0)
+        self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
+
         self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=True))
         self.pb_add_media_without_path.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=False))
         self.pbRemoveVideo.clicked.connect(self.remove_media)
@@ -124,7 +128,6 @@ class Observation(QDialog, Ui_Form):
         self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
         self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
-        '''self.pb_record_value.clicked.connect(self.record_value)'''
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
 
@@ -525,10 +528,12 @@ class Observation(QDialog, Ui_Form):
                 return False
 
         # check time offset
+        '''
         if not is_numeric(self.leTimeOffset.text()):
             QMessageBox.critical(self, programName ,
                                  f"<b>{self.leTimeOffset.text()}</b> is not recognized as a valid time offset format")
             return False
+        '''
 
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):

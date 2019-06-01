@@ -38,25 +38,31 @@ import duration_widget
 
 class DlgEditEvent(QDialog, Ui_Form):
 
-    def __init__(self, log_level, current_time, time_format, show_set_current_time=False, parent=None):
+    def __init__(self, log_level,
+                 time_value=0,
+                 current_time=0,
+                 time_format=S,
+                 show_set_current_time=False,
+                 parent=None):
 
         super().__init__(parent)
         self.setupUi(self)
+        self.time_value = time_value
 
         self.pb_set_to_current_time.setVisible(show_set_current_time)
         self.current_time = current_time
 
-        '''
-        self.dsbTime.setVisible(time_format == S)
-        self.teTime.setVisible(time_format == HHMMSS)
-        '''
-
         self.dsbTime.setVisible(False)
         self.teTime.setVisible(False)
 
-        self.time_widget = duration_widget.Duration_widget()
+        self.time_widget = duration_widget.Duration_widget(self.time_value)
+        if time_format == S:
+            self.time_widget.set_format_s()
+        if time_format == HHMMSS:
+            self.time_widget.set_format_hhmmss()
 
         self.horizontalLayout_2.insertWidget(0, self.time_widget)
+        
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
         self.pbOK.clicked.connect(self.accept)
@@ -67,11 +73,6 @@ class DlgEditEvent(QDialog, Ui_Form):
         """
         set time to current media time
         """
-
-        '''
-        self.teTime.setTime(QTime.fromString(seconds2time(self.current_time), HHMMSSZZZ))
-        self.dsbTime.setValue(float(self.current_time))
-        '''
 
         self.time_widget.set_time(float(self.current_time))
 
@@ -162,6 +163,6 @@ class EditSelectedEvents(QDialog):
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
-    w = DlgEditEvent(None, current_time=12, time_format=S, show_set_current_time=True)
+    w = DlgEditEvent(None, time_value=3.141, current_time=0, time_format=S, show_set_current_time=True)
     w.show()
     sys.exit(app.exec_())

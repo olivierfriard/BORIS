@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 This file is part of BORIS.
 
@@ -3087,18 +3087,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             jt.time_widget.set_format_s()
 
         if jt.exec_():
-            '''
-            if self.timeFormat == HHMMSS:
-                newTime = int(time2seconds(jt.te.time().toString(HHMMSSZZZ)) * 1000)
-            else:
-                newTime = int(jt.te.value() * 1000)
-            '''
-            #newTime = int((jt.time_widget.w1.time_value if jt.time_widget.w1.sign.text() == "+" else - jt.time_widget.w1.time_value) * 1000)
             newTime = int(jt.time_widget.get_time() * 1000)
-            print(newTime)
             if newTime < 0:
                 return
-
 
             if self.playerType == VLC:
                 if self.playMode == FFMPEG:
@@ -3150,8 +3141,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             QMessageBox.warning(
                                 self, programName,
-                                "The indicated position is behind the total media duration ({})".format(
-                                    seconds2time(sum(self.dw_player[0].media_durations) / 1000)))
+                                ("The indicated position is behind the total media duration "
+                                 f"({seconds2time(sum(self.dw_player[0].media_durations) / 1000)})"))
 
                     self.update_visualizations()
 
@@ -3184,7 +3175,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
                     self.dw_player[0].mediaListPlayer.previous()
 
-                    while 1:
+                    while True:
                         if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                             break
 
@@ -4675,12 +4666,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.twIndepVariables.resizeColumnsToContents()
 
         # adapt time offset for current time format
+        '''
         if self.timeFormat == S:
             observationWindow.teTimeOffset.setVisible(False)
 
         if self.timeFormat == HHMMSS:
             observationWindow.leTimeOffset.setVisible(False)
-
+        '''
         if mode == EDIT:
 
             observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
@@ -4714,8 +4706,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.info("No Video/Audio information")
 
             # offset
+            '''
             if self.timeFormat == S:
-
                 observationWindow.leTimeOffset.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])))
 
             if self.timeFormat == HHMMSS:
@@ -4727,6 +4719,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][obsId][TIME_OFFSET] < 0:
                 observationWindow.rbSubstract.setChecked(True)
+            '''
+            observationWindow.obs_time_offset.set_time(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])
 
             observationWindow.twVideo1.setRowCount(0)
             for player in self.pj[OBSERVATIONS][obsId][FILE]:
@@ -4887,6 +4881,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         r, 0).text()] = observationWindow.twIndepVariables.item(r, 2).text()
 
             # observation time offset
+            '''
             if self.timeFormat == HHMMSS:
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = time2seconds(observationWindow.teTimeOffset.time().toString(HHMMSSZZZ))
 
@@ -4895,6 +4890,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if observationWindow.rbSubstract.isChecked():
                 self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]
+            '''
+            self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
 
             self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
 
@@ -8150,13 +8147,11 @@ item []:
             return
 
         editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
+                                  time_value=0,
                                   current_time=0,
                                   time_format=self.timeFormat,
                                   show_set_current_time=False)
         editWindow.setWindowTitle("Add a new event")
-
-        editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(laps), HHMMSSZZZ))
-        editWindow.dsbTime.setValue(float(laps))
 
         sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
@@ -8169,11 +8164,7 @@ item []:
 
         if editWindow.exec_():  # button OK
 
-            if self.timeFormat == HHMMSS:
-                newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
-
-            if self.timeFormat == S:
-                newTime = Decimal(editWindow.dsbTime.value())
+            newTime = editWindow.time_widget.get_time()
 
             for idx in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -8325,13 +8316,6 @@ item []:
             QMessageBox.warning(self, programName, "Select an event to edit")
             return
 
-        editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
-                                  current_time=self.getLaps(),
-                                  time_format=self.timeFormat,
-                                  show_set_current_time=True)
-        editWindow.setWindowTitle("Edit event")
-
-
         twEvents_row = self.twEvents.selectedItems()[0].row()
 
         tsb_to_edit = [time2seconds(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text())
@@ -8342,19 +8326,12 @@ item []:
         row = [idx for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
                if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] == tsb_to_edit][0]
 
-        '''
-        editWindow.teTime.setTime(QtCore.QTime.fromString(seconds2time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0]),
-                                                          HHMMSSZZZ))
-        editWindow.dsbTime.setValue(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
-        '''
-
-        editWindow.time_widget.set_time(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0])
-        '''
-        if self.timeFormat == HHMMSS:
-            editWindow.time_widget.set_format_hhmmss()
-        if self.timeFormat == S:
-            editWindow.time_widget.set_format_s()
-        '''
+        editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
+                                  time_value=self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0],
+                                  current_time=self.getLaps(),
+                                  time_format=self.timeFormat,
+                                  show_set_current_time=True)
+        editWindow.setWindowTitle("Edit event")
 
         sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
@@ -8400,17 +8377,7 @@ item []:
 
             self.projectChanged = True
 
-            '''
-            if self.timeFormat == HHMMSS:
-                newTime = time2seconds(editWindow.teTime.time().toString(HHMMSSZZZ))
-            if self.timeFormat == S:
-                newTime = Decimal(str(editWindow.dsbTime.value()))
-            '''
-            #newTime =  editWindow.time_widget.w1.time_value if editWindow.time_widget.w1.sign.text() == "+" else - editWindow.time_widget.w1.time_value
-            newTime = Decimal(editWindow.time_widget.get_time())
-            print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-            print("newTime", newTime)
-
+            newTime = editWindow.time_widget.get_time()
 
             for key in self.pj[ETHOGRAM]:
                 if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
@@ -8625,7 +8592,7 @@ item []:
 
         about_dialog.setInformativeText((
             "<b>{prog_name}</b> {ver} - {date}"
-            "<p>Copyright &copy; 2012-2018 Olivier Friard - Marco Gamba<br>"
+            "<p>Copyright &copy; 2012-2019 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
             "<br>"
@@ -9225,9 +9192,9 @@ item []:
                         if not r:  # cancel button pressed
                             return
 
-                    '''print("selected_modifiers", selected_modifiers)'''
+                    print("selected_modifiers", selected_modifiers)
                     all_modifiers = {**selected_modifiers, **modifiers_external_data}
-                    '''print("all_modifiers", all_modifiers)'''
+                    print("all_modifiers", all_modifiers)
 
                     modifier_str = ""
                     for idx in sorted_keys(all_modifiers):
@@ -9236,7 +9203,8 @@ item []:
                         if all_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
                             modifier_str += ",".join(all_modifiers[idx].get("selected", ""))
                         if all_modifiers[idx]["type"] in [NUMERIC_MODIFIER, EXTERNAL_DATA_MODIFIER]:
-                            modifier_str += all_modifiers[idx]["selected"]
+                            print(all_modifiers[idx])
+                            modifier_str += all_modifiers[idx].get("selected", "NA")
 
             else:
                 modifier_str = event["from map"]

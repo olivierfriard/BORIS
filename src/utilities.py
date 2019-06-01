@@ -872,17 +872,14 @@ def time2seconds(time: str) -> Decimal:
     Returns:
         Decimal: time in seconds
     """
-    flagNeg = '-' in time
+    flag_neg = '-' in time
     time = time.replace("-", "")
 
     tsplit = time.split(":")
 
     h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
 
-    if flagNeg:
-        return Decimal(- (h * 3600 + m * 60 + s))
-    else:
-        return Decimal(h * 3600 + m * 60 + s)
+    return Decimal(- (h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
 
 
 def seconds2time(sec):
