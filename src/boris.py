@@ -1260,7 +1260,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
         if len(selected_observations) < 2:
-            QMessageBox.information(self, programName, "Select almost 2 observations for Needleman-Wunsch similarity")
+            QMessageBox.information(self, programName, "You have to select 2 observations for Needleman-Wunsch similarity")
             return
 
         # check if state events are paired
@@ -9092,7 +9092,7 @@ item []:
                                          for x in self.pj[OBSERVATIONS][obsId][EVENTS]]
 
 
-    def writeEvent(self, event: dict, memTime: Decimal):
+    def writeEvent(self, event: dict, memTime: Decimal) -> None:
         """
         add event from pressed key to observation
         offset is added to event time
@@ -9103,7 +9103,6 @@ item []:
         Args:
             event (dict): event parameters
             memTime (Decimal): time
-            mem_event (list): original event in case of editing
 
         """
 
@@ -9190,9 +9189,9 @@ item []:
                         if not r:  # cancel button pressed
                             return
 
-                    print("selected_modifiers", selected_modifiers)
+                    '''print("selected_modifiers", selected_modifiers)'''
                     all_modifiers = {**selected_modifiers, **modifiers_external_data}
-                    print("all_modifiers", all_modifiers)
+                    '''print("all_modifiers", all_modifiers)'''
 
                     modifier_str = ""
                     for idx in sorted_keys(all_modifiers):
@@ -9295,8 +9294,7 @@ item []:
 
             self.projectChanged = True
         except Exception:
-            raise
-            dialog.MessageDialog(programName, "Even can not be recorded.\nError: {}".format(sys.exc_info()[1]), [OK])
+            dialog.MessageDialog(programName, f"Even can not be recorded.\nError: {sys.exc_info()[1]}", [OK])
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
