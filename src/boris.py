@@ -786,8 +786,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             w.setEnabled(self.pj[OBSERVATIONS] != {})
         # plot events
         self.menuPlot_events.setEnabled(self.pj[OBSERVATIONS] != {})
-        # IRR
+
         self.menuInter_rater_reliability.setEnabled(self.pj[OBSERVATIONS] != {})
+        self.menuSimilarities.setEnabled(self.pj[OBSERVATIONS] != {})
 
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
@@ -1100,7 +1101,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # check if file name with extension already exists
                 if pathlib.Path(file_name).is_file():
                     if dialog.MessageDialog(programName,
-                                            "The file {} already exists.".format(file_name),
+                                            f"The file {file_name} already exists.",
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return
 
@@ -1172,7 +1173,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obsId)
 
         if out:
@@ -7010,7 +7011,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
                         for idx in newProjectWindow.pj[OBSERVATIONS][obs][FILE]:
                             for media in newProjectWindow.pj[OBSERVATIONS][obs][FILE][idx]:
-                                mediaList.append("#{}: {}".format(idx, media))
+                                mediaList.append(f"#{idx}: {media}")
 
                     elif newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
                         mediaList = [LIVE]
@@ -7159,8 +7160,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return ""
 
         except Exception:
-            logging.critical("The project file can not be saved.\nError: {}".format(sys.exc_info()[1]))
-            QMessageBox.critical(self, programName, "The project file can not be saved! {}".format(sys.exc_info()[1]))
+            logging.critical(f"The project file can not be saved.\nError: {sys.exc_info()[1]}")
+            QMessageBox.critical(self, programName, f"The project file can not be saved! {sys.exc_info()[1]}")
             self.save_project_json_started = False
             return "not saved"
 
@@ -7184,7 +7185,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # check if file name with extension already exists
                 if pathlib.Path(project_new_file_name).is_file():
                     if dialog.MessageDialog(programName,
-                                            "The file {} already exists.".format(project_new_file_name),
+                                            f"The file {project_new_file_name} already exists.",
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return "Not saved"
 
@@ -7197,7 +7198,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save current project
         """
         logging.debug("function: save project activated")
-        logging.debug("Project file name: {}".format(self.projectFileName))
+        logging.debug(f"Project file name: {self.projectFileName}")
 
         if not self.projectFileName:
             if not self.pj["project_name"]:
@@ -7218,7 +7219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # check if file name with extension already exists
                 if pathlib.Path(self.projectFileName).is_file():
                     if dialog.MessageDialog(programName,
-                                            "The file {} already exists.".format(self.projectFileName),
+                                            f"The file {self.projectFileName} already exists.",
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         self.projectFileName = ""
                         return ""
@@ -7270,7 +7271,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         activate the live observation mode (without media file)
         """
 
-        logging.debug("start live observation, self.liveObservationStarted: {}".format(self.liveObservationStarted))
+        logging.debug(f"start live observation, self.liveObservationStarted: {self.liveObservationStarted}")
 
         if "scan sampling" in self.pb_live_obs.text():
             self.pb_live_obs.setText("Stop live observation")
@@ -7324,7 +7325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.pj[OBSERVATIONS][obsId], self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obsId)
 
         if out:
@@ -7373,7 +7374,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
                                                               self.pj[OBSERVATIONS][obsId], self.timeFormat)
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obsId)
         if out:
             self.results = dialog.ResultsWidget()
@@ -7431,7 +7432,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 fileName = str(pathlib.Path(fileName)) + "." + outputFormat
                 if pathlib.Path(fileName).is_file():
                         if dialog.MessageDialog(programName,
-                                                "The file {} already exists.".format(fileName),
+                                                f"The file {fileName} already exists.",
                                                 [CANCEL, OVERWRITE]) == CANCEL:
                             return
 
@@ -7464,7 +7465,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             try:
                 with open(fileName, "w") as f:
                     for line in conn.iterdump():
-                        f.write("{}\n".format(line))
+                        f.write(f"{line}\n")
             except Exception:
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
@@ -7496,7 +7497,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if mem_command == "Skip all":
                         continue
                     mem_command = dialog.MessageDialog(programName,
-                                                       "The file {} already exists.".format(fileName),
+                                                       f"The file {fileName} already exists.",
                                                        [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
@@ -7518,7 +7519,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             out = ""
             for obsId in selectedObservations:
                 # observation id
-                out += "# {}\n".format(obsId)
+                out += f"# {obsId}\n"
 
                 for event in list(data):
                     if event[0] == obsId:
@@ -7536,7 +7537,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             event_stop = "{0:.3f}".format(float(event[stop_idx]))
 
-                        bs_timed = (["{subject}_{behavior}".format(subject=subject, behavior=behavior)] *
+                        bs_timed = ([f"{subject}_{behavior}"] *
                                     round((float(event_stop) - float(event_start)) * 100))
                         out += "|".join(bs_timed)
 
@@ -7578,10 +7579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             event_stop = "{0:.3f}".format(float(event[start_idx]) + 0.001)
                         else:
                             event_stop = "{0:.3f}".format(float(event[stop_idx]))
-                        out += "{subject}_{behavior},{start}-{stop} ".format(subject=subject,
-                                                                             behavior=behavior,
-                                                                             start=event_start,
-                                                                             stop=event_stop)
+                        out += f"{subject}_{behavior},{event_start}-{event_stop} "
 
                 out += "/\n\n"
                 if not flag_group:
@@ -7589,7 +7587,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     with open(fileName, "wb") as f:
                         f.write(str.encode(out))
                     out = ("% SDIS file created by BORIS (www.boris.unito.it) "
-                           "at {}\nTimed <seconds>;\n").format(datetime_iso8601(datetime.datetime.now()))
+                           f"at {datetime_iso8601(datetime.datetime.now())}\nTimed <seconds>;\n")
 
             if flag_group:
                 with open(fileName, "wb") as f:
@@ -7780,7 +7778,7 @@ item []:
                     continue
                 media = player.mediaplayer.get_media()
 
-                logging.info("State: {}".format(player.mediaplayer.get_state()))
+                logging.info(f"State: {player.mediaplayer.get_state()}")
                 logging.info("Media (get_mrl): {}".format(bytes_to_str(media.get_mrl())))
                 logging.info("media.get_meta(0): {}".format(media.get_meta(0)))
                 logging.info("Track: {}/{}".format(player.mediaplayer.video_get_track(),
