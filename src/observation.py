@@ -44,14 +44,10 @@ import plot_data_module
 import project_functions
 import duration_widget
 
-MEDIA_FILE_PATH_IDX = 2
-HAS_AUDIO_IDX = 6
-
 from observation_ui5 import Ui_Form
 
 out = ""
 fps = 0
-
 
 class AssignConverter(QDialog):
     """

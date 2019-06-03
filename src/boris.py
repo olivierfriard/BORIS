@@ -4599,7 +4599,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.close_observation()
 
-
         observationWindow = observation.Observation(tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)) else tempfile.gettempdir(),
                                                     project_path=self.projectFileName,
                                                     converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
@@ -4667,6 +4666,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.twIndepVariables.resizeColumnsToContents()
 
         # adapt time offset for current time format
+        if self.timeFormat == S:
+            observationWindow.obs_time_offset.set_format_s()
+        if self.timeFormat == HHMMSS:
+            observationWindow.obs_time_offset.set_format_hhmmss()
         '''
         if self.timeFormat == S:
             observationWindow.teTimeOffset.setVisible(False)
@@ -9056,10 +9059,7 @@ item []:
 
             t = self.twEvents.item(row, tw_obs_fields["time"]).text()
 
-            if ":" in t:
-                time = time2seconds(t)
-            else:
-                time = Decimal(t)
+            time = time2seconds(t) if ":" in t else Decimal(t)
 
             subject = self.twEvents.item(row, tw_obs_fields["subject"]).text()
             code = self.twEvents.item(row, tw_obs_fields["code"]).text()
@@ -10640,14 +10640,12 @@ item []:
 
                     with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
                         f.write(gv)
-                    result = subprocess.getoutput("""dot -Tpng -o "{0}.png" "{1}" """.format(fileName,
-                                                                                             tempfile.gettempdir() +
-                                                                                             os.sep + os.path.basename(fileName) +
-                                                                                             ".tmp.gv"))
+                    result = subprocess.getoutput((f'dot -Tpng -o "{fileName}.png" '
+                                                   f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'))
                     if not result:
                         out += f"<b>{fileName}.png</b> created<br>"
                     else:
-                        out += "Problem with <b>{fileName}</b><br>"
+                        out += f"Problem with <b>{fileName}</b><br>"
                 except Exception:
                     QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[1])))
 

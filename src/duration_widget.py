@@ -13,7 +13,7 @@ from PyQt5.QtCore import *
 
 class Widget_hhmmss(QWidget):
 
-    my_signal = pyqtSignal(float)
+    time_changed_signal = pyqtSignal(float)
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -76,11 +76,13 @@ class Widget_hhmmss(QWidget):
         if self.sign.text() == "-":
             new_time = - new_time
 
-        self.my_signal.emit(new_time)
+        self.time_changed_signal.emit(new_time)
 
 
     def value_changed(self, new_value, widget, val_min, val_max):
-        print("value changed")
+        """
+        time value changed
+        """
 
         if new_value > val_max:
             widget.setValue(val_min)
@@ -106,7 +108,7 @@ class Widget_hhmmss(QWidget):
 
 class Widget_seconds(QWidget):
 
-    my_signal = pyqtSignal(float)
+    time_changed_signal = pyqtSignal(float)
 
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
@@ -121,7 +123,7 @@ class Widget_seconds(QWidget):
         lay.addWidget(self.seconds2)
 
     def value_changed(self, v):
-        self.my_signal.emit(v)
+        self.time_changed_signal.emit(v)
 
 
 class Duration_widget(QWidget):
@@ -136,12 +138,12 @@ class Duration_widget(QWidget):
 
         self.Stack = QStackedWidget()
         self.w1 = Widget_hhmmss()
-        self.w1.my_signal.connect(self.time_changed)
+        self.w1.time_changed_signal.connect(self.time_changed)
+        self.Stack.addWidget(self.w1)
 
         self.w2 = Widget_seconds()
-        self.Stack.addWidget(self.w1)
+        self.w2.time_changed_signal.connect(self.time_changed)
         self.Stack.addWidget(self.w2)
-        self.w2.my_signal.connect(self.time_changed)
 
         lay.addWidget(self.Stack)
 
@@ -152,8 +154,10 @@ class Duration_widget(QWidget):
         self.format_s = QRadioButton("seconds")
         self.format_s.clicked.connect(self.set_format_s)
         lay.addWidget(self.format_s)
-        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        lay.addItem(spacerItem)
+
+        lay.addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        self.setLayout(lay)
 
         self.set_time(self.time_value)
 
@@ -199,7 +203,7 @@ class Duration_widget(QWidget):
         """
         switch to HHMMSS widget
         """
-        
+
         self.format_hhmmss.setChecked(True)
         self.set_time(self.time_value)
         self.Stack.setCurrentIndex(0)
