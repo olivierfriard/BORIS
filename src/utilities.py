@@ -106,7 +106,7 @@ def convert_time_to_decimal(pj: dict) -> dict:
             pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
         for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
             pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(
-                str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]))
+                str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]])).quantize(Decimal((".001")
 
     return pj
 
@@ -693,7 +693,7 @@ def extract_frames_mem(ffmpeg_bin: str,
 
 def decimal_default(obj):
     if isinstance(obj, Decimal):
-        return float(obj)
+        return float(round(obj, 3))
     raise TypeError
 
 
@@ -862,7 +862,7 @@ def float2decimal(f):
     return Decimal(str(f))
 
 
-def time2seconds(time: str) -> Decimal:
+def time2seconds(time_: str) -> Decimal:
     """
     convert hh:mm:ss.s to number of seconds (decimal)
 
@@ -872,10 +872,10 @@ def time2seconds(time: str) -> Decimal:
     Returns:
         Decimal: time in seconds
     """
-    flag_neg = '-' in time
-    time = time.replace("-", "")
+    flag_neg = "-" in time_
+    time_ = time_.replace("-", "")
 
-    tsplit = time.split(":")
+    tsplit = time_.split(":")
 
     h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
 

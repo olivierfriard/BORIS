@@ -7156,7 +7156,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             f = open(projectFileName, "w")
-            f.write(json.dumps(self.pj, indent=1, separators=(',', ':'), default=decimal_default))
+            f.write(json.dumps(self.pj, indent=1, separators=(",", ":"), default=decimal_default))
             f.close()
 
             self.projectChanged = False
@@ -8309,7 +8309,7 @@ item []:
 
     def edit_event(self):
         """
-        edit event corresponfing to the selected row in twEvents
+        edit event corresponding to the selected row in twEvents
         """
 
         if not self.observationId:
@@ -8321,11 +8321,15 @@ item []:
             return
 
         twEvents_row = self.twEvents.selectedItems()[0].row()
+        print("twEvents_row", twEvents_row)
 
         tsb_to_edit = [time2seconds(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text())
                                    if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text()),
                         self.twEvents.item(twEvents_row, EVENT_SUBJECT_FIELD_IDX).text(),
                         self.twEvents.item(twEvents_row, EVENT_BEHAVIOR_FIELD_IDX).text()]
+        print("tsb_to_edit", tsb_to_edit)
+
+        print(self.pj[OBSERVATIONS][self.observationId][EVENTS][1113])
 
         row = [idx for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
                if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] == tsb_to_edit][0]
