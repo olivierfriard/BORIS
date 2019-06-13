@@ -92,7 +92,7 @@ def bytes_to_str(b: bytes) -> str:
 
 def convert_time_to_decimal(pj: dict) -> dict:
     """
-    convert time from float to decimal
+    convert time of project from float to decimal
 
     Args:
         pj (dict): BORIS project
@@ -593,7 +593,7 @@ def extract_frames(ffmpeg_bin: str,
         logging.debug(f"ffmpeg error: {error}")
 
     # check before frame
-    if (start_frame - 1 > 0 
+    if (start_frame - 1 > 0
         and not os.path.isfile(pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"))):
 
         start_frame_before = max(1, round(start_frame - fps * number_of_seconds))
@@ -647,7 +647,7 @@ def extract_frames_mem(ffmpeg_bin: str,
         gray_color_table = [qRgb(i, i, i) for i in range(256)]
         if frame is None:
             return QImage()
-    
+
         im = np.asarray(frame)
         if im.dtype == np.uint8:
             if len(im.shape) == 2:
@@ -891,20 +891,19 @@ def seconds2time(sec):
     Returns:
         str: time in format hh:mm:ss
     """
-    flagNeg = sec < 0
-    sec = abs(sec)
+    neg_sign = "-" * (sec < 0)
+    abs_sec = abs(sec)
 
     hours = 0
 
-    minutes = int(sec / 60)
+    minutes = int(abs_sec / 60)
     if minutes >= 60:
         hours = int(minutes / 60)
         minutes = minutes % 60
 
-    secs = sec - hours * 3600 - minutes * 60
-    ssecs = "%06.3f" % secs
+    ssecs = f"{abs_sec - hours * 3600 - minutes * 60:06.3f}"
 
-    return "%s%02d:%02d:%s" % ('-' * flagNeg, hours, minutes, ssecs)
+    return f"{neg_sign}{hours:02}:{minutes:02}:{ssecs}"
 
 
 def safeFileName(s:str) -> str:

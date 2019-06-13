@@ -549,6 +549,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     save_project_json_started = False
 
+    # interpolated time
+    lastPlayTime = 0
+    lastPlayTimeGlobal = 0
 
     def __init__(self, ffmpeg_bin, parent=None):
 
@@ -3649,11 +3652,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentTime = self.getLaps() * 1000
 
-        time_str = "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
-            currentMediaName=os.path.basename(currentMedia),
-            currentTime=self.convertTime(currentTime / 1000),
-            totalTime=self.convertTime(Decimal(self.dw_player[0].mediaplayer.get_length() / 1000)),
-            currentFrame=round(self.FFmpegGlobalFrame))
+        time_str = (f"{os.path.basename(currentMedia)}: "
+                    f"<b>{self.convertTime(currentTime / 1000)} / "
+                    f"{self.convertTime(self.dw_player[0].mediaplayer.get_length() / 1000)}</b> "
+                    f"frame: <b>{round(self.FFmpegGlobalFrame)}</b>")
 
         self.lb_current_media_time.setText(time_str)
 
@@ -3811,11 +3813,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         currentTime = self.getLaps() * 1000
 
-        time_str = "{currentMediaName}: <b>{currentTime} / {totalTime}</b> frame: <b>{currentFrame}</b>".format(
-            currentMediaName=os.path.basename(currentMedia),
-            currentTime=self.convertTime(currentTime / 1000),
-            totalTime=self.convertTime(Decimal(self.dw_player[0].mediaplayer.get_length() / 1000)),
-            currentFrame=round(self.FFmpegGlobalFrame))
+        time_str = (f"{os.path.basename(currentMedia)}: "
+                    f"<b>{self.convertTime(currentTime / 1000)} / "
+                    f"{self.convertTime(self.dw_player[0].mediaplayer.get_length() / 1000)}</b> "
+                    f"frame: <b>{round(self.FFmpegGlobalFrame)}</b>")
 
         self.lb_current_media_time.setText(time_str)
 
@@ -6887,7 +6888,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.w_obs_info.setVisible(False)
 
 
-    def convertTime(self, sec):
+    def convertTime(self, sec) -> str:
         """
         convert time in base of current format
 
@@ -6899,7 +6900,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.timeFormat == S:
-            return '%.3f' % sec
+            return f"{sec}:.3f"
 
         if self.timeFormat == HHMMSS:
             return seconds2time(sec)
@@ -8078,8 +8079,9 @@ item []:
                 if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                         self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                     player.mediaplayer.set_rate(self.play_rate)
-            self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
-            logging.debug('play rate: {:.3f}'.format(self.play_rate))
+            self.lbSpeed.setText(f"x{self.play_rate:.3f}")
+
+            logging.debug(f"play rate: {self.play_rate:.3f}")
 
 
     def video_faster_activated(self):
@@ -8095,8 +8097,9 @@ item []:
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                             self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         player.mediaplayer.set_rate(self.play_rate)
-                self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
-                logging.info('play rate: {:.3f}'.format(self.play_rate))
+                self.lbSpeed.setText(f"x{self.play_rate:.3f}")
+
+                logging.debug(f"play rate: {self.play_rate:.3f}")
 
 
     def video_slower_activated(self):
@@ -8109,14 +8112,14 @@ item []:
             if self.play_rate - self.play_rate_step >= 0.1:
                 self.play_rate -= self.play_rate_step
 
-                '''for i in range(N_PLAYER):'''
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
                             self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         player.mediaplayer.set_rate(self.play_rate)
 
-                self.lbSpeed.setText('x{:.3f}'.format(self.play_rate))
-                logging.info('play rate: {:.3f}'.format(self.play_rate))
+                self.lbSpeed.setText(f"x{self.play_rate:.3f}")
+
+                logging.debug(f"play rate: {self.play_rate:.3f}")
 
 
     def add_event(self):
@@ -8865,6 +8868,22 @@ item []:
             # current media time
             try:
                 mediaTime = self.dw_player[0].mediaplayer.get_time()  # time of FIRST media player
+                '''
+                if self.play_rate == 1:
+                    interpolated_media_time = mediaTime
+                    time_ms = round(time.time()*1000)
+
+                    if (self.lastPlayTime == interpolated_media_time and self.lastPlayTime != 0):
+                        interpolated_media_time += time_ms - self.lastPlayTimeGlobal;
+                    else:
+                        self.lastPlayTime = interpolated_media_time
+                        self.lastPlayTimeGlobal = time_ms
+                else:
+                    self.lastPlayTime, self.lastPlayTimeGlobal = 0, 0
+                '''
+
+
+
             except Exception:
                 logging.warning("error on get time in timer_out function")
                 return
@@ -8881,7 +8900,7 @@ item []:
                 self.dw_player[0].videoframe.setVisible(True)
                 self.dw_player[0].volume_slider.setVisible(True)
 
-            t0 = self.dw_player[0].mediaplayer.get_time()
+            t0 = mediaTime   # self.dw_player[0].mediaplayer.get_time()
             ct0 = self.getLaps() * 1000
 
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
@@ -8896,15 +8915,16 @@ item []:
                                              ["offset"][str(i + 1)]) * 1000)) >= 300:
                             self.sync_time(i, ct0)
 
-            currentTimeOffset = Decimal(currentTime / 1000) + Decimal(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+            currentTimeOffset = Decimal(currentTime / 1000 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
             totalGlobalTime = sum(self.dw_player[0].media_durations)
 
             mediaName = ""
 
-            if self.dw_player[0].mediaplayer.get_length():
+            mediaplayer_length = self.dw_player[0].mediaplayer.get_length()
+            if mediaplayer_length:
 
-                self.mediaTotalLength = self.dw_player[0].mediaplayer.get_length() / 1000
+                self.mediaTotalLength = mediaplayer_length / 1000
 
                 # current state(s)
                 # extract State events
@@ -8930,17 +8950,27 @@ item []:
 
                 # update status bar
                 msg = ""
-                if (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing
-                        or self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused):
-                    msg = "{media_name}: <b>{time} / {total_time}</b>".format(media_name=mediaName,
-                                                                              time=self.convertTime(Decimal(mediaTime / 1000)),
-                                                                              total_time=self.convertTime(Decimal(self.mediaTotalLength)))
+                media_list_player_state = self.dw_player[0].mediaListPlayer.get_state()
+                if media_list_player_state in [vlc.State.Playing, vlc.State.Paused]:
+
+                    msg = (f"{mediaName}: <b>{self.convertTime(mediaTime / 1000)} / "
+                           f"{self.convertTime(self.mediaTotalLength)}</b>")
+
+                    '''
+                    if self.play_rate != 1:
+                        msg = (f"{mediaName}: <b>{self.convertTime(mediaTime / 1000)} / "
+                               f"{self.convertTime(self.mediaTotalLength)}</b>")
+                    else:
+
+                        msg = (f"{mediaName}: <b>{self.convertTime(interpolated_media_time / 1000)} / "
+                               f"{self.convertTime(self.mediaTotalLength)}</b>")
+                    '''
 
                     if self.dw_player[0].media_list.count() > 1:
-                        msg += " | total: <b>{} / {}</b>".format(self.convertTime(Decimal(currentTime / 1000)),
-                                                                 self.convertTime(Decimal(totalGlobalTime / 1000)))
+                        msg += (f" | total: <b>{self.convertTime(currentTime / 1000)} / "
+                                f"{self.convertTime(totalGlobalTime / 1000)}</b>")
 
-                    if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused:
+                    if media_list_player_state == vlc.State.Paused:
                         msg += " (paused)"
 
                 if msg:
@@ -8949,7 +8979,7 @@ item []:
 
                     # set video scroll bar
                     if scroll_slider:
-                        self.video_slider.setValue(mediaTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+                        self.video_slider.setValue(mediaTime / mediaplayer_length * (slider_maximum - 1))
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
