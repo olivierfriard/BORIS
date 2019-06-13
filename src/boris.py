@@ -4199,7 +4199,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.timer_out()
 
-        self.lbSpeed.setText("x{:.3f}".format(self.play_rate))
+        self.lbSpeed.setText(f"x{self.play_rate:.3f}")
 
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
@@ -5800,8 +5800,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
-        # check if state events are paired
+
         out = ""
+        # check if coded behaviors are defined in ethogram
+        ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
+        behaviors_not_defined = []
+        out = "" # will contain the output
+        for obs_id in selected_observations:
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+                if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                    behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+        if set(sorted(behaviors_not_defined)):
+            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+
+        # check if state events are paired
         not_paired_obs_list = []
         for obs_id in selected_observations:
             r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
@@ -5812,7 +5824,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obs_id)
 
         if out:
-            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            if not_paired_obs_list:
+                out += "<br>The observations with UNPAIRED state events will be removed from the analysis"
             self.results = dialog.Results_dialog()
             self.results.setWindowTitle(programName + " - Check selected observations")
             self.results.ptText.setReadOnly(True)
@@ -5973,8 +5986,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
+        # check if coded behaviors are defined in ethogram
+        ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
+        behaviors_not_defined = []
+        out = "" # will contain the output
+        for obs_id in selectedObservations:
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+                if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                    behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+        if set(sorted(behaviors_not_defined)):
+            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+
+
         # check if state events are paired
-        out = ""  # will contain the output
         not_paired_obs_list = []
         for obs_id in selectedObservations:
             r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id], self.timeFormat)
@@ -5986,7 +6010,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if out:
             out = "Some selected observations have issues:<br><br>" + out
             self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.setWindowTitle(f"{programName} - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.pbSave.setVisible(False)
@@ -6900,7 +6924,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.timeFormat == S:
-            return f"{sec}:.3f"
+            return f"{sec:.3f}"
 
         if self.timeFormat == HHMMSS:
             return seconds2time(sec)
@@ -8320,85 +8344,85 @@ item []:
             QMessageBox.warning(self, programName, "Select an event to edit")
             return
 
-        twEvents_row = self.twEvents.selectedItems()[0].row()
-        print("twEvents_row", twEvents_row)
+        try:
+            twEvents_row = self.twEvents.selectedItems()[0].row()
 
-        tsb_to_edit = [time2seconds(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text())
-                                   if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text()),
-                        self.twEvents.item(twEvents_row, EVENT_SUBJECT_FIELD_IDX).text(),
-                        self.twEvents.item(twEvents_row, EVENT_BEHAVIOR_FIELD_IDX).text()]
-        print("tsb_to_edit", tsb_to_edit)
+            tsb_to_edit = [time2seconds(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text())
+                                       if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(twEvents_row, EVENT_TIME_FIELD_IDX).text()),
+                            self.twEvents.item(twEvents_row, EVENT_SUBJECT_FIELD_IDX).text(),
+                            self.twEvents.item(twEvents_row, EVENT_BEHAVIOR_FIELD_IDX).text()]
 
-        print(self.pj[OBSERVATIONS][self.observationId][EVENTS][1113])
+            row = [idx for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                   if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] == tsb_to_edit][0]
 
-        row = [idx for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-               if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] == tsb_to_edit][0]
+            editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
+                                      time_value=self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0],
+                                      current_time=self.getLaps(),
+                                      time_format=self.timeFormat,
+                                      show_set_current_time=True)
+            editWindow.setWindowTitle("Edit event")
 
-        editWindow = DlgEditEvent(logging.getLogger().getEffectiveLevel(),
-                                  time_value=self.pj[OBSERVATIONS][self.observationId][EVENTS][row][0],
-                                  current_time=self.getLaps(),
-                                  time_format=self.timeFormat,
-                                  show_set_current_time=True)
-        editWindow.setWindowTitle("Edit event")
+            sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
-        sortedSubjects = [""] + sorted([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
+            editWindow.cobSubject.addItems(sortedSubjects)
 
-        editWindow.cobSubject.addItems(sortedSubjects)
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
+                editWindow.cobSubject.setCurrentIndex(sortedSubjects.index(self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                                                                                  [row][EVENT_SUBJECT_FIELD_IDX]))
+            else:
+                QMessageBox.warning(self,
+                                    programName,
+                                    "The subject <b>{}</b> does not exist more in the subject's list".format(
+                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX])
+                                    )
+                editWindow.cobSubject.setCurrentIndex(0)
 
-        if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX] in sortedSubjects:
-            editWindow.cobSubject.setCurrentIndex(sortedSubjects.index(self.pj[OBSERVATIONS][self.observationId][EVENTS]
-                                                                              [row][EVENT_SUBJECT_FIELD_IDX]))
-        else:
-            QMessageBox.warning(self,
-                                programName,
-                                "The subject <b>{}</b> does not exist more in the subject's list".format(
-                                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX])
-                                )
-            editWindow.cobSubject.setCurrentIndex(0)
+            sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
+            editWindow.cobCode.addItems(sortedCodes)
 
-        sortedCodes = sorted([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
-        editWindow.cobCode.addItems(sortedCodes)
+            # check if selected code is in code's list (no modification of codes)
+            if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
+                editWindow.cobCode.setCurrentIndex(
+                    sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
+                                      [EVENT_BEHAVIOR_FIELD_IDX]))
+            else:
+                logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
+                )
+                QMessageBox.warning(self,
+                                    programName,
+                                    "The behaviour <b>{}</b> does not exist more in the ethogram".format(
+                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+                editWindow.cobCode.setCurrentIndex(0)
 
-        # check if selected code is in code's list (no modification of codes)
-        if self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX] in sortedCodes:
-            editWindow.cobCode.setCurrentIndex(
-                sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
-                                  [EVENT_BEHAVIOR_FIELD_IDX]))
-        else:
-            logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
+            logging.debug("original modifiers: {}".format(
+                self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX])
             )
-            QMessageBox.warning(self,
-                                programName,
-                                "The behaviour <b>{}</b> does not exist more in the ethogram".format(
-                                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
-            editWindow.cobCode.setCurrentIndex(0)
 
-        logging.debug("original modifiers: {}".format(
-            self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX])
-        )
+            # comment
+            editWindow.leComment.setPlainText(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
 
-        # comment
-        editWindow.leComment.setPlainText(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
+            if editWindow.exec_():  # button OK
 
-        if editWindow.exec_():  # button OK
+                self.projectChanged = True
 
-            self.projectChanged = True
+                newTime = editWindow.time_widget.get_time()
 
-            newTime = editWindow.time_widget.get_time()
+                for key in self.pj[ETHOGRAM]:
+                    if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
+                        event = self.full_event(key)
+                        event["subject"] = editWindow.cobSubject.currentText()
 
-            for key in self.pj[ETHOGRAM]:
-                if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
-                    event = self.full_event(key)
-                    event["subject"] = editWindow.cobSubject.currentText()
+                        event["comment"] = editWindow.leComment.toPlainText()
+                        event["row"] = row
+                        event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
 
-                    event["comment"] = editWindow.leComment.toPlainText()
-                    event["row"] = row
-                    event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
+                        self.writeEvent(event, newTime)
+                        break
 
-                    self.writeEvent(event, newTime)
-                    break
-            print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+        except Exception:
+            logging.critical(f"Error in edit_event function: {error_type}")
+            dialog.error_message("editing the event", sys.exc_info())
 
 
     def show_all_events(self):
@@ -10046,7 +10070,7 @@ item []:
             for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS]):
                 '''if idx in rows_to_edit:'''
                 if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] in tsb_to_shift:
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][idx][EVENT_TIME_FIELD_IDX] += Decimal("{:.3f}".format(d))
+                    self.pj[OBSERVATIONS][self.observationId][EVENTS][idx][EVENT_TIME_FIELD_IDX] += Decimal(f"{d:.3f}")
                     self.projectChanged = True
 
             self.pj[OBSERVATIONS][self.observationId][EVENTS] = sorted(self.pj[OBSERVATIONS][self.observationId][EVENTS])
@@ -10368,8 +10392,20 @@ item []:
         if not selectedObservations:
             return
 
-        # check if state events are paired
         out = ""
+        # check if coded behaviors are defined in ethogram
+        ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
+        behaviors_not_defined = []
+        out = "" # will contain the output
+        for obs_id in selectedObservations:
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+                if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                    behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+        if set(sorted(behaviors_not_defined)):
+            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+
+
+        # check if state events are paired
         not_paired_obs_list = []
         for obsId in selectedObservations:
             r, msg = project_functions.check_state_events_obs(obsId, self.pj[ETHOGRAM],
@@ -10382,7 +10418,7 @@ item []:
         if out:
             out = "Some observations have UNPAIRED state events<br><br>" + out
             self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.setWindowTitle(f"{programName} - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.pbSave.setVisible(False)
@@ -10481,7 +10517,7 @@ item []:
                                      fileName,
                                      outputFormat)
 
-            if not r:
+            if not r and msg:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 

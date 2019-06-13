@@ -29,7 +29,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 import config
+import utilities
 import duration_widget
+import version
 
 '''
 class multi_values_dialog(QDialog):
@@ -97,6 +99,23 @@ def MessageDialog(title, text, buttons):
     message.setWindowFlags(Qt.WindowStaysOnTopHint)
     message.exec_()
     return message.clickedButton().text()
+
+
+def error_message(task: str, exc_info: tuple) -> None:
+    """
+    show details about the error
+
+    """
+    error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
+    QMessageBox.critical(None, config.programName,
+                         (f"An error occured during {task}.<br>"
+                          f"BORIS version: {version.__version__}<br>"
+                          f"Error: {error_type}<br>"
+                          f"in {error_file_name} "
+                          f"at line # {error_lineno}<br><br>"
+                          "Please report this problem to improve the software at:<br>"
+                          '<a href="https://github.com/olivierfriard/BORIS/issues">https://github.com/olivierfriard/BORIS/issues</a>'
+                          ))
 
 
 class Info_widget(QWidget):

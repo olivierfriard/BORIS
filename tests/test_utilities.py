@@ -19,6 +19,7 @@ from decimal import Decimal
 import json
 import datetime
 import numpy as np
+import inspect
 
 sys.path.append("../src")
 
@@ -144,6 +145,17 @@ class Test_eol2space(object):
 
     def test_r(self):
         assert utilities.eol2space("aaa\rbbb") == "aaa bbb"
+
+
+class Test_error_info(object):
+    def test_error1(self):
+        try:
+            1/0
+        except:
+            r = utilities.error_info(sys.exc_info())
+            assert str(r[0]) == 'division by zero'
+            assert r[1] == "test_utilities.py"
+            assert r[2] == 153
 
 
 class Test_extract_frames(object):
@@ -389,13 +401,15 @@ class Test_seconds2time(object):
 class Test_sorted_keys(object):
     def test_numeric_keys(self):
         r = utilities.sorted_keys({5: "a", 4: "7", 0: "z", 6: "a"})
-        #print(r)
         assert r == ['0', '4', '5', '6']
 
     def test_str_keys(self):
         r = utilities.sorted_keys({"10": "x", "0": "x", "1": "x", "11": "x", "05": "x"})
-        #print(r)
         assert r == ['0', '1', '5', '10', '11']
+
+    def test_empty_dict(self):
+        r = utilities.sorted_keys({})
+        assert r == []
 
 
 class Test_state_behavior_codes(object):
@@ -426,16 +440,16 @@ class Test_test_ffmpeg_path(object):
 
 class Test_time2seconds(object):
     def test_positive(self):
-        assert utilities.time2seconds("11:22:33.44") == Decimal(
-            "40953.44")
+        assert utilities.time2seconds("11:22:33.44") == Decimal("40953.44")
 
     def test_negative(self):
-        assert utilities.time2seconds("-11:22:33.44") == Decimal(
-            "-40953.44")
+        assert utilities.time2seconds("-11:22:33.44") == Decimal("-40953.44")
 
     def test_zero(self):
-        assert utilities.time2seconds("00:00:00.000") == Decimal(
-            "0.000")
+        assert utilities.time2seconds("00:00:00.000") == Decimal("0.000")
+
+    def test_wrong_input(self):
+        assert utilities.time2seconds("aaaaa") == Decimal("0.000")
 
 
 class Test_txt2np_array(object):
@@ -500,3 +514,8 @@ class Test_versiontuple(object):
     def test_3(self):
         r = utilities.versiontuple("1")
         assert r == (1,)
+
+    def test_4(self):
+        r = utilities.versiontuple("")
+        assert r == ()
+

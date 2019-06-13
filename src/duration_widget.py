@@ -214,7 +214,7 @@ class Duration_widget(QWidget):
         return time displayed by widget
         """
         #return Decimal(- self.time_value if self.w1.sign.text() == "-" else self.time_value).quantize(Decimal('.001'))
-        return Decimal(self.time_value).quantize(Decimal('.001'))
+        return Decimal(self.time_value).quantize(Decimal(".001"))
 
 
 if __name__ == '__main__':

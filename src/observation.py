@@ -415,8 +415,11 @@ class Observation(QDialog, Ui_Form):
                 self.cb_visualize_waveform.setChecked(False)
                 return
 
+            '''
             if dialog.MessageDialog(programName, ("You choose to visualize the spectrogram or waveform for the media in player #1.<br>"
                                                   "The WAV will be extracted from the media files, be patient"), [YES, NO]) == YES:
+            '''
+            if True:
 
                 w = dialog.Info_widget()
                 w.resize(350, 100)
@@ -455,9 +458,11 @@ class Observation(QDialog, Ui_Form):
                 if not flag_wav_produced:
                     self.cbVisualizeSpectrogram.setChecked(False)
                     self.cb_visualize_waveform.setChecked(False)
+            '''
             else:
                 self.cbVisualizeSpectrogram.setChecked(False)
                 self.cb_visualize_waveform.setChecked(False)
+            '''
 
 
     def pbCancel_clicked(self):

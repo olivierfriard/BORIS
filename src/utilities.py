@@ -48,6 +48,15 @@ import numpy as np
 from config import *
 
 
+def error_info(exc_info: tuple) -> tuple:
+    """
+    return details about error
+    """
+    exc_type, exc_obj, exc_tb = exc_info
+    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    return (exc_obj, fname, exc_tb.tb_lineno)
+
+
 def return_file_header(file_name, row_number=5):
     """
     return file header
@@ -106,7 +115,7 @@ def convert_time_to_decimal(pj: dict) -> dict:
             pj[OBSERVATIONS][obsId]["time offset"] = Decimal(str(pj[OBSERVATIONS][obsId]["time offset"]))
         for idx, event in enumerate(pj[OBSERVATIONS][obsId][EVENTS]):
             pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]] = Decimal(
-                str(pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]])).quantize(Decimal((".001")
+                pj[OBSERVATIONS][obsId][EVENTS][idx][pj_obs_fields["time"]]).quantize(Decimal(".001"))
 
     return pj
 
@@ -143,6 +152,7 @@ def txt2np_array(file_name: str,
         numpy array: data. Empty if not data failed to be loaded
 
     """
+
     # check columns
     try:
         columns = [int(x) - 1 for x in columns_str.split(",")]
@@ -207,7 +217,10 @@ def versiontuple(version_str: str) -> tuple:
     Returns:
         tuple: version in tuple format (for comparison)
     """
-    return tuple(map(int, (version_str.split("."))))
+    try:
+        return tuple(map(int, (version_str.split("."))))
+    except:
+        return ()
 
 
 def state_behavior_codes(ethogram):
@@ -872,14 +885,20 @@ def time2seconds(time_: str) -> Decimal:
     Returns:
         Decimal: time in seconds
     """
-    flag_neg = "-" in time_
-    time_ = time_.replace("-", "")
 
-    tsplit = time_.split(":")
+    try:
+        flag_neg = "-" in time_
 
-    h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
+        time_ = time_.replace("-", "")
 
-    return Decimal(- (h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
+        tsplit = time_.split(":")
+
+        h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
+
+        return Decimal(- (h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
+
+    except Exception:
+        return Decimal("0.000")
 
 
 def seconds2time(sec):

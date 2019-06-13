@@ -184,9 +184,9 @@ LIVE = "LIVE"
 MEDIA = 'MEDIA'
 VIEWER = 'VIEWER'
 
-HHMMSS = 'hh:mm:ss'
+HHMMSS = "hh:mm:ss"
 HHMMSSZZZ = "hh:mm:ss.zzz"
-S = 's'
+S = "s"
 
 NEW = 'new'
 LIST = 'list'
