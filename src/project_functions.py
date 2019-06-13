@@ -688,7 +688,7 @@ def extract_observed_subjects(pj, selected_observations):
     return list(set(observed_subjects))
 
 
-def open_project_json(projectFileName):
+def open_project_json(projectFileName: str) -> tuple:
     """
     open project json
 
@@ -708,21 +708,21 @@ def open_project_json(projectFileName):
     msg = ""
 
     if not os.path.isfile(projectFileName):
-        return projectFileName, projectChanged, {"error": "File {} not found".format(projectFileName)}, msg
+        return projectFileName, projectChanged, {"error": f"File {projectFileName} not found"}, msg
 
     try:
         s = open(projectFileName, "r").read()
     except PermissionError:
-        return projectFileName, projectChanged, {"error": "File {}: Permission denied".format(projectFileName)}, msg
+        return projectFileName, projectChanged, {f"error": f"File {projectFileName}: Permission denied"}, msg
     except Exception:
-        return projectFileName, projectChanged, {"error": "Error on file {}: {}".format(projectFileName, sys.exc_info()[1])}, msg
+        return projectFileName, projectChanged, {f"error": "Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     try:
         pj = json.loads(s)
     except json.decoder.JSONDecodeError:
         return projectFileName, projectChanged, {"error": "This project file seems corrupted"}, msg
     except Exception:
-        return projectFileName, projectChanged, {"error": "This project file seems corruptedError on file {}: {}".format(projectFileName, sys.exc_info()[1])}, msg
+        return projectFileName, projectChanged, {f"error": "This project file seems corruptedError on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     # transform time to decimal
     pj = utilities.convert_time_to_decimal(pj)
