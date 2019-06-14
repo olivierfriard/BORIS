@@ -148,7 +148,6 @@ class Observation(QDialog, Ui_Form):
 
         self.tabWidget.setCurrentIndex(0)
 
-        self.cb_start_from_current_time.setVisible(False)
 
 
 
