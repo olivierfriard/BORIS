@@ -727,7 +727,7 @@ def complete(l: list, max_: int):
     return l
 
 
-def datetime_iso8601(dt):
+def datetime_iso8601(dt) -> str:
     """
     current date time in ISO8601 format without milliseconds
     example: 2019-06-13 10:01:02
@@ -738,7 +738,7 @@ def datetime_iso8601(dt):
     return dt.isoformat(" ").split(".")[0]
 
 
-def seconds_of_day(dt):
+def seconds_of_day(dt) -> Decimal:
     """
     return the number of seconds since start of the day
     """

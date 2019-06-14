@@ -150,7 +150,6 @@ class Observation(QDialog, Ui_Form):
 
 
 
-
     def tw_data_files_cellDoubleClicked(self, row, column):
         """
         double click on "Converters column"

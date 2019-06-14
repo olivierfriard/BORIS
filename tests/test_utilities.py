@@ -385,6 +385,15 @@ class Test_safefilename(object):
                                       ) == "aaa_bb_b.c_cc ddd_ _ _www_ __ _"
 
 
+class Test_seconds_of_day(object):
+    def test1(self):
+        assert utilities.seconds_of_day(datetime.datetime(2002, 12, 25, 0, 0, 10, 123)) == Decimal("10.000")
+    def test2(self):
+        assert utilities.seconds_of_day(datetime.datetime(2002, 12, 25, 0, 0, 10, 123000)) == Decimal("10.123")
+    def test3(self):
+        assert utilities.seconds_of_day(datetime.datetime(2002, 12, 25, 1, 2, 3, 654321)) == Decimal("3723.654")
+
+
 class Test_seconds2time(object):
     def test_negative(self):
         assert utilities.seconds2time(

@@ -115,11 +115,11 @@ class addModifierDialog(QDialog, Ui_Dialog):
         add subjects as modifiers
         """
 
-        for subject in self.subjects:
+        for subject, key in self.subjects:
             if self.itemPositionMem != -1:
-                self.lwModifiers.insertItem(self.itemPositionMem, subject)
+                self.lwModifiers.insertItem(self.itemPositionMem, f"{subject} ({key})" if key else subject)
             else:
-                self.lwModifiers.addItem(subject)
+                self.lwModifiers.addItem(f"{subject} ({key})" if key else subject)
 
         self.modifiers_sets_dict[str(self.tabWidgetModifiersSets.currentIndex())]["values"] = [self.lwModifiers.item(x).text()
                                                                                                for x in range(self.lwModifiers.count())]

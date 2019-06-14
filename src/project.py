@@ -655,9 +655,20 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.twBehaviors.item(row, behavioursFields["coding map"]).text():
                 QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
             else:
+
+                subjects_list = []
+                for subject_row in range(self.twSubjects.rowCount()):
+                    key = self.twSubjects.item(subject_row, 0).text() if self.twSubjects.item(subject_row, 0) else ""
+                    subjectName = self.twSubjects.item(subject_row, 1).text().strip() if self.twSubjects.item(subject_row, 1) else ""
+                    subjects_list.append((subjectName, key))
+
+                print(subjects_list)
+
                 addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text(),
-                                                                   subjects=[self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
-                addModifierWindow.setWindowTitle("""Set modifiers for "{}" behavior""".format(self.twBehaviors.item(row, 2).text()))
+                                                                   #subjects=[self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]]
+                                                                   subjects=subjects_list
+                                                                   )
+                addModifierWindow.setWindowTitle(f'Set modifiers for "{self.twBehaviors.item(row, 2).text()}" behavior')
                 if addModifierWindow.exec_():
                     self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
 
@@ -751,7 +762,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                                         self.twVariables.item(row, tw_indVarFields.index("label")).text()))
 
 
-
     def check_indep_var_config(self):
         """
         check if default type is compatible with var type
@@ -761,7 +771,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         for r in range(self.twVariables.rowCount()):
 
             if self.twVariables.item(r, 0).text().strip().upper() in existing_var:
-                return False, "Row: {} - The variable label <b>{}</b> is already in use." .format(r + 1, self.twVariables.item(r, 0).text())
+                return False, f"Row: {r + 1} - The variable label <b>{self.twVariables.item(r, 0).text()}</b> is already in use."
 
             # check if same lables
             existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
@@ -1540,7 +1550,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 for idx, field_name in enumerate(subjectsFields):
                     item = QTableWidgetItem(subject.get(field_name, ""))
                     self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
-
 
 
     def twBehaviors_cellChanged(self, row, column):
