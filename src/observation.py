@@ -23,9 +23,9 @@ Copyright 2012-2019 Olivier Friard
 
 """
 
-#from PyQt5.QtGui import *
-#from PyQt5.QtCore import *
-#from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
 
 import os
 import time
@@ -147,6 +147,8 @@ class Observation(QDialog, Ui_Form):
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
         self.tabWidget.setCurrentIndex(0)
+
+        self.cb_start_from_current_time.setVisible(False)
 
 
 
