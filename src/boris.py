@@ -4542,11 +4542,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def initialize_new_live_observation(self):
         """
-        initialize new live observation
+        initialize a new live observation
         """
 
-        self.playerType = LIVE
-        self.playMode = LIVE
+        self.playerType, self.playMode = LIVE, LIVE
 
         self.w_live.setVisible(True)
 
@@ -4566,10 +4565,25 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.liveObservationStarted = False
         self.pb_live_obs.setText("Start live observation")
 
+        if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
+            current_time = utilities.seconds_of_day(datetime.datetime.now())
+        else:
+            current_time = 0
+
+        self.lb_current_media_time.setText(self.convertTime(current_time))
+
+        '''
         if self.timeFormat == HHMMSS:
-            self.lb_current_media_time.setText("00:00:00.000")
+
+            if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
+                self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
+            else:
+                self.lb_current_media_time.setText("00:00:00.000")
+
         if self.timeFormat == S:
             self.lb_current_media_time.setText("0.000")
+        '''
+
 
         self.lbCurrentStates.setText("")
 
@@ -4768,25 +4782,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             pass
 
 
-
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
-                if "scan_sampling_time" in self.pj[OBSERVATIONS][obsId]:
-                    observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId]["scan_sampling_time"])
-
+                # sampling time
+                observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId].get("scan_sampling_time", 0))
+                # start from current time
+                observationWindow.cb_start_from_current_time.setChecked(self.pj[OBSERVATIONS][obsId].get("start_from_current_time", False))
 
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
-            if VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][obsId]:
-                observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId][VISUALIZE_SPECTROGRAM])
+            observationWindow.cbVisualizeSpectrogram.setChecked(self.pj[OBSERVATIONS][obsId].get(VISUALIZE_SPECTROGRAM, False))
 
             # waveform
             observationWindow.cb_visualize_waveform.setEnabled(True)
-            if VISUALIZE_WAVEFORM in self.pj[OBSERVATIONS][obsId]:
-                observationWindow.cb_visualize_waveform.setChecked(self.pj[OBSERVATIONS][obsId][VISUALIZE_WAVEFORM])
+            observationWindow.cb_visualize_waveform.setChecked(self.pj[OBSERVATIONS][obsId].get(VISUALIZE_WAVEFORM, False))
 
 
             # plot data
@@ -4935,7 +4947,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pj[OBSERVATIONS][new_obs_id][CLOSE_BEHAVIORS_BETWEEN_VIDEOS] = False
 
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
-                self.pj[OBSERVATIONS][new_obs_id]["scan_sampling_time"] = observationWindow.sbScanSampling.value()
+                self.pj[OBSERVATIONS][new_obs_id][SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
+                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_TIME] = observationWindow.cb_start_from_current_time.isChecked()
 
             # media file
             self.pj[OBSERVATIONS][new_obs_id][FILE] = {}
@@ -7264,8 +7277,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         timer for live observation
         """
 
-        currentTime = self.getLaps()
-        self.lb_current_media_time.setText(self.convertTime(currentTime))
+        if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
+            current_time = utilities.seconds_of_day(datetime.datetime.now())
+        else:
+            current_time = self.getLaps()
+        self.lb_current_media_time.setText(self.convertTime(current_time))
 
         # extract State events
 
@@ -7275,7 +7291,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.currentStates = utilities.get_current_states_modifiers_by_subject(utilities.state_behavior_codes(self.pj[ETHOGRAM]),
                                                                                self.pj[OBSERVATIONS][self.observationId][EVENTS],
                                                                                dict(self.pj[SUBJECTS], **{"": {SUBJECT_NAME: ""}}),
-                                                                               currentTime,
+                                                                               current_time,
                                                                                include_modifiers=True)
 
         # show current states
@@ -7286,12 +7302,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check scan sampling
 
-        if "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId]:
-            if self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]:
-                if int(currentTime) % self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"] == 0:
-                    self.beep("beep")
-                    self.liveTimer.stop()
-                    self.pb_live_obs.setText("Live observation stopped (scan sampling)")
+        if self.pj[OBSERVATIONS][self.observationId].get(SCAN_SAMPLING_TIME, 0):
+            if int(current_time) % self.pj[OBSERVATIONS][self.observationId][SCAN_SAMPLING_TIME] == 0:
+                self.beep("beep")
+                self.liveTimer.stop()
+                self.pb_live_obs.setText("Live observation stopped (scan sampling)")
 
 
     def start_live_observation(self):
@@ -7307,8 +7322,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
 
-        if not self.liveObservationStarted:
+        if self.liveObservationStarted:
+            # stop live obs
+            self.pb_live_obs.setText("Start live observation")
+            self.liveStartTime = None
+            self.liveTimer.stop()
 
+            if self.timeFormat == HHMMSS:
+                if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
+                    self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
+                else:
+                    self.lb_current_media_time.setText("00:00:00.000")
+
+            if self.timeFormat == S:
+                self.lb_current_media_time.setText("0.000")
+
+        else:
             if self.twEvents.rowCount():
                 if dialog.MessageDialog(programName, "Delete the current events?", [YES, NO]) == YES:
                     self.twEvents.setRowCount(0)
@@ -7322,16 +7351,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.liveStartTime.start()
             # start timer
             self.liveTimer.start(100)
-        else:
-
-            self.pb_live_obs.setText("Start live observation")
-            self.liveStartTime = None
-            self.liveTimer.stop()
-
-            if self.timeFormat == HHMMSS:
-                self.lb_current_media_time.setText("00:00:00.000")
-            if self.timeFormat == S:
-                self.lb_current_media_time.setText("0.000")
 
         self.liveObservationStarted = not self.liveObservationStarted
 
@@ -8421,7 +8440,7 @@ item []:
                         break
 
         except Exception:
-            logging.critical(f"Error in edit_event function: {error_type}")
+            logging.critical(f"Error in edit_event function: {sys.exc_info()[1]}")
             dialog.error_message("editing the event", sys.exc_info())
 
 
@@ -8432,7 +8451,7 @@ item []:
         self.filtered_subjects = []
         self.filtered_behaviors = []
         self.loadEventsInTW(self.observationId)
-        self.dwObservations.setWindowTitle("Events for “{}” observation".format(self.observationId))
+        self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation")
 
 
     def filter_events(self):
@@ -8451,10 +8470,10 @@ item []:
             self.filtered_subjects.append("")
         self.filtered_behaviors = parameters["selected behaviors"][:]
 
-        logging.debug("self.filtered_behaviors: {}".format(self.filtered_behaviors))
+        logging.debug(f"self.filtered_behaviors: {self.filtered_behaviors}")
 
         self.loadEventsInTW(self.observationId)
-        self.dwObservations.setWindowTitle("Events for “{}” observation (filtered)".format(self.observationId))
+        self.dwObservations.setWindowTitle(f"Events for “{self.observationId}” observation (filtered)")
 
 
     def no_media(self):
@@ -8516,7 +8535,7 @@ item []:
             except Exception:
                 QMessageBox.critical(self,
                                      programName,
-                                     "The code <b>{}</b> of behavior coding map does not exist in ethogram.".format(code))
+                                     f"The code <b>{code}</b> of behavior coding map does not exist in ethogram.")
                 return
 
             event = self.full_event(behavior_idx)
@@ -9352,7 +9371,8 @@ item []:
 
             self.projectChanged = True
         except Exception:
-            dialog.MessageDialog(programName, f"Even can not be recorded.\nError: {sys.exc_info()[1]}", [OK])
+            raise
+            dialog.MessageDialog(programName, f"Event can not be recorded.\nError: {sys.exc_info()[1]}", [OK])
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
@@ -9633,14 +9653,18 @@ item []:
             if function_keys[ek] in [self.pj[ETHOGRAM][x]["key"] for x in self.pj[ETHOGRAM]]:
                 obs_key = function_keys[ek]
 
-        # get video time
-        if (self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE and
-                "scan_sampling_time" in self.pj[OBSERVATIONS][self.observationId] and
-                self.pj[OBSERVATIONS][self.observationId]["scan_sampling_time"]):
-            if self.timeFormat == HHMMSS:
-                memLaps = Decimal(int(time2seconds(self.lb_current_media_time.text())))
-            if self.timeFormat == S:
-                memLaps = Decimal(int(Decimal(self.lb_current_media_time.text())))
+        # get time
+        if self.pj[OBSERVATIONS][self.observationId][TYPE] == LIVE:
+            if self.pj[OBSERVATIONS][self.observationId].get(SCAN_SAMPLING_TIME, 0):
+                if self.timeFormat == HHMMSS:
+                    memLaps = Decimal(int(time2seconds(self.lb_current_media_time.text())))
+                if self.timeFormat == S:
+                    memLaps = Decimal(int(Decimal(self.lb_current_media_time.text())))
+            else: # no scan sampling
+                if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
+                    memLaps = Decimal(str(utilities.seconds_of_day(datetime.datetime.now())))
+                else:
+                    memLaps = self.getLaps()
 
         else:
             memLaps = self.getLaps()

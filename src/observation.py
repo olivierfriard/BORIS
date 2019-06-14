@@ -23,9 +23,9 @@ Copyright 2012-2019 Olivier Friard
 
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+#from PyQt5.QtGui import *
+#from PyQt5.QtCore import *
+#from PyQt5.QtWidgets import *
 
 import os
 import time
@@ -48,6 +48,7 @@ from observation_ui5 import Ui_Form
 
 out = ""
 fps = 0
+
 
 class AssignConverter(QDialog):
     """

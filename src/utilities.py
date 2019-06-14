@@ -729,12 +729,22 @@ def complete(l: list, max_: int):
 
 def datetime_iso8601(dt):
     """
-    current date time in ISO8601 format
+    current date time in ISO8601 format without milliseconds
+    example: 2019-06-13 10:01:02
 
     Returns:
         str: date time in ISO8601 format
     """
-    return dt.isoformat().replace("T", " ").split(".")[0]
+    return dt.isoformat(" ").split(".")[0]
+
+
+def seconds_of_day(dt):
+    """
+    return the number of seconds since start of the day
+    """
+
+    return Decimal((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(Decimal("0.001"))
+
 
 '''
 def behavior2color(behavior, behaviors):

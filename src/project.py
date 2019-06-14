@@ -971,7 +971,8 @@ class projectDialog(QDialog, Ui_dlgProject):
     def select_behaviors(self, title="Record value from external data file",
                          text="Behaviors",
                          behavioral_categories=[],
-                         ethogram={}):
+                         ethogram={},
+                         behavior_type=[STATE_EVENT, POINT_EVENT]):
         """
         allow user to select behaviors to import
 

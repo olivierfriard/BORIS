@@ -188,6 +188,9 @@ HHMMSS = "hh:mm:ss"
 HHMMSSZZZ = "hh:mm:ss.zzz"
 S = "s"
 
+START_FROM_CURRENT_TIME = "start_from_current_time"
+SCAN_SAMPLING_TIME = "scan_sampling_time"
+
 NEW = 'new'
 LIST = 'list'
 EDIT = 'edit'
