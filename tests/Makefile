@@ -3,3 +3,6 @@
 default:
 	pytest -s -vv
 
+
+coverage:
+	pytest -s -vv --cov

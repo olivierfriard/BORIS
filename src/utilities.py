@@ -223,7 +223,7 @@ def versiontuple(version_str: str) -> tuple:
         return ()
 
 
-def state_behavior_codes(ethogram):
+def state_behavior_codes(ethogram: dict) -> list:
     """
     behavior codes defined as STATE event
 
@@ -236,34 +236,6 @@ def state_behavior_codes(ethogram):
     """
     return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if "STATE" in ethogram[x][TYPE].upper()]
 
-'''
-def get_current_states_by_subject(state_behaviors_codes: list,
-                                  events: list,
-                                  subjects: dict,
-                                  time: Decimal) -> dict:
-    """
-    get current states for subjects at given time (modifiers are not returned)
-    Args:
-        state_behaviors_codes (list): list of behavior codes defined as STATE event
-        events (list): list of events
-        subjects (dict): dictionary of subjects
-        time (Decimal): time
-
-    Returns:
-        dict: current states by subject. dict of list
-    """
-    current_states = {}
-    for idx in subjects:
-        current_states[idx] = []
-        for sbc in state_behaviors_codes:
-            if len([x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
-                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
-                    and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                    and x[EVENT_TIME_FIELD_IDX] <= time]) % 2:  # test if odd
-                current_states[idx].append(sbc)
-
-    return current_states
-'''
 
 def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
                                             events: list,
@@ -434,11 +406,6 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
             return str(wav_file_path)
         # extract wav file using FFmpeg
 
-        '''
-        p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"'.format(ffmpeg_bin=ffmpeg_bin,
-                                                                                                            media_file_path=media_file_path,
-                                                                                                            wav_file_path=wav_file_path),
-        '''
         p = subprocess.Popen(f'"{ffmpeg_bin}" -i "{media_file_path}" -y -ac 1 -vn "{wav_file_path}"',
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
@@ -454,110 +421,6 @@ def extract_wav(ffmpeg_bin: str, media_file_path: str, tmp_dir: str) -> str:
         else:
             return ""
 
-
-'''
-def extract_frames_old(ffmpeg_bin: str,
-                   start_frame: int,
-                   second: float,
-                   current_media_path,
-                   fps,
-                   imageDir,
-                   md5_media_path,
-                   extension,
-                   frame_resize,
-                   number_of_seconds):
-    """
-    extract frames from media file and save them in imageDir directory
-
-    Args:
-        ffmpeg_bin (str): path for ffmpeg
-        start_frame (int): extract frames from frame
-        second (float): second to begin extraction of frames
-        currentMedia (str): path for current media
-        fps (float): number of frame by second
-        imageDir (str): path of dir where to save frames
-        md5_media_path (str): md5 of file name content
-        extension (str): image format
-        frame_resize (int): horizontal resolution of frame
-        number_of_seconds (int): number of seconds to extract
-
-    """
-
-    if not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(
-            imageDir=imageDir,
-            sep=os.sep,
-            md5_media_path=md5_media_path,
-            frame=start_frame + 1,
-            extension=extension)):
-
-        ffmpeg_command = ('"{ffmpeg_bin}" -ss {second:.3f} '
-                          '-loglevel quiet '
-                          '-i "{current_media_path}" '
-                          '-start_number {start_number} '
-                          '-vframes {number_of_frames} '
-                          '-vf scale={frame_resize}:-1 '
-                          '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
-                              ffmpeg_bin=ffmpeg_bin,
-                              second=second,
-                              current_media_path=current_media_path,
-                              start_number=start_frame,
-                              number_of_frames=number_of_seconds * fps,
-                              imageDir=imageDir,
-                              sep=os.sep,
-                              md5_media_path=md5_media_path,
-                              extension=extension,
-                              frame_resize=frame_resize)
-
-        logging.debug("ffmpeg command: {}".format(ffmpeg_command))
-
-        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        out, error = p.communicate()
-        out, error = out.decode("utf-8"), error.decode("utf-8")
-
-        if error:
-            logging.debug("ffmpeg error: {}".format(error))
-
-    # check before frame
-    if start_frame - 1 > 0 and not os.path.isfile("{imageDir}{sep}BORIS@{md5_media_path}_{frame:08}.{extension}".format(imageDir=imageDir,
-                          sep=os.sep,
-                          md5_media_path=md5_media_path,
-                          frame=start_frame - 1,
-                          extension=extension)):
-
-        if round(start_frame - fps * number_of_seconds) < 1:
-            start_frame_before = 1
-            second_before = 0
-        else:
-            start_frame_before = round(start_frame - fps * number_of_seconds)
-            second_before = second - number_of_seconds
-
-        ffmpeg_command = ('"{ffmpeg_bin}" -ss {second} '
-                          "-loglevel quiet "
-                          '-i "{current_media_path}" '
-                          '-start_number {start_number} '
-                          '-vframes {number_of_frames} '
-                          '-vf scale={frame_resize}:-1 '
-                          '"{imageDir}{sep}BORIS@{md5_media_path}_%08d.{extension}"').format(
-            ffmpeg_bin=ffmpeg_bin,
-            second=second_before,
-            current_media_path=current_media_path,
-            start_number=start_frame_before,
-            number_of_frames=number_of_seconds * fps + 2,  # +2 to obtain current frame
-            imageDir=imageDir,
-            sep=os.sep,
-            md5_media_path=md5_media_path,
-            extension=extension,
-            frame_resize=frame_resize)
-
-        logging.debug("ffmpeg command (before): {}".format(ffmpeg_command))
-
-        p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        out, error = p.communicate()
-        out, error = out.decode("utf-8"), error.decode("utf-8")
-
-        if error:
-            logging.debug("ffmpeg error: {}".format(error))
-'''
 
 def extract_frames(ffmpeg_bin: str,
                    start_frame: int,
@@ -746,23 +609,6 @@ def seconds_of_day(dt) -> Decimal:
     return Decimal((dt - datetime.datetime.combine(dt.date(), datetime.time(0))).total_seconds()).quantize(Decimal("0.001"))
 
 
-'''
-def behavior2color(behavior, behaviors):
-    """
-    return color for behavior
-    """
-    return PLOT_BEHAVIORS_COLORS[behaviors.index(behavior)]
-'''
-
-'''
-def replace_spaces(l):
-    """
-    replace sapces with _ in strings contained in list
-    """
-
-    return [x.replace(" ", "_") for x in l]
-'''
-
 def sorted_keys(d: dict) -> list:
     """
     return list of sorted keys of provided dictionary
@@ -775,28 +621,6 @@ def sorted_keys(d: dict) -> list:
     """
     return [str(x) for x in sorted([int(x) for x in d.keys()])]
 
-
-'''
-def bestTimeUnit(t: float):
-    """
-    Return time in best format
-
-    Args:
-        t (float): time in seconds
-
-    Returns:
-
-
-    """
-    unit = "s"
-    if t >= 60:
-        t = t / 60
-        unit = "min"
-    if t > 60:
-        t = t / 60
-        unit = "h"
-    return t, unit
-'''
 
 def intfloatstr(s: str):
     """
@@ -987,42 +811,6 @@ def test_ffmpeg_path(FFmpegPath):
     return True, ""
 
 
-'''
-def playWithVLC(fileName):
-    """
-    play media in filename and return out, fps and has_vout (number of video)
-    """
-
-    import vlc
-    import time
-    instance = vlc.Instance()
-    mediaplayer = instance.media_player_new()
-    media = instance.media_new(fileName)
-    mediaplayer.set_media(media)
-    media.parse()
-    mediaplayer.play()
-    global out
-    global fps
-    out, fps, result = '', 0, None
-    while True:
-        if mediaplayer.get_state() == vlc.State.Playing:
-            break
-        if mediaplayer.get_state() == vlc.State.Ended:
-            result = 'media error'
-            break
-        time.sleep(3)
-
-    if result:
-        out = result
-    else:
-        out = media.get_duration()
-    fps = mediaplayer.get_fps()
-    nvout = mediaplayer.has_vout()
-    mediaplayer.stop()
-
-    return out, fps, nvout
-'''
-
 def check_ffmpeg_path():
     """
     check for ffmpeg path
@@ -1108,12 +896,6 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
         error = p.communicate()[1].decode("utf-8")
     except Exception:
         return {"error": "Error reading file"}
-
-    # check for invalid data
-    '''
-    if "Invalid data found when processing input" in error:
-        return {"error": "Invalid data found when processing input"}
-    '''
 
     rows = error.split("\n")
 

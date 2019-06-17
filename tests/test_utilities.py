@@ -19,7 +19,6 @@ from decimal import Decimal
 import json
 import datetime
 import numpy as np
-import inspect
 
 sys.path.append("../src")
 
@@ -96,6 +95,10 @@ class Test_check_txt_file(object):
         r = utilities.check_txt_file("files/xxx")
         assert r == {'error': "[Errno 2] No such file or directory: 'files/xxx'"}
 
+    def test_empty_file(self):
+        r = utilities.check_txt_file("files/empty_file")
+        assert r == {'error': 'Could not determine delimiter'}
+
 
 class Test_complete(object):
     def test_list_3_to_8(self):
@@ -105,7 +108,7 @@ class Test_complete(object):
         assert utilities.complete([], 4) == ["", "", "", ""]
 
     def test_list_longer_then_max(self):
-        assert utilities.complete(["a","b","c","d"], 3) == ["a","b","c","d"]
+        assert utilities.complete(["a", "b", "c", "d"], 3) == ["a", "b", "c", "d"]
 
 
 
@@ -155,7 +158,7 @@ class Test_error_info(object):
             r = utilities.error_info(sys.exc_info())
             assert str(r[0]) == 'division by zero'
             assert r[1] == "test_utilities.py"
-            assert r[2] == 153
+            assert r[2] == 156
 
 
 class Test_extract_frames(object):
@@ -331,8 +334,8 @@ class Test_get_current_states_by_subject(object):
 class Test_get_ip_address(object):
     def test_1(self):
         print(utilities.get_ip_address())
+        assert False
 '''
-
 
 class Test_intfloatstr(object):
     def test_str(self):

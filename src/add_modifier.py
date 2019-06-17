@@ -46,6 +46,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
         self.setupUi(self)
 
         self.subjects = subjects
+        if not self.subjects:
+            self.pb_add_subjects.setEnabled(False)
 
         self.pbAddModifier.clicked.connect(self.addModifier)
         self.pbAddModifier.setIcon(QIcon(":/frame_forward"))
@@ -75,7 +77,6 @@ class addModifierDialog(QDialog, Ui_Dialog):
         for idx in sorted_keys(dummy_dict):
             modif_values.append(dummy_dict[idx])
 
-
         self.modifiers_sets_dict = {}
         for modif in modif_values:
             self.modifiers_sets_dict[str(len(self.modifiers_sets_dict))] = dict(modif)
@@ -96,6 +97,8 @@ class addModifierDialog(QDialog, Ui_Dialog):
 
         # set first tab as active
         self.tabMem = 0
+
+
 
     def pb_pushed(self, button):
 
@@ -324,6 +327,21 @@ class addModifierDialog(QDialog, Ui_Dialog):
                         w.setVisible(False)
                     for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
                         w.setEnabled(False)
+
+                if not len(self.modifiers_sets_dict):
+                    # set invisible and unavailable buttons and others elements
+                    for w in [self.lbSetName, self.lbType, self.lbValues, self.leSetName, self.cbType, self.lwModifiers, self.pbMoveUp,
+                              self.pbMoveDown, self.pbRemoveModifier, self.pbRemoveSet, self.pbMoveSetLeft, self.pbMoveSetRight,
+                              self.pb_add_subjects, self.pb_load_file, self.pb_sort_modifiers]:
+                        w.setVisible(False)
+                    for w in [self.leModifier, self.leCode, self.pbAddModifier, self.pbModifyModifier]:
+                        w.setEnabled(False)
+                    return
+
+
+
+
+
         else:
             QMessageBox.information(self, programName, "It is not possible to remove the last modifiers' set.")
 
