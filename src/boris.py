@@ -582,7 +582,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
         self.actionCloseObs.setIcon(QIcon(":/close_observation"))
 
-        self.setWindowTitle("{} ({})".format(programName, __version__))
+        self.setWindowTitle(f"{programName} ({__version__})")
 
         if os.path.isfile(sys.path[0]):  # for pyinstaller
             datadir = os.path.dirname(sys.path[0])
@@ -591,11 +591,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.w_obs_info.setVisible(False)
 
-        self.lbLogoBoris.setPixmap(QPixmap(datadir + "/logo_boris_500px.png"))
+        self.lbLogoBoris.setPixmap(QPixmap(f"{datadir}/logo_boris_500px.png"))
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
 
-        self.lbLogoUnito.setPixmap(QPixmap(datadir + "/dbios_unito.png"))
+        self.lbLogoUnito.setPixmap(QPixmap(f"{datadir}/dbios_unito.png"))
         self.lbLogoUnito.setScaledContents(False)
         self.lbLogoUnito.setAlignment(Qt.AlignCenter)
 
@@ -5816,11 +5816,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         out = ""
         # check if coded behaviors are defined in ethogram
-        ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
+        ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}
         behaviors_not_defined = []
         out = "" # will contain the output
         for obs_id in selected_observations:
-            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+            for event in self.pj[OBSERVATIONS][obs_id][EVENTS]:
                 if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                     behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
         if set(sorted(behaviors_not_defined)):
@@ -6000,11 +6000,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # check if coded behaviors are defined in ethogram
-        ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
+        ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}
         behaviors_not_defined = []
         out = "" # will contain the output
         for obs_id in selectedObservations:
-            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+            for event in self.pj[OBSERVATIONS][obs_id][EVENTS]:
                 if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                     behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
         if set(sorted(behaviors_not_defined)):
@@ -10418,11 +10418,11 @@ item []:
 
         out = ""
         # check if coded behaviors are defined in ethogram
-        ethogram_behavior_codes = {pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in pj[ETHOGRAM]}
+        ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}
         behaviors_not_defined = []
         out = "" # will contain the output
         for obs_id in selectedObservations:
-            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+            for event in self.pj[OBSERVATIONS][obs_id][EVENTS]:
                 if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                     behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
         if set(sorted(behaviors_not_defined)):

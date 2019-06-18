@@ -19,8 +19,8 @@ import config
 def test_no_media_loaded(qtbot):
 
     w = observation.Observation("/tmp")
-    w.show()
-    # w.testing = True
+    #w.show()
+
     qtbot.addWidget(w)
 
     def handle_dialog():
@@ -36,7 +36,7 @@ def test_no_media_loaded(qtbot):
 def test_no_obs_id(qtbot):
 
     w = observation.Observation("/tmp")
-    w.show()
+    #w.show()
     qtbot.addWidget(w)
     w.ffmpeg_bin = "ffmpeg"
 
@@ -78,7 +78,7 @@ def test_players_in_crescent_order(qtbot):
     """
 
     w = observation.Observation("/tmp")
-    w.show()
+    #w.show()
     qtbot.addWidget(w)
     #w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -107,7 +107,7 @@ def test_players_in_crescent_order(qtbot):
 def test_ok(qtbot):
 
     w = observation.Observation("/tmp")
-    w.show()
+    #w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -132,7 +132,7 @@ def test_ok(qtbot):
 def test_cancel(qtbot):
 
     w = observation.Observation("/tmp")
-    w.show()
+    #w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -157,7 +157,7 @@ def test_extract_wav_from_video(qtbot):
         pass
 
     w = observation.Observation("/tmp")
-    w.show()
+    #w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
@@ -179,7 +179,7 @@ def test_extract_wav_from_wav(qtbot):
 
     w = observation.Observation("/tmp")
 
-    w.show()
+    #w.show()
     qtbot.addWidget(w)
     w.mode = "new"
     w.pj = config.EMPTY_PROJECT
