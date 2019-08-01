@@ -126,7 +126,7 @@ parser.add_option("-o", "--observation", action="store", help="Observation id")
 # set logging parameters
 if options.debug in ["one", "new", "stdout"]:
     if options.debug == "new":
-        log_file_name = str(pathlib.Path(os.path.expanduser("~")) / "BORIS_" + datetime.datetime.now().replace(microsecond=0).isoformat().replace(":", "-") + ".log")
+        log_file_name = str(pathlib.Path(os.path.expanduser("~")) / f"BORIS_{datetime.datetime.now().replace(microsecond=0).isoformat().replace(':', '-')}.log")
         file_mode = "w"
     if options.debug == "one":
         log_file_name = str(pathlib.Path(os.path.expanduser("~")) / "BORIS.log")
@@ -3274,8 +3274,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         if self.observationId and self.projectFileName:
-            logging.info("automatic backup")
+            logging.info("autosave project")
             self.save_project_activated()
+        else:
+            logging.debug((f"project not autosaved: "
+                           f"observation id: {self.observationId} "
+                           f"project file name: {self.projectFileName}"))
 
 
     def update_subject(self, subject):
