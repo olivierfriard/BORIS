@@ -134,20 +134,20 @@ if options.debug in ["one", "new", "stdout"]:
     if options.debug in ["one", "new"]:
         logging.basicConfig(filename=log_file_name,
                             filemode=file_mode,
-                            format='%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
+                            format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
+                            datefmt="%H:%M:%S",
                             level=logging.DEBUG)
     if options.debug in ["stdout"]:
-        logging.basicConfig(format='%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
+        logging.basicConfig(format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
+                            datefmt="%H:%M:%S",
                             level=logging.DEBUG)
 else:
-    logging.basicConfig(format='%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s',
-                        datefmt='%H:%M:%S',
+    logging.basicConfig(format="%(asctime)s,%(msecs)d  %(module)s l.%(lineno)d %(levelname)s %(message)s",
+                        datefmt="%H:%M:%S",
                         level=logging.INFO)
 
 if options.version:
-    print("version {0} release date: {1}".format(__version__, __version_date__))
+    print(f"version {__version__} release date: {__version_date__}")
     sys.exit(0)
 
 logging.debug("")
@@ -5319,7 +5319,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.automaticBackup = 0
 
-            logging.debug(f"Automatic_backup: {self.automaticBackup}")
+            # activate or desactivate autosave timer
+            if self.automaticBackup:
+                self.automaticBackupTimer.start(self.automaticBackup * 60000)
+            else:
+                self.automaticBackupTimer.stop()
+
+            logging.debug(f"Autosave: {self.automaticBackup}")
 
             self.behaviouralStringsSeparator = "|"
             try:
@@ -7186,7 +7192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             str:
         """
 
-        logging.debug(f"save project json {projectFileName}:")
+        logging.debug(f"init save_project_json function {projectFileName}")
         if self.save_project_json_started:
             logging.warning(f"Function save_project_json already launched")
             return
@@ -7202,6 +7208,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.projectChanged = False
             self.save_project_json_started = False
+            
+            logging.debug(f"end save_project_json function")
             return ""
 
         except Exception:
