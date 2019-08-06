@@ -4111,11 +4111,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].fps = {}
 
             for mediaFile in self.pj[OBSERVATIONS][self.observationId][FILE][n_player]:
-                logging.debug("media file: {}".format(mediaFile))
+
+                logging.debug(f"media file: {mediaFile}")
 
                 media_full_path = project_functions.media_full_path(mediaFile, self.projectFileName)
-                logging.debug("media_full_path: {}".format(media_full_path))
+
+                logging.debug(f"media_full_path: {media_full_path}")
+
+                '''
                 media = self.instance.media_new("file:///" + media_full_path)
+                '''
+                media = self.instance.media_new(pathlib.Path(media_full_path).as_uri())
                 media.parse()
 
                 # media duration
@@ -11244,9 +11250,7 @@ if __name__ == "__main__":
             QMessageBox.warning(
                 None,
                 programName,
-                ("Error opening observation: <b>{}</b><br>{}").format(
-                    observation_to_open, r.split(":")[1]
-                ),
+                (f"Error opening observation: <b>{observation_to_open}</b><br>{r.split(':')[1]}"),
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )

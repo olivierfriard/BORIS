@@ -715,14 +715,14 @@ def open_project_json(projectFileName: str) -> tuple:
     except PermissionError:
         return projectFileName, projectChanged, {f"error": f"File {projectFileName}: Permission denied"}, msg
     except Exception:
-        return projectFileName, projectChanged, {f"error": "Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
+        return projectFileName, projectChanged, {f"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     try:
         pj = json.loads(s)
     except json.decoder.JSONDecodeError:
         return projectFileName, projectChanged, {"error": "This project file seems corrupted"}, msg
     except Exception:
-        return projectFileName, projectChanged, {f"error": "This project file seems corruptedError on file {projectFileName}: {sys.exc_info()[1]}"}, msg
+        return projectFileName, projectChanged, {f"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     # transform time to decimal
     pj = utilities.convert_time_to_decimal(pj)
@@ -881,9 +881,9 @@ def open_project_json(projectFileName: str) -> tuple:
             project_lowerthan7 = True
 
             msg = (
-                "The project file was converted to the new format (v. {project_version}) in use with your version of BORIS.<br>"
-                "Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_version}).<br>"
-            ).format(project_version=project_format_version)
+                f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
+                f"Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_format_version}).<br>"
+            )
 
             projectChanged = True
 
@@ -891,8 +891,8 @@ def open_project_json(projectFileName: str) -> tuple:
     if project_lowerthan7:
 
         msg = (
-            "The project was updated to the current project version ({project_format_version})."
-        ).format(project_format_version=project_format_version)
+            f"The project was updated to the current project version ({project_format_version})."
+        )
 
         try:
             copyfile(projectFileName, projectFileName.replace(".boris", ".v{}.boris".format(pj["project_format_version"])))
