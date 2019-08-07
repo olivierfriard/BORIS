@@ -475,6 +475,8 @@ def dataset_write(dataset, file_name, output_format):
         str: error message
     """
 
+    logging.debug("function: dataset_write")
+
     try:
         if output_format == "tsv":
             with open(file_name, "wb") as f:
@@ -511,7 +513,7 @@ def dataset_write(dataset, file_name, output_format):
                 f.write(str.encode(dataset.html))
             return True, ""
 
-        return False, "Format {} not found".format(output_format)
+        return False, f"Format {output_format} not found"
 
     except Exception:
         return False, str(sys.exc_info()[1])

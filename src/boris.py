@@ -7443,7 +7443,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obsId)
         if out:
             self.results = dialog.ResultsWidget()
-            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.setWindowTitle(f"{programName} - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.show()
@@ -7570,6 +7570,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                 data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
+                data.title = obsId
                 r, msg = export_observation.dataset_write(data, fileName, outputFormat)
                 if not r:
                     QMessageBox.warning(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -7577,8 +7578,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
         data.title = "Aggregated events"
-
-
 
         if outputFormat == "tbs":  # Timed behavioral sequences
             out = ""
@@ -7618,9 +7617,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 with open(fileName, "wb") as f:
                     f.write(str.encode(out))
             return
-
-
-
 
         if outputFormat == "sds":  # SDIS format
             out = ("% SDIS file created by BORIS (www.boris.unito.it) "
