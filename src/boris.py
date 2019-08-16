@@ -2955,10 +2955,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             w.label.setText("Fix UNPAIRED events at time")
 
             if w.exec_():
+                fix_at_time = w.time_widget.get_time()
+                '''
                 if self.timeFormat == HHMMSS:
                     fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
                 elif self.timeFormat == S:
                     fix_at_time = Decimal(str(w.te.value()))
+                '''
 
                 events_to_add = project_functions.fix_unpaired_state_events(
                     self.observationId,
@@ -5161,10 +5164,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 w.label.setText("Fix UNPAIRED events at time")
 
                 if w.exec_():
+                    '''
                     if self.timeFormat == HHMMSS:
                         fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
                     elif self.timeFormat == S:
                         fix_at_time = Decimal(str(w.te.value()))
+                    '''
+                    fix_at_time = w.time_widget.get_time()
+
 
                     events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
                                                                                 self.pj[ETHOGRAM],
@@ -7214,7 +7221,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.projectChanged = False
             self.save_project_json_started = False
-            
+
             logging.debug(f"end save_project_json function")
             return ""
 

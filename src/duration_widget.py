@@ -209,9 +209,9 @@ class Duration_widget(QWidget):
         self.Stack.setCurrentIndex(0)
 
 
-    def get_time(self):
+    def get_time(self) -> Decimal:
         """
-        return time displayed by widget
+        return time displayed by widget in seconds
         """
         #return Decimal(- self.time_value if self.w1.sign.text() == "-" else self.time_value).quantize(Decimal('.001'))
         return Decimal(self.time_value).quantize(Decimal(".001"))
