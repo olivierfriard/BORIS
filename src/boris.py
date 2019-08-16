@@ -2942,26 +2942,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
-            '''
-            if self.playerType == VIEWER:
-                # max time
-                time_ = max(x[0] for x in self.pj[OBSERVATIONS][self.observationId][EVENTS])
-            else:
-                time_ = self.getLaps()
-            '''
-
             w = dialog.JumpTo(self.timeFormat)
             w.setWindowTitle("Fix UNPAIRED state events")
             w.label.setText("Fix UNPAIRED events at time")
 
             if w.exec_():
                 fix_at_time = w.time_widget.get_time()
-                '''
-                if self.timeFormat == HHMMSS:
-                    fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
-                elif self.timeFormat == S:
-                    fix_at_time = Decimal(str(w.te.value()))
-                '''
 
                 events_to_add = project_functions.fix_unpaired_state_events(
                     self.observationId,
@@ -4028,7 +4014,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         initialize new observation for VLC
         """
 
-        logging.debug("initialize new observation for VLC")
+        logging.debug("function: initialize new observation for VLC")
 
         ok, msg = project_functions.check_if_media_available(self.pj[OBSERVATIONS][self.observationId],
                                                              self.projectFileName)
@@ -4085,17 +4071,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
-
             # for receiving event from volume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
-
             # for receiving event resize and clicked
             self.dw_player[i].view_signal.connect(self.signal_from_dw)
 
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
             self.dw_player[i].mediaplayer.video_set_key_input(False)
             self.dw_player[i].mediaplayer.video_set_mouse_input(False)
-
 
             if self.config_param[DISPLAY_SUBTITLES]:
                 self.dw_player[i].mediaplayer.video_set_spu(0)
@@ -4121,9 +4104,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 logging.debug(f"media_full_path: {media_full_path}")
 
-                '''
-                media = self.instance.media_new("file:///" + media_full_path)
-                '''
                 media = self.instance.media_new(pathlib.Path(media_full_path).as_uri())
                 media.parse()
 
@@ -5164,15 +5144,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 w.label.setText("Fix UNPAIRED events at time")
 
                 if w.exec_():
-                    '''
-                    if self.timeFormat == HHMMSS:
-                        fix_at_time = utilities.time2seconds(w.te.time().toString(HHMMSSZZZ))
-                    elif self.timeFormat == S:
-                        fix_at_time = Decimal(str(w.te.value()))
-                    '''
                     fix_at_time = w.time_widget.get_time()
-
-
                     events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
                                                                                 self.pj[ETHOGRAM],
                                                                                 self.pj[OBSERVATIONS][self.observationId],
