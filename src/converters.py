@@ -26,7 +26,7 @@ This file is part of BORIS.
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from converters_ui5 import Ui_converters
+from converters_ui import Ui_converters
 
 import os
 import dialog

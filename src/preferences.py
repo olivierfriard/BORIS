@@ -27,7 +27,7 @@ import logging
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from preferences_ui5 import Ui_prefDialog
+from preferences_ui import Ui_prefDialog
 
 import os
 from config import CANCEL, BEHAVIORS_PLOT_COLORS

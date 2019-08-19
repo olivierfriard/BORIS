@@ -173,6 +173,9 @@ class Ui_dlgProject(object):
         self.pbRemoveSubject = QtWidgets.QPushButton(self.tabSubjects)
         self.pbRemoveSubject.setObjectName("pbRemoveSubject")
         self.verticalLayout_15.addWidget(self.pbRemoveSubject)
+        self.pb_remove_all_subjects = QtWidgets.QPushButton(self.tabSubjects)
+        self.pb_remove_all_subjects.setObjectName("pb_remove_all_subjects")
+        self.verticalLayout_15.addWidget(self.pb_remove_all_subjects)
         self.pb_convert_subjects_key_to_lower = QtWidgets.QPushButton(self.tabSubjects)
         self.pb_convert_subjects_key_to_lower.setObjectName("pb_convert_subjects_key_to_lower")
         self.verticalLayout_15.addWidget(self.pb_convert_subjects_key_to_lower)
@@ -547,6 +550,7 @@ class Ui_dlgProject(object):
         item.setText(_translate("dlgProject", "Description"))
         self.pbAddSubject.setText(_translate("dlgProject", "Add subject"))
         self.pbRemoveSubject.setText(_translate("dlgProject", "Remove subject"))
+        self.pb_remove_all_subjects.setText(_translate("dlgProject", "Remove all subjects"))
         self.pb_convert_subjects_key_to_lower.setText(_translate("dlgProject", "Convert keys to lower case"))
         self.pbImportSubjectsFromProject.setText(_translate("dlgProject", "Import subjects\n"
 "from a BORIS project"))

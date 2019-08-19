@@ -27,7 +27,7 @@ This file is part of BORIS.
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from add_modifier_ui5 import Ui_Dialog
+from add_modifier_ui import Ui_Dialog
 
 import dialog
 import logging

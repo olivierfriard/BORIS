@@ -25,7 +25,7 @@ This file is part of BORIS.
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from project_ui5 import Ui_dlgProject
+from project_ui import Ui_dlgProject
 
 import logging
 import json

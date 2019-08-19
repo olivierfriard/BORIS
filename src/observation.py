@@ -44,7 +44,7 @@ import plot_data_module
 import project_functions
 import duration_widget
 
-from observation_ui5 import Ui_Form
+from observation_ui import Ui_Form
 
 out = ""
 fps = 0

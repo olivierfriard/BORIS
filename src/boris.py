@@ -49,7 +49,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtMultimedia import QSound
-from boris_ui5 import *
+from boris_ui import *
 import qrc_boris5
 
 import select_observations

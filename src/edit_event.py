@@ -27,7 +27,7 @@ import logging
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
-from edit_event_ui5 import Ui_Form
+from edit_event_ui import Ui_Form
 
 from config import HHMMSS, S, HHMMSSZZZ
 from utilities import seconds2time
@@ -62,7 +62,7 @@ class DlgEditEvent(QDialog, Ui_Form):
             self.time_widget.set_format_hhmmss()
 
         self.horizontalLayout_2.insertWidget(0, self.time_widget)
-        
+
 
         self.pb_set_to_current_time.clicked.connect(self.set_to_current_time)
         self.pbOK.clicked.connect(self.accept)

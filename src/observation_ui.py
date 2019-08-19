@@ -295,7 +295,7 @@ class Ui_Form(object):
         self.verticalLayout_12.addWidget(self.splitter_2)
 
         self.retranslateUi(Form)
-        self.tabProjectType.setCurrentIndex(1)
+        self.tabProjectType.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
