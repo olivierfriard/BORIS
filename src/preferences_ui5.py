@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -267,7 +267,7 @@ class Ui_prefDialog(object):
         self.label_4.setText(_translate("prefDialog", "Fast forward/backward speed (seconds)"))
         self.label_2.setText(_translate("prefDialog", "Time offset for video/audio reposition (seconds)"))
         self.label_5.setText(_translate("prefDialog", "Playback speed step value"))
-        self.label_6.setText(_translate("prefDialog", "Automatic backup every (minutes)"))
+        self.label_6.setText(_translate("prefDialog", "Auto-save project every (minutes)"))
         self.label_3.setText(_translate("prefDialog", "Separator for behavioural strings (events export)"))
         self.leSeparator.setText(_translate("prefDialog", "|"))
         self.cbCloseSameEvent.setText(_translate("prefDialog", "Close the same current event independently of modifiers"))
