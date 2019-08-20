@@ -5,46 +5,45 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2019 Olivier Friard
 
+This file is part of BORIS.
 
-  This program is free software; you can redistribute it and/or modify
+  BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation; either version 3 of the License, or
+  any later version.
 
-  This program is distributed in the hope that it will be useful,
+  BORIS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 
   You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-  MA 02110-1301, USA.
+  along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
 
-from PyQt5.QtGui import *
+
+import glob
+import hashlib
+import logging
+import os
+import tempfile
+import time
+from pathlib import Path
+
+import numpy
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-import os
-import time
-import hashlib
-import tempfile
-import glob
-import logging
-from pathlib import Path
-import numpy
-
-from config import *
-import utilities
-from utilities import *
 import dialog
+import duration_widget
 import plot_data_module
 import project_functions
-import duration_widget
-
+import utilities
+from config import *
 from observation_ui import Ui_Form
+from utilities import *
 
 out = ""
 fps = 0
@@ -781,4 +780,3 @@ class Observation(QDialog, Ui_Form):
             # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
         else:
             QMessageBox.warning(self, programName, "No media file selected")
-

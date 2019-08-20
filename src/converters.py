@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2019 Olivier Friard
 
 This file is part of BORIS.
 
@@ -23,18 +23,19 @@ This file is part of BORIS.
 """
 
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from converters_ui import Ui_converters
-
-import os
-import dialog
 import json
+import os
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
+import dialog
 from config import *
+from converters_ui import Ui_converters
 
 
 class Converters(QDialog, Ui_converters):

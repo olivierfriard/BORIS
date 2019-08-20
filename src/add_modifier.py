@@ -23,14 +23,14 @@ This file is part of BORIS.
 """
 
 
+import logging
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from add_modifier_ui import Ui_Dialog
 
 import dialog
-import logging
+from add_modifier_ui import Ui_Dialog
 from config import *
 from utilities import sorted_keys
 

@@ -22,18 +22,17 @@ This file is part of BORIS.
 
 """
 
+
 import logging
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from edit_event_ui import Ui_Form
-
-from config import HHMMSS, S, HHMMSSZZZ
-from utilities import seconds2time
 
 import duration_widget
-
+from config import HHMMSS, HHMMSSZZZ, S
+from edit_event_ui import Ui_Form
+from utilities import seconds2time
 
 
 class DlgEditEvent(QDialog, Ui_Form):

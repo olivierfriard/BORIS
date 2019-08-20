@@ -22,27 +22,28 @@ This file is part of BORIS.
 
 """
 
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from project_ui import Ui_dlgProject
 
-import logging
 import json
-import tablib
-import urllib.parse
-import urllib.request
-import urllib.error
+import logging
 import pathlib
 import re
 import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 
-from utilities import sorted_keys
-from config import *
+import tablib
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 import add_modifier
 import dialog
 import export_observation
 import param_panel
+from config import *
+from project_ui import Ui_dlgProject
+from utilities import sorted_keys
 
 
 class ExclusionMatrix(QDialog):

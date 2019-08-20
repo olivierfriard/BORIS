@@ -22,17 +22,17 @@ This file is part of BORIS.
 
 """
 
+
+import logging
+import os
 import sys
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from param_panel_ui import Ui_Dialog
-
-import os
-import logging
 
 from config import *
+from param_panel_ui import Ui_Dialog
 
 
 class Param_panel(QDialog, Ui_Dialog):
@@ -153,4 +153,3 @@ class Param_panel(QDialog, Ui_Dialog):
                     self.lwBehaviors.item(idx).setCheckState(Qt.Checked)
                 else:
                     self.lwBehaviors.item(idx).setCheckState(Qt.Unchecked)
-

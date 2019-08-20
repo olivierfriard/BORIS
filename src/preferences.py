@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 
+
 import logging
 
 from PyQt5.QtGui import *
