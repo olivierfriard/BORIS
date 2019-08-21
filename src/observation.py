@@ -156,7 +156,7 @@ class Observation(QDialog, Ui_Form):
         ask user a time interval for limiting the media observation
         """
         if self.cb_observation_time_interval.isChecked():
-            time_interval_dialog = dialog.JumpTo(HHMMSS)
+            time_interval_dialog = dialog.Ask_time(HHMMSS)
             time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Start observation at")
             time_interval_dialog.label.setText("Start observation at")

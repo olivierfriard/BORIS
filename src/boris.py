@@ -2943,7 +2943,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
-            w = dialog.JumpTo(self.timeFormat)
+            w = dialog.Ask_time(self.timeFormat)
             w.setWindowTitle("Fix UNPAIRED state events")
             w.label.setText("Fix UNPAIRED events at time")
 
@@ -3123,7 +3123,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         jump to the user specified media position
         """
 
-        jt = dialog.JumpTo(self.timeFormat)
+        jt = dialog.Ask_time(self.timeFormat)
         jt.time_widget.set_time(0)
 
         if jt.exec_():
@@ -5143,7 +5143,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if results.exec_():  # fix events
 
-                w = dialog.JumpTo(self.timeFormat)
+                w = dialog.Ask_time(self.timeFormat)
                 w.setWindowTitle("Fix UNPAIRED state events")
                 w.label.setText("Fix UNPAIRED events at time")
 

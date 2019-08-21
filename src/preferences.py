@@ -32,12 +32,6 @@ from config import BEHAVIORS_PLOT_COLORS, CANCEL
 from dialog import MessageDialog
 from preferences_ui import Ui_prefDialog
 
-'''from PyQt5.QtGui import *'''
-
-
-'''from PyQt5.QtCore import *'''
-
-
 
 class Preferences(QDialog, Ui_prefDialog):
     def __init__(self, parent=None):
@@ -84,4 +78,5 @@ class Preferences(QDialog, Ui_prefDialog):
         reset behavior colors to default
         """
         self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
+
         logging.debug("reset behaviors colors to default")
