@@ -347,7 +347,7 @@ class JumpTo(QDialog):
     "jump to" dialog box
     """
 
-    def __init__(self, timeFormat):
+    def __init__(self, time_format):
         super(JumpTo, self).__init__()
         hbox = QVBoxLayout(self)
         self.label = QLabel()
@@ -355,8 +355,12 @@ class JumpTo(QDialog):
         hbox.addWidget(self.label)
 
         self.time_widget = duration_widget.Duration_widget()
-        hbox.addWidget(self.time_widget)
+        if time_format == config.HHMMSS:
+            self.time_widget.set_format_hhmmss()
+        if time_format == config.S:
+            self.time_widget.set_format_s()
 
+        hbox.addWidget(self.time_widget)
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.accept)
         self.pbOK.setDefault(True)

@@ -175,6 +175,9 @@ class Ui_Form(object):
         self.cbCloseCurrentBehaviorsBetweenVideo = QtWidgets.QCheckBox(self.layoutWidget4)
         self.cbCloseCurrentBehaviorsBetweenVideo.setObjectName("cbCloseCurrentBehaviorsBetweenVideo")
         self.verticalLayout.addWidget(self.cbCloseCurrentBehaviorsBetweenVideo)
+        self.cb_observation_time_interval = QtWidgets.QCheckBox(self.layoutWidget4)
+        self.cb_observation_time_interval.setObjectName("cb_observation_time_interval")
+        self.verticalLayout.addWidget(self.cb_observation_time_interval)
         spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.MinimumExpanding)
         self.verticalLayout.addItem(spacerItem2)
         self.verticalLayout_5.addWidget(self.splitter_3)
@@ -296,7 +299,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -336,6 +339,7 @@ class Ui_Form(object):
         self.cbVisualizeSpectrogram.setText(_translate("Form", "Visualize the sound spectrogram for the player #1"))
         self.cb_visualize_waveform.setText(_translate("Form", "Visualize the waveform for the player #1"))
         self.cbCloseCurrentBehaviorsBetweenVideo.setText(_translate("Form", "Stop ongoing state events between successive media files"))
+        self.cb_observation_time_interval.setText(_translate("Form", "Limit observation to a time interval"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_player_1), _translate("Form", "Media files"))
         self.label_7.setText(_translate("Form", "Data files to plot"))
         item = self.tw_data_files.horizontalHeaderItem(0)

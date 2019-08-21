@@ -187,7 +187,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">
@@ -323,6 +323,13 @@
                     <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
                      <property name="text">
                       <string>Stop ongoing state events between successive media files</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="cb_observation_time_interval">
+                     <property name="text">
+                      <string>Limit observation to a time interval</string>
                      </property>
                     </widget>
                    </item>

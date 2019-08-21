@@ -20,5 +20,5 @@ This file is part of BORIS.
 
 """
 
-__version__ = "7.7.4"
-__version_date__ = "2019-08-16"
+__version__ = "7.8"
+__version_date__ = "2019-08-21"
