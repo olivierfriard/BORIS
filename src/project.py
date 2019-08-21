@@ -150,8 +150,7 @@ class ExclusionMatrix(QDialog):
             for c, c_name in enumerate(self.stateBehaviors):
                 if c_name != r_name:
                     try:
-                        self.checkboxes["{}|{}".format(c_name, r_name)].setChecked(self.checkboxes["{}|{}".format(r_name,
-                                                                                                                  c_name)].isChecked())
+                        self.checkboxes[f"{c_name}|{r_name}"].setChecked(self.checkboxes[f"{r_name}|{c_name}"].isChecked())
                     except Exception:
                         pass
 
@@ -543,7 +542,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         ethogram_data = tablib.Dataset()
         ethogram_data.title = "Ethogram"
         if self.leProjectName.text():
-            ethogram_data.title = "Ethogram of {} project".format(self.leProjectName.text())
+            ethogram_data.title = f"Ethogram of {self.leProjectName.text()} project"
 
         ethogram_data.headers = ["Behavior code", "Behavior type", "Description", "Key", "Behavioral category", "Excluded behaviors"]
 
@@ -606,11 +605,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                         if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.removed:
                             if dialog.MessageDialog(
                                 programName,
-                                ("The <b>{}</b> behavior belongs to a behavioral category <b>{}</b> "
+                                (f"The <b>{self.twBehaviors.item(row, behavioursFields['code']).text()}</b> behavior belongs "
+                                 f"to a behavioral category <b>{self.twBehaviors.item(row, behavioursFields['category']).text()}</b> "
                                  "that is no more in the behavioral categories list.<br><br>"
                                  "Remove the behavior from category?"
-                                 ).format(self.twBehaviors.item(row, behavioursFields["code"]).text(),
-                                          self.twBehaviors.item(row, behavioursFields["category"]).text()),
+                                 ),
                                     [YES, CANCEL]) == YES:
                                 self.twBehaviors.item(row, behavioursFields["category"]).setText("")
             if bc.renamed:
@@ -781,8 +780,9 @@ class projectDialog(QDialog, Ui_dlgProject):
             # check default value
             if (self.twVariables.item(r, 2).text() != TIMESTAMP
                     and not self.check_variable_default_value(self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text())):
-                return False, "Row: {} - The default value ({}) is not compatible with the variable type ({})".format(
-                    r + 1, self.twVariables.item(r, 3).text(), self.twVariables.item(r, 2).text())
+                return False, (f"Row: {r + 1} - "
+                               f"The default value ({self.twVariables.item(r, 3).text()}) is not compatible "
+                               f"with the variable type ({self.twVariables.item(r, 2).text()})")
 
             # check if default value in set of values
             if self.twVariables.item(r, 2).text() == SET_OF_VALUES and self.twVariables.item(r, 4).text() == "":
@@ -792,7 +792,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     and self.twVariables.item(r, 4).text()
                     and self.twVariables.item(r, 3).text()
                     and self.twVariables.item(r, 3).text() not in self.twVariables.item(r, 4).text().split(",")):
-                return False, "The default value ({}) is not contained in set of values".format(self.twVariables.item(r, 3).text())
+                return False, f"The default value ({self.twVariables.item(r, 3).text()}) is not contained in set of values"
 
         return True, "OK"
 
@@ -1814,9 +1814,9 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # check key length
                 if (self.twSubjects.item(r, 0).text().upper() not in list(function_keys.values())
                         and len(self.twSubjects.item(r, 0).text()) > 1):
-                    self.lbSubjectsState.setText(("""<font color="red">Error on key {} for subject!</font>"""
+                    self.lbSubjectsState.setText((f'<font color="red">Error on key {self.twSubjects.item(r, 0).text()} for subject!</font>'
                                                   "The key is too long (keys must be of one character"
-                                                  " except for function keys _F1, F2..._)").format(self.twSubjects.item(r, 0).text()))
+                                                  " except for function keys _F1, F2..._)"))
                     return
 
                 if self.twSubjects.item(r, 0).text() in keys:
@@ -1930,7 +1930,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         for row in range(self.twSubjects.rowCount()):
             if self.twSubjects.item(row, 1):
                 if self.twSubjects.item(row, 1).text() != self.twSubjects.item(row, 1).text().strip():
-                    subjects_name_with_leading_trailing_spaces += '"{}" '.format(self.twSubjects.item(row, 1).text())
+                    subjects_name_with_leading_trailing_spaces += f'"{self.twSubjects.item(row, 1).text()}" '
 
         remove_leading_trailing_spaces = NO
         if subjects_name_with_leading_trailing_spaces:
@@ -1939,8 +1939,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 "Attention! Some leading and/or trailing spaces are present in the following <b>subject name(s)</b>:<br>"
                 f"<b>{subjects_name_with_leading_trailing_spaces}</b><br><br>"
                 "Do you want to remove the leading and trailing spaces?<br><br>"
-                """<font color="red"><b>Be careful with this option"""
-                """ if you have already done observations!</b></font>"""
+                '<font color="red"><b>Be careful with this option'
+                " if you have already done observations!</b></font>"
             ), [YES, NO])
 
         # check subjects
@@ -1960,15 +1960,15 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 # check if subject name is empty
                 if subjectName == "":
-                    QMessageBox.warning(self, programName, "The subject name can not be empty (check row #{}).".format(row + 1))
+                    QMessageBox.warning(self, programName, f"The subject name can not be empty (check row #{row + 1}).")
                     return
 
                 if "|" in subjectName:
                     QMessageBox.warning(self, programName,
-                                        "The pipe (|) character is not allowed in subject name <b>{}</b>".format(subjectName))
+                                        f"The pipe (|) character is not allowed in subject name <b>{subjectName}</b>")
                     return
             else:
-                QMessageBox.warning(self, programName, "Missing subject name in subjects configuration at row {}".format(row + 1))
+                QMessageBox.warning(self, programName, f"Missing subject name in subjects configuration at row #{row + 1}")
                 return
 
             # description
@@ -2049,8 +2049,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     # check for | char in code
                     if field == "code" and "|" in self.twBehaviors.item(r, behavioursFields[field]).text():
                         QMessageBox.warning(self, programName,
-                                            "The pipe (|) character is not allowed in code <b>{}</b> !".format(
-                                                self.twBehaviors.item(r, behavioursFields[field]).text()))
+                                            ("The pipe (|) character is not allowed in code "
+                                             f"<b>{self.twBehaviors.item(r, behavioursFields[field]).text()}</b> !"))
                         return
 
                     if remove_leading_trailing_spaces == YES:
@@ -2138,7 +2138,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     # check if label is empty
                     if field == "label" and self.twVariables.item(r, idx).text() == "":
                         QMessageBox.warning(self, programName,
-                                            "The label of an indipendent variable can not be empty (check row #{}).".format(r + 1))
+                                            f"The label of an indipendent variable can not be empty (check row #{r + 1}).")
                         return
                     row[field] = self.twVariables.item(r, idx).text().strip()
                 else:
@@ -2225,10 +2225,10 @@ class projectDialog(QDialog, Ui_dlgProject):
             str: string containing Python function
         """
 
-        function = """def {}(INPUT):\n""".format(name)
+        function = f"def {name}(INPUT):\n"
         function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT\n"""
         function += "\n".join(["    " + row for row in code.split("\n")])
-        function += """\n    return OUTPUT"""
+        function += "\n    return OUTPUT"
 
         return function
 
@@ -2257,7 +2257,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         try:
             exec(function)
         except Exception:
-            QMessageBox.critical(self, "BORIS", "The code produces an error:<br><b>{}</b>".format(sys.exc_info()[1]))
+            QMessageBox.critical(self, "BORIS", f"The code produces an error:<br><b>{sys.exc_info()[1]}</b>")
             return
 
 
@@ -2415,8 +2415,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                             exec(function)
                         except Exception:
                             QMessageBox.critical(self, "BORIS",
-                                                 "The code of {} converter produces an error:<br><b>{}</b>".format(converter_name,
-                                                                                                                   sys.exc_info()[1]))
+                                                 (f"The code of {converter_name} converter produces an error: "
+                                                  f"<br><b>{sys.exc_info()[1]}</b>"))
 
                         self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
                         self.tw_converters.setItem(self.tw_converters.rowCount() - 1, 0,

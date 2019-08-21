@@ -50,11 +50,7 @@ class Preferences(QDialog, Ui_prefDialog):
 
     def refresh_preferences(self):
         if (
-            MessageDialog(
-                "BORIS",
-                "Refresh will re-initialize all your preferences and close BORIS",
-                [CANCEL, "Refresh preferences"],
-            )
+            MessageDialog("BORIS", "Refresh will re-initialize all your preferences and close BORIS", [CANCEL, "Refresh preferences"])
             == "Refresh preferences"
         ):
             self.flag_refresh = True
@@ -64,12 +60,7 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         allow user select a cache dir for ffmpeg images
         """
-        FFmpegCacheDir = QFileDialog().getExistingDirectory(
-            self,
-            "Select a directory",
-            os.path.expanduser("~"),
-            options=QFileDialog().ShowDirsOnly,
-        )
+        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly)
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 
