@@ -2435,12 +2435,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
 if __name__ == '__main__':
 
-    import sys
-    '''
-    import project_functions
-    _, _, pj, _ = project_functions.open_project_json("test.boris")
-    '''
-
     app = QApplication(sys.argv)
     w = projectDialog()
     w.show()

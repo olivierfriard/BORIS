@@ -24,17 +24,14 @@ Copyright 2012-2019 Olivier Friard
 """
 
 
-try:
-    from PyQt5.QtGui import *
-    from PyQt5.QtCore import *
-    from PyQt5.QtWidgets import *
-except:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
-
 import os
-import dialog
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 import config
+import dialog
 from utilities import *
 
 commands_index = {"Start": 2, "Edit": 3, "View": 4}
@@ -52,7 +49,7 @@ class MyTableWidgetItem(QTableWidgetItem):
 
 class observationsList_widget(QDialog):
 
-    def __init__(self, data, header, column_type, parent=None):
+    def __init__(self, data: list, header: list, column_type: list, parent=None):
         super(observationsList_widget, self).__init__(parent)
 
         self.data = data
@@ -191,6 +188,7 @@ class observationsList_widget(QDialog):
         else:
             self.done(commands_index[response])
 
+
     def pbSelection_clicked(self, mode):
         """
         select or unselect all filtered observations
@@ -203,6 +201,7 @@ class observationsList_widget(QDialog):
 
     def pbCancel_clicked(self):
         self.close()
+
 
     def pbOk_clicked(self):
         self.done(1)
@@ -346,3 +345,5 @@ class observationsList_widget(QDialog):
             except:
                 pass
         self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
+
+

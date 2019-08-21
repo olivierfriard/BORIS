@@ -74,7 +74,7 @@ def select_observations(pj: dict, mode: str) -> tuple:
             if pj[OBSERVATIONS][obs][FILE]:
                 for player in sorted(pj[OBSERVATIONS][obs][FILE].keys()):
                     for media in pj[OBSERVATIONS][obs][FILE][player]:
-                        mediaList.append("#{0}: {1}".format(player, media))
+                        mediaList.append(f"#{player}: {media}")
 
             if len(mediaList) > 8:
                 media = " ".join(mediaList)

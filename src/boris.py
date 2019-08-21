@@ -3019,7 +3019,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.close_observation()
         # check if an observation is running
         if self.observationId:
-
             if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
                 return
@@ -3040,8 +3039,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.new_observation(mode=EDIT, obsId=selected_obs[0])   # observation id to edit
                 else:
                     QMessageBox.warning(self, programName,
-                                        ("The observation <b>{}</b> is running!<br>"
-                                         "Close it before editing.").format(self.observationId))
+                                        (f"The observation <b>{self.observationId}</b> is running!<br>"
+                                         "Close it before editing."))
 
 
     def actionCheckUpdate_activated(self, flagMsgOnlyIfNew=False):
@@ -3053,11 +3052,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             versionURL = "http://www.boris.unito.it/static/ver4.dat"
             lastVersion = urllib.request.urlopen(versionURL).read().strip().decode("utf-8")
             if versiontuple(lastVersion) > versiontuple(__version__):
-                msg = ("""A new version is available: v. <b>{}</b><br>"""
-                       """Go to <a href="http://www.boris.unito.it">"""
-                       """http://www.boris.unito.it</a> to install it.""").format(lastVersion)
+                msg = (f"A new version is available: v. <b>{lastVersion}</b><br>"
+                       'Go to <a href="http://www.boris.unito.it">'
+                       "http://www.boris.unito.it</a> to install it.")
             else:
-                msg = "The version you are using is the last one: <b>{}</b>".format(__version__)
+                msg = f"The version you are using is the last one: <b>{__version__}</b>"
             newsURL = "http://www.boris.unito.it/static/news.dat"
             news = urllib.request.urlopen(newsURL).read().strip().decode("utf-8")
             self.saveConfigFile(lastCheckForNewVersion=int(time.mktime(time.localtime())))
