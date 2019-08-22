@@ -722,15 +722,10 @@ def time2seconds(time_: str) -> Decimal:
 
     try:
         flag_neg = "-" in time_
-
         time_ = time_.replace("-", "")
-
         tsplit = time_.split(":")
-
         h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
-
         return Decimal(- (h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
-
     except Exception:
         return Decimal("0.000")
 

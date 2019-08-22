@@ -636,8 +636,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.addPermanentWidget(self.lbSubject)
         '''
 
-        # time offset
+        # observation time interval
+        self.lb_obs_time_interval = QLabel()
+        self.lb_obs_time_interval.setFrameStyle(QFrame.StyledPanel)
+        self.lb_obs_time_interval.setMinimumWidth(160)
+        self.statusbar.addPermanentWidget(self.lb_obs_time_interval)
 
+
+        # time offset
         self.lbTimeOffset = QLabel()
         self.lbTimeOffset.setFrameStyle(QFrame.StyledPanel)
         self.lbTimeOffset.setMinimumWidth(160)
@@ -796,8 +802,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
-        # statusbar label
-        #for w in [self.lbTime, self.lbSubject, self.lbTimeOffset, self.lbSpeed]:
+        # statusbar labels
         for w in [self.lbTimeOffset, self.lbSpeed]:
             w.setVisible(self.playerType == VLC)
 
@@ -3075,6 +3080,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             new_time (int): time in milliseconds
 
         """
+        logging.debug(f"seek mediaplayer in player #{player} to {new_time}")
 
         if self.dw_player[player].media_list.count() == 1:
 
@@ -3124,6 +3130,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         jt = dialog.Ask_time(self.timeFormat)
+        jt.setWindowTitle("Jump to specific time")
         jt.time_widget.set_time(0)
 
         if jt.exec_():
@@ -3383,7 +3390,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if preferencesWindow.flag_refresh:
                 # refresh preferences remove the config file
+
                 logging.debug("flag refresh ")
+
                 self.config_param["refresh_preferences"] = True
                 self.close()
                 # check if refresh canceled for not saved project
@@ -3433,7 +3442,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.observationId:
                 self.loadEventsInTW(self.observationId)
-                self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+                self.display_statusbar_info(self.observationId)
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
@@ -3660,6 +3669,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lb_current_media_time.setText(time_str)
 
+        # observation time interval
+        if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+            if currentTime >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1] * 1000:
+                if self.is_playing():
+                    self.pause_video()
+                    self.beep("beep")
+
         # video slider
         self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
 
@@ -3672,7 +3688,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                              dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
                                                                              currentTime / 1000,
                                                                              include_modifiers=True)
-
 
         # show current states
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
@@ -4168,14 +4183,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # position media
             if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
-                '''self.dw_player[i].mediaplayer.set_time(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))'''
                 self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000),
                                       player=i)
             else:
-                '''self.dw_player[i].mediaplayer.set_time(0)'''
                 self.seek_mediaplayer(0, player=i)
-
-
 
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
@@ -4203,7 +4214,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionPlay.setIcon(QIcon(":/play"))
 
-        self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+        self.display_statusbar_info(self.observationId)
 
         self.memMedia, self.currentSubject = "", ""
 
@@ -4554,6 +4565,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         initialize a new live observation
         """
+        logging.debug(f"function: initialize new live obs: {self.observationId}")
 
         self.playerType, self.playMode = LIVE, LIVE
 
@@ -4582,6 +4594,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lb_current_media_time.setText(self.convertTime(current_time))
 
+        # display observation time interval (if any)
+        self.lb_obs_time_interval.setVisible(True)
+        self.display_statusbar_info(self.observationId)
+
         '''
         if self.timeFormat == HHMMSS:
 
@@ -4593,7 +4609,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == S:
             self.lb_current_media_time.setText("0.000")
         '''
-
 
         self.lbCurrentStates.setText("")
 
@@ -4627,7 +4642,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow = observation.Observation(tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)) else tempfile.gettempdir(),
                                                     project_path=self.projectFileName,
                                                     converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
-                                                    log_level=logging.getLogger().getEffectiveLevel())
+                                                    time_format=self.timeFormat)
 
         observationWindow.pj = dict(self.pj)
         observationWindow.mode = mode
@@ -4710,7 +4725,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check date format for old versions of BORIS app
             try:
-                import time
                 time.strptime(self.pj[OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
                 self.pj[OBSERVATIONS][obsId]["date"] = self.pj[OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
             except ValueError:
@@ -4800,6 +4814,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.cb_observation_time_interval.setEnabled(True)
             if self.pj[OBSERVATIONS][obsId].get(OBSERVATION_TIME_INTERVAL, [0, 0]) != [0, 0]:
                 observationWindow.cb_observation_time_interval.setChecked(True)
+                observationWindow.observation_time_interval = self.pj[OBSERVATIONS][obsId].get(OBSERVATION_TIME_INTERVAL, [0, 0])
                 observationWindow.cb_observation_time_interval.setText(("Limit observation to a time interval: "
                                                                         f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][0]} - "
                                                                         f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][1]}"))
@@ -4877,7 +4892,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 logging.info(f"observation id {obsId} changed in {new_obs_id}")
 
-                self.pj[OBSERVATIONS][new_obs_id] = self.pj[OBSERVATIONS][obsId]
+                self.pj[OBSERVATIONS][new_obs_id] = dict(self.pj[OBSERVATIONS][obsId])
                 del self.pj[OBSERVATIONS][obsId]
 
             # observation date
@@ -4905,7 +4920,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # observation time offset
             self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
 
-            self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
+            if observationWindow.cb_observation_time_interval.isChecked():
+                self.pj[OBSERVATIONS][new_obs_id][OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
+
+            self.display_statusbar_info(new_obs_id)
 
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
@@ -5106,6 +5124,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             self.timer.stop()
+            self.FFmpegTimer.stop()
             self.timer_sound_signal.stop()
 
             for i, player in enumerate(self.dw_player):
@@ -5220,10 +5239,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twSubjects.item(i, len(subjectsFields)).setText("")
 
         self.lbTimeOffset.clear()
-
         self.play_rate = 1
         self.lbSpeed.clear()
-
+        self.lb_obs_time_interval.clear()
         self.playerType = ""
 
         self.menu_options()
@@ -5568,16 +5586,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "There is no project to edit")
 
 
-
-    def display_timeoffset_statubar(self, timeOffset):
+    def display_statusbar_info(self, obs_id: str):
         """
-        display offset in status bar
+        display information about obs_id observation in status bar:
+        time offset, observation time interval
         """
 
-        if timeOffset:
-            self.lbTimeOffset.setText("Time offset: <b>{}</b>".format(timeOffset if self.timeFormat == S else seconds2time(timeOffset)))
-        else:
-            self.lbTimeOffset.clear()
+        logging.debug(f"function: display statusbar info: {obs_id}")
+
+        try:
+            if self.pj[OBSERVATIONS][obs_id][TIME_OFFSET]:
+                time_offset = 0
+                if self.timeFormat == S:
+                    time_offset = self.pj[OBSERVATIONS][obs_id][TIME_OFFSET]
+                if self.timeFormat == HHMMSS:
+                    time_offset = seconds2time(self.pj[OBSERVATIONS][obs_id][TIME_OFFSET])
+                self.lbTimeOffset.setText(f"Time offset: <b>{time_offset}</b>")
+            else:
+                self.lbTimeOffset.clear()
+        except Exception:
+            logging.debug("error in time offset display")
+            pass
+
+        try:
+            if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][obs_id]:
+                if self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL] != [0, 0]:
+
+                    if self.timeFormat == HHMMSS:
+                        start_time = utilities.seconds2time(self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][0])
+                        stop_time = utilities.seconds2time(self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][1])
+                    if self.timeFormat == S:
+                        start_time = f"{self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][0]:.3f}"
+                        stop_time = f"{self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][1]:.3f}"
+                        
+                    self.lb_obs_time_interval.setText(("Observation time interval: "
+                                                       f"{start_time} - {stop_time}"))
+            else:
+                self.lb_obs_time_interval.clear()
+        except Exception:
+            logging.debug("error in observation time interval")
+            pass
+        
+        
 
     # TODO: replace by event_type in project_functions
     def eventType(self, code):
@@ -7282,10 +7332,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_time = utilities.seconds_of_day(datetime.datetime.now())
         else:
             current_time = self.getLaps()
+
         self.lb_current_media_time.setText(self.convertTime(current_time))
 
         # extract State events
-
         self.currentStates = {}
         # add states for no focal subject
 
@@ -7302,12 +7352,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show_current_states_in_subjects_table()
 
         # check scan sampling
-
         if self.pj[OBSERVATIONS][self.observationId].get(SCAN_SAMPLING_TIME, 0):
             if int(current_time) % self.pj[OBSERVATIONS][self.observationId][SCAN_SAMPLING_TIME] == 0:
                 self.beep("beep")
                 self.liveTimer.stop()
                 self.pb_live_obs.setText("Live observation stopped (scan sampling)")
+
+        # observation time interval
+        if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+            if current_time >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+                self.beep("beep")
+                self.liveTimer.stop()
+                self.pb_live_obs.setText("Live observation finished")
 
 
     def start_live_observation(self):
@@ -8896,7 +8952,8 @@ item []:
         triggered by timer
         """
 
-        #logging.debug("function: timer_out")
+        # logging.debug("function: timer_out")
+
         if not self.observationId:
             return
 
@@ -8904,6 +8961,14 @@ item []:
 
             # cumulative time
             currentTime = self.getLaps() * 1000
+
+            # observation time interval
+            if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+                if currentTime >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1] * 1000:
+                    if self.is_playing():
+                        self.pause_video()
+                        self.beep("beep")
+
 
             if self.beep_every:
                 if currentTime % (self.beep_every * 1000) <= 300:
@@ -8926,8 +8991,6 @@ item []:
                     self.lastPlayTime, self.lastPlayTimeGlobal = 0, 0
                 '''
 
-
-
             except Exception:
                 logging.warning("error on get time in timer_out function")
                 return
@@ -8944,7 +9007,7 @@ item []:
                 self.dw_player[0].videoframe.setVisible(True)
                 self.dw_player[0].volume_slider.setVisible(True)
 
-            t0 = mediaTime   # self.dw_player[0].mediaplayer.get_time()
+            t0 = mediaTime
             ct0 = self.getLaps() * 1000
 
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
@@ -8992,7 +9055,7 @@ item []:
 
                 mediaName = self.dw_player[0].mediaplayer.get_media().get_meta(0)
 
-                # update status bar
+                # update media info
                 msg = ""
                 media_list_player_state = self.dw_player[0].mediaListPlayer.get_state()
                 if media_list_player_state in [vlc.State.Playing, vlc.State.Paused]:

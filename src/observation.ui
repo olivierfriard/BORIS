@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1032</width>
-    <height>578</height>
+    <height>583</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -114,6 +114,13 @@
            </spacer>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cb_observation_time_interval">
+          <property name="text">
+           <string>Limit observation to a time interval</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -323,13 +330,6 @@
                     <widget class="QCheckBox" name="cbCloseCurrentBehaviorsBetweenVideo">
                      <property name="text">
                       <string>Stop ongoing state events between successive media files</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QCheckBox" name="cb_observation_time_interval">
-                     <property name="text">
-                      <string>Limit observation to a time interval</string>
                      </property>
                     </widget>
                    </item>

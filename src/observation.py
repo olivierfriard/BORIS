@@ -95,13 +95,13 @@ class AssignConverter(QDialog):
 
 class Observation(QDialog, Ui_Form):
 
-    def __init__(self, tmp_dir, project_path="", converters={}, log_level="", parent=None):
+    def __init__(self, tmp_dir, project_path="", converters={}, time_format=S, parent=None):
         """
         Args:
             tmp_dir (str): path of temporary directory
             project_path (str): path of project
             converters (dict): converters dictionary
-            log_level: level of log
+
         """
 
         super().__init__()
@@ -109,6 +109,7 @@ class Observation(QDialog, Ui_Form):
         self.tmp_dir = tmp_dir
         self.project_path = project_path
         self.converters = converters
+        self.time_format = time_format
         self.observation_time_interval = [0, 0]
 
         self.setupUi(self)
@@ -156,18 +157,24 @@ class Observation(QDialog, Ui_Form):
         ask user a time interval for limiting the media observation
         """
         if self.cb_observation_time_interval.isChecked():
-            time_interval_dialog = dialog.Ask_time(HHMMSS)
+            time_interval_dialog = dialog.Ask_time(self.time_format)
             time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Start observation at")
             time_interval_dialog.label.setText("Start observation at")
             start_time, stop_time = 0, 0
             if time_interval_dialog.exec_():
                 start_time = time_interval_dialog.time_widget.get_time()
+            else:
+                self.cb_observation_time_interval.setChecked(False)
+                return
             time_interval_dialog.time_widget.set_time(0)
             time_interval_dialog.setWindowTitle("Stop observation at")
             time_interval_dialog.label.setText("Stop observation at")
             if time_interval_dialog.exec_():
                 stop_time = time_interval_dialog.time_widget.get_time()
+            else:
+                self.cb_observation_time_interval.setChecked(False)
+                return
 
             if start_time or stop_time:
                 if stop_time <= start_time:

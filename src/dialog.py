@@ -310,7 +310,7 @@ class ChooseObservationsToImport(QDialog):
 
 class Ask_time(QDialog):
     """
-    "Ask time" dialog box
+    "Ask time" dialog box using duration widget in duration_widget module
     """
 
     def __init__(self, time_format):
@@ -327,17 +327,21 @@ class Ask_time(QDialog):
             self.time_widget.set_format_s()
 
         hbox.addWidget(self.time_widget)
+        
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.accept)
         self.pbOK.setDefault(True)
+
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.reject)
+
         self.hbox2 = QHBoxLayout(self)
+        self.hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.hbox2.addWidget(self.pbCancel)
         self.hbox2.addWidget(self.pbOK)
         hbox.addLayout(self.hbox2)
         self.setLayout(hbox)
-        self.setWindowTitle("Jump to specific time")
+        self.setWindowTitle("Time")
 
 
 
@@ -635,6 +639,8 @@ class Results_dialog(QDialog):
         self.pbSave.clicked.connect(self.save_results)
         hbox2.addWidget(self.pbSave)
 
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
@@ -686,6 +692,8 @@ class ResultsWidget(QWidget):
         hbox.addWidget(self.ptText)
 
         hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        
         self.pbSave = QPushButton("Save results")
         self.pbSave.clicked.connect(self.save_results)
         hbox2.addWidget(self.pbSave)
