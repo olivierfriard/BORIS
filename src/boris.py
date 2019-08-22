@@ -5102,6 +5102,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             self.timer.stop()
+            self.FFmpegTimer.stop()
             self.timer_sound_signal.stop()
 
             for i, player in enumerate(self.dw_player):
