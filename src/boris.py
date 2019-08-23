@@ -8769,16 +8769,6 @@ item []:
             self.dw_player[idx].mediaplayer.video_set_logo_int(3, 0)
 
 
-        '''
-        2: 'logo_x',
-        3: 'logo_y',
-        4: 'delay',
-        5: 'repeat',
-        6: 'opacity',
-        7: 'position',
-        }
-        '''
-
         except Exception:
             logging.critical("error in add_image_overlay function")
 
