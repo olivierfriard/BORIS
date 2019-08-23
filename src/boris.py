@@ -785,8 +785,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
         self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
         self.actionShow_data_files.setEnabled(self.playerType == VLC)
+        self.menuImage_overlay_on_video.setEnabled(self.playerType == VLC)
+        '''
         self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == VLC)
         self.actionRemove_image_overlay.setEnabled(self.playerType == VLC)
+        '''
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCoding_pad.setEnabled(flagObs)
@@ -8748,12 +8751,18 @@ item []:
             file_name = fn[0] if type(fn) is tuple else fn
             if not file_name:
                 return
+            if len(self.dw_player) > 1:
+                items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
+                item, ok_pressed = QInputDialog.getItem(self, "Get item","Color:", items, 0, False)
+                if ok_pressed and item:
+                    idx = items.index(item)
+                else:
+                    return
+            else:
+                idx = 0
+            self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
+            self.dw_player[idx].mediaplayer.video_set_logo_string(1, file_name)
 
-            items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
-            item, ok_pressed = QInputDialog.getItem(self, "Get item","Color:", items, 0, False)
-            if ok_pressed and item:
-                self.dw_player[items.index(item)].mediaplayer.video_set_logo_int(0, 1)
-                self.dw_player[items.index(item)].mediaplayer.video_set_logo_string(1, file_name)
         except Exception:
             logging.critical("error in add_image_overlay function")
 
