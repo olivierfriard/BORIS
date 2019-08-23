@@ -8763,7 +8763,6 @@ item []:
                     return
             else:
                 idx = 0
-            self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
             self.dw_player[idx].mediaplayer.video_set_logo_string(1, file_name)
             self.dw_player[idx].mediaplayer.video_set_logo_int(2, 0)
             self.dw_player[idx].mediaplayer.video_set_logo_int(3, 0)
@@ -8771,7 +8770,8 @@ item []:
             self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)
             self.dw_player[idx].mediaplayer.video_set_logo_int(6, 255)
 
-            print(self.dw_player[idx].mediaplayer.video_get_logo_string(1))
+            self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
+            # print(self.dw_player[idx].mediaplayer.video_get_logo_int(1))
 
 
 
