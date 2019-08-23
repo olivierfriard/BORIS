@@ -8771,6 +8771,8 @@ item []:
             self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)
             self.dw_player[idx].mediaplayer.video_set_logo_int(6, 255)
 
+            print(self.dw_player[idx].mediaplayer.video_get_logo_string(1))
+
 
 
 
