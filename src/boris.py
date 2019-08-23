@@ -8777,6 +8777,7 @@ item []:
 
 
         except Exception:
+            raise
             logging.critical("error in add_image_overlay function")
 
 
