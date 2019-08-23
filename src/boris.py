@@ -8746,6 +8746,9 @@ item []:
         """
         add an image overlay on video
         """
+
+        logging.debug(f"function add_image_overlay")
+
         try:
             fn = QFileDialog().getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
             file_name = fn[0] if type(fn) is tuple else fn
