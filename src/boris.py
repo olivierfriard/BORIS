@@ -8763,6 +8763,11 @@ item []:
                     return
             else:
                 idx = 0
+
+            print(file_name)
+
+
+            file_name = "c:\\users\\user\\Downloads\\transparent_layer.png"
             self.dw_player[idx].mediaplayer.video_set_logo_string(1, file_name)
             self.dw_player[idx].mediaplayer.video_set_logo_int(2, 0)
             self.dw_player[idx].mediaplayer.video_set_logo_int(3, 0)
