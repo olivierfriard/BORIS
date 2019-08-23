@@ -8764,13 +8764,7 @@ item []:
             else:
                 idx = 0
 
-            print(file_name)
-
-            file_name = str(pathlib.Path(file_name))
-
-            print(file_name)
-
-            self.dw_player[idx].mediaplayer.video_set_logo_string(1, file_name)
+            self.dw_player[idx].mediaplayer.video_set_logo_string(1, str(pathlib.Path(file_name)))
             self.dw_player[idx].mediaplayer.video_set_logo_int(2, 0)
             self.dw_player[idx].mediaplayer.video_set_logo_int(3, 0)
             self.dw_player[idx].mediaplayer.video_set_logo_int(4, 0)
@@ -8778,13 +8772,8 @@ item []:
             self.dw_player[idx].mediaplayer.video_set_logo_int(6, 255)
 
             self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
-            # print(self.dw_player[idx].mediaplayer.video_get_logo_int(1))
-
-
-
 
         except Exception:
-            raise
             logging.critical("error in add_image_overlay function")
 
 
