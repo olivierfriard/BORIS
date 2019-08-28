@@ -6033,7 +6033,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.pj[OBSERVATIONS][obs_id][EVENTS]:
                         maxTime += max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0]
                         max_length = max(max_length, max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0])
-                logging.debug("max time all events all subjects: {}".format(maxTime))
+
+                logging.debug(f"max time all events all subjects: {maxTime}")
+
                 max_obs_length = max_length
                 selectedObsTotalMediaLength = maxTime
 
@@ -6226,14 +6228,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if len(selectedObservations) > 1:
                 if total_observation_time:
                     if self.timeFormat == HHMMSS:
-                        self.tb.lbTotalObservedTime.setText("Total observation length: {}".format(seconds2time(total_observation_time)))
+                        self.tb.lbTotalObservedTime.setText(f"Total observation length: {seconds2time(total_observation_time)}")
                     if self.timeFormat == S:
                         self.tb.lbTotalObservedTime.setText("Total observation length: {:0.3f}".format(float(total_observation_time)))
                 else:
                     self.tb.lbTotalObservedTime.setText("Total observation length: not available")
             else:
                 if self.timeFormat == HHMMSS:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(min_time), seconds2time(max_time)))
+                    self.tb.lbTotalObservedTime.setText(f"Analysis from {seconds2time(min_time)} to {seconds2time(max_time)}")
                 if self.timeFormat == S:
                     self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(min_time), float(max_time)))
 
