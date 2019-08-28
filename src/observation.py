@@ -564,7 +564,7 @@ class Observation(QDialog, Ui_Form):
             for i in players:
                 durations.append(sum(players[i]))
             if [x for x in durations[1:] if x > durations[0]]:
-                QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
+                QMessageBox.critical(self, programName, "The longuest media file(s) must be loaded in player #1")
                 return False
 
         # check time offset
@@ -578,19 +578,17 @@ class Observation(QDialog, Ui_Form):
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
                     QMessageBox.critical(self, programName,
                                          f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
 
         # check if observation id not empty
         if not self.leObservationId.text():
-            #QMessageBox.warning(self, programName , "The <b>observation id</b> is mandatory and must be unique!" )
             self.qm = QMessageBox()
             self.qm.setIcon(QMessageBox.Critical)
             self.qm.setText("The <b>observation id</b> is mandatory and must be unique!")
             self.qm.exec_()
-
             return False
 
         # check if new obs and observation id already present or if edit obs and id changed

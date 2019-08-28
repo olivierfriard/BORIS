@@ -5280,19 +5280,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
-
             try:
+
                 logging.debug("restore geometry")
+
                 self.restoreGeometry(settings.value("geometry"))
-                logging.debug("geometry restored")
             except Exception:
-                logging.debug("Error trying to restore geometry")
+                logging.warning("Error trying to restore geometry")
                 pass
 
             self.saved_state = settings.value("dockwidget_positions")
             if not isinstance(self.saved_state, QByteArray):
                 self.saved_state = None
-            logging.debug("saved state: {} {}".format(self.saved_state, type(self.saved_state)))
+
+            logging.debug(f"saved state: {self.saved_state}")
 
             self.dwEthogram.setVisible(False)
             self.dwSubjects.setVisible(False)
@@ -5421,7 +5422,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pause_before_addevent = False
             logging.debug(f"pause_before_addevent: {self.pause_before_addevent}")
 
-
             if self.checkForNewVersion:
                 if (settings.value("last_check_for_new_version")
                         and (int(time.mktime(time.localtime())) - int(
@@ -5490,7 +5490,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.spectrogram_time_interval = SPECTROGRAM_DEFAULT_TIME_INTERVAL
 
-
             # plot colors
             try:
                 self.plot_colors = settings.value("plot_colors").split("|")
@@ -5529,7 +5528,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.recent_projects = []
         else:
             self.recent_projects = []
-
 
 
     def saveConfigFile(self, lastCheckForNewVersion=0):
