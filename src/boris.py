@@ -785,6 +785,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
         self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
         self.actionShow_data_files.setEnabled(self.playerType == VLC)
+        self.menuImage_overlay_on_video.setEnabled(self.playerType == VLC)
+        '''
+        self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == VLC)
+        self.actionRemove_image_overlay.setEnabled(self.playerType == VLC)
+        '''
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCoding_pad.setEnabled(flagObs)
@@ -901,6 +906,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
+
+        # image overlay on video
+        self.actionAdd_image_overlay_on_video.triggered.connect(self.add_image_overlay)
+        self.actionRemove_image_overlay.triggered.connect(self.remove_image_overlay)
 
         self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
         self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
@@ -4191,6 +4200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
 
+
         # self.initialize_video_tab()
         # initialize video slider
         self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
@@ -5618,7 +5628,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.timeFormat == S:
                         start_time = f"{self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][0]:.3f}"
                         stop_time = f"{self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][1]:.3f}"
-                        
+
                     self.lb_obs_time_interval.setText(("Observation time interval: "
                                                        f"{start_time} - {stop_time}"))
             else:
@@ -5626,8 +5636,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         except Exception:
             logging.debug("error in observation time interval")
             pass
-        
-        
+
+
 
     # TODO: replace by event_type in project_functions
     def eventType(self, code):
@@ -8730,6 +8740,49 @@ item []:
         about_dialog.setDetailedText(details)
 
         _ = about_dialog.exec_()
+
+
+    def add_image_overlay(self):
+        """
+        add an image overlay on video
+        """
+
+        logging.debug(f"function add_image_overlay")
+
+        try:
+            fn = QFileDialog().getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
+            file_name = fn[0] if type(fn) is tuple else fn
+            if not file_name:
+                return
+            if len(self.dw_player) > 1:
+                items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
+                item, ok_pressed = QInputDialog.getItem(self, "Get item","Color:", items, 0, False)
+                if ok_pressed and item:
+                    idx = items.index(item)
+                else:
+                    return
+            else:
+                idx = 0
+
+            self.dw_player[idx].mediaplayer.video_set_logo_string(1, str(pathlib.Path(file_name)))
+            self.dw_player[idx].mediaplayer.video_set_logo_int(2, 0)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(3, 0)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(4, 0)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(6, 255)
+
+            self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
+
+        except Exception:
+            logging.critical("error in add_image_overlay function")
+
+
+    def remove_image_overlay(self):
+        """
+        remove image overlay from all video
+        """
+        for i, _ in enumerate(self.dw_player):
+            self.dw_player[i].mediaplayer.video_set_logo_int(0, 0)
 
 
     def video_slider_sliderMoved(self):
