@@ -120,7 +120,7 @@ def error_message(task: str, exc_info: tuple) -> None:
 
 class Info_widget(QWidget):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(Info_widget, self).__init__(parent)
 
         self.setWindowTitle("BORIS")
@@ -327,7 +327,7 @@ class Ask_time(QDialog):
             self.time_widget.set_format_s()
 
         hbox.addWidget(self.time_widget)
-        
+
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.accept)
         self.pbOK.setDefault(True)
@@ -415,12 +415,12 @@ class EditSelectedEvents(QDialog):
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
             QMessageBox.warning(None, config.programName, "You must select a field to be edited",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
             QMessageBox.warning(None, config.programName, "You must select a new value from the list",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         self.accept()
@@ -673,7 +673,6 @@ class Results_dialog(QDialog):
                 QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
 
 
-
 class ResultsWidget(QWidget):
     """
     widget for visualizing text output
@@ -693,7 +692,7 @@ class ResultsWidget(QWidget):
 
         hbox2 = QHBoxLayout()
         hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        
+
         self.pbSave = QPushButton("Save results")
         self.pbSave.clicked.connect(self.save_results)
         hbox2.addWidget(self.pbSave)
@@ -725,28 +724,6 @@ class ResultsWidget(QWidget):
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
-'''
-class FrameViewer(QWidget):
-    """
-    widget for visualizing frame
-    """
-    def __init__(self):
-        super(FrameViewer, self).__init__()
-
-        self.setWindowTitle("")
-
-        hbox = QVBoxLayout()
-
-        self.lbFrame = QLabel("")
-        hbox.addWidget(self.lbFrame)
-
-        self.setLayout(hbox)
-
-    def pbOK_clicked(self):
-        self.close()
-'''
-
-
 class View_data_head(QDialog):
     """
     widget for visualizing first rows of data file
@@ -764,11 +741,6 @@ class View_data_head(QDialog):
 
         self.tw = QTableWidget()
         vbox.addWidget(self.tw)
-
-        '''
-        self.cb_header = QCheckBox("Data file contains an header")
-        vbox.addWidget(self.cb_header)
-        '''
 
         self.label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
         vbox.addWidget(self.label)
@@ -817,12 +789,6 @@ class View_explore_project_results(QWidget):
 
         hbox2 = QHBoxLayout()
 
-        '''
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-        hbox2.addWidget(self.pbCancel)
-        '''
-
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.close)
         hbox2.addWidget(self.pbOK)
@@ -831,7 +797,8 @@ class View_explore_project_results(QWidget):
 
         self.setLayout(vbox)
 
-        #self.resize(540, 640)
+        # self.resize(540, 640)
+
 
     def tw_cellDoubleClicked(self, r, c):
 

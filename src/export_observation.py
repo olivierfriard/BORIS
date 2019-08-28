@@ -108,7 +108,7 @@ def export_events_jwatcher(parameters: list,
 
                 try:
                     behavior_key = [ethogram[k][BEHAVIOR_KEY] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav_code][0]
-                except:
+                except Exception:
                     # coded behavior not defined in ethogram
                     continue
                 if [ethogram[k][TYPE] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav_code] == [STATE_EVENT]:
@@ -274,7 +274,7 @@ def export_events_jwatcher(parameters: list,
 
         return True, ""
 
-    except:
+    except Exception:
         logging.critical("Error during exporting the events for JWatcher")
         dialog.error_message("exporting the events for JWatcher", sys.exc_info())
         return False, ""
@@ -383,9 +383,9 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
             pass
 
     for event in eventsWithStatus:
-        if (((event[SUBJECT_EVENT_FIELD] in parameters["selected subjects"]) or
-                (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"])) and
-                (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
+        if (((event[SUBJECT_EVENT_FIELD] in parameters["selected subjects"])
+            or (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"]))
+            and (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
 
             fields = []
             fields.append(utilities.intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
@@ -406,8 +406,8 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
                     except KeyError:
                         fields.append("NA")
                 else:
-                    fields.append("NA") # media file
-                    fields.append("NA") # FPS
+                    fields.append("NA")  # media file
+                    fields.append("NA")  # FPS
 
             if observation["type"] in [LIVE]:
                 fields.append(LIVE)  # media
@@ -553,7 +553,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
 
 
     obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
-    if obs_length == Decimal("-1"): # media length not available
+    if obs_length == Decimal("-1"):  # media length not available
         interval = TIME_EVENTS
 
     logging.debug(f"obs_length: {obs_length}")
@@ -864,7 +864,7 @@ def observation_to_behavioral_sequences(pj,
                                                                                    for x in pj[OBSERVATIONS]
                                                                                    [obs_id]
                                                                                    [FILE][PLAYER1]]),
-                                                                        os.linesep))
+                                                                         os.linesep))
                 if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
                     out_file.write("# Live observation{0}{0}".format(os.linesep))
 
@@ -898,9 +898,5 @@ def observation_to_behavioral_sequences(pj,
                     if out:
                         out_file.write(out + "\n")
             return True, ""
-    except:
+    except Exception:
         return False, str(sys.exc_info()[1])
-
-
-
-

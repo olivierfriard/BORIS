@@ -145,12 +145,12 @@ class EditSelectedEvents(QDialog):
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
             QMessageBox.warning(None, config.programName, "You must select a field to be edited",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
             QMessageBox.warning(None, config.programName, "You must select a new value from the list",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         self.accept()
