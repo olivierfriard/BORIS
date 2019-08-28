@@ -6485,8 +6485,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 rows.append(values)
                 rows.append([""])
 
-                rows.append(["Analysis from", "{:0.3f}".format(float(min_time)), "to", "{:0.3f}".format(float(max_time))])
-                rows.append(["Total length (s)", "{:0.3f}".format(float(max_time - min_time))])
+                rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
+                rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
                 rows.append([""])
                 rows.append(["Time budget"])
 
@@ -6525,7 +6525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             values.append(categories[subject][category]["number"])
                             try:
-                                values.append("{:0.3f}".format(categories[subject][category]["duration"]))
+                                values.append(f"{categories[subject][category]['duration']:0.3f}")
                             except Exception:
                                 values.append(categories[subject][category]["duration"])
 
@@ -6570,8 +6570,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             QMessageBox.warning(
                                 None,
                                 programName,
-                                ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
-                                 "The limit on worksheet name length is 31 characters").format(obsId, data.title),
+                                (f"The worksheet name <b>{obsId}</b> was shortened to <b>{data.title}</b> due to XLS format limitations.\n"
+                                 "The limit on worksheet name length is 31 characters"),
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                             )
 
@@ -6603,7 +6603,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.pj[OBSERVATIONS][obs_id], self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obs_id)
 
         if out:
