@@ -132,6 +132,77 @@ class Info_widget(QWidget):
         self.setLayout(layout)
 
 
+class Video_overlay_dialog(QDialog):
+    """
+    dialog to ask image file and position for video overlay
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        vlayout = QVBoxLayout()
+        vlayout.addWidget(QLabel("File"))
+        self.le_file_path = QLineEdit()
+        vlayout.addWidget(self.le_file_path)
+        self.pb_browse = QPushButton("Browse")
+        self.pb_browse.clicked.connect(self.browse)
+        vlayout.addWidget(self.pb_browse)
+        '''
+        vlayout.addWidget(QLabel("Position: x,y"))
+        self.le_overlay_position = QLineEdit()
+        vlayout.addWidget(self.le_overlay_position)
+        '''
+
+        self.sb_overlay_transparency = QSpinBox()
+        self.sb_overlay_transparency.setRange(0, 255)
+        self.sb_overlay_transparency.setSingleStep(1)
+        self.sb_overlay_transparency.setValue(128)
+        vlayout.addWidget(self.sb_overlay_transparency)
+
+        self.cb_player = QComboBox()
+        vlayout.addWidget(self.cb_player)
+
+        hbox = QHBoxLayout()
+        self.pb_cancel = QPushButton("Cancel")
+        self.pb_cancel.clicked.connect(self.reject)
+        hbox.addWidget(self.pb_cancel)
+        self.pb_oK = QPushButton("OK")
+        self.pb_oK.clicked.connect(self.ok)
+        self.pb_oK.setDefault(True)
+        hbox.addWidget(self.pb_oK)
+
+        vlayout.addLayout(hbox)
+
+        self.setLayout(vlayout)
+
+    def browse(self):
+        fn = QFileDialog().getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        if file_name:
+            self.le_file_path.setText(file_name)
+
+    def ok(self):
+        if not self.le_file_path.text():
+            QMessageBox.warning(None, config.programName, "Select a file containing a PNG image",
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+        '''
+        if self.le_overlay_position.text() and "," not in self.le_overlay_position.text():
+            QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+        if self.le_overlay_position.text():
+            try:
+                [int(x.strip()) for x in self.le_overlay_position.text().split(",")]
+            except Exception:
+                QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
+        '''
+
+        self.accept()
+
+
 class Input_dialog(QDialog):
     """
     dialog for user input. Elements can be checkbox, lineedit
@@ -662,7 +733,7 @@ class Results_dialog(QDialog):
         save content of self.ptText
         """
 
-        fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:

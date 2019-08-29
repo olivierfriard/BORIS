@@ -8750,10 +8750,19 @@ item []:
         logging.debug(f"function add_image_overlay")
 
         try:
-            fn = QFileDialog().getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
-            file_name = fn[0] if type(fn) is tuple else fn
-            if not file_name:
+            w = dialog.Video_overlay_dialog()
+            items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
+            w.cb_player.addItems(items)
+            if not w.exec_():
                 return
+
+            file_name = w.le_file_path.text()
+            '''
+            overlay_position = w.le_overlay_position.text()
+            '''
+
+            idx = w.cb_player.currentIndex()
+            '''
             if len(self.dw_player) > 1:
                 items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
                 item, ok_pressed = QInputDialog.getItem(self, "Get item","Color:", items, 0, False)
@@ -8763,13 +8772,28 @@ item []:
                     return
             else:
                 idx = 0
+            '''
 
             self.dw_player[idx].mediaplayer.video_set_logo_string(1, str(pathlib.Path(file_name)))
-            self.dw_player[idx].mediaplayer.video_set_logo_int(2, 0)
-            self.dw_player[idx].mediaplayer.video_set_logo_int(3, 0)
-            self.dw_player[idx].mediaplayer.video_set_logo_int(4, 0)
-            self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)
-            self.dw_player[idx].mediaplayer.video_set_logo_int(6, 255)
+
+            '''
+            # overlay position
+            try:
+                self.dw_player[idx].mediaplayer.video_set_logo_int(2, int(overlay_position.split(",")[0].strip()))
+                self.dw_player[idx].mediaplayer.video_set_logo_int(3, int(overlay_position.split(",")[1].strip()))
+            except Exception:
+                logging.warning(f"error in overlay position")
+                pass
+            '''
+
+            '''self.dw_player[idx].mediaplayer.video_set_logo_int(4, 0)'''
+            '''self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)'''
+
+            self.dw_player[idx].mediaplayer.video_set_logo_int(6, w.sb_overlay_transparency.value())
+            self.dw_player[idx].mediaplayer.video_set_logo_int(2, -100)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(3, -20)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(7, 5)  # top-left
+
 
             self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
 
