@@ -244,6 +244,7 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
                                             include_modifiers: bool = False) -> dict:
     """
     get current states and modifiers (if requested) for subjects at given time
+
     Args:
         state_behaviors_codes (list): list of behavior codes defined as STATE event
         events (list): list of events

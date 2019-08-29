@@ -63,6 +63,7 @@ import param_panel
 import modifiers_coding_map
 import map_creator
 import behav_coding_map_creator
+import instantaneous_sampling
 import select_modifiers
 import utilities
 from utilities import *
@@ -924,15 +925,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
-        self.actionTest_stb2.setVisible(False)
-
         # self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
         self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.setVisible(False)
         self.actionPlot_events2.triggered.connect(self.plot_events_triggered)
 
-        self.actionTest.setVisible(False)
+        self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -1068,6 +1067,60 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
         self.pb_live_obs.clicked.connect(self.start_live_observation)
+
+
+    def instantaneous_sampling(self):
+        """
+        instantantaneous sampling analysis
+        """
+
+        result, selected_observations = self.selectObservations(MULTIPLE)
+
+        if not selected_observations:
+            return
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obs_id in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obs_id], self.timeFormat)
+
+            if not r:
+                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+                not_paired_obs_list.append(obs_id)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from tha analysis<br><br>" + out
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
+        max_obs_length, selectedObsTotalMediaLength = self.observation_length(selected_observations)
+        if max_obs_length == -1: # media length not available, user choose to not use events
+            return
+
+        parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                         maxTime=max_obs_length,
+                                                         flagShowExcludeBehaviorsWoEvents=True,
+                                                         by_category=False)
+
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
+            QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to analyze")
+            return
+
+
+        instantaneous_sampling.instantaneous_sampling(self.pj,
+                                                      selected_observations,
+                                                      parameters)
 
 
     def twEthogram_sorted(self):
@@ -9045,7 +9098,6 @@ item []:
                     if self.is_playing():
                         self.pause_video()
                         self.beep("beep")
-
 
             if self.beep_every:
                 if currentTime % (self.beep_every * 1000) <= 300:

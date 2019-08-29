@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.3
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -499,6 +501,8 @@ class Ui_MainWindow(object):
         self.actionAdd_image_overlay_on_video.setObjectName("actionAdd_image_overlay_on_video")
         self.actionRemove_image_overlay = QtWidgets.QAction(MainWindow)
         self.actionRemove_image_overlay.setObjectName("actionRemove_image_overlay")
+        self.actionInstantaneous_sampling = QtWidgets.QAction(MainWindow)
+        self.actionInstantaneous_sampling.setObjectName("actionInstantaneous_sampling")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -574,8 +578,8 @@ class Ui_MainWindow(object):
         self.menuAnalyze.addAction(self.actionTime_budget_by_behaviors_category)
         self.menuAnalyze.addAction(self.menuPlot_events.menuAction())
         self.menuAnalyze.addAction(self.menuInter_rater_reliability.menuAction())
-        self.menuAnalyze.addAction(self.actionTest_stb2)
         self.menuAnalyze.addAction(self.menuSimilarities.menuAction())
+        self.menuAnalyze.addAction(self.actionInstantaneous_sampling)
         self.menuZoom1.addAction(self.actionZoom1_fitwindow)
         self.menuZoom1.addAction(self.actionZoom1_1_4)
         self.menuZoom1.addAction(self.actionZoom1_1_2)
@@ -844,4 +848,4 @@ class Ui_MainWindow(object):
         self.actionExtract_frames_from_media_files.setText(_translate("MainWindow", "Extract frames from media files"))
         self.actionAdd_image_overlay_on_video.setText(_translate("MainWindow", "Add an image overlay"))
         self.actionRemove_image_overlay.setText(_translate("MainWindow", "Remove"))
-
+        self.actionInstantaneous_sampling.setText(_translate("MainWindow", "Instantaneous sampling"))

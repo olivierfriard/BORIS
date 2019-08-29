@@ -277,8 +277,8 @@
     <addaction name="actionTime_budget_by_behaviors_category"/>
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
-    <addaction name="actionTest_stb2"/>
     <addaction name="menuSimilarities"/>
+    <addaction name="actionInstantaneous_sampling"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1364,6 +1364,11 @@
   <action name="actionRemove_image_overlay">
    <property name="text">
     <string>Remove</string>
+   </property>
+  </action>
+  <action name="actionInstantaneous_sampling">
+   <property name="text">
+    <string>Instantaneous sampling</string>
    </property>
   </action>
  </widget>
