@@ -219,7 +219,7 @@ def versiontuple(version_str: str) -> tuple:
     """
     try:
         return tuple(map(int, (version_str.split("."))))
-    except:
+    except Exception:
         return ()
 
 
@@ -241,7 +241,7 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
                                             events: list,
                                             subjects: dict,
                                             time: Decimal,
-                                            include_modifiers: bool=False) -> dict:
+                                            include_modifiers: bool = False) -> dict:
     """
     get current states and modifiers (if requested) for subjects at given time
     Args:
@@ -538,17 +538,17 @@ def extract_frames_mem(ffmpeg_bin: str,
                     qim = QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_ARGB32)
                     return qim.copy() if copy else qim
 
-    ffmpeg_command = [ "ffmpeg", "-loglevel", "info",
-        '-i', current_media_path,
-        '-hide_banner',
-        '-ss', str((start_frame - 1) / fps),
-        '-vframes', str(int(fps * number_of_seconds)),
-        '-s', f'{resolution[0]}x{resolution[1]}',
-        #'-s', '1280x860',
-        '-f', 'image2pipe',
-        '-pix_fmt', 'rgb24',
-        '-vcodec', 'rawvideo', '-',
-        ]
+    ffmpeg_command = ["ffmpeg", "-loglevel", "info",
+                      '-i', current_media_path,
+                      '-hide_banner',
+                      '-ss', str((start_frame - 1) / fps),
+                      '-vframes', str(int(fps * number_of_seconds)),
+                      '-s', f'{resolution[0]}x{resolution[1]}',
+                      # '-s', '1280x860',
+                      '-f', 'image2pipe',
+                      '-pix_fmt', 'rgb24',
+                      '-vcodec', 'rawvideo', '-',
+                      ]
     pipe = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
 
     # print("stderr", self.pipe.stderr)
@@ -560,7 +560,6 @@ def extract_frames_mem(ffmpeg_bin: str,
             print("frames finished")
             return
 
-        #self.frames_cache[f] = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3))))
         frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3)))))
 
     return frames
@@ -676,18 +675,6 @@ def polygon_area(poly):
 
     return abs(tot / 2)
 
-'''
-def hashfile(fileName, hasher, blocksize=65536):
-    """
-    return hash of file content
-    """
-    with open(fileName, 'rb') as afile:
-        buf = afile.read(blocksize)
-        while len(buf) > 0:
-            hasher.update(buf)
-            buf = afile.read(blocksize)
-    return hasher.hexdigest()
-'''
 
 def url2path(url):
     """
@@ -722,15 +709,10 @@ def time2seconds(time_: str) -> Decimal:
 
     try:
         flag_neg = "-" in time_
-
         time_ = time_.replace("-", "")
-
         tsplit = time_.split(":")
-
         h, m, s = int(tsplit[0]), int(tsplit[1]), Decimal(tsplit[2])
-
         return Decimal(- (h * 3600 + m * 60 + s)) if flag_neg else Decimal(h * 3600 + m * 60 + s)
-
     except Exception:
         return Decimal("0.000")
 
@@ -759,12 +741,12 @@ def seconds2time(sec):
     return f"{neg_sign}{hours:02}:{minutes:02}:{ssecs}"
 
 
-def safeFileName(s:str) -> str:
+def safeFileName(s: str) -> str:
     """
     replace characters not allowed in file name by _
     """
     fileName = s
-    notAllowedChars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|", "\n", "\r",]
+    notAllowedChars = ["/", "\\", ":", "*", "?", '"', "<", ">", "|", "\n", "\r"]
     for char in notAllowedChars:
         fileName = fileName.replace(char, "_")
 
@@ -982,4 +964,3 @@ def behavior_color(colors_list, idx):
         return colors_list[idx % len(colors_list)]
     except Exception:
         return "darkgray"
-

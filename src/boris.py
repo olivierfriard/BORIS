@@ -636,8 +636,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.statusbar.addPermanentWidget(self.lbSubject)
         '''
 
-        # time offset
+        # observation time interval
+        self.lb_obs_time_interval = QLabel()
+        self.lb_obs_time_interval.setFrameStyle(QFrame.StyledPanel)
+        self.lb_obs_time_interval.setMinimumWidth(160)
+        self.statusbar.addPermanentWidget(self.lb_obs_time_interval)
 
+
+        # time offset
         self.lbTimeOffset = QLabel()
         self.lbTimeOffset.setFrameStyle(QFrame.StyledPanel)
         self.lbTimeOffset.setMinimumWidth(160)
@@ -779,6 +785,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
         self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
         self.actionShow_data_files.setEnabled(self.playerType == VLC)
+        self.menuImage_overlay_on_video.setEnabled(self.playerType == VLC)
+        '''
+        self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == VLC)
+        self.actionRemove_image_overlay.setEnabled(self.playerType == VLC)
+        '''
         # geometric measurements
         self.actionDistance.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCoding_pad.setEnabled(flagObs)
@@ -796,8 +807,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
 
-        # statusbar label
-        #for w in [self.lbTime, self.lbSubject, self.lbTimeOffset, self.lbSpeed]:
+        # statusbar labels
         for w in [self.lbTimeOffset, self.lbSpeed]:
             w.setVisible(self.playerType == VLC)
 
@@ -896,6 +906,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
         self.actionSubjects_pad.triggered.connect(self.show_subjects_pad)
+
+        # image overlay on video
+        self.actionAdd_image_overlay_on_video.triggered.connect(self.add_image_overlay)
+        self.actionRemove_image_overlay.triggered.connect(self.remove_image_overlay)
 
         self.actionRecode_resize_video.triggered.connect(lambda: self.ffmpeg_process("reencode_resize"))
         self.actionRotate_video.triggered.connect(lambda: self.ffmpeg_process("rotate"))
@@ -2943,7 +2957,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
-            w = dialog.JumpTo(self.timeFormat)
+            w = dialog.Ask_time(self.timeFormat)
             w.setWindowTitle("Fix UNPAIRED state events")
             w.label.setText("Fix UNPAIRED events at time")
 
@@ -3067,17 +3081,66 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "Can not check for updates...")
 
 
+    def seek_mediaplayer(self, new_time: int, player=0):
+        """
+        change media position in player
+
+        Args:
+            new_time (int): time in milliseconds
+
+        """
+        logging.debug(f"seek mediaplayer in player #{player} to {new_time}")
+
+        if self.dw_player[player].media_list.count() == 1:
+
+            if new_time < self.dw_player[player].mediaplayer.get_length():
+                self.dw_player[player].mediaplayer.set_time(new_time)
+            else:
+                QMessageBox.warning(self, programName,
+                                    ("The indicated position is behind the end of media "
+                                     f"({seconds2time(self.dw_player[player].mediaplayer.get_length() / 1000)})"))
+
+        elif self.dw_player[player].media_list.count() > 1:
+
+            if new_time < sum(self.dw_player[player].media_durations):
+
+                # remember if player paused (go previous will start playing)
+                flagPaused = self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused
+
+                tot = 0
+                for idx, d in enumerate(self.dw_player[player].media_durations):
+                    if new_time >= tot and new_time < tot + d:
+                        self.dw_player[player].mediaListPlayer.play_item_at_index(idx)
+
+                        # wait until media is played
+                        while True:
+                            if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                break
+
+                        if flagPaused:
+                            self.dw_player[player].mediaListPlayer.pause()
+
+                        self.dw_player[player].mediaplayer.set_time(
+                            new_time - sum(
+                                self.dw_player[player].media_durations[0: self.dw_player[player].media_list.index_of_item(
+                                    self.dw_player[player].mediaplayer.get_media())]))
+
+                        break
+                    tot += d
+            else:
+                QMessageBox.warning(self, programName,
+                                    ("The indicated position is behind the total media duration "
+                                     f"({seconds2time(sum(self.dw_player[player].media_durations) / 1000)})"))
+
+
     def jump_to(self):
         """
         jump to the user specified media position
         """
 
-        jt = dialog.JumpTo(self.timeFormat)
+        jt = dialog.Ask_time(self.timeFormat)
+        jt.setWindowTitle("Jump to specific time")
         jt.time_widget.set_time(0)
-        if self.timeFormat == HHMMSS:
-            jt.time_widget.set_format_hhmmss()
-        else:
-            jt.time_widget.set_format_s()
 
         if jt.exec_():
             newTime = int(jt.time_widget.get_time() * 1000)
@@ -3096,46 +3159,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 elif self.playMode == VLC:  # play mode VLC
 
-                    if self.dw_player[0].media_list.count() == 1:
-
-                        if newTime < self.dw_player[0].mediaplayer.get_length():
-                            self.dw_player[0].mediaplayer.set_time(newTime)
-                        else:
-                            QMessageBox.warning(self, programName, "The indicated position is behind the end of media ({})".
-                                                                   format(seconds2time(self.dw_player[0].mediaplayer.get_length() / 1000)))
-
-                    elif self.dw_player[0].media_list.count() > 1:
-
-                        if newTime < sum(self.dw_player[0].media_durations):
-
-                            # remember if player paused (go previous will start playing)
-                            flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
-
-                            tot = 0
-                            for idx, d in enumerate(self.dw_player[0].media_durations):
-                                if newTime >= tot and newTime < tot + d:
-                                    self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
-
-                                    # wait until media is played
-                                    while True:
-                                        if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                                            break
-
-                                    if flagPaused:
-                                        self.dw_player[0].mediaListPlayer.pause()
-
-                                    self.dw_player[0].mediaplayer.set_time(
-                                        newTime - sum(
-                                            self.dw_player[0].media_durations[0: self.dw_player[0].media_list.index_of_item(
-                                                self.dw_player[0].mediaplayer.get_media())]))
-
-                                    break
-                                tot += d
-                        else:
-                            QMessageBox.warning(
-                                self, programName,
-                                ("The indicated position is behind the total media duration "
-                                 f"({seconds2time(sum(self.dw_player[0].media_durations) / 1000)})"))
+                    self.seek_mediaplayer(newTime)
 
                     self.update_visualizations()
 
@@ -3375,7 +3399,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if preferencesWindow.flag_refresh:
                 # refresh preferences remove the config file
+
                 logging.debug("flag refresh ")
+
                 self.config_param["refresh_preferences"] = True
                 self.close()
                 # check if refresh canceled for not saved project
@@ -3425,7 +3451,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.observationId:
                 self.loadEventsInTW(self.observationId)
-                self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+                self.display_statusbar_info(self.observationId)
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
@@ -3652,6 +3678,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lb_current_media_time.setText(time_str)
 
+        # observation time interval
+        if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+            if currentTime >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1] * 1000:
+                if self.is_playing():
+                    self.pause_video()
+                    self.beep("beep")
+
         # video slider
         self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
 
@@ -3664,7 +3697,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                              dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
                                                                              currentTime / 1000,
                                                                              include_modifiers=True)
-
 
         # show current states
         subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
@@ -4008,7 +4040,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-
     def initialize_new_observation_vlc(self):
         """
         initialize new observation for VLC
@@ -4020,10 +4051,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                              self.projectFileName)
         if not ok:
             QMessageBox.critical(self, programName,
-                                 ("{}<br><br>The observation will be opened in VIEW mode.<br>"
+                                 (f"{msg}<br><br>The observation will be opened in VIEW mode.<br>"
                                   "It will not be possible to log events.<br>"
                                   "Modify the media path to point an existing media file "
-                                  "to log events or copy media file in the BORIS project directory.").format(msg),
+                                  "to log events or copy media file in the BORIS project directory."),
                                  QMessageBox.Ok | QMessageBox.Default,
                                  QMessageBox.NoButton)
 
@@ -4145,7 +4176,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[i].mediaplayer.set_nsobject(int(self.dw_player[i].videoframe.winId()))
 
             # show first frame of video
-            logging.debug("playing media #{0}".format(0))
+            logging.debug(f"playing media #0")
 
             self.dw_player[i].mediaListPlayer.play_item_at_index(0)
 
@@ -4158,10 +4189,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             while True:
                 if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                     break
-            self.dw_player[i].mediaplayer.set_time(0)
+
+            # position media
+            if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
+                self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000),
+                                      player=i)
+            else:
+                self.seek_mediaplayer(0, player=i)
 
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
+
 
         # self.initialize_video_tab()
         # initialize video slider
@@ -4186,7 +4224,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionPlay.setIcon(QIcon(":/play"))
 
-        self.display_timeoffset_statubar(self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+        self.display_statusbar_info(self.observationId)
 
         self.memMedia, self.currentSubject = "", ""
 
@@ -4537,6 +4575,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         initialize a new live observation
         """
+        logging.debug(f"function: initialize new live obs: {self.observationId}")
 
         self.playerType, self.playMode = LIVE, LIVE
 
@@ -4565,6 +4604,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lb_current_media_time.setText(self.convertTime(current_time))
 
+        # display observation time interval (if any)
+        self.lb_obs_time_interval.setVisible(True)
+        self.display_statusbar_info(self.observationId)
+
         '''
         if self.timeFormat == HHMMSS:
 
@@ -4576,7 +4619,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.timeFormat == S:
             self.lb_current_media_time.setText("0.000")
         '''
-
 
         self.lbCurrentStates.setText("")
 
@@ -4610,7 +4652,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         observationWindow = observation.Observation(tmp_dir=self.ffmpeg_cache_dir if (self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir)) else tempfile.gettempdir(),
                                                     project_path=self.projectFileName,
                                                     converters=self.pj[CONVERTERS] if CONVERTERS in self.pj else {},
-                                                    log_level=logging.getLogger().getEffectiveLevel())
+                                                    time_format=self.timeFormat)
 
         observationWindow.pj = dict(self.pj)
         observationWindow.mode = mode
@@ -4693,7 +4735,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # check date format for old versions of BORIS app
             try:
-                import time
                 time.strptime(self.pj[OBSERVATIONS][obsId]["date"], "%Y-%m-%d %H:%M")
                 self.pj[OBSERVATIONS][obsId]["date"] = self.pj[OBSERVATIONS][obsId]["date"].replace(" ", "T") + ":00"
             except ValueError:
@@ -4718,20 +4759,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.info("No Video/Audio information")
 
             # offset
-            '''
-            if self.timeFormat == S:
-                observationWindow.leTimeOffset.setText(self.convertTime(abs(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])))
-
-            if self.timeFormat == HHMMSS:
-                time = QTime()
-                h, m, s_dec = seconds2time(abs(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])).split(":")
-                s, ms = s_dec.split(".")
-                time.setHMS(int(h), int(m), int(s), int(ms))
-                observationWindow.teTimeOffset.setTime(time)
-
-            if self.pj[OBSERVATIONS][obsId][TIME_OFFSET] < 0:
-                observationWindow.rbSubstract.setChecked(True)
-            '''
             observationWindow.obs_time_offset.set_time(self.pj[OBSERVATIONS][obsId][TIME_OFFSET])
 
             observationWindow.twVideo1.setRowCount(0)
@@ -4793,6 +4820,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.cb_visualize_waveform.setEnabled(True)
             observationWindow.cb_visualize_waveform.setChecked(self.pj[OBSERVATIONS][obsId].get(VISUALIZE_WAVEFORM, False))
 
+            # observation time interval
+            observationWindow.cb_observation_time_interval.setEnabled(True)
+            if self.pj[OBSERVATIONS][obsId].get(OBSERVATION_TIME_INTERVAL, [0, 0]) != [0, 0]:
+                observationWindow.cb_observation_time_interval.setChecked(True)
+                observationWindow.observation_time_interval = self.pj[OBSERVATIONS][obsId].get(OBSERVATION_TIME_INTERVAL, [0, 0])
+                observationWindow.cb_observation_time_interval.setText(("Limit observation to a time interval: "
+                                                                        f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][0]} - "
+                                                                        f"{self.pj[OBSERVATIONS][obsId][OBSERVATION_TIME_INTERVAL][1]}"))
 
             # plot data
             if PLOT_DATA in self.pj[OBSERVATIONS][obsId]:
@@ -4858,14 +4893,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                              "date": "",
                                                              "description": "",
                                                              TIME_OFFSET: 0,
-                                                             EVENTS: []}
+                                                             EVENTS: [],
+                                                             OBSERVATION_TIME_INTERVAL: [0, 0]
+                                                             }
 
             # check if id changed
             if mode == EDIT and new_obs_id != obsId:
 
                 logging.info(f"observation id {obsId} changed in {new_obs_id}")
 
-                self.pj[OBSERVATIONS][new_obs_id] = self.pj[OBSERVATIONS][obsId]
+                self.pj[OBSERVATIONS][new_obs_id] = dict(self.pj[OBSERVATIONS][obsId])
                 del self.pj[OBSERVATIONS][obsId]
 
             # observation date
@@ -4891,24 +4928,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         r, 0).text()] = observationWindow.twIndepVariables.item(r, 2).text()
 
             # observation time offset
-            '''
-            if self.timeFormat == HHMMSS:
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = time2seconds(observationWindow.teTimeOffset.time().toString(HHMMSSZZZ))
-
-            if self.timeFormat == S:
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = abs(Decimal(observationWindow.leTimeOffset.text()))
-
-            if observationWindow.rbSubstract.isChecked():
-                self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = - self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET]
-            '''
             self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET] = observationWindow.obs_time_offset.get_time()
 
-            self.display_timeoffset_statubar(self.pj[OBSERVATIONS][new_obs_id][TIME_OFFSET])
+            if observationWindow.cb_observation_time_interval.isChecked():
+                self.pj[OBSERVATIONS][new_obs_id][OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
+
+            self.display_statusbar_info(new_obs_id)
 
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_SPECTROGRAM] = observationWindow.cbVisualizeSpectrogram.isChecked()
             # visualize spectrogram
             self.pj[OBSERVATIONS][new_obs_id][VISUALIZE_WAVEFORM] = observationWindow.cb_visualize_waveform.isChecked()
+            # time interval for observation
+            self.pj[OBSERVATIONS][new_obs_id][OBSERVATION_TIME_INTERVAL] = observationWindow.observation_time_interval
 
             # plot data
             if observationWindow.tw_data_files.rowCount():
@@ -5140,7 +5172,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if results.exec_():  # fix events
 
-                w = dialog.JumpTo(self.timeFormat)
+                w = dialog.Ask_time(self.timeFormat)
                 w.setWindowTitle("Fix UNPAIRED state events")
                 w.label.setText("Fix UNPAIRED events at time")
 
@@ -5217,10 +5249,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.twSubjects.item(i, len(subjectsFields)).setText("")
 
         self.lbTimeOffset.clear()
-
         self.play_rate = 1
         self.lbSpeed.clear()
-
+        self.lb_obs_time_interval.clear()
         self.playerType = ""
 
         self.menu_options()
@@ -5249,19 +5280,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
-
             try:
+
                 logging.debug("restore geometry")
+
                 self.restoreGeometry(settings.value("geometry"))
-                logging.debug("geometry restored")
             except Exception:
-                logging.debug("Error trying to restore geometry")
+                logging.warning("Error trying to restore geometry")
                 pass
 
             self.saved_state = settings.value("dockwidget_positions")
             if not isinstance(self.saved_state, QByteArray):
                 self.saved_state = None
-            logging.debug("saved state: {} {}".format(self.saved_state, type(self.saved_state)))
+
+            logging.debug(f"saved state: {self.saved_state}")
 
             self.dwEthogram.setVisible(False)
             self.dwSubjects.setVisible(False)
@@ -5390,7 +5422,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pause_before_addevent = False
             logging.debug(f"pause_before_addevent: {self.pause_before_addevent}")
 
-
             if self.checkForNewVersion:
                 if (settings.value("last_check_for_new_version")
                         and (int(time.mktime(time.localtime())) - int(
@@ -5459,7 +5490,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.spectrogram_time_interval = SPECTROGRAM_DEFAULT_TIME_INTERVAL
 
-
             # plot colors
             try:
                 self.plot_colors = settings.value("plot_colors").split("|")
@@ -5498,7 +5528,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.recent_projects = []
         else:
             self.recent_projects = []
-
 
 
     def saveConfigFile(self, lastCheckForNewVersion=0):
@@ -5565,16 +5594,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "There is no project to edit")
 
 
-
-    def display_timeoffset_statubar(self, timeOffset):
+    def display_statusbar_info(self, obs_id: str):
         """
-        display offset in status bar
+        display information about obs_id observation in status bar:
+        time offset, observation time interval
         """
 
-        if timeOffset:
-            self.lbTimeOffset.setText("Time offset: <b>{}</b>".format(timeOffset if self.timeFormat == S else seconds2time(timeOffset)))
-        else:
-            self.lbTimeOffset.clear()
+        logging.debug(f"function: display statusbar info: {obs_id}")
+
+        try:
+            if self.pj[OBSERVATIONS][obs_id][TIME_OFFSET]:
+                time_offset = 0
+                if self.timeFormat == S:
+                    time_offset = self.pj[OBSERVATIONS][obs_id][TIME_OFFSET]
+                if self.timeFormat == HHMMSS:
+                    time_offset = seconds2time(self.pj[OBSERVATIONS][obs_id][TIME_OFFSET])
+                self.lbTimeOffset.setText(f"Time offset: <b>{time_offset}</b>")
+            else:
+                self.lbTimeOffset.clear()
+        except Exception:
+            logging.debug("error in time offset display")
+            pass
+
+        try:
+            if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][obs_id]:
+                if self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL] != [0, 0]:
+
+                    if self.timeFormat == HHMMSS:
+                        start_time = utilities.seconds2time(self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][0])
+                        stop_time = utilities.seconds2time(self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][1])
+                    if self.timeFormat == S:
+                        start_time = f"{self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][0]:.3f}"
+                        stop_time = f"{self.pj[OBSERVATIONS][obs_id][OBSERVATION_TIME_INTERVAL][1]:.3f}"
+
+                    self.lb_obs_time_interval.setText(("Observation time interval: "
+                                                       f"{start_time} - {stop_time}"))
+            else:
+                self.lb_obs_time_interval.clear()
+        except Exception:
+            logging.debug("error in observation time interval")
+            pass
+
+
 
     # TODO: replace by event_type in project_functions
     def eventType(self, code):
@@ -5972,7 +6033,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.pj[OBSERVATIONS][obs_id][EVENTS]:
                         maxTime += max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0]
                         max_length = max(max_length, max(self.pj[OBSERVATIONS][obs_id][EVENTS])[0])
-                logging.debug("max time all events all subjects: {}".format(maxTime))
+
+                logging.debug(f"max time all events all subjects: {maxTime}")
+
                 max_obs_length = max_length
                 selectedObsTotalMediaLength = maxTime
 
@@ -6165,14 +6228,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if len(selectedObservations) > 1:
                 if total_observation_time:
                     if self.timeFormat == HHMMSS:
-                        self.tb.lbTotalObservedTime.setText("Total observation length: {}".format(seconds2time(total_observation_time)))
+                        self.tb.lbTotalObservedTime.setText(f"Total observation length: {seconds2time(total_observation_time)}")
                     if self.timeFormat == S:
                         self.tb.lbTotalObservedTime.setText("Total observation length: {:0.3f}".format(float(total_observation_time)))
                 else:
                     self.tb.lbTotalObservedTime.setText("Total observation length: not available")
             else:
                 if self.timeFormat == HHMMSS:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {} to {}".format(seconds2time(min_time), seconds2time(max_time)))
+                    self.tb.lbTotalObservedTime.setText(f"Analysis from {seconds2time(min_time)} to {seconds2time(max_time)}")
                 if self.timeFormat == S:
                     self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(min_time), float(max_time)))
 
@@ -6422,8 +6485,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 rows.append(values)
                 rows.append([""])
 
-                rows.append(["Analysis from", "{:0.3f}".format(float(min_time)), "to", "{:0.3f}".format(float(max_time))])
-                rows.append(["Total length (s)", "{:0.3f}".format(float(max_time - min_time))])
+                rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
+                rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
                 rows.append([""])
                 rows.append(["Time budget"])
 
@@ -6462,7 +6525,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             values.append(categories[subject][category]["number"])
                             try:
-                                values.append("{:0.3f}".format(categories[subject][category]["duration"]))
+                                values.append(f"{categories[subject][category]['duration']:0.3f}")
                             except Exception:
                                 values.append(categories[subject][category]["duration"])
 
@@ -6507,8 +6570,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             QMessageBox.warning(
                                 None,
                                 programName,
-                                ("The worksheet name <b>{0}</b> was shortened to <b>{1}</b> due to XLS format limitations.\n"
-                                 "The limit on worksheet name length is 31 characters").format(obsId, data.title),
+                                (f"The worksheet name <b>{obsId}</b> was shortened to <b>{data.title}</b> due to XLS format limitations.\n"
+                                 "The limit on worksheet name length is 31 characters"),
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                             )
 
@@ -6540,7 +6603,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.pj[OBSERVATIONS][obs_id], self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obs_id}</strong><br>{msg}<br>".format(obs_id=obs_id, msg=msg)
+                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obs_id)
 
         if out:
@@ -6715,9 +6778,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         plot_events.behaviors_bar_plot(self.pj,
                                        selected_observations,
-                                       parameters["selected subjects"],
-                                       parameters["selected behaviors"],
-                                       parameters["include modifiers"],
+                                       parameters[SELECTED_SUBJECTS],
+                                       parameters[SELECTED_BEHAVIORS],
+                                       parameters[INCLUDE_MODIFIERS],
                                        parameters["time"],
                                        parameters[START_TIME],
                                        parameters[END_TIME],
@@ -7279,10 +7342,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             current_time = utilities.seconds_of_day(datetime.datetime.now())
         else:
             current_time = self.getLaps()
+
         self.lb_current_media_time.setText(self.convertTime(current_time))
 
         # extract State events
-
         self.currentStates = {}
         # add states for no focal subject
 
@@ -7299,12 +7362,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.show_current_states_in_subjects_table()
 
         # check scan sampling
-
         if self.pj[OBSERVATIONS][self.observationId].get(SCAN_SAMPLING_TIME, 0):
             if int(current_time) % self.pj[OBSERVATIONS][self.observationId][SCAN_SAMPLING_TIME] == 0:
                 self.beep("beep")
                 self.liveTimer.stop()
                 self.pb_live_obs.setText("Live observation stopped (scan sampling)")
+
+        # observation time interval
+        if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+            if current_time >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+                self.beep("beep")
+                self.liveTimer.stop()
+                self.pb_live_obs.setText("Live observation finished")
 
 
     def start_live_observation(self):
@@ -8673,6 +8742,73 @@ item []:
         _ = about_dialog.exec_()
 
 
+    def add_image_overlay(self):
+        """
+        add an image overlay on video
+        """
+
+        logging.debug(f"function add_image_overlay")
+
+        try:
+            w = dialog.Video_overlay_dialog()
+            items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
+            w.cb_player.addItems(items)
+            if not w.exec_():
+                return
+
+            file_name = w.le_file_path.text()
+            '''
+            overlay_position = w.le_overlay_position.text()
+            '''
+
+            idx = w.cb_player.currentIndex()
+            '''
+            if len(self.dw_player) > 1:
+                items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
+                item, ok_pressed = QInputDialog.getItem(self, "Get item","Color:", items, 0, False)
+                if ok_pressed and item:
+                    idx = items.index(item)
+                else:
+                    return
+            else:
+                idx = 0
+            '''
+
+            self.dw_player[idx].mediaplayer.video_set_logo_string(1, str(pathlib.Path(file_name)))
+
+            '''
+            # overlay position
+            try:
+                self.dw_player[idx].mediaplayer.video_set_logo_int(2, int(overlay_position.split(",")[0].strip()))
+                self.dw_player[idx].mediaplayer.video_set_logo_int(3, int(overlay_position.split(",")[1].strip()))
+            except Exception:
+                logging.warning(f"error in overlay position")
+                pass
+            '''
+
+            '''self.dw_player[idx].mediaplayer.video_set_logo_int(4, 0)'''
+            '''self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)'''
+
+            self.dw_player[idx].mediaplayer.video_set_logo_int(6, w.sb_overlay_transparency.value())
+            self.dw_player[idx].mediaplayer.video_set_logo_int(2, -100)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(3, -20)
+            self.dw_player[idx].mediaplayer.video_set_logo_int(7, 5)  # top-left
+
+
+            self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
+
+        except Exception:
+            logging.critical("error in add_image_overlay function")
+
+
+    def remove_image_overlay(self):
+        """
+        remove image overlay from all video
+        """
+        for i, _ in enumerate(self.dw_player):
+            self.dw_player[i].mediaplayer.video_set_logo_int(0, 0)
+
+
     def video_slider_sliderMoved(self):
         """
         media position slider moved
@@ -8841,14 +8977,14 @@ item []:
                         self.dw_player[n_player].media_durations[0:media_idx + 1]):
                     # correct media
 
-                    logging.debug("{} correct media".format(n_player + 1))
+                    logging.debug(f"{n_player + 1} correct media")
 
                     self.dw_player[n_player].mediaplayer.set_time(new_time - sum(
                         self.dw_player[n_player].media_durations[0: media_idx])
                     )
                 else:
 
-                    logging.debug("{} not correct media".format(n_player + 1))
+                    logging.debug(f"{n_player + 1} not correct media")
 
                     flagPaused = self.dw_player[n_player].mediaListPlayer.get_state() == vlc.State.Paused
                     tot = 0
@@ -8873,7 +9009,7 @@ item []:
 
             else:  # end of media list
 
-                logging.debug("{} end of media".format(n_player + 1))
+                logging.debug(f"{n_player + 1} end of media")
 
                 self.dw_player[n_player].mediaListPlayer.play_item_at_index(len(self.dw_player[n_player].media_durations) - 1)
                 app.processEvents()
@@ -8893,7 +9029,8 @@ item []:
         triggered by timer
         """
 
-        #logging.debug("function: timer_out")
+        # logging.debug("function: timer_out")
+
         if not self.observationId:
             return
 
@@ -8901,6 +9038,14 @@ item []:
 
             # cumulative time
             currentTime = self.getLaps() * 1000
+
+            # observation time interval
+            if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+                if currentTime >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1] * 1000:
+                    if self.is_playing():
+                        self.pause_video()
+                        self.beep("beep")
+
 
             if self.beep_every:
                 if currentTime % (self.beep_every * 1000) <= 300:
@@ -8923,8 +9068,6 @@ item []:
                     self.lastPlayTime, self.lastPlayTimeGlobal = 0, 0
                 '''
 
-
-
             except Exception:
                 logging.warning("error on get time in timer_out function")
                 return
@@ -8941,7 +9084,7 @@ item []:
                 self.dw_player[0].videoframe.setVisible(True)
                 self.dw_player[0].volume_slider.setVisible(True)
 
-            t0 = mediaTime   # self.dw_player[0].mediaplayer.get_time()
+            t0 = mediaTime
             ct0 = self.getLaps() * 1000
 
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
@@ -8989,7 +9132,7 @@ item []:
 
                 mediaName = self.dw_player[0].mediaplayer.get_media().get_meta(0)
 
-                # update status bar
+                # update media info
                 msg = ""
                 media_list_player_state = self.dw_player[0].mediaListPlayer.get_state()
                 if media_list_player_state in [vlc.State.Playing, vlc.State.Paused]:
@@ -9077,7 +9220,7 @@ item []:
                         field = behav_fields_in_mainwindow[col]
                         self.twEthogram.setItem(self.twEthogram.rowCount() - 1, col, QTableWidgetItem(str(self.pj[ETHOGRAM][idx][field])))
         if self.twEthogram.rowCount() < len(self.pj[ETHOGRAM].keys()):
-            self.dwEthogram.setWindowTitle("Ethogram (filtered {0}/{1})".format(self.twEthogram.rowCount(), len(self.pj[ETHOGRAM].keys())))
+            self.dwEthogram.setWindowTitle(f"Ethogram (filtered {self.twEthogram.rowCount()}/{len(self.pj[ETHOGRAM].keys())})")
 
             if self.observationId:
                 self.pj[OBSERVATIONS][self.observationId]["filtered behaviors"] = behaviorsToShow
@@ -9493,11 +9636,13 @@ item []:
         """
 
         if self.playMode == FFMPEG:
-            logging.debug("current frame {0}".format(self.FFmpegGlobalFrame))
+
+            logging.debug(f"current frame {self.FFmpegGlobalFrame}")
+
             if self.FFmpegGlobalFrame > 1:
                 self.FFmpegGlobalFrame -= 2
                 self.ffmpeg_timer_out()
-                logging.debug("new frame {0}".format(self.FFmpegGlobalFrame))
+                logging.debug(f"new frame {self.FFmpegGlobalFrame}")
 
 
     def frame_forward(self):
@@ -9792,7 +9937,7 @@ item []:
 
     def twEvents_doubleClicked(self):
         """
-        seek video to double clicked position (add self.repositioningTimeOffset value)
+        seek media to double clicked position (add self.repositioningTimeOffset value)
         substract time offset if defined
         """
 
@@ -9815,6 +9960,9 @@ item []:
 
             if self.playMode == VLC:
 
+                self.seek_mediaplayer(newTime)
+
+                '''
                 flag_pause = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused])
 
                 if len(self.dw_player[0].media_durations) == 1:
@@ -9832,13 +9980,10 @@ item []:
                                 if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                                     break
 
-                        '''self.pause_video()'''
-
                     if time_ >= self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
                         self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_media().get_duration() - 100)
                     else:
                         self.dw_player[0].mediaplayer.set_time(int(newTime))
-
 
                 else:  # more media in player 1
 
@@ -9865,6 +10010,7 @@ item []:
                             break
 
                         tot += d
+                '''
 
                 self.update_visualizations()
 
@@ -10690,7 +10836,7 @@ item []:
                     with open(fileName + ".gv", "w") as f:
                         f.write(gv)
 
-                    out += "<b>{}</b> created<br>".format(fileName + ".gv")
+                    out += f"<b>{fileName}.gv</b> created<br>"
                 except Exception:
                     QMessageBox.information(self, programName, f"Error during dot script creation.\n{str(sys.exc_info()[1])}")
 
@@ -10735,7 +10881,7 @@ item []:
                     else:
                         out += f"Problem with <b>{fileName}</b><br>"
                 except Exception:
-                    QMessageBox.information(self, programName, "Error during flow diagram creation.\n{}".format(str(sys.exc_info()[1])))
+                    QMessageBox.information(self, programName, f"Error during flow diagram creation.\n{str(sys.exc_info()[1])}")
 
         if out:
             QMessageBox.information(self, programName, out)
@@ -10860,16 +11006,14 @@ item []:
 
                         if obsId in self.pj[OBSERVATIONS].keys():
                             diag_result = dialog.MessageDialog(programName,
-                                                               ("The observation <b>{}</b>"
-                                                                "already exists in the current project.<br>").format(obsId),
+                                                               (f"The observation <b>{obsId}</b>"
+                                                                "already exists in the current project.<br>"),
                                                                ["Interrupt import", "Skip observation", "Rename observation"])
                             if diag_result == "Interrupt import":
                                 return
 
                             if diag_result == "Rename observation":
-                                self.pj[OBSERVATIONS]["{} (imported at {})".format(obsId,
-                                                                                   datetime_iso8601(datetime.datetime.now())
-                                                                                   )] = dict(fromProject[OBSERVATIONS][obsId])
+                                self.pj[OBSERVATIONS][f"{obsId} (imported at {datetime_iso8601(datetime.datetime.now())})"] = dict(fromProject[OBSERVATIONS][obsId])
                                 flagImported = True
                         else:
                             self.pj[OBSERVATIONS][obsId] = dict(fromProject[OBSERVATIONS][obsId])
@@ -10977,6 +11121,19 @@ item []:
 
             elif self.playMode == VLC:
 
+
+                newTime = (sum(
+                    self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                      index_of_item(self.dw_player[0].
+                                                                    mediaplayer.get_media())]) +
+                           self.dw_player[0].mediaplayer.get_time() - self.fast * 1000)
+
+                if newTime < self.fast * 1000:
+                    newTime = 0
+
+                self.seek_mediaplayer(newTime)
+
+                '''
                 if self.dw_player[0].media_list.count() == 1:
                     if self.dw_player[0].mediaplayer.get_time() >= self.fast * 1000:
                         self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_time() - self.fast * 1000)
@@ -11019,6 +11176,7 @@ item []:
 
                 else:
                     self.no_media()
+                '''
 
                 self.update_visualizations()
 
@@ -11043,6 +11201,7 @@ item []:
                 if self.FFmpegGlobalFrame * (1000 / self.fps) >= sum(self.dw_player[0].media_durations):
                     logging.debug("end of last media")
                     self.FFmpegGlobalFrame = int(sum(self.dw_player[0].media_durations) * self.fps / 1000) - 1
+
                     logging.debug("FFmpegGlobalFrame {}  sum duration {}".format(self.FFmpegGlobalFrame,
                                                                                  sum(self.dw_player[0].media_durations)))
 
@@ -11052,6 +11211,16 @@ item []:
                 self.ffmpeg_timer_out()
 
             elif self.playMode == VLC:
+
+                newTime = (sum(
+                    self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
+                                                      index_of_item(self.dw_player[0].
+                                                                    mediaplayer.get_media())]) +
+                           self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
+
+                self.seek_mediaplayer(newTime)
+
+                '''
                 if self.dw_player[0].media_list.count() == 1:
                     if self.dw_player[0].mediaplayer.get_time() >= self.dw_player[0].mediaplayer.get_length() - self.fast * 1000:
                         self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_length())
@@ -11091,9 +11260,9 @@ item []:
 
                                 break
                             tot += d
-
                 else:
                     self.no_media()
+                '''
 
                 self.update_visualizations()
 
@@ -11123,18 +11292,37 @@ item []:
 
             elif self.playMode == VLC:
 
+                if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
+                    self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
+                else:
+                    self.seek_mediaplayer(0)
+
+                '''
                 self.dw_player[0].mediaListPlayer.play_item_at_index(0)
                 while True:
                     if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                         break
-                self.dw_player[0].mediaplayer.set_time(0)
+                # position media
+                if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
+                    self.dw_player[0].mediaplayer.set_time(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
+                else:
+                    self.dw_player[0].mediaplayer.set_time(0)
+
                 self.dw_player[0].mediaListPlayer.pause()
                 while True:
                     if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                         break
 
-                self.dw_player[0].mediaplayer.set_time(0)
-                self.video_slider.setValue(0)
+                # position media
+                if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
+                    self.dw_player[0].mediaplayer.set_time(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
+                    self.video_slider.setValue(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000)
+                                                   / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+                else:
+                    self.dw_player[0].mediaplayer.set_time(0)
+                    self.video_slider.setValue(0)
+                '''
+
                 self.update_visualizations()
 
 

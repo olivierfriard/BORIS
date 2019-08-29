@@ -36,9 +36,20 @@ VLC_TIMER_OUT = 200
 SPECTRO_TIMER = 200
 
 
-function_keys = {16777264: 'F1', 16777265: 'F2', 16777266: 'F3', 16777267: 'F4', 16777268: 'F5',
-                 16777269: 'F6', 16777270: 'F7', 16777271: 'F8', 16777272: 'F9', 16777273: 'F10',
-                 16777274: 'F11', 16777275: 'F12'}
+function_keys = {
+    16777264: "F1",
+    16777265: "F2",
+    16777266: "F3",
+    16777267: "F4",
+    16777268: "F5",
+    16777269: "F6",
+    16777270: "F7",
+    16777271: "F8",
+    16777272: "F9",
+    16777273: "F10",
+    16777274: "F11",
+    16777275: "F12",
+}
 
 PROJECT_NAME = "project_name"
 PROJECT_DATE = "project_date"
@@ -56,6 +67,8 @@ SUBJECTS = "subjects_conf"
 ETHOGRAM = "behaviors_conf"
 BEHAVIORAL_CATEGORIES = "behavioral_categories"
 CONVERTERS = "converters"
+
+OBSERVATION_TIME_INTERVAL = "observation time interval"
 
 SUBJECT_NAME = "name"
 
@@ -101,16 +114,17 @@ PLOT_DATA_TIMEOFFSET_IDX = 6
 PLOT_DATA_SUBSTRACT1STVALUE_IDX = 7
 PLOT_DATA_PLOTCOLOR_IDX = 8
 
-DATA_PLOT_FIELDS = {PLOT_DATA_FILEPATH_IDX: "file_path",
-                    PLOT_DATA_COLUMNS_IDX: "columns",
-                    PLOT_DATA_PLOTTITLE_IDX: "title",
-                    PLOT_DATA_VARIABLENAME_IDX: "variable_name",
-                    PLOT_DATA_CONVERTERS_IDX: "converters",
-                    PLOT_DATA_TIMEINTERVAL_IDX: "time_interval",
-                    PLOT_DATA_TIMEOFFSET_IDX: "time_offset",
-                    PLOT_DATA_SUBSTRACT1STVALUE_IDX: "substract_first_value",
-                    PLOT_DATA_PLOTCOLOR_IDX: "color"
-                    }
+DATA_PLOT_FIELDS = {
+    PLOT_DATA_FILEPATH_IDX: "file_path",
+    PLOT_DATA_COLUMNS_IDX: "columns",
+    PLOT_DATA_PLOTTITLE_IDX: "title",
+    PLOT_DATA_VARIABLENAME_IDX: "variable_name",
+    PLOT_DATA_CONVERTERS_IDX: "converters",
+    PLOT_DATA_TIMEINTERVAL_IDX: "time_interval",
+    PLOT_DATA_TIMEOFFSET_IDX: "time_offset",
+    PLOT_DATA_SUBSTRACT1STVALUE_IDX: "substract_first_value",
+    PLOT_DATA_PLOTCOLOR_IDX: "color",
+}
 DATA_PLOT_STYLES = ["b-", "r-", "g-", "bo", "ro", "go"]
 
 BEHAVIOR_CODE = "code"
@@ -119,15 +133,49 @@ BEHAVIOR_CATEGORY = "category"
 
 
 # fields for event configuration
-fields = {"type": 0, "key": 1, "code": 2, "description": 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
+fields = {
+    "type": 0,
+    "key": 1,
+    "code": 2,
+    "description": 3,
+    "modifiers": 4,
+    "excluded": 5,
+    "coding map": 6,
+}
 
-behav_fields_in_mainwindow = {0: "key", 1: "code", 2: "type", 3: "description", 4: "category", 5: "modifiers", 6: "excluded"}
+behav_fields_in_mainwindow = {
+    0: "key",
+    1: "code",
+    2: "type",
+    3: "description",
+    4: "category",
+    5: "modifiers",
+    6: "excluded",
+}
 
 # fields in ethogram table from project window
 # behavioursFields = {'type': 0, 'key': 1, 'code': 2, 'description': 3, 'modifiers': 4, 'excluded': 5, 'coding map': 6}
-behavioursFields = {"type": 0, "key": 1, "code": 2, "description": 3, "category": 4, "modifiers": 5, "excluded": 6, "coding map": 7}
+behavioursFields = {
+    "type": 0,
+    "key": 1,
+    "code": 2,
+    "description": 3,
+    "category": 4,
+    "modifiers": 5,
+    "excluded": 6,
+    "coding map": 7,
+}
 
-ETHOGRAM_FIELDS = ["type", "key", "code", "description", "category", "modifiers", "excluded", "coding map"]
+ETHOGRAM_FIELDS = [
+    "type",
+    "key",
+    "code",
+    "description",
+    "category",
+    "modifiers",
+    "excluded",
+    "coding map",
+]
 ETHOGRAM_EDITABLE_FIELDS = ["key", "code", "description"]
 
 PROJECT_BEHAVIORS_KEY_FIELD_IDX = 1
@@ -139,7 +187,12 @@ HAS_AUDIO_IDX = 6
 STATE_EVENT = "State event"
 POINT_EVENT = "Point event"
 
-BEHAVIOR_TYPES = ["Point event", "State event", "Point event with coding map", "State event with coding map"]
+BEHAVIOR_TYPES = [
+    "Point event",
+    "State event",
+    "Point event with coding map",
+    "State event with coding map",
+]
 
 DEFAULT_BEHAVIOR_TYPE = "Point event"
 
@@ -168,10 +221,10 @@ for idx, field in enumerate(pj_events_fields):
 
 EVENT_TIME_FIELD_IDX = 0
 
-SUBJECT_EVENT_FIELD = 1       # to be removed after check
+SUBJECT_EVENT_FIELD = 1  # to be removed after check
 EVENT_SUBJECT_FIELD_IDX = 1
 
-BEHAVIOR_EVENT_FIELD = 2       # to be removed after check
+BEHAVIOR_EVENT_FIELD = 2  # to be removed after check
 EVENT_BEHAVIOR_FIELD_IDX = 2
 
 EVENT_MODIFIER_FIELD_IDX = 3
@@ -181,8 +234,8 @@ EVENT_COMMENT_FIELD_IDX = 4
 SUBJECT_NAME_FIELD_IDX = 1
 
 LIVE = "LIVE"
-MEDIA = 'MEDIA'
-VIEWER = 'VIEWER'
+MEDIA = "MEDIA"
+VIEWER = "VIEWER"
 
 HHMMSS = "hh:mm:ss"
 HHMMSSZZZ = "hh:mm:ss.zzz"
@@ -191,16 +244,16 @@ S = "s"
 START_FROM_CURRENT_TIME = "start_from_current_time"
 SCAN_SAMPLING_TIME = "scan_sampling_time"
 
-NEW = 'new'
-LIST = 'list'
-EDIT = 'edit'
-OPEN = 'open'
+NEW = "new"
+LIST = "list"
+EDIT = "edit"
+OPEN = "open"
 VIEW = "view"
-SELECT = 'select'
-SINGLE = 'single'
-MULTIPLE = 'multiple'
+SELECT = "select"
+SINGLE = "single"
+MULTIPLE = "multiple"
 
-SELECT1 = 'select1'
+SELECT1 = "select1"
 
 FILTERED_BEHAVIORS = "filtered behaviors"
 
@@ -231,8 +284,8 @@ TIME_ARBITRARY_INTERVAL = "time interval"
 AVAILABLE_INDEP_VAR_TYPES = [NUMERIC, TEXT, SET_OF_VALUES, TIMESTAMP]
 
 
-INDEPENDENT_VARIABLES = 'independent_variables'
-OBSERVATIONS = 'observations'
+INDEPENDENT_VARIABLES = "independent_variables"
+OBSERVATIONS = "observations"
 
 CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
@@ -277,18 +330,37 @@ MULTI_SELECTION = 1
 NUMERIC_MODIFIER = 2
 EXTERNAL_DATA_MODIFIER = 3
 
-MODIFIERS_STR = {SINGLE_SELECTION: "Single item selection",
-                 MULTI_SELECTION: "Multiple items selection",
-                 NUMERIC_MODIFIER: "Numeric",
-                 EXTERNAL_DATA_MODIFIER: "Value from external data file"}
+MODIFIERS_STR = {
+    SINGLE_SELECTION: "Single item selection",
+    MULTI_SELECTION: "Multiple items selection",
+    NUMERIC_MODIFIER: "Numeric",
+    EXTERNAL_DATA_MODIFIER: "Value from external data file",
+}
 
 # colors
-subtitlesColors = ['cyan', 'red', 'blue', 'yellow', 'fuchsia', 'orange', 'lime', 'green']
+subtitlesColors = [
+    "cyan",
+    "red",
+    "blue",
+    "yellow",
+    "fuchsia",
+    "orange",
+    "lime",
+    "green",
+]
 
-CATEGORY_COLORS_LIST = ["#FF96CC", "#96FF9C", "#CCFFFE", "#EEFF70", "#FF4F64", "#F8BF15", "#3DC7AD"]
+CATEGORY_COLORS_LIST = [
+    "#FF96CC",
+    "#96FF9C",
+    "#CCFFFE",
+    "#EEFF70",
+    "#FF4F64",
+    "#F8BF15",
+    "#3DC7AD",
+]
 
-SPECTROGRAM_COLOR_MAPS = ['viridis', 'inferno', 'plasma', 'magma', "gray", "YlOrRd"]
-SPECTROGRAM_DEFAULT_COLOR_MAP = 'viridis'
+SPECTROGRAM_COLOR_MAPS = ["viridis", "inferno", "plasma", "magma", "gray", "YlOrRd"]
+SPECTROGRAM_DEFAULT_COLOR_MAP = "viridis"
 SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
 
 
@@ -302,57 +374,170 @@ SPECTROGRAM_DEFAULT_TIME_INTERVAL = 10
 ACTIVE_MEASUREMENTS_COLOR = "lime"
 PASSIVE_MEASUREMENTS_COLOR = "red"
 
-BEHAVIORS_PLOT_COLORS = ['tab:blue',
-                         'tab:orange',
-                         'tab:green',
-                         'tab:red',
-                         'tab:purple',
-                         'tab:brown',
-                         'tab:pink',
-                         'tab:gray',
-                         'tab:olive',
-                         'tab:cyan',
-                         "blue", "green", "red", "cyan", "magenta", "yellow", "lime",
-                         "darksalmon", "purple", "orange", "maroon", "silver",
-                         "slateblue", "hotpink", "steelblue", "darkgoldenrod",
-                         'aqua', 'aquamarine',
-                         'beige', 'bisque', 'black', 'blanchedalmond', 'blueviolet', 'brown',
-                         'burlywood', 'cadetblue', 'chartreuse', 'chocolate', 'coral',
-                         'cornflowerblue', 'cornsilk', 'crimson', 'darkblue', 'darkcyan',
-                         'darkgreen', 'darkgrey', 'darkkhaki', 'darkmagenta',
-                         'darkolivegreen', 'darkorange', 'darkorchid', 'darkred',
-                         '#598556', 'darkseagreen', 'darkslateblue', 'darkslategray',
-                         'darkslategrey', 'darkturquoise', 'darkviolet', 'deeppink',
-                         'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue', 'firebrick',
-                         'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro',
-                         'gold', 'goldenrod', 'gray', 'greenyellow', 'grey', 'honeydew',
-                         'indianred', 'indigo', 'khaki',
-                         'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral',
-                         'lightgoldenrodyellow', 'lightgray', 'lightgreen', 'lightgrey',
-                         'lightpink', '#bcecac', 'lightsalmon', 'lightseagreen',
-                         'lightskyblue', 'lightslategray', 'lightslategrey', 'lightsteelblue',
-                         'lightyellow', 'limegreen', 'linen', 'mediumaquamarine', 'mediumblue',
-                         'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue',
-                         'mediumspringgreen', 'mediumturquoise', 'mediumvioletred',
-                         'midnightblue', 'mintcream', 'mistyrose', 'moccasin', 'navajowhite',
-                         'navy', 'oldlace', 'olive', 'olivedrab', 'orangered', 'orchid',
-                         'palegoldenrod', 'palegreen', 'paleturquoise', 'palevioletred',
-                         'papayawhip', 'peachpuff', 'peru', 'pink', 'plum', 'powderblue', 'rosybrown',
-                         'royalblue', 'saddlebrown', '#87ae73', 'salmon', 'sandybrown', 'seagreen',
-                         'seashell', 'sienna', 'skyblue', 'slategray', 'slategrey',
-                         'springgreen', 'tan', 'teal', 'thistle', 'tomato', 'turquoise', 'violet',
-                         'wheat', 'yellowgreen', 'darkgray']
+BEHAVIORS_PLOT_COLORS = [
+    "tab:blue",
+    "tab:orange",
+    "tab:green",
+    "tab:red",
+    "tab:purple",
+    "tab:brown",
+    "tab:pink",
+    "tab:gray",
+    "tab:olive",
+    "tab:cyan",
+    "blue",
+    "green",
+    "red",
+    "cyan",
+    "magenta",
+    "yellow",
+    "lime",
+    "darksalmon",
+    "purple",
+    "orange",
+    "maroon",
+    "silver",
+    "slateblue",
+    "hotpink",
+    "steelblue",
+    "darkgoldenrod",
+    "aqua",
+    "aquamarine",
+    "beige",
+    "bisque",
+    "black",
+    "blanchedalmond",
+    "blueviolet",
+    "brown",
+    "burlywood",
+    "cadetblue",
+    "chartreuse",
+    "chocolate",
+    "coral",
+    "cornflowerblue",
+    "cornsilk",
+    "crimson",
+    "darkblue",
+    "darkcyan",
+    "darkgreen",
+    "darkgrey",
+    "darkkhaki",
+    "darkmagenta",
+    "darkolivegreen",
+    "darkorange",
+    "darkorchid",
+    "darkred",
+    "#598556",
+    "darkseagreen",
+    "darkslateblue",
+    "darkslategray",
+    "darkslategrey",
+    "darkturquoise",
+    "darkviolet",
+    "deeppink",
+    "deepskyblue",
+    "dimgray",
+    "dimgrey",
+    "dodgerblue",
+    "firebrick",
+    "floralwhite",
+    "forestgreen",
+    "fuchsia",
+    "gainsboro",
+    "gold",
+    "goldenrod",
+    "gray",
+    "greenyellow",
+    "grey",
+    "honeydew",
+    "indianred",
+    "indigo",
+    "khaki",
+    "lawngreen",
+    "lemonchiffon",
+    "lightblue",
+    "lightcoral",
+    "lightgoldenrodyellow",
+    "lightgray",
+    "lightgreen",
+    "lightgrey",
+    "lightpink",
+    "#bcecac",
+    "lightsalmon",
+    "lightseagreen",
+    "lightskyblue",
+    "lightslategray",
+    "lightslategrey",
+    "lightsteelblue",
+    "lightyellow",
+    "limegreen",
+    "linen",
+    "mediumaquamarine",
+    "mediumblue",
+    "mediumorchid",
+    "mediumpurple",
+    "mediumseagreen",
+    "mediumslateblue",
+    "mediumspringgreen",
+    "mediumturquoise",
+    "mediumvioletred",
+    "midnightblue",
+    "mintcream",
+    "mistyrose",
+    "moccasin",
+    "navajowhite",
+    "navy",
+    "oldlace",
+    "olive",
+    "olivedrab",
+    "orangered",
+    "orchid",
+    "palegoldenrod",
+    "palegreen",
+    "paleturquoise",
+    "palevioletred",
+    "papayawhip",
+    "peachpuff",
+    "peru",
+    "pink",
+    "plum",
+    "powderblue",
+    "rosybrown",
+    "royalblue",
+    "saddlebrown",
+    "#87ae73",
+    "salmon",
+    "sandybrown",
+    "seagreen",
+    "seashell",
+    "sienna",
+    "skyblue",
+    "slategray",
+    "slategrey",
+    "springgreen",
+    "tan",
+    "teal",
+    "thistle",
+    "tomato",
+    "turquoise",
+    "violet",
+    "wheat",
+    "yellowgreen",
+    "darkgray",
+]
 
-EMPTY_PROJECT = {"time_format": HHMMSS,
-                 "project_date": "",
-                 "project_name": "",
-                 "project_description": "",
-                 "project_format_version": project_format_version,
-                 SUBJECTS: {},
-                 ETHOGRAM: {},
-                 OBSERVATIONS: {},
-                 BEHAVIORAL_CATEGORIES: [],
-                 INDEPENDENT_VARIABLES: {},
-                 CODING_MAP: {},
-                 BEHAVIORS_CODING_MAP: [],
-                 CONVERTERS: {}}
+EMPTY_PROJECT = {
+    "time_format": HHMMSS,
+    "project_date": "",
+    "project_name": "",
+    "project_description": "",
+    "project_format_version": project_format_version,
+    SUBJECTS: {},
+    ETHOGRAM: {},
+    OBSERVATIONS: {},
+    BEHAVIORAL_CATEGORIES: [],
+    INDEPENDENT_VARIABLES: {},
+    CODING_MAP: {},
+    BEHAVIORS_CODING_MAP: [],
+    CONVERTERS: {},
+}

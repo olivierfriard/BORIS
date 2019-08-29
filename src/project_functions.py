@@ -175,7 +175,7 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 def check_project_integrity(pj: dict,
                             time_format: str,
                             project_file_name: str,
-                            media_file_available: bool=True) -> str:
+                            media_file_available: bool = True) -> str:
 
     """
     check project integrity
@@ -491,7 +491,7 @@ def export_observations_list(pj: dict,
         try:
             with open(file_name, "wb") as f:
                 f.write(data.export(output_format))
-        except:
+        except Exception:
             return False
 
     return True
@@ -978,5 +978,3 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
                     )
 
     return closing_events_to_add
-
-

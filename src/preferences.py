@@ -24,19 +24,16 @@ This file is part of BORIS.
 
 
 import logging
-
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from preferences_ui import Ui_prefDialog
-
 import os
-from config import CANCEL, BEHAVIORS_PLOT_COLORS
+
+from PyQt5.QtWidgets import QDialog, QFileDialog
+
+from config import BEHAVIORS_PLOT_COLORS, CANCEL
 from dialog import MessageDialog
+from preferences_ui import Ui_prefDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):
-
     def __init__(self, parent=None):
 
         super().__init__()
@@ -51,29 +48,26 @@ class Preferences(QDialog, Ui_prefDialog):
 
         self.flag_refresh = False
 
-
     def refresh_preferences(self):
-        if MessageDialog("BORIS", "Refresh will re-initialize all your preferences and close BORIS",
-                         [CANCEL, "Refresh preferences"]) == "Refresh preferences":
+        if (
+            MessageDialog("BORIS", "Refresh will re-initialize all your preferences and close BORIS", [CANCEL, "Refresh preferences"])
+            == "Refresh preferences"
+        ):
             self.flag_refresh = True
             self.accept()
-
 
     def browseFFmpegCacheDir(self):
         """
         allow user select a cache dir for ffmpeg images
         """
-        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"),
-                                                            options=QFileDialog().ShowDirsOnly)
+        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly)
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
-
 
     def reset_colors(self):
         """
         reset behavior colors to default
         """
         self.te_plot_colors.setPlainText("\n".join(BEHAVIORS_PLOT_COLORS))
+
         logging.debug("reset behaviors colors to default")
-
-

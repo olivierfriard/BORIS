@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1032, 578)
+        Form.resize(1032, 583)
         self.verticalLayout_12 = QtWidgets.QVBoxLayout(Form)
         self.verticalLayout_12.setObjectName("verticalLayout_12")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -68,6 +68,9 @@ class Ui_Form(object):
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_6.addItem(spacerItem)
         self.verticalLayout_2.addLayout(self.horizontalLayout_6)
+        self.cb_observation_time_interval = QtWidgets.QCheckBox(self.layoutWidget)
+        self.cb_observation_time_interval.setObjectName("cb_observation_time_interval")
+        self.verticalLayout_2.addWidget(self.cb_observation_time_interval)
         self.layoutWidget1 = QtWidgets.QWidget(self.splitter)
         self.layoutWidget1.setObjectName("layoutWidget1")
         self.verticalLayout_11 = QtWidgets.QVBoxLayout(self.layoutWidget1)
@@ -296,7 +299,7 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
         self.tabProjectType.setCurrentIndex(0)
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
@@ -307,6 +310,7 @@ class Ui_Form(object):
         self.dteDate.setDisplayFormat(_translate("Form", "yyyy-MM-dd hh:mm"))
         self.label_9.setText(_translate("Form", "Description"))
         self.lbTimeOffset.setText(_translate("Form", "Time offset"))
+        self.cb_observation_time_interval.setText(_translate("Form", "Limit observation to a time interval"))
         self.label_3.setText(_translate("Form", "Independent variables"))
         item = self.twIndepVariables.horizontalHeaderItem(0)
         item.setText(_translate("Form", "Variable"))

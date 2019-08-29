@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1032</width>
-    <height>578</height>
+    <height>583</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -115,6 +115,13 @@
           </item>
          </layout>
         </item>
+        <item>
+         <widget class="QCheckBox" name="cb_observation_time_interval">
+          <property name="text">
+           <string>Limit observation to a time interval</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="layoutWidget">
@@ -187,7 +194,7 @@
            <item>
             <widget class="QTabWidget" name="tabWidget">
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tab_player_1">
               <attribute name="title">

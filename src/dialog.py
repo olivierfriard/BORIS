@@ -120,7 +120,7 @@ def error_message(task: str, exc_info: tuple) -> None:
 
 class Info_widget(QWidget):
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(Info_widget, self).__init__(parent)
 
         self.setWindowTitle("BORIS")
@@ -130,6 +130,77 @@ class Info_widget(QWidget):
         self.lwi = QListWidget()
         layout.addWidget(self.lwi)
         self.setLayout(layout)
+
+
+class Video_overlay_dialog(QDialog):
+    """
+    dialog to ask image file and position for video overlay
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        vlayout = QVBoxLayout()
+        vlayout.addWidget(QLabel("File"))
+        self.le_file_path = QLineEdit()
+        vlayout.addWidget(self.le_file_path)
+        self.pb_browse = QPushButton("Browse")
+        self.pb_browse.clicked.connect(self.browse)
+        vlayout.addWidget(self.pb_browse)
+        '''
+        vlayout.addWidget(QLabel("Position: x,y"))
+        self.le_overlay_position = QLineEdit()
+        vlayout.addWidget(self.le_overlay_position)
+        '''
+
+        self.sb_overlay_transparency = QSpinBox()
+        self.sb_overlay_transparency.setRange(0, 255)
+        self.sb_overlay_transparency.setSingleStep(1)
+        self.sb_overlay_transparency.setValue(128)
+        vlayout.addWidget(self.sb_overlay_transparency)
+
+        self.cb_player = QComboBox()
+        vlayout.addWidget(self.cb_player)
+
+        hbox = QHBoxLayout()
+        self.pb_cancel = QPushButton("Cancel")
+        self.pb_cancel.clicked.connect(self.reject)
+        hbox.addWidget(self.pb_cancel)
+        self.pb_oK = QPushButton("OK")
+        self.pb_oK.clicked.connect(self.ok)
+        self.pb_oK.setDefault(True)
+        hbox.addWidget(self.pb_oK)
+
+        vlayout.addLayout(hbox)
+
+        self.setLayout(vlayout)
+
+    def browse(self):
+        fn = QFileDialog().getOpenFileName(self, "Choose an image file", "", "PNG files (*.png);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+        if file_name:
+            self.le_file_path.setText(file_name)
+
+    def ok(self):
+        if not self.le_file_path.text():
+            QMessageBox.warning(None, config.programName, "Select a file containing a PNG image",
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+        '''
+        if self.le_overlay_position.text() and "," not in self.le_overlay_position.text():
+            QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            return
+        if self.le_overlay_position.text():
+            try:
+                [int(x.strip()) for x in self.le_overlay_position.text().split(",")]
+            except Exception:
+                QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                return
+        '''
+
+        self.accept()
 
 
 class Input_dialog(QDialog):
@@ -308,66 +379,40 @@ class ChooseObservationsToImport(QDialog):
         return [item.text() for item in self.lw.selectedItems()]
 
 
-class JumpTo_old(QDialog):
+class Ask_time(QDialog):
     """
-    "jump to" dialog box
-    """
-
-    def __init__(self, timeFormat):
-        super(JumpTo, self).__init__()
-        hbox = QVBoxLayout(self)
-        self.label = QLabel()
-        self.label.setText("Go to time")
-        hbox.addWidget(self.label)
-        if timeFormat == "hh:mm:ss":
-            self.te = QTimeEdit()
-            self.te.setDisplayFormat("hh:mm:ss.zzz")
-        else:
-            self.te = QDoubleSpinBox()
-            self.te.setMinimum(0)
-            self.te.setMaximum(86400)
-            self.te.setDecimals(3)
-        self.te.setStyleSheet("font-size:14px")
-        hbox.addWidget(self.te)
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
-        self.pbOK.setDefault(True)
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-        self.hbox2 = QHBoxLayout(self)
-        self.hbox2.addWidget(self.pbCancel)
-        self.hbox2.addWidget(self.pbOK)
-        hbox.addLayout(self.hbox2)
-        self.setLayout(hbox)
-        self.setWindowTitle("Jump to specific time")
-
-
-class JumpTo(QDialog):
-    """
-    "jump to" dialog box
+    "Ask time" dialog box using duration widget in duration_widget module
     """
 
-    def __init__(self, timeFormat):
-        super(JumpTo, self).__init__()
+    def __init__(self, time_format):
+        super().__init__()
         hbox = QVBoxLayout(self)
         self.label = QLabel()
         self.label.setText("Go to time")
         hbox.addWidget(self.label)
 
         self.time_widget = duration_widget.Duration_widget()
+        if time_format == config.HHMMSS:
+            self.time_widget.set_format_hhmmss()
+        if time_format == config.S:
+            self.time_widget.set_format_s()
+
         hbox.addWidget(self.time_widget)
 
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.accept)
         self.pbOK.setDefault(True)
+
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.reject)
+
         self.hbox2 = QHBoxLayout(self)
+        self.hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.hbox2.addWidget(self.pbCancel)
         self.hbox2.addWidget(self.pbOK)
         hbox.addLayout(self.hbox2)
         self.setLayout(hbox)
-        self.setWindowTitle("Jump to specific time")
+        self.setWindowTitle("Time")
 
 
 
@@ -441,12 +486,12 @@ class EditSelectedEvents(QDialog):
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
             QMessageBox.warning(None, config.programName, "You must select a field to be edited",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
             QMessageBox.warning(None, config.programName, "You must select a new value from the list",
-            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         self.accept()
@@ -665,6 +710,8 @@ class Results_dialog(QDialog):
         self.pbSave.clicked.connect(self.save_results)
         hbox2.addWidget(self.pbSave)
 
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
         self.pbCancel = QPushButton("Cancel")
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
@@ -686,7 +733,7 @@ class Results_dialog(QDialog):
         save content of self.ptText
         """
 
-        fn = QFileDialog(self).getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
@@ -695,7 +742,6 @@ class Results_dialog(QDialog):
                     f.write(self.ptText.toPlainText())
             except Exception:
                 QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
-
 
 
 class ResultsWidget(QWidget):
@@ -716,6 +762,8 @@ class ResultsWidget(QWidget):
         hbox.addWidget(self.ptText)
 
         hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
         self.pbSave = QPushButton("Save results")
         self.pbSave.clicked.connect(self.save_results)
         hbox2.addWidget(self.pbSave)
@@ -747,28 +795,6 @@ class ResultsWidget(QWidget):
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
-'''
-class FrameViewer(QWidget):
-    """
-    widget for visualizing frame
-    """
-    def __init__(self):
-        super(FrameViewer, self).__init__()
-
-        self.setWindowTitle("")
-
-        hbox = QVBoxLayout()
-
-        self.lbFrame = QLabel("")
-        hbox.addWidget(self.lbFrame)
-
-        self.setLayout(hbox)
-
-    def pbOK_clicked(self):
-        self.close()
-'''
-
-
 class View_data_head(QDialog):
     """
     widget for visualizing first rows of data file
@@ -786,11 +812,6 @@ class View_data_head(QDialog):
 
         self.tw = QTableWidget()
         vbox.addWidget(self.tw)
-
-        '''
-        self.cb_header = QCheckBox("Data file contains an header")
-        vbox.addWidget(self.cb_header)
-        '''
 
         self.label = QLabel("Enter the column indices to plot (time, value) separated by comma (,)")
         vbox.addWidget(self.label)
@@ -839,12 +860,6 @@ class View_explore_project_results(QWidget):
 
         hbox2 = QHBoxLayout()
 
-        '''
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-        hbox2.addWidget(self.pbCancel)
-        '''
-
         self.pbOK = QPushButton("OK")
         self.pbOK.clicked.connect(self.close)
         hbox2.addWidget(self.pbOK)
@@ -853,7 +868,8 @@ class View_explore_project_results(QWidget):
 
         self.setLayout(vbox)
 
-        #self.resize(540, 640)
+        # self.resize(540, 640)
+
 
     def tw_cellDoubleClicked(self, r, c):
 

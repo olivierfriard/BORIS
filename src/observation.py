@@ -95,13 +95,13 @@ class AssignConverter(QDialog):
 
 class Observation(QDialog, Ui_Form):
 
-    def __init__(self, tmp_dir, project_path="", converters={}, log_level="", parent=None):
+    def __init__(self, tmp_dir, project_path="", converters={}, time_format=S, parent=None):
         """
         Args:
             tmp_dir (str): path of temporary directory
             project_path (str): path of project
             converters (dict): converters dictionary
-            log_level: level of log
+
         """
 
         super().__init__()
@@ -109,6 +109,8 @@ class Observation(QDialog, Ui_Form):
         self.tmp_dir = tmp_dir
         self.project_path = project_path
         self.converters = converters
+        self.time_format = time_format
+        self.observation_time_interval = [0, 0]
 
         self.setupUi(self)
 
@@ -130,6 +132,7 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
+        self.cb_observation_time_interval.clicked.connect(self.limit_time_interval)
 
         self.pbSave.clicked.connect(self.pbSave_clicked)
         self.pbLaunch.clicked.connect(self.pbLaunch_clicked)
@@ -141,12 +144,48 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled(False)
         self.cb_visualize_waveform.setEnabled(False)
+        self.cb_observation_time_interval.setEnabled(False)
         # disabled due to problem when video goes back
         self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
         self.tabWidget.setCurrentIndex(0)
 
+
+    def limit_time_interval(self):
+        """
+        ask user a time interval for limiting the media observation
+        """
+        if self.cb_observation_time_interval.isChecked():
+            time_interval_dialog = dialog.Ask_time(self.time_format)
+            time_interval_dialog.time_widget.set_time(0)
+            time_interval_dialog.setWindowTitle("Start observation at")
+            time_interval_dialog.label.setText("Start observation at")
+            start_time, stop_time = 0, 0
+            if time_interval_dialog.exec_():
+                start_time = time_interval_dialog.time_widget.get_time()
+            else:
+                self.cb_observation_time_interval.setChecked(False)
+                return
+            time_interval_dialog.time_widget.set_time(0)
+            time_interval_dialog.setWindowTitle("Stop observation at")
+            time_interval_dialog.label.setText("Stop observation at")
+            if time_interval_dialog.exec_():
+                stop_time = time_interval_dialog.time_widget.get_time()
+            else:
+                self.cb_observation_time_interval.setChecked(False)
+                return
+
+            if start_time or stop_time:
+                if stop_time <= start_time:
+                    QMessageBox.critical(self, programName, "The stop time comes before the start time")
+                    self.cb_observation_time_interval.setChecked(False)
+                    return
+                self.observation_time_interval = [start_time, stop_time]
+                self.cb_observation_time_interval.setText(f"Limit observation to a time interval: {start_time} - {stop_time}")
+        else:
+            self.observation_time_interval = [0, 0]
+            self.cb_observation_time_interval.setText("Limit observation to a time interval")
 
 
     def tw_data_files_cellDoubleClicked(self, row, column):
@@ -525,7 +564,7 @@ class Observation(QDialog, Ui_Form):
             for i in players:
                 durations.append(sum(players[i]))
             if [x for x in durations[1:] if x > durations[0]]:
-                QMessageBox.critical(self, programName , "The longuest media file(s) must be loaded in player #1")
+                QMessageBox.critical(self, programName, "The longuest media file(s) must be loaded in player #1")
                 return False
 
         # check time offset
@@ -539,19 +578,17 @@ class Observation(QDialog, Ui_Form):
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
                     QMessageBox.critical(self, programName,
                                          f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
 
         # check if observation id not empty
         if not self.leObservationId.text():
-            #QMessageBox.warning(self, programName , "The <b>observation id</b> is mandatory and must be unique!" )
             self.qm = QMessageBox()
             self.qm.setIcon(QMessageBox.Critical)
             self.qm.setText("The <b>observation id</b> is mandatory and must be unique!")
             self.qm.exec_()
-
             return False
 
         # check if new obs and observation id already present or if edit obs and id changed
@@ -673,10 +710,9 @@ class Observation(QDialog, Ui_Form):
                     QMessageBox.critical(self, programName,
                                          f"The <b>{file_path}</b> file does not seem to be a media file.")
 
-        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)
-        # disabled due to problem when video goes back
-        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+        for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
+                  self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
+            w.setEnabled(self.twVideo1.rowCount() > 0)
 
 
     def add_media_from_dir(self, n_player, flag_path):
@@ -709,11 +745,9 @@ class Observation(QDialog, Ui_Form):
                         if r == "Cancel":
                             break
 
-
-        self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-        self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)
-        # disabled due to problem when video goes back
-        # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+        for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
+                  self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
+            w.setEnabled(self.twVideo1.rowCount() > 0)
 
 
     def add_media_to_listview(self, nPlayer, fileName):
@@ -774,9 +808,9 @@ class Observation(QDialog, Ui_Form):
                     except NameError:
                         pass
 
-            self.cbVisualizeSpectrogram.setEnabled(self.twVideo1.rowCount() > 0)
-            self.cb_visualize_waveform.setEnabled(self.twVideo1.rowCount() > 0)
-            # disabled due to problem when video goes back
-            # self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(self.twVideo1.rowCount() > 0)
+            for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
+                      self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
+                w.setEnabled(self.twVideo1.rowCount() > 0)
+
         else:
             QMessageBox.warning(self, programName, "No media file selected")
