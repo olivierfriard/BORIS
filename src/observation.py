@@ -144,7 +144,7 @@ class Observation(QDialog, Ui_Form):
 
         self.cbVisualizeSpectrogram.setEnabled(False)
         self.cb_visualize_waveform.setEnabled(False)
-        self.cb_observation_time_interval.setEnabled(False)
+        self.cb_observation_time_interval.setEnabled(True)
         # disabled due to problem when video goes back
         self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)

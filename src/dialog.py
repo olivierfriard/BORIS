@@ -153,6 +153,7 @@ class Video_overlay_dialog(QDialog):
         self.le_overlay_position = QLineEdit()
         vlayout.addWidget(self.le_overlay_position)
 
+        vlayout.addWidget(QLabel("Transparency"))
         self.sb_overlay_transparency = QSpinBox()
         self.sb_overlay_transparency.setRange(0, 255)
         self.sb_overlay_transparency.setSingleStep(1)
