@@ -258,7 +258,6 @@
      <addaction name="actionPlot_events1"/>
      <addaction name="actionPlot_events2"/>
      <addaction name="actionBehavior_bar_plot"/>
-     <addaction name="actionTest"/>
     </widget>
     <widget class="QMenu" name="menuInter_rater_reliability">
      <property name="title">
@@ -718,8 +717,14 @@
    </property>
   </action>
   <action name="actionTime_budget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Time budget</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
    </property>
   </action>
   <action name="actionSave_project">
@@ -1367,6 +1372,9 @@
    </property>
   </action>
   <action name="actionInstantaneous_sampling">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Instantaneous sampling</string>
    </property>
