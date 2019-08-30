@@ -949,7 +949,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPlot_events1.setVisible(False)
         self.actionPlot_events2.triggered.connect(self.plot_events_triggered)
 
-        self.actionInstantaneous_sampling.setVisible(False)
+        # self.actionInstantaneous_sampling.setVisible(False)
         self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
 
         # menu Help
