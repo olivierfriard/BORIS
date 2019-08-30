@@ -184,21 +184,26 @@ class ProjectServerThread(QThread):
         s.settimeout(1800)
 
         s.bind((get_ip_address(), 0))
-        self.signal.emit({"URL": "{}:{}".format(s.getsockname()[0], s.getsockname()[1])})
+        self.signal.emit({"URL": f"{s.getsockname()[0]}:{s.getsockname()[1]}"})
 
         s.listen(5)
         while 1:
             try:
                 c, addr = s.accept()
-                logging.debug("Got connection from {}".format(addr))
+
+                logging.debug(f"Got connection from {addr}")
+
             except socket.timeout:
                 s.close()
+
                 logging.debug("Project server timeout")
+
                 self.signal.emit({"MESSAGE": "Project server timeout"})
                 return
 
             rq = c.recv(BUFFER_SIZE)
-            logging.debug("request: {}".format(rq))
+
+            logging.debug(f"request: {rq}")
 
             if rq == b"get":
                 msg = self.message
@@ -206,12 +211,16 @@ class ProjectServerThread(QThread):
                     c.send(msg[0:BUFFER_SIZE])
                     msg = msg[BUFFER_SIZE:]
                 c.close()
+
                 logging.debug("Project sent")
-                self.signal.emit({"MESSAGE": "Project sent to {}".format(addr[0])})
+
+                self.signal.emit({"MESSAGE": f"Project sent to {addr[0]}"})
 
             if rq == b"stop":
                 c.close()
+
                 logging.debug("server stopped")
+
                 self.signal.emit({"MESSAGE": "The server is now stopped"})
                 return
 
@@ -230,7 +239,7 @@ class ProjectServerThread(QThread):
                     else:
                         break
                 c2.close()
-                self.signal.emit({"RECEIVED": "{}".format(rq2.decode("utf-8")), "SENDER": addr})
+                self.signal.emit({"RECEIVED": f"{rq2.decode('utf-8')}", "SENDER": addr})
 
 
 class TempDirCleanerThread(QThread):
@@ -310,13 +319,17 @@ class Video_frame(QFrame):
     Frame emits a signal when clicked or resized
     """
 
-    view_signal = pyqtSignal(str)
+    video_frame_signal = pyqtSignal(str, int)
     x_click, y_click = 0, 0
 
 
     def sizeHint(self):
         return QtCore.QSize(150, 200)
 
+    '''
+    def mouseDoubleClickEvent(self, QMouseEvent):
+        print("double click")
+    '''
 
     def mousePressEvent(self, QMouseEvent):
         """
@@ -324,6 +337,8 @@ class Video_frame(QFrame):
         """
 
         xm, ym = QMouseEvent.x(), QMouseEvent.y()
+        button = QMouseEvent.button()
+
         xf, yf = self.geometry().width(), self.geometry().height()
 
         if not self.v_resolution:
@@ -342,7 +357,7 @@ class Video_frame(QFrame):
             y_end_video = yv
 
             if xm < x_start_video or xm > x_end_video:
-                self.view_signal.emit("clicked_out_of_video")
+                self.video_frame_signal.emit("clicked_out_of_video", button)
                 return
 
             x_click_video = xm - x_start_video
@@ -357,7 +372,7 @@ class Video_frame(QFrame):
             x_end_video = xv
 
             if ym < y_start_video or ym > y_end_video:
-                self.view_signal.emit("clicked_out_of_video")
+                self.video_frame_signal.emit("clicked_out_of_video", button)
                 return
 
             y_click_video = ym - y_start_video
@@ -366,15 +381,17 @@ class Video_frame(QFrame):
         self.x_click = int(x_click_video / xv * self.h_resolution)
         self.y_click = int(y_click_video / yv * self.v_resolution)
 
-        self.view_signal.emit("clicked")
+        self.video_frame_signal.emit("clicked", button)
 
 
     def resizeEvent(self, dummy):
         """
         emits signal when video resized
         """
+
         logging.debug("video frame resized")
-        self.view_signal.emit("resized")
+
+        self.video_frame_signal.emit("resized", 0)
 
 
 
@@ -382,21 +399,21 @@ class DW(QDockWidget):
 
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
-    view_signal = pyqtSignal(int, str)
+    view_signal = pyqtSignal(int, str, int)
 
     def __init__(self, id_, parent=None):
         super().__init__(parent)
         self.id_ = id_
         self.zoomed = False
-        self.setWindowTitle("Player #{}".format(id_ + 1))
-        self.setObjectName("player{}".format(id_ + 1))
+        self.setWindowTitle(f"Player #{id_ + 1}")
+        self.setObjectName(f"player{id_ + 1}")
 
         self.w = QtWidgets.QWidget()
 
         self.hlayout = QHBoxLayout()
 
         self.videoframe = Video_frame()
-        self.videoframe.view_signal.connect(self.view_signal_triggered)
+        self.videoframe.video_frame_signal.connect(self.view_signal_triggered)
         self.palette = self.videoframe.palette()
         self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.videoframe.setPalette(self.palette)
@@ -438,11 +455,12 @@ class DW(QDockWidget):
         """
         self.key_pressed_signal.emit(event)
 
-    def view_signal_triggered(self, msg):
+
+    def view_signal_triggered(self, msg, button):
         """
         transmit signal received by video frame
         """
-        self.view_signal.emit(self.id_, msg)
+        self.view_signal.emit(self.id_, msg, button)
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -687,7 +705,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pn = self.pj["project_name"]
             else:
                 if self.projectFileName:
-                    pn = "Unnamed project ({})".format(self.projectFileName)
+                    pn = f"Unnamed project ({self.projectFileName})"
                 else:
                     pn = "Unnamed project"
 
@@ -4151,13 +4169,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.dw_player[i].setVisible(True)
 
-            # for receiving mouse event from dock widget
+            # for receiving mouse event from frame viewer
             self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
             # for receiving event from volume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.setVolume)
-            # for receiving event resize and clicked
+            # for receiving event resize and clicked (Zoom - crop)
             self.dw_player[i].view_signal.connect(self.signal_from_dw)
 
             self.dw_player[i].mediaplayer = self.instance.media_player_new()
@@ -4196,7 +4214,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     mediaLength = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][LENGTH][mediaFile] * 1000
                     mediaFPS = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][FPS][mediaFile]
                 except Exception:
+
                     logging.debug("media_info key not found")
+
                     r = utilities.accurate_media_analysis(self.ffmpeg_bin, media_full_path)
                     if "error" not in r:
                         if MEDIA_INFO not in self.pj[OBSERVATIONS][self.observationId]:
@@ -4516,9 +4536,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.keyPressEvent(event)
 
 
-    def signal_from_dw(self, id_, msg):
+    def signal_from_dw(self, id_, msg, button):
         """
-        receive signal from doxk widget: clicked or resized
+        receive signal from dock widget: clicked or resized
         """
 
         if msg == "clicked_out_of_video":
@@ -4538,7 +4558,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         right = left + fw
         bottom = top + fh
 
-        if msg == "clicked":
+        if msg == "clicked" and button == Qt.LeftButton:
             if not self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
                 self.dw_player[id_].zoomed = True
@@ -8725,10 +8745,10 @@ item []:
         About dialog
         """
 
-        ver = 'v. {0}'.format(__version__)
+        ver = f"v. {__version__}"
 
         programs_versions = ["VLC media player"]
-        programs_versions.append("version {}".format(bytes_to_str(vlc.libvlc_get_version())))
+        programs_versions.append(f"version {bytes_to_str(vlc.libvlc_get_version())}")
         if vlc.plugin_path:
             programs_versions.append("VLC libraries path: {}".format(vlc.plugin_path))
 
@@ -8743,7 +8763,7 @@ item []:
                                   "https://www.ffmpeg.org"])
 
         # matplotlib
-        programs_versions.extend(["\nMatplotlib", "version {}".format(matplotlib.__version__), "https://matplotlib.org"])
+        programs_versions.extend(["\nMatplotlib", f"version {matplotlib.__version__}", "https://matplotlib.org"])
 
         # graphviz
         gv_result = subprocess.getoutput("dot -V")
@@ -8810,43 +8830,22 @@ item []:
                 return
 
             file_name = w.le_file_path.text()
-            '''
             overlay_position = w.le_overlay_position.text()
-            '''
 
             idx = w.cb_player.currentIndex()
-            '''
-            if len(self.dw_player) > 1:
-                items = list([f"Player #{i + 1}" for i, _ in enumerate(self.dw_player)])
-                item, ok_pressed = QInputDialog.getItem(self, "Get item","Color:", items, 0, False)
-                if ok_pressed and item:
-                    idx = items.index(item)
-                else:
-                    return
-            else:
-                idx = 0
-            '''
 
             self.dw_player[idx].mediaplayer.video_set_logo_string(1, str(pathlib.Path(file_name)))
 
-            '''
             # overlay position
-            try:
-                self.dw_player[idx].mediaplayer.video_set_logo_int(2, int(overlay_position.split(",")[0].strip()))
-                self.dw_player[idx].mediaplayer.video_set_logo_int(3, int(overlay_position.split(",")[1].strip()))
-            except Exception:
-                logging.warning(f"error in overlay position")
-                pass
-            '''
-
-            '''self.dw_player[idx].mediaplayer.video_set_logo_int(4, 0)'''
-            '''self.dw_player[idx].mediaplayer.video_set_logo_int(5, -1)'''
+            if overlay_position:
+                try:
+                    self.dw_player[idx].mediaplayer.video_set_logo_int(2, int(overlay_position.split(",")[0].strip()))
+                    self.dw_player[idx].mediaplayer.video_set_logo_int(3, int(overlay_position.split(",")[1].strip()))
+                except Exception:
+                    logging.warning(f"error in overlay position")
+                    pass
 
             self.dw_player[idx].mediaplayer.video_set_logo_int(6, w.sb_overlay_transparency.value())
-            self.dw_player[idx].mediaplayer.video_set_logo_int(2, -100)
-            self.dw_player[idx].mediaplayer.video_set_logo_int(3, -20)
-            self.dw_player[idx].mediaplayer.video_set_logo_int(7, 5)  # top-left
-
 
             self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
 

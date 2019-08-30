@@ -288,14 +288,14 @@ def synthetic_time_budget(pj: dict,
                         columns.append(behaviors[subj][behavior_modifiers_str][param[0]])
 
             data_report.append(columns)
-    except:
+    except Exception:
         msg = "{}\n{}\nLine number: {}".format(str(sys.exc_info()[0]).replace("<class '", "").replace("'>", ""),
                                                sys.exc_info()[1],
                                                sys.exc_info()[2].tb_lineno)
         logging.critical(msg)
         return (False,
-               msg,
-               tablib.Dataset())
+                msg,
+                tablib.Dataset())
 
     return True, msg, data_report
 

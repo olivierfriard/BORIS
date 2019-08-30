@@ -142,16 +142,16 @@ class Video_overlay_dialog(QDialog):
 
         vlayout = QVBoxLayout()
         vlayout.addWidget(QLabel("File"))
+        hbox = QHBoxLayout()
         self.le_file_path = QLineEdit()
-        vlayout.addWidget(self.le_file_path)
-        self.pb_browse = QPushButton("Browse")
-        self.pb_browse.clicked.connect(self.browse)
-        vlayout.addWidget(self.pb_browse)
-        '''
+        hbox.addWidget(self.le_file_path)
+        self.pb_browse = QPushButton("Browse", self, clicked=self.browse)
+        hbox.addWidget(self.pb_browse)
+        vlayout.addLayout(hbox)
+
         vlayout.addWidget(QLabel("Position: x,y"))
         self.le_overlay_position = QLineEdit()
         vlayout.addWidget(self.le_overlay_position)
-        '''
 
         self.sb_overlay_transparency = QSpinBox()
         self.sb_overlay_transparency.setRange(0, 255)
@@ -163,11 +163,10 @@ class Video_overlay_dialog(QDialog):
         vlayout.addWidget(self.cb_player)
 
         hbox = QHBoxLayout()
-        self.pb_cancel = QPushButton("Cancel")
-        self.pb_cancel.clicked.connect(self.reject)
+        self.pb_cancel = QPushButton("Cancel", self, clicked=self.reject)
         hbox.addWidget(self.pb_cancel)
-        self.pb_oK = QPushButton("OK")
-        self.pb_oK.clicked.connect(self.ok)
+        self.pb_oK = QPushButton("OK", clicked=self.ok)
+        '''self.pb_oK.clicked.connect(self.ok)'''
         self.pb_oK.setDefault(True)
         hbox.addWidget(self.pb_oK)
 
@@ -186,7 +185,7 @@ class Video_overlay_dialog(QDialog):
             QMessageBox.warning(None, config.programName, "Select a file containing a PNG image",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
-        '''
+
         if self.le_overlay_position.text() and "," not in self.le_overlay_position.text():
             QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -198,8 +197,6 @@ class Video_overlay_dialog(QDialog):
                 QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
-        '''
-
         self.accept()
 
 

@@ -882,7 +882,8 @@ def open_project_json(projectFileName: str) -> tuple:
 
             msg = (
                 f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
-                f"Please note that this new version will NOT be compatible with previous BORIS versions (&lt; v. {project_format_version}).<br>"
+                f"Please note that this new version will NOT be compatible with previous BORIS versions "
+                f"(&lt; v. {project_format_version}).<br>"
             )
 
             projectChanged = True
@@ -895,8 +896,9 @@ def open_project_json(projectFileName: str) -> tuple:
         )
 
         try:
-            copyfile(projectFileName, projectFileName.replace(".boris", ".v{}.boris".format(pj["project_format_version"])))
-            msg += "\n\nThe old file project was saved as {}".format(projectFileName.replace(".boris", ".v{}.boris".format(pj["project_format_version"])))
+            old_project_file_name = projectFileName.replace(".boris", f".v{pj['project_format_version']}.boris")
+            copyfile(projectFileName, old_project_file_name)
+            msg += f"\n\nThe old file project was saved as {old_project_file_name}"
         except Exception:
             pass
 
