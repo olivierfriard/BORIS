@@ -504,7 +504,7 @@ class Ui_MainWindow(object):
         self.actionRemove_image_overlay = QtWidgets.QAction(MainWindow)
         self.actionRemove_image_overlay.setObjectName("actionRemove_image_overlay")
         self.actionInstantaneous_sampling = QtWidgets.QAction(MainWindow)
-        self.actionInstantaneous_sampling.setEnabled(False)
+        self.actionInstantaneous_sampling.setEnabled(True)
         self.actionInstantaneous_sampling.setObjectName("actionInstantaneous_sampling")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)

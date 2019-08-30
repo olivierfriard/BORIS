@@ -147,7 +147,7 @@ def load_aggregated_events_in_db(pj: dict,
                                                           pj[OBSERVATIONS][obsId],
                                                           HHMMSS)
         if not r:
-            out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
     if out:
         return False, out, None
 
@@ -192,7 +192,6 @@ def load_aggregated_events_in_db(pj: dict,
 
                 cursor1.execute("SELECT DISTINCT modifiers FROM events WHERE observation=? AND subject=? AND code=? ORDER BY modifiers",
                                 (obsId, subject, behavior, ))
-                '''rows_distinct_modifiers = list(x[0].strip() for x in cursor1.fetchall())'''
 
                 rows_distinct_modifiers = list(x[0] for x in cursor1.fetchall())
 

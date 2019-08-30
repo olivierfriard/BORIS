@@ -63,7 +63,7 @@ import param_panel
 import modifiers_coding_map
 import map_creator
 import behav_coding_map_creator
-#import instantaneous_sampling
+import instantaneous_sampling
 import select_modifiers
 import utilities
 from utilities import *
@@ -1136,10 +1136,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to analyze")
             return
 
+        # ask for time interval
+        i, ok = QInputDialog.getDouble(self, "Instantaneous sampling", "Time interval (in seconds):", 1.0, 0.001, 86400, 3)
+        if not ok:
+            return
+        time_interval = float2decimal(i)
 
-        instantaneous_sampling.instantaneous_sampling(self.pj,
+        results = instantaneous_sampling.instantaneous_sampling(self.pj,
                                                       selected_observations,
-                                                      parameters)
+                                                      parameters,
+                                                      time_interval)
+
+        results_dialog = dialog.Results_dialog()
+        results_dialog.setWindowTitle(programName + f" - Instantaneous sampling (time interval: {time_interval})")
+        results_dialog.ptText.setReadOnly(True)
+        results_dialog.ptText.appendHtml("<pre>" + results + "</pre>")
+        results_dialog.pbSave.setVisible(True)
+        # results_dialog.pbCancel.setVisible(True)
+
+        if not results_dialog.exec_():
+            return
+
 
 
     def twEthogram_sorted(self):
@@ -6717,8 +6734,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not plot_directory:
                 return
 
-            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats", ["PNG", "SVG", "PDF", "EPS", "PS"], 0,
-                                            False)
+            item, ok = QInputDialog.getItem(self, "Select the file format", "Available formats",
+                                            ["PNG", "SVG", "PDF", "EPS", "PS"], 0, False)
             if ok and item:
                 file_format = item.lower()
             else:
@@ -6767,7 +6784,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
 
-        plot_events.create_events_plot(self.pj,
+        plot_events.create_events_plot_new(self.pj,
                                        selected_observations,
                                        parameters,
                                        plot_colors=self.plot_colors,
@@ -9505,6 +9522,7 @@ item []:
                         csj = []
 
                 logging.debug(f"csj {csj}")
+
                 cm = {}  # modifiers for current behaviors
                 for cs in csj:
                     for ev in self.pj[OBSERVATIONS][self.observationId][EVENTS]:

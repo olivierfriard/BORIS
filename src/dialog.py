@@ -739,7 +739,7 @@ class Results_dialog(QDialog):
                 with open(file_name, "w") as f:
                     f.write(self.ptText.toPlainText())
             except Exception:
-                QMessageBox.critical(self, programName, "The file {} can not be saved".format(file_name))
+                QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
 class ResultsWidget(QWidget):
