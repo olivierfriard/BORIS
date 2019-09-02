@@ -1228,7 +1228,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     with open(file_name, "w") as f:
                         if output_format in ["csv", "tsv"]:
                             f.write(results_df[obs_id][subject].to_csv(sep="," if output_format=="csv" else "\t",
-                                                      index=False))
+                                                                       index=False))
                         if output_format == "html":
                             f.write(results_df[obs_id][subject].to_html())
                 except Exception:
