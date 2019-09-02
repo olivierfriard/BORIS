@@ -1109,9 +1109,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obs_id)
 
         if out:
-            out = "The observations with UNPAIRED state events will be removed from tha analysis<br><br>" + out
+            out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
             self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.setWindowTitle(f"{programName} - Check selected observations")
             self.results.ptText.setReadOnly(True)
             self.results.ptText.appendHtml(out)
             self.results.pbSave.setVisible(False)
@@ -1142,13 +1142,103 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         time_interval = float2decimal(i)
 
-        results = instantaneous_sampling.instantaneous_sampling(self.pj,
-                                                      selected_observations,
-                                                      parameters,
-                                                      time_interval)
+        self.statusbar.showMessage("Instantaneous sampling is running. Please wait...", 0)
+        app.processEvents()
 
+        results_df = instantaneous_sampling.instantaneous_sampling(self.pj,
+                                                                   selected_observations,
+                                                                   parameters,
+                                                                   time_interval)
+
+        self.statusbar.showMessage("Instantaneous sampling done...", 5000)
+        app.processEvents()
+
+        # save results
+        if len(selected_observations) == 1:
+            extended_file_formats = ["Tab Separated Values (*.tsv)",
+                                     "Comma Separated Values (*.csv)",
+                                     # "Open Document Spreadsheet ODS (*.ods)",
+                                     # "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                     # "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                     "HTML (*.html)"]
+            file_formats = ["tsv",
+                            "csv",
+                            # "ods",
+                            # "xlsx",
+                            # "xls",
+                            "html"]
+
+            file_name, filter_ = QFileDialog().getSaveFileName(self, "Save results", "", ";;".join(extended_file_formats))
+            if not file_name:
+                return
+
+            output_format = file_formats[extended_file_formats.index(filter_)]
+            print(file_name, output_format)
+            if pathlib.Path(file_name).suffix != "." + output_format:
+                file_name = str(pathlib.Path(file_name)) + "." + output_format
+                # check if file with new extension already exists
+                if pathlib.Path(file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            f"The file {file_name} already exists.",
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return
+        else:
+            items = ("Tab Separated Values (*.tsv)",
+                     "Comma separated values (*.csv)",
+                     # "Open Document Spreadsheet (*.ods)",
+                     # "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                     # "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                     "HTML (*.html)")
+
+            item, ok = QInputDialog.getItem(self, "Save results", "Available formats", items, 0, False)
+            if not ok:
+                return
+            output_format = re.sub(".* \(\*\.", "", item)[:-1]
+
+            export_dir = QFileDialog().getExistingDirectory(self, "Choose a directory to save results", os.path.expanduser("~"),
+                                                            options=QFileDialog.ShowDirsOnly)
+            if not export_dir:
+                return
+
+        mem_command = ""
+        for obs_id in results_df:
+            for subject in results_df[obs_id]:
+
+                if len(selected_observations) > 1:
+                    file_name = str(pathlib.Path(pathlib.Path(export_dir) / safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
+                else:
+                    file_name = str(pathlib.Path(os.path.splitext(file_name)[0] + safeFileName("_" + subject)).with_suffix("." + output_format))
+
+                    #file_name = str(pathlib.Path(pathlib.Path(file_name).stem + safeFileName("_" + subject)).with_suffix("." + output_format))
+                    print(file_name)
+
+                # check if file with new extension already exists
+                if mem_command != "Overwrite all" and pathlib.Path(file_name).is_file():
+                    if mem_command == "Skip all":
+                        continue
+                    mem_command = dialog.MessageDialog(programName,
+                                                       f"The file {file_name} already exists.",
+                                                       [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                    if mem_command == CANCEL:
+                        return
+                    if mem_command == "Skip":
+                        continue
+
+                try:
+                    with open(file_name, "w") as f:
+                        if output_format in ["csv", "tsv"]:
+                            f.write(results_df[obs_id][subject].to_csv(sep="," if output_format=="csv" else "\t",
+                                                      index=False))
+                        if output_format == "html":
+                            f.write(results_df[obs_id][subject].to_html())
+                except Exception:
+                    QMessageBox.critical(self, programName, "Error saving file")
+                    return
+
+
+        '''
         results_dialog = dialog.Results_dialog()
-        results_dialog.setWindowTitle(programName + f" - Instantaneous sampling (time interval: {time_interval})")
+        results_dialog.setWindowTitle(f"{programName} - Instantaneous sampling (time interval: {time_interval})")
         results_dialog.ptText.setReadOnly(True)
         results_dialog.ptText.appendHtml("<pre>" + results + "</pre>")
         results_dialog.pbSave.setVisible(True)
@@ -1156,6 +1246,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not results_dialog.exec_():
             return
+        '''
 
 
 
@@ -6784,7 +6875,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
 
-        plot_events.create_events_plot_new(self.pj,
+        plot_events.create_events_plot(self.pj,
                                        selected_observations,
                                        parameters,
                                        plot_colors=self.plot_colors,
@@ -10636,7 +10727,8 @@ item []:
                 if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                     behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
         if set(sorted(behaviors_not_defined)):
-            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+            out += ("The following behaviors are not defined in the ethogram: "
+                    f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>")
 
 
         # check if state events are paired
@@ -10650,7 +10742,7 @@ item []:
                 not_paired_obs_list.append(obsId)
 
         if out:
-            out = "Some observations have UNPAIRED state events<br><br>" + out
+            out = f"Some observations have UNPAIRED state events<br><br>{out}"
             self.results = dialog.Results_dialog()
             self.results.setWindowTitle(f"{programName} - Check selected observations")
             self.results.ptText.setReadOnly(True)

@@ -529,17 +529,17 @@ def create_events_plot(pj,
                        file_format="png"):
 
 
-    selected_subjects = parameters["selected subjects"]
-    selected_behaviors = parameters["selected behaviors"]
-    include_modifiers = parameters["include modifiers"]
+    selected_subjects = parameters[SELECTED_SUBJECTS]
+    selected_behaviors = parameters[SELECTED_BEHAVIORS]
+    include_modifiers = parameters[INCLUDE_MODIFIERS]
     interval = parameters[TIME_INTERVAL]
     start_time = parameters[START_TIME]
     end_time = parameters[END_TIME]
 
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                       selected_subjects,
-                                                       selected_observations,
-                                                       selected_behaviors)
+                                                                      selected_subjects,
+                                                                      selected_observations,
+                                                                      selected_behaviors)
 
     if not ok:
         return False, msg, None
@@ -718,7 +718,8 @@ def create_events_plot(pj,
 
 
 
-
+"""
+# TEST time
 def create_events_plot_new(pj,
                        selected_observations,
                        parameters,
@@ -919,3 +920,4 @@ def create_events_plot_new(pj,
             plt.savefig(output_file_name)
         else:
             plt.show()
+"""

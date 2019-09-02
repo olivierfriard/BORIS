@@ -231,7 +231,6 @@ def synthetic_time_budget(pj: dict,
             cursor.execute("DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
                            (obs_id, min_time, min_time, max_time, max_time, ))
 
-
             for subject in selected_subjects:
 
                 # check if behaviors are to exclude from total time
@@ -257,26 +256,26 @@ def synthetic_time_budget(pj: dict,
 
                     for row in cursor.fetchall():
                         behaviors[subject][behavior_modifiers_str]["duration"] = (0 if row[0] is None
-                                                                                  else "{:.3f}".format(row[0]))
+                                                                                  else f"{row[0]:.3f}")
 
                         behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
                         behaviors[subject][behavior_modifiers_str]["duration mean"] = (0 if row[2] is None
-                                                                                       else "{:.3f}".format(row[2]))
+                                                                                       else f"{row[2]:.3f}")
                         behaviors[subject][behavior_modifiers_str]["duration stdev"] = (0 if row[3] is None
-                                                                                        else "{:.3f}".format(row[3]))
+                                                                                        else f"{row[3]:.3f}")
 
                         if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
                             try:
                                 behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
                                     0 if row[0] is None
-                                    else "{:.3f}".format(row[0] / ((max_time - min_time) - time_to_subtract)))
+                                    else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}")
                             except ZeroDivisionError:
                                 behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
                         else:
                             # behavior subtracted
                             behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
                                 0 if row[0] is None
-                                else "{:.3f}".format(row[0] / (max_time - min_time)))
+                                else f"{row[0] / (max_time - min_time):.3f}")
 
             columns = [obs_id, f"{max_time - min_time:0.3f}"]
             for subj in selected_subjects:

@@ -162,7 +162,7 @@ def load_aggregated_events_in_db(pj: dict,
                                     and pj[ETHOGRAM][x][BEHAVIOR_CODE] in selectedBehaviors]
 
     db = sqlite3.connect(":memory:")
-    # db = sqlite3.connect("/tmp/2.sqlite", isolation_level=None)
+    # db = sqlite3.connect("/tmp/13.sqlite", isolation_level=None)
 
     db.row_factory = sqlite3.Row
     cursor2 = db.cursor()
