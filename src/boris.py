@@ -8873,7 +8873,7 @@ item []:
 
     def remove_image_overlay(self):
         """
-        remove image overlay from all video
+        remove image overlay from all players
         """
         for i, _ in enumerate(self.dw_player):
             self.dw_player[i].mediaplayer.video_set_logo_int(0, 0)

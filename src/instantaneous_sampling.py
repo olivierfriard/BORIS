@@ -30,20 +30,26 @@ def instantaneous_sampling(pj: dict,
                            time_interval: float):
 
     print(parameters_obs)
-    out = ""
+    results_df = {}
 
     state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
 
     n_rows = int((parameters_obs[END_TIME] - parameters_obs[START_TIME]) / time_interval) + 1
 
 
-
     for obs_id in selected_observations:
+        '''
         out += f"Observation: {obs_id}\n\n"
+        '''
+        if obs_id not in results_df:
+          results_df[obs_id] = {}
+
         for subject in parameters_obs[SELECTED_SUBJECTS]:
 
-            out += subject +":\n\n"
-            df = pd.DataFrame(index=range(n_rows), columns=["time"] + parameters_obs[SELECTED_BEHAVIORS])
+            '''
+            out += subject + ":\n\n"
+            '''
+            results_df[obs_id][subject] = pd.DataFrame(index=range(n_rows), columns=["time"] + parameters_obs[SELECTED_BEHAVIORS])
             row_idx = 0
             t = parameters_obs[START_TIME]
             while t < parameters_obs[END_TIME]:
@@ -55,16 +61,18 @@ def instantaneous_sampling(pj: dict,
                                                                              t,
                                                                              include_modifiers=parameters_obs[INCLUDE_MODIFIERS])
 
-                df.loc[row_idx, "time"] = float(t)
+                results_df[obs_id][subject].loc[row_idx, "time"] = float(t)
                 for behav in parameters_obs[SELECTED_BEHAVIORS]:
                     print(list(current_states.values()))
-                    df.loc[row_idx, behav] = int(behav in list(current_states.values())[0])
+                    results_df[obs_id][subject].loc[row_idx, behav] = int(behav in list(current_states.values())[0])
 
                 t += time_interval
                 row_idx += 1
 
-            print(df.to_string(index=False))
+            print(results_df[obs_id][subject].to_string(index=False))
 
+            '''
             out += df.to_csv(index=False, sep="\t") + "\n\n"
+            '''
 
-    return out
+    return results_df
