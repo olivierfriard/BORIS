@@ -54,7 +54,9 @@ def instantaneous_sampling(pj: dict,
 
     state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
 
+    '''
     n_rows = int((parameters_obs[END_TIME] - parameters_obs[START_TIME]) / time_interval) + 1
+    '''
 
     for obs_id in selected_observations:
 
@@ -66,6 +68,9 @@ def instantaneous_sampling(pj: dict,
             # extract tuple (behavior, modifier)
             behav_modif_list = [(idx[2], idx[3])
                                 for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (subject if subject != NO_FOCAL_SUBJECT else "")]
+
+            # extract observed subjects NOT USED at the moment
+            observed_subjects = [event[1] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
 
             # add selected behavior if not found in (behavior, modifier)
             if not parameters_obs[EXCLUDE_BEHAVIORS]:
