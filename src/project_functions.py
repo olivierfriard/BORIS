@@ -465,7 +465,7 @@ def export_observations_list(pj: dict,
             if pj[OBSERVATIONS][obs_id][FILE]:
                 for player in sorted(pj[OBSERVATIONS][obs_id][FILE].keys()):
                     for media in pj[OBSERVATIONS][obs_id][FILE][player]:
-                        media_files.append("#{0}: {1}".format(player, media))
+                        media_files.append(f"#{player}: {media}")
 
         # independent variables
         indep_var = []

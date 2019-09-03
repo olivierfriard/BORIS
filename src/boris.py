@@ -1157,15 +1157,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if len(selected_observations) == 1:
             extended_file_formats = ["Tab Separated Values (*.tsv)",
                                      "Comma Separated Values (*.csv)",
-                                     # "Open Document Spreadsheet ODS (*.ods)",
-                                     # "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                                     # "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                     "Open Document Spreadsheet ODS (*.ods)",
+                                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                                      "HTML (*.html)"]
             file_formats = ["tsv",
                             "csv",
-                            # "ods",
-                            # "xlsx",
-                            # "xls",
+                            "ods",
+                            "xlsx",
+                            "xls",
                             "html"]
 
             file_name, filter_ = QFileDialog().getSaveFileName(self, "Save results", "", ";;".join(extended_file_formats))
@@ -1185,9 +1185,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             items = ("Tab Separated Values (*.tsv)",
                      "Comma separated values (*.csv)",
-                     # "Open Document Spreadsheet (*.ods)",
-                     # "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                     # "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                     "Open Document Spreadsheet (*.ods)",
+                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
                      "HTML (*.html)")
 
             item, ok = QInputDialog.getItem(self, "Save results", "Available formats", items, 0, False)
@@ -1225,12 +1225,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         continue
 
                 try:
-                    with open(file_name, "w") as f:
-                        if output_format in ["csv", "tsv"]:
+                    if output_format in ["csv", "tsv", "html"]:
+                        with open(file_name, "wb") as f:
+                            f.write(str.encode(results_df[obs_id][subject].export(output_format)))
+                            '''
                             f.write(results_df[obs_id][subject].to_csv(sep="," if output_format=="csv" else "\t",
                                                                        index=False))
-                        if output_format == "html":
-                            f.write(results_df[obs_id][subject].to_html())
+                            '''
+
+                    if output_format in ["ods", "xlsx", "xls"]:
+                        with open(file_name, "wb") as f:
+                            f.write(results_df[obs_id][subject].export(output_format))
+
                 except Exception:
                     QMessageBox.critical(self, programName, "Error saving file")
                     return
