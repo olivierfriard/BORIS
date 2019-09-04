@@ -51,13 +51,20 @@ from config import *
 def error_info(exc_info: tuple) -> tuple:
     """
     return details about error
+
+    Args:
+        sys.exc_info() (tuple):
+
+    Returns:
+        tuple: error type, error file name, error line number
     """
+
     exc_type, exc_obj, exc_tb = exc_info
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     return (exc_obj, fname, exc_tb.tb_lineno)
 
 
-def return_file_header(file_name, row_number=5):
+def return_file_header(file_name: str, row_number:int = 5) -> list:
     """
     return file header
 

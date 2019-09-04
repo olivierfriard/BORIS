@@ -1228,32 +1228,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if output_format in ["csv", "tsv", "html"]:
                         with open(file_name, "wb") as f:
                             f.write(str.encode(results_df[obs_id][subject].export(output_format)))
-                            '''
-                            f.write(results_df[obs_id][subject].to_csv(sep="," if output_format=="csv" else "\t",
-                                                                       index=False))
-                            '''
 
                     if output_format in ["ods", "xlsx", "xls"]:
                         with open(file_name, "wb") as f:
                             f.write(results_df[obs_id][subject].export(output_format))
 
                 except Exception:
-                    QMessageBox.critical(self, programName, "Error saving file")
+                    
+                    error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+                    logging.critical(f"Error in edit_event function: {error_type} {error_file_name} {error_lineno}")
+
+                    QMessageBox.critical(self, programName, f"Error saving file: {error_type}")
                     return
-
-
-        '''
-        results_dialog = dialog.Results_dialog()
-        results_dialog.setWindowTitle(f"{programName} - Instantaneous sampling (time interval: {time_interval})")
-        results_dialog.ptText.setReadOnly(True)
-        results_dialog.ptText.appendHtml("<pre>" + results + "</pre>")
-        results_dialog.pbSave.setVisible(True)
-        # results_dialog.pbCancel.setVisible(True)
-
-        if not results_dialog.exec_():
-            return
-        '''
-
 
 
     def twEthogram_sorted(self):
@@ -8691,7 +8677,8 @@ item []:
                         break
 
         except Exception:
-            logging.critical(f"Error in edit_event function: {sys.exc_info()[1]}")
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error in edit_event function: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("editing the event", sys.exc_info())
 
 

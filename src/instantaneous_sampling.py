@@ -31,7 +31,7 @@ def instantaneous_sampling(pj: dict,
                            parameters_obs: dict,
                            time_interval: float) -> dict:
     """
-    Instataneous samplig analysis
+    Instantaneous samplig analysis
 
     Args:
         pj (dict): project dictionary
@@ -44,19 +44,9 @@ def instantaneous_sampling(pj: dict,
 
     """
 
-    print(parameters_obs[SELECTED_SUBJECTS])
-
-    '''
-    t1 = time.time()
-    '''
-
     results_df = {}
 
     state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
-
-    '''
-    n_rows = int((parameters_obs[END_TIME] - parameters_obs[START_TIME]) / time_interval) + 1
-    '''
 
     for obs_id in selected_observations:
 
@@ -81,22 +71,10 @@ def instantaneous_sampling(pj: dict,
             behav_modif_set = set(behav_modif_list)
 
             if parameters_obs[INCLUDE_MODIFIERS]:
-                '''
-                results_df[obs_id][subject] = pd.DataFrame(index=range(n_rows),
-                                                           columns=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "")
-                                                                               for x in sorted(behav_modif_set)])
-                '''
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "")
                                                                                  for x in sorted(behav_modif_set)])
             else:
-                '''
-                results_df[obs_id][subject] = pd.DataFrame(index=range(n_rows),
-                                                           columns=["time"] + [x[0] for x in sorted(behav_modif_set)])
-
-                '''
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [x[0] for x in sorted(behav_modif_set)])
-
-            #  print(results_df[obs_id][subject].columns)
 
             if subject == NO_FOCAL_SUBJECT:
                 sel_subject_dict = {"": {SUBJECT_NAME: ""}}
@@ -115,21 +93,12 @@ def instantaneous_sampling(pj: dict,
 
                 cols = [float(t)]  # time
 
-                #  print(current_states)
-
                 for behav in results_df[obs_id][subject].headers[1:]:  # skip time
                     cols.append(int(behav in current_states[list(current_states.keys())[0]]))
 
-                '''
-                results_df[obs_id][subject].loc[row_idx] = cols
-                '''
                 results_df[obs_id][subject].append(cols)
 
                 t += time_interval
                 row_idx += 1
-
-    '''
-    print(time.time() - t1)
-    '''
 
     return results_df
