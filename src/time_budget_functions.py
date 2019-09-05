@@ -27,6 +27,7 @@ import math
 from config import *
 import db_functions
 import project_functions
+import utilities
 
 import time
 import statistics
@@ -242,7 +243,8 @@ def synthetic_time_budget(pj: dict,
                                         "WHERE observation = ? AND subject = ? AND behavior = ? "),
                                        (obs_id, subject, excluded_behav,))
                         for row in cursor.fetchall():
-                            time_to_subtract = row[0]
+                            if row[0] is not None:
+                                time_to_subtract += row[0]
 
                 for behavior_modifiers in distinct_behav_modif:
                     behavior, modifiers = behavior_modifiers
@@ -266,6 +268,9 @@ def synthetic_time_budget(pj: dict,
 
                         if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
                             try:
+
+                                print(row[0], time_to_subtract)
+
                                 behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
                                     0 if row[0] is None
                                     else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}")
@@ -288,9 +293,16 @@ def synthetic_time_budget(pj: dict,
 
             data_report.append(columns)
     except Exception:
+
+        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+        logging.critical(f"Error in edit_event function: {error_type} {error_file_name} {error_lineno}")
+
+        msg = f"Error type: {error_type}\nError file name: {error_file_name}\nError line number: {error_lineno}"
+        '''
         msg = "{}\n{}\nLine number: {}".format(str(sys.exc_info()[0]).replace("<class '", "").replace("'>", ""),
                                                sys.exc_info()[1],
                                                sys.exc_info()[2].tb_lineno)
+        '''
         logging.critical(msg)
         return (False,
                 msg,
@@ -467,7 +479,7 @@ def time_budget_analysis(ethogram: dict,
                         rows = list(new_rows)
 
                     if not len(rows):
-                        if not parameters["exclude behaviors"]:
+                        if not parameters[EXCLUDE_BEHAVIORS]:
                             out.append({"subject": subject,
                                         "behavior": behavior,
                                         "modifiers": "",

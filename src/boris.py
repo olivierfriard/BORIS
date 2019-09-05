@@ -1236,7 +1236,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 except Exception:
                     
                     error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                    logging.critical(f"Error in edit_event function: {error_type} {error_file_name} {error_lineno}")
+                    logging.critical(f"Error in instantaneous sampling function: {error_type} {error_file_name} {error_lineno}")
 
                     QMessageBox.critical(self, programName, f"Error saving file: {error_type}")
                     return
@@ -6148,7 +6148,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
                                                                    text=("The duration of the selected behaviors will "
                                                                          "be subtracted from the total time"),
-                                                                   table="")
+                                                                   table="",
+                                                                   behavior_type=[STATE_EVENT])
 
         ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj,
                                                                            selected_observations,
