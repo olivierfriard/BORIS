@@ -296,9 +296,9 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                 max_obs = max(max_obs, sum(b[i]))
 
             if ax_idx == 0:
-                axs[ax_idx].set_ylabel('Duration (s)')
-            axs[ax_idx].set_xlabel('Behaviors')
-            axs[ax_idx].set_title('{}'.format(subj))
+                axs[ax_idx].set_ylabel("Duration (s)")
+            axs[ax_idx].set_xlabel("Behaviors")
+            axs[ax_idx].set_title(f"{subj}")
 
             axs[ax_idx].set_xticks(ind)
             axs[ax_idx].set_xticklabels(behavior_mod_ticks,rotation=90)
@@ -649,7 +649,7 @@ def create_events_plot(pj,
                 ylabels = [" ".join(x) for x in distinct_behav_modif]
 
             if not ax_idx:
-                axs[ax_idx].set_title("Observation {}\n{}".format(obs_id, subject), fontsize=14)
+                axs[ax_idx].set_title(f"Observation {obs_id}\n{subject}", fontsize=14)
             else:
                 axs[ax_idx].set_title(subject, fontsize=14)
             bars = {}
