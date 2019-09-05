@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1198, 604)
+        MainWindow.resize(1381, 604)
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks|QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -80,7 +80,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1198, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1381, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -506,6 +506,10 @@ class Ui_MainWindow(object):
         self.actionInstantaneous_sampling = QtWidgets.QAction(MainWindow)
         self.actionInstantaneous_sampling.setEnabled(True)
         self.actionInstantaneous_sampling.setObjectName("actionInstantaneous_sampling")
+        self.actionPlot_current_observation = QtWidgets.QAction(MainWindow)
+        self.actionPlot_current_observation.setObjectName("actionPlot_current_observation")
+        self.actionFind_in_current_obs = QtWidgets.QAction(MainWindow)
+        self.actionFind_in_current_obs.setObjectName("actionFind_in_current_obs")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -644,6 +648,8 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionFrame_backward)
         self.toolBar.addAction(self.actionFrame_forward)
         self.toolBar.addAction(self.actionCloseObs)
+        self.toolBar.addAction(self.actionPlot_current_observation)
+        self.toolBar.addAction(self.actionFind_in_current_obs)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -851,3 +857,5 @@ class Ui_MainWindow(object):
         self.actionAdd_image_overlay_on_video.setText(_translate("MainWindow", "Add an image overlay"))
         self.actionRemove_image_overlay.setText(_translate("MainWindow", "Remove"))
         self.actionInstantaneous_sampling.setText(_translate("MainWindow", "Instantaneous sampling"))
+        self.actionPlot_current_observation.setText(_translate("MainWindow", "Plot current observation"))
+        self.actionFind_in_current_obs.setText(_translate("MainWindow", "Find in events"))

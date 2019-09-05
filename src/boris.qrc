@@ -2,7 +2,6 @@
 <qresource>
 <file alias="logo">icons/logo_eye.128px.png</file>
 <file alias="observations_list">icons/glyphicons_157_show_thumbnails_with_lines.png</file>
-<file alias="close_observation">icons/glyphicons_207_remove_2.png</file>
 <file alias="play">icons/glyphicons_173_play.png</file>
 <file alias="pause">icons/glyphicons_174_pause.png</file>
 <file alias="reset">icons/glyphicons_170_step_backward.png</file>
@@ -17,6 +16,9 @@
 <file alias="frame_mode">icons/glyphicons_008_film.png</file>
 <file alias="frame_backward">icons/glyphicons_210_left_arrow.png</file>
 <file alias="frame_forward">icons/glyphicons_211_right_arrow.png</file>
+<file alias="plot_current">icons/glyphicons_108_left_indent_modified.png</file>
+<file alias="close_observation">icons/glyphicons_207_remove_2.png</file>
+<file alias="find">icons/glyphicons_027_search.png</file>
 <file alias="beep">sounds/beep.wav</file>
 <file alias="key_sound">sounds/key_sound.wav</file>
 </qresource>

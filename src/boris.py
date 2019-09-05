@@ -51,7 +51,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtMultimedia import QSound
 from boris_ui import *
-import qrc_boris5
+import qrc_boris
 
 import select_observations
 import dialog
@@ -601,6 +601,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
         self.actionCloseObs.setIcon(QIcon(":/close_observation"))
+        self.actionPlot_current_observation.setIcon(QIcon(":/plot_current"))
+        self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
 
         self.setWindowTitle(f"{programName} ({__version__})")
 
@@ -799,6 +801,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionCloseObs.setEnabled(flagObs)
+        self.actionPlot_current_observation.setEnabled(flagObs)
+        self.actionFind_in_current_obs.setEnabled(flagObs)
 
         # Tools
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
@@ -947,9 +951,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehavior_bar_plot.setVisible(False)
 
         self.actionPlot_events1.setVisible(False)
-        self.actionPlot_events2.triggered.connect(self.plot_events_triggered)
+        self.actionPlot_events2.triggered.connect(lambda: self.plot_events_triggered(mode="list"))
 
-        # self.actionInstantaneous_sampling.setVisible(False)
+        if __version__ != "7.8.1":
+            self.actionInstantaneous_sampling.setVisible(False)
         self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
 
         # menu Help
@@ -990,6 +995,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.triggered.connect(self.frame_backward)
         self.actionFrame_forward.triggered.connect(self.frame_forward)
         self.actionCloseObs.triggered.connect(self.close_observation)
+        self.actionPlot_current_observation.triggered.connect(lambda: self.plot_events_triggered(mode="current"))
+        self.actionFind_in_current_obs.triggered.connect(self.find_events)
 
         # table Widget double click
         self.twEvents.itemDoubleClicked.connect(self.twEvents_doubleClicked)
@@ -1404,9 +1411,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         cursor = db_connector.cursor()
         out = ("Index of Inter-rater Reliability - Cohen's Kappa\n\n"
-               "Interval time: {interval:.3f} s\n"
-               "Selected subjects: {selected_subjects}\n\n").format(interval=interval,
-                                                                    selected_subjects=", ".join(plot_parameters[SELECTED_SUBJECTS]))
+               f"Interval time: {interval:.3f} s\n"
+               f"Selected subjects: {', '.join(plot_parameters[SELECTED_SUBJECTS])}\n\n")
+
         mem_done = []
         irr_results = np.ones((len(selected_observations), len(selected_observations)))
 
@@ -1425,13 +1432,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     out += msg + "\n=============\n"
                     mem_done.append(set([obs_id1, obs_id2]))
 
-        out2 = "\t{}\n".format("\t".join(list(selected_observations)))
+        out2 = "\t{}\n".format('\t'.join(list(selected_observations)))
         for r in range(irr_results.shape[0]):
-            out2 += "{}\t".format(selected_observations[r])
+            out2 += f"{selected_observations[r]}\t"
             out2 += "\t".join(["%8.6f" % x for x in irr_results[r, :]]) + "\n"
 
         self.results = dialog.ResultsWidget()
-        self.results.setWindowTitle(programName + " - IRR - Cohen's Kappa (time-unit) analysis results")
+        self.results.setWindowTitle(f"BORIS - IRR - Cohen's Kappa (time-unit) analysis results")
         self.results.ptText.setReadOnly(True)
         if len(selected_observations) == 2:
             self.results.ptText.appendPlainText(out)
@@ -1463,7 +1470,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.timeFormat)
 
             if not r:
-                out += "Observation: <strong>{obsId}</strong><br>{msg}<br>".format(obsId=obsId, msg=msg)
+                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
                 not_paired_obs_list.append(obsId)
 
         if out:
@@ -1561,7 +1568,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if behav[MODIFIERS][idx]["values"]:
                             modifiers += "Values:<br>"
                             for m in behav[MODIFIERS][idx]["values"]:
-                                modifiers += "{}, ".format(m)
+                                modifiers += f"{m}, "
                             modifiers = modifiers.strip(" ,") + "<br>"
                 else:
                     modifiers = "-"
@@ -1570,19 +1577,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 results.setWindowTitle("View behavior")
                 results.ptText.clear()
                 results.ptText.setReadOnly(True)
-                txt = ("Code: <b>{}</b><br>"
-                       "Type: {}<br>"
-                       "Key: <b>{}</b><br><br>"
-                       "Description: {}<br><br>"
-                       "Category: {}<br><br>"
-                       "Exclude: {}<br><br><br>"
-                       "Modifiers:<br>{}").format(behav["code"],
-                                                  behav["type"],
-                                                  behav["key"],
-                                                  behav["description"],
-                                                  behav["category"] if behav["category"] else "-",
-                                                  behav["excluded"],
-                                                  modifiers)
+                txt = (f"Code: <b>{behav['code']}</b><br>"
+                       f"Type: {behav['type']}<br>"
+                       f"Key: <b>{behav['key']}</b><br><br>"
+                       f"Description: {behav['description']}<br><br>"
+                       f"Category: {behav['category'] if behav['category'] else '-'}<br><br>"
+                       f"Exclude: {behav['excluded']}<br><br><br>"
+                       f"Modifiers:<br>{modifiers}")
                 results.ptText.appendHtml(txt)
                 results.exec_()
 
@@ -1603,14 +1604,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.actionSend_project.setText("Project server")
                     return
 
-                logging.debug("decoded {} length: {}".format(type(sent_obs), len(sent_obs)))
+                logging.debug(f"decoded {type(sent_obs)} length: {len(sent_obs)}")
 
                 flag_msg = False
                 mem_obsid = ""
                 for obsId in sent_obs:
 
                     self.w.lwi.addItem(
-                        QListWidgetItem("{}: Observation {} received".format(datetime.datetime.now().isoformat(), obsId))
+                        QListWidgetItem(f"{datetime.datetime.now().isoformat()}: Observation {obsId} received")
                     )
                     self.w.lwi.scrollToBottom()
 
@@ -1618,9 +1619,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         flag_msg = True
                         response = dialog.MessageDialog(
                             programName,
-                            ("An observation with the same id<br><b>{}</b><br>"
-                             "received from<br><b>{}</b><br>"
-                             "already exists in the current project.").format(obsId, msg_dict["SENDER"][0]),
+                            (f"An observation with the same id<br><b>{obsId}</b><br>"
+                             f"received from<br><b>{msg_dict['SENDER'][0]}</b><br>"
+                             "already exists in the current project."),
                             [OVERWRITE, "Rename received observation", CANCEL])
 
                         if response == CANCEL:
@@ -1633,7 +1634,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             new_id = obsId
                             while new_id in self.pj[OBSERVATIONS]:
                                 new_id, ok = QInputDialog.getText(self,
-                                                                  "Rename observation received from {}".format(msg_dict["SENDER"][0]),
+                                                                  f"Rename observation received from {msg_dict['SENDER'][0]}",
                                                                   "New observation id:",
                                                                   QLineEdit.Normal,
                                                                   new_id)
@@ -1647,14 +1648,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             elif "URL" in msg_dict:
                 self.tcp_port = int(msg_dict["URL"].split(":")[-1])
-                self.w.label.setText("Project server URL:<br><b>{}</b><br><br>Timeout: 30 minutes".format(msg_dict["URL"]))
+                self.w.label.setText(f"Project server URL:<br><b>{msg_dict['URL']}</b><br><br>Timeout: 30 minutes")
 
             else:
                 if "stopped" in msg_dict["MESSAGE"] or "timeout" in msg_dict["MESSAGE"]:
                     del self.w
                     self.actionSend_project.setText("Project server")
                 else:
-                    self.w.lwi.addItem(QListWidgetItem("{}: {}".format(datetime.datetime.now().isoformat(), msg_dict["MESSAGE"])))
+                    self.w.lwi.addItem(QListWidgetItem(f"{datetime.datetime.now().isoformat()}: {msg_dict['MESSAGE']}"))
                     self.w.lwi.scrollToBottom()
 
         if "server" in self.actionSend_project.text():
@@ -6244,7 +6245,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if set(sorted(behaviors_not_defined)):
             out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
 
-
         # check if state events are paired
         not_paired_obs_list = []
         for obs_id in selectedObservations:
@@ -6762,14 +6762,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         f.write(workbook.ods)
 
 
-    def plot_events_triggered(self):
+    def plot_events_triggered(self, mode:str = "list"):
         """
         plot events in time diagram
         """
-        result, selected_observations = self.selectObservations(MULTIPLE)
-
-        if not selected_observations:
-            return
+        if mode == "list":
+            result, selected_observations = self.selectObservations(MULTIPLE)
+    
+            if not selected_observations:
+                return
+        if mode == "current" and self.observationId:
+            selected_observations = [self.observationId]
         # check if state events are paired
         out = ""
         not_paired_obs_list = []
@@ -7210,7 +7213,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for w in [self.twEthogram, self.twSubjects, self.twEvents]:
                 w.setRowCount(0)   # behaviors
 
-        newProjectWindow = projectDialog(logging.getLogger().getEffectiveLevel())
+        newProjectWindow = projectDialog()
 
         # pass copy of self.pj
         newProjectWindow.pj = dict(self.pj)
@@ -11101,7 +11104,8 @@ item []:
 
         if self.projectFileName and fileName == self.projectFileName:
             QMessageBox.critical(None, programName,
-                                 "This project is already open", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                 "This project is already open",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if fileName:
@@ -11114,7 +11118,8 @@ item []:
             # transform time to decimal
             fromProject = convert_time_to_decimal(fromProject)  # function in utilities.py
 
-            dbc = dialog.ChooseObservationsToImport("Choose the observations to import:", sorted(list(fromProject[OBSERVATIONS].keys())))
+            dbc = dialog.ChooseObservationsToImport("Choose the observations to import:",
+                                                    sorted(list(fromProject[OBSERVATIONS].keys())))
 
             if dbc.exec_():
 

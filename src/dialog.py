@@ -96,7 +96,7 @@ def MessageDialog(title, text, buttons):
     for button in buttons:
         message.addButton(button, QMessageBox.YesRole)
 
-    message.setWindowFlags(Qt.WindowStaysOnTopHint)
+    # message.setWindowFlags(Qt.WindowStaysOnTopHint)
     message.exec_()
     return message.clickedButton().text()
 
@@ -327,7 +327,7 @@ class ChooseObservationsToImport(QDialog):
         super(ChooseObservationsToImport, self).__init__()
 
         self.setWindowTitle(config.programName)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        #self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         Vlayout = QVBoxLayout()
         widget = QWidget(self)
@@ -343,26 +343,21 @@ class ChooseObservationsToImport(QDialog):
         # TODO: to be enabled
         # lw.installEventFilter(self)
 
-        '''
-        if QT_VERSION_STR[0] == "4":
-            lw.setItemSelected(item, True)
-        else:
-            item.setSelected(True)
-        '''
-
         for code in observations_list:
             item = QListWidgetItem(code)
             self.lw.addItem(item)
 
         Vlayout.addWidget(self.lw)
 
-        pbCancel = QPushButton("Cancel")
-        pbCancel.clicked.connect(self.reject)
-        Vlayout.addWidget(pbCancel)
-        pbOK = QPushButton("OK")
+        hlayout = QHBoxLayout()
+        hlayout.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        pbCancel = QPushButton("Cancel", clicked=self.reject)
+        hlayout.addWidget(pbCancel)
+        pbOK = QPushButton("OK", clicked=self.accept)
         pbOK.setDefault(True)
-        pbOK.clicked.connect(self.accept)
-        Vlayout.addWidget(pbOK)
+        hlayout.addWidget(pbOK)
+        
+        Vlayout.addLayout(hlayout)
 
         self.setLayout(Vlayout)
 

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1198</width>
+    <width>1381</width>
     <height>604</height>
    </rect>
   </property>
@@ -144,7 +144,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1198</width>
+     <width>1381</width>
      <height>22</height>
     </rect>
    </property>
@@ -393,6 +393,8 @@
    <addaction name="actionFrame_backward"/>
    <addaction name="actionFrame_forward"/>
    <addaction name="actionCloseObs"/>
+   <addaction name="actionPlot_current_observation"/>
+   <addaction name="actionFind_in_current_obs"/>
   </widget>
   <widget class="QDockWidget" name="dwEthogram">
    <property name="floating">
@@ -1377,6 +1379,16 @@
    </property>
    <property name="text">
     <string>Instantaneous sampling</string>
+   </property>
+  </action>
+  <action name="actionPlot_current_observation">
+   <property name="text">
+    <string>Plot current observation</string>
+   </property>
+  </action>
+  <action name="actionFind_in_current_obs">
+   <property name="text">
+    <string>Find in events</string>
    </property>
   </action>
  </widget>

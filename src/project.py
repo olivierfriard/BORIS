@@ -33,7 +33,7 @@ import urllib.parse
 import urllib.request
 
 import tablib
-from PyQt5.QtCore import *
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
@@ -50,6 +50,8 @@ class ExclusionMatrix(QDialog):
 
     def __init__(self):
         super().__init__()
+        
+        # self.setWindowFlags(Qt.WindowStaysOnTopHint)        
 
         hbox = QVBoxLayout(self)
 
@@ -91,8 +93,8 @@ class ExclusionMatrix(QDialog):
         self.pbCancel.clicked.connect(self.reject)
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
+        self.pbOK = QPushButton("OK", clicked=self.accept)
+        '''self.pbOK.clicked.connect(self.accept)'''
         hbox2.addWidget(self.pbOK)
 
         hbox.addLayout(hbox2)
@@ -284,7 +286,7 @@ class BehavioralCategories(QDialog):
 
 class projectDialog(QDialog, Ui_dlgProject):
 
-    def __init__(self, log_level="", parent=None):
+    def __init__(self, parent=None):
 
         super().__init__()
 
@@ -1230,6 +1232,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check corresponding checkbox
         ex.cb_clicked()
+        # ex.setWindowFlags(Qt.WindowStaysOnTopHint)        
 
         if ex.exec_():
             for c, c_name in enumerate(stateBehaviors):
