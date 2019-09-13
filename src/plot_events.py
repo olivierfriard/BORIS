@@ -226,8 +226,6 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             print()
 
 
-        #b = {}
-
         behavior_mod_ticks = behavior_ticks[:]
         for ax_idx, subj in enumerate(selected_subjects):
 

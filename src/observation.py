@@ -249,7 +249,7 @@ class Observation(QDialog, Ui_Form):
                     return
 
                 self.test = plot_data_module.Plot_data(data_file_path,
-                                                  time_interval, # time interval
+                                                  time_interval,  # time interval
                                                   time_offset,   # time offset
                                                   plot_color,    # plot style
                                                   plot_title,    # plot title
