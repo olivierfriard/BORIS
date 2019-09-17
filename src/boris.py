@@ -573,6 +573,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     lastPlayTime = 0
     lastPlayTimeGlobal = 0
 
+
     def __init__(self, ffmpeg_bin, parent=None):
 
         super(MainWindow, self).__init__(parent)
@@ -640,36 +641,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.lbFocalSubject.setFont(font)
         self.lbCurrentStates.setFont(font)
 
-        # Statusbar initialisation
-        # add label to status bar
-        '''
-        self.lbTime = QLabel()
-        self.lbTime.setFrameStyle(QFrame.StyledPanel)
-        self.lbTime.setMinimumWidth(160)
-        self.statusbar.addPermanentWidget(self.lbTime)
-        '''
-
-        # current subjects
-        '''
-        self.lbSubject = QLabel()
-        self.lbSubject.setFrameStyle(QFrame.StyledPanel)
-        self.lbSubject.setMinimumWidth(160)
-        self.statusbar.addPermanentWidget(self.lbSubject)
-        '''
-
         # observation time interval
         self.lb_obs_time_interval = QLabel()
         self.lb_obs_time_interval.setFrameStyle(QFrame.StyledPanel)
         self.lb_obs_time_interval.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lb_obs_time_interval)
 
-
         # time offset
         self.lbTimeOffset = QLabel()
         self.lbTimeOffset.setFrameStyle(QFrame.StyledPanel)
         self.lbTimeOffset.setMinimumWidth(160)
         self.statusbar.addPermanentWidget(self.lbTimeOffset)
-
 
         # speed
         self.lbSpeed = QLabel()
@@ -685,7 +667,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.FFmpegGlobalFrame = 0
 
-        self.config_param = {DISPLAY_SUBTITLES: False}
+        self.config_param = {DISPLAY_SUBTITLES: False,
+                             SAVE_FRAMES: DISK,
+                             MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES}
 
         self.menu_options()
         self.connections()
@@ -1131,7 +1115,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         max_obs_length, selectedObsTotalMediaLength = self.observation_length(selected_observations)
-        if max_obs_length == -1: # media length not available, user choose to not use events
+        if max_obs_length == -1:  # media length not available, user choose to not use events
             return
 
         parameters = self.choose_obs_subj_behav_category(selected_observations,
@@ -3532,6 +3516,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
 
         # frame-by-frame mode
+        if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+            preferencesWindow.rb_save_frames_in_mem.setChecked(True)
+        if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+            preferencesWindow.rb_save_frames_on_disk.setChecked(True)
+
+        preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
+        
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
         mem_frame_resize = self.frame_resize
         # frame-by-frame cache size (in seconds)
@@ -3630,6 +3621,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
 
             # frame-by-frame
+            self.config_param[SAVE_FRAMES] = DISK
+            if preferencesWindow.rb_save_frames_in_mem.isChecked():
+                self.config_param[SAVE_FRAMES] = MEMORY
+            if preferencesWindow.rb_save_frames_on_disk.isChecked():
+                self.config_param[SAVE_FRAMES] = DISK
+            self.config_param[MEMORY_FOR_FRAMES] = preferencesWindow.sb_frames_memory_size.value()
+
             self.frame_resize = preferencesWindow.sbFrameResize.value()
 
             # delete files in imageDirectory f frame_resize changed
@@ -3733,71 +3731,95 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
-            # update data plot
-            '''
-            current_time = self.getLaps()
-            for idx in self.plot_data:
-                self.plot_data[idx].update_plot(current_time)
-            '''
+            if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
 
-            md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
+                md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
+    
+                frame_image_path = pathlib.Path(self.imageDirectory) / pathlib.Path((f"BORIS@{md5FileName}_{frameCurrentMedia:08}"
+                                                                                      f".{self.frame_bitmap_format.lower()}"))
+    
+                logging.debug(f"frame_image_path: {frame_image_path}")
+                logging.debug(f"frame_image_path is file: {os.path.isfile(frame_image_path)}")
+    
+                if os.path.isfile(frame_image_path):
+                    self.pixmap = QPixmap(str(frame_image_path))
+                    # check if jpg filter available if not use png
+                    if self.pixmap.isNull():
+                        self.frame_bitmap_format = "PNG"
+                else:
+                    self.iw = dialog.Info_widget()
+                    self.iw.lwi.setVisible(False)
+                    self.iw.resize(350, 200)
+                    self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
+    
+                    logging.debug(f"Extracting frame")
+    
+                    self.iw.setWindowTitle("Extracting frames...")
+                    self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
+                    self.iw.show()
+                    app.processEvents()
+    
+                    utilities.extract_frames(self.ffmpeg_bin,
+                                             frameCurrentMedia,
+                                             (frameCurrentMedia - 1) / self.fps,
+                                             current_media_full_path,
+                                             round(self.fps),
+                                             self.imageDirectory,
+                                             md5FileName,
+                                             self.frame_bitmap_format.lower(),
+                                             self.frame_resize,
+                                             self.fbf_cache_size)
+                    self.iw.hide()
+    
+                    if not os.path.isfile(frame_image_path):
+    
+                        logging.warning(f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.fps)}")
+    
+                        return
+    
+                    self.pixmap = QPixmap(str(frame_image_path))
+                    # check if jpg filter available if not use png
+                    if self.pixmap.isNull():
+                        self.frame_bitmap_format = "PNG"
+    
+                player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
-            '''
-            frame_image_path = "{imageDir}{sep}BORIS@{fileName}_{frame:08}.{extension}".format(imageDir=self.imageDirectory,
-                                                                                               sep=os.sep,
-                                                                                               fileName=md5FileName,
-                                                                                               frame=frameCurrentMedia,
-                                                                                               extension=self.frame_bitmap_format.lower())
-            '''
+            if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
 
-            frame_image_path = pathlib.Path(self.imageDirectory) / pathlib.Path((f"BORIS@{md5FileName}_{frameCurrentMedia:08}"
-                                                                                  f".{self.frame_bitmap_format.lower()}"))
+                logging.debug(f"frame current media: {frameCurrentMedia}")
+    
+                if not (current_media_full_path in self.frames_cache
+                        and frameCurrentMedia in self.frames_cache[current_media_full_path]):
+    
+                    self.statusbar.showMessage("Extracting frames", 0)
+                    app.processEvents()
+    
+                    print(player.frame_viewer.size().width(), player.frame_viewer.size().height())
+                    print(player.videoframe.h_resolution, player.videoframe.v_resolution)
+    
+                    r = utilities.extract_frames_mem(self.ffmpeg_bin,
+                                             frameCurrentMedia,
+                                             (frameCurrentMedia - 1) / self.fps,
+                                             current_media_full_path,
+                                             round(self.fps),
+                                             #(player.frame_viewer.size().width(), player.frame_viewer.size().height()),
+                                             (player.videoframe.h_resolution, player.videoframe.v_resolution),
+                                             self.fbf_cache_size)
+    
+                    if current_media_full_path not in self.frames_cache:
+                        self.frames_cache[current_media_full_path] =  {}
+                    for idx, f in enumerate(r):
+                        self.frames_cache[current_media_full_path][frameCurrentMedia + idx] = f
+    
+                    print("frames cache mem size:", sum([len(self.frames_cache[k].keys()) * 3 * player.videoframe.h_resolution * player.videoframe.v_resolution for k in self.frames_cache]))
+    
+                    self.statusbar.showMessage("", 0)
+    
+    
+                print(list(self.frames_cache[current_media_full_path].keys()))
+    
+                player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frameCurrentMedia].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
-            logging.debug(f"frame_image_path: {frame_image_path}")
-            logging.debug(f"frame_image_path is file: {os.path.isfile(frame_image_path)}")
-
-            if os.path.isfile(frame_image_path):
-                self.pixmap = QPixmap(str(frame_image_path))
-                # check if jpg filter available if not use png
-                if self.pixmap.isNull():
-                    self.frame_bitmap_format = "PNG"
-            else:
-                self.iw = dialog.Info_widget()
-                self.iw.lwi.setVisible(False)
-                self.iw.resize(350, 200)
-                self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-                logging.debug(f"Extracting frame")
-
-                self.iw.setWindowTitle("Extracting frames...")
-                self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
-                self.iw.show()
-                app.processEvents()
-
-                utilities.extract_frames(self.ffmpeg_bin,
-                                         frameCurrentMedia,
-                                         (frameCurrentMedia - 1) / self.fps,
-                                         current_media_full_path,
-                                         round(self.fps),
-                                         self.imageDirectory,
-                                         md5FileName,
-                                         self.frame_bitmap_format.lower(),
-                                         self.frame_resize,
-                                         self.fbf_cache_size)
-                self.iw.hide()
-
-                if not os.path.isfile(frame_image_path):
-
-                    logging.warning(f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.fps)}")
-
-                    return
-
-                self.pixmap = QPixmap(str(frame_image_path))
-                # check if jpg filter available if not use png
-                if self.pixmap.isNull():
-                    self.frame_bitmap_format = "PNG"
-
-            player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
             # redraw measurements from previous frames
 
@@ -3882,7 +3904,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.get_events_current_row()
 
 
-    def ffmpeg_timer_out_future(self):
+    '''
+    def ffmpeg_timer_out_disabled(self):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
@@ -3927,15 +3950,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
-            # update data plot
-            current_time = self.getLaps()
-            for idx in self.plot_data:
-                self.plot_data[idx].update_plot(current_time)
-
             logging.debug(f"frame current media: {frame_current_media}")
 
-            if not (current_media_full_path in self.frames_cache and \
-                frame_current_media in self.frames_cache[current_media_full_path]):
+            if not (current_media_full_path in self.frames_cache
+                    and frame_current_media in self.frames_cache[current_media_full_path]):
 
                 self.statusbar.showMessage("Extracting frames", 0)
                 app.processEvents()
@@ -4041,7 +4059,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # show tracking cursor
         self.get_events_current_row()
-
+    '''
 
     def close_measurement_widget(self):
         self.measurement_w.close()
@@ -5625,11 +5643,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # frame-by-frame
             try:
+                self.config_param[SAVE_FRAMES] = settings.value(SAVE_FRAMES)
+            except Exception:
+                self.config_param[SAVE_FRAMES] = DISK
+            try:
+                self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
+            except Exception:
+                self.config_param[MEMORY_FOR_FRAMES] = DEFAULT_MEMORY_FOR_FRAMES
+
+            logging.debug(f"memory for frames: {self.config_param[MEMORY_FOR_FRAMES]}")
+
+            try:
                 self.frame_resize = int(settings.value("frame_resize"))
                 if not self.frame_resize:
                     self.frame_resize = 0
             except Exception:
                 self.frame_resize = 0
+
             logging.debug(f"frame_resize: {self.frame_resize}")
 
             try:
@@ -5638,6 +5668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
             except Exception:
                 self.frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
+
             logging.debug(f"frame_bitmap_format: {self.frame_bitmap_format}")
 
             try:
@@ -5646,6 +5677,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
             except Exception:
                 self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
+
             logging.debug(f"frame_cache_size: {self.fbf_cache_size}")
 
             # spectrogram
@@ -5743,6 +5775,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
         settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
         # frame-by-frame
+        for value in [SAVE_FRAMES, MEMORY_FOR_FRAMES]:
+            settings.setValue(value, self.config_param[value])
+
         settings.setValue("frame_resize", self.frame_resize)
         settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
         settings.setValue("frame_cache_size", self.fbf_cache_size)
@@ -7637,7 +7672,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         parameters = self.choose_obs_subj_behav_category(selected_observations, 0)
-        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
         export_dir = QFileDialog().getExistingDirectory(self, "Choose a directory to save subtitles", os.path.expanduser("~"),
                                                             options=QFileDialog(self).ShowDirsOnly)
@@ -11202,8 +11237,8 @@ item []:
                     return False
 
                 for i, player in enumerate(self.dw_player):
-                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
-                       self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
+                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
+                       and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         player.mediaListPlayer.play()
 
                 self.timer.start(VLC_TIMER_OUT)
@@ -11228,8 +11263,8 @@ item []:
                 self.FFmpegTimer.stop()
             else:
                 for i, player in enumerate(self.dw_player):
-                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
-                       self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
+                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
+                            and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
                         if player.mediaListPlayer.get_state() != vlc.State.Paused:
 
                             self.timer.stop()
@@ -11376,8 +11411,8 @@ item []:
                 newTime = (sum(
                     self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
                                                       index_of_item(self.dw_player[0].
-                                                                    mediaplayer.get_media())]) +
-                           self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
+                                                                    mediaplayer.get_media())])
+                                               + self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
 
                 self.seek_mediaplayer(newTime)
 
@@ -11457,32 +11492,6 @@ item []:
                     self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
                 else:
                     self.seek_mediaplayer(0)
-
-                '''
-                self.dw_player[0].mediaListPlayer.play_item_at_index(0)
-                while True:
-                    if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                        break
-                # position media
-                if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
-                    self.dw_player[0].mediaplayer.set_time(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
-                else:
-                    self.dw_player[0].mediaplayer.set_time(0)
-
-                self.dw_player[0].mediaListPlayer.pause()
-                while True:
-                    if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
-                        break
-
-                # position media
-                if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
-                    self.dw_player[0].mediaplayer.set_time(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
-                    self.video_slider.setValue(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000)
-                                                   / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
-                else:
-                    self.dw_player[0].mediaplayer.set_time(0)
-                    self.video_slider.setValue(0)
-                '''
 
                 self.update_visualizations()
 

@@ -463,7 +463,6 @@ def extract_frames(ffmpeg_bin: str,
                       f'-start_number {start_frame} '
                       f'-vframes {number_of_seconds * fps} '
                       f'-vf scale={frame_resize}:-1 '
-                      # f'"{imageDir}{os.sep}BORIS@{md5_media_path}_%08d.{extension}"'
                       f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"'
                       )
 
@@ -552,7 +551,6 @@ def extract_frames_mem(ffmpeg_bin: str,
                       '-ss', str((start_frame - 1) / fps),
                       '-vframes', str(int(fps * number_of_seconds)),
                       '-s', f'{resolution[0]}x{resolution[1]}',
-                      # '-s', '1280x860',
                       '-f', 'image2pipe',
                       '-pix_fmt', 'rgb24',
                       '-vcodec', 'rawvideo', '-',

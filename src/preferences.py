@@ -40,6 +40,9 @@ class Preferences(QDialog, Ui_prefDialog):
         self.setupUi(self)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
+        self.rb_save_frames_in_mem.clicked.connect(self.rb_frames_mem_disk)
+        self.rb_save_frames_on_disk.clicked.connect(self.rb_frames_mem_disk)
+
         self.pb_reset_colors.clicked.connect(self.reset_colors)
 
         self.pb_refresh.clicked.connect(self.refresh_preferences)
@@ -48,11 +51,21 @@ class Preferences(QDialog, Ui_prefDialog):
 
         self.flag_refresh = False
 
+
+    def rb_frames_mem_disk(self):
+        self.lb_memory_frames.setEnabled(self.rb_save_frames_in_mem.isChecked())
+        self.sb_frames_memory_size.setEnabled(self.rb_save_frames_in_mem.isChecked())
+
+        for w in [self.lb_resize_frame, self.sbFrameResize, self.lb_bitmap_quality,
+                  self.cbFrameBitmapFormat, self.lb_cache_size, self.sb_fbf_cache_size]:
+            w.setEnabled(self.rb_save_frames_on_disk.isChecked())
+
+
     def refresh_preferences(self):
-        if (
-            MessageDialog("BORIS", "Refresh will re-initialize all your preferences and close BORIS", [CANCEL, "Refresh preferences"])
-            == "Refresh preferences"
-        ):
+        if MessageDialog("BORIS",
+                         ("Refresh will re-initialize "
+                          "all your preferences and close BORIS"),
+                         [CANCEL, "Refresh preferences"]) == "Refresh preferences":
             self.flag_refresh = True
             self.accept()
 
@@ -60,7 +73,10 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         allow user select a cache dir for ffmpeg images
         """
-        FFmpegCacheDir = QFileDialog().getExistingDirectory(self, "Select a directory", os.path.expanduser("~"), options=QFileDialog().ShowDirsOnly)
+        FFmpegCacheDir = QFileDialog().getExistingDirectory(self,
+                                                            "Select a directory",
+                                                            os.path.expanduser("~"),
+                                                            options=QFileDialog().ShowDirsOnly)
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
 

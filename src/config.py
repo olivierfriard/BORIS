@@ -292,6 +292,12 @@ CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 VLC = "vlc"
 FFMPEG = "ffmpeg"
 
+SAVE_FRAMES = "save_frames"
+MEMORY_FOR_FRAMES = "memory_for_frames"
+DEFAULT_MEMORY_FOR_FRAMES = 200
+DISK = "disk"
+MEMORY = "memory"
+
 MEDIA_FILE_INFO = "media_file_info"
 MEDIA_INFO = "media_info"
 LENGTH = "length"
