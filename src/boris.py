@@ -22,6 +22,7 @@ This file is part of BORIS.
 
 """
 
+import psutil
 
 import os
 import sys
@@ -937,8 +938,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPlot_events1.setVisible(False)
         self.actionPlot_events2.triggered.connect(lambda: self.plot_events_triggered(mode="list"))
 
-        if __version__ != "7.8.1":
-            self.actionInstantaneous_sampling.setVisible(False)
         self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
 
         # menu Help
@@ -1081,8 +1080,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def instantaneous_sampling(self):
         """
-        instantantaneous sampling analysis
+        instantaneous sampling analysis
         """
+
+        QMessageBox.warning(self, programName,
+                            "This function is experimental for now.<br>Please test it and report bugs")
 
         result, selected_observations = self.selectObservations(MULTIPLE)
 
@@ -1196,20 +1198,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for subject in results_df[obs_id]:
 
                 if len(selected_observations) > 1:
-                    file_name = str(pathlib.Path(pathlib.Path(export_dir) / safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
+                    file_name = str(pathlib.Path(pathlib.Path(export_dir)
+                                    / safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
                 else:
-                    file_name = str(pathlib.Path(os.path.splitext(file_name)[0] + safeFileName("_" + subject)).with_suffix("." + output_format))
-
-                    #file_name = str(pathlib.Path(pathlib.Path(file_name).stem + safeFileName("_" + subject)).with_suffix("." + output_format))
-                    print(file_name)
+                    file_name = str(pathlib.Path(os.path.splitext(file_name)[0]
+                                    + safeFileName("_" + subject)).with_suffix("." + output_format))
 
                 # check if file with new extension already exists
-                if mem_command != "Overwrite all" and pathlib.Path(file_name).is_file():
+                if mem_command != OVERWRITE_ALL and pathlib.Path(file_name).is_file():
                     if mem_command == "Skip all":
                         continue
                     mem_command = dialog.MessageDialog(programName,
                                                        f"The file {file_name} already exists.",
-                                                       [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                                                       [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
                     if mem_command == "Skip":
@@ -1225,7 +1226,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             f.write(results_df[obs_id][subject].export(output_format))
 
                 except Exception:
-                    
+
                     error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
                     logging.critical(f"Error in instantaneous sampling function: {error_type} {error_file_name} {error_lineno}")
 
@@ -1441,7 +1442,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
         if len(selected_observations) < 2:
-            QMessageBox.information(self, programName, "You have to select 2 observations for Needleman-Wunsch similarity")
+            QMessageBox.information(self, programName, "You have to select at least 2 observations for Needleman-Wunsch similarity")
             return
 
         # check if state events are paired
@@ -1697,7 +1698,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if action not in ["reencode_resize", "rotate"]:
             return
 
-
         def readStdOutput(idx):
 
             self.processes_widget.label.setText(("This operation can be long. Be patient...\n\n"
@@ -1709,7 +1709,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 self.processes[idx - 1][0].readAllStandardOutput().data().decode("utf-8")
                                                ]
                                               )
-
 
         def qprocess_finished(idx):
             """
@@ -1738,7 +1737,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 r = utilities.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
                 if "error" in r:
-                    QMessageBox.warning(self, programName, "{} does not seem a media file".format(fileNames[0]))
+                    QMessageBox.warning(self, programName, f"{fileNames[0]} does not seem a media file")
                 elif r["has_video"]:
                     try:
                         current_bitrate = r["bitrate"]
@@ -1748,7 +1747,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         current_resolution = int(r["resolution"].split("x")[0])
                     except Exception:
                         pass
-
 
                 ib = dialog.Input_dialog("Set the parameters for re-encoding / resizing",
                                  [("sb", "Horizontal resolution (in pixel)", 352, 3840, 100, current_resolution),
@@ -1781,18 +1779,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             files_list = []
             for file_name in fileNames:
                 if action == "reencode_resize":
-                    fn = "{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi".format(file_name=file_name,
-                                                                                              horiz_resol=horiz_resol,
-                                                                                              video_quality=video_quality)
+                    fn = f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi"
                 if action == "rotate":
-                    fn = "{file_name}.rotated{rotation}.avi".format(file_name=file_name,
-                                                                rotation=["", "90", "-90", "180"][rotation_idx])
+                    fn = f"{file_name}.rotated{['', '90', '-90', '180'][rotation_idx]}.avi"
                 if os.path.isfile(fn):
                     files_list.append(fn)
 
             if files_list:
                 response = dialog.MessageDialog(programName, "Some file(s) already exist.\n\n" + "\n".join(files_list),
-                                                ["Overwrite all", CANCEL])
+                                                [OVERWRITE_ALL, CANCEL])
                 if response == CANCEL:
                     return
 
@@ -1812,13 +1807,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if action == "reencode_resize":
                     args = ["-y",
-                            "-i", '{file_name}'.format(file_name=file_name),
-                            "-vf", "scale={horiz_resol}:-1".format(horiz_resol=horiz_resol),
-                            "-b:v", "{video_quality}k".format(video_quality=video_quality),
-                            '{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi'.format(file_name=file_name,
-                                                                                                  horiz_resol=horiz_resol,
-                                                                                                  video_quality=video_quality)
-                             ]
+                            "-i", f"{file_name}",
+                            "-vf", f"scale={horiz_resol}:-1",
+                            "-b:v", f"{video_quality}k",
+                            f"{file_name}.re-encoded.{horiz_resol}px.{video_quality}k.avi"
+                           ]
 
                 if action == "rotate":
 
@@ -1831,21 +1824,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if rotation_idx in [1, 2]:
                         args = ["-y",
-                                "-i", '{file_name}'.format(file_name=file_name),
-                                "-vf", "transpose={rotation_idx}".format(rotation_idx=rotation_idx),
+                                "-i", f"{file_name}",
+                                "-vf", f"transpose={rotation_idx}",
                                 "-codec:a", "copy",
-                                "-b:v", "{video_quality}k".format(video_quality=video_quality),
-                                "{file_name}.rotated{rotation}.avi".format(file_name=file_name,
-                                                                       rotation=["", "90", "-90"][rotation_idx])
-                                ]
+                                "-b:v", f"{video_quality}k",
+                                f"{file_name}.rotated{['', '90', '-90'][rotation_idx]}.avi"
+                               ]
 
                     if rotation_idx == 3:  # 180
                         args = ["-y",
-                                "-i", '{file_name}'.format(file_name=file_name),
+                                "-i", f"{file_name}",
                                 "-vf", "transpose=2,transpose=2",
                                 "-codec:a", "copy",
-                                "-b:v", "{video_quality}k".format(video_quality=video_quality),
-                                "{file_name}.rotated180.avi".format(file_name=file_name)
+                                "-b:v", f"{video_quality}k",
+                                f"{file_name}.rotated180.avi"
                                 ]
 
                 self.processes.append([QProcess(self), [ffmpeg_bin, args, file_name]])
@@ -1855,7 +1847,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.processes[-1][0].finished.connect(lambda: qprocess_finished(len(self.processes)))
 
             self.processes[-1][0].start(self.processes[-1][1][0], self.processes[-1][1][1])
-
 
 
     def click_signal_from_coding_pad(self, behaviorCode):
@@ -3522,7 +3513,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.rb_save_frames_on_disk.setChecked(True)
 
         preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
-        
+
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
         mem_frame_resize = self.frame_resize
         # frame-by-frame cache size (in seconds)
@@ -3630,17 +3621,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.frame_resize = preferencesWindow.sbFrameResize.value()
 
-            # delete files in imageDirectory f frame_resize changed
-            if self.frame_resize != mem_frame_resize:
-                # check temp dir for images from ffmpeg
-                self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+            # clear frames memory cache if frames saved on disk
+            if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+                self.frames_cache.clear()
+                print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) )
 
-                for f in [x for x in os.listdir(self.imageDirectory)
-                          if "BORIS@" in x and os.path.isfile(self.imageDirectory + os.sep + x)]:
-                    try:
-                        os.remove(self.imageDirectory + os.sep + f)
-                    except Exception:
-                        pass
+            # frames cache
+            # clear cache (mem or files) if frame_resize changed
+            if self.frame_resize != mem_frame_resize:
+
+                if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+                    self.frames_cache.clear()
+
+                if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+                    # check temp dir for images from ffmpeg
+                    self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+                    for f in [x for x in os.listdir(self.imageDirectory)
+                              if "BORIS@" in x and os.path.isfile(self.imageDirectory + os.sep + x)]:
+                        try:
+                            os.remove(self.imageDirectory + os.sep + f)
+                        except Exception:
+                            pass
 
             self.frame_bitmap_format = preferencesWindow.cbFrameBitmapFormat.currentText()
 
@@ -3685,6 +3687,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return currentMedia, round(frameCurrentMedia)
 
 
+    def display_top(self, snapshot, key_type='filename', limit=3):
+
+        snapshot = snapshot.filter_traces((
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        ))
+        top_stats = snapshot.statistics(key_type, True)
+
+        print("Top %s lines" % limit)
+
+        for index, stat in enumerate(top_stats[:limit], 1):
+            frame = stat.traceback[0]
+            # replace "/path/to/module/file.py" with "module/file.py"
+            filename = os.sep.join(frame.filename.split(os.sep)[-2:])
+            print(f"#{index}: {filename}:{frame.lineno}: {round(stat.size / 1024)} KiB")
+            line = linecache.getline(frame.filename, frame.lineno).strip()
+            if line:
+                print('    %s' % line)
+
+        other = top_stats[limit:]
+        if other:
+            size = sum(stat.size for stat in other)
+            print("%s other: %.1f KiB" % (len(other), size / 1024))
+        total = sum(stat.size for stat in top_stats)
+
+        print("Total allocated size: %.1f KiB" % (total / 1024))
+
 
     def ffmpeg_timer_out(self):
         """
@@ -3695,21 +3724,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.debug("ffmpeg_timer_out function")
 
-        logging.debug("fps {}".format(self.fps))
+        logging.debug(f"fps {self.fps}")
 
         frameMs = 1000 / self.fps
 
-        logging.debug("frame Ms {}".format(frameMs))
+        logging.debug(f"frame Ms {frameMs}")
 
         requiredFrame = self.FFmpegGlobalFrame + 1
 
-        logging.debug("required frame 1: {}".format(requiredFrame))
+        logging.debug(f"required frame 1: {requiredFrame}")
 
-        logging.debug("sum self.duration1 {}".format(sum(self.dw_player[0].media_durations)))
+        logging.debug(f"sum self.duration1 {sum(self.dw_player[0].media_durations)}")
 
         # check if end of last media
         if requiredFrame * frameMs >= sum(self.dw_player[0].media_durations):
-            logging.debug("end of last media 1 frame: {}".format(requiredFrame))
+
+            logging.debug(f"end of last media 1 frame: {requiredFrame}")
+
             return
 
         for i, player in enumerate(self.dw_player):
@@ -3722,8 +3753,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             current_media_full_path = project_functions.media_full_path(currentMedia, self.projectFileName)
 
-            logging.debug("current media 1: {}".format(currentMedia))
-            logging.debug("frame current media 1: {}".format(frameCurrentMedia))
+            logging.debug(f"current media 1: {currentMedia}")
+            logging.debug(f"frame current media 1: {frameCurrentMedia}")
 
             # update spectro plot
             self.timer_sound_signal_out()
@@ -3734,16 +3765,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
 
                 md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
-    
+
                 frame_image_path = pathlib.Path(self.imageDirectory) / pathlib.Path((f"BORIS@{md5FileName}_{frameCurrentMedia:08}"
                                                                                       f".{self.frame_bitmap_format.lower()}"))
-    
+
                 logging.debug(f"frame_image_path: {frame_image_path}")
                 logging.debug(f"frame_image_path is file: {os.path.isfile(frame_image_path)}")
-    
+
                 if os.path.isfile(frame_image_path):
                     self.pixmap = QPixmap(str(frame_image_path))
-                    # check if jpg filter available if not use png
+
+                    # check if jpg filter available. If not use png
                     if self.pixmap.isNull():
                         self.frame_bitmap_format = "PNG"
                 else:
@@ -3751,14 +3783,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.iw.lwi.setVisible(False)
                     self.iw.resize(350, 200)
                     self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
-    
+
                     logging.debug(f"Extracting frame")
-    
+
                     self.iw.setWindowTitle("Extracting frames...")
                     self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
                     self.iw.show()
                     app.processEvents()
-    
+
                     utilities.extract_frames(self.ffmpeg_bin,
                                              frameCurrentMedia,
                                              (frameCurrentMedia - 1) / self.fps,
@@ -3770,54 +3802,72 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                              self.frame_resize,
                                              self.fbf_cache_size)
                     self.iw.hide()
-    
+
                     if not os.path.isfile(frame_image_path):
-    
+
                         logging.warning(f"frame not found: {frame_image_path} {frameCurrentMedia} {int(frameCurrentMedia / self.fps)}")
-    
+
                         return
-    
+
                     self.pixmap = QPixmap(str(frame_image_path))
                     # check if jpg filter available if not use png
                     if self.pixmap.isNull():
                         self.frame_bitmap_format = "PNG"
-    
+
                 player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
+
 
             if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
 
                 logging.debug(f"frame current media: {frameCurrentMedia}")
-    
+
                 if not (current_media_full_path in self.frames_cache
                         and frameCurrentMedia in self.frames_cache[current_media_full_path]):
-    
+
                     self.statusbar.showMessage("Extracting frames", 0)
                     app.processEvents()
-    
-                    print(player.frame_viewer.size().width(), player.frame_viewer.size().height())
-                    print(player.videoframe.h_resolution, player.videoframe.v_resolution)
-    
-                    r = utilities.extract_frames_mem(self.ffmpeg_bin,
-                                             frameCurrentMedia,
-                                             (frameCurrentMedia - 1) / self.fps,
-                                             current_media_full_path,
-                                             round(self.fps),
-                                             #(player.frame_viewer.size().width(), player.frame_viewer.size().height()),
-                                             (player.videoframe.h_resolution, player.videoframe.v_resolution),
-                                             self.fbf_cache_size)
-    
+
+                    '''
+                    print("frame_viewer size", player.frame_viewer.size().width(), player.frame_viewer.size().height())
+                    print("videoframe resolution", player.videoframe.h_resolution, player.videoframe.v_resolution)
+                    '''
+                    # check if cache memory is below the limit
+                    if (psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024) >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES):
+                        print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) )
+                        logging.debug("clear memory cache")
+                        self.frames_cache.clear()
+
+                    extracted_frames, new_resolution = utilities.extract_frames_mem(self.ffmpeg_bin,
+                                                     frameCurrentMedia,
+                                                     (frameCurrentMedia - 1) / self.fps,
+                                                     current_media_full_path,
+                                                     round(self.fps),
+                                                     (player.videoframe.h_resolution, player.videoframe.v_resolution),
+                                                     self.frame_resize,
+                                                     self.fbf_cache_size)
+
+                    if not extracted_frames:
+                        self.statusbar.showMessage("Error during frames extraction", 5000)
+                        return
+
                     if current_media_full_path not in self.frames_cache:
-                        self.frames_cache[current_media_full_path] =  {}
-                    for idx, f in enumerate(r):
-                        self.frames_cache[current_media_full_path][frameCurrentMedia + idx] = f
-    
-                    print("frames cache mem size:", sum([len(self.frames_cache[k].keys()) * 3 * player.videoframe.h_resolution * player.videoframe.v_resolution for k in self.frames_cache]))
-    
+                        self.frames_cache[current_media_full_path] = {}
+                    for idx, frame in enumerate(extracted_frames):
+                        self.frames_cache[current_media_full_path][frameCurrentMedia + idx] = frame
+
+                    extracted_frames.clear()
+
+                    print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) )
+
+
+                    logging.debug(f"frames cache mem size: {sum([len(self.frames_cache[k]) * 3 * new_resolution[0] * new_resolution[1] for k in self.frames_cache])}")
+
                     self.statusbar.showMessage("", 0)
-    
-    
-                print(list(self.frames_cache[current_media_full_path].keys()))
-    
+
+                logging.debug(f"number of frames in memory for {current_media_full_path}: {len(self.frames_cache[current_media_full_path])}")
+
+                logging.debug(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
+
                 player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frameCurrentMedia].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
 
@@ -5425,6 +5475,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.observationId = ""
 
+        self.frames_cache.clear()
+
         self.statusbar.showMessage("", 0)
 
         self.dwObservations.setVisible(False)
@@ -5644,8 +5696,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # frame-by-frame
             try:
                 self.config_param[SAVE_FRAMES] = settings.value(SAVE_FRAMES)
+                if not self.config_param[SAVE_FRAMES]:
+                    self.config_param[SAVE_FRAMES] = DISK
             except Exception:
                 self.config_param[SAVE_FRAMES] = DISK
+
+            logging.debug(f"save frame on {self.config_param[SAVE_FRAMES]}")
+
             try:
                 self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
             except Exception:
@@ -6803,7 +6860,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         if mode == "list":
             result, selected_observations = self.selectObservations(MULTIPLE)
-    
+
             if not selected_observations:
                 return
         if mode == "current" and self.observationId:
@@ -8939,17 +8996,13 @@ item []:
             date=__version_date__,
             python_ver=platform.python_version()))
 
-        details = ("Python {python_ver} ({architecture}) - Qt {qt_ver} - PyQt{pyqt_ver} on {system}\n"
-                   "CPU type: {cpu_info}\n\n"
-                   "{programs_versions}").format(
-            python_ver=platform.python_version(),
-            architecture="64-bit" if sys.maxsize > 2**32 else "32-bit",
-            pyqt_ver=PYQT_VERSION_STR,
-            system=platform.system(),
-            qt_ver=QT_VERSION_STR,
-            cpu_info=platform.machine(),
-            programs_versions="\n".join(programs_versions)
-        )
+        n = "\n"
+        programs_versions = n.join(programs_versions)
+        details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
+                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
+                   f"CPU type: {platform.machine()}{n}"
+                   f"Memory in use by BORIS: {round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)} Mb{n}{n}"
+                   f"{programs_versions}")
 
         about_dialog.setDetailedText(details)
 

@@ -34,14 +34,15 @@ from preferences_ui import Ui_prefDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):
+
     def __init__(self, parent=None):
 
         super().__init__()
         self.setupUi(self)
 
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
-        self.rb_save_frames_in_mem.clicked.connect(self.rb_frames_mem_disk)
-        self.rb_save_frames_on_disk.clicked.connect(self.rb_frames_mem_disk)
+        self.rb_save_frames_in_mem.toggled.connect(self.rb_frames_mem_disk)
+        self.rb_save_frames_on_disk.toggled.connect(self.rb_frames_mem_disk)
 
         self.pb_reset_colors.clicked.connect(self.reset_colors)
 
@@ -53,21 +54,27 @@ class Preferences(QDialog, Ui_prefDialog):
 
 
     def rb_frames_mem_disk(self):
-        self.lb_memory_frames.setEnabled(self.rb_save_frames_in_mem.isChecked())
-        self.sb_frames_memory_size.setEnabled(self.rb_save_frames_in_mem.isChecked())
+        """
+        change where extracted frames will be saved: disk or memory
+        """
+        for w in [self.lb_memory_frames, self.sb_frames_memory_size]:
+            w.setEnabled(self.rb_save_frames_in_mem.isChecked())
 
-        for w in [self.lb_resize_frame, self.sbFrameResize, self.lb_bitmap_quality,
-                  self.cbFrameBitmapFormat, self.lb_cache_size, self.sb_fbf_cache_size]:
+        for w in [self.lb_bitmap_quality, self.cbFrameBitmapFormat]:
             w.setEnabled(self.rb_save_frames_on_disk.isChecked())
 
 
     def refresh_preferences(self):
+        """
+        allow user to delete the config file (.boris)
+        """
         if MessageDialog("BORIS",
                          ("Refresh will re-initialize "
                           "all your preferences and close BORIS"),
                          [CANCEL, "Refresh preferences"]) == "Refresh preferences":
             self.flag_refresh = True
             self.accept()
+
 
     def browseFFmpegCacheDir(self):
         """
@@ -79,6 +86,7 @@ class Preferences(QDialog, Ui_prefDialog):
                                                             options=QFileDialog().ShowDirsOnly)
         if FFmpegCacheDir:
             self.leFFmpegCacheDir.setText(FFmpegCacheDir)
+
 
     def reset_colors(self):
         """

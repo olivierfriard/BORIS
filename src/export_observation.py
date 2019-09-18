@@ -332,7 +332,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     if observation[TYPE] in [MEDIA]:
         for player in sorted(list(observation[FILE].keys())):
             for media in observation[FILE][player]:
-                rows.append(["Player #{0}".format(player), media])
+                rows.append([f"Player #{player}", media])
     rows.append([""])
 
     # date
@@ -369,7 +369,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     behavioral_category = project_functions.behavior_category(ethogram)
 
     for x in range(1, max_modifiers + 1):
-        header.append("Modifier {}".format(x))
+        header.append(f"Modifier {x}")
     header.extend(["Comment", "Status"])
 
     rows.append(header)

@@ -301,182 +301,153 @@
         <attribute name="title">
          <string>Frame-by-frame mode</string>
         </attribute>
-        <widget class="QRadioButton" name="rb_save_frames_in_mem">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>20</y>
-           <width>231</width>
-           <height>23</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Save frames in memory</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-        <widget class="QRadioButton" name="rb_save_frames_on_disk">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>160</y>
-           <width>201</width>
-           <height>23</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Save frames on disk</string>
-         </property>
-        </widget>
-        <widget class="QLabel" name="lb_memory_frames">
-         <property name="geometry">
-          <rect>
-           <x>40</x>
-           <y>60</y>
-           <width>201</width>
-           <height>17</height>
-          </rect>
-         </property>
-         <property name="text">
-          <string>Memory dedicated to frames (Mb)</string>
-         </property>
-        </widget>
-        <widget class="QSpinBox" name="sb_frames_memory_size">
-         <property name="geometry">
-          <rect>
-           <x>240</x>
-           <y>50</y>
-           <width>101</width>
-           <height>26</height>
-          </rect>
-         </property>
-         <property name="minimum">
-          <number>1</number>
-         </property>
-         <property name="maximum">
-          <number>1000</number>
-         </property>
-         <property name="singleStep">
-          <number>10</number>
-         </property>
-         <property name="value">
-          <number>200</number>
-         </property>
-        </widget>
-        <widget class="QWidget" name="">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>190</y>
-           <width>461</width>
-           <height>35</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QLabel" name="lb_resize_frame">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Resize frame (horizontal number of pixels). The aspect ratio will be maintained</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="sbFrameResize">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="maximum">
-             <number>1920</number>
-            </property>
-            <property name="singleStep">
-             <number>10</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>230</y>
-           <width>389</width>
-           <height>27</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
-          <item>
-           <widget class="QLabel" name="lb_bitmap_quality">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Frame bitmap format (JPG: Low quality  PNG: High quality)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QComboBox" name="cbFrameBitmapFormat">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string>JPG</string>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QLabel" name="lb_cache_size">
+             <property name="enabled">
+              <bool>true</bool>
              </property>
-            </item>
-            <item>
              <property name="text">
-              <string>PNG</string>
+              <string>Cache size (in seconds)</string>
              </property>
-            </item>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-        <widget class="QWidget" name="">
-         <property name="geometry">
-          <rect>
-           <x>20</x>
-           <y>260</y>
-           <width>196</width>
-           <height>28</height>
-          </rect>
-         </property>
-         <layout class="QHBoxLayout" name="horizontalLayout_9">
-          <item>
-           <widget class="QLabel" name="lb_cache_size">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>Cache size (in seconds)</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QSpinBox" name="sb_fbf_cache_size">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>3600</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="sb_fbf_cache_size">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>3600</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QLabel" name="lb_resize_frame">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Resize frame (horizontal number of pixels). The aspect ratio will be maintained</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="sbFrameResize">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="maximum">
+              <number>1920</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="rb_save_frames_in_mem">
+           <property name="text">
+            <string>Save frames in memory</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QLabel" name="lb_memory_frames">
+             <property name="text">
+              <string>Maximum amount of memory</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QSpinBox" name="sb_frames_memory_size">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+             <property name="maximum">
+              <number>16000</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+             <property name="value">
+              <number>2000</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="rb_save_frames_on_disk">
+           <property name="text">
+            <string>Save frames on disk</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QLabel" name="lb_bitmap_quality">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Frame bitmap format (JPG: Low quality  PNG: High quality)</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="cbFrameBitmapFormat">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <item>
+              <property name="text">
+               <string>JPG</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>PNG</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="tab_4">
         <attribute name="title">

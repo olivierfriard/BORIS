@@ -95,6 +95,7 @@ SAVE = "Save"
 DISCARD = "Discard"
 OK = "OK"
 OVERWRITE = "Overwrite"
+OVERWRITE_ALL = "Overwrite all"
 
 NO_FOCAL_SUBJECT = "No focal subject"
 
@@ -294,7 +295,7 @@ FFMPEG = "ffmpeg"
 
 SAVE_FRAMES = "save_frames"
 MEMORY_FOR_FRAMES = "memory_for_frames"
-DEFAULT_MEMORY_FOR_FRAMES = 200
+DEFAULT_MEMORY_FOR_FRAMES = 2000  # Mb
 DISK = "disk"
 MEMORY = "memory"
 

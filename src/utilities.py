@@ -503,16 +503,17 @@ def extract_frames(ffmpeg_bin: str,
         out, error = out.decode("utf-8"), error.decode("utf-8")
 
         if error:
-            logging.debug("ffmpeg error: {}".format(error))
+            logging.debug(f"ffmpeg error: {error}")
 
 
 def extract_frames_mem(ffmpeg_bin: str,
                    start_frame: int,
                    second: float,
                    current_media_path,
-                   fps,
-                   resolution,
-                   number_of_seconds):
+                   fps: int,
+                   resolution: tuple,
+                   frame_resize: int,
+                   number_of_seconds: int) -> (list, tuple):
     """
     extract frames from media file and save them in imageDir directory
 
@@ -524,6 +525,10 @@ def extract_frames_mem(ffmpeg_bin: str,
         fps (float): number of frame by second
         resolution (list): resolution (w, h)
         number_of_seconds (int): number of seconds to extract
+
+    Returns:
+        list: extracted frames in pixmap format
+        tuple: (new horizontal resolution, new vertical resolution
     """
 
     def toQImage(frame, copy=False):
@@ -545,30 +550,38 @@ def extract_frames_mem(ffmpeg_bin: str,
                     qim = QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_ARGB32)
                     return qim.copy() if copy else qim
 
+    if frame_resize:
+        new_h_resolution = frame_resize
+        new_v_resolution = round(resolution[1] * (frame_resize / resolution[0]))
+    else:
+        new_h_resolution, new_v_resolution = resolution
+
+    logging.debug(f"new resolution: {new_h_resolution} x {new_v_resolution}")
+
     ffmpeg_command = ["ffmpeg", "-loglevel", "info",
-                      '-i', current_media_path,
-                      '-hide_banner',
-                      '-ss', str((start_frame - 1) / fps),
-                      '-vframes', str(int(fps * number_of_seconds)),
-                      '-s', f'{resolution[0]}x{resolution[1]}',
-                      '-f', 'image2pipe',
-                      '-pix_fmt', 'rgb24',
-                      '-vcodec', 'rawvideo', '-',
+                      "-i", current_media_path,
+                      "-hide_banner",
+                      "-ss", str((start_frame - 1) / fps),
+                      "-vframes", str(int(fps * number_of_seconds)),
+                      "-s", f"{new_h_resolution}x{new_v_resolution}",
+                      "-f", "image2pipe",
+                      "-pix_fmt", "rgb24",
+                      "-vcodec", "rawvideo", "-",
                       ]
     pipe = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
 
     # print("stderr", self.pipe.stderr)
 
     frames = []
-    for f in range(start_frame, start_frame + 25):
-        raw_image = pipe.stdout.read(resolution[0] * resolution[1] * 3)
+    for f in range(start_frame, start_frame + int(fps * number_of_seconds)):
+        raw_image = pipe.stdout.read(new_h_resolution * new_v_resolution * 3)
         if not len(raw_image):
-            print("frames finished")
-            return
+            logging.debug("frames stream finished")
+            return [], ()
 
-        frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((resolution[1], resolution[0], 3)))))
+        frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((new_v_resolution, new_h_resolution, 3)))))
 
-    return frames
+    return frames, (new_h_resolution, new_v_resolution)
 
 
 
