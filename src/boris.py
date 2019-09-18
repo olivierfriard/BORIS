@@ -3833,8 +3833,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     '''
                     # check if cache memory is below the limit
                     if (psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024) >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES):
-                        print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) )
-                        logging.debug("clear memory cache")
+                        logging.debug((f"clear memory cache {round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) }"
+                                       f" used of {self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)} allowed" )
                         self.frames_cache.clear()
 
                     extracted_frames, new_resolution = utilities.extract_frames_mem(self.ffmpeg_bin,
