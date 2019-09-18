@@ -676,6 +676,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
+        self.init_memory = round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024)
+
 
     def menu_options(self):
         """
@@ -3857,7 +3859,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     extracted_frames.clear()
 
-                    print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) )
+                    print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024))
 
 
                     logging.debug(f"frames cache mem size: {sum([len(self.frames_cache[k]) * 3 * new_resolution[0] * new_resolution[1] for k in self.frames_cache])}")
