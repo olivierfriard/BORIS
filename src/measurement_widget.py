@@ -24,12 +24,13 @@ This file is part of BORIS.
 
 import logging
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from config import *
 import dialog
+from config import *
+
 
 class wgMeasurement(QWidget):
     """
@@ -128,10 +129,7 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            if QT_VERSION_STR[0] == "4":
-                fileName = QFileDialog(self).getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
-            else:
-                fileName, _ = QFileDialog(self).getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
+            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
             if fileName:
                 with open(fileName, "w") as f:
                     f.write(self.pte.toPlainText())
@@ -148,4 +146,3 @@ if __name__ == '__main__':
     w.show()
 
     sys.exit(app.exec_())
-

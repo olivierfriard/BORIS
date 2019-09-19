@@ -519,6 +519,7 @@ def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLen
     return True
 '''
 
+
 def create_events_plot(pj,
                        selected_observations,
                        parameters,
@@ -601,7 +602,7 @@ def create_events_plot(pj,
 
         # time
         obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
-        if obs_length == -1: # media length not available
+        if obs_length == -1:  # media length not available
             interval = TIME_EVENTS
 
         if interval == TIME_FULL_OBS:

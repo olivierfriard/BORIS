@@ -20,19 +20,20 @@ Copyright 2012-2019 Olivier Friard
 """
 
 
+import json
 import logging
 import os
-import sys
-import json
 import pathlib
-from shutil import copyfile
+import sys
 from decimal import *
-import tablib
+from shutil import copyfile
 
-from config import *
 import db_functions
-import utilities
+import dialog
 import select_observations
+import tablib
+import utilities
+from config import *
 
 
 def behavior_category(ethogram: dict) -> dict:
@@ -477,8 +478,8 @@ def export_observations_list(pj: dict,
                     indep_var.append("")
 
         data.append(
-            [obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(media_files)] +
-            indep_var
+            [obs_id, pj[OBSERVATIONS][obs_id]["date"], pj[OBSERVATIONS][obs_id]["description"], subjects, ", ".join(media_files)]
+            + indep_var
         )
 
     if output_format in ["tsv", "csv", "html"]:
@@ -520,10 +521,8 @@ def remove_media_files_path(pj):
                         pj[OBSERVATIONS][obs_id][FILE][n_player][idx] = p
                         if MEDIA_INFO in pj[OBSERVATIONS][obs_id]:
                             for info in [LENGTH, "hasAudio", "hasVideo", "fps"]:
-                                if (
-                                    info in pj[OBSERVATIONS][obs_id][MEDIA_INFO] and
-                                    media_file in pj[OBSERVATIONS][obs_id][MEDIA_INFO][info]
-                                ):
+                                if (info in pj[OBSERVATIONS][obs_id][MEDIA_INFO]
+                                        and media_file in pj[OBSERVATIONS][obs_id][MEDIA_INFO][info]):
                                     pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][p] = pj[OBSERVATIONS][obs_id][MEDIA_INFO][info][
                                         media_file
                                     ]
@@ -618,7 +617,57 @@ def observation_total_length(observation: dict):
         return media_max_total_length
 
     logging.critical("observation not LIVE nor MEDIA")
+
     return Decimal("0.0")
+
+
+def observation_length(pj, selected_observations: list) -> tuple:
+    """
+    max length of selected observations
+    total media length
+
+    Args:
+        selected_observations (list): list of selected observations
+
+    Returns:
+        float: maximum media length for all observations
+        float: total media length for all observations
+    """
+    selectedObsTotalMediaLength = Decimal("0.0")
+    max_obs_length = 0
+    for obs_id in selected_observations:
+        obs_length = observation_total_length(pj[OBSERVATIONS][obs_id])
+        if obs_length in [Decimal("0"), Decimal("-1")]:
+            selectedObsTotalMediaLength = -1
+            break
+        max_obs_length = max(max_obs_length, obs_length)
+        selectedObsTotalMediaLength += obs_length
+
+    # an observation media length is not available
+    if selectedObsTotalMediaLength == -1:
+        # propose to user to use max event time
+        if dialog.MessageDialog(programName,
+                                (f"A media length is not available for the observation <b>{obs_id}</b>.<br>"
+                                 "Use last event time as media length?"),
+                                [YES, NO]) == YES:
+            maxTime = 0  # max length for all events all subjects
+            max_length = 0
+            for obs_id in selected_observations:
+                if pj[OBSERVATIONS][obs_id][EVENTS]:
+                    maxTime += max(pj[OBSERVATIONS][obs_id][EVENTS])[0]
+                    max_length = max(max_length, max(pj[OBSERVATIONS][obs_id][EVENTS])[0])
+
+            logging.debug(f"max time all events all subjects: {maxTime}")
+
+            max_obs_length = max_length
+            selectedObsTotalMediaLength = maxTime
+
+        else:
+            max_obs_length = -1
+            selectedObsTotalMediaLength = Decimal("-1")
+
+    return max_obs_length, selectedObsTotalMediaLength
+
 
 
 def events_start_stop(ethogram, events):
@@ -858,8 +907,8 @@ def open_project_json(projectFileName: str) -> tuple:
                             # FPS
                             if "nframe" in pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]:
                                 pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {
-                                    media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["nframe"] /
-                                    (pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000)
+                                    media_file_path: pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["nframe"]
+                                                     / (pj[OBSERVATIONS][obs]["media_file_info"][media_md5_key]["video_length"] / 1000)
                                 }
                             else:
                                 pj[OBSERVATIONS][obs][MEDIA_INFO][FPS] = {media_file_path: 0}

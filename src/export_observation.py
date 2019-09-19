@@ -384,8 +384,8 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
 
     for event in eventsWithStatus:
         if (((event[SUBJECT_EVENT_FIELD] in parameters["selected subjects"])
-            or (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"]))
-            and (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
+                or (event[SUBJECT_EVENT_FIELD] == "" and NO_FOCAL_SUBJECT in parameters["selected subjects"]))
+                and (event[BEHAVIOR_EVENT_FIELD] in parameters["selected behaviors"])):
 
             fields = []
             fields.append(utilities.intfloatstr(str(event[EVENT_TIME_FIELD_IDX])))
@@ -541,7 +541,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     data = tablib.Dataset()
     observation = pj[OBSERVATIONS][obsId]
 
-
     duration1 = []   # in seconds
     if observation[TYPE] in [MEDIA]:
         try:
@@ -550,7 +549,6 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                     duration1.append(observation[MEDIA_INFO]["length"][mediaFile])
         except Exception:
             duration1 = []
-
 
     obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obsId])
     if obs_length == Decimal("-1"):  # media length not available

@@ -19,17 +19,25 @@ Copyright 2012-2019 Olivier Friard
   MA 02110-1301, USA.
 """
 
-from config import *
-import utilities
+import os
+import pathlib
+import re
 import time
+
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+
+import dialog
+import project_functions
+import select_observations
 import tablib
+import utilities
+from config import *
 
 
-
-def instantaneous_sampling(pj: dict,
-                           selected_observations: list,
-                           parameters_obs: dict,
-                           time_interval: float) -> dict:
+def instantaneous_sampling_analysis(pj: dict,
+                                    selected_observations: list,
+                                    parameters_obs: dict,
+                                    time_interval: float) -> dict:
     """
     Instantaneous samplig analysis
 
@@ -102,3 +110,159 @@ def instantaneous_sampling(pj: dict,
                 row_idx += 1
 
     return results_df
+
+
+def instantaneous_sampling(pj: dict):
+
+
+    result, selected_observations = select_observations.select_observations(pj,
+                                                                            MULTIPLE,
+                                                                            "Select observations for instantaneous sampling")
+
+    if not selected_observations:
+        return
+    # check if state events are paired
+    out = ""
+    not_paired_obs_list = []
+    for obs_id in selected_observations:
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
+                                                          pj[OBSERVATIONS][obs_id])
+
+        if not r:
+            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+            not_paired_obs_list.append(obs_id)
+
+    if out:
+        out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+
+        if not results.exec_():
+            return
+    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+    if not selected_observations:
+        return
+
+    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(pj, selected_observations)
+    if max_obs_length == -1:  # media length not available, user choose to not use events
+        return
+
+    parameters = dialog.choose_obs_subj_behav_category(pj,
+                                                       selected_observations,
+                                                       maxTime=max_obs_length,
+                                                       flagShowExcludeBehaviorsWoEvents=True,
+                                                       by_category=False)
+
+    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
+        return
+
+    # ask for time interval
+    i, ok = QInputDialog.getDouble(None, "Instantaneous sampling", "Time interval (in seconds):", 1.0, 0.001, 86400, 3)
+    if not ok:
+        return
+    time_interval = utilities.float2decimal(i)
+
+    # self.statusbar.showMessage("Instantaneous sampling is running. Please wait...", 0)
+    # app.processEvents()
+
+    results_df = instantaneous_sampling_analysis(pj,
+                                                 selected_observations,
+                                                 parameters,
+                                                 time_interval)
+
+    # self.statusbar.showMessage("Instantaneous sampling done...", 5000)
+    # app.processEvents()
+
+    # save results
+    if len(selected_observations) == 1:
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)"]
+        file_formats = ["tsv",
+                        "csv",
+                        "ods",
+                        "xlsx",
+                        "xls",
+                        "html"]
+
+        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
+        if not file_name:
+            return
+
+        output_format = file_formats[extended_file_formats.index(filter_)]
+
+        if pathlib.Path(file_name).suffix != "." + output_format:
+            file_name = str(pathlib.Path(file_name)) + "." + output_format
+            # check if file with new extension already exists
+            if pathlib.Path(file_name).is_file():
+                if dialog.MessageDialog(programName,
+                                        f"The file {file_name} already exists.",
+                                        [CANCEL, OVERWRITE]) == CANCEL:
+                    return
+    else:
+        items = ("Tab Separated Values (*.tsv)",
+                 "Comma separated values (*.csv)",
+                 "Open Document Spreadsheet (*.ods)",
+                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                 "HTML (*.html)")
+
+        item, ok = QInputDialog.getItem(None, "Save results", "Available formats", items, 0, False)
+        if not ok:
+            return
+        output_format = re.sub(".* \(\*\.", "", item)[:-1]
+
+        export_dir = QFileDialog().getExistingDirectory(None, "Choose a directory to save results",
+                                                        os.path.expanduser("~"),
+                                                        options=QFileDialog.ShowDirsOnly)
+        if not export_dir:
+            return
+
+    mem_command = ""
+    for obs_id in results_df:
+
+        for subject in results_df[obs_id]:
+
+            if len(selected_observations) > 1:
+                file_name_with_subject = str(pathlib.Path(pathlib.Path(export_dir)
+                                             / utilities.safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
+            else:
+                file_name_with_subject = str(pathlib.Path(os.path.splitext(file_name)[0]
+                                             + utilities.safeFileName("_" + subject)).with_suffix("." + output_format))
+
+            # check if file with new extension already exists
+            if mem_command != OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():
+                if mem_command == "Skip all":
+                    continue
+                mem_command = dialog.MessageDialog(programName,
+                                                   f"The file {file_name_with_subject} already exists.",
+                                                   [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
+                if mem_command == CANCEL:
+                    return
+                if mem_command == "Skip":
+                    continue
+
+            try:
+                if output_format in ["csv", "tsv", "html"]:
+                    with open(file_name_with_subject, "wb") as f:
+                        f.write(str.encode(results_df[obs_id][subject].export(output_format)))
+
+                if output_format in ["ods", "xlsx", "xls"]:
+                    with open(file_name_with_subject, "wb") as f:
+                        f.write(results_df[obs_id][subject].export(output_format))
+
+            except Exception:
+
+                error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+                logging.critical(f"Error in instantaneous sampling function: {error_type} {error_file_name} {error_lineno}")
+
+                QMessageBox.critical(None, programName, f"Error saving file: {error_type}")
+                return

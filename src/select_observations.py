@@ -34,7 +34,7 @@ import utilities
 import project_functions
 
 
-def select_observations(pj: dict, mode: str) -> tuple:
+def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     """
     allow user to select observations
     mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
@@ -42,6 +42,7 @@ def select_observations(pj: dict, mode: str) -> tuple:
     Args:
         pj (dict): BORIS project dictionary
         mode (str): mode foe selection: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
+        windows_title (str): title for windows
 
     Returns:
         str: selected mode: OPEN, EDIT, VIEW
@@ -96,6 +97,8 @@ def select_observations(pj: dict, mode: str) -> tuple:
         data.append([obs, date, descr, subjectsList, media] + indepvar)
 
     obsList = observations_list.observationsList_widget(data, header=obsListFields + indepVarHeader, column_type=column_type)
+    if windows_title:
+        obsList.setWindowTitle(windows_title)
 
     obsList.pbOpen.setVisible(False)
     obsList.pbView.setVisible(False)

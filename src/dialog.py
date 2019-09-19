@@ -28,63 +28,13 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
-import config
+from config import *
 import utilities
 import duration_widget
 import version
-
-'''
-class multi_values_dialog(QDialog):
-    """
-    dialog for user input. Elements can be checkbox, lineedit, spinbox
-
-    """
-
-    def __init__(self, label_caption, elements_list):
-        super().__init__()
-
-        hbox = QVBoxLayout()
-        self.label = QLabel()
-        self.label.setText(label_caption)
-        hbox.addWidget(self.label)
-
-        self.elements = {}
-        for element in elements_list:
-            if element[0] == "cb":
-                self.elements[element[1]] = QCheckBox(element[1])
-                self.elements[element[1]].setChecked(element[2])
-                hbox.addWidget(self.elements[element[1]])
-            if element[0] == "le":
-                lb = QLabel(element[1])
-                hbox.addWidget(lb)
-                self.elements[element[1]] = QLineEdit()
-                hbox.addWidget(self.elements[element[1]])
-            if element[0] == "sb":
-                lb = QLabel(element[1])
-                hbox.addWidget(lb)
-                self.elements[element[1]] = QSpinBox()
-                self.elements[element[1]].setRange(element[2], element[3])
-                self.elements[element[1]].setSingleStep(element[4])
-                self.elements[element[1]].setValue(element[5])
-                hbox.addWidget(self.elements[element[1]])
-
-        hbox2 = QHBoxLayout()
-
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-        hbox2.addWidget(self.pbCancel)
-
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.accept)
-        self.pbOK.setDefault(True)
-        hbox2.addWidget(self.pbOK)
-
-        hbox.addLayout(hbox2)
-
-        self.setLayout(hbox)
-
-        self.setWindowTitle("title")
-'''
+import param_panel
+import project_functions
+import logging
 
 
 def MessageDialog(title, text, buttons):
@@ -107,7 +57,7 @@ def error_message(task: str, exc_info: tuple) -> None:
 
     """
     error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
-    QMessageBox.critical(None, config.programName,
+    QMessageBox.critical(None, programName,
                          (f"An error occured during {task}.<br>"
                           f"BORIS version: {version.__version__}<br>"
                           f"Error: {error_type}<br>"
@@ -183,19 +133,19 @@ class Video_overlay_dialog(QDialog):
 
     def ok(self):
         if not self.le_file_path.text():
-            QMessageBox.warning(None, config.programName, "Select a file containing a PNG image",
+            QMessageBox.warning(None, programName, "Select a file containing a PNG image",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if self.le_overlay_position.text() and "," not in self.le_overlay_position.text():
-            QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
+            QMessageBox.warning(None, programName, "The overlay position must be in x,y format",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
         if self.le_overlay_position.text():
             try:
                 [int(x.strip()) for x in self.le_overlay_position.text().split(",")]
             except Exception:
-                QMessageBox.warning(None, config.programName, "The overlay position must be in x,y format",
+                QMessageBox.warning(None, programName, "The overlay position must be in x,y format",
                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
         self.accept()
@@ -263,7 +213,7 @@ class DuplicateBehaviorCode(QDialog):
 
         super(DuplicateBehaviorCode, self).__init__()
 
-        self.setWindowTitle(config.programName)
+        self.setWindowTitle(programName)
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         Vlayout = QVBoxLayout()
@@ -278,13 +228,6 @@ class DuplicateBehaviorCode(QDialog):
         self.lw.setObjectName("lw_modifiers")
         # TODO: to be enabled
         # lw.installEventFilter(self)
-
-        '''
-        if QT_VERSION_STR[0] == "4":
-            lw.setItemSelected(item, True)
-        else:
-            item.setSelected(True)
-        '''
 
         for code in codes_list:
             item = QListWidgetItem(code)
@@ -326,8 +269,7 @@ class ChooseObservationsToImport(QDialog):
 
         super(ChooseObservationsToImport, self).__init__()
 
-        self.setWindowTitle(config.programName)
-        #self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowTitle(programName)
 
         Vlayout = QVBoxLayout()
         widget = QWidget(self)
@@ -356,7 +298,7 @@ class ChooseObservationsToImport(QDialog):
         pbOK = QPushButton("OK", clicked=self.accept)
         pbOK.setDefault(True)
         hlayout.addWidget(pbOK)
-        
+
         Vlayout.addLayout(hlayout)
 
         self.setLayout(Vlayout)
@@ -385,9 +327,9 @@ class Ask_time(QDialog):
         hbox.addWidget(self.label)
 
         self.time_widget = duration_widget.Duration_widget()
-        if time_format == config.HHMMSS:
+        if time_format == HHMMSS:
             self.time_widget.set_format_hhmmss()
-        if time_format == config.S:
+        if time_format == S:
             self.time_widget.set_format_s()
 
         hbox.addWidget(self.time_widget)
@@ -478,12 +420,12 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
-            QMessageBox.warning(None, config.programName, "You must select a field to be edited",
+            QMessageBox.warning(None, programName, "You must select a field to be edited",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
-            QMessageBox.warning(None, config.programName, "You must select a new value from the list",
+            QMessageBox.warning(None, programName, "You must select a new value from the list",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
@@ -867,3 +809,215 @@ class View_explore_project_results(QWidget):
     def tw_cellDoubleClicked(self, r, c):
 
         self.double_click_signal.emit(self.tw.item(r, 0).text(), int(self.tw.item(r, 1).text()))
+
+
+'''
+def extract_observed_behaviors(pj, selected_observations, selectedSubjects):
+    """
+    extract unique behaviors codes from obs_id observation
+    """
+
+    observed_behaviors = []
+
+    # extract events from selected observations
+    all_events = [pj[OBSERVATIONS][x][EVENTS] for x in pj[OBSERVATIONS] if x in selected_observations]
+
+    for events in all_events:
+        for event in events:
+            if (event[EVENT_SUBJECT_FIELD_IDX] in selectedSubjects or
+               (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selectedSubjects)):
+                observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+
+    # remove duplicate
+    observed_behaviors = list(set(observed_behaviors))
+
+    return observed_behaviors
+'''
+
+
+def choose_obs_subj_behav_category(pj: dict,
+                                   selected_observations: list,
+                                   maxTime=0,
+                                   flagShowIncludeModifiers: bool = True,
+                                   flagShowExcludeBehaviorsWoEvents: bool = True,
+                                   by_category: bool = False,
+                                   show_time: bool = False,
+                                   timeFormat: str = HHMMSS):
+
+    """
+    show window for:
+      - selection of subjects
+      - selection of behaviors (based on selected subjects)
+      - selection of time interval
+      - inclusion/exclusion of modifiers
+      - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
+
+    Returns:
+         dict: {"selected subjects": selectedSubjects,
+                "selected behaviors": selectedBehaviors,
+                "include modifiers": True/False,
+                "exclude behaviors": True/False,
+                "time": TIME_FULL_OBS / TIME_EVENTS / TIME_ARBITRARY_INTERVAL
+                "start time": startTime,
+                "end time": endTime
+                }
+    """
+
+    paramPanelWindow = param_panel.Param_panel()
+    paramPanelWindow.resize(600, 500)
+    paramPanelWindow.setWindowTitle("Select subjects and behaviors")
+    paramPanelWindow.selectedObservations = selected_observations
+    paramPanelWindow.pj = pj
+
+    if not flagShowIncludeModifiers:
+        paramPanelWindow.cbIncludeModifiers.setVisible(False)
+    if not flagShowExcludeBehaviorsWoEvents:
+        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+
+    if by_category:
+        paramPanelWindow.cbIncludeModifiers.setVisible(False)
+        paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+
+    paramPanelWindow.frm_time_interval.setEnabled(False)
+    if timeFormat == HHMMSS:
+        paramPanelWindow.teStartTime.setTime(QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
+        paramPanelWindow.teEndTime.setTime(QTime.fromString(utilities.seconds2time(maxTime), "hh:mm:ss.zzz"))
+        paramPanelWindow.dsbStartTime.setVisible(False)
+        paramPanelWindow.dsbEndTime.setVisible(False)
+
+    if timeFormat == S:
+        paramPanelWindow.dsbStartTime.setValue(0.0)
+        paramPanelWindow.dsbEndTime.setValue(maxTime)
+        paramPanelWindow.teStartTime.setVisible(False)
+        paramPanelWindow.teEndTime.setVisible(False)
+
+    # hide max time
+    if not maxTime:
+        paramPanelWindow.frm_time.setVisible(False)
+
+    if selected_observations:
+        observedSubjects = project_functions.extract_observed_subjects(pj, selected_observations)
+    else:
+        # load all subjects and "No focal subject"
+        observedSubjects = [pj[SUBJECTS][x][SUBJECT_NAME] for x in pj[SUBJECTS]] + [""]
+    selectedSubjects = []
+
+    # add 'No focal subject'
+    if "" in observedSubjects:
+        selectedSubjects.append(NO_FOCAL_SUBJECT)
+        paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+        paramPanelWindow.ch = QCheckBox()
+        paramPanelWindow.ch.setText(NO_FOCAL_SUBJECT)
+        paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+        paramPanelWindow.ch.setChecked(True)
+        paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+    all_subjects = [pj[SUBJECTS][x][SUBJECT_NAME] for x in utilities.sorted_keys(pj[SUBJECTS])]
+
+    for subject in all_subjects:
+        paramPanelWindow.item = QListWidgetItem(paramPanelWindow.lwSubjects)
+        paramPanelWindow.ch = QCheckBox()
+        paramPanelWindow.ch.setText(subject)
+        paramPanelWindow.ch.stateChanged.connect(paramPanelWindow.cb_changed)
+        if subject in observedSubjects:
+            selectedSubjects.append(subject)
+            paramPanelWindow.ch.setChecked(True)
+        paramPanelWindow.lwSubjects.setItemWidget(paramPanelWindow.item, paramPanelWindow.ch)
+
+    logging.debug(f'selectedSubjects: {selectedSubjects}')
+
+    if selected_observations:
+        observedBehaviors = paramPanelWindow.extract_observed_behaviors(selected_observations, selectedSubjects)  # not sorted
+    else:
+        # load all behaviors
+        observedBehaviors = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]]
+
+    logging.debug(f'observed behaviors: {observedBehaviors}')
+
+    if BEHAVIORAL_CATEGORIES in pj:
+        categories = pj[BEHAVIORAL_CATEGORIES][:]
+        # check if behavior not included in a category
+        try:
+            if "" in [pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] for idx in pj[ETHOGRAM] if BEHAVIOR_CATEGORY in pj[ETHOGRAM][idx]]:
+                categories += [""]
+        except Exception:
+            categories = ["###no category###"]
+
+    else:
+        categories = ["###no category###"]
+
+    for category in categories:
+
+        if category != "###no category###":
+            if category == "":
+                paramPanelWindow.item = QListWidgetItem("No category")
+                paramPanelWindow.item.setData(34, "No category")
+            else:
+                paramPanelWindow.item = QListWidgetItem(category)
+                paramPanelWindow.item.setData(34, category)
+
+            font = QFont()
+            font.setBold(True)
+            paramPanelWindow.item.setFont(font)
+            paramPanelWindow.item.setData(33, "category")
+            paramPanelWindow.item.setData(35, False)
+
+            paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+        for behavior in [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in utilities.sorted_keys(pj[ETHOGRAM])]:
+
+            if ((categories == ["###no category###"])
+                or (behavior in [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM]
+                    if BEHAVIOR_CATEGORY in pj[ETHOGRAM][x] and pj[ETHOGRAM][x][BEHAVIOR_CATEGORY] == category])):
+
+                paramPanelWindow.item = QListWidgetItem(behavior)
+                if behavior in observedBehaviors:
+                    paramPanelWindow.item.setCheckState(Qt.Checked)
+                else:
+                    paramPanelWindow.item.setCheckState(Qt.Unchecked)
+
+                if category != "###no category###":
+                    paramPanelWindow.item.setData(33, "behavior")
+                    if category == "":
+                        paramPanelWindow.item.setData(34, "No category")
+                    else:
+                        paramPanelWindow.item.setData(34, category)
+
+                paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
+
+    if not paramPanelWindow.exec_():
+        return {SELECTED_SUBJECTS: [],
+                SELECTED_BEHAVIORS: []}
+
+    selectedSubjects = paramPanelWindow.selectedSubjects
+    selectedBehaviors = paramPanelWindow.selectedBehaviors
+
+    logging.debug(f"selected subjects: {selectedSubjects}")
+    logging.debug(f"selected behaviors: {selectedBehaviors}")
+
+    if timeFormat == HHMMSS:
+        startTime = utilities.time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
+        endTime = utilities.time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
+    if timeFormat == S:
+        startTime = Decimal(paramPanelWindow.dsbStartTime.value())
+        endTime = Decimal(paramPanelWindow.dsbEndTime.value())
+    if startTime > endTime:
+        QMessageBox.warning(None, programName, "The start time is after the end time",
+                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+        return {SELECTED_SUBJECTS: [], SELECTED_BEHAVIORS: []}
+
+    if paramPanelWindow.rb_full.isChecked():
+        time_param = TIME_FULL_OBS
+    if paramPanelWindow.rb_limit.isChecked():
+        time_param = TIME_EVENTS
+    if paramPanelWindow.rb_interval.isChecked():
+        time_param = TIME_ARBITRARY_INTERVAL
+
+    return {SELECTED_SUBJECTS: selectedSubjects,
+            SELECTED_BEHAVIORS: selectedBehaviors,
+            INCLUDE_MODIFIERS: paramPanelWindow.cbIncludeModifiers.isChecked(),
+            EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
+            "time": time_param,
+            START_TIME: startTime,
+            END_TIME: endTime
+            }

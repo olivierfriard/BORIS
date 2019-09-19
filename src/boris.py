@@ -1089,155 +1089,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         QMessageBox.warning(self, programName,
                             "This function is experimental for now.<br>Please test it and report bugs")
 
-        result, selected_observations = self.selectObservations(MULTIPLE)
-
-        if not selected_observations:
-            return
-        # check if state events are paired
-        out = ""
-        not_paired_obs_list = []
-        for obs_id in selected_observations:
-            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
-                                                              self.pj[OBSERVATIONS][obs_id], self.timeFormat)
-
-            if not r:
-                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-                not_paired_obs_list.append(obs_id)
-
-        if out:
-            out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
-            self.results = dialog.Results_dialog()
-            self.results.setWindowTitle(f"{programName} - Check selected observations")
-            self.results.ptText.setReadOnly(True)
-            self.results.ptText.appendHtml(out)
-            self.results.pbSave.setVisible(False)
-            self.results.pbCancel.setVisible(True)
-
-            if not self.results.exec_():
-                return
-        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-        if not selected_observations:
-            return
-
-        max_obs_length, selectedObsTotalMediaLength = self.observation_length(selected_observations)
-        if max_obs_length == -1:  # media length not available, user choose to not use events
-            return
-
-        parameters = self.choose_obs_subj_behav_category(selected_observations,
-                                                         maxTime=max_obs_length,
-                                                         flagShowExcludeBehaviorsWoEvents=True,
-                                                         by_category=False)
-
-        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-            QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to analyze")
-            return
-
-        # ask for time interval
-        i, ok = QInputDialog.getDouble(self, "Instantaneous sampling", "Time interval (in seconds):", 1.0, 0.001, 86400, 3)
-        if not ok:
-            return
-        time_interval = float2decimal(i)
-
-        self.statusbar.showMessage("Instantaneous sampling is running. Please wait...", 0)
-        app.processEvents()
-
-        results_df = instantaneous_sampling.instantaneous_sampling(self.pj,
-                                                                   selected_observations,
-                                                                   parameters,
-                                                                   time_interval)
-
-        self.statusbar.showMessage("Instantaneous sampling done...", 5000)
-        app.processEvents()
-
-        # save results
-        if len(selected_observations) == 1:
-            extended_file_formats = ["Tab Separated Values (*.tsv)",
-                                     "Comma Separated Values (*.csv)",
-                                     "Open Document Spreadsheet ODS (*.ods)",
-                                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                                     "HTML (*.html)"]
-            file_formats = ["tsv",
-                            "csv",
-                            "ods",
-                            "xlsx",
-                            "xls",
-                            "html"]
-
-            file_name, filter_ = QFileDialog().getSaveFileName(self, "Save results", "", ";;".join(extended_file_formats))
-            if not file_name:
-                return
-
-            output_format = file_formats[extended_file_formats.index(filter_)]
-
-            if pathlib.Path(file_name).suffix != "." + output_format:
-                file_name = str(pathlib.Path(file_name)) + "." + output_format
-                # check if file with new extension already exists
-                if pathlib.Path(file_name).is_file():
-                    if dialog.MessageDialog(programName,
-                                            f"The file {file_name} already exists.",
-                                            [CANCEL, OVERWRITE]) == CANCEL:
-                        return
-        else:
-            items = ("Tab Separated Values (*.tsv)",
-                     "Comma separated values (*.csv)",
-                     "Open Document Spreadsheet (*.ods)",
-                     "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
-                     "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
-                     "HTML (*.html)")
-
-            item, ok = QInputDialog.getItem(self, "Save results", "Available formats", items, 0, False)
-            if not ok:
-                return
-            output_format = re.sub(".* \(\*\.", "", item)[:-1]
-
-            export_dir = QFileDialog().getExistingDirectory(self, "Choose a directory to save results",
-                                                            os.path.expanduser("~"),
-                                                            options=QFileDialog.ShowDirsOnly)
-            if not export_dir:
-                return
-
-        
-        mem_command = ""
-        for obs_id in results_df:
-            print("results_df[obs_id]", results_df[obs_id])
-            for subject in results_df[obs_id]:
-
-                if len(selected_observations) > 1:
-                    file_name_with_subject = str(pathlib.Path(pathlib.Path(export_dir)
-                                                 / safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
-                else:
-                    file_name_with_subject = str(pathlib.Path(os.path.splitext(file_name)[0]
-                                                 + safeFileName("_" + subject)).with_suffix("." + output_format))
-
-                # check if file with new extension already exists
-                if mem_command != OVERWRITE_ALL and pathlib.Path(file_name).is_file():
-                    if mem_command == "Skip all":
-                        continue
-                    mem_command = dialog.MessageDialog(programName,
-                                                       f"The file {file_name_with_subject} already exists.",
-                                                       [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
-                    if mem_command == CANCEL:
-                        return
-                    if mem_command == "Skip":
-                        continue
-
-                try:
-                    if output_format in ["csv", "tsv", "html"]:
-                        with open(file_name_with_subject, "wb") as f:
-                            f.write(str.encode(results_df[obs_id][subject].export(output_format)))
-
-                    if output_format in ["ods", "xlsx", "xls"]:
-                        with open(file_name_with_subject, "wb") as f:
-                            f.write(results_df[obs_id][subject].export(output_format))
-
-                except Exception:
-
-                    error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                    logging.critical(f"Error in instantaneous sampling function: {error_type} {error_file_name} {error_lineno}")
-
-                    QMessageBox.critical(self, programName, f"Error saving file: {error_type}")
-                    return
+        instantaneous_sampling.instantaneous_sampling(self.pj)
 
 
     def twEthogram_sorted(self):
@@ -1280,7 +1132,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Export list of selected observations",
+                                                           "", ";;".join(extended_file_formats))
 
         if file_name:
             output_format = file_formats[extended_file_formats.index(filter_)]
@@ -4813,12 +4666,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_events_start_stop()
 
 
-    def selectObservations(self, mode):
+    def selectObservations(self, mode, windows_title=""):
         """
         show observations list window
         mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         """
-        result_str, selected_obs = select_observations.select_observations(self.pj, mode)
+        result_str, selected_obs = select_observations.select_observations(self.pj, mode, windows_title=windows_title)
 
         return result_str, selected_obs
 
@@ -6231,9 +6084,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        filediag_func = QFileDialog().getSaveFileNameAndFilter if QT_VERSION_STR[0] == "4" else QFileDialog(self).getSaveFileName
-
-        file_name, filter_ = filediag_func(self, "Synthetic time budget", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Synthetic time budget", "", ";;".join(extended_file_formats))
         if not file_name:
             return
 
@@ -6635,10 +6486,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if "od" in outputFormat:
                     filters = "Open Document Workbook *.ods (*.ods);;All files (*)"
 
-                if QT_VERSION_STR[0] == "4":
-                    WBfileName, filter_ = QFileDialog(self).getSaveFileNameAndFilter(self, "Save Time budget analysis", "", filters)
-                else:
-                    WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
+                WBfileName, filter_ = QFileDialog(self).getSaveFileName(self, "Save Time budget analysis", "", filters)
                 if not WBfileName:
                     return
 
@@ -7757,7 +7605,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
         """
 
-        result, selectedObservations = self.selectObservations(MULTIPLE)
+
+        result, selectedObservations = select_observations.select_observations(self.pj, MULTIPLE,
+                                                                               "Select observations for exporting events")
         if not selectedObservations:
             return
 
@@ -7777,9 +7627,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.show()
             return
 
-
         max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
+
         logging.debug(f"max_obs_length:{max_obs_length}  selectedObsTotalMediaLength:{selectedObsTotalMediaLength}")
+
         if max_obs_length == -1:
             return
 
@@ -7808,13 +7659,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if flag_group:
             file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html", "sds", "sql"]  # must be in same order than extended_file_formats
 
-            if QT_VERSION_STR[0] == "4":
-                fileName, filter_ = QFileDialog().getSaveFileNameAndFilter(self,
-                                                                           "Export aggregated events",
-                                                                           "", ";;".join(extended_file_formats))
-            else:
-                fileName, filter_ = QFileDialog().getSaveFileName(self, "Export aggregated events", "",
-                                                                  ";;".join(extended_file_formats))
+            fileName, filter_ = QFileDialog().getSaveFileName(self, "Export aggregated events", "",
+                                                              ";;".join(extended_file_formats))
 
             if not fileName:
                 return
@@ -7886,12 +7732,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not flag_group and outputFormat not in ["sds", "tbs"]:
                 fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
                 # check if file with new extension already exists
-                if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
+                if mem_command != OVERWRITE_ALL and pathlib.Path(fileName).is_file():
                     if mem_command == "Skip all":
                         continue
                     mem_command = dialog.MessageDialog(programName,
                                                        f"The file {fileName} already exists.",
-                                                       [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
+                                                       [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
                     if mem_command == "Skip":
@@ -10941,7 +10787,6 @@ item []:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-
     def export_events_as_behavioral_sequences(self, timed=False):
         """
         export events from selected observations by subject as behavioral sequences (plain text file)
@@ -10950,7 +10795,10 @@ item []:
         """
 
         # ask user for observations to analyze
-        result, selected_observations = self.selectObservations(MULTIPLE)
+        result, selected_observations = select_observations.select_observations(self.pj,
+                                                                                MULTIPLE,
+                                                                                "Select observations to export as behavioral sequences")
+
         if not selected_observations:
             return
 
@@ -11391,51 +11239,6 @@ item []:
 
                 self.seek_mediaplayer(newTime)
 
-                '''
-                if self.dw_player[0].media_list.count() == 1:
-                    if self.dw_player[0].mediaplayer.get_time() >= self.fast * 1000:
-                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_time() - self.fast * 1000)
-                    else:
-                        self.dw_player[0].mediaplayer.set_time(0)
-
-                elif self.dw_player[0].media_list.count() > 1:
-
-                    newTime = (sum(
-                        self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
-                                                          index_of_item(self.dw_player[0].
-                                                                        mediaplayer.get_media())]) +
-                               self.dw_player[0].mediaplayer.get_time() - self.fast * 1000)
-
-                    if newTime < self.fast * 1000:
-                        newTime = 0
-
-                    # remember if player paused (go previous will start playing)
-                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
-
-                    tot = 0
-                    for idx, d in enumerate(self.dw_player[0].media_durations):
-                        if tot <= newTime < tot + d:
-                            self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
-
-                            # wait until media is played
-                            while True:
-                                if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                                    break
-
-                            if flagPaused:
-                                self.dw_player[0].mediaListPlayer.pause()
-
-                            self.dw_player[0].mediaplayer.set_time(newTime - sum(
-                                self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
-                                                                  index_of_item(self.dw_player[0].
-                                                                                mediaplayer.get_media())]))
-                            break
-                        tot += d
-
-                else:
-                    self.no_media()
-                '''
-
                 self.update_visualizations()
 
                 # subtitles
@@ -11460,8 +11263,7 @@ item []:
                     logging.debug("end of last media")
                     self.FFmpegGlobalFrame = int(sum(self.dw_player[0].media_durations) * self.fps / 1000) - 1
 
-                    logging.debug("FFmpegGlobalFrame {}  sum duration {}".format(self.FFmpegGlobalFrame,
-                                                                                 sum(self.dw_player[0].media_durations)))
+                    logging.debug(f"FFmpegGlobalFrame {self.FFmpegGlobalFrame}  sum duration {sum(self.dw_player[0].media_durations)}")
 
                 if self.FFmpegGlobalFrame > 0:
                     self.FFmpegGlobalFrame -= 1
@@ -11477,50 +11279,6 @@ item []:
                                                + self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
 
                 self.seek_mediaplayer(newTime)
-
-                '''
-                if self.dw_player[0].media_list.count() == 1:
-                    if self.dw_player[0].mediaplayer.get_time() >= self.dw_player[0].mediaplayer.get_length() - self.fast * 1000:
-                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_length())
-                    else:
-                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
-
-                elif self.dw_player[0].media_list.count() > 1:
-
-                    logging.debug(f"media list count: {self.dw_player[0].media_list.count()}")
-                    newTime = (sum(
-                        self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
-                                                          index_of_item(self.dw_player[0].
-                                                                        mediaplayer.get_media())]) +
-                               self.dw_player[0].mediaplayer.get_time() + self.fast * 1000)
-
-                    if newTime < sum(self.dw_player[0].media_durations):
-                        # remember if player paused (go previous will start playing)
-                        flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
-
-                        tot = 0
-                        for idx, d in enumerate(self.dw_player[0].media_durations):
-                            if tot <= newTime < tot + d:
-                                self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
-                                # app.processEvents()
-                                # wait until media is played
-                                while True:
-                                    if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                                        break
-
-                                if flagPaused:
-                                    self.dw_player[0].mediaListPlayer.pause()
-
-                                self.dw_player[0].mediaplayer.set_time(newTime - sum(
-                                        self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
-                                                                          index_of_item(self.dw_player[0].
-                                                                                        mediaplayer.get_media())]))
-
-                                break
-                            tot += d
-                else:
-                    self.no_media()
-                '''
 
                 self.update_visualizations()
 

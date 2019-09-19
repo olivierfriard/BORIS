@@ -75,7 +75,7 @@ class Param_panel(QDialog, Ui_Dialog):
             if command == "unselect all":
                 cb.setChecked(False)
             if command == "reverse selection":
-                cb.setChecked(not cb.isChecked() )
+                cb.setChecked(not cb.isChecked())
 
 
     def behaviors_button_clicked(self, command):
@@ -131,6 +131,26 @@ class Param_panel(QDialog, Ui_Dialog):
             item.setData(35, not item.data(35))
 
 
+    def extract_observed_behaviors(self, selected_observations, selected_subjects):
+        """
+        extract unique behaviors codes from obs_id observation
+        """
+
+        observed_behaviors = []
+
+        # extract events from selected observations
+        all_events = [self.pj[OBSERVATIONS][x][EVENTS] for x in self.pj[OBSERVATIONS] if x in selected_observations]
+
+        for events in all_events:
+            for event in events:
+                if (event[EVENT_SUBJECT_FIELD_IDX] in selected_subjects
+                        or (not event[EVENT_SUBJECT_FIELD_IDX] and NO_FOCAL_SUBJECT in selected_subjects)):
+                    observed_behaviors.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+
+        # remove duplicate
+        return list(set(observed_behaviors))
+
+
     def cb_changed(self):
         selectedSubjects = []
         for idx in range(self.lwSubjects.count()):
@@ -138,18 +158,15 @@ class Param_panel(QDialog, Ui_Dialog):
             if cb and cb.isChecked():
                 selectedSubjects.append(cb.text())
 
-        observedBehaviors = self.extract_observed_behaviors( self.selectedObservations, selectedSubjects )
+        # FIX ME
+        observedBehaviors = self.extract_observed_behaviors(self.selectedObservations, selectedSubjects)
 
-        logging.debug("observed behaviors: {0}".format(observedBehaviors))
+        logging.debug(f"observed behaviors: {observedBehaviors}")
 
         for idx in range(self.lwBehaviors.count()):
-            '''
-            cb = self.lwBehaviors.itemWidget(self.lwBehaviors.item(idx))
-            cb.setChecked( cb.text() in observedBehaviors)
-            '''
 
             if self.lwBehaviors.item(idx).data(33) != "category":
-                if  self.lwBehaviors.item(idx).text() in observedBehaviors:
+                if self.lwBehaviors.item(idx).text() in observedBehaviors:
                     self.lwBehaviors.item(idx).setCheckState(Qt.Checked)
                 else:
                     self.lwBehaviors.item(idx).setCheckState(Qt.Unchecked)

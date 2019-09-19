@@ -64,7 +64,7 @@ def error_info(exc_info: tuple) -> tuple:
     return (exc_obj, fname, exc_tb.tb_lineno)
 
 
-def return_file_header(file_name: str, row_number:int = 5) -> list:
+def return_file_header(file_name: str, row_number: int = 5) -> list:
     """
     return file header
 
@@ -269,9 +269,9 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
             current_states[idx] = []
             for sbc in state_behaviors_codes:
                 bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
-                        if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
-                        and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                        and x[EVENT_TIME_FIELD_IDX] <= time]
+                      if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
+                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                      and x[EVENT_TIME_FIELD_IDX] <= time]
 
                 if len(bl) % 2:  # test if odd
                     current_states[idx].append(bl[-1][0] + f" ({bl[-1][1]})" * (bl[-1][1] != ""))
@@ -477,7 +477,7 @@ def extract_frames(ffmpeg_bin: str,
 
     # check before frame
     if (start_frame - 1 > 0
-        and not os.path.isfile(pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"))):
+            and not os.path.isfile(pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_{start_frame - 1:08}.{extension}"))):
 
         start_frame_before = max(1, round(start_frame - fps * number_of_seconds))
         second_before = (start_frame_before - 1) / fps
@@ -507,13 +507,13 @@ def extract_frames(ffmpeg_bin: str,
 
 
 def extract_frames_mem(ffmpeg_bin: str,
-                   start_frame: int,
-                   second: float,
-                   current_media_path,
-                   fps: int,
-                   resolution: tuple,
-                   frame_resize: int,
-                   number_of_seconds: int) -> (list, tuple):
+                       start_frame: int,
+                       second: float,
+                       current_media_path,
+                       fps: int,
+                       resolution: tuple,
+                       frame_resize: int,
+                       number_of_seconds: int) -> (list, tuple):
     """
     extract frames from media file and save them in imageDir directory
 
