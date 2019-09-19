@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 """
 
-import psutil
 
 import os
 import sys
@@ -46,6 +45,7 @@ import statistics
 import datetime
 import socket
 import pathlib
+import psutil
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -129,7 +129,8 @@ parser.add_option("-o", "--observation", action="store", help="Observation id")
 # set logging parameters
 if options.debug in ["one", "new", "stdout"]:
     if options.debug == "new":
-        log_file_name = str(pathlib.Path(os.path.expanduser("~")) / f"BORIS_{datetime.datetime.now().replace(microsecond=0).isoformat().replace(':', '-')}.log")
+        log_file_name = str(pathlib.Path(os.path.expanduser("~"))
+                            / f"BORIS_{datetime.datetime.now().replace(microsecond=0).isoformat().replace(':', '-')}.log")
         file_mode = "w"
     if options.debug == "one":
         log_file_name = str(pathlib.Path(os.path.expanduser("~")) / "BORIS.log")
@@ -676,7 +677,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
-        self.init_memory = round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024)
+        self.init_memory = round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)
 
 
     def menu_options(self):
@@ -1168,7 +1169,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
             output_format = file_formats[extended_file_formats.index(filter_)]
-            print(file_name, output_format)
+
             if pathlib.Path(file_name).suffix != "." + output_format:
                 file_name = str(pathlib.Path(file_name)) + "." + output_format
                 # check if file with new extension already exists
@@ -1190,28 +1191,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
             output_format = re.sub(".* \(\*\.", "", item)[:-1]
 
-            export_dir = QFileDialog().getExistingDirectory(self, "Choose a directory to save results", os.path.expanduser("~"),
+            export_dir = QFileDialog().getExistingDirectory(self, "Choose a directory to save results",
+                                                            os.path.expanduser("~"),
                                                             options=QFileDialog.ShowDirsOnly)
             if not export_dir:
                 return
 
+        
         mem_command = ""
         for obs_id in results_df:
+            print("results_df[obs_id]", results_df[obs_id])
             for subject in results_df[obs_id]:
 
                 if len(selected_observations) > 1:
-                    file_name = str(pathlib.Path(pathlib.Path(export_dir)
-                                    / safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
+                    file_name_with_subject = str(pathlib.Path(pathlib.Path(export_dir)
+                                                 / safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
                 else:
-                    file_name = str(pathlib.Path(os.path.splitext(file_name)[0]
-                                    + safeFileName("_" + subject)).with_suffix("." + output_format))
+                    file_name_with_subject = str(pathlib.Path(os.path.splitext(file_name)[0]
+                                                 + safeFileName("_" + subject)).with_suffix("." + output_format))
 
                 # check if file with new extension already exists
                 if mem_command != OVERWRITE_ALL and pathlib.Path(file_name).is_file():
                     if mem_command == "Skip all":
                         continue
                     mem_command = dialog.MessageDialog(programName,
-                                                       f"The file {file_name} already exists.",
+                                                       f"The file {file_name_with_subject} already exists.",
                                                        [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
@@ -1220,11 +1224,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 try:
                     if output_format in ["csv", "tsv", "html"]:
-                        with open(file_name, "wb") as f:
+                        with open(file_name_with_subject, "wb") as f:
                             f.write(str.encode(results_df[obs_id][subject].export(output_format)))
 
                     if output_format in ["ods", "xlsx", "xls"]:
-                        with open(file_name, "wb") as f:
+                        with open(file_name_with_subject, "wb") as f:
                             f.write(results_df[obs_id][subject].export(output_format))
 
                 except Exception:
@@ -3515,6 +3519,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.rb_save_frames_on_disk.setChecked(True)
 
         preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
+        preferencesWindow.lb_memory_in_use.setText((f"Memory used by BORIS: "
+                                                    f"{round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024, 3)}"
+                                                    " Mb"))
 
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
         mem_frame_resize = self.frame_resize
@@ -3626,7 +3633,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # clear frames memory cache if frames saved on disk
             if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
                 self.frames_cache.clear()
-                print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) )
 
             # frames cache
             # clear cache (mem or files) if frame_resize changed
@@ -3834,9 +3840,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     print("videoframe resolution", player.videoframe.h_resolution, player.videoframe.v_resolution)
                     '''
                     # check if cache memory is below the limit
-                    if (psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024) >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES):
-                        logging.debug((f"clear memory cache {round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024) }"
-                                       f" used of {self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)} allowed" )
+                    if (psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024 - self.init_memory
+                            >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)):
+                        logging.debug((f"clear memory cache {round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024) }"
+                                       f" used of {self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)} allowed"))
                         self.frames_cache.clear()
 
                     extracted_frames, new_resolution = utilities.extract_frames_mem(self.ffmpeg_bin,

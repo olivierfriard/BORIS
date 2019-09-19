@@ -50,8 +50,8 @@ class ExclusionMatrix(QDialog):
 
     def __init__(self):
         super().__init__()
-        
-        # self.setWindowFlags(Qt.WindowStaysOnTopHint)        
+
+        # self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         hbox = QVBoxLayout(self)
 
@@ -420,7 +420,19 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # convert modifier shortcuts
             if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
-                modifiers_dict = eval(self.twBehaviors.item(row, behavioursFields["modifiers"]).text()) if self.twBehaviors.item(row, behavioursFields["modifiers"]).text() else {}
+
+                modifiers_dict = (
+                    eval(
+                        self.twBehaviors.item(
+                            row, behavioursFields["modifiers"]
+                        ).text()
+                    )
+                    if self.twBehaviors.item(
+                        row, behavioursFields["modifiers"]
+                    ).text()
+                    else {}
+                )
+
                 for modifier_set in modifiers_dict:
                     try:
                         for idx2, value in enumerate(modifiers_dict[modifier_set]["values"]):
@@ -668,7 +680,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 print(subjects_list)
 
                 addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text(),
-                                                                   #subjects=[self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]]
                                                                    subjects=subjects_list
                                                                    )
                 addModifierWindow.setWindowTitle(f'Set modifiers for "{self.twBehaviors.item(row, 2).text()}" behavior')
@@ -1007,8 +1018,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                   paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
             w.setVisible(False)
 
-        #behaviors_list = [self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]]
-
         if behavioral_categories:
             categories = behavioral_categories
             # check if behavior not included in a category
@@ -1232,7 +1241,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         # check corresponding checkbox
         ex.cb_clicked()
-        # ex.setWindowFlags(Qt.WindowStaysOnTopHint)        
 
         if ex.exec_():
             for c, c_name in enumerate(stateBehaviors):
@@ -1246,8 +1254,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # update excluded field
             for r in range(self.twBehaviors.rowCount()):
-                if (includePointEvents == YES or
-                   (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
+                if (includePointEvents == YES
+                         or (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
                     for e in excl:
                         if e == self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text():
                             item = QTableWidgetItem(",".join(new_excl[e]))
@@ -1473,7 +1481,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     return
 
                 if response == "Replace":
-                   self.twBehaviors.setRowCount(0)
+                    self.twBehaviors.setRowCount(0)
 
             cb_text_splitted = cb_text.split("\n")
 
@@ -1538,7 +1546,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     return
 
                 if response == "Replace":
-                   self.twSubjects.setRowCount(0)
+                    self.twSubjects.setRowCount(0)
 
             cb_text_splitted = cb_text.split("\n")
 
@@ -1546,7 +1554,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 QMessageBox.warning(None, programName,
                                     ("The clipboard content does not have a constant number of fields.<br>"
                                      "From your spreadsheet: CTRL + A (select all cells), CTRL + C (copy to clipboard)"),
-                                     QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
             for row in cb_text_splitted:
@@ -1734,7 +1742,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                             for event in events:
                                 subjectsInObs.append(event[EVENT_SUBJECT_FIELD_IDX])
                         if subjectToDelete in subjectsInObs:
-                            if dialog.MessageDialog(programName, "The subject to remove is used in observations!", [REMOVE, CANCEL]) == REMOVE:
+                            if dialog.MessageDialog(programName, "The subject to remove is used in observations!",
+                                                    [REMOVE, CANCEL]) == REMOVE:
                                 flagDel = True
                         else:
                             # code not used
@@ -1763,7 +1772,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     # delete ethogram rows without behavior code
                     for r in range(self.twSubjects.rowCount() - 1, -1, -1):
-                        if not self.twSubjects.item(r, 1).text(): # no name
+                        if not self.twSubjects.item(r, 1).text():  # no name
                             self.twSubjects.removeRow(r)
 
                     # extract all subjects names to delete
@@ -2006,7 +2015,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             modif_code = value.split(" (")[0]
                             if modif_code.strip() != modif_code:
                                 modifiers_with_leading_trailing_spaces.append(modif_code)
-                except:
+                except Exception:
                     logging.critical("error checking leading/trailing spaces in modifiers")
 
         remove_leading_trailing_spaces = NO
@@ -2069,9 +2078,13 @@ class projectDialog(QDialog, Ui_dlgProject):
                                 for k in modifiers_dict:
                                     for idx, value in enumerate(modifiers_dict[k]["values"]):
                                         modif_code = value.split(" (")[0]
-                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k]["values"][idx].replace(modif_code, modif_code.strip())
+
+                                        modifiers_dict[k]["values"][idx] = modifiers_dict[k][
+                                            "values"
+                                        ][idx].replace(modif_code, modif_code.strip())
+
                                 row["modifiers"] = dict(modifiers_dict)
-                            except:
+                            except Exception:
 
                                 logging.critical("Error removing leading/trailing spaces in modifiers")
 
@@ -2082,7 +2095,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 else:
                     row[field] = ""
 
-            #if (row["type"]) and (row["key"]) and (row["code"]):
             if (row["type"]) and (row["code"]):
                 self.obs[str(len(self.obs))] = row
             else:
@@ -2115,10 +2127,10 @@ class projectDialog(QDialog, Ui_dlgProject):
         if behavior_category:
 
             response = dialog.MessageDialog(f"{programName} - Behavioral categories",
-                                 ("The behavioral categorie(s) "
-                                  f"{', '.join(set(['<b>' + x[1]  + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
-                                  "are no more defined in behavioral categories list"),
-                                 ["Add behavioral category/ies", "Ignore", CANCEL])
+                                            ("The behavioral categorie(s) "
+                                             f"{', '.join(set(['<b>' + x[1] + '</b>' + ' (used with <b>' + x[0] + '</b>)' for x in behavior_category]))} "
+                                             "are no more defined in behavioral categories list"),
+                                            ["Add behavioral category/ies", "Ignore", CANCEL])
             if response == "Add behavioral category/ies":
                 [self.pj[BEHAVIORAL_CATEGORIES].append(x1) for x1 in set(x[1] for x in behavior_category)]
             if response == CANCEL:
