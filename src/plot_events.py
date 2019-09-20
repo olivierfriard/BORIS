@@ -23,30 +23,29 @@ This file is part of BORIS.
 """
 
 
-"""
-GANTT Chart with Matplotlib
-Sukhbinder
-Inspired from
-<div class="embed-theclowersgroup"><blockquote class="wp-embedded-content"><a href="http://www.clowersresearch.com/main/gantt-charts-in-matplotlib/">Gantt Charts in Matplotlib</a></blockquote><script type="text/javascript"><!--//--><![CDATA[//><!--        !function(a,b){"use strict";function c(){if(!e){e=!0;var a,c,d,f,g=-1!==navigator.appVersion.indexOf("MSIE 10"),h=!!navigator.userAgent.match(/Trident.*rv:11./),i=b.querySelectorAll("iframe.wp-embedded-content");for(c=0;c<i.length;c++)if(d=i[c],!d.getAttribute("data-secret")){if(f=Math.random().toString(36).substr(2,10),d.src+="#?secret="+f,d.setAttribute("data-secret",f),g||h)a=d.cloneNode(!0),a.removeAttribute("security"),d.parentNode.replaceChild(a,d)}else;}}var d=!1,e=!1;if(b.querySelector)if(a.addEventListener)d=!0;if(a.wp=a.wp||{},!a.wp.receiveEmbedMessage)if(a.wp.receiveEmbedMessage=function(c){var d=c.data;if(d.secret||d.message||d.value)if(!/[^a-zA-Z0-9]/.test(d.secret)){var e,f,g,h,i,j=b.querySelectorAll('iframe[data-secret="'+d.secret+'"]'),k=b.querySelectorAll('blockquote[data-secret="'+d.secret+'"]');for(e=0;e<k.length;e++)k[e].style.display="none";for(e=0;e<j.length;e++)if(f=j[e],c.source===f.contentWindow){if(f.removeAttribute("style"),"height"===d.message){if(g=parseInt(d.value,10),g>1e3)g=1e3;else if(200>~~g)g=200;f.height=g}if("link"===d.message)if(h=b.createElement("a"),i=b.createElement("a"),h.href=f.getAttribute("src"),i.href=d.value,i.host===h.host)if(b.activeElement===f)a.top.location.href=d.value}else;}},d)a.addEventListener("message",a.wp.receiveEmbedMessage,!1),b.addEventListener("DOMContentLoaded",c,!1),a.addEventListener("load",c,!1)}(window,document);//--><!]]></script><iframe sandbox="allow-scripts" security="restricted" src="http://www.clowersresearch.com/main/gantt-charts-in-matplotlib/embed/" width="600" height="338" title="“Gantt Charts in Matplotlib” — The Clowers Group" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" class="wp-embedded-content"></iframe></div>
-"""
-import datetime as dt
-import matplotlib
-matplotlib.use("Qt5Agg")
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as font_manager
-import matplotlib.transforms as mtransforms
-import matplotlib.dates
-from matplotlib.dates import MICROSECONDLY, SECONDLY, MINUTELY, HOURLY, WEEKLY, MONTHLY, DateFormatter, rrulewrapper, RRuleLocator
-from matplotlib import colors as mcolors
 
-import numpy as np
+import datetime as dt
 import json
 import pathlib
 
-from config import *
-import utilities
+import matplotlib
+import matplotlib.dates
+import matplotlib.font_manager as font_manager
+import matplotlib.transforms as mtransforms
+import numpy as np
+from matplotlib import colors as mcolors
+from matplotlib.dates import (HOURLY, MICROSECONDLY, MINUTELY, MONTHLY,
+                              SECONDLY, WEEKLY, DateFormatter, RRuleLocator,
+                              rrulewrapper)
+
 import db_functions
 import project_functions
+import utilities
+from config import *
+
+matplotlib.use("Qt5Agg")
+import matplotlib.pyplot as plt
+
 
 plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
@@ -57,8 +56,8 @@ def default_value(ethogram, behav, param):
     """
     default_value_ = 0
     if (project_functions.event_type(behav, ethogram) == "POINT EVENT"
-       and param in ["duration"]):
-           default_value_ = "-"
+            and param in ["duration"]):
+        default_value_ = "-"
     return default_value_
 
 
@@ -159,11 +158,11 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             max_time = float(end_time)
 
         cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-                      (min_time, obs_id, min_time, min_time, max_time, ))
+                       (min_time, obs_id, min_time, min_time, max_time, ))
         cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-                      (max_time, obs_id, max_time, min_time, max_time, ))
+                       (max_time, obs_id, max_time, min_time, max_time, ))
         cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-                         (min_time, max_time, obs_id, min_time, max_time, ))
+                       (min_time, max_time, obs_id, min_time, max_time, ))
 
         for subject in selected_subjects:
             for behavior_modifiers in distinct_behav_modif:
@@ -178,7 +177,7 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                 # total duration
                 cursor.execute(("SELECT SUM(stop-start) FROM aggregated_events "
                                 "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                              (obs_id, subject, behavior, modifiers,))
+                               (obs_id, subject, behavior, modifiers,))
                 for row in cursor.fetchall():
                     behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
 
@@ -206,10 +205,10 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                     continue
 
                 if behavior not in behaviors_duration[subj]:
-                    behaviors_duration[subj][behavior] = [[],[]]
+                    behaviors_duration[subj][behavior] = [[], []]
 
                 behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-                #print(subj, behavior, modifiers)
+
                 if behavior not in behavior_ticks:
                     behavior_ticks.append(behavior)
 
@@ -241,17 +240,11 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
                         b[i].append(behaviors_duration[subj][behavior][0][i])
                         if include_modifiers:
 
-                            '''
-                            if behaviors_duration[subj][behavior][1][i]:
-                                behavior_mod_ticks[behavior_ticks.index(behavior)] = behavior_mod_ticks[behavior_ticks.index(behavior)] + "\n" + \
-                                                                                        behaviors_duration[subj][behavior][1][i]
-                            '''
-
                             if behaviors_duration[subj][behavior][1][i]:
                                 md_lgd.append(behavior + " " + behaviors_duration[subj][behavior][1][i])
                             else:
                                 md_lgd.append(behavior)
-                    except:
+                    except Exception:
                         b[i].append(0)
 
             print()
@@ -262,8 +255,6 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             print()
             print("md_lgd")
             print(md_lgd)
-
-            #ind = np.arange(len(behavior_ticks))    # the x locations for the groups
 
             ind = np.arange(len(behavior_ticks))
 
@@ -278,18 +269,28 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             idx_color = 0
 
             for i in sorted(b.keys()):
-                print(i, b[i])
+
                 if i == 0:
-                    pp.append(axs[ax_idx].bar(ind, b[i], width, color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])]))
+                    pp.append(axs[ax_idx].bar(
+                        ind,
+                        b[i],
+                        width,
+                        color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])]))
                 else:
-                    pp.append(axs[ax_idx].bar(ind, b[i], width, color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])], bottom=bottom_))
+                    pp.append(axs[ax_idx].bar(
+                        ind,
+                        b[i],
+                        width,
+                        color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])],
+                        bottom=bottom_))
+
 
                 idx_color += len(b[i])
 
                 if not bottom_:
                     bottom_ = b[i]
                 else:
-                    bottom_ = [x + bottom_[idx] for idx,x in enumerate(b[i])]
+                    bottom_ = [x + bottom_[idx] for idx, x in enumerate(b[i])]
 
                 max_obs = max(max_obs, sum(b[i]))
 
@@ -299,7 +300,7 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
             axs[ax_idx].set_title(f"{subj}")
 
             axs[ax_idx].set_xticks(ind)
-            axs[ax_idx].set_xticklabels(behavior_mod_ticks,rotation=90)
+            axs[ax_idx].set_xticklabels(behavior_mod_ticks, rotation=90)
             axs[ax_idx].set_yticks(np.arange(0, max(bottom_), 50))
 
             lgd_col = []
@@ -312,212 +313,14 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
 
         if plot_directory:
-            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix("." + file_format))
+            output_file_name = str(
+                pathlib.Path(
+                    pathlib.Path(plot_directory) /
+                    utilities.safeFileName(obs_id)).with_suffix("." + file_format))
+
             plt.savefig(output_file_name)
         else:
             plt.show()
-
-'''
-def plot_time_ranges(pj, time_format, plot_colors, obs, obsId, minTime, videoLength, excludeBehaviorsWithoutEvents, line_width):
-    """
-    create "hlines" matplotlib plot
-    used by plot_event function (legacy)
-    """
-
-    def on_draw(event):
-        # http://matplotlib.org/faq/howto_faq.html#move-the-edge-of-an-axes-to-make-room-for-tick-labels
-        bboxes = []
-        for label in labels:
-            bbox = label.get_window_extent()
-            bboxi = bbox.inverse_transformed(fig.transFigure)
-            bboxes.append(bboxi)
-
-        bbox = mtransforms.Bbox.union(bboxes)
-        if fig.subplotpars.left < bbox.width:
-            fig.subplots_adjust(left=1.1*bbox.width)
-            fig.canvas.draw()
-        return False
-
-    LINE_WIDTH = line_width
-    all_behaviors, observedBehaviors = [], []
-    maxTime = 0  # max time in all events of all subjects
-
-    # all behaviors defined in project without modifiers
-    all_project_behaviors = [pj[ETHOGRAM][idx]["code"] for idx in utilities.sorted_keys(pj[ETHOGRAM])]
-    all_project_subjects = [NO_FOCAL_SUBJECT] + [pj[SUBJECTS][idx]["name"] for idx in utilities.sorted_keys(pj[SUBJECTS])]
-
-    for subject in obs:
-
-        for behavior_modifiers_json in obs[subject]:
-
-            behavior_modifiers = json.loads(behavior_modifiers_json)
-
-            if not excludeBehaviorsWithoutEvents:
-                observedBehaviors.append(behavior_modifiers_json)
-            else:
-                if obs[subject][behavior_modifiers_json]:
-                    observedBehaviors.append(behavior_modifiers_json)
-
-            if not behavior_modifiers_json in all_behaviors:
-                all_behaviors.append(behavior_modifiers_json)
-
-            for t1, t2 in obs[subject][behavior_modifiers_json]:
-                maxTime = max(maxTime, t1, t2)
-
-        observedBehaviors.append("")
-
-    lbl = []
-    if excludeBehaviorsWithoutEvents:
-        for behav_modif_json in observedBehaviors:
-
-            if not behav_modif_json:
-                lbl.append("")
-                continue
-
-            behav_modif = json.loads(behav_modif_json)
-            if len(behav_modif) == 2:
-                lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
-            else:
-                lbl.append(behav_modif[0])
-
-    else:
-        all_behaviors.append('[""]') # empty json list element
-        for behav_modif_json in all_behaviors:
-
-            behav_modif = json.loads(behav_modif_json)
-            if len(behav_modif) == 2:
-                lbl.append("{0} ({1})".format(behav_modif[0], behav_modif[1]))
-            else:
-                lbl.append(behav_modif[0])
-        lbl = lbl[:] * len(obs)
-
-
-    lbl = lbl[:-1]  # remove last empty line
-
-    fig = plt.figure(figsize=(20, 10))
-    fig.suptitle("Time diagram of observation {}".format(obsId), fontsize=14)
-    ax = fig.add_subplot(111)
-    labels = ax.set_yticklabels(lbl)
-
-    ax.set_ylabel("Behaviors")
-
-    if time_format == HHMMSS:
-        fmtr = matplotlib.dates.DateFormatter("%H:%M:%S") # %H:%M:%S:%f
-        ax.xaxis.set_major_formatter(fmtr)
-        ax.set_xlabel("Time (hh:mm:ss)")
-    else:
-        ax.set_xlabel("Time (s)")
-
-    plt.ylim(len(lbl), -0.5)
-
-    if not videoLength:
-        videoLength = maxTime
-
-    if pj[OBSERVATIONS][obsId]["time offset"]:
-        t0 = round(pj[OBSERVATIONS][obsId]["time offset"] + minTime)
-        t1 = round(pj[OBSERVATIONS][obsId]["time offset"] + videoLength + 2)
-    else:
-        t0 = round(minTime)
-        t1 = round(videoLength)
-    subjectPosition = t0 + (t1 - t0) * 0.05
-
-    if time_format == HHMMSS:
-        t0d = dt.datetime(1970, 1, 1, int(t0 / 3600), int((t0 - int(t0 / 3600) * 3600) / 60), int(t0 % 60), round(round(t0 % 1, 3) * 1000000))
-        t1d = dt.datetime(1970, 1, 1, int(t1 / 3600), int((t1 - int(t1 / 3600) * 3600) / 60), int(t1 % 60), round(round(t1 % 1, 3) * 1000000))
-        subjectPositiond = dt.datetime(1970, 1, 1, int(subjectPosition / 3600), int((subjectPosition - int(subjectPosition / 3600) * 3600) / 60), int(subjectPosition % 60), round(round(subjectPosition % 1, 3) * 1000000))
-
-    if time_format == S:
-        t0d, t1d = t0, t1
-        subjectPositiond = subjectPosition
-
-    plt.xlim(t0d, t1d)
-    plt.yticks(range(len(lbl) + 1), np.array(lbl))
-
-    count = 0
-    flagFirstSubject = True
-
-    for subject in all_project_subjects:
-        if subject not in obs:
-            continue
-
-        if not flagFirstSubject:
-            if excludeBehaviorsWithoutEvents:
-                count += 1
-            ax.axhline(y=(count-1), linewidth=1, color="black")
-            ax.hlines(np.array([count]), np.array([0]), np.array([0]), lw=LINE_WIDTH, color=col)
-        else:
-            flagFirstSubject = False
-
-        ax.text(subjectPositiond, count - 0.5, subject)
-
-        behaviors = obs[subject]
-
-        x1, x2, y, col, pointsx, pointsy, guide = [], [], [], [], [], [], []
-        col_count = 0
-
-        for bm_json in all_behaviors:
-            if bm_json in obs[subject]:
-                if obs[subject][bm_json]:
-                    for t1, t2 in obs[subject][bm_json]:
-                        if t1 == t2:
-                            pointsx.append(t1)
-                            pointsy.append(count)
-                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                        else:
-                            x1.append(t1)
-                            x2.append(t2)
-                            y.append(count)
-
-                            col.append(utilities.behavior_color(plot_colors, all_project_behaviors.index(json.loads(bm_json)[0])))
-                            ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                    count += 1
-                else:
-                    x1.append(0)
-                    x2.append(0)
-                    y.append(count)
-                    col.append("white")
-                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                    count += 1
-
-            else:
-                if not excludeBehaviorsWithoutEvents:
-                    x1.append(0)
-                    x2.append(0)
-                    y.append(count)
-                    col.append("white")
-                    ax.axhline(y=count, linewidth=1, color="lightgray", zorder=-1)
-                    count += 1
-
-            col_count += 1
-
-        if time_format == HHMMSS:
-            ax.hlines(np.array(y), np.array([dt.datetime(1970, 1, 1, int(p / 3600),
-                                                               int((p - int(p / 3600) * 3600) / 60),
-                                                               int(p % 60), round(round(p % 1, 3) * 1e6))
-                                            for p in x1]),
-            np.array([dt.datetime(1970, 1, 1, int(p / 3600), int((p - int(p / 3600) * 3600) / 60), int(p % 60), round(round(p % 1, 3) * 1e6)) for p in x2]),
-            lw=LINE_WIDTH, color=col)
-
-        if time_format == S:
-            ax.hlines(np.array(y), np.array(x1), np.array(x2), lw=LINE_WIDTH, color=col)
-
-        if time_format == HHMMSS:
-
-            ax.plot(
-                np.array([
-                    dt.datetime(1970, 1, 1, int(p / 3600),
-                                int((p - int(p / 3600) * 3600) / 60), int(p % 60),
-                                round(round(p % 1, 3) * 1e6)) for p in pointsx
-                ]), pointsy, "r^")
-
-        if time_format == S:
-            ax.plot(pointsx, pointsy, "r^")
-
-    fig.canvas.mpl_connect("draw_event", on_draw)
-    plt.show()
-
-    return True
-'''
 
 
 def create_events_plot(pj,

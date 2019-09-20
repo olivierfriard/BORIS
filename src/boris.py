@@ -101,6 +101,7 @@ import plot_spectrogram_rt
 import plot_waveform_rt
 import observation
 import plot_data_module
+import overlap
 import otx_parser
 
 __version__ = version.__version__
@@ -943,6 +944,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
 
+        self.actionOverlap.triggered.connect(self.overlap)
+
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
         self.actionAbout.triggered.connect(self.actionAbout_activated)
@@ -1090,6 +1093,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             "This function is experimental for now.<br>Please test it and report bugs")
 
         instantaneous_sampling.instantaneous_sampling(self.pj)
+
+    def overlap(self):
+        QMessageBox.warning(self, programName,
+                            "This function is experimental for now.<br>Please test it and report bugs")
+
+        overlap.overlap(self.pj)
 
 
     def twEthogram_sorted(self):
@@ -7604,7 +7613,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         export aggregated events.
         Formats can be SQL (sql), SDIS (sds) or Tabular format (tsv, csv, ods, xlsx, xls, html)
         """
-
 
         result, selectedObservations = select_observations.select_observations(self.pj, MULTIPLE,
                                                                                "Select observations for exporting events")

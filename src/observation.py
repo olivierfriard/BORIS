@@ -295,7 +295,7 @@ class Observation(QDialog, Ui_Form):
 
         # limit to 2 files
         if self.tw_data_files.rowCount() >= 2:
-            QMessageBox.warning(self, programName , ("It is not yet possible to plot more than 2 external data sources"
+            QMessageBox.warning(self, programName, ("It is not yet possible to plot more than 2 external data sources"
                                                      "This limitation will be removed in future"))
             return
 
@@ -313,7 +313,7 @@ class Observation(QDialog, Ui_Form):
             r = utilities.check_txt_file(file_name)  # check_txt_file defined in utilities
 
             if "error" in r:
-                QMessageBox.critical(self, programName , r["error"])
+                QMessageBox.critical(self, programName, r["error"])
                 return
 
             if not r["homogeneous"]:  # not all rows have 2 columns
@@ -402,7 +402,7 @@ class Observation(QDialog, Ui_Form):
             else:
                 data_file_path = project_functions.media_full_path(self.tw_data_files.item(
                                                                        self.tw_data_files.selectedIndexes()[0].row(), 0).text(),
-                                                                   self.project_path)
+                                                                       self.project_path)
 
             file_parameters = utilities.check_txt_file(data_file_path)
             if "error" in file_parameters:
@@ -449,7 +449,7 @@ class Observation(QDialog, Ui_Form):
                     flag_player1 = True
 
             if not flag_player1:
-                QMessageBox.critical(self, programName , "The player #1 is not selected")
+                QMessageBox.critical(self, programName, "The player #1 is not selected")
                 self.cbVisualizeSpectrogram.setChecked(False)
                 self.cb_visualize_waveform.setChecked(False)
                 return
@@ -474,7 +474,7 @@ class Observation(QDialog, Ui_Form):
                     media_file_path = project_functions.media_full_path(self.twVideo1.item(row, MEDIA_FILE_PATH_IDX).text(),
                                                                         self.project_path)
                     if self.twVideo1.item(row, HAS_AUDIO_IDX).text() == "False":
-                        QMessageBox.critical(self, programName , f"The media file {media_file_path} do not seem to have audio")
+                        QMessageBox.critical(self, programName, f"The media file {media_file_path} do not seem to have audio")
                         flag_wav_produced = False
                         break
 
@@ -483,7 +483,7 @@ class Observation(QDialog, Ui_Form):
                         QApplication.processEvents()
 
                         if utilities.extract_wav(self.ffmpeg_bin, media_file_path, self.tmp_dir) == "":
-                            QMessageBox.critical(self, programName ,
+                            QMessageBox.critical(self, programName,
                                                  f"Error during extracting WAV of the media file {media_file_path}")
                             flag_wav_produced = False
                             break
@@ -492,7 +492,7 @@ class Observation(QDialog, Ui_Form):
 
                         flag_wav_produced = True
                     else:
-                        QMessageBox.warning(self, programName , f"<b>{media_file_path}</b> file not found")
+                        QMessageBox.warning(self, programName, f"<b>{media_file_path}</b> file not found")
 
                 if not flag_wav_produced:
                     self.cbVisualizeSpectrogram.setChecked(False)
@@ -533,13 +533,16 @@ class Observation(QDialog, Ui_Form):
         if self.tabProjectType.currentIndex() == 0:  # observation based on media file
             # check player number
             players_list = []
-            players = {} # for storing duration
+            players = {}  # for storing duration
             for row in range(self.twVideo1.rowCount()):
                 players_list.append(int(self.twVideo1.cellWidget(row, 0).currentText()))
                 if int(self.twVideo1.cellWidget(row, 0).currentText()) not in players:
-                    players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [utilities.time2seconds(self.twVideo1.item(row, 3).text())]
+                    players[int(self.twVideo1.cellWidget(row, 0).currentText())] = [
+                        utilities.time2seconds(self.twVideo1.item(row, 3).text())
+                    ]
                 else:
-                    players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(utilities.time2seconds(self.twVideo1.item(row, 3).text()))
+                    players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(
+                        utilities.time2seconds(self.twVideo1.item(row, 3).text()))
 
             # check if player#1 used
             if not players_list or min(players_list) > 1:
@@ -602,7 +605,7 @@ class Observation(QDialog, Ui_Form):
 
         # check if media list #2 populated and media list #1 empty
         if self.tabProjectType.currentIndex() == 0 and not self.twVideo1.rowCount():
-            QMessageBox.critical(self, programName , "Add a media file in the first media player!" )
+            QMessageBox.critical(self, programName, "Add a media file in the first media player!")
             return False
 
         # check offset for external data files
@@ -612,12 +615,12 @@ class Observation(QDialog, Ui_Form):
                                      ("The external data file start value "
                                       f"<b>{self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()}</b>"
                                       " is not recognized as a numeric value.<br>"
-                                     "Use decimal number of seconds (e.g. -58.5 or 32)"))
+                                      "Use decimal number of seconds (e.g. -58.5 or 32)"))
                 return False
 
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
-                if self.twIndepVariables.item(row, 2).text() and not is_numeric( self.twIndepVariables.item(row, 2).text() ):
+                if self.twIndepVariables.item(row, 2).text() and not is_numeric(self.twIndepVariables.item(row, 2).text()):
                     QMessageBox.critical(self, programName,
                                          f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
@@ -658,7 +661,6 @@ class Observation(QDialog, Ui_Form):
              bool: True if file is media else False
         """
 
-        #nframes, videoDuration_ms, videoDuration_s, fps, hasVideo, hasAudio = accurate_media_analysis(self.ffmpeg_bin, file_path)
         r = utilities.accurate_media_analysis(self.ffmpeg_bin, file_path)
         if "error" in r:
             return False
@@ -764,7 +766,7 @@ class Observation(QDialog, Ui_Form):
                                      f"{self.mediaFPS[fileName]:.3f}",
                                      self.mediaHasVideo[fileName],
                                      self.mediaHasAudio[fileName]]):
-            if col_idx == 0: # player combobox
+            if col_idx == 0:  # player combobox
                 combobox = QComboBox()
                 combobox.addItems(ALL_PLAYERS)
                 self.twVideo1.setCellWidget(self.twVideo1.rowCount() - 1, col_idx, combobox)
