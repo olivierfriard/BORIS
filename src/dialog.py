@@ -766,6 +766,7 @@ class Overlap_widget(QWidget):
 
         self.resize(540, 640)
 
+
     def filter(self):
         """
         save content of self.ptText
@@ -784,10 +785,10 @@ class Overlap_widget(QWidget):
             print(eval(logic))
             self.ptText.setPlainText(str(eval(logic)))
         except KeyError:
-        
             print("subject / behavior not found!")
             self.ptText.setPlainText("subject / behavior not found!")
-
+        except Exception:
+            self.ptText.setPlainText(f"Error in {self.logic.text()}")
         
 
 class View_data_head(QDialog):
