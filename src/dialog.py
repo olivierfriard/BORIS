@@ -23,6 +23,7 @@ This file is part of BORIS.
 """
 
 import sys
+import re
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -699,12 +700,10 @@ class ResultsWidget(QWidget):
         hbox2 = QHBoxLayout()
         hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-        self.pbSave = QPushButton("Save results")
-        self.pbSave.clicked.connect(self.save_results)
+        self.pbSave = QPushButton("Save results", clicked=self.save_results)
         hbox2.addWidget(self.pbSave)
 
-        self.pbOK = QPushButton("OK")
-        self.pbOK.clicked.connect(self.close)
+        self.pbOK = QPushButton("OK", clicked=self.close)
         hbox2.addWidget(self.pbOK)
 
         hbox.addLayout(hbox2)
@@ -729,6 +728,67 @@ class ResultsWidget(QWidget):
             except Exception:
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
+
+class Overlap_widget(QWidget):
+    """
+    widget for visualizing overlap analysis
+    """
+    def __init__(self, events):
+        super().__init__()
+
+        self.events = events
+        self.setWindowTitle("")
+
+        hbox = QVBoxLayout()
+
+        self.lb = QLabel("")
+        hbox.addWidget(self.lb)
+
+        self.logic = QLineEdit("")
+        hbox.addWidget(self.logic)
+
+
+        self.ptText = QPlainTextEdit()
+        hbox.addWidget(self.ptText)
+
+        hbox2 = QHBoxLayout()
+        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+
+        self.pbSave = QPushButton("Filter events", clicked=self.filter)
+        hbox2.addWidget(self.pbSave)
+
+        self.pbOK = QPushButton("OK", clicked=self.close)
+        hbox2.addWidget(self.pbOK)
+
+        hbox.addLayout(hbox2)
+
+        self.setLayout(hbox)
+
+        self.resize(540, 640)
+
+    def filter(self):
+        """
+        save content of self.ptText
+        """
+        sb_list = re.findall('"([^"]*)"', self.logic.text())
+        
+        print(sb_list)
+        
+        logic = self.logic.text()
+        for sb in set(sb_list):
+            logic = logic.replace(f'"{sb}"', f'self.events["{sb}"]')
+        
+        print(logic)
+        
+        try:
+            print(eval(logic))
+            self.ptText.setPlainText(str(eval(logic)))
+        except KeyError:
+        
+            print("subject / behavior not found!")
+            self.ptText.setPlainText("subject / behavior not found!")
+
+        
 
 class View_data_head(QDialog):
     """

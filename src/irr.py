@@ -89,7 +89,6 @@ def cohen_kappa(cursor,
     Inter-rater reliability Cohen's kappa coefficient (time-unit)
     see Sequential Analysis and Observational Methods for the Behavioral Sciences p. 77
 
-
     Args:
         cursor (sqlite3.cursor): cursor to aggregated events db
         obsid1 (str): id of observation #1

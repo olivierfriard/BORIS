@@ -101,7 +101,7 @@ import plot_spectrogram_rt
 import plot_waveform_rt
 import observation
 import plot_data_module
-import overlap
+# import overlap
 import otx_parser
 
 __version__ = version.__version__
@@ -1094,11 +1094,91 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         instantaneous_sampling.instantaneous_sampling(self.pj)
 
+
     def overlap(self):
+        '''
         QMessageBox.warning(self, programName,
                             "This function is experimental for now.<br>Please test it and report bugs")
+        '''
 
-        overlap.overlap(self.pj)
+        import intervals as I
+        def ic(i):
+            return I.closed(i[0], i[1])
+
+
+        result, selectedObservations = self.selectObservations(MULTIPLE)
+
+        parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                         maxTime=0,
+                                                         flagShowIncludeModifiers=False,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
+
+        for obs_id in selectedObservations:
+            ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
+                                                                          parameters[SELECTED_SUBJECTS],
+                                                                          [obs_id],
+                                                                          parameters[SELECTED_BEHAVIORS])
+
+            cursor = db_connector.cursor()
+
+            '''
+            cursor2.execute(("CREATE TABLE aggregated_events "
+                         "(id INTEGER PRIMARY KEY ASC, "
+                         "observation TEXT, "
+                         "subject TEXT, "
+                         "behavior TEXT, "
+                         "type TEXT, "
+                         "modifiers TEXT, "
+                         "start FLOAT, "
+                         "stop FLOAT, "
+                         "comment TEXT, "
+                         "comment_stop TEXT)"))
+            '''
+
+            cursor.execute("SELECT subject, behavior, start, stop FROM aggregated_events ")
+
+            events = {}
+            for row in cursor.fetchall():
+                for event in row:
+                    s, b, t1, t2 = row
+                    if s + "|" + b not in events:
+                        events[s + "|" + b] = ic([t1, t2])
+                    else:
+                        events[s + "|" + b] = events[s + "|" + b] | ic([t1, t2])
+
+            print(events)
+
+
+            self.w = dialog.Overlap_widget(events)
+            self.w.show()
+            
+            '''
+            logic, ok = QInputDialog.getText(self,
+                                             f"",
+                                             "",
+                                             QLineEdit.Normal,
+                                             "")
+
+            # logic = '"Himal|Tear" & "Nautilus|Tear"'
+
+            sb_list = re.findall('"([^"]*)"', logic)
+
+            print(sb_list)
+
+            for sb in set(sb_list):
+                logic = logic.replace(f'"{sb}"', f'events["{sb}"]')
+
+            print(logic)
+
+            try:
+                print(eval(logic))
+            except KeyError:
+
+                print("subject / behavior not found!")
+            '''
+
+
+        #overlap.overlap(self.pj)
 
 
     def twEthogram_sorted(self):
