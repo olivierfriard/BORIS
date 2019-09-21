@@ -747,6 +747,8 @@ class Overlap_widget(QWidget):
         self.logic = QLineEdit("")
         hbox.addWidget(self.logic)
 
+        self.pb_filter = QPushButton("Filter events", clicked=self.filter)
+        hbox.addWidget(self.pb_filter)
 
         self.ptText = QPlainTextEdit()
         hbox.addWidget(self.ptText)
@@ -754,7 +756,7 @@ class Overlap_widget(QWidget):
         hbox2 = QHBoxLayout()
         hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
 
-        self.pbSave = QPushButton("Filter events", clicked=self.filter)
+        self.pbSave = QPushButton("Save results", clicked=self.save_results)
         hbox2.addWidget(self.pbSave)
 
         self.pbOK = QPushButton("OK", clicked=self.close)
@@ -769,27 +771,46 @@ class Overlap_widget(QWidget):
 
     def filter(self):
         """
-        save content of self.ptText
+        filter events
         """
         sb_list = re.findall('"([^"]*)"', self.logic.text())
-        
+
         print(sb_list)
-        
-        logic = self.logic.text()
-        for sb in set(sb_list):
-            logic = logic.replace(f'"{sb}"', f'self.events["{sb}"]')
-        
-        print(logic)
-        
-        try:
-            print(eval(logic))
-            self.ptText.setPlainText(str(eval(logic)))
-        except KeyError:
-            print("subject / behavior not found!")
-            self.ptText.setPlainText("subject / behavior not found!")
-        except Exception:
-            self.ptText.setPlainText(f"Error in {self.logic.text()}")
-        
+
+        out = ""
+        for obs_id in self.events:
+            logic = self.logic.text()
+            for sb in set(sb_list):
+                logic = logic.replace(f'"{sb}"', f'self.events[obs_id]["{sb}"]')
+
+            print(logic)
+
+            try:
+
+                out += f"{obs_id}: {eval(logic)}" + "\n"
+            except KeyError:
+
+                out += f"{obs_id}: subject / behavior not found!" + "\n"
+            except Exception:
+                out += f"Error in {self.logic.text()}" + "\n"
+        self.ptText.setPlainText(out)
+
+    def save_results(self):
+        """
+        save content of self.ptText
+        """
+
+        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        file_name = fn[0] if type(fn) is tuple else fn
+
+        if file_name:
+            try:
+                with open(file_name, "w") as f:
+                    f.write(self.ptText.toPlainText())
+            except Exception:
+                QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+
+
 
 class View_data_head(QDialog):
     """
