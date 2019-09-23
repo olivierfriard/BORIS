@@ -1085,19 +1085,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         QMessageBox.warning(self, programName,
-                            "This function is experimental.<br>Please test it and report bugs")
+                            ("This function is experimental.<br>Please test it and report bugs on<br>"
+                             "https://github.com/olivierfriard/BORIS/issues"))
 
         instantaneous_sampling.instantaneous_sampling(self.pj)
 
 
     def advanced_event_filtering(self):
-        '''
+        """
+
+        """
+        
         QMessageBox.warning(self, programName,
-                            "This function is experimental.<br>Please test it and report bugs")
-        '''
+                            ("This function is experimental.<br>Please test it and report bugs on<br>"
+                             "https://github.com/olivierfriard/BORIS/issues"))
 
         advanced_event_filtering.event_filtering(self.pj)
-
 
 
     def twEthogram_sorted(self):
@@ -9587,10 +9590,7 @@ item []:
 
             # remove key code from modifiers
             modifier_str = re.sub(" \(.*\)", "", modifier_str)
-
-            #comment = event["comment"] if "comment" in event else ""
             comment = event.get("comment", "")
-            #subject = event["subject"] if "subject" in event else self.currentSubject
             subject = event.get("subject", self.currentSubject)
 
             # add event to pj
@@ -9648,7 +9648,7 @@ item []:
                 return None
 
 
-    def getLaps(self, n_player: int=0) -> Decimal:
+    def getLaps(self, n_player: int = 0) -> Decimal:
         """
         Cumulative laps time from begining of observation
         no more add time offset!
@@ -10651,7 +10651,7 @@ item []:
         self.find_replace_dialog.show()
 
 
-    def export_tabular_events(self, mode: str="tabular"):
+    def export_tabular_events(self, mode: str = "tabular"):
         """
         export events from selected observations in various formats: TSV, CSV, ODS, XLSX, XLS, HTML
 
@@ -10668,7 +10668,7 @@ item []:
         # check if coded behaviors are defined in ethogram
         ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}
         behaviors_not_defined = []
-        out = "" # will contain the output
+        out = ""  # will contain the output
         for obs_id in selectedObservations:
             for event in self.pj[OBSERVATIONS][obs_id][EVENTS]:
                 if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
@@ -10747,10 +10747,10 @@ item []:
                     fileName = str(pathlib.Path(fileName)) + "." + outputFormat
                     # check if file with new extension already exists
                     if pathlib.Path(fileName).is_file():
-                            if dialog.MessageDialog(programName,
-                                                    f"The file {fileName} already exists.",
-                                                    [CANCEL, OVERWRITE]) == CANCEL:
-                                return
+                        if dialog.MessageDialog(programName,
+                                                f"The file {fileName} already exists.",
+                                                [CANCEL, OVERWRITE]) == CANCEL:
+                            return
 
         if mode == "jwatcher":
             exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to export events",

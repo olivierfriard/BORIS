@@ -75,21 +75,19 @@ class timeBudgetResults(QWidget):
 
         hbox2 = QHBoxLayout()
 
-        self.pbSave = QPushButton("Save results")
+        self.pbSave = QPushButton("Save results", clicked=self.pbSave_clicked)
         hbox2.addWidget(self.pbSave)
 
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
-        self.pbClose = QPushButton("Close")
+        self.pbClose = QPushButton("Close", clicked=self.close)
         hbox2.addWidget(self.pbClose)
 
         hbox.addLayout(hbox2)
 
         self.setWindowTitle("Time budget")
 
-        self.pbClose.clicked.connect(self.close)
-        self.pbSave.clicked.connect(self.pbSave_clicked)
 
 
     def pbSave_clicked(self):
