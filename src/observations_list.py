@@ -39,23 +39,24 @@ commands_index = {"Start": 2, "Edit": 3, "View": 4}
 
 class MyTableWidgetItem(QTableWidgetItem):
     def __init__(self, text, sortKey):
-            QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
-            self.sortKey = sortKey
+        QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
+        self.sortKey = sortKey
 
     # Qt uses a simple < check for sorting items, override this to use the sortKey
     def __lt__(self, other):
-            return self.sortKey < other.sortKey
+        return self.sortKey < other.sortKey
 
 
 class observationsList_widget(QDialog):
 
     def __init__(self, data: list, header: list, column_type: list, parent=None):
+
         super(observationsList_widget, self).__init__(parent)
 
         self.data = data
         self.column_type = column_type
 
-        self.setWindowTitle("Observations list - " + config.programName)
+        self.setWindowTitle(f"Observations list - {config.programName}")
         self.label = QLabel("")
 
         self.mode = config.SINGLE
@@ -105,28 +106,22 @@ class observationsList_widget(QDialog):
         self.pbUnSelectAll.clicked.connect(lambda: self.pbSelection_clicked("unselect"))
         hbox2.addWidget(self.pbUnSelectAll)
 
-        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel = QPushButton("Cancel", clicked=self.pbCancel_clicked)
         hbox2.addWidget(self.pbCancel)
 
-        self.pbOpen = QPushButton("Start")
+        self.pbOpen = QPushButton("Start", clicked=self.pbOpen_clicked)
         hbox2.addWidget(self.pbOpen)
 
-        self.pbView = QPushButton("View")
+        self.pbView = QPushButton("View", clicked=self.pbView_clicked)
         hbox2.addWidget(self.pbView)
 
-        self.pbEdit = QPushButton("Edit")
+        self.pbEdit = QPushButton("Edit", clicked=self.pbEdit_clicked)
         hbox2.addWidget(self.pbEdit)
 
-        self.pbOk = QPushButton("OK")
+        self.pbOk = QPushButton("OK", clicked=self.pbOk_clicked)
         hbox2.addWidget(self.pbOk)
 
         self.gridLayout.addLayout(hbox2, 3, 0, 1, 3)
-
-        self.pbCancel.clicked.connect(self.pbCancel_clicked)
-        self.pbOk.clicked.connect(self.pbOk_clicked)
-        self.pbOpen.clicked.connect(self.pbOpen_clicked)
-        self.pbEdit.clicked.connect(self.pbEdit_clicked)
-        self.pbView.clicked.connect(self.pbView_clicked)
 
         self.view.doubleClicked.connect(self.view_doubleClicked)
 
@@ -140,32 +135,11 @@ class observationsList_widget(QDialog):
                 self.view.setItem(r, c, self.set_item(r, c))
 
         self.view.resizeColumnsToContents()
-        '''
-        hh = self.view.horizontalHeader()
-        hh.setSectionResizeMode(2, QHeaderView.Stretch)
-        '''
 
         self.comboBox.addItems(header)
 
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
-
-        #self.view.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-
-
-    '''
-    def pbExportList_clicked(self):
-        """
-        export list of observations
-        """
-        out = "Observation id\tDate\tDescription\tSubjects\tmedia\n"
-        for r in range(len(self.data)):
-            out += "\t".join([str(x).replace("\n", " ") for x in self.data[r]]) + "\n"
-        fn = QFileDialog(self).getSaveFileName(self, "Export list of observations", "", "Text files (*.txt *.tsv);;All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
-        with open(file_name, "w", encoding="utf-8") as out_file:
-            out_file.write(out)
-    '''
 
 
     def view_doubleClicked(self, index):
@@ -224,7 +198,7 @@ class observationsList_widget(QDialog):
         if self.column_type[c] == config.NUMERIC:
             try:
                 item = MyTableWidgetItem(self.data[r][c], float(self.data[r][c]))
-            except:
+            except Exception:
                 item = MyTableWidgetItem(self.data[r][c], 0)
         else:
             item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
@@ -242,14 +216,14 @@ class observationsList_widget(QDialog):
             """
             try:
                 return float(s)
-            except:
+            except Exception:
                 return s
 
-        def in_(s, l):
-            return s in l
+        def in_(s, lst):
+            return s in lst
 
-        def not_in(s, l):
-            return s not in l
+        def not_in(s, lst):
+            return s not in lst
 
         def equal(s, l):
             l_num, s_num = str2float(l), str2float(s)
@@ -342,8 +316,6 @@ class observationsList_widget(QDialog):
                         self.view.setRowCount(self.view.rowCount() + 1)
                         for c, _ in enumerate(row):
                             self.view.setItem(self.view.rowCount() - 1, c, self.set_item(r, c))
-            except:
+            except Exception:
                 pass
-        self.label.setText('{} observation{}'.format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
-
-
+        self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")

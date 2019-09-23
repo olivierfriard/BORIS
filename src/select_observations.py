@@ -25,8 +25,8 @@ Copyright 2012-2019 Olivier Friard
 
 
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAbstractItemView
 
 import observations_list
 from config import *

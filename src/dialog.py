@@ -22,20 +22,20 @@ This file is part of BORIS.
 
 """
 
-import sys
+import logging
 import re
+import sys
 
-from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from config import *
-import utilities
 import duration_widget
-import version
 import param_panel
 import project_functions
-import logging
+import utilities
+import version
+from config import *
 
 
 def MessageDialog(title, text, buttons):
@@ -729,9 +729,9 @@ class ResultsWidget(QWidget):
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
-class Overlap_widget(QWidget):
+class Overlap_dialog(QDialog):
     """
-    widget for visualizing overlap analysis
+    Dialog for visualizing overlap analysis
     """
     def __init__(self, events):
         super().__init__()
@@ -739,61 +739,107 @@ class Overlap_widget(QWidget):
         self.events = events
         self.setWindowTitle("")
 
-        hbox = QVBoxLayout()
+        vbox = QVBoxLayout()
 
         self.lb = QLabel("")
-        hbox.addWidget(self.lb)
+        vbox.addWidget(self.lb)
 
+        hbox = QHBoxLayout()
         self.logic = QLineEdit("")
         hbox.addWidget(self.logic)
-
         self.pb_filter = QPushButton("Filter events", clicked=self.filter)
         hbox.addWidget(self.pb_filter)
+        vbox.addLayout(hbox)
 
-        self.ptText = QPlainTextEdit()
-        hbox.addWidget(self.ptText)
+        hbox = QHBoxLayout()
+        self.rb_summary = QRadioButton("Summary")
+        self.rb_summary.setChecked(True)
+        self.rb_details = QRadioButton("Details")
+        hbox.addWidget(self.rb_summary)
+        vbox.addLayout(hbox)
 
-        hbox2 = QHBoxLayout()
-        hbox2.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        hbox = QHBoxLayout()
+        self.lw1 = QListWidget()
+        hbox.addWidget(self.lw1)
+        self.lw2 = QListWidget()
+        hbox.addWidget(self.lw2)
+        self.add_subj_behav_button = QPushButton("OK", clicked=self.add_subj_behav)
+        hbox.addWidget(self.add_subj_behav_button)
+        vbox.addLayout(hbox)
 
-        self.pbSave = QPushButton("Save results", clicked=self.save_results)
-        hbox2.addWidget(self.pbSave)
+        self.tw = QTableWidget(self)
+        vbox.addWidget(self.tw)
 
-        self.pbOK = QPushButton("OK", clicked=self.close)
-        hbox2.addWidget(self.pbOK)
+        hbox = QHBoxLayout()
+        hbox.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.pb_save = QPushButton("Save results", clicked=self.save_results)
+        hbox.addWidget(self.pb_save)
+        self.pb_OK = QPushButton("OK", clicked=self.close)
+        hbox.addWidget(self.pb_OK)
+        vbox.addLayout(hbox)
 
-        hbox.addLayout(hbox2)
+        self.setLayout(vbox)
 
-        self.setLayout(hbox)
+        subjects_list, behaviors_list = [], []
+        for obs_id in events:
+            for subj_behav in events[obs_id]:
+                subj, behav = subj_behav.split("|")
+                subjects_list.append(subj)
+                behaviors_list.append(behav)
+        subjects_set = set(sorted(subjects_list))
+        behaviors_set = set(sorted(behaviors_list))
+
+        self.lw1.addItems(subjects_set)
+        self.lw2.addItems(behaviors_set)
 
         self.resize(540, 640)
 
+    def add_subj_behav(self):
+
+        self.logic.insert(f'"{self.lw1.currentItem().text()}|{self.lw2.currentItem().text()}"')
 
     def filter(self):
         """
         filter events
         """
+        if not self.logic.text():
+            return
+        if self.logic.text().count('"') % 2:
+            QMessageBox.warning(self, programName, f'Wrong number of double quotes (")')
+            return
+
         sb_list = re.findall('"([^"]*)"', self.logic.text())
 
-        print(sb_list)
-
-        out = ""
+        out = []
         for obs_id in self.events:
             logic = self.logic.text()
             for sb in set(sb_list):
                 logic = logic.replace(f'"{sb}"', f'self.events[obs_id]["{sb}"]')
 
-            print(logic)
-
             try:
+                eval_result = eval(logic)
 
-                out += f"{obs_id}: {eval(logic)}" + "\n"
+                for i in eval_result:
+                    out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower}"])
+
             except KeyError:
-
-                out += f"{obs_id}: subject / behavior not found!" + "\n"
+                pass
+                #  out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
-                out += f"Error in {self.logic.text()}" + "\n"
-        self.ptText.setPlainText(out)
+                # out += f"Error in {self.logic.text()}" + "\n"
+                out.append([obs_id, f"Error in {self.logic.text()}", "NA", "NA", "NA"])
+
+        self.tw.clear()
+        self.tw.setRowCount(len(out))
+        self.tw.setColumnCount(5)  # obs_id, comment, start, stop, duration
+
+        self.tw.setHorizontalHeaderLabels(["Observation id", "Comment", "Start time", "Stop time", "Duration"])
+
+        for r in range(len(out)):
+            for c in range(5):
+                self.tw.setItem(r, c, QTableWidgetItem(out[r][c]))
+
+
 
     def save_results(self):
         """

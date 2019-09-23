@@ -23,86 +23,81 @@ This file is part of BORIS.
 """
 
 
-import os
-import sys
-import platform
-import logging
-from optparse import OptionParser
-import time
-import json
-from decimal import *
-import re
-import numpy as np
+import datetime
+import glob
 import hashlib
-import subprocess
+import json
+import logging
+import os
+import pathlib
+import platform
+import re
+import socket
 import sqlite3
+import statistics
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
-import urllib.error
-import tempfile
-import glob
-import statistics
-import datetime
-import socket
-import pathlib
-import psutil
-
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtMultimedia import QSound
-from boris_ui import *
-import qrc_boris
-
-import select_observations
-import dialog
-from edit_event import DlgEditEvent, EditSelectedEvents
-from project import *
-import preferences
-import param_panel
-
-import modifiers_coding_map
-import map_creator
-import behav_coding_map_creator
-import instantaneous_sampling
-import select_modifiers
-import utilities
-from utilities import *
-import tablib
-import observations_list
-import version
-
-import coding_pad
-import subjects_pad
-import transitions
-from config import *
-from time_budget_widget import timeBudgetResults
-import select_modifiers
-import behaviors_coding_map
-
-import project_functions
-
-import measurement_widget
-import irr
-import db_functions
-import export_observation
-import time_budget_functions
-
-import vlc
+from decimal import *
+from optparse import OptionParser
 
 import matplotlib
-import matplotlib.transforms as mtransforms
-from matplotlib import dates
-
 matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
+import numpy as np
+import psutil
+import tablib
+import vlc
+from matplotlib import dates
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtMultimedia import QSound
+from PyQt5.QtWidgets import *
+
+import behav_coding_map_creator
+import behaviors_coding_map
+import coding_pad
+import db_functions
+import dialog
+import export_observation
+import instantaneous_sampling
+import irr
+import map_creator
+import measurement_widget
+import modifiers_coding_map
+import observation
+import observations_list
+import overlap
+import otx_parser
+import param_panel
+import plot_data_module
 import plot_events
 import plot_spectrogram_rt
 import plot_waveform_rt
-import observation
-import plot_data_module
-# import overlap
-import otx_parser
+import preferences
+import project_functions
+import qrc_boris
+import select_modifiers
+import select_observations
+import subjects_pad
+import time_budget_functions
+import transitions
+import utilities
+import version
+from boris_ui import *
+from config import *
+from edit_event import DlgEditEvent, EditSelectedEvents
+from project import *
+from time_budget_widget import timeBudgetResults
+from utilities import *
+
+
+
 
 __version__ = version.__version__
 __version_date__ = version.__version_date__
@@ -1090,7 +1085,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         QMessageBox.warning(self, programName,
-                            "This function is experimental for now.<br>Please test it and report bugs")
+                            "This function is experimental.<br>Please test it and report bugs")
 
         instantaneous_sampling.instantaneous_sampling(self.pj)
 
@@ -1098,47 +1093,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def overlap(self):
         '''
         QMessageBox.warning(self, programName,
-                            "This function is experimental for now.<br>Please test it and report bugs")
+                            "This function is experimental.<br>Please test it and report bugs")
         '''
 
-        import intervals as I
-        def ic(i):
-            return I.closed(i[0], i[1])
-
-
-        result, selected_observations = self.selectObservations(MULTIPLE)
-
-        parameters = self.choose_obs_subj_behav_category(selected_observations,
-                                                         maxTime=0,
-                                                         flagShowIncludeModifiers=False,
-                                                         flagShowExcludeBehaviorsWoEvents=False)
-
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(self.pj,
-                                                                          parameters[SELECTED_SUBJECTS],
-                                                                          #[obs_id],
-                                                                          selected_observations,
-                                                                          parameters[SELECTED_BEHAVIORS])
-
-        cursor = db_connector.cursor()
-        events = {}
-
-        cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events ")
-
-        for row in cursor.fetchall():
-
-            for event in row:
-                obs, subj, behav, start, stop = row
-                if obs not in events:
-                    events[obs] = {}
-                if subj + "|" + behav not in events[obs]:
-                    events[obs][subj + "|" + behav] = ic([start, stop])
-                else:
-                    events[obs][subj + "|" + behav] = events[obs][subj + "|" + behav] | ic([start, stop])
-
-        print(events)
-
-        self.w = dialog.Overlap_widget(events)
-        self.w.show()
+        overlap.overlap(self.pj)
 
 
 
