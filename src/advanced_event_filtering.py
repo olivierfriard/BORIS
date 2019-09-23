@@ -46,6 +46,10 @@ def ic(i):
 
 
 def event_filtering(pj: dict):
+    """
+    advanced event filtering
+    the python-intervals module is used to do operations on interval
+    """
 
     result, selected_observations = select_observations.select_observations(pj,
                                                                             MULTIPLE,

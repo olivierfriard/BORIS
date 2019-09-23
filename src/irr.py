@@ -21,10 +21,12 @@ Copyright 2012-2019 Olivier Friard
 
 """
 
-from decimal import Decimal
 import logging
-import utilities
+from decimal import Decimal
+
 import numpy as np
+
+import utilities
 from config import *
 
 
@@ -45,14 +47,13 @@ def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers):
 
     s = []
     # state behaviors
-    rows = cursor.execute("""SELECT behavior, modifiers FROM aggregated_events
-              WHERE
-               observation = ?
-               AND subject = ?
-               AND type = 'STATE'
-               AND (? BETWEEN start AND STOP)
-               """ ,
-            (obsid, subject, float(time),)).fetchall()
+    rows = cursor.execute(("SELECT behavior, modifiers FROM aggregated_events "
+                           "WHERE "
+                           "observation = ? "
+                           "AND subject = ? "
+                           "AND type = 'STATE' "
+                           "AND (? BETWEEN start AND STOP) "),
+                          (obsid, subject, float(time),)).fetchall()
 
     for row in rows:
         if include_modifiers:
@@ -61,14 +62,13 @@ def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers):
             s.append([subject, row[0]])
 
     # point behaviors
-    rows = cursor.execute("""SELECT behavior, modifiers FROM aggregated_events
-              WHERE
-               observation = ?
-               AND subject = ?
-               AND type = 'POINT'
-               AND abs(start - ?) <= ?
-               """ ,
-            (obsid, subject, float(time), float(interval / 2),)).fetchall()
+    rows = cursor.execute(("SELECT behavior, modifiers FROM aggregated_events "
+                           "WHERE "
+                           "observation = ? "
+                           "AND subject = ? "
+                           "AND type = 'POINT' "
+                           "AND abs(start - ?) <= ? ")
+                          (obsid, subject, float(time), float(interval / 2),)).fetchall()
 
     for row in rows:
         if include_modifiers:
@@ -80,11 +80,11 @@ def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers):
 
 
 def cohen_kappa(cursor,
-                obsid1:str,
-                obsid2:str,
-                interval:float,
-                selected_subjects:list,
-                include_modifiers:bool):
+                obsid1: str,
+                obsid2: str,
+                interval: float,
+                selected_subjects: list,
+                include_modifiers: bool):
     """
     Inter-rater reliability Cohen's kappa coefficient (time-unit)
     see Sequential Analysis and Observational Methods for the Behavioral Sciences p. 77
@@ -104,7 +104,7 @@ def cohen_kappa(cursor,
 
     first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
                                   "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                               (obsid1, obsid2)).fetchone()[0]
+                                 (obsid1, obsid2)).fetchone()[0]
 
     if first_event is None:
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
@@ -113,16 +113,16 @@ def cohen_kappa(cursor,
     logging.debug(f"first_event: {first_event}")
     last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
                                  "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                             (obsid1, obsid2)).fetchone()[0]
+                                (obsid1, obsid2)).fetchone()[0]
 
     logging.debug("last_event: {}".format(last_event))
 
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                        (obsid1,)).fetchone()[0]
+                                (obsid1,)).fetchone()[0]
     nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                       (obsid2,)).fetchone()[0]
+                                (obsid2,)).fetchone()[0]
 
     total_states = []
 
@@ -166,7 +166,7 @@ def cohen_kappa(cursor,
 
             try:
                 contingency_table[total_states.index(s1), total_states.index(s2)] += 1
-            except:
+            except Exception:
                 return -100, "Error with contingency table"
 
         currentTime += interval
@@ -182,11 +182,11 @@ def cohen_kappa(cursor,
                 "number of events: {nb_events2:.0f}\n\n"
                 "K = {K:.3f}")
 
-    #out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
-    #out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid1) / interval)
+    # out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid1))
+    # out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid1) / interval)
 
-    #out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid2))
-    #out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid2) / interval)
+    # out += "Observation length: <b>{:.3f} s</b><br>".format(self.observationTotalMediaLength(obsid2))
+    # out += "Number of intervals: <b>{:.0f}</b><br><br>".format(self.observationTotalMediaLength(obsid2) / interval)
 
     cols_sums = contingency_table.sum(axis=0)
     rows_sums = contingency_table.sum(axis=1)
@@ -209,7 +209,7 @@ def cohen_kappa(cursor,
     else:
         try:
             K = round((agreements - sum_ef) / (overall_total - sum_ef), 3)
-        except:
+        except Exception:
             K = nan
 
     out = template.format(obsid1=obsid1, obsid2=obsid2,
@@ -270,14 +270,14 @@ def needleman_wunsch_identity(cursor,
         align1 = align1[::-1]
         align2 = align2[::-1]
 
-        i,j = 0,0
+        i, j = 0, 0
 
-        #calcuate identity, score and aligned sequeces
+        # calcuate identity, score and aligned sequeces
         symbol = []
         found = 0
         score = 0
         identity = 0
-        for i in range(0,len(align1)):
+        for i in range(0, len(align1)):
             # if two AAs are the same, then output the letter
             if align1[i] == align2[i]:
                 symbol.append(align1[i])
@@ -290,7 +290,7 @@ def needleman_wunsch_identity(cursor,
                 symbol.append(" ")
                 found = 0
 
-            #if one of them is a gap, output a space
+            # if one of them is a gap, output a space
             elif align1[i] == '-' or align2[i] == '-':
                 symbol.append(" ")
                 score += gap_penalty
@@ -324,35 +324,35 @@ def needleman_wunsch_identity(cursor,
 
         # Traceback and compute the alignment
         align1, align2 = [], []
-        i,j = m,n # start from the bottom right cell
-        while i > 0 and j > 0: # end toching the top or the left edge
+        i, j = m, n  # start from the bottom right cell
+        while i > 0 and j > 0:  # end toching the top or the left edge
             score_current = score[i][j]
-            score_diagonal = score[i-1][j-1]
-            score_up = score[i][j-1]
-            score_left = score[i-1][j]
+            score_diagonal = score[i - 1][j - 1]
+            score_up = score[i][j - 1]
+            score_left = score[i - 1][j]
 
-            if score_current == score_diagonal + match_score(seq1[i-1], seq2[j-1]):
-                align1.append(seq1[i-1])
-                align2.append(seq2[j-1])
+            if score_current == score_diagonal + match_score(seq1[i - 1], seq2[j - 1]):
+                align1.append(seq1[i - 1])
+                align2.append(seq2[j - 1])
                 i -= 1
                 j -= 1
             elif score_current == score_left + gap_penalty:
-                align1.append(seq1[i-1])
+                align1.append(seq1[i - 1])
                 align2.append("-")
                 i -= 1
             elif score_current == score_up + gap_penalty:
                 align1.append("-")
-                align2.append(seq2[j-1])
+                align2.append(seq2[j - 1])
                 j -= 1
 
         # Finish tracing up to the top left cell
         while i > 0:
-            align1.append(seq1[i-1])
+            align1.append(seq1[i - 1])
             align2.append("-")
             i -= 1
         while j > 0:
             align1.append("-")
-            align2.append(seq2[j-1])
+            align2.append(seq2[j - 1])
             j -= 1
 
         return finalize(align1, align2)
@@ -362,7 +362,7 @@ def needleman_wunsch_identity(cursor,
 
     first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
                                   "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                               (obsid1, obsid2)).fetchone()[0]
+                                 (obsid1, obsid2)).fetchone()[0]
 
     if first_event is None:
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
@@ -377,10 +377,10 @@ def needleman_wunsch_identity(cursor,
 
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                        (obsid1,)).fetchone()[0]
+                                (obsid1,)).fetchone()[0]
     nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                       (obsid2,)).fetchone()[0]
+                                (obsid2,)).fetchone()[0]
 
 
     seq1, seq2 = {}, {}
@@ -405,7 +405,7 @@ def needleman_wunsch_identity(cursor,
     logging.debug(f"seq1:\n {list(seq1.values())}")
     logging.debug(f"seq2:\n {list(seq2.values())}")
 
-    r = needle(list(seq1.values()), list(seq2.values()) )
+    r = needle(list(seq1.values()), list(seq2.values()))
 
     out = (f"Observation: {obsid1}\n"
            f"number of events: {nb_events1}\n\n"
@@ -415,4 +415,3 @@ def needleman_wunsch_identity(cursor,
 
     logging.debug(f"identity: {r['identity']}")
     return r['identity'], out
-
