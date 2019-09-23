@@ -764,6 +764,7 @@ class Overlap_dialog(QDialog):
         self.lw2 = QListWidget()
         hbox.addWidget(self.lw2)
         self.add_subj_behav_button = QPushButton("OK", clicked=self.add_subj_behav)
+        self.add_subj_behav_button.setIcon(QIcon.fromTheme("go-top"))
         hbox.addWidget(self.add_subj_behav_button)
         vbox.addLayout(hbox)
 
@@ -774,8 +775,8 @@ class Overlap_dialog(QDialog):
         hbox.addItem(QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.pb_save = QPushButton("Save results", clicked=self.save_results)
         hbox.addWidget(self.pb_save)
-        self.pb_OK = QPushButton("OK", clicked=self.close)
-        hbox.addWidget(self.pb_OK)
+        self.pb_close = QPushButton("Close", clicked=self.close)
+        hbox.addWidget(self.pb_close)
         vbox.addLayout(hbox)
 
         self.setLayout(vbox)
