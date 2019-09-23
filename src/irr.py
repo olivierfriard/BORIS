@@ -67,7 +67,7 @@ def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers):
                            "observation = ? "
                            "AND subject = ? "
                            "AND type = 'POINT' "
-                           "AND abs(start - ?) <= ? ")
+                           "AND abs(start - ?) <= ? "),
                           (obsid, subject, float(time), float(interval / 2),)).fetchall()
 
     for row in rows:
