@@ -89,8 +89,10 @@ def event_filtering(pj: dict):
         QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
         return
 
+    '''
     print("load in db")
     t1 = time.time()
+    '''
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                                       parameters[SELECTED_SUBJECTS],
                                                                       selected_observations,
@@ -102,7 +104,6 @@ def event_filtering(pj: dict):
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
 
     for row in cursor.fetchall():
-
         for event in row:
             obs, subj, behav, start, stop = row
             if obs not in events:
@@ -112,8 +113,10 @@ def event_filtering(pj: dict):
             else:
                 events[obs][subj + "|" + behav] = events[obs][subj + "|" + behav] | ic([start, stop])
 
+    '''
     t2 = time.time()
     print(f"db loaded: {t2 - t1}")
+    '''
 
     w = dialog.Advanced_event_filtering_dialog(events)
     w.exec_()
