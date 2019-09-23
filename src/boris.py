@@ -72,7 +72,7 @@ import measurement_widget
 import modifiers_coding_map
 import observation
 import observations_list
-import overlap
+import advanced_event_filtering
 import otx_parser
 import param_panel
 import plot_data_module
@@ -939,7 +939,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
 
-        self.actionOverlap.triggered.connect(self.overlap)
+        self.action_advanced_event_filtering.triggered.connect(self.advanced_event_filtering)
 
         # menu Help
         self.actionUser_guide.triggered.connect(self.actionUser_guide_triggered)
@@ -1090,13 +1090,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         instantaneous_sampling.instantaneous_sampling(self.pj)
 
 
-    def overlap(self):
+    def advanced_event_filtering(self):
         '''
         QMessageBox.warning(self, programName,
                             "This function is experimental.<br>Please test it and report bugs")
         '''
 
-        overlap.overlap(self.pj)
+        advanced_event_filtering.event_filtering(self.pj)
 
 
 

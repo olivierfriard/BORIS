@@ -24,8 +24,10 @@ This file is part of BORIS.
 
 import logging
 import re
+import statistics
 import sys
 
+import tablib
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -117,10 +119,10 @@ class Video_overlay_dialog(QDialog):
         hbox = QHBoxLayout()
         self.pb_cancel = QPushButton("Cancel", self, clicked=self.reject)
         hbox.addWidget(self.pb_cancel)
-        self.pb_oK = QPushButton("OK", clicked=self.ok)
-        '''self.pb_oK.clicked.connect(self.ok)'''
-        self.pb_oK.setDefault(True)
-        hbox.addWidget(self.pb_oK)
+        self.pb_OK = QPushButton("OK", clicked=self.ok)
+
+        self.pb_OK.setDefault(True)
+        hbox.addWidget(self.pb_OK)
 
         vlayout.addLayout(hbox)
 
@@ -729,33 +731,42 @@ class ResultsWidget(QWidget):
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
-class Overlap_dialog(QDialog):
+class Advanced_event_filtering_dialog(QDialog):
     """
-    Dialog for visualizing overlap analysis
+    Dialog for visualizing advanced event filtering results
     """
+
+    summary_header = ["Observation id", "Number of occurences", "Total duration", "Mean", "Std Dev"]
+    details_header = ["Observation id", "Comment", "Start time", "Stop time", "Duration"]
+
     def __init__(self, events):
         super().__init__()
 
         self.events = events
-        self.setWindowTitle("")
+        self.out = []
+        self.setWindowTitle("Advanced event filtering")
 
         vbox = QVBoxLayout()
 
-        self.lb = QLabel("")
-        vbox.addWidget(self.lb)
+        lb = QLabel("Filter")
+        vbox.addWidget(lb)
 
         hbox = QHBoxLayout()
         self.logic = QLineEdit("")
         hbox.addWidget(self.logic)
         self.pb_filter = QPushButton("Filter events", clicked=self.filter)
         hbox.addWidget(self.pb_filter)
+        self.pb_clear = QPushButton("Clear", clicked=self.logic.clear)
+        self.pb_clear.setIcon(QIcon.fromTheme("edit-clear"))
+        hbox.addWidget(self.pb_clear)
         vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
-        self.rb_summary = QRadioButton("Summary")
+        self.rb_summary = QRadioButton("Summary", toggled=self.filter)
         self.rb_summary.setChecked(True)
-        self.rb_details = QRadioButton("Details")
         hbox.addWidget(self.rb_summary)
+        self.rb_details = QRadioButton("Details", toggled=self.filter)
+        hbox.addWidget(self.rb_details)
         vbox.addLayout(hbox)
 
         hbox = QHBoxLayout()
@@ -763,12 +774,24 @@ class Overlap_dialog(QDialog):
         hbox.addWidget(self.lw1)
         self.lw2 = QListWidget()
         hbox.addWidget(self.lw2)
-        self.add_subj_behav_button = QPushButton("OK", clicked=self.add_subj_behav)
-        self.add_subj_behav_button.setIcon(QIcon.fromTheme("go-top"))
+        self.add_subj_behav_button = QPushButton("", clicked=self.add_subj_behav)
+        self.add_subj_behav_button.setIcon(QIcon.fromTheme("go-up"))
         hbox.addWidget(self.add_subj_behav_button)
+
+        self.lw3 = QListWidget()
+        self.lw3.addItems(["AND", "OR"])
+        hbox.addWidget(self.lw3)
+        self.add_logic_button = QPushButton("", clicked=self.add_logic)
+        self.add_logic_button.setIcon(QIcon.fromTheme("go-up"))
+        hbox.addWidget(self.add_logic_button)
+
         vbox.addLayout(hbox)
 
+        self.lb_results = QLabel("Results")
+        vbox.addWidget(self.lb_results)
+
         self.tw = QTableWidget(self)
+        #self.tw.setReadOnly(True)
         vbox.addWidget(self.tw)
 
         hbox = QHBoxLayout()
@@ -787,17 +810,34 @@ class Overlap_dialog(QDialog):
                 subj, behav = subj_behav.split("|")
                 subjects_list.append(subj)
                 behaviors_list.append(behav)
-        subjects_set = set(sorted(subjects_list))
-        behaviors_set = set(sorted(behaviors_list))
+        subjects_set = sorted(set(subjects_list))
+        behaviors_set = sorted(set(behaviors_list))
 
         self.lw1.addItems(subjects_set)
         self.lw2.addItems(behaviors_set)
 
-        self.resize(540, 640)
+        self.resize(640, 640)
+
 
     def add_subj_behav(self):
+        """
+        add subject|behavior of selected listwidgets items in lineEdit
+        """
+        self.logic.insert(f'"{self.lw1.currentItem().text()}|{self.lw2.currentItem().text()}" ')
 
-        self.logic.insert(f'"{self.lw1.currentItem().text()}|{self.lw2.currentItem().text()}"')
+
+    def add_logic(self):
+        """
+        add selected logic operaton to lineedit
+        """
+        text = ""
+        if self.lw3.currentItem().text() == "AND":
+            text = " & "
+        if self.lw3.currentItem().text() == "OR":
+            text = " | "
+        if text:
+            self.logic.insert(text)
+
 
     def filter(self):
         """
@@ -811,7 +851,7 @@ class Overlap_dialog(QDialog):
 
         sb_list = re.findall('"([^"]*)"', self.logic.text())
 
-        out = []
+        self.out = []
         for obs_id in self.events:
             logic = self.logic.text()
             for sb in set(sb_list):
@@ -819,41 +859,78 @@ class Overlap_dialog(QDialog):
 
             try:
                 eval_result = eval(logic)
-
                 for i in eval_result:
-                    out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower}"])
+                    if not i.is_empty():
+                        self.out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower:.3f}"])
 
             except KeyError:
                 pass
                 #  out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
                 # out += f"Error in {self.logic.text()}" + "\n"
-                out.append([obs_id, f"Error in {self.logic.text()}", "NA", "NA", "NA"])
+                self.out.append([obs_id, f"Error in {self.logic.text()}", "NA", "NA", "NA"])
 
         self.tw.clear()
-        self.tw.setRowCount(len(out))
-        self.tw.setColumnCount(5)  # obs_id, comment, start, stop, duration
 
-        self.tw.setHorizontalHeaderLabels(["Observation id", "Comment", "Start time", "Stop time", "Duration"])
+        if self.rb_details.isChecked():
 
-        for r in range(len(out)):
-            for c in range(5):
-                self.tw.setItem(r, c, QTableWidgetItem(out[r][c]))
+            self.lb_results.setText(f"Results ({len(self.out)} event{'s'*(len(self.out) > 1)})")
 
+            self.tw.setRowCount(len(self.out))
+            self.tw.setColumnCount(5)  # obs_id, comment, start, stop, duration
+            self.tw.setHorizontalHeaderLabels(details_header)
+            for r in range(len(self.out)):
+                for c in range(5):
+                    self.tw.setItem(r, c, QTableWidgetItem(self.out[r][c]))
+
+        if self.rb_summary.isChecked():
+
+            summary = {}
+            for row in self.out:
+                obs_id, _, start, stop, duration = row
+                if obs_id not in summary:
+                    summary[obs_id] = []
+                summary[obs_id].append(float(duration))
+
+            self.out = []
+            for obs_id in summary:
+
+                self.out.append([obs_id,
+                                str(len(summary[obs_id])),
+                                str(round(sum(summary[obs_id]), 3)),
+                                str(round(statistics.mean(summary[obs_id]), 3)),
+                                str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA"
+                                ])
+
+            self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
+            self.tw.setRowCount(len(summary))
+            self.tw.setColumnCount(5)  # obs_id, mean, stdev
+            self.tw.setHorizontalHeaderLabels(self.summary_header)
+            for r in range(len(self.out)):
+                for c in range(5):
+                    self.tw.setItem(r, c, QTableWidgetItem(self.out[r][c]))
 
 
     def save_results(self):
         """
-        save content of self.ptText
+        save results
         """
 
-        fn = QFileDialog().getSaveFileName(self, "Save results", "", "Text files (*.txt *.tsv);;All files (*)")
+        fn = QFileDialog().getSaveFileName(self, "Save results", "", "TAB separated values (*.tsv);;All files (*)")
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
+            if self.rb_details.isChecked():
+                tablib_dataset = tablib.Dataset(headers=self.details_header)
+            if self.rb_summary.isChecked():
+                tablib_dataset = tablib.Dataset(headers=self.summary_header)
+
+            [tablib_dataset.append(x) for x in self.out]
+
             try:
-                with open(file_name, "w") as f:
-                    f.write(self.ptText.toPlainText())
+                with open(file_name, "wb") as f:
+                    f.write(str.encode(tablib_dataset.tsv))
+
             except Exception:
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 

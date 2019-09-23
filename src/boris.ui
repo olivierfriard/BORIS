@@ -278,7 +278,7 @@
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="menuSimilarities"/>
     <addaction name="actionInstantaneous_sampling"/>
-    <addaction name="actionOverlap"/>
+    <addaction name="action_advanced_event_filtering"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
     <property name="title">
@@ -1392,9 +1392,9 @@
     <string>Find in events</string>
    </property>
   </action>
-  <action name="actionOverlap">
+  <action name="action_advanced_event_filtering">
    <property name="text">
-    <string>Overlap</string>
+    <string>Advanced event filtering</string>
    </property>
   </action>
  </widget>
