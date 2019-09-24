@@ -41,95 +41,24 @@ import utilities
 from config import *
 
 
-def ic(i):
+def icc(i):
+    """
+    create a closed-closed interval
+    """
     return I.closed(i[0], i[1])
 
 
-def event_filtering(pj: dict):
+def ico(i):
     """
-    advanced event filtering
-    the python-intervals module is used to do operations on interval
+    create a closed-open interval
     """
+    return I.closedopen(i[0], i[1])
 
-    result, selected_observations = select_observations.select_observations(pj,
-                                                                            MULTIPLE,
-                                                                            "Select observations for advanced event filtering")
-    if not selected_observations:
-        return
-
-    # check if state events are paired
-    out = ""
-    not_paired_obs_list = []
-    for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obs_id])
-
-        if not r:
-            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
-            not_paired_obs_list.append(obs_id)
-
-    if out:
-        out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
-        results = dialog.Results_dialog()
-        results.setWindowTitle(f"{programName} - Check selected observations")
-        results.ptText.setReadOnly(True)
-        results.ptText.appendHtml(out)
-        results.pbSave.setVisible(False)
-        results.pbCancel.setVisible(True)
-
-        if not results.exec_():
-            return
-    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
-    if not selected_observations:
-        return
-
-    # observations length
-    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(pj, selected_observations)
-    if max_obs_length == -1:  # media length not available, user choose to not use events
-        return
-
-    parameters = dialog.choose_obs_subj_behav_category(pj,
-                                                       selected_observations,
-                                                       maxTime=max_obs_length,
-                                                       flagShowIncludeModifiers=False,
-                                                       flagShowExcludeBehaviorsWoEvents=False,
-                                                       by_category=False)
-
-    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
-        return
-
-    '''
-    print("load in db")
-    t1 = time.time()
-    '''
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                      parameters[SELECTED_SUBJECTS],
-                                                                      selected_observations,
-                                                                      parameters[SELECTED_BEHAVIORS])
-
-    cursor = db_connector.cursor()
-    events = {}
-
-    cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
-
-    for row in cursor.fetchall():
-        for event in row:
-            obs, subj, behav, start, stop = row
-            if obs not in events:
-                events[obs] = {}
-            if subj + "|" + behav not in events[obs]:
-                events[obs][subj + "|" + behav] = ic([start, stop])
-            else:
-                events[obs][subj + "|" + behav] = events[obs][subj + "|" + behav] | ic([start, stop])
-
-    '''
-    t2 = time.time()
-    print(f"db loaded: {t2 - t1}")
-    '''
-
-    w = Advanced_event_filtering_dialog(events)
-    w.exec_()
+def io(i):
+    """
+    create a closed-open interval
+    """
+    return I.open(i[0], i[1])
 
 
 class Advanced_event_filtering_dialog(QDialog):
@@ -274,7 +203,10 @@ class Advanced_event_filtering_dialog(QDialog):
             logic = self.logic.text()
             for sb in set(sb_list):
                 logic = logic.replace(f'"{sb}"', f'self.events[obs_id]["{sb}"]')
+                if sb not in self.events[obs_id]:
+                    self.events[obs_id][sb] = io([0, 0])
 
+            print(logic)
             try:
                 eval_result = eval(logic)
                 for i in eval_result:
@@ -282,8 +214,9 @@ class Advanced_event_filtering_dialog(QDialog):
                         self.out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower:.3f}"])
 
             except KeyError:
-                pass
-                #  out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
+
+                #pass
+                self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
                 # out += f"Error in {self.logic.text()}" + "\n"
                 self.out.append([obs_id, f"Error in {self.logic.text()}", "NA", "NA", "NA"])
@@ -353,3 +286,92 @@ class Advanced_event_filtering_dialog(QDialog):
 
             except Exception:
                 QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+
+
+def event_filtering(pj: dict):
+    """
+    advanced event filtering
+    the python-intervals module is used to do operations on interval
+    """
+
+    result, selected_observations = select_observations.select_observations(pj,
+                                                                            MULTIPLE,
+                                                                            "Select observations for advanced event filtering")
+    if not selected_observations:
+        return
+
+    # check if state events are paired
+    out = ""
+    not_paired_obs_list = []
+    for obs_id in selected_observations:
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
+                                                          pj[OBSERVATIONS][obs_id])
+
+        if not r:
+            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+            not_paired_obs_list.append(obs_id)
+
+    if out:
+        out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
+        results = dialog.Results_dialog()
+        results.setWindowTitle(f"{programName} - Check selected observations")
+        results.ptText.setReadOnly(True)
+        results.ptText.appendHtml(out)
+        results.pbSave.setVisible(False)
+        results.pbCancel.setVisible(True)
+
+        if not results.exec_():
+            return
+    selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+    if not selected_observations:
+        return
+
+    # observations length
+    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(pj, selected_observations)
+    if max_obs_length == -1:  # media length not available, user choose to not use events
+        return
+
+    parameters = dialog.choose_obs_subj_behav_category(pj,
+                                                       selected_observations,
+                                                       maxTime=max_obs_length,
+                                                       flagShowIncludeModifiers=False,
+                                                       flagShowExcludeBehaviorsWoEvents=False,
+                                                       by_category=False)
+
+    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
+        return
+
+    '''
+    print("load in db")
+    t1 = time.time()
+    '''
+    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
+                                                                      parameters[SELECTED_SUBJECTS],
+                                                                      selected_observations,
+                                                                      parameters[SELECTED_BEHAVIORS])
+
+    cursor = db_connector.cursor()
+    events = {}
+
+    cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
+
+    for row in cursor.fetchall():
+        for event in row:
+            obs, subj, behav, start, stop = row
+            if obs not in events:
+                events[obs] = {}
+            if subj + "|" + behav not in events[obs]:
+                events[obs][subj + "|" + behav] = ico([start, stop])
+            else:
+                events[obs][subj + "|" + behav] = events[obs][subj + "|" + behav] | ico([start, stop])
+
+    '''
+    t2 = time.time()
+    print(f"db loaded: {t2 - t1}")
+    '''
+
+    w = Advanced_event_filtering_dialog(events)
+    w.exec_()
+
+
