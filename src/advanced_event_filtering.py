@@ -23,7 +23,8 @@ import os
 import pathlib
 import re
 import statistics
-import time
+import sys
+# import time
 
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QDialog, QHBoxLayout, QLabel, QLineEdit,
@@ -34,7 +35,7 @@ from PyQt5.QtCore import Qt
 
 import db_functions
 import dialog
-import intervals as I  # python-intervals (https://pypi.org/project/python-intervals)
+import intervals as Interval  # python-intervals (https://pypi.org/project/python-intervals)
 import project_functions
 import select_observations
 import utilities
@@ -45,20 +46,19 @@ def icc(i):
     """
     create a closed-closed interval
     """
-    return I.closed(i[0], i[1])
-
+    return Interval.closed(i[0], i[1])
 
 def ico(i):
     """
     create a closed-open interval
     """
-    return I.closedopen(i[0], i[1])
+    return Interval.closedopen(i[0], i[1])
 
 def io(i):
     """
     create a closed-open interval
     """
-    return I.open(i[0], i[1])
+    return Interval.open(i[0], i[1])
 
 
 class Advanced_event_filtering_dialog(QDialog):
@@ -206,20 +206,18 @@ class Advanced_event_filtering_dialog(QDialog):
                 if sb not in self.events[obs_id]:
                     self.events[obs_id][sb] = io([0, 0])
 
-            print(logic)
+            # print(logic)
             try:
                 eval_result = eval(logic)
                 for i in eval_result:
                     if not i.is_empty():
                         self.out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower:.3f}"])
-
             except KeyError:
-
-                #pass
                 self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
                 # out += f"Error in {self.logic.text()}" + "\n"
-                self.out.append([obs_id, f"Error in {self.logic.text()}", "NA", "NA", "NA"])
+                error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+                self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", "NA", "NA", "NA"])
                 flag_error = True
 
         self.tw.clear()
@@ -352,15 +350,26 @@ def event_filtering(pj: dict):
                                                                       parameters[SELECTED_BEHAVIORS])
 
     cursor = db_connector.cursor()
-    events = {}
 
+    # create intervals from DB
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
-
+    events = {}
     for row in cursor.fetchall():
         for event in row:
             obs, subj, behav, start, stop = row
+            # check if start and stop are in selected time interval
+            if stop < parameters[START_TIME]:
+                continue
+            if start > parameters[END_TIME]:
+                continue
+            if start < parameters[START_TIME]:
+                start = float(parameters[START_TIME])
+            if stop > parameters[END_TIME]:
+                stop = float(parameters[END_TIME])
+
             if obs not in events:
                 events[obs] = {}
+
             if subj + "|" + behav not in events[obs]:
                 events[obs][subj + "|" + behav] = ico([start, stop])
             else:
