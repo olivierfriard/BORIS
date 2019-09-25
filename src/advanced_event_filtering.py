@@ -48,11 +48,13 @@ def icc(i):
     """
     return Interval.closed(i[0], i[1])
 
+
 def ico(i):
     """
     create a closed-open interval
     """
     return Interval.closedopen(i[0], i[1])
+
 
 def io(i):
     """
@@ -242,12 +244,14 @@ class Advanced_event_filtering_dialog(QDialog):
             self.out = []
             for obs_id in summary:
 
-                self.out.append([obs_id,
-                                 str(len(summary[obs_id])),
-                                 str(round(sum(summary[obs_id]), 3)),
-                                 str(round(statistics.mean(summary[obs_id]), 3)),
-                                 str(round(statistics.stdev(summary[obs_id]), 3)) if len(summary[obs_id]) > 1 else "NA"
-                                ])
+                self.out.append([
+                    obs_id,
+                    str(len(summary[obs_id])),
+                    str(round(sum(summary[obs_id]), 3)),
+                    str(round(statistics.mean(summary[obs_id]), 3)),
+                    str(round(statistics.stdev(summary[obs_id]), 3))
+                    if len(summary[obs_id]) > 1 else "NA"
+                ])
 
             self.lb_results.setText(f"Results ({len(summary)} observation{'s'*(len(summary) > 1)})")
             self.tw.setRowCount(len(summary))
@@ -382,5 +386,3 @@ def event_filtering(pj: dict):
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()
-
-
