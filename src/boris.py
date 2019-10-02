@@ -673,11 +673,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
-        try:
-            self.init_memory = round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)
-        except psutil.AccessDenied:
-            self.init_memory = -1
-            print("access denied")
+        self.pid = os.getpid()
+        self.init_percent_memory = utilities.rss_memory_percent_used(self.pid)
 
 
     def menu_options(self):
@@ -3388,8 +3385,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
         preferencesWindow.lb_memory_in_use.setText((f"Memory used by BORIS: "
-                                                    f"{round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024, 3)}"
-                                                    " Mb"))
+                                                    f"{utilities.rss_memory_percent_used(self.pid):.1f} % of total memory"))
 
         preferencesWindow.sbFrameResize.setValue(self.frame_resize)
         mem_frame_resize = self.frame_resize
@@ -8845,7 +8841,7 @@ item []:
         about_dialog.setEscapeButton(QMessageBox.Ok)
 
         about_dialog.setInformativeText((
-            "<b>{prog_name}</b> {ver} - {date}"
+            f"<b>{programName}</b> {ver} - {__version_date__}"
             "<p>Copyright &copy; 2012-2019 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
@@ -8859,27 +8855,19 @@ item []:
             "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
             "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
             """<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>"""
-        ).format(
-            prog_name=programName,
-            ver=ver,
-            date=__version_date__,
-            python_ver=platform.python_version()))
+        ))
 
         n = "\n"
         programs_versions = n.join(programs_versions)
-        try:
-            memory_in_use = (f"{round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)} Mb "
-                             f"({psutil.Process(os.getpid()).memory_percent(memtype='uss'):.1f} % of total memory)")
-        except psutil.AccessDenied:
-            try:
-                memory_in_use = (f"{round(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024)} Mb "
-                                 f"({psutil.Process(os.getpid()).memory_percent():.1f} % of total memory)")
-            except Exception:
-                memory_in_use = "Not available"
+        memory_in_use = f"{utilities.rss_memory_used(self.pid)} Mb" if utilities.rss_memory_used(self.pid) != -1 else "Not available"
+        percent_memory_in_use = (f"({utilities.rss_memory_percent_used(self.pid):.1f} % of total memory)"
+                                 if utilities.rss_memory_percent_used(self.pid) != -1
+                                 else "")
+
         details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
                    f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
                    f"CPU type: {platform.machine()}{n}"
-                   f"Memory in use by BORIS: {memory_in_use}{n}{n}"
+                   f"Memory in use by BORIS: {memory_in_use} {percent_memory_in_use}{n}{n}"
                    f"{programs_versions}")
 
         about_dialog.setDetailedText(details)

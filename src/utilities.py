@@ -22,28 +22,27 @@ Copyright 2012-2019 Olivier Friard
 """
 
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import QPixmap, qRgb, QImage
-from PyQt5.QtWidgets import *
-
-import math
 import csv
-import re
-import wave
-import subprocess
+import datetime
 import hashlib
-import urllib.parse
-import sys
-import os
 import logging
+import math
+import os
+import pathlib
+import re
+import socket
 import subprocess
+import sys
+import urllib.parse
+import wave
 from decimal import *
 from shutil import copyfile
-import math
-import datetime
-import socket
-import pathlib
+
 import numpy as np
+import psutil
+from PyQt5.QtCore import *
+from PyQt5.QtGui import QImage, QPixmap, qRgb
+from PyQt5.QtWidgets import *
 
 from config import *
 
@@ -678,6 +677,38 @@ def angle(p1, p2, p3):
     """
     return math.acos(
         (distance(p1, p2) ** 2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
+
+
+def rss_memory_used(pid):
+    """
+    get RSS memory used by process pid
+
+    Args:
+        pid (int): process id
+    Returns:
+        int: RSS memory used by process pid in Mb
+
+    """
+    try:
+        return round(psutil.Process(pid).memory_info().rss / 1024 / 1024)
+    except exception:
+        return -1
+
+
+def rss_memory_percent_used(pid):
+    """
+    get RSS memory percent used by process pid
+
+    Args:
+        pid (int): process id
+    Returns:
+        float: RSS memory percent used by process pid
+
+    """
+    try:
+        return psutil.Process(pid).memory_percent(memtype='rss')
+    except Exception:
+        return -1
 
 
 def polygon_area(poly):
