@@ -295,7 +295,7 @@ FFMPEG = "ffmpeg"
 
 SAVE_FRAMES = "save_frames"
 MEMORY_FOR_FRAMES = "memory_for_frames"
-DEFAULT_MEMORY_FOR_FRAMES = 2000  # Mb
+DEFAULT_MEMORY_FOR_FRAMES = 80  # % total memory
 DISK = "disk"
 MEMORY = "memory"
 

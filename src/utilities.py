@@ -711,6 +711,15 @@ def rss_memory_percent_used(pid):
         return -1
 
 
+def available_memory():
+    """
+    get available memory on system
+    """
+    try:
+        return psutil.virtual_memory().available
+    except Exception:
+        return -1
+
 def polygon_area(poly):
     """
     area of polygon

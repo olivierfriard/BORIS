@@ -50,7 +50,6 @@ matplotlib.use("Qt5Agg")
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
-import psutil
 import tablib
 import vlc
 from matplotlib import dates
@@ -3704,11 +3703,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     print("videoframe resolution", player.videoframe.h_resolution, player.videoframe.v_resolution)
                     '''
                     # check if cache memory is below the limit
-                    if (psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024 - self.init_memory
-                            >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)):
-                        logging.debug((f"clear memory cache {round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024) }"
+
+
+                    if ((utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
+                        or (psutil.virtual_memory().percent > 95)):
+
+                        logging.debug((f"clear memory cache {utilities.rss_memory_percent_used(self.pid)}"
                                        f" used of {self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)} allowed"))
+
                         self.frames_cache.clear()
+
+                        '''
+                        dist_idx = sorted([(abs(frameCurrentMedia - idx), idx) for idx in self.frames_cache[current_media_full_path]], reverse=True)
+                        while dist_idx and ((utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
+                        or (psutil.virtual_memory().percent > 95)):
+                            print(f"deleting 1 {dist_idx[0]}")
+                            del self.frames_cache[current_media_full_path][dist_idx[0][1]]   # clear
+                            del dist_idx[0]
+                        '''
 
                     extracted_frames, new_resolution = utilities.extract_frames_mem(self.ffmpeg_bin,
                                                      frameCurrentMedia,
@@ -3730,7 +3742,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     extracted_frames.clear()
 
-                    print("mem", round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 /1024))
+                    '''
+                    dist_idx = sorted([(abs(frameCurrentMedia - idx), idx) for idx in self.frames_cache[current_media_full_path]], reverse=True)
+                    while dist_idx and ((utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
+                    or (psutil.virtual_memory().percent > 95)):
+                        print("used %", utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory)
+                        print("tot mem percent", psutil.virtual_memory().percent)
+                        print(f"deleting 2 {dist_idx[0]}")
+                        # del self.frames_cache[current_media_full_path][dist_idx[0][1]]   # clear
+                        self.frames_cache[current_media_full_path].pop(dist_idx[0][1])
+                        del dist_idx[0]
+                    '''
 
 
                     logging.debug(f"frames cache mem size: {sum([len(self.frames_cache[k]) * 3 * new_resolution[0] * new_resolution[1] for k in self.frames_cache])}")
@@ -8867,6 +8889,8 @@ item []:
         details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
                    f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
                    f"CPU type: {platform.machine()}{n}"
+                   f"Total memory: {psutil.virtual_memory().total / 1024 / 1024 / 1024:.1f} Gb "
+                   f"({100 - psutil.virtual_memory().percent :.1f} % available){n}"
                    f"Memory in use by BORIS: {memory_in_use} {percent_memory_in_use}{n}{n}"
                    f"{programs_versions}")
 

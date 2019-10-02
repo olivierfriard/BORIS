@@ -381,16 +381,23 @@
            <item>
             <widget class="QSpinBox" name="sb_frames_memory_size">
              <property name="minimum">
-              <number>1</number>
+              <number>5</number>
              </property>
              <property name="maximum">
-              <number>16000</number>
+              <number>100</number>
              </property>
              <property name="singleStep">
-              <number>10</number>
+              <number>5</number>
              </property>
              <property name="value">
-              <number>2000</number>
+              <number>80</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="lb_percent_total_memory">
+             <property name="text">
+              <string>% of total memory</string>
              </property>
             </widget>
            </item>
