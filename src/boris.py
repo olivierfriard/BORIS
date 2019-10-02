@@ -8194,7 +8194,7 @@ item []:
                 logging.warning("The frame-by-frame mode will not be available because the video files have different frame rates")
                 QMessageBox.warning(self, programName, ("The frame-by-frame mode will not be available"
                                                         " because the video files have different frame rates ({})."
-                                                        ).format(", ".join(all_fps)),
+                                                        ).format(", ".join(map(str, all_fps))),
                                     QMessageBox.Ok | QMessageBox.Default,
                                     QMessageBox.NoButton)
                 self.actionFrame_by_frame.setChecked(False)
