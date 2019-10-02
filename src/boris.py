@@ -1095,7 +1095,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         """
-        
+
         QMessageBox.warning(self, programName,
                             ("This function is experimental.<br>Please test it and report bugs on<br>"
                              "https://github.com/olivierfriard/BORIS/issues"))
@@ -9849,7 +9849,7 @@ item []:
                 self.video_faster_activated()
             return
         # speed normal
-        if ek == Qt.Key_Backslash:
+        if ek == Qt.Key_Backspace:
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                 self.video_normalspeed_activated()
             return
@@ -9865,20 +9865,26 @@ item []:
 
         # frame-by-frame mode
         if self.playMode == FFMPEG:
-            if ek == 47 or ek == Qt.Key_Left:   # /   one frame back
+            if ek == 47 or ek == Qt.Key_Left:  # / one frame back
 
                 logging.debug(f"Current frame {self.FFmpegGlobalFrame}")
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
                     newTime = 1000 * self.FFmpegGlobalFrame / self.fps
                     self.ffmpeg_timer_out()
+
                     logging.debug(f"New frame {self.FFmpegGlobalFrame}")
+
                 return
 
             if ek == 42 or ek == Qt.Key_Right:  # *  read next frame
+
                 logging.debug(f"(next) current frame {self.FFmpegGlobalFrame}")
+
                 self.ffmpeg_timer_out()
+
                 logging.debug(f"(next) new frame {self.FFmpegGlobalFrame}")
+
                 return
 
         if self.playerType == VLC:
