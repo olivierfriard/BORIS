@@ -8869,7 +8869,7 @@ item []:
         programs_versions = n.join(programs_versions)
         try:
             memory_in_use = (f"{round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)} Mb "
-                             f"({psutil.Process(os.getpid()).memory_percent(mem_type='uss'):.1f} % of total memory)")
+                             f"({psutil.Process(os.getpid()).memory_percent(memtype='uss'):.1f} % of total memory)")
         except psutil.AccessDenied:
             try:
                 memory_in_use = (f"{round(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024)} Mb "
