@@ -673,7 +673,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
-        self.init_memory = round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)
+        try:
+            self.init_memory = round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)
+        except psutil.AccessDenied:
+            self.init_memory = -1
+            print("access denied")
 
 
     def menu_options(self):
@@ -8863,10 +8867,19 @@ item []:
 
         n = "\n"
         programs_versions = n.join(programs_versions)
+        try:
+            memory_in_use = (f"{round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)} Mb "
+                             f"({psutil.Process(os.getpid()).memory_percent(mem_type='uss'):.1f} % of total memory)")
+        except psutil.AccessDenied:
+            try:
+                memory_in_use = (f"{round(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024)} Mb "
+                                 f"({psutil.Process(os.getpid()).memory_percent():.1f} % of total memory)")
+            except Exception:
+                memory_in_use = "Not available"
         details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
                    f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
                    f"CPU type: {platform.machine()}{n}"
-                   f"Memory in use by BORIS: {round(psutil.Process(os.getpid()).memory_full_info().uss / 1024 / 1024)} Mb{n}{n}"
+                   f"Memory in use by BORIS: {memory_in_use}{n}{n}"
                    f"{programs_versions}")
 
         about_dialog.setDetailedText(details)
