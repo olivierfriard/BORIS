@@ -9838,6 +9838,22 @@ item []:
             self.switch_playing_mode()
             return
 
+        # speed down
+        if ek == Qt.Key_BracketLeft:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                self.video_slower_activated()
+            return
+        # speed up
+        if ek == Qt.Key_BracketRight:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                self.video_faster_activated()
+            return
+        # speed normal
+        if ek == Qt.Key_Backslash:
+            if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
+                self.video_normalspeed_activated()
+            return
+
         # play / pause with space bar
         if ek == Qt.Key_Space:
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
