@@ -277,7 +277,7 @@
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="menuSimilarities"/>
-    <addaction name="actionInstantaneous_sampling"/>
+    <addaction name="action_behavior_binary_table"/>
     <addaction name="action_advanced_event_filtering"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
@@ -1374,12 +1374,12 @@
     <string>Remove</string>
    </property>
   </action>
-  <action name="actionInstantaneous_sampling">
+  <action name="action_behavior_binary_table">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Instantaneous sampling</string>
+    <string>Behaviors binary table</string>
    </property>
   </action>
   <action name="actionPlot_current_observation">

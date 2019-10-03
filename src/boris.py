@@ -64,7 +64,7 @@ import coding_pad
 import db_functions
 import dialog
 import export_observation
-import instantaneous_sampling
+import behavior_binary_table
 import irr
 import map_creator
 import measurement_widget
@@ -242,7 +242,11 @@ class ProjectServerThread(QThread):
 class TempDirCleanerThread(QThread):
     """
     class for cleaning image cache directory with qthread
+
+    The temporary directory is checked every 30 s.
+    If the total size of frames files is greater than the limit fixed by user 1/10 of the files is deleted
     """
+
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.exiting = False
@@ -672,6 +676,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
+        # for memory checking
         self.pid = os.getpid()
         self.init_percent_memory = utilities.rss_memory_percent_used(self.pid)
 
@@ -804,15 +809,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionBehaviors_coding_map.setEnabled(flagObs)
 
         # Analysis
-        for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report]:
+        for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report,
+                  self.action_behavior_binary_table, self.action_advanced_event_filtering, self.menuPlot_events,
+                  self.menuInter_rater_reliability, self.menuSimilarities, self.menuCreate_transitions_matrix]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
+
+        '''
         # plot events
+
         self.menuPlot_events.setEnabled(self.pj[OBSERVATIONS] != {})
 
         self.menuInter_rater_reliability.setEnabled(self.pj[OBSERVATIONS] != {})
         self.menuSimilarities.setEnabled(self.pj[OBSERVATIONS] != {})
 
         self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
+        '''
 
         # statusbar labels
         for w in [self.lbTimeOffset, self.lbSpeed]:
@@ -937,7 +948,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionPlot_events1.setVisible(False)
         self.actionPlot_events2.triggered.connect(lambda: self.plot_events_triggered(mode="list"))
 
-        self.actionInstantaneous_sampling.triggered.connect(self.instantaneous_sampling)
+        self.action_behavior_binary_table.triggered.connect(self.create_behavior_binary_table)
 
         self.action_advanced_event_filtering.triggered.connect(self.advanced_event_filtering)
 
@@ -1079,16 +1090,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pb_live_obs.clicked.connect(self.start_live_observation)
 
 
-    def instantaneous_sampling(self):
+    def create_behavior_binary_table(self):
         """
-        instantaneous sampling analysis
+        create behavior binary table
         """
 
         QMessageBox.warning(self, programName,
                             ("This function is experimental.<br>Please test it and report bugs on<br>"
                              "https://github.com/olivierfriard/BORIS/issues"))
 
-        instantaneous_sampling.instantaneous_sampling(self.pj)
+        behavior_binary_table.behavior_binary_table(self.pj)
 
 
     def advanced_event_filtering(self):
@@ -8198,7 +8209,7 @@ item []:
             logging.info("ffmpeg timer stopped")
 
             # stop thread for cleaning temp directory
-            if self.ffmpeg_cache_dir_max_size:
+            if self.config_param.get(SAVE_FRAMES, DISK) == DISK and self.ffmpeg_cache_dir_max_size:
                 self.cleaningThread.exiting = True
 
         # go to frame by frame mode
@@ -8259,7 +8270,7 @@ item []:
             self.ffmpeg_timer_out()
 
             # set thread for cleaning temp directory
-            if self.ffmpeg_cache_dir_max_size:
+            if self.config_param.get(SAVE_FRAMES, DISK) == DISK and self.ffmpeg_cache_dir_max_size:
                 self.cleaningThread.exiting = False
                 self.cleaningThread.ffmpeg_cache_dir_max_size = self.ffmpeg_cache_dir_max_size * 1024 * 1024
                 self.cleaningThread.tempdir = self.imageDirectory + os.sep
@@ -8271,7 +8282,7 @@ item []:
         self.actionFaster.setEnabled(self.playMode == VLC)
         self.actionSlower.setEnabled(self.playMode == VLC)
 
-        logging.info("new play mode: {0}".format(self.playMode))
+        logging.info(f"new play mode: {self.playMode}")
 
         self.menu_options()
 
@@ -8294,9 +8305,9 @@ item []:
                         for idx, media in enumerate(self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
                             if self.FFmpegGlobalFrame < sum(player.media_durations[0:idx + 1]):
                                 p = pathlib.Path(media)
-                                snapshot_file_path = str(p.parent / "{}_{}.png".format(p.stem, self.FFmpegGlobalFrame))
+                                snapshot_file_path = str(p.parent / f"{p.stem}_{self.FFmpegGlobalFrame}.png")
                                 player.frame_viewer.pixmap().save(snapshot_file_path)
-                                self.statusbar.showMessage("Snapshot player #1 saved in {}".format(snapshot_file_path), 0)
+                                self.statusbar.showMessage(f"Snapshot player #1 saved in {snapshot_file_path}", 0)
                                 break
 
                 elif self.playMode == VLC:

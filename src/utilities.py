@@ -181,12 +181,12 @@ def txt2np_array(file_name: str,
             try:
                 exec(function)
             except Exception:
-                return False, "error in converter: {}".format(sys.exc_info()[1]), np.array([])
+                return False, f"error in converter: {sys.exc_info()[1]}", np.array([])
 
             np_converters[column_idx - 1] = locals()[conv_name]
 
         else:
-            return False, "converter {} not found".format(converters_param[column_idx]), np.array([])
+            return False, f"converter {converters_param[column_idx]} not found", np.array([])
 
     # snif txt file
     try:
@@ -205,7 +205,7 @@ def txt2np_array(file_name: str,
                           skiprows=has_header,
                           converters=np_converters)
     except Exception:
-        return False, "{}".format(sys.exc_info()[1]), np.array([])
+        return False, f"{sys.exc_info()[1]}", np.array([])
 
     # check if first value must be substracted
     if substract_first_value == "True":
@@ -495,7 +495,7 @@ def extract_frames(ffmpeg_bin: str,
                           f'"{pathlib.Path(imageDir) / pathlib.Path(f"BORIS@{md5_media_path}_%08d.{extension}")}"'
                           )
 
-        logging.debug("ffmpeg command (before): {}".format(ffmpeg_command))
+        logging.debug(f"ffmpeg command (before): {ffmpeg_command}")
 
         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         out, error = p.communicate()
@@ -513,8 +513,9 @@ def extract_frames_mem(ffmpeg_bin: str,
                        resolution: tuple,
                        frame_resize: int,
                        number_of_seconds: int) -> (list, tuple):
+
     """
-    extract frames from media file and save them in imageDir directory
+    extract frames from media file and return in a list in QPixmap format
 
     Args:
         ffmpeg_bin (str): path for ffmpeg
@@ -575,13 +576,14 @@ def extract_frames_mem(ffmpeg_bin: str,
     for f in range(start_frame, start_frame + int(fps * number_of_seconds)):
         raw_image = pipe.stdout.read(new_h_resolution * new_v_resolution * 3)
         if not len(raw_image):
+
             logging.debug("frames stream finished")
+
             return [], ()
 
-        frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype='uint8').reshape((new_v_resolution, new_h_resolution, 3)))))
+        frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3)))))
 
     return frames, (new_h_resolution, new_v_resolution)
-
 
 
 def decimal_default(obj):
@@ -837,11 +839,11 @@ def test_ffmpeg_path(FFmpegPath):
         str: message
     """
 
-    out, error = subprocess.Popen('"{0}" -version'.format(FFmpegPath),
+    out, error = subprocess.Popen(f'"{FFmpegPath}" -version',
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE, shell=True).communicate()
-    logging.debug("test ffmpeg path output: {}".format(out))
-    logging.debug("test ffmpeg path error: {}".format(error))
+    logging.debug(f"test ffmpeg path output: {out}")
+    logging.debug(f"test ffmpeg path error: {error}")
 
     if (b'avconv' in out) or (b'the Libav developers' in error):
         return False, 'Please use FFmpeg from https://www.ffmpeg.org in place of FFmpeg from Libav project.'
@@ -926,9 +928,15 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
 
     """
 
+    command = f'"{ffmpeg_bin}" -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
+
+
+    '''
+    TO BE DELETED 2019-10-04
     command = '"{ffmpeg_bin}" -i "{file_name}" > {null_output}'.format(ffmpeg_bin=ffmpeg_bin,
                                                                        file_name=file_name,
                                                                        null_output="NUL" if sys.platform.startswith("win") else "/dev/null")
+    '''
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
