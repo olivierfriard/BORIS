@@ -814,17 +814,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                   self.menuInter_rater_reliability, self.menuSimilarities, self.menuCreate_transitions_matrix]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
 
-        '''
-        # plot events
-
-        self.menuPlot_events.setEnabled(self.pj[OBSERVATIONS] != {})
-
-        self.menuInter_rater_reliability.setEnabled(self.pj[OBSERVATIONS] != {})
-        self.menuSimilarities.setEnabled(self.pj[OBSERVATIONS] != {})
-
-        self.menuCreate_transitions_matrix.setEnabled(self.pj[OBSERVATIONS] != {})
-        '''
-
         # statusbar labels
         for w in [self.lbTimeOffset, self.lbSpeed]:
             w.setVisible(self.playerType == VLC)

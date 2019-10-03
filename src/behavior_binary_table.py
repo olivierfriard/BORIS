@@ -34,12 +34,12 @@ import utilities
 from config import *
 
 
-def instantaneous_sampling_analysis(pj: dict,
-                                    selected_observations: list,
-                                    parameters_obs: dict,
-                                    time_interval: float) -> dict:
+def create_behavior_binary_table(pj: dict,
+                                 selected_observations: list,
+                                 parameters_obs: dict,
+                                 time_interval: float) -> dict:
     """
-    Instantaneous samplig analysis
+    create behavior binary table
 
     Args:
         pj (dict): project dictionary
@@ -112,12 +112,12 @@ def instantaneous_sampling_analysis(pj: dict,
     return results_df
 
 
-def instantaneous_sampling(pj: dict):
+def behavior_binary_table(pj: dict):
 
 
     result, selected_observations = select_observations.select_observations(pj,
                                                                             MULTIPLE,
-                                                                            "Select observations for instantaneous sampling")
+                                                                            "Select observations for the behavior binary table")
 
     if not selected_observations:
         return
@@ -162,7 +162,7 @@ def instantaneous_sampling(pj: dict):
         return
 
     # ask for time interval
-    i, ok = QInputDialog.getDouble(None, "Instantaneous sampling", "Time interval (in seconds):", 1.0, 0.001, 86400, 3)
+    i, ok = QInputDialog.getDouble(None, "Behavior binary table", "Time interval (in seconds):", 1.0, 0.001, 86400, 3)
     if not ok:
         return
     time_interval = utilities.float2decimal(i)
@@ -170,10 +170,10 @@ def instantaneous_sampling(pj: dict):
     # self.statusbar.showMessage("Instantaneous sampling is running. Please wait...", 0)
     # app.processEvents()
 
-    results_df = instantaneous_sampling_analysis(pj,
-                                                 selected_observations,
-                                                 parameters,
-                                                 time_interval)
+    results_df = create_behavior_binary_table(pj,
+                                              selected_observations,
+                                              parameters,
+                                              time_interval)
 
     # self.statusbar.showMessage("Instantaneous sampling done...", 5000)
     # app.processEvents()
@@ -262,7 +262,7 @@ def instantaneous_sampling(pj: dict):
             except Exception:
 
                 error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                logging.critical(f"Error in instantaneous sampling function: {error_type} {error_file_name} {error_lineno}")
+                logging.critical(f"Error in behavior binary table function: {error_type} {error_file_name} {error_lineno}")
 
                 QMessageBox.critical(None, programName, f"Error saving file: {error_type}")
                 return
