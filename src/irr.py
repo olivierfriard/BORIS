@@ -30,7 +30,12 @@ import utilities
 from config import *
 
 
-def subj_behav_modif(cursor, obsid, subject, time, interval, include_modifiers):
+def subj_behav_modif(cursor,
+                     obsid,
+                     subject,
+                     time,
+                     interval,
+                     include_modifiers: bool):
     """
     current behaviors for observation obsId at time
 
@@ -111,11 +116,12 @@ def cohen_kappa(cursor,
         return -100, f"An observation has no recorded events: {obsid1} {obsid2}"
 
     logging.debug(f"first_event: {first_event}")
+
     last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
                                  "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
                                 (obsid1, obsid2)).fetchone()[0]
 
-    logging.debug("last_event: {}".format(last_event))
+    logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
                                  "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
