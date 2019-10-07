@@ -110,6 +110,13 @@ def cohen_kappa(cursor,
     first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
                                   "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
                                  (obsid1, obsid2)).fetchone()[0]
+    '''
+
+
+    first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
+                                  f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                 (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+    '''
 
     if first_event is None:
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
