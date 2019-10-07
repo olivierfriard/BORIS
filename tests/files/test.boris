@@ -811,7 +811,8 @@
    "date":"2018-05-29T11:01:03",
    "description":"",
    "time offset":0.0,
-   "events":[[
+   "events":[
+    [
      10.0,
      "subject1",
      "s",
@@ -824,7 +825,8 @@
      "s",
      "",
      ""
-    ]],
+    ]
+   ],
    "independent_variables":{
     "a":"",
     "b":"",
@@ -1125,6 +1127,247 @@
    "visualize_spectrogram":false,
    "close_behaviors_between_videos":false,
    "scan_sampling_time":0
+  },
+  "observation #2 (copy)":{
+   "file":{},
+   "type":"LIVE",
+   "date":"2019-10-07T15:39:26",
+   "description":"",
+   "time offset":0.0,
+   "events":[
+    [
+     1.8,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     8.125,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     10.25,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     23.35,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     26.775,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     31.475,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     34.15,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     34.825,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     34.925,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     227.765,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     253.49,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     255.34,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     261.14,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     268.165,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     276.69,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     280.965,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     286.215,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     292.065,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     294.215,
+     "subject1",
+     "s",
+     "",
+     ""
+    ],
+    [
+     299.715,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     301.34,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     303.24,
+     "",
+     "p",
+     "",
+     ""
+    ],
+    [
+     303.79,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     307.765,
+     "",
+     "s",
+     "",
+     ""
+    ],
+    [
+     314.49,
+     "subject2",
+     "p",
+     "",
+     ""
+    ],
+    [
+     316.065,
+     "subject2",
+     "p",
+     "",
+     ""
+    ],
+    [
+     317.39,
+     "subject2",
+     "s",
+     "",
+     ""
+    ],
+    [
+     320.365,
+     "subject2",
+     "s",
+     "",
+     ""
+    ]
+   ],
+   "observation time interval":[
+    0,
+    0
+   ],
+   "independent_variables":{
+    "a":"",
+    "b":"",
+    "c":"111"
+   },
+   "visualize_spectrogram":false,
+   "visualize_waveform":false,
+   "close_behaviors_between_videos":false,
+   "scan_sampling_time":0,
+   "start_from_current_time":false
+  },
+  "observation without events":{
+   "file":{},
+   "type":"LIVE",
+   "date":"2019-10-07T15:52:55",
+   "description":"",
+   "time offset":0.0,
+   "events":[],
+   "observation time interval":[
+    0,
+    0
+   ],
+   "independent_variables":{
+    "a":"",
+    "b":"",
+    "c":"111"
+   },
+   "visualize_spectrogram":false,
+   "visualize_waveform":false,
+   "close_behaviors_between_videos":false,
+   "scan_sampling_time":0,
+   "start_from_current_time":false
   }
  },
  "independent_variables":{

@@ -87,7 +87,7 @@ def subj_behav_modif(cursor,
 def cohen_kappa(cursor,
                 obsid1: str,
                 obsid2: str,
-                interval: float,
+                interval: Decimal,
                 selected_subjects: list,
                 include_modifiers: bool):
     """
@@ -98,7 +98,7 @@ def cohen_kappa(cursor,
         cursor (sqlite3.cursor): cursor to aggregated events db
         obsid1 (str): id of observation #1
         obsid2 (str): id of observation #2
-        interval (float): time unit (s)
+        interval (decimal.Decimal): time unit (s)
         selected_subjects (list): subjects selected for analysis
         include_modifiers (bool): True: include modifiers False: do not
 
@@ -107,26 +107,24 @@ def cohen_kappa(cursor,
         str: result of analysis
     """
 
-    first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
-                                  "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                 (obsid1, obsid2)).fetchone()[0]
-    '''
+    # check if obs have events
+    for obs_id in [obsid1, obsid2]:
+        if not cursor.execute("SELECT * FROM aggregated_events WHERE observation = ? ",
+                      (obs_id, )).fetchall():
+            return -100, f"The observation {obs_id} has no recorded events"
 
 
     first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
                                   f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
                                  (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
-    '''
-
-    if first_event is None:
-        logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
-        return -100, f"An observation has no recorded events: {obsid1} {obsid2}"
 
     logging.debug(f"first_event: {first_event}")
 
+
     last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
-                                 "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                (obsid1, obsid2)).fetchone()[0]
+                                  f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                 (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+
 
     logging.debug(f"last_event: {last_event}")
 
