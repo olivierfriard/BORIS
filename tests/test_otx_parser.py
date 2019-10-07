@@ -19,6 +19,7 @@ def before():
     os.system("mkdir output")
 
 class Test_otx_to_boris(object):
+
     def test_otx(self):
         boris_project = otx_parser.otx_to_boris("files/otx_parser_test.otx")
         pj = json.loads(open("files/otx_import_test.boris").read())

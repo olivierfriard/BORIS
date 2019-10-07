@@ -20,14 +20,15 @@ def before():
     os.system("rm -rf output")
     os.system("mkdir output")
 
+
 class Test_time_budget(object):
 
     """
     start and end times are not taken into account
     """
-  
+
     def test_time_budget1(self):
-        
+
 
         VERIF = [{"subject": "subject1", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}, {"subject": "subject1", "behavior": "s", "modifiers": "", "duration": 16.875, "duration_mean": 5.625, "duration_stdev": 1.021, "number": 3, "inter_duration_mean": 2.15, "inter_duration_stdev": 0.0}, {"subject": "subject2", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}, {"subject": "subject2", "behavior": "s", "modifiers": "", "duration": 7.675, "duration_mean": 7.675, "duration_stdev": "NA", "number": 1, "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}]
 
@@ -93,8 +94,8 @@ class Test_time_budget(object):
     def test_time_budget3(self):
 
         VERIF = [{"subject": "No focal subject", "behavior": "s", "modifiers": "", "duration": 59.625, "duration_mean": 9.937,
-        "duration_stdev": 8.395, "number": 6, "inter_duration_mean": 49.268, "inter_duration_stdev": 84.012}, 
-        {"subject": "No focal subject", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, 
+        "duration_stdev": 8.395, "number": 6, "inter_duration_mean": 49.268, "inter_duration_stdev": 84.012},
+        {"subject": "No focal subject", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0,
         "duration_stdev": "NA", "number": 6, "inter_duration_mean": 54.083, "inter_duration_stdev": 117.79}]
 
         pj = json.loads(open("files/test.boris").read())

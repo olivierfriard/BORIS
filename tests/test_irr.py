@@ -16,14 +16,9 @@ from config import *
 import decimal
 
 
-@pytest.fixture()
-def before():
-    os.system("rm -rf output")
-    os.system("mkdir output")
-
 class Test_irr(object):
 
-    def test_irr1(self):
+    def test_same_observation(self):
 
         pj = json.loads(open("files/test.boris").read())
 
@@ -50,7 +45,7 @@ class Test_irr(object):
 
 
 
-    def test_irr2(self):
+    def test_2(self):
 
         pj = json.loads(open("files/test.boris").read())
 
