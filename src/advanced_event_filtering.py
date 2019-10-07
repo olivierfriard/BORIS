@@ -27,7 +27,7 @@ import sys
 # import time
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QDialog, QHBoxLayout, QLabel, QLineEdit,
+from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit,
                              QListWidget, QMessageBox, QPushButton,
                              QRadioButton, QSizePolicy, QSpacerItem,
                              QTableWidget, QTableWidgetItem, QVBoxLayout)
@@ -40,6 +40,7 @@ import project_functions
 import select_observations
 import utilities
 from config import *
+import tablib
 
 
 def icc(i):
