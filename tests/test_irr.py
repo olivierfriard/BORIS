@@ -115,7 +115,6 @@ class Test_irr(object):
                                selected_subjects = selected_subjects,
                                include_modifiers = False)
 
-        print(K)
         assert K == 1
 
 
