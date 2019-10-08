@@ -9825,12 +9825,13 @@ item []:
         QApplication.keyboardModifiers()
 
         http://qt-project.org/doc/qt-5.0/qtcore/qt.html#Key-enum
+        https://github.com/pyqt/python-qt5/blob/master/PyQt5/qml/builtins.qmltypes
 
         ESC: 16777216
         '''
 
         if self.playerType == VIEWER:
-            if event.key() in [16777248, 16777249, 16777251, 16777252, 16781571]:
+            if event.key() in [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_CapsLock, Qt.Key_AltGr]:
                 return
             QMessageBox.critical(self, programName, ("The current observation is opened in VIEW mode.\n"
                                                      "It is not allowed to log events in this mode."))
@@ -9864,12 +9865,12 @@ item []:
             return
 
         # speed down
-        if ek == Qt.Key_BracketLeft:
+        if ek == Qt.Key_End:
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                 self.video_slower_activated()
             return
         # speed up
-        if ek == Qt.Key_BracketRight:
+        if ek == Qt.Key_Home:
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                 self.video_faster_activated()
             return
@@ -9893,6 +9894,7 @@ item []:
             if ek == 47 or ek == Qt.Key_Left:  # / one frame back
 
                 logging.debug(f"Current frame {self.FFmpegGlobalFrame}")
+
                 if self.FFmpegGlobalFrame > 1:
                     self.FFmpegGlobalFrame -= 2
                     newTime = 1000 * self.FFmpegGlobalFrame / self.fps
@@ -9915,19 +9917,25 @@ item []:
         if self.playerType == VLC:
             #  jump backward
             if ek == Qt.Key_Down:
+
                 logging.debug("jump backward")
+
                 self.jumpBackward_activated()
                 return
 
             # jump forward
             if ek == Qt.Key_Up:
+
                 logging.debug("jump forward")
+
                 self.jumpForward_activated()
                 return
 
             # next media file (page up)
             if ek == Qt.Key_PageUp:
+
                 logging.debug("next media file")
+
                 self.next_media_file()
 
             # previous media file (page down)

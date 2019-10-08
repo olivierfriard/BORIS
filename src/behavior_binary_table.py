@@ -55,6 +55,8 @@ def create_behavior_binary_table(pj: dict,
     results_df = {}
 
     state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
+    if not state_behavior_codes:
+        return {"error": True, "msg": "No state events selected"}
 
     for obs_id in selected_observations:
 
@@ -65,14 +67,15 @@ def create_behavior_binary_table(pj: dict,
 
             # extract tuple (behavior, modifier)
             behav_modif_list = [(idx[2], idx[3])
-                                for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (subject if subject != NO_FOCAL_SUBJECT else "")]
+                                for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (subject if subject != NO_FOCAL_SUBJECT else "")
+                                                                               and idx[2] in state_behavior_codes]
 
             # extract observed subjects NOT USED at the moment
             observed_subjects = [event[1] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
 
             # add selected behavior if not found in (behavior, modifier)
             if not parameters_obs[EXCLUDE_BEHAVIORS]:
-                for behav in parameters_obs[SELECTED_BEHAVIORS]:
+                for behav in state_behavior_codes:
                     if behav not in [x[0] for x in behav_modif_list]:
                         behav_modif_list.append((behav, ""))
 
@@ -154,6 +157,7 @@ def behavior_binary_table(pj: dict):
     parameters = dialog.choose_obs_subj_behav_category(pj,
                                                        selected_observations,
                                                        maxTime=max_obs_length,
+                                                       flagShowIncludeModifiers=True,
                                                        flagShowExcludeBehaviorsWoEvents=True,
                                                        by_category=False)
 
@@ -174,6 +178,11 @@ def behavior_binary_table(pj: dict):
                                               selected_observations,
                                               parameters,
                                               time_interval)
+
+    if "error" in results_df:
+        QMessageBox.warning(None, programName, results_df["msg"])
+        return
+
 
     # self.statusbar.showMessage("Instantaneous sampling done...", 5000)
     # app.processEvents()
