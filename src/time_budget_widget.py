@@ -22,16 +22,14 @@ This file is part of BORIS.
 
 """
 
-import sys
-
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-
 import logging
 import os
-import tablib
 import pathlib
+import sys
+import utilities
+
+import tablib
+from PyQt5.QtWidgets import *
 
 import dialog
 from config import *
@@ -121,9 +119,7 @@ class timeBudgetResults(QWidget):
                                  "HTML (*.html)"]
         file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-        filediag_func = QFileDialog().getSaveFileName
-
-        file_name, filter_ = filediag_func(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Save Time budget analysis", "", ";;".join(extended_file_formats))
 
         if not file_name:
             return
@@ -134,50 +130,87 @@ class timeBudgetResults(QWidget):
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
                 if dialog.MessageDialog(programName,
-                                        "The file {} already exists.".format(file_name),
+                                        f"The file {file_name} already exists.",
                                         [CANCEL, OVERWRITE]) == CANCEL:
                     return
 
-
         rows = []
-        # observations list
-        rows.append(["Observations:"])
-        for idx in range(self.lw.count()):
+
+        # 1 observation
+        if self.lw.count() == 1:
+            col1, indep_var_label = [], []
+            # add obs id
+            col1.append(self.lw.item(0).text())
+            # add obs date
+            col1.append(self.pj[OBSERVATIONS][self.lw.item(0).text()].get("date", ""))
+
+            # description
+            col1.append(utilities.eol2space(self.pj[OBSERVATIONS][self.lw.item(0).text()].get(DESCRIPTION, "")))
+            header = ["Observation id", "Observation date", "Description"]
+
+            # indep var
+            for var in self.pj[OBSERVATIONS][self.lw.item(0).text()].get(INDEPENDENT_VARIABLES, {}):
+                indep_var_label.append(var)
+                col1.append(self.pj[OBSERVATIONS][self.lw.item(0).text()][INDEPENDENT_VARIABLES][var])
+
+            header.extend(indep_var_label)
+
+            col1.extend([f"{self.min_time:0.3f}", f"{self.max_time:0.3f}", f"{self.max_time - self.min_time:0.3f}"])
+            header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
+
+            for col_idx in range(self.twTB.columnCount()):
+                header.append(self.twTB.horizontalHeaderItem(col_idx).text())
+
+            rows.append(header)
+
+            for row_idx in range(self.twTB.rowCount()):
+                values = []
+                for col_idx in range(self.twTB.columnCount()):
+                    values.append(intfloatstr(self.twTB.item(row_idx, col_idx).text()))
+
+                rows.append(col1 + values)
+
+        else:
+            # observations list
+            rows.append(["Observations:"])
+            for idx in range(self.lw.count()):
+                rows.append([""])
+                rows.append(["Observation id", self.lw.item(idx).text()])
+                rows.append(["Observation date", self.pj[OBSERVATIONS][self.lw.item(idx).text()].get("date", "")])
+                rows.append(["Description", utilities.eol2space(self.pj[OBSERVATIONS][self.lw.item(idx).text()].get(DESCRIPTION, ""))])
+
+                if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(idx).text()]:
+                    rows.append(["Independent variables:"])
+                    for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
+                        rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
+
+            if self.excluded_behaviors_list.text():
+                s1, s2 = self.excluded_behaviors_list.text().split(": ")
+                rows.extend([[""], [s1] + s2.split(", ")])
+
+            rows.extend([[""], [""], ["Time budget:"]])
+
+            # write header
+            header = []
+            for col_idx in range(self.twTB.columnCount()):
+                header.append(self.twTB.horizontalHeaderItem(col_idx).text())
+
+            rows.append(header)
             rows.append([""])
-            rows.append([self.lw.item(idx).text()])
 
-            if INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][self.lw.item(idx).text()]:
-                rows.append(["Independent variables:"])
-                for var in self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES]:
-                    rows.append([var, self.pj[OBSERVATIONS][self.lw.item(idx).text()][INDEPENDENT_VARIABLES][var]])
+            for row in range(self.twTB.rowCount()):
+                values = []
+                for col_idx in range(self.twTB.columnCount()):
+                    values.append(intfloatstr(self.twTB.item(row, col_idx).text()))
 
-        if self.excluded_behaviors_list.text():
-            s1, s2 = self.excluded_behaviors_list.text().split(": ")
-            rows.extend([[""], [s1] + s2.split(", ")])
+                rows.append(values)
 
-        rows.extend([[""], [""], ["Time budget:"]])
-
-        # write header
-        cols = []
-        for col in range(self.twTB.columnCount()):
-            cols.append(self.twTB.horizontalHeaderItem(col).text())
-
-        rows.append(cols)
-        rows.append([""])
-
-        for row in range(self.twTB.rowCount()):
-            values = []
-            for col in range(self.twTB.columnCount()):
-                values.append(intfloatstr(self.twTB.item(row, col).text()))
-
-            rows.append(values)
-
-        maxLen = max([len(r) for r in rows])
+        max_row_length = max([len(r) for r in rows])
         data = tablib.Dataset()
         data.title = "Time budget"
 
         for row in rows:
-            data.append(complete(row, maxLen))
+            data.append(complete(row, max_row_length))
 
         if outputFormat in ["tsv", "csv", "html"]:
             with open(file_name, "wb") as f:

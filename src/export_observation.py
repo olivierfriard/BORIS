@@ -662,8 +662,8 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                          behavioral_category[behavior],
                                          row["modifiers"],
                                          POINT,
-                                         "{0:.3f}".format(row["start"]),  # start
-                                         "{0:.3f}".format(row["stop"]),  # stop
+                                         f"{row['start']:.3f}",  # start
+                                         f"{row['stop']:.3f}",  # stop
                                          "NA",  # duration
                                          row["comment"],
                                          ""
@@ -692,9 +692,9 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                                              behavioral_category[behavior],
                                              row["modifiers"],
                                              STATE,
-                                             "{0:.3f}".format(row["start"]),
-                                             "{0:.3f}".format(row["stop"]),
-                                             "{0:.3f}".format(row["stop"] - row["start"]),
+                                             f"{row['start']:.3f}",
+                                             f"{row['stop']:.3f}",
+                                             f"{row['stop'] - row['start']:.3f}",
                                              row["comment"],
                                              row["comment_stop"]
                                              ])
@@ -846,7 +846,7 @@ def observation_to_behavioral_sequences(pj,
         with open(file_name, "w", encoding="utf-8") as out_file:
             for obs_id in selected_observations:
                 # observation id
-                out_file.write("\n# observation id: {}\n".format(obs_id))
+                out_file.write("\n" + f"# observation id: {obs_id}" + "\n")
                 # observation description
                 descr = pj[OBSERVATIONS][obs_id]["description"]
                 if "\r\n" in descr:

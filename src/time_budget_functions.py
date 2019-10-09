@@ -20,17 +20,18 @@ Copyright 2012-2019 Olivier Friard
 """
 
 
-import sys
 import logging
-import tablib
 import math
-from config import *
+import statistics
+import sys
+import time
+
+import tablib
+
 import db_functions
 import project_functions
 import utilities
-
-import time
-import statistics
+from config import *
 
 
 def default_value(ethogram, behav, param):
@@ -298,12 +299,9 @@ def synthetic_time_budget(pj: dict,
         logging.critical(f"Error in edit_event function: {error_type} {error_file_name} {error_lineno}")
 
         msg = f"Error type: {error_type}\nError file name: {error_file_name}\nError line number: {error_lineno}"
-        '''
-        msg = "{}\n{}\nLine number: {}".format(str(sys.exc_info()[0]).replace("<class '", "").replace("'>", ""),
-                                               sys.exc_info()[1],
-                                               sys.exc_info()[2].tb_lineno)
-        '''
+
         logging.critical(msg)
+
         return (False,
                 msg,
                 tablib.Dataset())

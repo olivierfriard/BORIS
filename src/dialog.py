@@ -73,7 +73,7 @@ def error_message(task: str, exc_info: tuple) -> None:
 class Info_widget(QWidget):
 
     def __init__(self, parent=None):
-        super(Info_widget, self).__init__(parent)
+        super().__init__(parent)
 
         self.setWindowTitle("BORIS")
         layout = QVBoxLayout()

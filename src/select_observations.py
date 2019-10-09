@@ -60,7 +60,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     data = []
     for obs in sorted(list(pj[OBSERVATIONS].keys())):
         date = pj[OBSERVATIONS][obs]["date"].replace("T", " ")
-        descr = utilities.eol2space(pj[OBSERVATIONS][obs]["description"])
+        descr = utilities.eol2space(pj[OBSERVATIONS][obs][DESCRIPTION])
 
         # subjects
         observedSubjects = project_functions.extract_observed_subjects(pj, [obs])

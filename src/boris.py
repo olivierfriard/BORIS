@@ -4879,7 +4879,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 pass
 
             observationWindow.dteDate.setDateTime(QDateTime.fromString(self.pj[OBSERVATIONS][obsId]["date"], "yyyy-MM-ddThh:mm:ss"))
-            observationWindow.teDescription.setPlainText(self.pj[OBSERVATIONS][obsId]["description"])
+            observationWindow.teDescription.setPlainText(self.pj[OBSERVATIONS][obsId][DESCRIPTION])
 
             try:
                 observationWindow.mediaDurations = self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["length"]
@@ -5029,7 +5029,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pj[OBSERVATIONS][self.observationId] = {FILE: [],
                                                              TYPE: "",
                                                              "date": "",
-                                                             "description": "",
+                                                             DESCRIPTION: "",
                                                              TIME_OFFSET: 0,
                                                              EVENTS: [],
                                                              OBSERVATION_TIME_INTERVAL: [0, 0]
@@ -5045,7 +5045,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # observation date
             self.pj[OBSERVATIONS][new_obs_id]["date"] = observationWindow.dteDate.dateTime().toString(Qt.ISODate)
-            self.pj[OBSERVATIONS][new_obs_id]["description"] = observationWindow.teDescription.toPlainText()
+            self.pj[OBSERVATIONS][new_obs_id][DESCRIPTION] = observationWindow.teDescription.toPlainText()
             # observation type: read project type from tab text
             self.pj[OBSERVATIONS][new_obs_id][TYPE] = observationWindow.tabProjectType.tabText(
                 observationWindow.tabProjectType.currentIndex()).upper()
@@ -5186,6 +5186,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
         '''
+
+
+        try:
+            del self.tb
+        except Exception:
+            pass
         try:
             for x in self.ext_data_timer_list:
                 x.stop()
@@ -6222,13 +6228,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if coded behaviors are defined in ethogram
         ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}
         behaviors_not_defined = []
-        out = "" # will contain the output
+        out = ""  # will contain the output
         for obs_id in selectedObservations:
             for event in self.pj[OBSERVATIONS][obs_id][EVENTS]:
                 if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
                     behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
         if set(sorted(behaviors_not_defined)):
-            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+            out += ("The following behaviors are not defined in the ethogram: "
+                    f"<b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>")
 
         # check if state events are paired
         not_paired_obs_list = []
@@ -6240,7 +6247,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 not_paired_obs_list.append(obs_id)
 
         if out:
-            out = "Some selected observations have issues:<br><br>" + out
+            out = f"Some selected observations have issues:<br><br>{out}"
             self.results = dialog.Results_dialog()
             self.results.setWindowTitle(f"{programName} - Check selected observations")
             self.results.ptText.setReadOnly(True)
@@ -6378,6 +6385,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # widget for results visualization
             self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
+            # add min and max time
+            self.tb.min_time = min_time
+            self.tb.max_time = max_time
 
             # observations list
             self.tb.label.setText("Selected observations")
@@ -6390,14 +6400,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.timeFormat == HHMMSS:
                         self.tb.lbTotalObservedTime.setText(f"Total observation length: {seconds2time(total_observation_time)}")
                     if self.timeFormat == S:
-                        self.tb.lbTotalObservedTime.setText("Total observation length: {:0.3f}".format(float(total_observation_time)))
+                        self.tb.lbTotalObservedTime.setText(f"Total observation length: {float(total_observation_time):0.3f}")
                 else:
                     self.tb.lbTotalObservedTime.setText("Total observation length: not available")
             else:
                 if self.timeFormat == HHMMSS:
                     self.tb.lbTotalObservedTime.setText(f"Analysis from {seconds2time(min_time)} to {seconds2time(max_time)}")
                 if self.timeFormat == S:
-                    self.tb.lbTotalObservedTime.setText("Analysis from {:0.3f} to {:0.3f} s".format(float(min_time), float(max_time)))
+                    self.tb.lbTotalObservedTime.setText(f"Analysis from {float(min_time):0.3f} to {float(max_time):0.3f} s")
 
             # behaviors excluded from total time
             if parameters[EXCLUDED_BEHAVIORS]:
@@ -6622,37 +6632,49 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         excl_behaviors_total_time[element["subject"]] += element["duration"] if element["duration"] != "NA" else 0
 
                 rows = []
+                col1 = []
                 # observation id
-                rows.append(["Observation id", obsId])
-                rows.append([""])
+                col1.append(obsId)
+                col1.append(self.pj[OBSERVATIONS][obsId].get("date", ""))
+                col1.append(utilities.eol2space(self.pj[OBSERVATIONS][obsId].get(DESCRIPTION, "")))
+                #rows.append(["Observation id", obsId])
+                #rows.append([""])
+                header = ["Observation id", "Observation date", "Description"]
 
-                labels = ["Independent variables"]
-                values = [""]
+                #labels = ["Independent variables"]
+                indep_var_label = []
+                indep_var_values = []
                 if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
                     for idx in self.pj[INDEPENDENT_VARIABLES]:
-                        labels.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+                        indep_var_label.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
 
                         if (INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
                                 and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.
                                 pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
-                            values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][
+                            indep_var_values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][
                                 self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
 
-                rows.append(labels)
-                rows.append(values)
-                rows.append([""])
+                header.extend(indep_var_label)
+                col1.extend(indep_var_values)
+                #rows.append(labels)
+                #rows.append(values)
+                #rows.append([""])
 
-                rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
-                rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
-                rows.append([""])
-                rows.append(["Time budget"])
+                # interval analysis
+                col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
+                #rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
+                #rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
+                #rows.append([""])
+                #rows.append(["Time budget"])
+                header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
 
                 if mode == "by_behavior":
 
-                    rows.append(fields + ["% of total length"])
+                    # header
+                    rows.append(header + fields + ["% of total length"])
 
                     for row in out:
-                        values = []
+                        values = col1
                         for field in fields:
                             values.append(str(row[field]).replace(" ()", ""))
                         # % of total time
@@ -7265,7 +7287,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
                                                             2,
                                                             QTableWidgetItem(
-                                                                utilities.eol2space(newProjectWindow.pj[OBSERVATIONS][obs]["description"])))
+                                                                utilities.eol2space(newProjectWindow.pj[OBSERVATIONS][obs][DESCRIPTION])))
 
                     mediaList = []
                     if newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
@@ -9657,8 +9679,8 @@ item []:
             if self.pj[ETHOGRAM][idx]["key"] == obs_key:
 
                 code_descr = self.pj[ETHOGRAM][idx][BEHAVIOR_CODE]
-                if self.pj[ETHOGRAM][idx]["description"]:
-                    code_descr += " - " + self.pj[ETHOGRAM][idx]["description"]
+                if self.pj[ETHOGRAM][idx][DESCRIPTION]:
+                    code_descr += " - " + self.pj[ETHOGRAM][idx][DESCRIPTION]
                 items.append(code_descr)
                 self.detailedObs[code_descr] = idx
 

@@ -22,9 +22,11 @@ Copyright 2012-2019 Olivier Friard
 import os
 import pathlib
 import re
+import sys
 import time
 
-from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox, QApplication
+from PyQt5.QtCore import Qt
 
 import dialog
 import project_functions
@@ -171,21 +173,30 @@ def behavior_binary_table(pj: dict):
         return
     time_interval = utilities.float2decimal(i)
 
-    # self.statusbar.showMessage("Instantaneous sampling is running. Please wait...", 0)
-    # app.processEvents()
+    '''
+    iw = dialog.Info_widget()
+    iw.lwi.setVisible(False)
+    iw.resize(350, 200)
+    iw.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+    iw.setWindowTitle("Behavior binary table")
+    iw.label.setText("Creating the behavior binary table...")
+    iw.show()
+    QApplication.processEvents()
+    '''
 
     results_df = create_behavior_binary_table(pj,
                                               selected_observations,
                                               parameters,
                                               time_interval)
 
+    '''
+    iw.hide()
+    '''
+
     if "error" in results_df:
         QMessageBox.warning(None, programName, results_df["msg"])
         return
-
-
-    # self.statusbar.showMessage("Instantaneous sampling done...", 5000)
-    # app.processEvents()
 
     # save results
     if len(selected_observations) == 1:

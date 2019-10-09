@@ -211,6 +211,7 @@
      <addaction name="actionExportEventString"/>
      <addaction name="actionExport_events_as_Praat_TextGrid"/>
      <addaction name="actionJWatcher"/>
+     <addaction name="action_behavior_binary_table"/>
     </widget>
     <addaction name="actionNew_observation"/>
     <addaction name="actionOpen_observation"/>
@@ -277,7 +278,6 @@
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="menuSimilarities"/>
-    <addaction name="action_behavior_binary_table"/>
     <addaction name="action_advanced_event_filtering"/>
    </widget>
    <widget class="QMenu" name="menuPlayback">
@@ -1002,7 +1002,7 @@
   </action>
   <action name="actionExport_aggregated_events">
    <property name="text">
-    <string>aggregated events</string>
+    <string>Aggregated events</string>
    </property>
   </action>
   <action name="actionCoding_pad">
@@ -1379,7 +1379,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Behaviors binary table</string>
+    <string>as behaviors binary table</string>
    </property>
   </action>
   <action name="actionPlot_current_observation">
