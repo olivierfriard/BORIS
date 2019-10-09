@@ -28,6 +28,7 @@ project_format_version = "7.0"
 
 VLC_MIN_VERSION = "2"
 
+
 CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
 
 N_PLAYER = 8
@@ -79,6 +80,8 @@ POINT_EVENT_PLOT_DURATION = 0.010
 POINT_EVENT_PLOT_COLOR = "black"
 
 CHAR_FORBIDDEN_IN_MODIFIERS = "(|),`~"
+
+ADAPT_FAST_JUMP = "adapt_fast_jump"
 
 subjects_config = ["key", "id"]
 
@@ -548,3 +551,11 @@ EMPTY_PROJECT = {
     BEHAVIORS_CODING_MAP: [],
     CONVERTERS: {},
 }
+
+ADAPT_FAST_JUMP_DEFAULT = False
+
+INIT_PARAM = {DISPLAY_SUBTITLES: False,
+              SAVE_FRAMES: DISK,
+              MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES,
+              ADAPT_FAST_JUMP: ADAPT_FAST_JUMP_DEFAULT,
+              }

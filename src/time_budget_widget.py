@@ -160,14 +160,12 @@ class timeBudgetResults(QWidget):
 
             for col_idx in range(self.twTB.columnCount()):
                 header.append(self.twTB.horizontalHeaderItem(col_idx).text())
-
             rows.append(header)
 
             for row_idx in range(self.twTB.rowCount()):
                 values = []
                 for col_idx in range(self.twTB.columnCount()):
                     values.append(intfloatstr(self.twTB.item(row_idx, col_idx).text()))
-
                 rows.append(col1 + values)
 
         else:

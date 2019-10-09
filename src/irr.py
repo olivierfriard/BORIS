@@ -110,7 +110,7 @@ def cohen_kappa(cursor,
     # check if obs have events
     for obs_id in [obsid1, obsid2]:
         if not cursor.execute("SELECT * FROM aggregated_events WHERE observation = ? ",
-                      (obs_id, )).fetchall():
+                              (obs_id, )).fetchall():
             return -100, f"The observation {obs_id} has no recorded events"
 
 
@@ -120,20 +120,19 @@ def cohen_kappa(cursor,
 
     logging.debug(f"first_event: {first_event}")
 
-
     last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
-                                  f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
-                                 (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+                                 f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
 
 
     logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
-                                 "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                (obsid1,)).fetchone()[0]
+                                 f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                (obsid1,) + tuple(selected_subjects)).fetchone()[0]
     nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
-                                 "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                (obsid2,)).fetchone()[0]
+                                 f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                (obsid2,) + tuple(selected_subjects)).fetchone()[0]
 
     total_states = []
 
@@ -233,10 +232,11 @@ def cohen_kappa(cursor,
 
 
 def needleman_wunsch_identity(cursor,
-                              obsid1, obsid2,
+                              obsid1: str,
+                              obsid2: str,
                               interval,
-                              selected_subjects,
-                              include_modifiers):
+                              selected_subjects: list,
+                              include_modifiers: bool):
     """
     Needleman - Wunsch identity between 2 observations
 
@@ -246,6 +246,7 @@ def needleman_wunsch_identity(cursor,
         cursor (sqlite3.cursor): cursor to aggregated events db
         obsid1 (str): id of observation #1
         obsid2 (str): id of observation #2
+        interval
         selected_subjects (list): subjects selected for analysis
         include_modifiers (bool): True: include modifiers False: do not
 
@@ -253,7 +254,6 @@ def needleman_wunsch_identity(cursor,
         float: K
         str: result of analysis
     """
-
 
     def zeros(shape):
         retval = []
@@ -283,19 +283,16 @@ def needleman_wunsch_identity(cursor,
 
         i, j = 0, 0
 
-        # calcuate identity, score and aligned sequeces
         symbol = []
         found = 0
         score = 0
         identity = 0
         for i in range(0, len(align1)):
-            # if two AAs are the same, then output the letter
             if align1[i] == align2[i]:
                 symbol.append(align1[i])
                 identity = identity + 1
                 score += match_score(align1[i], align2[i])
 
-            # if they are not identical and none of them is gap
             elif align1[i] != align2[i] and align1[i] != '-' and align2[i] != '-':
                 score += match_score(align1[i], align2[i])
                 symbol.append(" ")
@@ -316,12 +313,10 @@ def needleman_wunsch_identity(cursor,
 
 
     def needle(seq1, seq2):
-        m, n = len(seq1), len(seq2)  # length of two sequences
+        m, n = len(seq1), len(seq2)
 
-        # Generate DP table and traceback path pointer matrix
-        score = zeros((m + 1, n + 1))      # the DP table
+        score = zeros((m + 1, n + 1))
 
-        # Calculate DP table
         for i in range(0, m + 1):
             score[i][0] = gap_penalty * i
         for j in range(0, n + 1):
@@ -333,10 +328,9 @@ def needleman_wunsch_identity(cursor,
                 insert = score[i][j - 1] + gap_penalty
                 score[i][j] = max(match, delete, insert)
 
-        # Traceback and compute the alignment
         align1, align2 = [], []
-        i, j = m, n  # start from the bottom right cell
-        while i > 0 and j > 0:  # end toching the top or the left edge
+        i, j = m, n 
+        while i > 0 and j > 0:
             score_current = score[i][j]
             score_diagonal = score[i - 1][j - 1]
             score_up = score[i][j - 1]
@@ -369,30 +363,30 @@ def needleman_wunsch_identity(cursor,
         return finalize(align1, align2)
 
 
-
-
     first_event = cursor.execute(("SELECT min(start) FROM aggregated_events "
-                                  "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                 (obsid1, obsid2)).fetchone()[0]
+                                  f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                 (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
 
     if first_event is None:
         logging.debug(f"An observation has no recorded events: {obsid1} or {obsid2}")
         return -100, f"An observation has no recorded events: {obsid1} {obsid2}"
 
     logging.debug(f"first_event: {first_event}")
-    last_event = cursor.execute(("SELECT max(stop) FROM aggregated_events "
-                                 "WHERE observation in (?, ?) AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                                                                             (obsid1, obsid2)).fetchone()[0]
 
-    logging.debug("last_event: {}".format(last_event))
+    last_event = cursor.execute(("SELECT max(start) FROM aggregated_events "
+                                 f"WHERE observation in (?, ?) AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                (obsid1, obsid2) + tuple(selected_subjects)).fetchone()[0]
+
+    logging.debug(f"last_event: {last_event}")
 
     nb_events1 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
-                                 "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                (obsid1,)).fetchone()[0]
-    nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
-                                 "WHERE observation = ? AND subject in ('{}') ").format("','".join(selected_subjects)),
-                                (obsid2,)).fetchone()[0]
+                                 f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                (obsid1,) + tuple(selected_subjects)).fetchone()[0]
 
+
+    nb_events2 = cursor.execute(("SELECT COUNT(*) FROM aggregated_events "
+                                 f"WHERE observation = ? AND subject in ({','.join('?'*len(selected_subjects))}) "),
+                                (obsid2,) + tuple(selected_subjects)).fetchone()[0]
 
     seq1, seq2 = {}, {}
 
@@ -425,4 +419,5 @@ def needleman_wunsch_identity(cursor,
            f"identity = {r['identity']:.3f} %")
 
     logging.debug(f"identity: {r['identity']}")
+
     return r['identity'], out
