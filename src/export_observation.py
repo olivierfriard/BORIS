@@ -855,16 +855,13 @@ def observation_to_behavioral_sequences(pj,
                     descr = descr.replace("\n", "\n# ")
                 elif "\r" in descr:
                     descr = descr.replace("\r", "\r# ")
-                out_file.write("# observation description: {}\n".format(descr))
+                out_file.write(f"# observation description: {descr}\n")
                 # media file name
                 if pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
-                    out_file.write("# Media file name: {0}{1}{1}".format(", ".join([os.path.basename(x)
-                                                                                   for x in pj[OBSERVATIONS]
-                                                                                   [obs_id]
-                                                                                   [FILE][PLAYER1]]),
-                                                                         os.linesep))
+                    out_file.write((f"# Media file name: {', '.join([os.path.basename(x) for x in pj[OBSERVATIONS][obs_id][FILE][PLAYER1]])}"
+                                    f"{os.linesep}{os.linesep}"))
                 if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
-                    out_file.write("# Live observation{0}{0}".format(os.linesep))
+                    out_file.write(f"# Live observation{os.linesep}{os.linesep}")
 
                 # independent variables
                 if INDEPENDENT_VARIABLES in pj[OBSERVATIONS][obs_id]:

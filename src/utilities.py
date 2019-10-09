@@ -824,7 +824,7 @@ def eol2space(s: str) -> str:
     Returns:
         str: string where /rn /r /n are converted in space
     """
-    return s.replace('\r\n', ' ').replace('\n', ' ').replace('\r', ' ')
+    return s.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
 
 
 def test_ffmpeg_path(FFmpegPath):

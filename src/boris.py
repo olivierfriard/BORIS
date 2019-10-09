@@ -6619,7 +6619,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 out, categories = time_budget_functions.time_budget_analysis(self.pj[ETHOGRAM],
                                                                              cursor,
-                                                                             selectedObservations,
+                                                                             [obsId],
                                                                              parameters,
                                                                              by_category=(mode == "by_category"))
 
@@ -6687,7 +6687,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         else:
                             values.append("-")
 
-                        rows.append(values)
+                        rows.append(list(values))
 
                 if mode == "by_category":
                     rows.append(fields)

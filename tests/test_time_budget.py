@@ -30,7 +30,14 @@ class Test_time_budget(object):
     def test_time_budget1(self):
 
 
-        VERIF = [{"subject": "subject1", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}, {"subject": "subject1", "behavior": "s", "modifiers": "", "duration": 16.875, "duration_mean": 5.625, "duration_stdev": 1.021, "number": 3, "inter_duration_mean": 2.15, "inter_duration_stdev": 0.0}, {"subject": "subject2", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}, {"subject": "subject2", "behavior": "s", "modifiers": "", "duration": 7.675, "duration_mean": 7.675, "duration_stdev": "NA", "number": 1, "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}]
+        VERIF = [{"subject": "subject1", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA",
+                  "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}, {"subject": "subject1", "behavior": "s",
+                  "modifiers": "", "duration": 16.875, "duration_mean": 5.625, "duration_stdev": 1.021, "number": 3,
+                  "inter_duration_mean": 2.15, "inter_duration_stdev": 0.0}, {"subject": "subject2", "behavior": "p", "modifiers": "",
+                  "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": "0", "inter_duration_mean": "NA",
+                  "inter_duration_stdev": "NA"},
+                  {"subject": "subject2", "behavior": "s", "modifiers": "", "duration": 7.675, "duration_mean": 7.675,
+                   "duration_stdev": "NA", "number": 1, "inter_duration_mean": "NA", "inter_duration_stdev": "NA"}]
 
         pj = json.loads(open("files/test.boris").read())
 
@@ -60,8 +67,10 @@ class Test_time_budget(object):
 
     def test_time_budget2(self):
 
-        VERIF = [{"subject": "subject1", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA", "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"},
-        {"subject": "subject2", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": 0, "number": 2, "inter_duration_mean": 0.0, "inter_duration_stdev": "NA"}]
+        VERIF = [{"subject": "subject1", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": "NA",
+        "number": "0", "inter_duration_mean": "NA", "inter_duration_stdev": "NA"},
+        {"subject": "subject2", "behavior": "p", "modifiers": "", "duration": 0, "duration_mean": 0, "duration_stdev": 0, "number": 2,
+        "inter_duration_mean": 0.0, "inter_duration_stdev": "NA"}]
 
         pj = json.loads(open("files/test.boris").read())
 
