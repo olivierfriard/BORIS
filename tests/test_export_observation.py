@@ -118,9 +118,9 @@ class Test_export_events(object):
         assert ref_all_cells == test_all_cells
 
 
-# TODO: add testing long worsheet title xls
+# TODO: add testing long worksheet title xls
 
-# TODO: add testing for worsheet title containing forbidden characters xls/xlsx
+# TODO: add testing for worksheet title containing forbidden characters xls/xlsx
 
 
 

@@ -699,7 +699,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     pn = "Unnamed project"
 
         self.setWindowTitle("{}{}{}".format(self.observationId + " - " * (self.observationId != ""),
-                                            pn + (" - " * (pn != "")), programName))
+                                            pn + (" - " * (pn != "")),
+                                            programName))
 
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
@@ -8570,8 +8571,8 @@ item []:
                 return
 
             external_command = external_command_template.format(OBS_ID=self.observationId,
-                                                                MEDIA_PATH='"{}"'.format(media_path),
-                                                                MEDIA_BASENAME='"{}"'.format(os.path.basename(media_path)),
+                                                                MEDIA_PATH=f'"{media_path}"',
+                                                                MEDIA_BASENAME=f'"{os.path.basename(media_path)}"',
                                                                 START_S=eventtime_onmedia_s,
                                                                 END_S=eventtime_onmedia_e,
                                                                 START_MS=eventtime_onmedia_s * 1000,
@@ -8663,18 +8664,15 @@ item []:
                     sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
                                       [EVENT_BEHAVIOR_FIELD_IDX]))
             else:
-                logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
-                )
+                logging.warning((f"The behaviour {self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]} "
+                                "does not exist more in the ethogram"))
                 QMessageBox.warning(self,
                                     programName,
-                                    "The behaviour <b>{}</b> does not exist more in the ethogram".format(
-                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+                                    (f"The behaviour <b>{self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]}</b> "
+                                     "does not exist more in the ethogram"))
                 editWindow.cobCode.setCurrentIndex(0)
 
-            logging.debug("original modifiers: {}".format(
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX])
-            )
+            logging.debug(f"original modifiers: {self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]}")
 
             # comment
             editWindow.leComment.setPlainText(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
@@ -8873,7 +8871,7 @@ item []:
         programs_versions = ["VLC media player"]
         programs_versions.append(f"version {bytes_to_str(vlc.libvlc_get_version())}")
         if vlc.plugin_path:
-            programs_versions.append("VLC libraries path: {}".format(vlc.plugin_path))
+            programs_versions.append(f"VLC libraries path: {vlc.plugin_path}")
 
         # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
@@ -9576,9 +9574,7 @@ item []:
                         if not r:  # cancel button pressed
                             return
 
-                    '''print("selected_modifiers", selected_modifiers)'''
                     all_modifiers = {**selected_modifiers, **modifiers_external_data}
-                    '''print("all_modifiers", all_modifiers)'''
 
                     modifier_str = ""
                     for idx in sorted_keys(all_modifiers):
@@ -10419,9 +10415,8 @@ item []:
         d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or subtract (use negative value):", 0, -86400, 86400, 3)
         if ok and d:
             if dialog.MessageDialog(programName,
-                                    ("Confirm the {} of {} seconds "
-                                     "to all selected events in the current observation?").format("addition" if d > 0 else "subtraction",
-                                                                                                  abs(d)),
+                                    (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
+                                     "to all selected events in the current observation?"),
                                     [YES, NO]) == NO:
                 return
 
@@ -11185,9 +11180,8 @@ item []:
                                              if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
                         if new_behav_set:
                             diag_result = dialog.MessageDialog(programName,
-                                                               ("Some coded behaviors in <b>{}</b> are"
-                                                                "not in the ethogram:<br><b>{}</b>").format(obsId,
-                                                                                                            ", ".join(new_behav_set)),
+                                                               (f"Some coded behaviors in <b>{obsId}</b> are"
+                                                                f"not in the ethogram:<br><b>{', '.join(new_behav_set)}</b>"),
                                                                ["Interrupt import", "Skip observation", "Import observation"])
                             if diag_result == "Interrupt import":
                                 return
@@ -11199,9 +11193,8 @@ item []:
                                                if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
                         if new_subject_set and new_subject_set != {""}:
                             diag_result = dialog.MessageDialog(programName,
-                                                               ("Some coded subjects in <b>{}</b> are not defined in the project:<br>"
-                                                                "<b>{}</b>").format(obsId,
-                                                                                    ", ".join(new_subject_set)),
+                                                               (f"Some coded subjects in <b>{obsId}</b> are not defined in the project:<br>"
+                                                                f"<b>{', '.join(new_subject_set)}</b>"),
                                                                ["Interrupt import", "Skip observation", "Import observation"])
 
                             if diag_result == "Interrupt import":
@@ -11450,8 +11443,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        msg = ("The VLC media player seems very old ({}). "
-               "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version())
+        msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
+               "Go to http://www.videolan.org/vlc to update it")
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(2)
@@ -11474,7 +11467,8 @@ if __name__ == "__main__":
     if options.project:
         project_to_open = options.project
 
-    logging.debug("args: {}".format(args))
+    logging.debug(f"args: {args}")
+
     if args and len(args) > 0:
         project_to_open = args[0]
 

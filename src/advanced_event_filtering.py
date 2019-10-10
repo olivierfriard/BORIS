@@ -43,21 +43,21 @@ from config import *
 import tablib
 
 
-def icc(i):
+def icc(i: list):
     """
     create a closed-closed interval
     """
     return Interval.closed(i[0], i[1])
 
 
-def ico(i):
+def ico(i: list):
     """
     create a closed-open interval
     """
     return Interval.closedopen(i[0], i[1])
 
 
-def io(i):
+def io(i: list):
     """
     create a closed-open interval
     """
@@ -69,8 +69,8 @@ class Advanced_event_filtering_dialog(QDialog):
     Dialog for visualizing advanced event filtering results
     """
 
-    summary_header = ["Observation id", "Number of occurences", "Total duration", "Mean", "Std Dev"]
-    details_header = ["Observation id", "Comment", "Start time", "Stop time", "Duration"]
+    summary_header = ["Observation id", "Number of occurences", "Total duration (s)", "Duration mean (s)", "Std Dev"]
+    details_header = ["Observation id", "Comment", "Start time", "Stop time", "Duration (s)"]
 
     def __init__(self, events):
         super().__init__()
@@ -309,7 +309,6 @@ class Advanced_event_filtering_dialog(QDialog):
         [tablib_dataset.append(x) for x in self.out]
 
         try:
-
             if output_format in ["csv", "tsv", "html"]:
                 with open(file_name, "wb") as f:
                     f.write(str.encode(tablib_dataset.export(output_format)))
@@ -319,7 +318,6 @@ class Advanced_event_filtering_dialog(QDialog):
                     f.write(tablib_dataset.export(output_format))
 
         except Exception:
-            raise
             QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
@@ -407,10 +405,10 @@ def event_filtering(pj: dict):
             if obs not in events:
                 events[obs] = {}
 
-            if subj + "|" + behav not in events[obs]:
-                events[obs][subj + "|" + behav] = ico([start, stop])
+            if f"{subj}|{behav}" not in events[obs]:
+                events[obs][f"{subj}|{behav}"] = ico([start, stop])
             else:
-                events[obs][subj + "|" + behav] = events[obs][subj + "|" + behav] | ico([start, stop])
+                events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | ico([start, stop])
 
     '''
     t2 = time.time()

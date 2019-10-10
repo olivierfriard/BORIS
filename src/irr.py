@@ -184,7 +184,7 @@ def cohen_kappa(cursor,
     logging.debug(f"seq1:\n {list(seq1.values())}")
     logging.debug(f"seq2:\n {list(seq2.values())}")
 
-    logging.debug("contingency_table:\n {}".format(contingency_table))
+    logging.debug(f"contingency_table:\n {contingency_table}")
 
     template = ("Observation: {obsid1}\n"
                 "number of events: {nb_events1}\n\n"
@@ -251,7 +251,7 @@ def needleman_wunsch_identity(cursor,
         include_modifiers (bool): True: include modifiers False: do not
 
     Return:
-        float: K
+        float: identity
         str: result of analysis
     """
 
@@ -275,7 +275,6 @@ def needleman_wunsch_identity(cursor,
             return gap_penalty
         else:
             return mismatch_penalty
-
 
     def finalize(align1, align2):
         align1 = align1[::-1]
