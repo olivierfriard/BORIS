@@ -444,14 +444,15 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
     maxLen = max([len(r) for r in rows])
     data = tablib.Dataset()
 
-    data.title = obsId
-    # check if worksheet name will be > 31 char
+    data.title = utilities.safe_xl_worksheet_title(obsId, output_format)
+    '''
     if output_format in ["xls", "xlsx"]:
         for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
             data.title = data.title.replace(forbidden_char, " ")
         if output_format in ["xls"]:
             if len(data.title) > 31:
                 data.title = data.title[0:31]
+    '''
 
     for row in rows:
         data.append(utilities.complete(row, maxLen))
@@ -491,11 +492,13 @@ def dataset_write(dataset, file_name, output_format):
                 f.write(dataset.ods)
             return True, ""
 
+        dataset.title = utilities.safe_xl_worksheet_title(dataset.title, output_format)
+        '''
         if output_format in ["xls", "xlsx"]:
             # check worksheet title
             for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
                 dataset.title = dataset.title.replace(forbidden_char, " ")
-
+        '''
         if output_format == "xlsx":
             with open(file_name, "wb") as f:
                 f.write(dataset.xlsx)

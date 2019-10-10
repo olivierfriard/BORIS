@@ -272,23 +272,55 @@ class Advanced_event_filtering_dialog(QDialog):
         save results
         """
 
-        fn = QFileDialog().getSaveFileName(self, "Save results", "", "TAB separated values (*.tsv);;All files (*)")
-        file_name = fn[0] if type(fn) is tuple else fn
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)"]
+        file_formats = ["tsv",
+                        "csv",
+                        "ods",
+                        "xlsx",
+                        "xls",
+                        "html"]
 
-        if file_name:
-            if self.rb_details.isChecked():
-                tablib_dataset = tablib.Dataset(headers=self.details_header)
-            if self.rb_summary.isChecked():
-                tablib_dataset = tablib.Dataset(headers=self.summary_header)
+        file_name, filter_ = QFileDialog().getSaveFileName(None, "Save results", "", ";;".join(extended_file_formats))
+        if not file_name:
+            return
 
-            [tablib_dataset.append(x) for x in self.out]
+        output_format = file_formats[extended_file_formats.index(filter_)]
 
-            try:
+        if pathlib.Path(file_name).suffix != "." + output_format:
+            file_name = str(pathlib.Path(file_name)) + "." + output_format
+            # check if file with new extension already exists
+            if pathlib.Path(file_name).is_file():
+                if dialog.MessageDialog(programName,
+                                        f"The file {file_name} already exists.",
+                                        [CANCEL, OVERWRITE]) == CANCEL:
+                    return
+
+        if self.rb_details.isChecked():
+            tablib_dataset = tablib.Dataset(headers=self.details_header)
+        if self.rb_summary.isChecked():
+            tablib_dataset = tablib.Dataset(headers=self.summary_header)
+        tablib_dataset.title = utilities.safe_xl_worksheet_title(self.logic.text(), output_format)
+
+        [tablib_dataset.append(x) for x in self.out]
+
+        try:
+
+            if output_format in ["csv", "tsv", "html"]:
                 with open(file_name, "wb") as f:
-                    f.write(str.encode(tablib_dataset.tsv))
+                    f.write(str.encode(tablib_dataset.export(output_format)))
 
-            except Exception:
-                QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+            if output_format in ["ods", "xlsx", "xls"]:
+                with open(file_name, "wb") as f:
+                    f.write(tablib_dataset.export(output_format))
+
+        except Exception:
+            raise
+            QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
 
 
 def event_filtering(pj: dict):

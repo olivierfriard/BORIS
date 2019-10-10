@@ -111,9 +111,17 @@ class Test_export_events(object):
         test_all_cells = []
         wb = load_workbook(filename=f'output/{file_name}', read_only=True)
         for ws_name in wb.sheetnames:
+            worksheet_name = ws_name
             test_all_cells.extend([cell.value for row in wb[ws_name].rows for cell in row])
 
+        assert worksheet_name == obs_id
         assert ref_all_cells == test_all_cells
+
+
+# TODO: add testing long worsheet title xls
+
+# TODO: add testing for worsheet title containing forbidden characters xls/xlsx
+
 
 
 class Test_export_aggregated_events(object):

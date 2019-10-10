@@ -814,6 +814,23 @@ def safeFileName(s: str) -> str:
     return fileName
 
 
+def safe_xl_worksheet_title(title: str,
+                            output_format: str):
+    """
+    sanitize the XLS and XLSX worksheet title
+    
+    Args:
+        title (str): title for worksheet
+        output_format (str): xls or xlsx
+    """
+    if output_format in ["xls", "xlsx"]:
+        if output_format in ["xls"]:
+            title = title[:31]
+        for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
+            title = title.replace(forbidden_char, " ")
+    return title
+
+
 def eol2space(s: str) -> str:
     """
     replace EOL char by space for all platforms
