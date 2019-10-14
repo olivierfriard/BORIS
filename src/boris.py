@@ -3371,6 +3371,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # pause before add event
         preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
+        preferencesWindow.cb_compact_time_budget.setChecked(self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT)
+
         # FFmpeg for frame by frame mode
         preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
         preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
@@ -3479,6 +3481,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId:
                 self.loadEventsInTW(self.observationId)
                 self.display_statusbar_info(self.observationId)
+
+            # result
+            if preferencesWindow.cb_compact_time_budget.isChecked():
+                self.config_param[TIME_BUDGET_FORMAT] = COMPACT_TIME_BUDGET_FORMAT
+            else:
+                self.config_param[TIME_BUDGET_FORMAT] = DEFAULT_TIME_BUDGET_FORMAT
 
             self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
             self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
