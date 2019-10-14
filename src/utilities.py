@@ -172,10 +172,10 @@ def txt2np_array(file_name: str,
 
             conv_name = column_converter[column_idx]
 
-            function = """def {}(INPUT):\n""".format(conv_name)
+            function = f"""def {conv_name}(INPUT):\n"""
             function += """    INPUT = INPUT.decode("utf-8") if isinstance(INPUT, bytes) else INPUT"""
             for line in converters[conv_name]["code"].split("\n"):
-                function += "    {}\n".format(line)
+                function += f"    {line}\n"
             function += """    return OUTPUT"""
 
             try:
@@ -650,7 +650,7 @@ def intfloatstr(s: str):
         return int(s)
     except Exception:
         try:
-            return "{:0.3f}".format(float(s))
+            return f"{float(s):0.3f}"
         except Exception:
             return s
 
@@ -814,6 +814,23 @@ def safeFileName(s: str) -> str:
     return fileName
 
 
+def safe_xl_worksheet_title(title: str,
+                            output_format: str):
+    """
+    sanitize the XLS and XLSX worksheet title
+    
+    Args:
+        title (str): title for worksheet
+        output_format (str): xls or xlsx
+    """
+    if output_format in ["xls", "xlsx"]:
+        if output_format in ["xls"]:
+            title = title[:31]
+        for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
+            title = title.replace(forbidden_char, " ")
+    return title
+
+
 def eol2space(s: str) -> str:
     """
     replace EOL char by space for all platforms
@@ -929,14 +946,6 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
     """
 
     command = f'"{ffmpeg_bin}" -i "{file_name}" > {"NUL" if sys.platform.startswith("win") else "/dev/null"}'
-
-
-    '''
-    TO BE DELETED 2019-10-04
-    command = '"{ffmpeg_bin}" -i "{file_name}" > {null_output}'.format(ffmpeg_bin=ffmpeg_bin,
-                                                                       file_name=file_name,
-                                                                       null_output="NUL" if sys.platform.startswith("win") else "/dev/null")
-    '''
 
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 

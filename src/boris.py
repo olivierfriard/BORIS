@@ -668,9 +668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.FFmpegGlobalFrame = 0
 
-        self.config_param = {DISPLAY_SUBTITLES: False,
-                             SAVE_FRAMES: DISK,
-                             MEMORY_FOR_FRAMES: DEFAULT_MEMORY_FOR_FRAMES}
+        self.config_param = INIT_PARAM
 
         self.menu_options()
         self.connections()
@@ -701,7 +699,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     pn = "Unnamed project"
 
         self.setWindowTitle("{}{}{}".format(self.observationId + " - " * (self.observationId != ""),
-                                            pn + (" - " * (pn != "")), programName))
+                                            pn + (" - " * (pn != "")),
+                                            programName))
 
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
@@ -3347,6 +3346,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
         preferencesWindow.sbffSpeed.setValue(self.fast)
+        preferencesWindow.cb_adapt_fast_jump.setChecked(self.config_param.get(ADAPT_FAST_JUMP, False))
         preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
         preferencesWindow.sbSpeedStep.setValue(self.play_rate_step)
         # automatic backup
@@ -3446,6 +3446,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timeFormat = HHMMSS
 
             self.fast = preferencesWindow.sbffSpeed.value()
+
+            self.config_param[ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
 
             self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
 
@@ -5434,8 +5436,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
-            try:
 
+            try:
+                self.config_param = settings.value("config")
+            except:
+                pass
+            if self.config_param is None:
+                self.config_param = INIT_PARAM
+
+                # for back compatibility
+                # display subtitles 
+                try:
+                    self.config_param[DISPLAY_SUBTITLES] = (settings.value(DISPLAY_SUBTITLES) == 'true')
+                except Exception:
+                    self.config_param[DISPLAY_SUBTITLES] = False
+    
+                logging.debug(f"{DISPLAY_SUBTITLES}: {self.config_param[DISPLAY_SUBTITLES]}")
+
+                # frame-by-frame
+                try:
+                    self.config_param[SAVE_FRAMES] = settings.value(SAVE_FRAMES)
+                    if not self.config_param[SAVE_FRAMES]:
+                        self.config_param[SAVE_FRAMES] = DISK
+                except Exception:
+                    self.config_param[SAVE_FRAMES] = DISK
+    
+                logging.debug(f"save frame on {self.config_param[SAVE_FRAMES]}")
+    
+                try:
+                    self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
+                except Exception:
+                    self.config_param[MEMORY_FOR_FRAMES] = DEFAULT_MEMORY_FOR_FRAMES
+    
+                logging.debug(f"memory for frames: {self.config_param[MEMORY_FOR_FRAMES]}")
+
+
+            try:
                 logging.debug("restore geometry")
 
                 self.restoreGeometry(settings.value("geometry"))
@@ -5560,13 +5596,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.checkForNewVersion = False
             logging.debug(f"check_for_new_version: {self.checkForNewVersion}")
 
-            # dsiplay subtitles
-            self.config_param[DISPLAY_SUBTITLES] = False
-            try:
-                self.config_param[DISPLAY_SUBTITLES] = (settings.value(DISPLAY_SUBTITLES) == 'true')
-            except Exception:
-                self.config_param[DISPLAY_SUBTITLES] = False
-            logging.debug(f"{DISPLAY_SUBTITLES}: {self.config_param[DISPLAY_SUBTITLES]}")
 
             # pause before add event
             self.pause_before_addevent = False
@@ -5574,6 +5603,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.pause_before_addevent = (settings.value("pause_before_addevent") == 'true')
             except Exception:
                 self.pause_before_addevent = False
+
             logging.debug(f"pause_before_addevent: {self.pause_before_addevent}")
 
             if self.checkForNewVersion:
@@ -5601,23 +5631,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 self.ffmpeg_cache_dir_max_size = 0
             logging.debug(f"ffmpeg_cache_dir_max_size: {self.ffmpeg_cache_dir_max_size}")
-
-            # frame-by-frame
-            try:
-                self.config_param[SAVE_FRAMES] = settings.value(SAVE_FRAMES)
-                if not self.config_param[SAVE_FRAMES]:
-                    self.config_param[SAVE_FRAMES] = DISK
-            except Exception:
-                self.config_param[SAVE_FRAMES] = DISK
-
-            logging.debug(f"save frame on {self.config_param[SAVE_FRAMES]}")
-
-            try:
-                self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
-            except Exception:
-                self.config_param[MEMORY_FOR_FRAMES] = DEFAULT_MEMORY_FOR_FRAMES
-
-            logging.debug(f"memory for frames: {self.config_param[MEMORY_FOR_FRAMES]}")
 
             try:
                 self.frame_resize = int(settings.value("frame_resize"))
@@ -5713,6 +5726,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
         settings = QSettings(iniFilePath, QSettings.IniFormat)
 
+        settings.setValue("config", self.config_param)
+
         settings.setValue("geometry", self.saveGeometry())
 
         if self.saved_state:
@@ -5731,7 +5746,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         settings.setValue("alert_nosubject", self.alertNoFocalSubject)
         settings.setValue("tracking_cursor_above_event", self.trackingCursorAboveEvent)
         settings.setValue("check_for_new_version", self.checkForNewVersion)
-        settings.setValue(DISPLAY_SUBTITLES, self.config_param[DISPLAY_SUBTITLES])
+        # settings.setValue(DISPLAY_SUBTITLES, self.config_param[DISPLAY_SUBTITLES])
         settings.setValue("pause_before_addevent", self.pause_before_addevent)
 
         if lastCheckForNewVersion:
@@ -5740,9 +5755,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # FFmpeg
         settings.setValue("ffmpeg_cache_dir", self.ffmpeg_cache_dir)
         settings.setValue("ffmpeg_cache_dir_max_size", self.ffmpeg_cache_dir_max_size)
+        '''
         # frame-by-frame
         for value in [SAVE_FRAMES, MEMORY_FOR_FRAMES]:
             settings.setValue(value, self.config_param[value])
+        '''
 
         settings.setValue("frame_resize", self.frame_resize)
         settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
@@ -8562,8 +8579,8 @@ item []:
                 return
 
             external_command = external_command_template.format(OBS_ID=self.observationId,
-                                                                MEDIA_PATH='"{}"'.format(media_path),
-                                                                MEDIA_BASENAME='"{}"'.format(os.path.basename(media_path)),
+                                                                MEDIA_PATH=f'"{media_path}"',
+                                                                MEDIA_BASENAME=f'"{os.path.basename(media_path)}"',
                                                                 START_S=eventtime_onmedia_s,
                                                                 END_S=eventtime_onmedia_e,
                                                                 START_MS=eventtime_onmedia_s * 1000,
@@ -8655,18 +8672,15 @@ item []:
                     sortedCodes.index(self.pj[OBSERVATIONS][self.observationId][EVENTS][row]
                                       [EVENT_BEHAVIOR_FIELD_IDX]))
             else:
-                logging.warning("The behaviour <b>{0}</b> does not exist more in the ethogram".format(
-                    self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX])
-                )
+                logging.warning((f"The behaviour {self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]} "
+                                "does not exist more in the ethogram"))
                 QMessageBox.warning(self,
                                     programName,
-                                    "The behaviour <b>{}</b> does not exist more in the ethogram".format(
-                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]))
+                                    (f"The behaviour <b>{self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_BEHAVIOR_FIELD_IDX]}</b> "
+                                     "does not exist more in the ethogram"))
                 editWindow.cobCode.setCurrentIndex(0)
 
-            logging.debug("original modifiers: {}".format(
-                self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX])
-            )
+            logging.debug(f"original modifiers: {self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_MODIFIER_FIELD_IDX]}")
 
             # comment
             editWindow.leComment.setPlainText(self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_COMMENT_FIELD_IDX])
@@ -8865,7 +8879,7 @@ item []:
         programs_versions = ["VLC media player"]
         programs_versions.append(f"version {bytes_to_str(vlc.libvlc_get_version())}")
         if vlc.plugin_path:
-            programs_versions.append("VLC libraries path: {}".format(vlc.plugin_path))
+            programs_versions.append(f"VLC libraries path: {vlc.plugin_path}")
 
         # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
@@ -9568,9 +9582,7 @@ item []:
                         if not r:  # cancel button pressed
                             return
 
-                    '''print("selected_modifiers", selected_modifiers)'''
                     all_modifiers = {**selected_modifiers, **modifiers_external_data}
-                    '''print("all_modifiers", all_modifiers)'''
 
                     modifier_str = ""
                     for idx in sorted_keys(all_modifiers):
@@ -10411,9 +10423,8 @@ item []:
         d, ok = QInputDialog.getDouble(self, "Time value", "Value to add or subtract (use negative value):", 0, -86400, 86400, 3)
         if ok and d:
             if dialog.MessageDialog(programName,
-                                    ("Confirm the {} of {} seconds "
-                                     "to all selected events in the current observation?").format("addition" if d > 0 else "subtraction",
-                                                                                                  abs(d)),
+                                    (f"Confirm the {'addition' if d > 0 else 'subtraction'} of {abs(d)} seconds "
+                                     "to all selected events in the current observation?"),
                                     [YES, NO]) == NO:
                 return
 
@@ -11177,9 +11188,8 @@ item []:
                                              if event[EVENT_BEHAVIOR_FIELD_IDX] not in behav_set])
                         if new_behav_set:
                             diag_result = dialog.MessageDialog(programName,
-                                                               ("Some coded behaviors in <b>{}</b> are"
-                                                                "not in the ethogram:<br><b>{}</b>").format(obsId,
-                                                                                                            ", ".join(new_behav_set)),
+                                                               (f"Some coded behaviors in <b>{obsId}</b> are"
+                                                                f"not in the ethogram:<br><b>{', '.join(new_behav_set)}</b>"),
                                                                ["Interrupt import", "Skip observation", "Import observation"])
                             if diag_result == "Interrupt import":
                                 return
@@ -11191,9 +11201,8 @@ item []:
                                                if event[EVENT_SUBJECT_FIELD_IDX] not in subjects_set])
                         if new_subject_set and new_subject_set != {""}:
                             diag_result = dialog.MessageDialog(programName,
-                                                               ("Some coded subjects in <b>{}</b> are not defined in the project:<br>"
-                                                                "<b>{}</b>").format(obsId,
-                                                                                    ", ".join(new_subject_set)),
+                                                               (f"Some coded subjects in <b>{obsId}</b> are not defined in the project:<br>"
+                                                                f"<b>{', '.join(new_subject_set)}</b>"),
                                                                ["Interrupt import", "Skip observation", "Import observation"])
 
                             if diag_result == "Interrupt import":
@@ -11309,10 +11318,12 @@ item []:
         """
         if self.playerType == VLC:
 
+            decrement = self.fast * self.play_rate if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT) else self.fast
             if self.playMode == FFMPEG:
                 currentTime = self.FFmpegGlobalFrame / self.fps
-                if int((currentTime - self.fast * self.play_rate) * self.fps) > 0:
-                    self.FFmpegGlobalFrame = int((currentTime - self.fast * self.play_rate) * self.fps)
+                
+                if int((currentTime - decrement) * self.fps) > 0:
+                    self.FFmpegGlobalFrame = int((currentTime - decrement) * self.fps)
                 else:
                     self.FFmpegGlobalFrame = 0   # position to init
                 self.ffmpeg_timer_out()
@@ -11323,9 +11334,9 @@ item []:
                     self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
                                                       index_of_item(self.dw_player[0].
                                                                     mediaplayer.get_media())]) +
-                           self.dw_player[0].mediaplayer.get_time() - round(self.fast * self.play_rate * 1000))
+                           self.dw_player[0].mediaplayer.get_time() - round(decrement * 1000))
 
-                if newTime < self.fast * self.play_rate * 1000:
+                if newTime < decrement * 1000:
                     newTime = 0
 
                 self.seek_mediaplayer(newTime)
@@ -11346,12 +11357,15 @@ item []:
 
         if self.playerType == VLC:
 
+            increment = self.fast * self.play_rate if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT) else self.fast
             if self.playMode == FFMPEG:
 
-                self.FFmpegGlobalFrame += (self.fast * self.play_rate) * self.fps
+                self.FFmpegGlobalFrame += increment * self.fps
 
                 if self.FFmpegGlobalFrame * (1000 / self.fps) >= sum(self.dw_player[0].media_durations):
+
                     logging.debug("end of last media")
+
                     self.FFmpegGlobalFrame = int(sum(self.dw_player[0].media_durations) * self.fps / 1000) - 1
 
                     logging.debug(f"FFmpegGlobalFrame {self.FFmpegGlobalFrame}  sum duration {sum(self.dw_player[0].media_durations)}")
@@ -11367,7 +11381,7 @@ item []:
                     self.dw_player[0].media_durations[0:self.dw_player[0].media_list.
                                                       index_of_item(self.dw_player[0].
                                                                     mediaplayer.get_media())])
-                                               + self.dw_player[0].mediaplayer.get_time() + round(self.fast * self.play_rate * 1000))
+                                               + self.dw_player[0].mediaplayer.get_time() + round(increment * 1000))
 
                 self.seek_mediaplayer(newTime)
 
@@ -11437,8 +11451,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        msg = ("The VLC media player seems very old ({}). "
-               "Go to http://www.videolan.org/vlc to update it").format(vlc.libvlc_get_version())
+        msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
+               "Go to http://www.videolan.org/vlc to update it")
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(2)
@@ -11461,7 +11475,8 @@ if __name__ == "__main__":
     if options.project:
         project_to_open = options.project
 
-    logging.debug("args: {}".format(args))
+    logging.debug(f"args: {args}")
+
     if args and len(args) > 0:
         project_to_open = args[0]
 

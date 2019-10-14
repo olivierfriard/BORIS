@@ -379,6 +379,7 @@ class Test_return_file_header(object):
 
 
 class Test_safefilename(object):
+
     def test_filename_with_spaces(self):
         assert utilities.safeFileName("aaa bbb.ccc") == "aaa bbb.ccc"
 
@@ -386,6 +387,30 @@ class Test_safefilename(object):
         # ["/", "\\", ":", "*", "?", '"', "<", ">", "|"]
         assert utilities.safeFileName("aaa/bb\\b.c:cc ddd* ? \"www\" <> |"
                                       ) == "aaa_bb_b.c_cc ddd_ _ _www_ __ _"
+
+
+class Test_safe_xl_worksheet_title(object):
+
+    def test_long_title_xls(self):
+        assert utilities.safe_xl_worksheet_title("0123456789012345678901234567890123456789",
+                                                 "xls") == "0123456789012345678901234567890"
+
+    def test_long_title_xlsx(self):
+        assert utilities.safe_xl_worksheet_title("0123456789012345678901234567890123456789",
+                                                 "xlsx") == "0123456789012345678901234567890123456789"
+
+    def test_long_title_tsv(self):
+        assert utilities.safe_xl_worksheet_title("0123456789012345678901234567890123456789",
+                                                 "tsv") == "0123456789012345678901234567890123456789"
+
+    def test_title_with_forbidden_chars_xls(self):
+        # \/*[]:?
+        assert utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls") == "000 000 000 000 000 000 000 000"
+
+    def test_title_with_forbidden_chars_xlsx(self):
+        # \/*[]:?
+        assert utilities.safe_xl_worksheet_title(r"000\000/000*000[000]000:000?000 000", "xls") == "000 000 000 000 000 000 000 000"
+
 
 
 class Test_seconds_of_day(object):

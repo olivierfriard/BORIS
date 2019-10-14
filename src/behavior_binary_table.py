@@ -25,8 +25,9 @@ import re
 import sys
 import time
 
-from PyQt5.QtWidgets import QFileDialog, QInputDialog, QMessageBox, QApplication
 from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QApplication, QFileDialog, QInputDialog,
+                             QMessageBox)
 
 import dialog
 import project_functions
