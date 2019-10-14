@@ -305,11 +305,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-<<<<<<< HEAD
-        self.tabWidget.setCurrentIndex(1)
-=======
         self.tabWidget.setCurrentIndex(0)
->>>>>>> 1f21e41f8862451c63b66fc66ccdf692e19b62b1
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):

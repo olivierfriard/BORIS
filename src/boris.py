@@ -5445,30 +5445,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.config_param = INIT_PARAM
 
                 # for back compatibility
-                # display subtitles 
+                # display subtitles
                 try:
                     self.config_param[DISPLAY_SUBTITLES] = (settings.value(DISPLAY_SUBTITLES) == 'true')
                 except Exception:
                     self.config_param[DISPLAY_SUBTITLES] = False
-    
+
                 logging.debug(f"{DISPLAY_SUBTITLES}: {self.config_param[DISPLAY_SUBTITLES]}")
 
                 # frame-by-frame
+                '''
                 try:
                     self.config_param[SAVE_FRAMES] = settings.value(SAVE_FRAMES)
                     if not self.config_param[SAVE_FRAMES]:
                         self.config_param[SAVE_FRAMES] = DISK
                 except Exception:
                     self.config_param[SAVE_FRAMES] = DISK
-    
+
                 logging.debug(f"save frame on {self.config_param[SAVE_FRAMES]}")
-    
+
                 try:
                     self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
                 except Exception:
                     self.config_param[MEMORY_FOR_FRAMES] = DEFAULT_MEMORY_FOR_FRAMES
-    
+
                 logging.debug(f"memory for frames: {self.config_param[MEMORY_FOR_FRAMES]}")
+                '''
 
 
             try:
@@ -6409,7 +6411,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     excl_behaviors_total_time[element["subject"]] += element["duration"] if not isinstance(element["duration"], str) else 0
 
             # widget for results visualization
-            self.tb = timeBudgetResults(logging.getLogger().getEffectiveLevel(), self.pj)
+            self.tb = timeBudgetResults(self.pj, self.config_param)
             # add min and max time
             self.tb.min_time = min_time
             self.tb.max_time = max_time
@@ -11321,7 +11323,7 @@ item []:
             decrement = self.fast * self.play_rate if self.config_param.get(ADAPT_FAST_JUMP, ADAPT_FAST_JUMP_DEFAULT) else self.fast
             if self.playMode == FFMPEG:
                 currentTime = self.FFmpegGlobalFrame / self.fps
-                
+
                 if int((currentTime - decrement) * self.fps) > 0:
                     self.FFmpegGlobalFrame = int((currentTime - decrement) * self.fps)
                 else:

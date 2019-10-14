@@ -42,14 +42,14 @@ class timeBudgetResults(QWidget):
     a function for exporting data in TSV, CSV, XLS and ODS formats is implemented
 
     Args:
-        log_level ():
         pj (dict): BORIS project
     """
 
-    def __init__(self, log_level, pj):
+    def __init__(self, pj, config_param):
         super().__init__()
 
         self.pj = pj
+        self.config_param = config_param
 
         hbox = QVBoxLayout(self)
 
@@ -136,8 +136,10 @@ class timeBudgetResults(QWidget):
 
         rows = []
 
+        print(self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT ))
         # 1 observation
-        if self.lw.count() == 1:
+        if (self.lw.count() == 1
+                and self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT ) == COMPACT_TIME_BUDGET_FORMAT):
             col1, indep_var_label = [], []
             # add obs id
             col1.append(self.lw.item(0).text())
@@ -174,6 +176,8 @@ class timeBudgetResults(QWidget):
             for idx in range(self.lw.count()):
                 rows.append([""])
                 rows.append(["Observation id", self.lw.item(idx).text()])
+                # print(self.lw.item(idx).text())
+                # print(self.pj[OBSERVATIONS]["0001_a"])
                 rows.append(["Observation date", self.pj[OBSERVATIONS][self.lw.item(idx).text()].get("date", "")])
                 rows.append(["Description", utilities.eol2space(self.pj[OBSERVATIONS][self.lw.item(idx).text()].get(DESCRIPTION, ""))])
 
