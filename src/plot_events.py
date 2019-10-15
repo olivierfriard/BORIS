@@ -29,8 +29,10 @@ import json
 import pathlib
 
 import matplotlib
+matplotlib.use("Qt5Agg")
 import matplotlib.dates
 import matplotlib.font_manager as font_manager
+import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
 from matplotlib import colors as mcolors
@@ -43,8 +45,7 @@ import project_functions
 import utilities
 from config import *
 
-matplotlib.use("Qt5Agg")
-import matplotlib.pyplot as plt
+
 
 
 plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)

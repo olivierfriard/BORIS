@@ -11083,7 +11083,6 @@ item []:
 
             strings_list = []
             for obsId in selectedObservations:
-                # strings_list.append(self.create_behavioral_strings(obsId, subject, plot_parameters))
                 strings_list.append(export_observation.events_to_behavioral_sequences(self.pj, obsId, subject,
                                                                                       plot_parameters,
                                                                                       self.behaviouralStringsSeparator))
