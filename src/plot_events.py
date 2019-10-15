@@ -46,8 +46,6 @@ import utilities
 from config import *
 
 
-
-
 plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
 
