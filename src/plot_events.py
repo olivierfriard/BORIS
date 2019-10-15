@@ -511,9 +511,11 @@ def create_events_plot(pj,
         plt.tight_layout()
 
         if len(selected_observations) > 1:
+            '''
             output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix(
                 "." + file_format))
-            plt.savefig(output_file_name)
+            '''
+            plt.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{file_format}")
         else:
             plt.show()
 
