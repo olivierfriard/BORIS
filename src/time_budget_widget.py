@@ -136,7 +136,6 @@ class timeBudgetResults(QWidget):
 
         rows = []
 
-        print(self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT ))
         # 1 observation
         if (self.lw.count() == 1
                 and self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT ) == COMPACT_TIME_BUDGET_FORMAT):

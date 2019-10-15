@@ -6448,9 +6448,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 tb_fields = ["Subject", "Behavior", "Modifiers", "Total number of occurences", "Total duration (s)",
                              "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
                              "inter-event intervals std dev", "% of total length"]
-
                 fields = ["subject", "behavior", "modifiers", "number", "duration", "duration_mean",
                           "duration_stdev", "inter_duration_mean", "inter_duration_stdev"]
+
                 self.tb.twTB.setColumnCount(len(tb_fields))
                 self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
@@ -6484,8 +6484,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
 
             if mode == "by_category":
+
                 tb_fields = ["Subject", "Category", "Total number", "Total duration (s)"]
                 fields = ["number", "duration"]
+
                 self.tb.twTB.setColumnCount(len(tb_fields))
                 self.tb.twTB.setHorizontalHeaderLabels(tb_fields)
 
@@ -6567,11 +6569,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     return
 
             if mode == "by_behavior":
+
+                tb_fields = ["Subject", "Behavior", "Modifiers", "Total number of occurences", "Total duration (s)",
+                             "Duration mean (s)", "Duration std dev", "inter-event intervals mean (s)",
+                             "inter-event intervals std dev", "% of total length"]
                 fields = ["subject", "behavior", "modifiers", "number",
                           "duration", "duration_mean", "duration_stdev",
                           "inter_duration_mean", "inter_duration_stdev"]
 
             if mode == "by_category":
+
+                tb_fields = ["Subject", "Category", "Total number of occurences", "Total duration (s)"]
                 fields = ["subject", "category", "number", "duration"]
 
             for obsId in selectedObservations:
@@ -6658,105 +6666,173 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if element["behavior"] in parameters[EXCLUDED_BEHAVIORS]:
                         excl_behaviors_total_time[element["subject"]] += element["duration"] if element["duration"] != "NA" else 0
 
-                rows = []
-                col1 = []
-                # observation id
-                col1.append(obsId)
-                col1.append(self.pj[OBSERVATIONS][obsId].get("date", ""))
-                col1.append(utilities.eol2space(self.pj[OBSERVATIONS][obsId].get(DESCRIPTION, "")))
-                #rows.append(["Observation id", obsId])
-                #rows.append([""])
-                header = ["Observation id", "Observation date", "Description"]
+                if self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT:
+                    rows = []
+                    col1 = []
+                    # observation id
+                    col1.append(obsId)
+                    col1.append(self.pj[OBSERVATIONS][obsId].get("date", ""))
+                    col1.append(utilities.eol2space(self.pj[OBSERVATIONS][obsId].get(DESCRIPTION, "")))
+                    header = ["Observation id", "Observation date", "Description"]
 
-                #labels = ["Independent variables"]
-                indep_var_label = []
-                indep_var_values = []
-                if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
-                    for idx in self.pj[INDEPENDENT_VARIABLES]:
-                        indep_var_label.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+                    indep_var_label = []
+                    indep_var_values = []
+                    if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
+                        for idx in self.pj[INDEPENDENT_VARIABLES]:
+                            indep_var_label.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
 
-                        if (INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
-                                and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.
-                                pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
-                            indep_var_values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][
-                                self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
+                            if (INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
+                                    and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.
+                                    pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
+                                indep_var_values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][
+                                    self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
 
-                header.extend(indep_var_label)
-                col1.extend(indep_var_values)
-                #rows.append(labels)
-                #rows.append(values)
-                #rows.append([""])
+                    header.extend(indep_var_label)
+                    col1.extend(indep_var_values)
 
-                # interval analysis
-                col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
-                #rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
-                #rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
-                #rows.append([""])
-                #rows.append(["Time budget"])
-                header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
+                    # interval analysis
+                    col1.extend([f"{min_time:0.3f}", f"{max_time:0.3f}", f"{max_time - min_time:0.3f}"])
+                    header.extend(["Time budget start", "Time budget stop", "Time budget duration"])
 
-                if mode == "by_behavior":
+                    if mode == "by_behavior":
 
-                    # header
-                    rows.append(header + fields + ["% of total length"])
+                        # header
+                        rows.append(header + tb_fields)
 
-                    for row in out:
-                        values = col1
-                        for field in fields:
-                            values.append(str(row[field]).replace(" ()", ""))
-                        # % of total time
-                        if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
-                            tot_time = float(max_time - min_time)
-                            # substract duration of excluded behaviors from total time for each subject
-                            if (row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[EXCLUDED_BEHAVIORS]):
-                                tot_time -= excl_behaviors_total_time[row["subject"]]
-                            values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
-                        else:
-                            values.append("-")
-
-                        rows.append(list(values))
-
-                if mode == "by_category":
-                    rows.append(fields)
-                    # data.headers = fields # + ["% of total media length"]
-                    for subject in categories:
-
-                        for category in categories[subject]:
+                        for row in out:
                             values = []
-                            values.append(subject)
-                            if category == "":
-                                values.append("No category")
+                            for field in fields:
+                                values.append(str(row[field]).replace(" ()", ""))
+                            # % of total time
+                            if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                                tot_time = float(max_time - min_time)
+                                # substract duration of excluded behaviors from total time for each subject
+                                if (row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[EXCLUDED_BEHAVIORS]):
+                                    tot_time -= excl_behaviors_total_time[row["subject"]]
+                                values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
                             else:
-                                values.append(category)
+                                values.append("-")
 
-                            values.append(categories[subject][category]["number"])
-                            try:
-                                values.append(f"{categories[subject][category]['duration']:0.3f}")
-                            except Exception:
-                                values.append(categories[subject][category]["duration"])
+                            rows.append(col1 + values)
+
+                    if mode == "by_category":
+                        rows.append(header + tb_fields)
+
+                        for subject in categories:
+
+                            for category in categories[subject]:
+                                values = []
+                                values.append(subject)
+                                if category == "":
+                                    values.append("No category")
+                                else:
+                                    values.append(category)
+
+                                values.append(categories[subject][category]["number"])
+                                try:
+                                    values.append(f"{categories[subject][category]['duration']:0.3f}")
+                                except Exception:
+                                    values.append(categories[subject][category]["duration"])
+
+                                rows.append(col1 + values)
+
+
+                if self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == LONG_TIME_BUDGET_FORMAT:
+
+                    rows = []
+                    # observation id
+                    rows.append(["Observation id", obsId])
+                    rows.append([""])
+
+                    labels = ["Independent variables"]
+                    values = [""]
+                    if INDEPENDENT_VARIABLES in self.pj and self.pj[INDEPENDENT_VARIABLES]:
+                        for idx in self.pj[INDEPENDENT_VARIABLES]:
+                            labels.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+
+                            if (INDEPENDENT_VARIABLES in self.pj[OBSERVATIONS][obsId]
+                                    and self.pj[INDEPENDENT_VARIABLES][idx]["label"] in self.
+                                    pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES]):
+                                values.append(self.pj[OBSERVATIONS][obsId][INDEPENDENT_VARIABLES][
+                                    self.pj[INDEPENDENT_VARIABLES][idx]["label"]])
+
+                    rows.append(labels)
+                    rows.append(values)
+                    rows.append([""])
+
+                    rows.append(["Analysis from", f"{min_time:0.3f}", "to", f"{max_time:0.3f}"])
+                    rows.append(["Total length (s)", f"{max_time - min_time:0.3f}"])
+                    rows.append([""])
+                    rows.append(["Time budget"])
+
+                    if mode == "by_behavior":
+
+                        rows.append(tb_fields)
+
+                        for row in out:
+                            values = []
+                            for field in fields:
+                                values.append(str(row[field]).replace(" ()", ""))
+                            # % of total time
+                            if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                                tot_time = float(max_time - min_time)
+                                # substract duration of excluded behaviors from total time for each subject
+                                if (row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[EXCLUDED_BEHAVIORS]):
+                                    tot_time -= excl_behaviors_total_time[row["subject"]]
+                                values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
+                            else:
+                                values.append("-")
 
                             rows.append(values)
+
+                    if mode == "by_category":
+                        rows.append(tb_fields)
+
+                        for subject in categories:
+
+                            for category in categories[subject]:
+                                values = []
+                                values.append(subject)
+                                if category == "":
+                                    values.append("No category")
+                                else:
+                                    values.append(category)
+
+                                values.append(categories[subject][category]["number"])
+                                try:
+                                    values.append(f"{categories[subject][category]['duration']:0.3f}")
+                                except Exception:
+                                    values.append(categories[subject][category]["duration"])
+
+                                rows.append(values)
 
                 data = tablib.Dataset()
                 data.title = obsId
                 for row in rows:
                     data.append(complete(row, max([len(r) for r in rows])))
 
+                # check woksheet/workbook title
+                data.title = utilities.safe_xl_worksheet_title(data.title, extension)
+
+                '''
                 if "xls" in outputFormat:
                     for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
                         data.title = data.title.replace(forbidden_char, " ")
+                '''
 
                 if flagWorkBook:
+                    '''
                     for forbidden_char in EXCEL_FORBIDDEN_CHARACTERS:
                         data.title = data.title.replace(forbidden_char, " ")
                     if "xls" in outputFormat:
                         if len(data.title) > 31:
                             data.title = data.title[:31]
+                    '''
                     workbook.add_sheet(data)
 
                 else:
 
-                    fileName = exportDir + os.sep + safeFileName(obsId) + "." + extension
+                    fileName = f"{pathlib.Path(exportDir) / pathlib.Path(safeFileName(obsId))}.{extension}"
 
                     if outputFormat in ["tsv", "csv", "html"]:
                         with open(fileName, "wb") as f:
@@ -6771,6 +6847,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             f.write(data.xlsx)
 
                     if outputFormat == "xls legacy":
+                        '''
                         if len(data.title) > 31:
                             data.title = data.title[:31]
                             QMessageBox.warning(
@@ -6780,6 +6857,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                  "The limit on worksheet name length is 31 characters"),
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton
                             )
+                        '''
 
                         with open(fileName, "wb") as f:
                             f.write(data.xls)

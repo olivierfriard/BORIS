@@ -570,8 +570,6 @@ def extract_frames_mem(ffmpeg_bin: str,
                       ]
     pipe = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
 
-    # print("stderr", self.pipe.stderr)
-
     frames = []
     for f in range(start_frame, start_frame + int(fps * number_of_seconds)):
         raw_image = pipe.stdout.read(new_h_resolution * new_v_resolution * 3)
