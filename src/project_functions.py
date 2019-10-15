@@ -99,7 +99,7 @@ def check_if_media_available(observation: dict, project_file_name: str) -> bool:
                 return False, "error"
             for media_file in observation[FILE][nplayer]:
                 if not media_full_path(media_file, project_file_name):
-                    return False, "Media file <b>{}</b> not found".format(media_file)
+                    return False, f"Media file <b>{media_file}</b> not found"
     return True, ""
 
 
@@ -202,14 +202,14 @@ def check_project_integrity(pj: dict,
         # check if coded behaviors are defined in ethogram
         r = check_coded_behaviors(pj)
         if r:
-            out += "The following behaviors are not defined in the ethogram: <b>{}</b><br>".format(", ".join(r))
+            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(r)}</b><br>"
 
         # check for unpaired state events
         for obs_id in pj[OBSERVATIONS]:
             ok, msg = check_state_events_obs(obs_id, pj[ETHOGRAM], pj[OBSERVATIONS][obs_id], time_format)
             if not ok:
                 out += "<br><br>" if out else ""
-                out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+                out += f"Observation: <b>{obs_id}</b><br>{msg}"
 
         # check if behavior belong to category that is not in categories list
         for idx in pj[ETHOGRAM]:
@@ -218,9 +218,10 @@ def check_project_integrity(pj: dict,
                     if pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY] not in pj[BEHAVIORAL_CATEGORIES]:
                         out += "<br><br>" if out else ""
                         out += (
-                            "The behavior <b>{}</b> belongs to the behavioral category <b>{}</b> "
+                            f"The behavior <b>{pj[ETHOGRAM][idx][BEHAVIOR_CODE]}</b> belongs "
+                            f"to the behavioral category <b>{pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY]}</b> "
                             "that is no more in behavioral categories list."
-                        ).format(pj[ETHOGRAM][idx][BEHAVIOR_CODE], pj[ETHOGRAM][idx][BEHAVIOR_CATEGORY])
+                        )
 
         # check for leading/trailing spaces/special chars in modifiers defined in ethogram
         for idx in pj[ETHOGRAM]:
@@ -239,7 +240,7 @@ def check_project_integrity(pj: dict,
                 ok, msg = check_if_media_available(pj[OBSERVATIONS][obs_id], project_file_name)
                 if not ok:
                     out += "<br><br>" if out else ""
-                    out += "Observation: <b>{}</b><br>{}".format(obs_id, msg)
+                    out += f"Observation: <b>{obs_id}</b><br>{msg}"
 
         # check if media length available
         for obs_id in pj[OBSERVATIONS]:
@@ -349,7 +350,10 @@ def create_subtitles(pj: dict,
                         modifiers=modifiers_str,
                     )
 
-                file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with_suffix(".srt"))
+                '''
+                file_name = str(pathlib.Path(pathlib.Path(export_dir) / utilities.safeFileName(obsId)).with suffix(".srt"))
+                '''
+                file_name = f"{pathlib.Path(export_dir) / utilities.safeFileName(obsId)}.srt"
                 try:
                     with open(file_name, "w") as f:
                         f.write(out)
@@ -410,13 +414,16 @@ def create_subtitles(pj: dict,
                                 modifiers=modifiers_str,
                             )
 
-                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with_suffix(".srt"))
+                        '''
+                        file_name = str(pathlib.Path(pathlib.Path(export_dir) / pathlib.Path(mediaFile).name).with suffix(".srt"))
+                        '''
+                        file_name = f"{pathlib.Path(export_dir) / pathlib.Path(mediaFile).name}.srt"
                         try:
                             with open(file_name, "w") as f:
                                 f.write(out)
                         except Exception:
                             flag_ok = False
-                            msg += "observation: {}\ngave the following error:\n{}\n".format(obsId, str(sys.exc_info()[1]))
+                            msg += f"observation: {obsId}\ngave the following error:\n{sys.exc_info()[1]}\n"
 
                         init = end
 
@@ -751,7 +758,7 @@ def open_project_json(projectFileName: str) -> tuple:
         str: message
     """
 
-    logging.debug("open project: {0}".format(projectFileName))
+    logging.debug(f"open project: {projectFileName}")
 
     projectChanged = False
     msg = ""
@@ -796,8 +803,8 @@ def open_project_json(projectFileName: str) -> tuple:
             {
                 "error": (
                     "This project file was created with a more recent version of BORIS.<br>"
-                    "You must update BORIS to <b>v. >= {}</b> to open this project"
-                ).format(pj["project_format_version"])
+                    f"You must update BORIS to <b>v. >= {pj['project_format_version']}</b> to open this project"
+                )
             },
             msg,
         )
@@ -832,10 +839,9 @@ def open_project_json(projectFileName: str) -> tuple:
             key, name = pj[SUBJECTS][idx]
             pj[SUBJECTS][idx] = {"key": key, "name": name, "description": ""}
 
-        msg = (
-            "The project file was converted to the new format (v. {}) in use with your version of BORIS.<br>"
-            "Choose a new file name for saving it."
-        ).format(project_format_version)
+        msg = (f"The project file was converted to the new format (v. {project_format_version}) in use with your version of BORIS.<br>"
+               "Choose a new file name for saving it."
+              )
         projectFileName = ""
 
     # update modifiers to JSON format

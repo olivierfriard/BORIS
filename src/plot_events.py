@@ -313,10 +313,13 @@ def behaviors_bar_plot(pj, selected_observations, selected_subjects, selected_be
 
 
         if plot_directory:
+            '''
             output_file_name = str(
                 pathlib.Path(
                     pathlib.Path(plot_directory) /
-                    utilities.safeFileName(obs_id)).with_suffix("." + file_format))
+                    utilities.safeFileName(obs_id)).with suffix("." + file_format))
+            '''
+            output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{file_format}"
 
             plt.savefig(output_file_name)
         else:
@@ -512,13 +515,12 @@ def create_events_plot(pj,
 
         if len(selected_observations) > 1:
             '''
-            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix(
+            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with suffix(
                 "." + file_format))
             '''
             plt.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{file_format}")
         else:
             plt.show()
-
 
 
 
@@ -719,7 +721,7 @@ def create_events_plot_new(pj,
         plt.tight_layout()
 
         if len(selected_observations) > 1:
-            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with_suffix(
+            output_file_name = str(pathlib.Path(pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)).with suffix(
                 "." + file_format))
             plt.savefig(output_file_name)
         else:

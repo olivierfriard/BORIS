@@ -253,11 +253,17 @@ def behavior_binary_table(pj: dict):
         for subject in results_df[obs_id]:
 
             if len(selected_observations) > 1:
+                '''
                 file_name_with_subject = str(pathlib.Path(pathlib.Path(export_dir)
-                                             / utilities.safeFileName(obs_id + "_" + subject)).with_suffix("." + output_format))
+                                             / utilities.safeFileName(obs_id + "_" + subject)).with suffix("." + output_format))
+                '''
+                file_name_with_subject = str(pathlib.Path(export_dir) / utilities.safeFileName(obs_id + "_" + subject)) + "." + output_format
             else:
+                '''
                 file_name_with_subject = str(pathlib.Path(os.path.splitext(file_name)[0]
-                                             + utilities.safeFileName("_" + subject)).with_suffix("." + output_format))
+                                             + utilities.safeFileName("_" + subject)).with suffix("." + output_format))
+                '''
+                file_name_with_subject = str(os.path.splitext(file_name)[0] + utilities.safeFileName("_" + subject)) + "." + output_format
 
             # check if file with new extension already exists
             if mem_command != OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():

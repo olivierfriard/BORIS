@@ -120,8 +120,7 @@ def export_events_jwatcher(parameters: list,
                     if mem_number_of_state_events[behav_code] % 2 == 0:
                         continue
 
-                rows.append("{time_ms}, {bevavior_key}".format(time_ms=int(event[EVENT_TIME_FIELD_IDX] * 1000),
-                                                               bevavior_key=behavior_key))
+                rows.append(f"{int(event[EVENT_TIME_FIELD_IDX] * 1000)}, {behavior_key}")
                 if (event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key) not in all_observed_behaviors:
                     all_observed_behaviors.append((event[EVENT_BEHAVIOR_FIELD_IDX], behavior_key))
 
@@ -148,16 +147,16 @@ def export_events_jwatcher(parameters: list,
 
             rows = []
             rows.append("#-----------------------------------------------------------")
-            rows.append("# Name: {}".format(pathlib.Path(file_name_subject).with_suffix(".fmf").name))
+            rows.append(f"# Name: {pathlib.Path(file_name_subject).with_suffix('.fmf').name}")
             rows.append("# Format: Focal Master File 1.0")
-            rows.append("# Updated: {}".format(datetime.datetime.now().isoformat()))
+            rows.append(f"# Updated: {datetime.datetime.now().isoformat()}")
             rows.append("#-----------------------------------------------------------")
             for (behav, key) in all_observed_behaviors:
-                rows.append("Behaviour.name.{}={}".format(key, behav))
+                rows.append(f"Behaviour.name.{key}={behav}")
                 behav_description = [ethogram[k][DESCRIPTION] for k in ethogram if ethogram[k][BEHAVIOR_CODE] == behav][0]
-                rows.append("Behaviour.description.{}={}".format(key, behav_description))
+                rows.append(f"Behaviour.description.{key}={behav_description}")
 
-            rows.append("DurationMilliseconds={}".format(int(float(total_length) * 1000)))
+            rows.append(f"DurationMilliseconds={int(float(total_length) * 1000)}")
             rows.append("CountUp=false")
             rows.append("Question.1=")
             rows.append("Question.2=")
@@ -173,15 +172,15 @@ def export_events_jwatcher(parameters: list,
                     with open(fmf_file_path, "w") as f_out:
                         f_out.write("\n".join(rows))
                 except Exception:
-                    return False, "File FMF not created: {}".format(sys.exc_info()[1])
+                    return False, f"File FMF not created: {sys.exc_info()[1]}"
 
             # create FAF file
             faf_file_path = pathlib.Path(file_name_subject).with_suffix(".faf")
             faf_creation_answer = ""
             if faf_file_path.exists():
                 faf_creation_answer = dialog.MessageDialog(programName,
-                                                           ("The {} file already exists.<br>"
-                                                            "What do you want to do?").format(faf_file_path),
+                                                           (f"The {faf_file_path} file already exists.<br>"
+                                                            "What do you want to do?"),
                                                            [OVERWRITE, "Skip file creation", CANCEL])
                 if faf_creation_answer == CANCEL:
                     return True, ""
@@ -258,11 +257,11 @@ def export_events_jwatcher(parameters: list,
             rows.append("")
 
             for (behav, key) in all_observed_behaviors:
-                rows.append("Behavior.isModified.{}=false".format(key))
-                rows.append("Behavior.isSubtracted.{}=false".format(key))
-                rows.append("Behavior.isIgnored.{}=false".format(key))
-                rows.append("Behavior.isEventAnalyzed.{}=false".format(key))
-                rows.append("Behavior.switchesOff.{}=".format(key))
+                rows.append(f"Behavior.isModified.{key}=false")
+                rows.append(f"Behavior.isSubtracted.{key}=false")
+                rows.append(f"Behavior.isIgnored.{key}=false")
+                rows.append(f"Behavior.isEventAnalyzed.{key}=false")
+                rows.append(f"Behavior.switchesOff.{key}=")
                 rows.append("")
 
             if faf_creation_answer == "" or faf_creation_answer == OVERWRITE:
@@ -270,7 +269,7 @@ def export_events_jwatcher(parameters: list,
                     with open(pathlib.Path(file_name_subject).with_suffix(".faf"), "w") as f_out:
                         f_out.write("\n".join(rows))
                 except Exception:
-                    return False, "File FAF not created: {}".format(sys.exc_info()[1])
+                    return False, f"File FAF not created: {sys.exc_info()[1]}"
 
         return True, ""
 
@@ -297,7 +296,7 @@ def export_events(parameters, obsId, observation, ethogram, file_name, output_fo
         str: error message
     """
 
-    total_length = "{0:.3f}".format(project_functions.observation_total_length(observation))
+    total_length = f"{project_functions.observation_total_length(observation):.3f}"
 
     eventsWithStatus = project_functions.events_start_stop(ethogram, observation[EVENTS])
 
@@ -749,9 +748,9 @@ def events_to_behavioral_sequences(pj,
 
             if event[-1] == START:
                 if parameters[INCLUDE_MODIFIERS]:
-                    current_states.append("{}{}{}".format(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                          "&" if event[EVENT_MODIFIER_FIELD_IDX] else "",
-                                                          event[EVENT_MODIFIER_FIELD_IDX].replace("|", ";")))
+                    current_states.append((f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
+                                           f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                           f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}"))
                 else:
                     current_states.append(event[EVENT_BEHAVIOR_FIELD_IDX])
 
@@ -762,9 +761,9 @@ def events_to_behavioral_sequences(pj,
             if event[-1] == STOP:
 
                 if parameters[INCLUDE_MODIFIERS]:
-                    behav_modif = "{}{}{}".format(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                  "&" if event[EVENT_MODIFIER_FIELD_IDX] else "",
-                                                  event[EVENT_MODIFIER_FIELD_IDX].replace("|", ";"))
+                    behav_modif = (f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
+                                   f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                   f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}")
                 else:
                     behav_modif = event[EVENT_BEHAVIOR_FIELD_IDX]
                 if behav_modif in current_states:
@@ -871,13 +870,12 @@ def observation_to_behavioral_sequences(pj,
                     out_file.write("# Independent variables\n")
 
                     for variable in pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES]:
-                        out_file.write("# {0}: {1}\n".format(variable,
-                                                             pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][variable]))
+                        out_file.write(f"# {variable}: {pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][variable]}\n")
                 out_file.write("\n")
 
                 # selected subjects
                 for subject in parameters[SELECTED_SUBJECTS]:
-                    out_file.write("\n# {}:\n".format(subject if subject else NO_FOCAL_SUBJECT))
+                    out_file.write(f"\n# {subject if subject else NO_FOCAL_SUBJECT}:\n")
 
                     if not timed:
                         out = events_to_behavioral_sequences(pj,

@@ -6582,6 +6582,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 tb_fields = ["Subject", "Category", "Total number of occurences", "Total duration (s)"]
                 fields = ["subject", "category", "number", "duration"]
 
+            mem_command = ""
             for obsId in selectedObservations:
 
                 cursor = db_functions.load_events_in_db(self.pj,
@@ -6811,7 +6812,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for row in rows:
                     data.append(complete(row, max([len(r) for r in rows])))
 
-                # check woksheet/workbook title
+                # check worksheet/workbook title for forbidden char (excel)
                 data.title = utilities.safe_xl_worksheet_title(data.title, extension)
 
                 '''
@@ -6833,6 +6834,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:
 
                     fileName = f"{pathlib.Path(exportDir) / pathlib.Path(safeFileName(obsId))}.{extension}"
+                    if mem_command != OVERWRITE_ALL and pathlib.Path(fileName).is_file():
+                        if mem_command == "Skip all":
+                            continue
+                        mem_command = dialog.MessageDialog(programName,
+                                                        f"The file {fileName} already exists.",
+                                                        [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
+                        if mem_command == CANCEL:
+                            return
+                        if mem_command in ["Skip", "Skip all"]:
+                            continue
 
                     if outputFormat in ["tsv", "csv", "html"]:
                         with open(fileName, "wb") as f:
@@ -7889,7 +7900,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             data.extend(d)
 
             if not flag_group and outputFormat not in ["sds", "tbs"]:
-                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                '''
+                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
+                '''
+                fileName = f"{pathlib.Path(exportDir) / safeFileName(obsId)}.{outputFormat}"
                 # check if file with new extension already exists
                 if mem_command != OVERWRITE_ALL and pathlib.Path(fileName).is_file():
                     if mem_command == "Skip all":
@@ -7899,7 +7913,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                        [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
-                    if mem_command == "Skip":
+                    if mem_command in ["Skip" "Skip all"] :
                         continue
 
                 data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
@@ -7941,7 +7955,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 out += "\n"
 
                 if not flag_group:
-                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                    '''
+                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
+                    '''
+                    fileName = f"{pathlib.Path(exportDir) / safeFileName(obsId)}.{outputFormat}"
                     with open(fileName, "wb") as f:
                         f.write(str.encode(out))
                     out = ""
@@ -7977,7 +7994,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 out += "/\n\n"
                 if not flag_group:
-                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                    '''
+                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
+                    '''
+                    fileName = f"{pathlib.Path(exportDir) / safeFileName(obsId)}.{outputFormat}"
                     with open(fileName, "wb") as f:
                         f.write(str.encode(out))
                     out = ("% SDIS file created by BORIS (www.boris.unito.it) "
@@ -8144,7 +8164,10 @@ item []:
                 )
 
             try:
-                with open(str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix(".textGrid")), "w") as f:
+                '''
+                with open(str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix(".textGrid")), "w") as f:
+                '''
+                with open(f"{pathlib.Path(exportDir) / safeFileName(obsId)}.textGrid", "w") as f:
                     f.write(out)
 
                 if flagUnpairedEventFound:
@@ -10884,8 +10907,6 @@ item []:
         if not parameters["selected subjects"] or not parameters["selected behaviors"]:
             return
 
-        filediag_func = QFileDialog().getSaveFileName
-
         if mode == "tabular":
             if len(selectedObservations) > 1:  # choose directory for exporting observations
 
@@ -10914,7 +10935,7 @@ item []:
                                          "HTML (*.html)"]
                 file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
 
-                fileName, filter_ = filediag_func(self, "Export events", "", ";;".join(extended_file_formats))
+                fileName, filter_ = QFileDialog().getSaveFileName(self, "Export events", "", ";;".join(extended_file_formats))
                 if not fileName:
                     return
 
@@ -10941,7 +10962,10 @@ item []:
         for obsId in selectedObservations:
             if (len(selectedObservations) > 1 or mode == "jwatcher"):
 
-                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with_suffix("." + outputFormat))
+                '''
+                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
+                '''
+                fileName = f"{pathlib.Path(exportDir) / safeFileName(obsId)}.{outputFormat}"
                 # check if file with new extension already exists
                 if mem_command != "Overwrite all" and pathlib.Path(fileName).is_file():
                     if mem_command == "Skip all":
@@ -10951,7 +10975,7 @@ item []:
                                                        [OVERWRITE, "Overwrite all", "Skip", "Skip all", CANCEL])
                     if mem_command == CANCEL:
                         return
-                    if mem_command == "Skip":
+                    if mem_command in ["Skip", "Skip all"]:
                         continue
 
             if mode == "tabular":
