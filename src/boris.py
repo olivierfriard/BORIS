@@ -323,7 +323,6 @@ class Video_frame(QFrame):
     video_frame_signal = pyqtSignal(str, int)
     x_click, y_click = 0, 0
 
-
     def sizeHint(self):
         return QtCore.QSize(150, 200)
 
@@ -6411,7 +6410,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # widget for results visualization
             self.tb = timeBudgetResults(self.pj, self.config_param)
-            
+
             # add min and max time
             self.tb.min_time = min_time
             self.tb.max_time = max_time
