@@ -175,8 +175,6 @@ class timeBudgetResults(QWidget):
             for idx in range(self.lw.count()):
                 rows.append([""])
                 rows.append(["Observation id", self.lw.item(idx).text()])
-                # print(self.lw.item(idx).text())
-                # print(self.pj[OBSERVATIONS]["0001_a"])
                 rows.append(["Observation date", self.pj[OBSERVATIONS][self.lw.item(idx).text()].get("date", "")])
                 rows.append(["Description", utilities.eol2space(self.pj[OBSERVATIONS][self.lw.item(idx).text()].get(DESCRIPTION, ""))])
 

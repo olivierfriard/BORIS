@@ -1415,9 +1415,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     modifiers = ""
                     for idx in sorted_keys(behav[MODIFIERS]):
                         if behav[MODIFIERS][idx]["name"]:
-                            modifiers += "<br>Name: {}<br>Type: {}<br>".format(behav[MODIFIERS][idx]["name"]
-                                                                               if behav[MODIFIERS][idx]["name"] else "-",
-                                                                               MODIFIERS_STR[behav[MODIFIERS][idx]["type"]])
+                            modifiers += (f"<br>Name: {behav[MODIFIERS][idx]['name'] if behav[MODIFIERS][idx]['name'] else '-'}"
+                                          f"<br>Type: {MODIFIERS_STR[behav[MODIFIERS][idx]['type']]}<br>")
 
                         if behav[MODIFIERS][idx]["values"]:
                             modifiers += "Values:<br>"
@@ -5445,12 +5444,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.config_param = INIT_PARAM
 
                 # for back compatibility
-                # display subtitles
+                # display subtitles 
                 try:
                     self.config_param[DISPLAY_SUBTITLES] = (settings.value(DISPLAY_SUBTITLES) == 'true')
                 except Exception:
                     self.config_param[DISPLAY_SUBTITLES] = False
-
+    
                 logging.debug(f"{DISPLAY_SUBTITLES}: {self.config_param[DISPLAY_SUBTITLES]}")
 
                 # frame-by-frame
@@ -5461,14 +5460,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.config_param[SAVE_FRAMES] = DISK
                 except Exception:
                     self.config_param[SAVE_FRAMES] = DISK
-
+    
                 logging.debug(f"save frame on {self.config_param[SAVE_FRAMES]}")
-
+    
                 try:
                     self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
                 except Exception:
                     self.config_param[MEMORY_FOR_FRAMES] = DEFAULT_MEMORY_FOR_FRAMES
-
+    
                 logging.debug(f"memory for frames: {self.config_param[MEMORY_FOR_FRAMES]}")
                 '''
 
@@ -6412,6 +6411,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # widget for results visualization
             self.tb = timeBudgetResults(self.pj, self.config_param)
+            
             # add min and max time
             self.tb.min_time = min_time
             self.tb.max_time = max_time
@@ -6470,15 +6470,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         column += 1
 
                     # % of total time
-                    if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                    if row["duration"] in [0, NA]:
+                        item = QTableWidgetItem(str(row["duration"]))
+                    elif row["duration"] not in ["-", UNPAIRED] and selectedObsTotalMediaLength:
                         tot_time = float(total_observation_time)
                         # substract time of excluded behaviors from the total for the subject
                         if (row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[EXCLUDED_BEHAVIORS]):
                             tot_time -= excl_behaviors_total_time[row["subject"]]
-
                         item = QTableWidgetItem(str(round(row["duration"] / tot_time * 100, 1)) if tot_time > 0 else "-")
                     else:
-                        item = QTableWidgetItem("NA")
+                        item = QTableWidgetItem("-")
 
                     item.setFlags(Qt.ItemIsEnabled)
                     self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
@@ -6667,6 +6668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if element["behavior"] in parameters[EXCLUDED_BEHAVIORS]:
                         excl_behaviors_total_time[element["subject"]] += element["duration"] if element["duration"] != "NA" else 0
 
+                # compact format
                 if self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT:
                     rows = []
                     col1 = []
@@ -6705,11 +6707,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             for field in fields:
                                 values.append(str(row[field]).replace(" ()", ""))
                             # % of total time
-                            if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                            if row["duration"] in [0, NA]:
+                                values.append(row["duration"])
+                            elif row["duration"] not in ["-", UNPAIRED] and selectedObsTotalMediaLength:
                                 tot_time = float(max_time - min_time)
                                 # substract duration of excluded behaviors from total time for each subject
                                 if (row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[EXCLUDED_BEHAVIORS]):
                                     tot_time -= excl_behaviors_total_time[row["subject"]]
+                                # % of tot time
                                 values.append(round(row["duration"] / tot_time * 100, 1) if tot_time > 0 else "-")
                             else:
                                 values.append("-")
@@ -6737,7 +6742,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                 rows.append(col1 + values)
 
-
+                # long format
                 if self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == LONG_TIME_BUDGET_FORMAT:
 
                     rows = []
@@ -6775,7 +6780,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             for field in fields:
                                 values.append(str(row[field]).replace(" ()", ""))
                             # % of total time
-                            if row["duration"] not in ["NA", "-", UNPAIRED, 0] and selectedObsTotalMediaLength:
+                            if row["duration"] in [0, NA]:
+                                values.append(row["duration"])
+                            elif row["duration"] not in ["-", UNPAIRED] and selectedObsTotalMediaLength:
                                 tot_time = float(max_time - min_time)
                                 # substract duration of excluded behaviors from total time for each subject
                                 if (row["subject"] in excl_behaviors_total_time and row["behavior"] not in parameters[EXCLUDED_BEHAVIORS]):
