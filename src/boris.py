@@ -929,8 +929,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
-        # self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
-        self.actionBehavior_bar_plot.setVisible(False)
+        self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
+        self.actionBehavior_bar_plot.setVisible(True)
 
         self.actionPlot_events1.setVisible(False)
         self.actionPlot_events2.triggered.connect(lambda: self.plot_events_triggered(mode="list"))
@@ -7056,11 +7056,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             max_obs_length = max(max_obs_length, totalMediaLength)
 
         if len(selected_observations) == 1:
-            parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=totalMediaLength)
+            parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                             maxTime=totalMediaLength,
+                                                             flagShowIncludeModifiers=False)
         else:
-            parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=0)
+            parameters = self.choose_obs_subj_behav_category(selected_observations,
+                                                             maxTime=0,
+                                                             flagShowIncludeModifiers=False
+                                                             )
 
-        if not parameters["selected subjects"] or not parameters["selected behaviors"]:
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             QMessageBox.warning(self, programName, "Select subject(s) and behavior(s) to plot")
             return
 
@@ -7082,12 +7087,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         plot_events.behaviors_bar_plot(self.pj,
                                        selected_observations,
-                                       parameters[SELECTED_SUBJECTS],
-                                       parameters[SELECTED_BEHAVIORS],
-                                       parameters[INCLUDE_MODIFIERS],
-                                       parameters["time"],
-                                       parameters[START_TIME],
-                                       parameters[END_TIME],
+                                       parameters,
                                        plot_directory,
                                        output_format
                                        )
