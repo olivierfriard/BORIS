@@ -24,10 +24,11 @@ This file is part of BORIS.
 
 import datetime as dt
 import json
+import logging
 import pathlib
+import sys
 
 import matplotlib
-matplotlib.use("Qt5Agg")
 import matplotlib.dates
 import matplotlib.font_manager as font_manager
 import matplotlib.pyplot as plt
@@ -42,6 +43,9 @@ import db_functions
 import project_functions
 import utilities
 from config import *
+
+matplotlib.use("Qt5Agg")
+
 
 plt_colors = dict(mcolors.BASE_COLORS, **mcolors.CSS4_COLORS)
 
@@ -94,13 +98,16 @@ def behaviors_bar_plot(pj: dict,
         pj (dict): project
         param (dict): parameters
         plot_directory (str): path of directory
-        output_format (str): image format 
+        output_format (str): image format
+
+    Returns:
+        dict:
     """
 
     selected_subjects = param[SELECTED_SUBJECTS]
     selected_behaviors = param[SELECTED_BEHAVIORS]
     include_modifiers = param[INCLUDE_MODIFIERS]
-    interval = param["time"]
+    time_interval = param["time"]
     start_time = param[START_TIME]
     end_time = param[END_TIME]
 
@@ -113,198 +120,206 @@ def behaviors_bar_plot(pj: dict,
                                                                       selected_behaviors)
 
     if not ok:
-        return False, msg, None
-
-    cursor = db_connector.cursor()
-    if include_modifiers:
-        cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
-        distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
-    else:
-        cursor.execute("SELECT distinct behavior FROM aggregated_events")
-        distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
-
-    # add selected behaviors that are not observed
-    for behav in selected_behaviors:
-        if [x for x in distinct_behav_modif if x[0] == behav] == []:
-            distinct_behav_modif.append([behav, "-"])
-
-    behaviors = init_behav_modif(pj[ETHOGRAM],
-                                 param[SELECTED_SUBJECTS],
-                                 distinct_behav_modif,
-                                 param[INCLUDE_MODIFIERS],
-                                 parameters)
-
-    # select time interval
-    for obs_id in selected_observations:
-
-        if len(selected_subjects) > 1:
-            fig, axs = plt.subplots(nrows=1, ncols=len(selected_subjects), sharey=True)
+        return {"error": True, "message": msg}
+    try:
+        cursor = db_connector.cursor()
+        if include_modifiers:
+            cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
+            distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
         else:
-            fig, ax = plt.subplots(nrows=1, ncols=len(selected_subjects), sharey=True)
-            axs = np.ndarray(shape=(1), dtype=type(ax))
-            axs[0] = ax
+            cursor.execute("SELECT distinct behavior FROM aggregated_events")
+            distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
 
-        # if modifiers not to be included set modifiers to ""
-        if not include_modifiers:
-            cursor.execute("UPDATE aggregated_events SET modifiers = ''")
+        # add selected behaviors that are not observed
+        if not param[EXCLUDE_BEHAVIORS]:
+            for behav in selected_behaviors:
+                if [x for x in distinct_behav_modif if x[0] == behav] == []:
+                    distinct_behav_modif.append([behav, "-"])
 
-        # time
-        obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
-        if obs_length == -1:
-            obs_length = 0
+        behaviors = init_behav_modif(pj[ETHOGRAM],
+                                    param[SELECTED_SUBJECTS],
+                                    distinct_behav_modif,
+                                    param[INCLUDE_MODIFIERS],
+                                    parameters)
 
-        if param["time"] == TIME_FULL_OBS:
-            min_time = float(0)
-            max_time = float(obs_length)
+        # select time interval
+        for obs_id in selected_observations:
 
-        if param["time"] == TIME_EVENTS:
-            try:
-                min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
-            except Exception:
+            if len(selected_subjects) > 1:
+                fig, axs = plt.subplots(nrows=1, ncols=len(selected_subjects), sharey=True)
+            else:
+                fig, ax = plt.subplots(nrows=1, ncols=len(selected_subjects), sharey=True)
+                axs = np.ndarray(shape=(1), dtype=type(ax))
+                axs[0] = ax
+
+            # if modifiers not to be included set modifiers to ""
+            if not include_modifiers:
+                cursor.execute("UPDATE aggregated_events SET modifiers = ''")
+
+            # time
+            obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+            if obs_length == -1:
+                obs_length = 0
+
+            if param["time"] == TIME_FULL_OBS:
                 min_time = float(0)
-            try:
-                max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
-            except Exception:
                 max_time = float(obs_length)
 
-        if param["time"] == TIME_ARBITRARY_INTERVAL:
-            min_time = float(start_time)
-            max_time = float(end_time)
+            if param["time"] == TIME_EVENTS:
+                try:
+                    min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                except Exception:
+                    min_time = float(0)
+                try:
+                    max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                except Exception:
+                    max_time = float(obs_length)
 
-        cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-                       (min_time, obs_id, min_time, min_time, max_time, ))
-        cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-                       (max_time, obs_id, max_time, min_time, max_time, ))
-        cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-                       (min_time, max_time, obs_id, min_time, max_time, ))
+            if param["time"] == TIME_ARBITRARY_INTERVAL:
+                min_time = float(start_time)
+                max_time = float(end_time)
 
-        for subject in selected_subjects:
-            for behavior_modifiers in distinct_behav_modif:
-                behavior, modifiers = behavior_modifiers
+            cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
+                        (min_time, obs_id, min_time, min_time, max_time, ))
+            cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
+                        (max_time, obs_id, max_time, min_time, max_time, ))
+            cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
+                        (min_time, max_time, obs_id, min_time, max_time, ))
 
-                # skip if behavior defined as POINT
-                if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
-                    continue
+            for subject in selected_subjects:
+                for behavior_modifiers in distinct_behav_modif:
+                    behavior, modifiers = behavior_modifiers
 
-                behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                    # skip if behavior defined as POINT
+                    if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                        continue
 
-                # total duration
-                cursor.execute(("SELECT SUM(stop-start) FROM aggregated_events "
-                                "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
-                               (obs_id, subject, behavior, modifiers,))
-                for row in cursor.fetchall():
-                    behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row[0] is None else row[0]
+                    behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
 
-        max_length = 0
-        behaviors_duration = {}
-        mb = {}
+                    # total duration
+                    cursor.execute(("SELECT SUM(stop - start) AS duration FROM aggregated_events "
+                                    "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
+                                   (obs_id, subject, behavior, modifiers,))
+                    for row in cursor.fetchall():
+                        behaviors[subject][behavior_modifiers_str]["duration"] = 0 if row["duration"] is None else row["duration"]
 
-        for ax_idx, subj in enumerate(selected_subjects):
-            behaviors_duration[subj] = {}
+            max_length = 0
+            behaviors_duration = {}
+            mb = {}
 
-            behavior_ticks = []
+            for ax_idx, subj in enumerate(selected_subjects):
+                behaviors_duration[subj] = {}
 
-            for behavior_modifiers in sorted(distinct_behav_modif):
+                behavior_ticks = []
 
-                behavior, modifiers = behavior_modifiers
+                for behavior_modifiers in sorted(distinct_behav_modif):
 
-                # skip if behavior defined as POINT
-                if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
-                    continue
+                    behavior, modifiers = behavior_modifiers
 
-                if behavior not in behaviors_duration[subj]:
-                    behaviors_duration[subj][behavior] = [[], []]
+                    # skip if behavior defined as POINT
+                    if POINT in project_functions.event_type(behavior, pj[ETHOGRAM]):
+                        continue
 
-                behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                    if behavior not in behaviors_duration[subj]:
+                        behaviors_duration[subj][behavior] = [[], []]
 
-                if behavior not in behavior_ticks:
-                    behavior_ticks.append(behavior)
+                    behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
 
-                for param in parameters:
-                    behaviors_duration[subj][behavior][0].append(behaviors[subj][behavior_modifiers_str][param[0]])
-                    behaviors_duration[subj][behavior][1].append(modifiers)
-                    max_length = max(max_length, len(behaviors_duration[subj][behavior][1]))
+                    if behavior not in behavior_ticks:
+                        behavior_ticks.append(behavior)
 
-        behavior_mod_ticks = behavior_ticks[:]
-        for ax_idx, subj in enumerate(selected_subjects):
+                    for parameter in parameters:
+                        behaviors_duration[subj][behavior][0].append(behaviors[subj][behavior_modifiers_str][parameter[0]])
+                        behaviors_duration[subj][behavior][1].append(modifiers)
+                        max_length = max(max_length, len(behaviors_duration[subj][behavior][1]))
 
-            md_lgd = []
-            b = {}
-            for i in range(max_length):
+            behavior_mod_ticks = behavior_ticks[:]
+            for ax_idx, subj in enumerate(selected_subjects):
+                md_lgd = []
+                b = {}
+                for i in range(max_length):
+                    b[i] = []
+                    for behavior in sorted(behaviors_duration[subj].keys()):
+                        try:
+                            b[i].append(behaviors_duration[subj][behavior][0][i])
+                            if include_modifiers:
+                                if behaviors_duration[subj][behavior][1][i]:
+                                    md_lgd.append(behavior + " " + behaviors_duration[subj][behavior][1][i])
+                                else:
+                                    md_lgd.append(behavior)
+                        except Exception:
+                            b[i].append(0)
 
-                b[i] = []
+                ind = np.arange(len(behavior_ticks))
 
-                for behavior in sorted(behaviors_duration[subj].keys()):
-                    try:
-                        b[i].append(behaviors_duration[subj][behavior][0][i])
-                        if include_modifiers:
+                width = 0.35       # the width of the bars: can also be len(x) sequence
 
-                            if behaviors_duration[subj][behavior][1][i]:
-                                md_lgd.append(behavior + " " + behaviors_duration[subj][behavior][1][i])
-                            else:
-                                md_lgd.append(behavior)
-                    except Exception:
-                        b[i].append(0)
+                pp = []
+                max_obs = 0
+                bottom_ = []
 
-            ind = np.arange(len(behavior_ticks))
+                idx_color = 0
 
-            width = 0.35       # the width of the bars: can also be len(x) sequence
+                for i in sorted(b.keys()):
+                    if b[i]:
+                        if i == 0:
+                            pp.append(axs[ax_idx].bar(
+                                ind,
+                                b[i],
+                                width,
+                                color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])]))
+                        else:
+                            pp.append(axs[ax_idx].bar(
+                                ind,
+                                b[i],
+                                width,
+                                color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])],
+                                bottom=bottom_))
 
-            pp = []
-            max_obs = 0
-            bottom_ = []
+                    idx_color += len(b[i])
 
-            idx_color = 0
+                    if not bottom_:
+                        bottom_ = b[i]
+                    else:
+                        bottom_ = [x + bottom_[idx] for idx, x in enumerate(b[i])]
 
-            for i in sorted(b.keys()):
+                    max_obs = max(max_obs, sum(b[i]))
 
-                if i == 0:
-                    pp.append(axs[ax_idx].bar(
-                        ind,
-                        b[i],
-                        width,
-                        color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])]))
-                else:
-                    pp.append(axs[ax_idx].bar(
-                        ind,
-                        b[i],
-                        width,
-                        color=BEHAVIORS_PLOT_COLORS[idx_color:idx_color + len(b[i])],
-                        bottom=bottom_))
+                if ax_idx == 0:
+                    axs[ax_idx].set_ylabel("Duration (s)")
+                axs[ax_idx].set_xlabel("Behaviors")
+                axs[ax_idx].set_title(f"{subj}")
 
-                idx_color += len(b[i])
+                axs[ax_idx].set_xticks(ind)
+                axs[ax_idx].set_xticklabels(behavior_mod_ticks, rotation=90)
+                if int(max(bottom_)):
+                    if int(max(bottom_) / 5):
+                        axs[ax_idx].set_yticks(np.arange(0, max(bottom_), int(max(bottom_) / 5)))
+                    else:
+                        axs[ax_idx].set_yticks(np.arange(0, max(bottom_), 1))
 
-                if not bottom_:
-                    bottom_ = b[i]
-                else:
-                    bottom_ = [x + bottom_[idx] for idx, x in enumerate(b[i])]
+                lgd_col = []
+                for p in pp:
+                    for r in p:
+                        if r.get_height():
+                            lgd_col.append(r)
 
-                max_obs = max(max_obs, sum(b[i]))
+                plt.legend(lgd_col, md_lgd)
 
-            if ax_idx == 0:
-                axs[ax_idx].set_ylabel("Duration (s)")
-            axs[ax_idx].set_xlabel("Behaviors")
-            axs[ax_idx].set_title(f"{subj}")
+            plt.tight_layout()
 
-            axs[ax_idx].set_xticks(ind)
-            axs[ax_idx].set_xticklabels(behavior_mod_ticks, rotation=90)
-            axs[ax_idx].set_yticks(np.arange(0, max(bottom_), int(max(bottom_) / 5)))
+            if plot_directory:
+                output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{output_format}"
+                plt.savefig(output_file_name)
+            else:
+                plt.show()
 
-            lgd_col = []
-            for p in pp:
-                for r in p:
-                    if r.get_height():
-                        lgd_col.append(r)
+        return {}
 
-            plt.legend(lgd_col, md_lgd)
-
-        plt.tight_layout()
-
-        if plot_directory:
-            output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{file_format}"
-            plt.savefig(output_file_name)
-        else:
-            plt.show()
+    except Exception:
+        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+        logging.critical(f"Error in time budget bar plot: {error_type} {error_file_name} {error_lineno}")
+        return {"error": True, "exception": sys.exc_info()}
 
 
 def create_events_plot(pj,
@@ -497,4 +512,3 @@ def create_events_plot(pj,
             plt.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{file_format}")
         else:
             plt.show()
-

@@ -96,8 +96,6 @@ from time_budget_widget import timeBudgetResults
 from utilities import *
 
 
-
-
 __version__ = version.__version__
 __version_date__ = version.__version_date__
 
@@ -1402,6 +1400,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     # TODO: externalize function
+
     def view_behavior(self):
         """
         show details of selected behavior
@@ -7058,11 +7057,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if len(selected_observations) == 1:
             parameters = self.choose_obs_subj_behav_category(selected_observations,
                                                              maxTime=totalMediaLength,
-                                                             flagShowIncludeModifiers=False)
+                                                             flagShowIncludeModifiers=False,
+                                                             flagShowExcludeBehaviorsWoEvents=True)
         else:
             parameters = self.choose_obs_subj_behav_category(selected_observations,
                                                              maxTime=0,
-                                                             flagShowIncludeModifiers=False
+                                                             flagShowIncludeModifiers=False,
+                                                             flagShowExcludeBehaviorsWoEvents=True
                                                              )
 
         if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
@@ -7085,12 +7086,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return
 
-        plot_events.behaviors_bar_plot(self.pj,
-                                       selected_observations,
-                                       parameters,
-                                       plot_directory,
-                                       output_format
-                                       )
+        r = plot_events.behaviors_bar_plot(self.pj,
+                                           selected_observations,
+                                           parameters,
+                                           plot_directory,
+                                           output_format
+                                          )
+        if "error" in r:
+            if "exception" in r:
+                dialog.error_message("Time budget bar plot", r["exception"])
+            else:
+                QMessageBox.warning(self, programName, r.get("message", "Error on time budget bar plot"))
 
 
     def load_project(self, project_path, project_changed, pj):
