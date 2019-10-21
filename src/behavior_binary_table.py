@@ -25,6 +25,7 @@ import re
 import sys
 import time
 
+import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QFileDialog, QInputDialog,
                              QMessageBox)
@@ -32,7 +33,6 @@ from PyQt5.QtWidgets import (QApplication, QFileDialog, QInputDialog,
 import dialog
 import project_functions
 import select_observations
-import tablib
 import utilities
 from config import *
 
@@ -119,7 +119,10 @@ def create_behavior_binary_table(pj: dict,
 
 
 def behavior_binary_table(pj: dict):
-
+    """
+    ask user for parameters for behavior binary table
+    call create_behavior_binary_table
+    """
 
     result, selected_observations = select_observations.select_observations(pj,
                                                                             MULTIPLE,

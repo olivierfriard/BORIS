@@ -389,16 +389,16 @@ def time_budget_analysis(ethogram: dict,
                             "subject": subject,
                             "behavior": behavior,
                             "modifiers": modifier[0],
-                            "duration": 0,
-                            "duration_mean": 0,
-                            "duration_stdev": "NA",
+                            "duration": NA,
+                            "duration_mean": NA,
+                            "duration_stdev": NA,
                             "number": len(rows),
                             "inter_duration_mean":
                             round(statistics.mean(all_event_interdurations), 3)
-                            if len(all_event_interdurations) else "NA",
+                            if len(all_event_interdurations) else NA,
                             "inter_duration_stdev":
                             round(statistics.stdev(all_event_interdurations), 3)
-                            if len(all_event_interdurations) > 1 else "NA"
+                            if len(all_event_interdurations) > 1 else NA
                         })
 
                 if STATE in project_functions.event_type(behavior, ethogram):
@@ -476,17 +476,18 @@ def time_budget_analysis(ethogram: dict,
                             new_rows.append([new_occurence, observation])
                         rows = list(new_rows)
 
+                    # include behaviors without events
                     if not len(rows):
                         if not parameters[EXCLUDE_BEHAVIORS]:
                             out.append({"subject": subject,
                                         "behavior": behavior,
                                         "modifiers": "",
-                                        "duration": 0,
-                                        "duration_mean": 0,
-                                        "duration_stdev": "NA",
+                                        "duration": NA,
+                                        "duration_mean": NA,
+                                        "duration_stdev": NA,
                                         "number": "0",
-                                        "inter_duration_mean": "NA",
-                                        "inter_duration_stdev": "NA"})
+                                        "inter_duration_mean": NA,
+                                        "inter_duration_stdev": NA})
                         continue
 
                     # inter events duration
@@ -499,16 +500,16 @@ def time_budget_analysis(ethogram: dict,
                         "subject": subject,
                         "behavior": behavior,
                         "modifiers": "",
-                        "duration": 0,
-                        "duration_mean": 0,
-                        "duration_stdev": 0,
+                        "duration": NA,
+                        "duration_mean": NA,
+                        "duration_stdev": NA,
                         "number": len(rows),
                         "inter_duration_mean":
                         round(statistics.mean(all_event_interdurations), 3)
-                        if len(all_event_interdurations) else "NA",
+                        if len(all_event_interdurations) else NA,
                         "inter_duration_stdev":
                         round(statistics.stdev(all_event_interdurations), 3)
-                        if len(all_event_interdurations) > 1 else "NA"
+                        if len(all_event_interdurations) > 1 else NA
                     })
 
                 if STATE in project_functions.event_type(behavior, ethogram):
@@ -555,15 +556,15 @@ def time_budget_analysis(ethogram: dict,
                             "",
                             "duration": round(sum(all_event_durations), 3),
                             "duration_mean": round(statistics.mean(all_event_durations), 3)
-                            if len(all_event_durations) else "NA",
+                            if len(all_event_durations) else NA,
                             "duration_stdev":
                             round(statistics.stdev(all_event_durations), 3)
-                            if len(all_event_durations) > 1 else "NA",
+                            if len(all_event_durations) > 1 else NA,
                             "number": len(all_event_durations),
                             "inter_duration_mean": round(statistics.mean(all_event_interdurations), 3)
-                            if len(all_event_interdurations) else "NA",
+                            if len(all_event_interdurations) else NA,
                             "inter_duration_stdev": round(statistics.stdev(all_event_interdurations), 3)
-                            if len(all_event_interdurations) > 1 else "NA"
+                            if len(all_event_interdurations) > 1 else NA
                         })
 
         out += out_cat

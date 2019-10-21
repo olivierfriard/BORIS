@@ -28,10 +28,11 @@ project_format_version = "7.0"
 
 VLC_MIN_VERSION = "2"
 
-
 CHECK_NEW_VERSION_DELAY = 15 * 24 * 60 * 60
 
 N_PLAYER = 8
+
+NA = "NA"
 
 VLC_TIMER_OUT = 200
 SPECTRO_TIMER = 200

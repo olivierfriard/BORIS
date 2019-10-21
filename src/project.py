@@ -1484,6 +1484,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twBehaviors.setRowCount(0)
 
             cb_text_splitted = cb_text.split("\n")
+            while "" in cb_text_splitted:
+                cb_text_splitted.remove("")
 
             if len(set([len(x.split("\t")) for x in cb_text_splitted])) != 1:
                 QMessageBox.warning(None, programName,

@@ -254,9 +254,8 @@
     </property>
     <widget class="QMenu" name="menuPlot_events">
      <property name="title">
-      <string>Plot events</string>
+      <string>Plot</string>
      </property>
-     <addaction name="actionPlot_events1"/>
      <addaction name="actionPlot_events2"/>
      <addaction name="actionBehavior_bar_plot"/>
     </widget>
@@ -1254,7 +1253,7 @@
   </action>
   <action name="actionBehavior_bar_plot">
    <property name="text">
-    <string>Behaviors bar plot</string>
+    <string>Plot time budget</string>
    </property>
   </action>
   <action name="action_obs_list">
