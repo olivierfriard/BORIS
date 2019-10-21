@@ -7090,7 +7090,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            selected_observations,
                                            parameters,
                                            plot_directory,
-                                           output_format
+                                           output_format,
+                                           plot_colors=self.plot_colors
                                           )
         if "error" in r:
             if "exception" in r:
