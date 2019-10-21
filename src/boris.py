@@ -7926,6 +7926,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         data = tablib.Dataset(*sorted(list(data), key=lambda x: float(x[start_idx])), headers=header)
         data.title = "Aggregated events"
 
+        # TODO: finish
         if outputFormat == "tbs":  # Timed behavioral sequences
             out = ""
             for obsId in selectedObservations:
