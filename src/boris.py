@@ -7009,6 +7009,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         bar plot of behaviors durations
         """
 
+        QMessageBox.warning(self, programName,
+                            ("This function is experimental.<br>Please test it and report bugs on<br>"
+                             "https://github.com/olivierfriard/BORIS/issues"))
+
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
@@ -7086,13 +7090,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return
 
-        r = plot_events.behaviors_bar_plot(self.pj,
-                                           selected_observations,
-                                           parameters,
-                                           plot_directory,
-                                           output_format,
-                                           plot_colors=self.plot_colors
-                                          )
+        r = plot_events.create_behaviors_bar_plot(self.pj,
+                                                  selected_observations,
+                                                  parameters,
+                                                  plot_directory,
+                                                  output_format,
+                                                  plot_colors=self.plot_colors
+                                                 )
         if "error" in r:
             if "exception" in r:
                 dialog.error_message("Time budget bar plot", r["exception"])

@@ -105,7 +105,8 @@ def init_behav(ethogram: dict,
 
 
 
-def behaviors_bar_plot(pj: dict,
+
+def create_behaviors_bar_plot(pj: dict,
                        selected_observations: list,
                        param: dict,
                        plot_directory: str,
@@ -287,8 +288,6 @@ def behaviors_bar_plot(pj: dict,
                                 color=colors_duration
                                 )
 
-
-
                 if ax_idx == 0:
                     axs[ax_idx].set_ylabel("Duration (s)")
                 axs[ax_idx].set_xlabel("Behaviors")
@@ -314,10 +313,9 @@ def behaviors_bar_plot(pj: dict,
 
 
             if plot_directory:
-                output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{output_format}"
-                fig.savefig(output_file_name)
-                fig2.savefig(output_file_name + ".2.png")
-
+                # output_file_name = f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.{output_format}"
+                fig.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.duration.{output_format}")
+                fig2.savefig(f"{pathlib.Path(plot_directory) / utilities.safeFileName(obs_id)}.number_of_occurences.{output_format}")
                 plt.close()
             else:
                 fig.show()
@@ -331,7 +329,7 @@ def behaviors_bar_plot(pj: dict,
         return {"error": True, "exception": sys.exc_info()}
 
 
-
+'''
 def behaviors_bar_plot_old(pj: dict,
                        selected_observations: list,
                        param: dict,
@@ -566,6 +564,7 @@ def behaviors_bar_plot_old(pj: dict,
         error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
         logging.critical(f"Error in time budget bar plot: {error_type} {error_file_name} {error_lineno}")
         return {"error": True, "exception": sys.exc_info()}
+'''
 
 
 def create_events_plot(pj,
