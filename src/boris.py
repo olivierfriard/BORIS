@@ -464,6 +464,7 @@ class DW(QDockWidget):
 class MainWindow(QMainWindow, Ui_MainWindow):
 
     instance = vlc.Instance()   # "--avcodec-hw=none"
+    print("instance", instance)
 
     pj = dict(EMPTY_PROJECT)
     project = False
@@ -2229,9 +2230,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         out, error = p.communicate()
 
         except Exception:
-            logging.critical(f"Error during frames extraction. {sys.exc_info()[1]}")
-            QMessageBox.critical(None, programName, f"Error during frames extraction. {sys.exc_info()[1]}",
-                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error during frame extraction: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Export during frame extraction", sys.exc_info())
 
 
     def extract_events(self):
@@ -2466,9 +2468,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         out, error = p.communicate()
 
         except Exception:
-            logging.critical(f"Error during subvideo extraction. {sys.exc_info()[1]}")
-            QMessageBox.critical(None, programName, f"Error during subvideo extraction. {sys.exc_info()[1]}",
-                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error during subvideo extraction: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Error during subvideo extraction", sys.exc_info())
 
 
     def generate_wav_file_from_media(self):
@@ -7577,8 +7580,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return ""
 
         except Exception:
-            logging.critical(f"The project file can not be saved.\nError: {sys.exc_info()[1]}")
-            QMessageBox.critical(self, programName, f"The project file can not be saved! {sys.exc_info()[1]}")
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"The project file can not be saved: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("The project file can not be saved.", sys.exc_info())
+
             self.save_project_json_started = False
             return "not saved"
 
@@ -7893,6 +7899,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for line in conn.iterdump():
                         f.write(f"{line}\n")
             except Exception:
+
                 errorMsg = sys.exc_info()[1]
                 logging.critical(errorMsg)
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -8053,149 +8060,145 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not exportDir:
             return
 
-        for obsId in selectedObservations:
+        try:
+            mem_command = ""
+            for obsId in selectedObservations:
 
-            out = """File type = "ooTextFile"
-Object class = "TextGrid"
+                subjectheader = ('    item [{subjectIdx}]:\n'
+                                '        class = "IntervalTier"\n'
+                                '        name = "{subject}"\n'
+                                '        xmin = {intervalsMin}\n'
+                                '        xmax = {intervalsMax}\n'
+                                '        intervals: size = {intervalsSize}\n')
 
-xmin = 0
-xmax = 98.38814058956916
-tiers? <exists>
-size = {subjectNum}
-item []:
-"""
-            subjectheader = """    item [{subjectIdx}]:
-        class = "IntervalTier"
-        name = "{subject}"
-        xmin = {intervalsMin}
-        xmax = {intervalsMax}
-        intervals: size = {intervalsSize}
-"""
 
-            template = """        intervals [{count}]:
-            xmin = {xmin}
-            xmax = {xmax}
-            text = "{name}"
-"""
+                template = ('        intervals [{count}]:\n'
+                            '            xmin = {xmin}\n'
+                            '            xmax = {xmax}\n'
+                            '            text = "{name}"\n')
 
-            flagUnpairedEventFound = False
+                flagUnpairedEventFound = False
 
-            totalMediaDuration = round(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]), 3)
+                totalMediaDuration = round(project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]), 3)
 
-            cursor = db_functions.load_events_in_db(self.pj,
-                                                    plot_parameters["selected subjects"],
-                                                    selectedObservations,
-                                                    plot_parameters["selected behaviors"],
-                                                    time_interval=TIME_FULL_OBS)
+                cursor = db_functions.load_events_in_db(self.pj,
+                                                        plot_parameters[SELECTED_SUBJECTS],
+                                                        selectedObservations,
+                                                        plot_parameters[SELECTED_BEHAVIORS],
+                                                        time_interval=TIME_FULL_OBS)
 
-            cursor.execute(
-                ("SELECT count(distinct subject) FROM events "
-                 "WHERE observation = '{}' AND subject in ('{}') AND type = 'STATE' "
-                 ).format(obsId, "','".join(plot_parameters["selected subjects"])))
-
-            subjectsNum = int(list(cursor.fetchall())[0][0])
-
-            subjectsMin, subjectsMax = 0, totalMediaDuration
-
-            out = """File type = "ooTextFile"
-Object class = "TextGrid"
-
-xmin = {subjectsMin}
-xmax = {subjectsMax}
-tiers? <exists>
-size = {subjectsNum}
-item []:
-""".format(subjectsNum=subjectsNum, subjectsMin=subjectsMin, subjectsMax=subjectsMax)
-
-            subjectIdx = 0
-            for subject in plot_parameters["selected subjects"]:
-
-                subjectIdx += 1
-
-                cursor.execute("SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
-                intervalsSize = int(list(cursor.fetchall())[0][0] / 2)
-
-                intervalsMin, intervalsMax = 0, totalMediaDuration
-
-                out += subjectheader
-
-                cursor.execute(("SELECT occurence, code FROM events "
-                                "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"), (obsId, subject))
-
-                rows = [{"occurence": float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
-                if not rows:
-                    continue
-
-                count = 0
-
-                # check if 1st behavior starts at the beginning
-
-                if rows[0]["occurence"] > 0:
-                    count += 1
-                    out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
-
-                for idx, row in enumerate(rows):
-                    if idx % 2 == 0:
-
-                        # check if events not interlacced
-                        if row["code"] != rows[idx + 1]["code"]:
-                            QMessageBox.critical(None, programName,
-                                                 "The events are interlaced. It is not possible to produce the Praat TextGrid file",
-                                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                            return
-
-                        count += 1
-                        out += template.format(count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"])
-
-                        # check if difference is > 0.001
-                        if len(rows) > idx + 2:
-                            if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
-
-                                '''
-                                logging.debug("difference: {}-{}={}".format(rows[idx + 2]["occurence"],
-                                              rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
-                                '''
-
-                                out += template.format(count=count + 1, name="null",
-                                                       xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"])
-                                count += 1
-                            else:
-                                '''
-                                logging.debug("difference <=0.001: {} - {} = {}".format(rows[idx + 2]["occurence"],
-                                               rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
-                                '''
-                                rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
-
-                                '''
-                                logging.debug("difference after: {} - {} = {}".format(rows[idx + 2]["occurence"],
-                                               rows[idx + 1]["occurence"], rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"]))
-                                '''
-
-                # check if last event ends at the end of media file
-                if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]):
-                    count += 1
-                    out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
-
-                # add info
-                out = out.format(
-                    subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax
+                cursor.execute(
+                    ("SELECT count(distinct subject) FROM events "
+                    "WHERE observation = ? AND subject IN ({}) AND type = 'STATE' ".format(",".join(["?"] * len(plot_parameters[SELECTED_SUBJECTS])))
+                    ),
+                    [obsId] + plot_parameters[SELECTED_SUBJECTS]
                 )
 
-            try:
-                '''
-                with open(str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix(".textGrid")), "w") as f:
-                '''
-                with open(f"{pathlib.Path(exportDir) / safeFileName(obsId)}.textGrid", "w") as f:
-                    f.write(out)
+                subjectsNum = int(list(cursor.fetchall())[0][0])
 
-                if flagUnpairedEventFound:
-                    QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",
-                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                subjectsMin, subjectsMax = 0, totalMediaDuration
 
-            except Exception:
-                errorMsg = sys.exc_info()[1]
-                logging.critical(errorMsg)
-                QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                out = ('File type = "ooTextFile"\n'
+                    'Object class = "TextGrid"\n'
+                    '\n'
+                    f'xmin = {subjectsMin}\n'
+                    f'xmax = {subjectsMax}\n'
+                    'tiers? <exists>\n'
+                    f'size = {subjectsNum}\n'
+                    'item []:\n')
+
+                subjectIdx = 0
+                for subject in plot_parameters[SELECTED_SUBJECTS]:
+                    if subject not in [x[EVENT_SUBJECT_FIELD_IDX] for x in self.pj[OBSERVATIONS][obsId][EVENTS]]:
+                        continue
+
+                    subjectIdx += 1
+
+                    cursor.execute("SELECT count(*) FROM events WHERE observation = ? AND subject = ? AND type = 'STATE' ", (obsId, subject))
+                    intervalsSize = int(list(cursor.fetchall())[0][0] / 2)
+
+                    intervalsMin, intervalsMax = 0, totalMediaDuration
+
+                    out += subjectheader
+
+                    cursor.execute(("SELECT occurence, code FROM events "
+                                    "WHERE observation = ? AND subject = ? AND type = 'STATE' order by occurence"), (obsId, subject))
+
+                    rows = [{"occurence": float2decimal(r["occurence"]), "code": r["code"]} for r in cursor.fetchall()]
+                    if not rows:
+                        continue
+
+                    count = 0
+
+                    # check if 1st behavior starts at the beginning
+
+                    if rows[0]["occurence"] > 0:
+                        count += 1
+                        out += template.format(count=count, name="null", xmin=0.0, xmax=rows[0]["occurence"])
+
+                    for idx, row in enumerate(rows):
+                        if idx % 2 == 0:
+
+                            # check if events not interlacced
+                            if row["code"] != rows[idx + 1]["code"]:
+                                QMessageBox.critical(None, programName,
+                                                    "The events are interlaced. It is not possible to produce the Praat TextGrid file",
+                                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+                                return
+
+                            count += 1
+                            out += template.format(count=count, name=row["code"], xmin=row["occurence"], xmax=rows[idx + 1]["occurence"])
+
+                            # check if difference is > 0.001
+                            if len(rows) > idx + 2:
+                                if rows[idx + 2]["occurence"] - rows[idx + 1]["occurence"] > 0.001:
+
+                                    out += template.format(count=count + 1, name="null",
+                                                        xmin=rows[idx + 1]["occurence"], xmax=rows[idx + 2]["occurence"])
+                                    count += 1
+                                else:
+                                    rows[idx + 2]["occurence"] = rows[idx + 1]["occurence"]
+
+                    # check if last event ends at the end of media file
+                    if rows[-1]["occurence"] < project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId]):
+                        count += 1
+                        out += template.format(count=count, name="null", xmin=rows[-1]["occurence"], xmax=totalMediaDuration)
+
+                    # add info
+                    out = out.format(
+                        subjectIdx=subjectIdx, subject=subject, intervalsSize=count, intervalsMin=intervalsMin, intervalsMax=intervalsMax
+                    )
+
+                # check if file already exists
+                if mem_command != OVERWRITE_ALL and pathlib.Path(f"{pathlib.Path(exportDir) / safeFileName(obsId)}.textGrid").is_file():
+                    if mem_command == "Skip all":
+                        continue
+                    mem_command = dialog.MessageDialog(programName,
+                                                    f"The file <b>{pathlib.Path(exportDir) / safeFileName(obsId)}.textGrid</b> already exists.",
+                                                    [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
+                    if mem_command == CANCEL:
+                        return
+                    if mem_command in ["Skip", "Skip all"]:
+                        continue
+
+                try:
+                    with open(f"{pathlib.Path(exportDir) / safeFileName(obsId)}.textGrid", "w") as f:
+                        f.write(out)
+
+                    if flagUnpairedEventFound:
+                        QMessageBox.warning(self, programName, "Some state events are not paired. They were excluded from export",
+                                            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+
+                except Exception:
+                    error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+                    logging.critical(f"Error in export textgrid function: {error_type} {error_file_name} {error_lineno}")
+                    dialog.error_message("Export textGrid", sys.exc_info())
+
+        except Exception:
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error in export textgrid function: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Export textGrid", sys.exc_info())
 
 
     def media_file_info(self):
@@ -9804,8 +9807,10 @@ item []:
 
             self.projectChanged = True
         except Exception:
-            raise
-            dialog.MessageDialog(programName, f"Event can not be recorded.\nError: {sys.exc_info()[1]}", [OK])
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Event can not be recorded: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Event can not be recorded", sys.exc_info())
 
 
     def fill_lwDetailed(self, obs_key, memLaps):
@@ -11051,15 +11056,6 @@ item []:
                 QMessageBox.critical(None, programName, f"Error while exporting events as behavioral sequences:<br>{msg}",
                                      QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-            # response = dialog.MessageDialog(programName, "Include observation(s) information?", [YES, NO])
-            '''
-            try:
-
-            except Exception:
-                logging.critical(sys.exc_info()[1])
-                QMessageBox.critical(None, programName, str(sys.exc_info()[1]), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            '''
-
 
     def transitions_matrix(self, mode):
         """
@@ -11154,19 +11150,23 @@ item []:
         fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""
-        for fileName in fileNames:
-            with open(fileName, "r") as infile:
-                try:
+        try:
+            for fileName in fileNames:
+                with open(fileName, "r") as infile:
                     gv = transitions.create_transitions_gv_from_matrix(infile.read(),
-                                                                       cutoff_all=0,
-                                                                       cutoff_behavior=0,
-                                                                       edge_label="percent_node")
+                                                                        cutoff_all=0,
+                                                                        cutoff_behavior=0,
+                                                                        edge_label="percent_node")
                     with open(fileName + ".gv", "w") as f:
                         f.write(gv)
 
                     out += f"<b>{fileName}.gv</b> created<br>"
-                except Exception:
-                    QMessageBox.information(self, programName, f"Error during dot script creation.\n{str(sys.exc_info()[1])}")
+
+        except Exception:
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error during dot script creation: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Error during dot script creation", sys.exc_info())
 
         if out:
             QMessageBox.information(self, programName,
@@ -11192,24 +11192,27 @@ item []:
         fileNames = fn[0] if type(fn) is tuple else fn
 
         out = ""
-        for fileName in fileNames:
-            with open(fileName, "r") as infile:
-                try:
+        try:
+            for fileName in fileNames:
+                with open(fileName, "r") as infile:
                     gv = transitions.create_transitions_gv_from_matrix(infile.read(),
-                                                                       cutoff_all=0,
-                                                                       cutoff_behavior=0,
-                                                                       edge_label="percent_node")
+                                                                        cutoff_all=0,
+                                                                        cutoff_behavior=0,
+                                                                        edge_label="percent_node")
 
                     with open(tempfile.gettempdir() + os.sep + os.path.basename(fileName) + ".tmp.gv", "w") as f:
                         f.write(gv)
                     result = subprocess.getoutput((f'dot -Tpng -o "{fileName}.png" '
-                                                   f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'))
+                                                    f'"{tempfile.gettempdir() + os.sep + os.path.basename(fileName)}.tmp.gv"'))
                     if not result:
                         out += f"<b>{fileName}.png</b> created<br>"
                     else:
                         out += f"Problem with <b>{fileName}</b><br>"
-                except Exception:
-                    QMessageBox.information(self, programName, f"Error during flow diagram creation.\n{str(sys.exc_info()[1])}")
+        except Exception:
+
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error during flow diagram creation: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Error during flow diagram creation", sys.exc_info())
 
         if out:
             QMessageBox.information(self, programName, out)
