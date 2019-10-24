@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'boris.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.0
+# Created by: PyQt5 UI code generator 5.13.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -512,6 +512,9 @@ class Ui_MainWindow(object):
         self.actionFind_in_current_obs.setObjectName("actionFind_in_current_obs")
         self.action_advanced_event_filtering = QtWidgets.QAction(MainWindow)
         self.action_advanced_event_filtering.setObjectName("action_advanced_event_filtering")
+        self.action_block_dockwidgets = QtWidgets.QAction(MainWindow)
+        self.action_block_dockwidgets.setCheckable(True)
+        self.action_block_dockwidgets.setObjectName("action_block_dockwidgets")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -615,6 +618,7 @@ class Ui_MainWindow(object):
         self.menu_coding_map_creator.addAction(self.action_create_modifiers_coding_map)
         self.menuImage_overlay_on_video.addAction(self.actionAdd_image_overlay_on_video)
         self.menuImage_overlay_on_video.addAction(self.actionRemove_image_overlay)
+        self.menuTools.addAction(self.action_block_dockwidgets)
         self.menuTools.addAction(self.actionShow_spectrogram)
         self.menuTools.addAction(self.actionShow_the_sound_waveform)
         self.menuTools.addAction(self.actionShow_data_files)
@@ -862,3 +866,4 @@ class Ui_MainWindow(object):
         self.actionPlot_current_observation.setText(_translate("MainWindow", "Plot current observation"))
         self.actionFind_in_current_obs.setText(_translate("MainWindow", "Find in events"))
         self.action_advanced_event_filtering.setText(_translate("MainWindow", "Advanced event filtering"))
+        self.action_block_dockwidgets.setText(_translate("MainWindow", "Block dockwidgets"))

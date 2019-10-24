@@ -902,6 +902,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpTo.triggered.connect(self.jump_to)
 
         # menu Tools
+        self.action_block_dockwidgets.triggered.connect(self.block_dockwidgets)
+
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
         self.action_create_behaviors_coding_map.triggered.connect(self.behaviors_coding_map_creator)
 
@@ -1077,6 +1079,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.automaticBackupTimer.start(self.automaticBackup * 60000)
 
         self.pb_live_obs.clicked.connect(self.start_live_observation)
+
+
+    def block_dockwidgets(self):
+        """
+        allow to block Qdockwidgets on main window because they can have a strange behavior specially on Mac
+        """
+        for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
+            if self.action_block_dockwidgets.isChecked():
+                w.setFloating(False)
+                w.setFeatures(QDockWidget.NoDockWidgetFeatures)
+            else:
+                w.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable)
 
 
     def create_behavior_binary_table(self):
