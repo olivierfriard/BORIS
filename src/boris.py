@@ -624,9 +624,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.toolBar.setEnabled(True)
 
         # start with dock widget invisible
-        self.dwObservations.setVisible(False)
-        self.dwEthogram.setVisible(False)
-        self.dwSubjects.setVisible(False)
+        for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
+            w.setVisible(False)
+            # if BORIS is running on Mac block all dockwidget features
+            # because Qdockwidgets have strange behavior
+            if sys.platform == "darwin":
+                pass
+            w.setFeatures(QDockWidget.DockWidgetMovable)
 
         self.lb_current_media_time.setText("")
         self.lbFocalSubject.setText("")
