@@ -629,8 +629,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # if BORIS is running on Mac block all dockwidget features
             # because Qdockwidgets have strange behavior
             if sys.platform == "darwin":
-                pass
-            w.setFeatures(QDockWidget.DockWidgetMovable)
+                w.setFeatures(QDockWidget.DockWidgetMovable)
 
         self.lb_current_media_time.setText("")
         self.lbFocalSubject.setText("")
