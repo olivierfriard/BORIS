@@ -866,4 +866,4 @@ class Ui_MainWindow(object):
         self.actionPlot_current_observation.setText(_translate("MainWindow", "Plot current observation"))
         self.actionFind_in_current_obs.setText(_translate("MainWindow", "Find in events"))
         self.action_advanced_event_filtering.setText(_translate("MainWindow", "Advanced event filtering"))
-        self.action_block_dockwidgets.setText(_translate("MainWindow", "Block dockwidgets"))
+        self.action_block_dockwidgets.setText(_translate("MainWindow", "Lock dockwidgets"))

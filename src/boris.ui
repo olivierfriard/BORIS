@@ -1402,7 +1402,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Block dockwidgets</string>
+    <string>Lock dockwidgets</string>
    </property>
   </action>
  </widget>

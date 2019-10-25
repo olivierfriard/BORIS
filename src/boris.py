@@ -626,10 +626,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # start with dock widget invisible
         for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
             w.setVisible(False)
-            # if BORIS is running on Mac block all dockwidget features
-            # because Qdockwidgets have strange behavior
-            if sys.platform == "darwin":
-                w.setFeatures(QDockWidget.DockWidgetMovable)
+
+        # if BORIS is running on Mac lock all dockwidget features
+        # because Qdockwidgets may have a strange behavior
+        if sys.platform == "darwin":
+            self.action_block_dockwidgets.setChecked(True)
+            self.block_dockwidgets()
 
         self.lb_current_media_time.setText("")
         self.lbFocalSubject.setText("")
@@ -902,6 +904,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionJumpTo.triggered.connect(self.jump_to)
 
         # menu Tools
+
         self.action_block_dockwidgets.triggered.connect(self.block_dockwidgets)
 
         self.action_create_modifiers_coding_map.triggered.connect(self.modifiers_coding_map_creator)
