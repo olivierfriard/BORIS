@@ -11618,7 +11618,7 @@ if __name__ == "__main__":
     #window.setWindowFlags(Qt.WindowTitleHint | Qt.CustomizeWindowHint)
     #window.setWindowFlags(Qt.WindowFlags() & ~Qt.WindowMaximizeButtonHint)
 
-    window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
+    #window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
 
     # open project/start observation on command line
     project_to_open = ""
