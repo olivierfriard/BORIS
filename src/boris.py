@@ -11613,6 +11613,8 @@ if __name__ == "__main__":
     app.setApplicationName(programName)
     window = MainWindow(ffmpeg_bin)
 
+    window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
+
     # open project/start observation on command line
     project_to_open = ""
     observation_to_open = ""
