@@ -463,6 +463,7 @@ class DW(QDockWidget):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
+
     instance = vlc.Instance()   # "--avcodec-hw=none"
     print("instance", instance)
 
@@ -11612,6 +11613,10 @@ if __name__ == "__main__":
 
     app.setApplicationName(programName)
     window = MainWindow(ffmpeg_bin)
+
+    #window.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
+    #window.setWindowFlags(Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+    #window.setWindowFlags(Qt.WindowFlags() & ~Qt.WindowMaximizeButtonHint)
 
     window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
 
