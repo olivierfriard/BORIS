@@ -879,17 +879,30 @@ def choose_obs_subj_behav_category(pj: dict,
         paramPanelWindow.cbExcludeBehaviors.setVisible(False)
 
     paramPanelWindow.frm_time_interval.setEnabled(False)
+
+
     if timeFormat == HHMMSS:
+        paramPanelWindow.start_time.set_format_hhmmss()
+        paramPanelWindow.end_time.set_format_hhmmss()
+        '''
         paramPanelWindow.teStartTime.setTime(QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
         paramPanelWindow.teEndTime.setTime(QTime.fromString(utilities.seconds2time(maxTime), "hh:mm:ss.zzz"))
         paramPanelWindow.dsbStartTime.setVisible(False)
         paramPanelWindow.dsbEndTime.setVisible(False)
+        '''
 
     if timeFormat == S:
+        paramPanelWindow.start_time.set_format_s()
+        paramPanelWindow.end_time.set_format_s()
+        '''
         paramPanelWindow.dsbStartTime.setValue(0.0)
         paramPanelWindow.dsbEndTime.setValue(maxTime)
         paramPanelWindow.teStartTime.setVisible(False)
         paramPanelWindow.teEndTime.setVisible(False)
+        '''
+    paramPanelWindow.start_time.set_time(0)
+    paramPanelWindow.end_time.set_time(maxTime)
+
 
     # hide max time
     if not maxTime:
@@ -995,14 +1008,18 @@ def choose_obs_subj_behav_category(pj: dict,
     logging.debug(f"selected subjects: {selectedSubjects}")
     logging.debug(f"selected behaviors: {selectedBehaviors}")
 
+    startTime = paramPanelWindow.start_time.get_time()
+    endTime = paramPanelWindow.end_time.get_time()
+    '''
     if timeFormat == HHMMSS:
         startTime = utilities.time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
         endTime = utilities.time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
     if timeFormat == S:
         startTime = Decimal(paramPanelWindow.dsbStartTime.value())
         endTime = Decimal(paramPanelWindow.dsbEndTime.value())
+    '''
     if startTime > endTime:
-        QMessageBox.warning(None, programName, "The start time is after the end time",
+        QMessageBox.warning(None, programName, "The start time is greater than the end time",
                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         return {SELECTED_SUBJECTS: [], SELECTED_BEHAVIORS: []}
 

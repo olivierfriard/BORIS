@@ -10,6 +10,10 @@ from decimal import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
+HHMMSS = "hh:mm:ss"
+HHMMSSZZZ = "hh:mm:ss.zzz"
+S = "s"
+
 
 class Widget_hhmmss(QWidget):
 
@@ -22,7 +26,7 @@ class Widget_hhmmss(QWidget):
 
         self.sign = QPushButton("+")
         self.sign.clicked.connect(self.change_sign)
-        self.sign.setStyleSheet('font-size:12px;')
+        self.sign.setStyleSheet("font-size:12px;")
         lay.addWidget(self.sign)
 
         self.hours = QSpinBox()
@@ -172,7 +176,6 @@ class Duration_widget(QWidget):
     def set_time(self, new_time):
 
         self.w1.sign.setText("-" if new_time < 0 else "+")
-        #new_time = abs(new_time)
 
         h = abs(new_time) // 3600
         m = (abs(new_time) - h * 3600) // 60
@@ -208,6 +211,11 @@ class Duration_widget(QWidget):
         self.set_time(self.time_value)
         self.Stack.setCurrentIndex(0)
 
+    def set_format(self, time_format):
+        if time_format in [HHMMSS, HHMMSSZZZ]:
+            self.set_format_hhmmss()
+        if time_format in [S]:
+            self.set_format_s()
 
     def get_time(self) -> Decimal:
         """

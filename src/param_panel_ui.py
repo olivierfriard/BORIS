@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'param_panel.ui'
 #
-# Created by: PyQt5 UI code generator 5.9
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -97,25 +99,9 @@ class Ui_Dialog(object):
         self.lbStartTime = QtWidgets.QLabel(self.frm_time_interval)
         self.lbStartTime.setObjectName("lbStartTime")
         self.horizontalLayout.addWidget(self.lbStartTime)
-        self.teStartTime = QtWidgets.QTimeEdit(self.frm_time_interval)
-        self.teStartTime.setObjectName("teStartTime")
-        self.horizontalLayout.addWidget(self.teStartTime)
-        self.dsbStartTime = QtWidgets.QDoubleSpinBox(self.frm_time_interval)
-        self.dsbStartTime.setDecimals(3)
-        self.dsbStartTime.setMaximum(1000000.0)
-        self.dsbStartTime.setObjectName("dsbStartTime")
-        self.horizontalLayout.addWidget(self.dsbStartTime)
         self.lbEndTime = QtWidgets.QLabel(self.frm_time_interval)
         self.lbEndTime.setObjectName("lbEndTime")
         self.horizontalLayout.addWidget(self.lbEndTime)
-        self.teEndTime = QtWidgets.QTimeEdit(self.frm_time_interval)
-        self.teEndTime.setObjectName("teEndTime")
-        self.horizontalLayout.addWidget(self.teEndTime)
-        self.dsbEndTime = QtWidgets.QDoubleSpinBox(self.frm_time_interval)
-        self.dsbEndTime.setDecimals(3)
-        self.dsbEndTime.setMaximum(1000000.0)
-        self.dsbEndTime.setObjectName("dsbEndTime")
-        self.horizontalLayout.addWidget(self.dsbEndTime)
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem3)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -155,9 +141,6 @@ class Ui_Dialog(object):
         self.rb_limit.setText(_translate("Dialog", "Limit to observed events"))
         self.label.setText(_translate("Dialog", "Time interval"))
         self.lbStartTime.setText(_translate("Dialog", "Start time"))
-        self.teStartTime.setDisplayFormat(_translate("Dialog", "hh:mm:ss.zzz"))
         self.lbEndTime.setText(_translate("Dialog", "End time"))
-        self.teEndTime.setDisplayFormat(_translate("Dialog", "hh:mm:ss.zzz"))
         self.pbCancel.setText(_translate("Dialog", "Cancel"))
         self.pbOK.setText(_translate("Dialog", "OK"))
-

@@ -114,6 +114,7 @@ class Observation(QDialog, Ui_Form):
 
         self.setupUi(self)
 
+        # insert duration widget for time offset
         self.obs_time_offset = duration_widget.Duration_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
 

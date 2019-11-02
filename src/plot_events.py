@@ -705,7 +705,7 @@ def create_events_plot(pj,
                 bars[behavior_modifiers_str] = []
 
                 # total duration
-                cursor.execute(("SELECT start,stop FROM aggregated_events "
+                cursor.execute(("SELECT start, stop FROM aggregated_events "
                                 "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ?"),
                                (obs_id, subject, behavior, modifiers,))
                 for row in cursor.fetchall():

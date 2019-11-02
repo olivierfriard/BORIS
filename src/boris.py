@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -4865,13 +4863,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             observationWindow.obs_time_offset.set_format_s()
         if self.timeFormat == HHMMSS:
             observationWindow.obs_time_offset.set_format_hhmmss()
-        '''
-        if self.timeFormat == S:
-            observationWindow.teTimeOffset.setVisible(False)
 
-        if self.timeFormat == HHMMSS:
-            observationWindow.leTimeOffset.setVisible(False)
-        '''
         if mode == EDIT:
 
             observationWindow.setWindowTitle(f'Edit observation "{obsId}"')
@@ -4945,7 +4937,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"][mediaFile])))
                         except Exception:
                             pass
-
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
                 observationWindow.tabProjectType.setCurrentIndex(video)
@@ -5907,7 +5898,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.cbIncludeModifiers.setVisible(False)
             paramPanelWindow.cbExcludeBehaviors.setVisible(False)
 
+        # start and end time
         paramPanelWindow.frm_time_interval.setEnabled(False)
+        paramPanelWindow.start_time.set_format(self.timeFormat)
+        paramPanelWindow.end_time.set_format(self.timeFormat)
+        paramPanelWindow.start_time.set_time(0)
+        paramPanelWindow.end_time.set_time(maxTime)
+
+        '''
         if self.timeFormat == HHMMSS:
             paramPanelWindow.teStartTime.setTime(QtCore.QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
             paramPanelWindow.teEndTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
@@ -5919,6 +5917,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             paramPanelWindow.dsbEndTime.setValue(maxTime)
             paramPanelWindow.teStartTime.setVisible(False)
             paramPanelWindow.teEndTime.setVisible(False)
+            '''
 
         # hide max time
         if not maxTime:
@@ -6026,12 +6025,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"selected subjects: {selectedSubjects}")
         logging.debug(f"selected behaviors: {selectedBehaviors}")
 
+        startTime = paramPanelWindow.start_time.get_time()
+        endTime = paramPanelWindow.end_time.get_time()
+        '''
         if self.timeFormat == HHMMSS:
             startTime = time2seconds(paramPanelWindow.teStartTime.time().toString(HHMMSSZZZ))
             endTime = time2seconds(paramPanelWindow.teEndTime.time().toString(HHMMSSZZZ))
         if self.timeFormat == S:
             startTime = Decimal(paramPanelWindow.dsbStartTime.value())
             endTime = Decimal(paramPanelWindow.dsbEndTime.value())
+        '''
         if startTime > endTime:
             QMessageBox.warning(None, programName, "The start time is after the end time",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)

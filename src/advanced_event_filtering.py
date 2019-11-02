@@ -24,7 +24,6 @@ import pathlib
 import re
 import statistics
 import sys
-# import time
 
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel, QLineEdit,

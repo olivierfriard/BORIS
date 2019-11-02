@@ -27,10 +27,10 @@ import logging
 import os
 import sys
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDialog
 
+import duration_widget
 from config import *
 from param_panel_ui import Ui_Dialog
 
@@ -41,6 +41,14 @@ class Param_panel(QDialog, Ui_Dialog):
 
         super().__init__()
         self.setupUi(self)
+
+
+        # insert duration widget for time offset
+        self.start_time = duration_widget.Duration_widget(0)
+        self.horizontalLayout.insertWidget(1, self.start_time)
+        self.end_time = duration_widget.Duration_widget(0)
+        self.horizontalLayout.insertWidget(2, self.end_time)
+
 
         self.pbSelectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("select all"))
         self.pbUnselectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("unselect all"))
@@ -133,7 +141,7 @@ class Param_panel(QDialog, Ui_Dialog):
 
     def extract_observed_behaviors(self, selected_observations, selected_subjects):
         """
-        extract unique behaviors codes from obs_id observation
+        extract unique behaviors codes from obs_id observation and selected subjects
         """
 
         observed_behaviors = []
