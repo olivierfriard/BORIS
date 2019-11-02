@@ -21,7 +21,7 @@ pytest==4.0.2
 pytest-cov==2.6.0
 pytest-qt==3.2.2
 python-dateutil==2.7.5
-PyYAML==3.13
+PyYAML==5.1
 six==1.12.0
 tablib==0.12.1
 unicodecsv==0.14.1
