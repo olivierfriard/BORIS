@@ -208,10 +208,6 @@ class Advanced_event_filtering_dialog(QDialog):
                 if sb not in self.events[obs_id]:
                     self.events[obs_id][sb] = io([0, 0])
 
-            print(logic)
-            print(self.events[obs_id]["No focal subject|e"])
-            print(self.events[obs_id]["No focal subject|z"])
-
             try:
                 eval_result = eval(logic)
                 for i in eval_result:
