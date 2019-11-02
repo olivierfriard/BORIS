@@ -340,6 +340,7 @@
      <addaction name="actionAdd_image_overlay_on_video"/>
      <addaction name="actionRemove_image_overlay"/>
     </widget>
+    <addaction name="action_block_dockwidgets"/>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionShow_the_sound_waveform"/>
     <addaction name="actionShow_data_files"/>
@@ -1394,6 +1395,14 @@
   <action name="action_advanced_event_filtering">
    <property name="text">
     <string>Advanced event filtering</string>
+   </property>
+  </action>
+  <action name="action_block_dockwidgets">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Lock dockwidgets</string>
    </property>
   </action>
  </widget>

@@ -58,7 +58,7 @@ def ico(i: list):
 
 def io(i: list):
     """
-    create a closed-open interval
+    create a open interval
     """
     return Interval.open(i[0], i[1])
 
@@ -208,7 +208,10 @@ class Advanced_event_filtering_dialog(QDialog):
                 if sb not in self.events[obs_id]:
                     self.events[obs_id][sb] = io([0, 0])
 
-            # print(logic)
+            print(logic)
+            print(self.events[obs_id]["No focal subject|e"])
+            print(self.events[obs_id]["No focal subject|z"])
+
             try:
                 eval_result = eval(logic)
                 for i in eval_result:
@@ -323,7 +326,7 @@ class Advanced_event_filtering_dialog(QDialog):
 def event_filtering(pj: dict):
     """
     advanced event filtering
-    the python-intervals module is used to do operations on interval
+    the python-intervals module is used to do operations on intervals (intersection, union)
     """
 
     result, selected_observations = select_observations.select_observations(pj,
@@ -374,10 +377,6 @@ def event_filtering(pj: dict):
         QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    '''
-    print("load in db")
-    t1 = time.time()
-    '''
     ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                                       parameters[SELECTED_SUBJECTS],
                                                                       selected_observations,
@@ -404,15 +403,13 @@ def event_filtering(pj: dict):
             if obs not in events:
                 events[obs] = {}
 
-            if f"{subj}|{behav}" not in events[obs]:
-                events[obs][f"{subj}|{behav}"] = ico([start, stop])
-            else:
-                events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | ico([start, stop])
+            # use function in base at event (state or point)
+            interval_func = icc if start == stop else ico
 
-    '''
-    t2 = time.time()
-    print(f"db loaded: {t2 - t1}")
-    '''
+            if f"{subj}|{behav}" not in events[obs]:
+                events[obs][f"{subj}|{behav}"] = interval_func([start, stop])
+            else:
+                events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()
