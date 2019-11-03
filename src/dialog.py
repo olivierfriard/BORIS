@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -574,7 +572,7 @@ class FindReplaceEvents(QWidget):
         self.clickSignal.emit(msg)
 
 
-class exlore_project_dialog(QDialog):
+class explore_project_dialog(QDialog):
     """
     "explore project" dialog box
     """

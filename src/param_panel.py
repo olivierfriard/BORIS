@@ -47,7 +47,7 @@ class Param_panel(QDialog, Ui_Dialog):
         self.start_time = duration_widget.Duration_widget(0)
         self.horizontalLayout.insertWidget(1, self.start_time)
         self.end_time = duration_widget.Duration_widget(0)
-        self.horizontalLayout.insertWidget(2, self.end_time)
+        self.horizontalLayout_6.insertWidget(1, self.end_time)
 
 
         self.pbSelectAllSubjects.clicked.connect(lambda: self.subjects_button_clicked("select all"))

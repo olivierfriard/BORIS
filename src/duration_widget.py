@@ -5,7 +5,7 @@ widget to edit duration > 24 h or < 0
 https://stackoverflow.com/questions/44380202/creating-a-custom-widget-in-pyqt5
 """
 
-from decimal import *
+import decimal as dc
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -23,6 +23,8 @@ class Widget_hhmmss(QWidget):
         QWidget.__init__(self, parent=parent)
 
         lay = QHBoxLayout(self)
+        lay.setSpacing(0)
+        lay.setContentsMargins(0, 0, 0, 0)
 
         self.sign = QPushButton("+")
         self.sign.clicked.connect(self.change_sign)
@@ -62,7 +64,7 @@ class Widget_hhmmss(QWidget):
 
         spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         lay.addItem(spacerItem)
-
+        self.setLayout(lay)
 
     def change_sign(self):
         """
@@ -117,6 +119,8 @@ class Widget_seconds(QWidget):
     def __init__(self, parent=None):
         QWidget.__init__(self, parent=parent)
         lay = QHBoxLayout(self)
+        lay.setSpacing(0)
+        lay.setContentsMargins(0, 0, 0, 0)
 
         self.seconds2 = QDoubleSpinBox()
         self.seconds2.setValue(0)
@@ -126,6 +130,11 @@ class Widget_seconds(QWidget):
         self.seconds2.valueChanged.connect(self.value_changed)
         lay.addWidget(self.seconds2)
 
+        spacerItem = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        lay.addItem(spacerItem)
+
+        self.setLayout(lay)
+
     def value_changed(self, v):
         self.time_changed_signal.emit(v)
 
@@ -134,11 +143,14 @@ class Duration_widget(QWidget):
 
     def __init__(self, time_value=0, parent=None):
 
-        QWidget.__init__(self, parent=parent)
+        # QWidget.__init__(self, parent=parent)
+        super().__init__()
 
-        self.time_value = Decimal(time_value).quantize(Decimal('.001'))
+        self.time_value = dc.Decimal(time_value).quantize(dc.Decimal('.001'))
 
         lay = QHBoxLayout(self)
+        lay.setSpacing(0)
+        lay.setContentsMargins(0, 0, 0, 0)
 
         self.Stack = QStackedWidget()
         self.w1 = Widget_hhmmss()
@@ -212,17 +224,19 @@ class Duration_widget(QWidget):
         self.Stack.setCurrentIndex(0)
 
     def set_format(self, time_format):
+        """
+        switch time format in base of time_format value
+        """
         if time_format in [HHMMSS, HHMMSSZZZ]:
             self.set_format_hhmmss()
         if time_format in [S]:
             self.set_format_s()
 
-    def get_time(self) -> Decimal:
+    def get_time(self) -> dc.Decimal:
         """
         return time displayed by widget in seconds
         """
-        #return Decimal(- self.time_value if self.w1.sign.text() == "-" else self.time_value).quantize(Decimal('.001'))
-        return Decimal(self.time_value).quantize(Decimal(".001"))
+        return dc.Decimal(self.time_value).quantize(dc.Decimal(".001"))
 
 
 if __name__ == '__main__':

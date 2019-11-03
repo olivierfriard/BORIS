@@ -10731,7 +10731,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         search various elements (subjects, behaviors, modifiers, comments) in all observations
         """
 
-        explore_dialog = dialog.exlore_project_dialog()
+        explore_dialog = dialog.explore_project_dialog()
         if explore_dialog.exec_():
             results = []
             nb_fields = ((explore_dialog.find_subject.text() != "") +
