@@ -39,7 +39,7 @@ from decimal import *
 from shutil import copyfile
 
 import numpy as np
-import psutil
+'''import psutil'''
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QImage, QPixmap, qRgb
 from PyQt5.QtWidgets import *
@@ -678,7 +678,7 @@ def angle(p1, p2, p3):
     return math.acos(
         (distance(p1, p2) ** 2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
 
-
+'''
 def rss_memory_used(pid):
     """
     get RSS memory used by process pid
@@ -693,7 +693,6 @@ def rss_memory_used(pid):
         return round(psutil.Process(pid).memory_info().rss / 1024 / 1024)
     except exception:
         return -1
-
 
 def rss_memory_percent_used(pid):
     """
@@ -710,7 +709,6 @@ def rss_memory_percent_used(pid):
     except Exception:
         return -1
 
-
 def available_memory():
     """
     get available memory on system
@@ -719,6 +717,7 @@ def available_memory():
         return psutil.virtual_memory().available
     except Exception:
         return -1
+'''
 
 def polygon_area(poly):
     """

@@ -41,7 +41,7 @@ def find_local_libvlc():
 
     if sys.platform.startswith('win'):
         libname = 'libvlc.dll'
-        
+
         lib_path = parent_dir / libname
         if lib_path.exists():
             mem_dir = os.getcwd()
