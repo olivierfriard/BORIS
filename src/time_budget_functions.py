@@ -269,9 +269,6 @@ def synthetic_time_budget(pj: dict,
 
                         if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
                             try:
-
-                                print(row[0], time_to_subtract)
-
                                 behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
                                     0 if row[0] is None
                                     else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}")
@@ -581,7 +578,6 @@ def time_budget_analysis(ethogram: dict,
 
                 if category in categories[subject]:
                     if behav["duration"] not in ["-", "NA"] and categories[subject][category]["duration"] not in ["-", "NA"]:
-                        print(categories[subject][category]["duration"], behav["duration"])
                         categories[subject][category]["duration"] += behav["duration"]
                     else:
                         categories[subject][category]["duration"] = "-"

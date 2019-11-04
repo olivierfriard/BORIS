@@ -374,12 +374,6 @@ def create_subtitles(pj: dict,
                             return False, f"The length for media file {mediaFile} is not available"
                         out = ""
 
-                        print(",".join(["?"] * len(parameters["selected subjects"])))
-
-                        print(",".join(["?"] * len(parameters["selected behaviors"])))
-
-                        print([obsId, init, end] + parameters["selected subjects"] + parameters["selected behaviors"])
-
                         cursor.execute(
                             (
                                 "SELECT subject, behavior, type, start, stop, modifiers FROM aggregated_events "
@@ -1028,7 +1022,6 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
                 for event in lst:
 
                     last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
-                    print("last_event_time", last_event_time, type(last_event_time))
 
                     closing_events_to_add.append(
                         [last_event_time + Decimal("0.001"), subject, behavior, event[1], ""]  # modifiers  # comment

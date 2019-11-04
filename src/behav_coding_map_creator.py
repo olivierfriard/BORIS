@@ -405,7 +405,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.areaColor.setAlpha(int(self.slAlpha.value() / 100 * 255))
 
         if self.selectedPolygon:
-            print("clsed polygon set brush", self.areaColor)
             self.selectedPolygon.setBrush(self.areaColor)
 
             for idx, area in enumerate(self.polygonsList2):
@@ -731,7 +730,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             points = []
             for p in range(pg.polygon().count()):
-                # print(int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y()))
                 points.append([int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y())])
 
             mapDict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
@@ -760,36 +758,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         if self.fileName:
             mapDict = self.make_coding_map_dict()
-
-            '''
-            mapDict = {"coding_map_type": "BORIS behaviors coding map",
-                       "name": self.mapName,
-                       "areas": {}}
-
-            for ac, pg in self.polygonsList2:
-                if not mapDict["areas"]:
-                    idx = 0
-                else:
-                    idx = max(mapDict["areas"].keys()) + 1
-
-                points = []
-                for p in range(pg.polygon().count()):
-                    print(int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y()))
-                    points.append([int(pg.polygon().value(p).x()), int(pg.polygon().value(p).y())])
-
-                mapDict["areas"][idx] = {"code": ac, "geometry": points, "color": pg.brush().color().rgba()}
-
-            # Save QPixmap to QByteArray via QBuffer.
-            byte_array = QByteArray()
-            buffer = QBuffer(byte_array)
-            buffer.open(QIODevice.WriteOnly)
-            self.pixmap.save(buffer, "PNG")
-            string_io = io.BytesIO( byte_array )
-            string_io.seek(0)
-
-            # add codified bitmap
-            mapDict["bitmap"] = binascii.b2a_base64(string_io.read()).decode("utf-8")
-            '''
 
             with open(self.fileName, "w") as outfile:
                 outfile.write(json.dumps(mapDict))
@@ -882,11 +850,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         # self.polygonsList2[self.leAreaCode.text()] = self.closedPolygon
         self.polygonsList2.append([self.leAreaCode.text(), self.closedPolygon])
 
-        print("self.closedPolygon.brush().color()", self.closedPolygon.brush().color())
-        print("self.closedPolygon.count()", self.closedPolygon.polygon().count())
-        for p in range(self.closedPolygon.polygon().count()):
-            print(self.closedPolygon.polygon().value(p))
-
         self.closedPolygon, self.flagNewArea = None, None
         self.view._start = 0
         self.view.points, self.view.elList = [], []
@@ -912,7 +875,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             self.closedPolygon = None
 
         # remove all lines
-        print("self.view.elList", self.view.elList)
         for l in self.view.elList:
             self.view.scene().removeItem(l)
 

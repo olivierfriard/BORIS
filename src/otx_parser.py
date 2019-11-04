@@ -115,20 +115,17 @@ def otx_to_boris(file_path: str) -> dict:
         if modif_parent_id:
             modifiers[modif_parent_id]["values"].append(modif_code)
         else:
-            #modifiers_set[modif_id]
             if len(key) > 1:
                 key = ""
                 flag_long_key = True
             modifiers[modif_id] = { "set_name": modif_code, "key": key, "description": description, "values": []}
 
-    # print("modifiers")
 
     connections = {}
     itemlist = xmldoc.getElementsByTagName('CDS_CONNECTION')
 
     for item in itemlist:
         connections[ item.attributes['CDS_ELEMENT_ID'].value ] =  item.attributes['CDS_MODIFIER_ID'].value
-    #print("connections", connections)
 
     # behaviors
     behaviors = {}
@@ -300,20 +297,4 @@ def otx_to_boris(file_path: str) -> dict:
         project["msg"] = "The keys longer than one char were deleted"
 
     return project
-
-'''
-if __name__ == "__main__":
-    import json
-
-    boris_project = otx_to_boris(sys.argv[1])
-    if "error" in boris_project:
-        print(boris_project["error"])
-    else:
-        filename = pathlib.Path(sys.argv[1])
-        filename_replace_ext = filename.with_suffix(".boris")
-        with open(filename_replace_ext, "w") as f_out:
-            f_out.write(json.dumps(boris_project))
-'''
-
-
 

@@ -148,7 +148,6 @@ def create_transitions_gv_from_matrix(matrix, cutoff_all=0, cutoff_behavior=0, e
 
                     if edge_label == "fraction_node":
                         transition_sum = sum(transitions[behaviour1].values())
-                        print(transition_sum)
                         if transitions[behaviour1][behaviour2] / transition_sum > cutoff_behavior:
                             out += """"{behaviour1}" -> "{behaviour2}" [label="{label}%"];\n""".format(behaviour1=behaviour1,
                                     behaviour2=behaviour2, label=round(transitions[behaviour1][behaviour2] / transition_sum * 100, 1))

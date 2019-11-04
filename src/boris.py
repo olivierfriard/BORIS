@@ -324,7 +324,7 @@ class Video_frame(QFrame):
 
     '''
     def mouseDoubleClickEvent(self, QMouseEvent):
-        print("double click")
+        """handle double click on video frame""""
     '''
 
     def mousePressEvent(self, QMouseEvent):
@@ -463,7 +463,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     instance = vlc.Instance()   # "--avcodec-hw=none"
-    print("instance", instance)
 
     pj = dict(EMPTY_PROJECT)
     project = False
@@ -3595,24 +3594,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         ))
         top_stats = snapshot.statistics(key_type, True)
 
-        print("Top %s lines" % limit)
-
         for index, stat in enumerate(top_stats[:limit], 1):
             frame = stat.traceback[0]
             # replace "/path/to/module/file.py" with "module/file.py"
             filename = os.sep.join(frame.filename.split(os.sep)[-2:])
-            print(f"#{index}: {filename}:{frame.lineno}: {round(stat.size / 1024)} KiB")
             line = linecache.getline(frame.filename, frame.lineno).strip()
-            if line:
-                print('    %s' % line)
 
         other = top_stats[limit:]
         if other:
             size = sum(stat.size for stat in other)
-            print("%s other: %.1f KiB" % (len(other), size / 1024))
         total = sum(stat.size for stat in top_stats)
-
-        print("Total allocated size: %.1f KiB" % (total / 1024))
 
 
     def ffmpeg_timer_out(self):

@@ -323,12 +323,6 @@ class Plotter(QObject):
     @pyqtSlot(float)
     def replot(self, current_time):  # time_ in s
 
-        logging.debug("============================================")
-        '''
-        print("============================================")
-        print("current time", current_time)
-        print("self.min_time_value <= current_time <= self.max_time_value", self.min_time_value <= current_time <= self.max_time_value)
-        '''
 
         logging.debug("current_time: {}".format(current_time))
 
@@ -337,24 +331,14 @@ class Plotter(QObject):
         logging.debug("self.interval: {}".format(self.interval))
 
         freq_interval = int(round(self.interval / self.min_time_step))
-        '''
-        print("freq interval", freq_interval)
-        '''
 
         if self.min_time_value <= current_discrete_time <= self.max_time_value:
 
             logging.debug("self.min_time_value <= current_discrete_time <= self.max_time_value")
 
             idx = np.where(self.data[:, 0] == current_discrete_time)[0]
-            '''
-                print("idx 1", idx)
-                print(self.data[:20])
-                '''
             if not len(idx):
                 idx = np.where(abs(self.data[:, 0] - current_discrete_time) <= 0.02)[0]
-                '''
-                    print("idx 2", idx)
-                    '''
 
             if len(idx):
 
@@ -362,12 +346,7 @@ class Plotter(QObject):
 
                 logging.debug("position data: {}".format(position_data))
 
-                #print(current_discrete_time, position_data, self.data[position_data:position_data+1][:,1])
-
                 position_start = int(position_data - freq_interval // 2)
-                '''
-                    print("position_start", position_start)
-                    '''
 
                 flag_i, flag_j = False, False
 
@@ -380,14 +359,10 @@ class Plotter(QObject):
                     position_start = 0
 
                 position_end = int(position_data + freq_interval // 2)
-                '''print("position_end", position_end)'''
 
                 if position_end >= len(self.data):
                     j = np.array([np.nan] * abs(position_end - len(self.data))).T
                     flag_j = True
-                    '''
-                        print("len j", len(j))
-                        '''
 
                     position_end = len(self.data)
 
@@ -398,21 +373,14 @@ class Plotter(QObject):
 
                 if flag_j:
                     d = np.append(d, j, axis=0)
-                '''
-                    print("len d", len(d))
-                    '''
             else:
                 # not known problem
-                #return nan data
                 d = np.array([np.nan] * int(self.interval / self.min_time_step)).T
 
         elif current_time > self.max_time_value:
 
             logging.debug("self.interval/self.min_time_step/2: {}".format(self.interval / self.min_time_step / 2))
 
-            #print((current_time - self.max_time_value)/self.min_time_step)
-
-            #dim_footer = int((current_time - self.max_time_value)/self.min_time_step +  self.interval/self.min_time_step/2)
             dim_footer = int(round((current_time - self.max_time_value) / self.min_time_step + self.interval / self.min_time_step / 2))
 
             footer = np.array([np.nan] * dim_footer).T
@@ -452,14 +420,8 @@ class Plotter(QObject):
             x = (self.min_time_value - current_time) / self.min_time_step
             dim_header = int(round(self.interval / self.min_time_step / 2 + x))
             header = np.array([np.nan] * dim_header).T
-            '''
-            print("len header", len(header))
-            '''
 
             b = int(round(self.interval / self.min_time_step / 2 - x))
-            '''
-            print("b", b)
-            '''
 
             if b >= 0:
                 d = np.append(header, self.data[0:b][:, 1], axis=0)
@@ -542,7 +504,6 @@ if __name__ == '__main__':
                     column_converter)
 
     if win.error_msg:
-        print(win.error_msg)
         sys.exit()
 
     win.show()

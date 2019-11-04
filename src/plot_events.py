@@ -161,13 +161,10 @@ def create_behaviors_bar_plot(pj: dict,
                         distinct_behav.append(behavior)
             '''
 
-            print(obs_id, distinct_behav)
-
             # distinct subjects
             cursor.execute("SELECT distinct subject FROM aggregated_events WHERE observation = ?",
                            (obs_id,))
             distinct_subjects = [rows["subject"] for rows in cursor.fetchall()]
-            print(obs_id, distinct_subjects)
 
             behaviors = init_behav(pj[ETHOGRAM],
                                 distinct_subjects,
@@ -224,8 +221,6 @@ def create_behaviors_bar_plot(pj: dict,
             cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
                         (min_time, max_time, obs_id, min_time, max_time, ))
 
-            print("behaviors", behaviors)
-
             for ax_idx, subject in enumerate(sorted(distinct_subjects)):
 
                 for behavior in distinct_behav:
@@ -269,11 +264,6 @@ def create_behaviors_bar_plot(pj: dict,
 
 
                 #width = 0.35       # the width of the bars: can also be len(x) sequence
-
-                print("durations", durations)
-                print(colors_duration)
-                print("n_occurences", n_occurences)
-                print(colors)
 
                 axs2[ax_idx].bar(np.arange(len(n_occurences)),
                                 n_occurences,

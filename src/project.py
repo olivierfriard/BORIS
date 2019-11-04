@@ -677,8 +677,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     subjectName = self.twSubjects.item(subject_row, 1).text().strip() if self.twSubjects.item(subject_row, 1) else ""
                     subjects_list.append((subjectName, key))
 
-                print(subjects_list)
-
                 addModifierWindow = add_modifier.addModifierDialog(self.twBehaviors.item(row, column).text(),
                                                                    subjects=subjects_list
                                                                    )

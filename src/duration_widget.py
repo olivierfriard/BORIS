@@ -238,11 +238,11 @@ class Duration_widget(QWidget):
         """
         return dc.Decimal(self.time_value).quantize(dc.Decimal(".001"))
 
-
+'''
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
     w = Duration_widget()
     w.show()
-    print(w.get_time())
     sys.exit(app.exec_())
+'''
