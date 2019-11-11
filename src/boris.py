@@ -727,7 +727,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExportEvents_2.setEnabled(flag)
         self.actionExport_aggregated_events.setEnabled(flag)
 
-        self.actionExportEventString.setEnabled(flag)
+        # self.actionExportEventString.setEnabled(flag)
+        self.menuas_behavioural_sequences.setEnabled(flag)
         self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
         self.actionJWatcher.setEnabled(flag)
 
@@ -880,7 +881,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionLoad_observations_file.triggered.connect(self.import_observations)
 
         self.actionExportEvents_2.triggered.connect(lambda: self.export_tabular_events("tabular"))
-        self.actionExportEventString.triggered.connect(lambda: self.export_events_as_behavioral_sequences(timed=False))
+        
+        # behavioral sequences
+        # self.actionExportEventString.triggered.connect(lambda: self.export_events_as_behavioral_sequences(timed=False))
+        self.actionseparated_subjects.triggered.connect(lambda: self.export_events_as_behavioral_sequences(separated_subjects=True, timed=False))
+        self.actiongrouped_subjects.triggered.connect(lambda: self.export_events_as_behavioral_sequences(separated_subjects=False, timed=False))
+
         self.actionExport_aggregated_events.triggered.connect(self.export_aggregated_events)
         self.actionExport_events_as_Praat_TextGrid.triggered.connect(self.export_state_events_as_textgrid)
         self.actionJWatcher.triggered.connect(lambda: self.export_tabular_events("jwatcher"))
@@ -11032,11 +11038,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
 
-    def export_events_as_behavioral_sequences(self, timed=False):
+    def export_events_as_behavioral_sequences(self, separated_subjects=False, timed=False):
         """
         export events from selected observations by subject as behavioral sequences (plain text file)
         behaviors are separated by character specified in self.behaviouralStringsSeparator (usually pipe |)
         for use with Behatrix (see http://www.boris.unito.it/pages/behatrix)
+
+        Args:
+            separated_subjects (bool):
+            timed (bool):
         """
 
         # ask user for observations to analyze
@@ -11059,11 +11069,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         file_name = fn[0] if type(fn) is tuple else fn
 
         if file_name:
-
             r, msg = export_observation.observation_to_behavioral_sequences(pj=self.pj,
                                                                             selected_observations=selected_observations,
                                                                             parameters=parameters,
                                                                             behaviors_separator=self.behaviouralStringsSeparator,
+                                                                            separated_subjects= separated_subjects,
                                                                             timed=timed,
                                                                             file_name=file_name)
             if not r:
