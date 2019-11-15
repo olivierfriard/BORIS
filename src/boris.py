@@ -3356,216 +3356,223 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         show preferences window
         """
 
-        preferencesWindow = preferences.Preferences()
-        preferencesWindow.tabWidget.setCurrentIndex(0)
-
-        if self.timeFormat == S:
-            preferencesWindow.cbTimeFormat.setCurrentIndex(0)
-
-        if self.timeFormat == HHMMSS:
-            preferencesWindow.cbTimeFormat.setCurrentIndex(1)
-
-        preferencesWindow.sbffSpeed.setValue(self.fast)
-        preferencesWindow.cb_adapt_fast_jump.setChecked(self.config_param.get(ADAPT_FAST_JUMP, False))
-        preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
-        preferencesWindow.sbSpeedStep.setValue(self.play_rate_step)
-        # automatic backup
-        preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
-        # separator for behavioural strings
-        preferencesWindow.leSeparator.setText(self.behaviouralStringsSeparator)
-        # close same event indep of modifiers
-        preferencesWindow.cbCloseSameEvent.setChecked(self.close_the_same_current_event)
-        # confirm sound
-        preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
-        # beep every
-        preferencesWindow.sbBeepEvery.setValue(self.beep_every)
-
-        # alert no focal subject
-        preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
-        # tracking cursor above event
-        preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
-        # check for new version
-        preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
-        # display subtitles
-        preferencesWindow.cb_display_subtitles.setChecked(self.config_param[DISPLAY_SUBTITLES])
-        # pause before add event
-        preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
-
-        preferencesWindow.cb_compact_time_budget.setChecked(self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT)
-
-        # FFmpeg for frame by frame mode
-        preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
-        preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
-        preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
-
-        # frame-by-frame mode
-        if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
-            preferencesWindow.rb_save_frames_in_mem.setChecked(True)
-        if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
-            preferencesWindow.rb_save_frames_on_disk.setChecked(True)
-
-        preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
-        preferencesWindow.lb_memory_in_use.setText((f"Memory used by BORIS: "
-                                                    f"{utilities.rss_memory_percent_used(self.pid):.1f} % of total memory"))
-
-        preferencesWindow.sbFrameResize.setValue(self.frame_resize)
-        mem_frame_resize = self.frame_resize
-        # frame-by-frame cache size (in seconds)
-        preferencesWindow.sb_fbf_cache_size.setValue(self.fbf_cache_size)
-
-        preferencesWindow.cbFrameBitmapFormat.clear()
-        preferencesWindow.cbFrameBitmapFormat.addItems(FRAME_BITMAP_FORMAT_LIST)
-
         try:
-            preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(self.frame_bitmap_format))
-        except Exception:
-            preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(FRAME_DEFAULT_BITMAP_FORMAT))
+            preferencesWindow = preferences.Preferences()
+            preferencesWindow.tabWidget.setCurrentIndex(0)
 
-        # spectrogram
-        preferencesWindow.cbSpectrogramColorMap.clear()
-        preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
-        try:
-            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
-        except Exception:
-            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+            if self.timeFormat == S:
+                preferencesWindow.cbTimeFormat.setCurrentIndex(0)
 
-        try:
-            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
-        except Exception:
-            preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+            if self.timeFormat == HHMMSS:
+                preferencesWindow.cbTimeFormat.setCurrentIndex(1)
 
-        try:
-            preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
-        except Exception:
-            preferencesWindow.sb_time_interval.setValue(SPECTROGRAM_DEFAULT_TIME_INTERVAL)
+            preferencesWindow.sbffSpeed.setValue(self.fast)
+            preferencesWindow.cb_adapt_fast_jump.setChecked(self.config_param.get(ADAPT_FAST_JUMP, False))
+            preferencesWindow.sbRepositionTimeOffset.setValue(self.repositioningTimeOffset)
+            preferencesWindow.sbSpeedStep.setValue(self.play_rate_step)
+            # automatic backup
+            preferencesWindow.sbAutomaticBackup.setValue(self.automaticBackup)
+            # separator for behavioural strings
+            preferencesWindow.leSeparator.setText(self.behaviouralStringsSeparator)
+            # close same event indep of modifiers
+            preferencesWindow.cbCloseSameEvent.setChecked(self.close_the_same_current_event)
+            # confirm sound
+            preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
+            # beep every
+            preferencesWindow.sbBeepEvery.setValue(self.beep_every)
 
-        # plot colors
-        if not self.plot_colors:
-            self.plot_colors = BEHAVIORS_PLOT_COLORS
-        preferencesWindow.te_plot_colors.setPlainText("\n".join(self.plot_colors))
+            # alert no focal subject
+            preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
+            # tracking cursor above event
+            preferencesWindow.cbTrackingCursorAboveEvent.setChecked(self.trackingCursorAboveEvent)
+            # check for new version
+            preferencesWindow.cbCheckForNewVersion.setChecked(self.checkForNewVersion)
+            # display subtitles
+            preferencesWindow.cb_display_subtitles.setChecked(self.config_param[DISPLAY_SUBTITLES])
+            # pause before add event
+            preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
-        if preferencesWindow.exec_():
+            preferencesWindow.cb_compact_time_budget.setChecked(self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT)
 
-            if preferencesWindow.flag_refresh:
-                # refresh preferences remove the config file
+            # FFmpeg for frame by frame mode
+            preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
+            preferencesWindow.leFFmpegCacheDir.setText(self.ffmpeg_cache_dir)
+            preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
 
-                logging.debug("flag refresh ")
-
-                self.config_param["refresh_preferences"] = True
-                self.close()
-                # check if refresh canceled for not saved project
-                if "refresh_preferences" in self.config_param:
-                    if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
-                        os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
-                    sys.exit()
-
-            if preferencesWindow.cbTimeFormat.currentIndex() == 0:
-                self.timeFormat = S
-
-            if preferencesWindow.cbTimeFormat.currentIndex() == 1:
-                self.timeFormat = HHMMSS
-
-            self.fast = preferencesWindow.sbffSpeed.value()
-
-            self.config_param[ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
-
-            self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
-
-            self.play_rate_step = preferencesWindow.sbSpeedStep.value()
-
-            self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
-            if self.automaticBackup:
-                self.automaticBackupTimer.start(self.automaticBackup * 60000)
-            else:
-                self.automaticBackupTimer.stop()
-
-            self.behaviouralStringsSeparator = preferencesWindow.leSeparator.text()
-
-            self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
-
-            self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
-
-            self.beep_every = preferencesWindow.sbBeepEvery.value()
-
-            self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
-
-            self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
-
-            self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
-
-            self.config_param[DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
-            st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
-            for player in self.dw_player:
-                 player.mediaplayer.video_set_spu(st_track_number)
-
-            self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
-
-            if self.observationId:
-                self.loadEventsInTW(self.observationId)
-                self.display_statusbar_info(self.observationId)
-
-            # result
-            if preferencesWindow.cb_compact_time_budget.isChecked():
-                self.config_param[TIME_BUDGET_FORMAT] = COMPACT_TIME_BUDGET_FORMAT
-            else:
-                self.config_param[TIME_BUDGET_FORMAT] = DEFAULT_TIME_BUDGET_FORMAT
-
-            self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
-            self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
-
-            # frame-by-frame
-            self.config_param[SAVE_FRAMES] = DISK
-            if preferencesWindow.rb_save_frames_in_mem.isChecked():
-                self.config_param[SAVE_FRAMES] = MEMORY
-            if preferencesWindow.rb_save_frames_on_disk.isChecked():
-                self.config_param[SAVE_FRAMES] = DISK
-            self.config_param[MEMORY_FOR_FRAMES] = preferencesWindow.sb_frames_memory_size.value()
-
-            self.frame_resize = preferencesWindow.sbFrameResize.value()
-
-            # clear frames memory cache if frames saved on disk
+            # frame-by-frame mode
+            if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+                preferencesWindow.rb_save_frames_in_mem.setChecked(True)
             if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
-                self.frames_cache.clear()
+                preferencesWindow.rb_save_frames_on_disk.setChecked(True)
 
-            # frames cache
-            # clear cache (mem or files) if frame_resize changed
-            if self.frame_resize != mem_frame_resize:
+            preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
+            '''
+            preferencesWindow.lb_memory_in_use.setText((f"Memory used by BORIS: "
+                                                        f"{utilities.rss_memory_percent_used(self.pid):.1f} % of total memory"))
+            '''
 
-                if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
-                    self.frames_cache.clear()
-
-                if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
-                    # check temp dir for images from ffmpeg
-                    self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
-
-                    for f in [x for x in os.listdir(self.imageDirectory)
-                              if "BORIS@" in x and os.path.isfile(self.imageDirectory + os.sep + x)]:
-                        try:
-                            os.remove(self.imageDirectory + os.sep + f)
-                        except Exception:
-                            pass
-
-            self.frame_bitmap_format = preferencesWindow.cbFrameBitmapFormat.currentText()
-
+            preferencesWindow.sbFrameResize.setValue(self.frame_resize)
+            mem_frame_resize = self.frame_resize
             # frame-by-frame cache size (in seconds)
-            self.fbf_cache_size = preferencesWindow.sb_fbf_cache_size.value()
+            preferencesWindow.sb_fbf_cache_size.setValue(self.fbf_cache_size)
+
+            preferencesWindow.cbFrameBitmapFormat.clear()
+            preferencesWindow.cbFrameBitmapFormat.addItems(FRAME_BITMAP_FORMAT_LIST)
+
+            try:
+                preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(self.frame_bitmap_format))
+            except Exception:
+                preferencesWindow.cbFrameBitmapFormat.setCurrentIndex(FRAME_BITMAP_FORMAT_LIST.index(FRAME_DEFAULT_BITMAP_FORMAT))
 
             # spectrogram
-            self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
-            # self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
-            self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
+            preferencesWindow.cbSpectrogramColorMap.clear()
+            preferencesWindow.cbSpectrogramColorMap.addItems(SPECTROGRAM_COLOR_MAPS)
+            try:
+                preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+            except Exception:
+                preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
 
-            if self.playMode == FFMPEG:
-                self.FFmpegGlobalFrame -= 1
-                self.ffmpeg_timer_out()
+            try:
+                preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(self.spectrogram_color_map))
+            except Exception:
+                preferencesWindow.cbSpectrogramColorMap.setCurrentIndex(SPECTROGRAM_COLOR_MAPS.index(SPECTROGRAM_DEFAULT_COLOR_MAP))
+
+            try:
+                preferencesWindow.sb_time_interval.setValue(self.spectrogram_time_interval)
+            except Exception:
+                preferencesWindow.sb_time_interval.setValue(SPECTROGRAM_DEFAULT_TIME_INTERVAL)
 
             # plot colors
-            self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
+            if not self.plot_colors:
+                self.plot_colors = BEHAVIORS_PLOT_COLORS
+            preferencesWindow.te_plot_colors.setPlainText("\n".join(self.plot_colors))
 
-            self.menu_options()
+            if preferencesWindow.exec_():
 
-            self.saveConfigFile()
+                if preferencesWindow.flag_refresh:
+                    # refresh preferences remove the config file
 
+                    logging.debug("flag refresh ")
+
+                    self.config_param["refresh_preferences"] = True
+                    self.close()
+                    # check if refresh canceled for not saved project
+                    if "refresh_preferences" in self.config_param:
+                        if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
+                            os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
+                        sys.exit()
+
+                if preferencesWindow.cbTimeFormat.currentIndex() == 0:
+                    self.timeFormat = S
+
+                if preferencesWindow.cbTimeFormat.currentIndex() == 1:
+                    self.timeFormat = HHMMSS
+
+                self.fast = preferencesWindow.sbffSpeed.value()
+
+                self.config_param[ADAPT_FAST_JUMP] = preferencesWindow.cb_adapt_fast_jump.isChecked()
+
+                self.repositioningTimeOffset = preferencesWindow.sbRepositionTimeOffset.value()
+
+                self.play_rate_step = preferencesWindow.sbSpeedStep.value()
+
+                self.automaticBackup = preferencesWindow.sbAutomaticBackup.value()
+                if self.automaticBackup:
+                    self.automaticBackupTimer.start(self.automaticBackup * 60000)
+                else:
+                    self.automaticBackupTimer.stop()
+
+                self.behaviouralStringsSeparator = preferencesWindow.leSeparator.text()
+
+                self.close_the_same_current_event = preferencesWindow.cbCloseSameEvent.isChecked()
+
+                self.confirmSound = preferencesWindow.cbConfirmSound.isChecked()
+
+                self.beep_every = preferencesWindow.sbBeepEvery.value()
+
+                self.alertNoFocalSubject = preferencesWindow.cbAlertNoFocalSubject.isChecked()
+
+                self.trackingCursorAboveEvent = preferencesWindow.cbTrackingCursorAboveEvent.isChecked()
+
+                self.checkForNewVersion = preferencesWindow.cbCheckForNewVersion.isChecked()
+
+                self.config_param[DISPLAY_SUBTITLES] = preferencesWindow.cb_display_subtitles.isChecked()
+                st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
+                for player in self.dw_player:
+                    player.mediaplayer.video_set_spu(st_track_number)
+
+                self.pause_before_addevent = preferencesWindow.cb_pause_before_addevent.isChecked()
+
+                if self.observationId:
+                    self.loadEventsInTW(self.observationId)
+                    self.display_statusbar_info(self.observationId)
+
+                # result
+                if preferencesWindow.cb_compact_time_budget.isChecked():
+                    self.config_param[TIME_BUDGET_FORMAT] = COMPACT_TIME_BUDGET_FORMAT
+                else:
+                    self.config_param[TIME_BUDGET_FORMAT] = DEFAULT_TIME_BUDGET_FORMAT
+
+                self.ffmpeg_cache_dir = preferencesWindow.leFFmpegCacheDir.text()
+                self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
+
+                # frame-by-frame
+                self.config_param[SAVE_FRAMES] = DISK
+                if preferencesWindow.rb_save_frames_in_mem.isChecked():
+                    self.config_param[SAVE_FRAMES] = MEMORY
+                if preferencesWindow.rb_save_frames_on_disk.isChecked():
+                    self.config_param[SAVE_FRAMES] = DISK
+                self.config_param[MEMORY_FOR_FRAMES] = preferencesWindow.sb_frames_memory_size.value()
+
+                self.frame_resize = preferencesWindow.sbFrameResize.value()
+
+                # clear frames memory cache if frames saved on disk
+                if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+                    self.frames_cache.clear()
+
+                # frames cache
+                # clear cache (mem or files) if frame_resize changed
+                if self.frame_resize != mem_frame_resize:
+
+                    if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+                        self.frames_cache.clear()
+
+                    if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+                        # check temp dir for images from ffmpeg
+                        self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+
+                        for f in [x for x in os.listdir(self.imageDirectory)
+                                if "BORIS@" in x and os.path.isfile(self.imageDirectory + os.sep + x)]:
+                            try:
+                                os.remove(self.imageDirectory + os.sep + f)
+                            except Exception:
+                                pass
+
+                self.frame_bitmap_format = preferencesWindow.cbFrameBitmapFormat.currentText()
+
+                # frame-by-frame cache size (in seconds)
+                self.fbf_cache_size = preferencesWindow.sb_fbf_cache_size.value()
+
+                # spectrogram
+                self.spectrogram_color_map = preferencesWindow.cbSpectrogramColorMap.currentText()
+                # self.spectrogramHeight = preferencesWindow.sbSpectrogramHeight.value()
+                self.spectrogram_time_interval = preferencesWindow.sb_time_interval.value()
+
+                if self.playMode == FFMPEG:
+                    self.FFmpegGlobalFrame -= 1
+                    self.ffmpeg_timer_out()
+
+                # plot colors
+                self.plot_colors = preferencesWindow.te_plot_colors.toPlainText().split()
+
+                self.menu_options()
+
+                self.saveConfigFile()
+
+        except:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error in Preferences function: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message("Error ", sys.exc_info())
 
     def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float):
         """
