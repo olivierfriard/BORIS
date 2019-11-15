@@ -206,9 +206,16 @@
      <property name="title">
       <string>Export events</string>
      </property>
+     <widget class="QMenu" name="menuas_behavioural_sequences">
+      <property name="title">
+       <string>as behavioural sequences</string>
+      </property>
+      <addaction name="actionseparated_subjects"/>
+      <addaction name="actiongrouped_subjects"/>
+     </widget>
      <addaction name="actionExportEvents_2"/>
      <addaction name="actionExport_aggregated_events"/>
-     <addaction name="actionExportEventString"/>
+     <addaction name="menuas_behavioural_sequences"/>
      <addaction name="actionExport_events_as_Praat_TextGrid"/>
      <addaction name="actionJWatcher"/>
      <addaction name="action_behavior_binary_table"/>
@@ -870,11 +877,6 @@
     <string>Check for updates and news</string>
    </property>
   </action>
-  <action name="actionExportEventString">
-   <property name="text">
-    <string>as behavioural strings</string>
-   </property>
-  </action>
   <action name="actionClose_project">
    <property name="text">
     <string>Close project</string>
@@ -1403,6 +1405,16 @@
    </property>
    <property name="text">
     <string>Lock dockwidgets</string>
+   </property>
+  </action>
+  <action name="actionseparated_subjects">
+   <property name="text">
+    <string>separated subjects</string>
+   </property>
+  </action>
+  <action name="actiongrouped_subjects">
+   <property name="text">
+    <string>grouped subjects</string>
    </property>
   </action>
  </widget>

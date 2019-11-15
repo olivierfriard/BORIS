@@ -711,7 +711,7 @@ def events_to_behavioral_sequences(pj,
                                    parameters: dict,
                                    behav_seq_separator: str) -> str:
     """
-    return the behavioral sequence (behavioral string) for subject in obsId
+    return the behavioral sequence (behavioral string) for subject in obs_id
 
     Args:
         pj (dict): project
@@ -771,6 +771,84 @@ def events_to_behavioral_sequences(pj,
 
                 if current_states:
                     out += "+".join(sorted(current_states))
+
+                    out += behav_seq_separator
+
+    # remove last separator (if separator not empty)
+    if behav_seq_separator:
+        out = out[0: -len(behav_seq_separator)]
+
+    return out
+
+
+def events_to_behavioral_sequences_all_subj(pj,
+                                   obs_id: str,
+                                   subjects_list: list,
+                                   parameters: dict,
+                                   behav_seq_separator: str) -> str:
+    """
+    return the behavioral sequences for all selected subjects in obs_id
+
+    Args:
+        pj (dict): project
+        obs_id (str): observation id
+        subjects_list (list): list of subjects
+        parameters (dict): parameters
+        behav_seq_separator (str): separator of behviors in behavioral sequences
+
+    Returns:
+        str: behavioral sequences for all selected subjects in selected observation
+    """
+
+    out = ""
+    current_states = {i:[] for i in subjects_list}
+    events_with_status = project_functions.events_start_stop(pj[ETHOGRAM], pj[OBSERVATIONS][obs_id][EVENTS])
+
+    for event in events_with_status:
+        # check if event in selected behaviors
+        if event[EVENT_BEHAVIOR_FIELD_IDX] not in parameters[SELECTED_BEHAVIORS]:
+            continue
+
+        if (event[EVENT_SUBJECT_FIELD_IDX] in subjects_list) or (event[EVENT_SUBJECT_FIELD_IDX] == "" and NO_FOCAL_SUBJECT in subjects_list):
+
+            subject = event[EVENT_SUBJECT_FIELD_IDX] if event[EVENT_SUBJECT_FIELD_IDX] else NO_FOCAL_SUBJECT
+
+            if event[-1] == POINT:
+                if current_states[subject]:
+                    out += f"[{subject}]" + "+".join(current_states[subject]) + "+" + event[EVENT_BEHAVIOR_FIELD_IDX]
+                else:
+                    out += f"[{subject}]" + event[EVENT_BEHAVIOR_FIELD_IDX]
+
+                if parameters[INCLUDE_MODIFIERS]:
+                    out += "&" + event[EVENT_MODIFIER_FIELD_IDX].replace("|", "+")
+
+                out += behav_seq_separator
+
+            if event[-1] == START:
+                if parameters[INCLUDE_MODIFIERS]:
+                    current_states[subject].append((f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
+                                           f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                           f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}"))
+                else:
+                    current_states[subject].append(event[EVENT_BEHAVIOR_FIELD_IDX])
+
+                out += f"[{subject}]" + "+".join(sorted(current_states[subject]))
+
+                out += behav_seq_separator
+
+            if event[-1] == STOP:
+
+                if parameters[INCLUDE_MODIFIERS]:
+                    behav_modif = (f"{event[EVENT_BEHAVIOR_FIELD_IDX]}"
+                                   f"{'&' if event[EVENT_MODIFIER_FIELD_IDX] else ''}"
+                                   f"{event[EVENT_MODIFIER_FIELD_IDX].replace('|', ';')}")
+                else:
+                    behav_modif = event[EVENT_BEHAVIOR_FIELD_IDX]
+                if behav_modif in current_states[subject]:
+                    current_states[subject].remove(behav_modif)
+
+                if current_states[subject]:
+                    out += f"[{subject}]" + "+".join(sorted(current_states[subject]))
 
                     out += behav_seq_separator
 
@@ -841,6 +919,7 @@ def observation_to_behavioral_sequences(pj,
                                         selected_observations,
                                         parameters,
                                         behaviors_separator,
+                                        separated_subjects,
                                         timed,
                                         file_name):
 
@@ -852,16 +931,13 @@ def observation_to_behavioral_sequences(pj,
                 # observation description
                 descr = pj[OBSERVATIONS][obs_id]["description"]
                 if "\r\n" in descr:
-                    descr = descr.replace("\r\n", "\r\n# ")
-                elif "\n" in descr:
-                    descr = descr.replace("\n", "\n# ")
+                    descr = descr.replace("\r\n", "\n# ")
                 elif "\r" in descr:
-                    descr = descr.replace("\r", "\r# ")
-                out_file.write(f"# observation description: {descr}\n")
+                    descr = descr.replace("\r", "\n# ")
+                out_file.write(f"# observation description: {descr}\n\n")
                 # media file name
                 if pj[OBSERVATIONS][obs_id][TYPE] in [MEDIA]:
-                    out_file.write((f"# Media file name: {', '.join([os.path.basename(x) for x in pj[OBSERVATIONS][obs_id][FILE][PLAYER1]])}"
-                                    f"{os.linesep}{os.linesep}"))
+                    out_file.write(f"# Media file name: {', '.join([os.path.basename(x) for x in pj[OBSERVATIONS][obs_id][FILE][PLAYER1]])}\n\n")
                 if pj[OBSERVATIONS][obs_id][TYPE] in [LIVE]:
                     out_file.write(f"# Live observation{os.linesep}{os.linesep}")
 
@@ -873,26 +949,42 @@ def observation_to_behavioral_sequences(pj,
                         out_file.write(f"# {variable}: {pj[OBSERVATIONS][obs_id][INDEPENDENT_VARIABLES][variable]}\n")
                 out_file.write("\n")
 
-                # selected subjects
-                for subject in parameters[SELECTED_SUBJECTS]:
-                    out_file.write(f"\n# {subject if subject else NO_FOCAL_SUBJECT}:\n")
-
-                    if not timed:
-                        out = events_to_behavioral_sequences(pj,
-                                                             obs_id,
-                                                             subject,
-                                                             parameters,
-                                                             behaviors_separator)
-                    if timed:
-                        out = events_to_timed_behavioral_sequences(pj,
-                                                                   obs_id,
-                                                                   subject,
-                                                                   parameters,
-                                                                   0.001,
-                                                                   behaviors_separator)
-
+                # one sequence for all subjects
+                if not separated_subjects:
+                    out = events_to_behavioral_sequences_all_subj(pj,
+                                                                  obs_id,
+                                                                  parameters[SELECTED_SUBJECTS],
+                                                                  parameters,
+                                                                  behaviors_separator)
                     if out:
                         out_file.write(out + "\n")
+
+                # one sequence by subject
+                if separated_subjects:
+                    # selected subjects
+                    for subject in parameters[SELECTED_SUBJECTS]:
+                        out_file.write(f"\n# {subject if subject else NO_FOCAL_SUBJECT}:\n")
+
+                        if not timed:
+                            out = events_to_behavioral_sequences(pj,
+                                                                obs_id,
+                                                                subject,
+                                                                parameters,
+                                                                behaviors_separator)
+                        if timed:
+                            out = events_to_timed_behavioral_sequences(pj,
+                                                                    obs_id,
+                                                                    subject,
+                                                                    parameters,
+                                                                    0.001,
+                                                                    behaviors_separator)
+
+                        if out:
+                            out_file.write(out + "\n")
+
             return True, ""
+
     except Exception:
-        return False, str(sys.exc_info()[1])
+        raise
+        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+        return False, f"{error_type} {error_file_name} {error_lineno}"
