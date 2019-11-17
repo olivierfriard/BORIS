@@ -58,7 +58,8 @@ def create_behavior_binary_table(pj: dict,
     results_df = {}
 
     state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
-    if not state_behavior_codes:
+    point_behavior_codes = [x for x in utilities.point_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
+    if not state_behavior_codes and not point_behavior_codes:
         return {"error": True, "msg": "No state events selected"}
 
     for obs_id in selected_observations:
@@ -71,14 +72,15 @@ def create_behavior_binary_table(pj: dict,
             # extract tuple (behavior, modifier)
             behav_modif_list = [(idx[2], idx[3])
                                 for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (subject if subject != NO_FOCAL_SUBJECT else "")
-                                                                               and idx[2] in state_behavior_codes]
+                                                                               and idx[2] in parameters_obs[SELECTED_BEHAVIORS]]
 
             # extract observed subjects NOT USED at the moment
-            observed_subjects = [event[1] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
+            observed_subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
 
             # add selected behavior if not found in (behavior, modifier)
             if not parameters_obs[EXCLUDE_BEHAVIORS]:
-                for behav in state_behavior_codes:
+                #for behav in state_behavior_codes:
+                for behav in parameters_obs[SELECTED_BEHAVIORS]:
                     if behav not in [x[0] for x in behav_modif_list]:
                         behav_modif_list.append((behav, ""))
 
@@ -99,16 +101,30 @@ def create_behavior_binary_table(pj: dict,
             t = parameters_obs[START_TIME]
             while t < parameters_obs[END_TIME]:
 
+                # state events
                 current_states = utilities.get_current_states_modifiers_by_subject(state_behavior_codes,
                                                                                    pj[OBSERVATIONS][obs_id][EVENTS],
                                                                                    sel_subject_dict,
                                                                                    t,
                                                                                    include_modifiers=parameters_obs[INCLUDE_MODIFIERS])
 
+                # point events
+                current_point = utilities.get_current_points_by_subject(point_behavior_codes,
+                                                                        pj[OBSERVATIONS][obs_id][EVENTS],
+                                                                        sel_subject_dict,
+                                                                        t,
+                                                                        time_interval,
+                                                                        include_modifiers=parameters_obs[INCLUDE_MODIFIERS])
+
                 cols = [float(t)]  # time
 
                 for behav in results_df[obs_id][subject].headers[1:]:  # skip time
-                    cols.append(int(behav in current_states[list(current_states.keys())[0]]))
+                    if behav in state_behavior_codes:
+                        cols.append(int(behav in current_states[list(current_states.keys())[0]]))
+
+                    if behav in point_behavior_codes:
+                        cols.append(current_point[list(current_point.keys())[0]].count(behav))
+                            #int(behav in current_point[list(current_point.keys())[0]]))
 
                 results_df[obs_id][subject].append(cols)
 
@@ -142,7 +158,7 @@ def behavior_binary_table(pj: dict):
             not_paired_obs_list.append(obs_id)
 
     if out:
-        out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
+        out = f"The observations with UNPAIRED state events will be removed from the analysis<br><br>{out}"
         results = dialog.Results_dialog()
         results.setWindowTitle(f"{programName} - Check selected observations")
         results.ptText.setReadOnly(True)

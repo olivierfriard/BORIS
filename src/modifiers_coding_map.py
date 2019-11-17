@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -22,7 +20,7 @@ This file is part of BORIS.
 
 """
 
-codeSeparator = ","
+
 
 
 from PyQt5.QtGui import *
@@ -33,15 +31,17 @@ import json
 import binascii
 import os
 
+codeSeparator = ","
+
 class ModifiersCodingMapWindowClass(QDialog):
 
     class View(QGraphicsView):
 
         mousePress = pyqtSignal(QMouseEvent)
         def mousePressEvent(self, event):
-            self.mousePress.emit( event )
+            self.mousePress.emit(event)
 
-        _start=0
+        start=0
         elList = []
         points = []
 
@@ -74,17 +74,14 @@ class ModifiersCodingMapWindowClass(QDialog):
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hBoxLayout.addItem(spacerItem)
 
-        self.pbCancel = QPushButton("Cancel")
+        self.pbCancel = QPushButton("Cancel", clicked=self.reject)
         hBoxLayout.addWidget(self.pbCancel)
-        self.pbCancel.clicked.connect(self.reject)
 
-        self.btDone = QPushButton("Done", self)
-        self.btDone.clicked.connect(self.accept)
+        self.btDone = QPushButton("Done", self, clicked=self.accept)
         self.btDone.setVisible(True)
 
         hBoxLayout.addWidget(self.btDone)
 
-        #Vlayout.addWidget(self.btDone)
         Vlayout.addLayout(hBoxLayout)
 
         self.setLayout(Vlayout)
@@ -100,7 +97,7 @@ class ModifiersCodingMapWindowClass(QDialog):
         test = self.view.mapToScene(event.pos()).toPoint()
 
         for code in self.polygonsList2:
-            if self.polygonsList2[ code ].contains(test):
+            if self.polygonsList2[code].contains(test):
 
                 codes = self.leareaCode.text().split(codeSeparator)
                 if "" in codes:
@@ -116,7 +113,6 @@ class ModifiersCodingMapWindowClass(QDialog):
 
     def getCodes(self):
         return self.leareaCode.text()
-
 
     def loadMap(self):
         """
@@ -143,28 +139,15 @@ class ModifiersCodingMapWindowClass(QDialog):
             for p in points:
                 newPolygon.append(QPoint(p[0], p[1]))
 
-            clr = QColor( )
-            clr.setRgba( self.areasList["areas"][ area]['color'] )
+            clr = QColor()
+            clr.setRgba(self.areasList["areas"][area]["color"])
 
             # draw polygon
             polygon = QGraphicsPolygonItem(newPolygon)
 
             polygon.setPen(QPen(clr, 0, Qt.NoPen, Qt.RoundCap, Qt.RoundJoin))
 
-            polygon.setBrush( QBrush(clr, Qt.SolidPattern))
+            polygon.setBrush(QBrush(clr, Qt.SolidPattern))
 
-            self.view.scene().addItem( polygon )
-            self.polygonsList2[ area ] = polygon
-
-
-if __name__ == '__main__':
-
-    import sys
-    app = QApplication(sys.argv)
-
-    if len(sys.argv) > 1:
-        cm = json.loads(open(sys.argv[1], "r").read())
-        codingMapWindow = codingMapWindowClass(cm)
-        codingMapWindow.resize(640, 640)
-        codingMapWindow.show()
-        sys.exit(app.exec_())
+            self.view.scene().addItem(polygon)
+            self.polygonsList2[area] = polygon

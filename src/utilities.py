@@ -240,7 +240,21 @@ def state_behavior_codes(ethogram: dict) -> list:
         list: list of behavior codes defined as STATE event
 
     """
-    return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if "STATE" in ethogram[x][TYPE].upper()]
+    return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if STATE in ethogram[x][TYPE].upper()]
+
+
+def point_behavior_codes(ethogram: dict) -> list:
+    """
+    behavior codes defined as POINT event
+
+    Args:
+        ethogram (dict): ethogram dictionary
+
+    Returns:
+        list: list of behavior codes defined as POINT event
+
+    """
+    return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if POINT in ethogram[x][TYPE].upper()]
 
 
 def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
@@ -292,9 +306,11 @@ def get_current_points_by_subject(point_behaviors_codes: list,
                                   events: list,
                                   subjects: dict,
                                   time: Decimal,
-                                  tolerance: Decimal) -> dict:
+                                  tolerance: Decimal,
+                                  include_modifiers: bool = False) -> dict:
     """
-    get near point events for subjects at given time
+    get point events for subjects between given time (time) and (time + tolerance)
+    includes modifiers
     Args:
         point_behaviors_codes (list): list of behavior codes defined as POINT event
         events (list): list of events
@@ -303,19 +319,27 @@ def get_current_points_by_subject(point_behaviors_codes: list,
         tolerance (Decimal): tolerance (s)
 
     Returns:
-        dict: current states by subject. dict of list
+        dict: current point behaviors by subject. dict of list
     """
     current_points = {}
     for idx in subjects:
         current_points[idx] = []
         for sbc in point_behaviors_codes:
-            events = [[x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]] for x in events
-                      if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                      and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                      and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance]
+            if include_modifiers:
+                point_events = [[x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]] for x in events
+                                if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                                and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                                # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
+                                and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
+            else:
+                point_events = [x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+                                if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+                                and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                                # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
+                                and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
 
-            for event in events:
-                current_points[idx].append(event)
+            for point_event in point_events:
+                current_points[idx].append(point_event)
 
     return current_points
 

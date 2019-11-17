@@ -8849,7 +8849,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.pj[ETHOGRAM][key][BEHAVIOR_CODE] == editWindow.cobCode.currentText():
                         event = self.full_event(key)
                         event["subject"] = editWindow.cobSubject.currentText()
-
                         event["comment"] = editWindow.leComment.toPlainText()
                         event["row"] = row
                         event["original_modifiers"] = self.pj[OBSERVATIONS][self.observationId][EVENTS][row][pj_obs_fields["modifier"]]
@@ -9949,12 +9948,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.codingMapWindowGeometry:
                 self.codingMapWindow.restoreGeometry(self.codingMapWindowGeometry)
 
-            if not self.codingMapWindow.exec_():
-                return
+            if self.codingMapWindow.exec_():
+                event["from map"] = self.codingMapWindow.getCodes()
+            else:
+                event["from map"] = ""
 
             self.codingMapWindowGeometry = self.codingMapWindow.saveGeometry()
-
-            event["from map"] = self.codingMapWindow.getCodes()
 
             # restart media
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
