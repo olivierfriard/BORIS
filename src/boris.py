@@ -109,7 +109,8 @@ if sys.platform == "darwin":  # for MacOS
 usage = "usage: %prog [options] [-p PROJECT_PATH] [-o \"OBSERVATION ID\"]"
 parser = OptionParser(usage=usage)
 
-parser.add_option("-d", "--debug", action="store", default="", dest="debug", help="one: log to BORIS.log, new: log to new file")
+parser.add_option("-d", "--debug", action="store", default="", dest="debug",
+                  help="one: log to BORIS.log, new: log to new file")
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
 parser.add_option("-p", "--project", action="store", help="Project file")
@@ -259,6 +260,7 @@ class TempDirCleanerThread(QThread):
                 for ts, f in fl[0:int(len(fl) / 10)]:
                     os.remove(f)
             time.sleep(30)
+
             logging.debug((f"Cleaning frame cache directory. ffmpeg_cache_dir_max_size: {self.ffmpeg_cache_dir_max_size} "
                            f"boris_frames_total_size: {boris_frames_total_size}"))
 
@@ -715,8 +717,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # observations
 
         # enabled if observations
-        for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation, self.actionObservationsList,
-                  self.action_obs_list]:
+        for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation,
+                  self.actionObservationsList, self.action_obs_list]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # enabled if observation
@@ -1215,8 +1217,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         remove path of media files
         """
 
-        if dialog.MessageDialog(programName, ("Removing the path of media files from the project file is irreversible.<br>"
-                                              "Are you sure to continue?"),
+        if dialog.MessageDialog(programName,
+                                ("Removing the path of media files from the project file is irreversible.<br>"
+                                 "Are you sure to continue?"),
                                 [YES, NO]) == NO:
             return
 
@@ -1277,7 +1280,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for time slice
-        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
+        i, ok = QInputDialog.getDouble(self, "IRR - Cohen's Kappa (time-unit)",
+                                       "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
@@ -1335,7 +1339,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
         if len(selected_observations) < 2:
-            QMessageBox.information(self, programName, "You have to select at least 2 observations for Needleman-Wunsch similarity")
+            QMessageBox.information(self, programName,
+                                    "You have to select at least 2 observations for Needleman-Wunsch similarity")
             return
 
         # check if state events are paired
@@ -1378,7 +1383,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # ask for time slice
 
-        i, ok = QInputDialog.getDouble(self, "Needleman-Wunsch similarity", "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
+        i, ok = QInputDialog.getDouble(self, "Needleman-Wunsch similarity",
+                                       "Time unit (in seconds):", 1.0, 0.001, 86400, 3)
         if not ok:
             return
         interval = float2decimal(i)
@@ -7309,8 +7315,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if self.projectChanged:
-            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
-
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?",
+                                            [SAVE, DISCARD, CANCEL])
             if response == SAVE:
                 if self.save_project_activated() == "not saved":
                     return
@@ -7417,7 +7423,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 newProjectWindow.teDescription.setPlainText(newProjectWindow.pj[PROJECT_DESCRIPTION])
 
             if newProjectWindow.pj[PROJECT_DATE]:
-                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE], "yyyy-MM-ddThh:mm:ss"))
+                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE],
+                                                     "yyyy-MM-ddThh:mm:ss"))
             else:
                 newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
@@ -7488,7 +7495,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             item.setFlags(Qt.ItemIsEnabled)
                             item.setBackground(QColor(230, 230, 230))
 
-                        newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1, behavioursFields[field], item)
+                        newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1,
+                                                             behavioursFields[field], item)
 
             # load independent variables
             if INDEPENDENT_VARIABLES in newProjectWindow.pj:
@@ -7510,7 +7518,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 0,
                                                               QTableWidgetItem(bcm["name"]))
                     codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
-                    newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
+                    newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1,
+                                                              QTableWidgetItem(codes))
 
             # time converters
             if CONVERTERS in newProjectWindow.pj:

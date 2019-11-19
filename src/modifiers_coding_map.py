@@ -31,7 +31,6 @@ import json
 import binascii
 import os
 
-codeSeparator = ","
 
 class ModifiersCodingMapWindowClass(QDialog):
 
@@ -50,14 +49,15 @@ class ModifiersCodingMapWindowClass(QDialog):
             self.setScene(QGraphicsScene(self))
             self.scene().update()
 
-    areasList = {}
-    polygonsList2 = {}
-
     def __init__(self, modifiers_coding_map):
         super(ModifiersCodingMapWindowClass, self).__init__()
 
+        self.areasList = {}
+        self.polygonsList2 = {}
+        self.codeSeparator = ","
+
         self.codingMap = modifiers_coding_map
-        self.setWindowTitle("Modifiers coding map: {}".format(self.codingMap["name"]))
+        self.setWindowTitle(f"Modifiers coding map: {self.codingMap['name']}")
         Vlayout = QVBoxLayout(self)
 
         self.view = self.View(self)
@@ -99,7 +99,7 @@ class ModifiersCodingMapWindowClass(QDialog):
         for code in self.polygonsList2:
             if self.polygonsList2[code].contains(test):
 
-                codes = self.leareaCode.text().split(codeSeparator)
+                codes = self.leareaCode.text().split(self.codeSeparator)
                 if "" in codes:
                     codes.remove("")
 
@@ -109,7 +109,7 @@ class ModifiersCodingMapWindowClass(QDialog):
                 else:
                     codes.append(code)
 
-                self.leareaCode.setText(codeSeparator.join(sorted(codes)))
+                self.leareaCode.setText(self.codeSeparator.join(sorted(codes)))
 
     def getCodes(self):
         return self.leareaCode.text()
