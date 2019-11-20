@@ -317,6 +317,7 @@ def get_current_points_by_subject(point_behaviors_codes: list,
         subjects (dict): dictionary of subjects
         time (Decimal): time (s)
         tolerance (Decimal): tolerance (s)
+        include_modifiers (bool): True to include modifiers
 
     Returns:
         dict: current point behaviors by subject. dict of list
