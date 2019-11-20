@@ -26,11 +26,10 @@ This file is part of BORIS.
 import logging
 import os
 
-from PyQt5.QtWidgets import QDialog, QFileDialog
-
 from config import BEHAVIORS_PLOT_COLORS, CANCEL
 from dialog import MessageDialog
 from preferences_ui import Ui_prefDialog
+from PyQt5.QtWidgets import QDialog, QFileDialog
 
 
 class Preferences(QDialog, Ui_prefDialog):

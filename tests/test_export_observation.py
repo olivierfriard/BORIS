@@ -33,8 +33,8 @@ class Test_export_events(object):
 
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #1"
-        parameters = {"selected subjects": ["subject1", "subject2"],
-                      "selected behaviors": ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"],
+                      SELECTED_BEHAVIORS: ["p", "s"]}
         file_name = "test_export_events_tabular.tsv"
         output_format  = "tsv"
 
@@ -53,8 +53,8 @@ class Test_export_events(object):
 
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #1"
-        parameters = {"selected subjects": ["subject1", "subject2"],
-                      "selected behaviors": ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"],
+                      SELECTED_BEHAVIORS: ["p", "s"]}
         file_name = "test_export_events_tabular.csv"
         output_format  = "csv"
 
@@ -71,8 +71,8 @@ class Test_export_events(object):
 
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #1"
-        parameters = {"selected subjects": ["subject1", "subject2"],
-                      "selected behaviors": ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"],
+                      SELECTED_BEHAVIORS: ["p", "s"]}
         file_name = "test_export_events_tabular.html"
         output_format  = "html"
 
@@ -91,8 +91,8 @@ class Test_export_events(object):
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
-        parameters = {"selected subjects": ["subject1", "subject2"],
-                      "selected behaviors": ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2"],
+                      SELECTED_BEHAVIORS: ["p", "s"]}
         file_name = "test_export_events_tabular.xlsx"
         output_format  = "xlsx"
 
@@ -414,7 +414,7 @@ class Test_events_to_behavioral_sequences(object):
 
         obs_id = "observation #1"
         subject = "subject1"
-        parameters = {"selected subjects": ["subject2"],
+        parameters = {SELECTED_SUBJECTS: ["subject2"],
                       "selected behaviors": ["p"],
                       INCLUDE_MODIFIERS: False,
                       EXCLUDE_BEHAVIORS: False,
@@ -439,7 +439,7 @@ class Test_events_to_behavioral_sequences(object):
 
         obs_id = "modifiers"
         subject = ""
-        parameters = {"selected subjects": [""],
+        parameters = {SELECTED_SUBJECTS: [""],
                       "selected behaviors": ["q", "r"],
                       INCLUDE_MODIFIERS: True,
                       EXCLUDE_BEHAVIORS: False,
@@ -465,7 +465,7 @@ class Test_events_to_behavioral_sequences(object):
 
         obs_id = "live not paired"
         subject = ""
-        parameters = {"selected subjects": [""],
+        parameters = {SELECTED_SUBJECTS: [""],
                       "selected behaviors": ["p", "s"],
                       INCLUDE_MODIFIERS: False,
                       EXCLUDE_BEHAVIORS: False,
@@ -490,7 +490,7 @@ class Test_events_to_behavioral_sequences(object):
         pj = json.loads(open("files/test.boris").read())
 
         observations = ["live export behavioral sequences"]
-        parameters = {"selected subjects": [""],
+        parameters = {SELECTED_SUBJECTS: [""],
                       "selected behaviors": ["p", "s"],
                       INCLUDE_MODIFIERS: False,
                       EXCLUDE_BEHAVIORS: False,
@@ -503,6 +503,7 @@ class Test_events_to_behavioral_sequences(object):
                                         selected_observations=observations,
                                         parameters=parameters,
                                         behaviors_separator=behav_seq_separator,
+                                        separated_subjects=True,
                                         timed=False,
                                         file_name="output/Test_events_to_behavioral_sequences_test_6_multi_rows_description.txt")
 
@@ -522,7 +523,7 @@ class Test_events_to_behavioral_sequences(object):
         pj = json.loads(open("files/test.boris").read())
 
         observations = ["live export behavioral sequences", "observation #1"]
-        parameters = {"selected subjects": ["", "subject1", "subject2"],
+        parameters = {SELECTED_SUBJECTS: ["", "subject1", "subject2"],
                       "selected behaviors": ["p", "s"],
                       INCLUDE_MODIFIERS: False,
                       EXCLUDE_BEHAVIORS: False,
@@ -535,6 +536,7 @@ class Test_events_to_behavioral_sequences(object):
                                         selected_observations=observations,
                                         parameters=parameters,
                                         behaviors_separator=behav_seq_separator,
+                                        separated_subjects=True,
                                         timed=False,
                                         file_name="output/Test_events_to_behavioral_sequences_test_7.txt")
 
