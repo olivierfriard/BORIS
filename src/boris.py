@@ -9036,8 +9036,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         About dialog
         """
 
-        ver = f"v. {__version__}"
-
         programs_versions = ["VLC media player"]
         programs_versions.append(f"version {bytes_to_str(vlc.libvlc_get_version())}")
         if vlc.plugin_path:
@@ -9069,34 +9067,38 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         about_dialog.setEscapeButton(QMessageBox.Ok)
 
         about_dialog.setInformativeText((
-            f"<b>{programName}</b> {ver} - {__version_date__}"
+            f"<b>{programName}</b> v. {__version__} - {__version_date__}"
             "<p>Copyright &copy; 2012-2019 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
             "<br>"
-            """BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>"""
-            """See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>"""
+            'BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>'
+            'See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>'
             "<br>"
             "The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help."
             "<hr>"
             "How to cite BORIS:<br>"
             "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
             "coding and live observations. Methods Ecol Evol, 7: 1325–1330.<br>"
-            """<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>"""
+            '<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>'
         ))
-
         n = "\n"
-        programs_versions = n.join(programs_versions)
+        details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
+                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
+                   f"CPU type: {platform.machine()}{n}\n")
+
+        r, memory = utilities.mem_info()
+        if not r:
+            details += (f"Total memory: {memory.get('total_memory', 'Not available')} Mb\n"
+                        f"Free memory: {memory.get('free_memory', 'Not available')} Mb\n\n")
+
+        details += n.join(programs_versions)
         '''
         memory_in_use = f"{utilities.rss_memory_used(self.pid)} Mb" if utilities.rss_memory_used(self.pid) != -1 else "Not available"
         percent_memory_in_use = (f"({utilities.rss_memory_percent_used(self.pid):.1f} % of total memory)"
                                  if utilities.rss_memory_percent_used(self.pid) != -1
                                  else "")
         '''
-        details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
-                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
-                   f"CPU type: {platform.machine()}{n}"
-                   f"{programs_versions}")
 
         '''
         f"Total memory: {psutil.virtual_memory().total / 1024 / 1024 / 1024:.1f} Gb "
@@ -11216,7 +11218,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if out:
             QMessageBox.information(self, programName,
-                                    out + "<br><br>The DOT scripts can be used with Graphviz or WebGraphviz to generate diagram")
+                                    (f"{out}<br><br>The DOT scripts can be used with Graphviz or WebGraphviz "
+                                     "to generate diagram"))
 
 
     def transitions_flow_diagram(self):
@@ -11229,8 +11232,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if "graphviz" not in result:
             QMessageBox.critical(self, programName, ("The GraphViz package is not installed.<br>"
                                                      "The <b>dot</b> program was not found in the path.<br><br>"
-                                                     """Go to <a href="http://www.graphviz.org">"""
-                                                     """http://www.graphviz.org</a> for information"""))
+                                                     'Go to <a href="http://www.graphviz.org">'
+                                                     "http://www.graphviz.org</a> for information"))
             return
 
         fn = QFileDialog(self).getOpenFileNames(self, "Select one or more transitions matrix files", "",
@@ -11289,7 +11292,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.close_observation()
 
         if self.projectChanged:
-            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?", [SAVE, DISCARD, CANCEL])
+            response = dialog.MessageDialog(programName, "What to do about the current unsaved project?",
+                                            [SAVE, DISCARD, CANCEL])
 
             if response == SAVE:
                 if self.save_project_activated() == "not saved":
@@ -11317,7 +11321,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         import observations from project file
         """
 
-        fn = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "", "Project files (*.boris);;All files (*)")
+        fn = QFileDialog(self).getOpenFileName(self, "Choose a BORIS project file", "",
+                                               "Project files (*.boris);;All files (*)")
         fileName = fn[0] if type(fn) is tuple else fn
 
         if self.projectFileName and fileName == self.projectFileName:

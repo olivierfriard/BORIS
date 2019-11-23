@@ -39,7 +39,6 @@ from decimal import *
 from shutil import copyfile
 
 import numpy as np
-'''import psutil'''
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QImage, QPixmap, qRgb
 from PyQt5.QtWidgets import *
@@ -50,6 +49,7 @@ from config import *
 def error_info(exc_info: tuple) -> tuple:
     """
     return details about error
+    usage: error_info(sys.exc_info())
 
     Args:
         sys.exc_info() (tuple):
@@ -702,6 +702,36 @@ def angle(p1, p2, p3):
     """
     return math.acos(
         (distance(p1, p2) ** 2 + distance(p1, p3)**2 - distance(p2, p3)**2) / (2 * distance(p1, p2) * distance(p1, p3))) / math.pi * 180
+
+
+def mem_info():
+    """
+    get info about total mem, used mem and free mem using the free utility (on Linux)
+
+    Returns:
+        bool: True if error
+        dict: values
+    """
+    if sys.platform.startswith("linux"):
+        try:
+            process = subprocess.Popen(["free", "-m"], stdout=subprocess.PIPE)
+            out, err = process.communicate()
+            _, tot_mem, used_mem, free_mem, *_ = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
+            return False, {"total_memory": tot_mem, "used_memory": used_mem, "free_memory": free_mem}
+        except Exception:
+            return True, {"msg": error_info(sys.exc_info())[0]}
+
+    if sys.platform.startswith("darwin"):
+        try:
+            output = subprocess.check_output(("top", "-l", "1", "-s", "0"))
+            r = [x.decode("utf-8") for x in output.split(b"\n") if b"PhysMem" in x][0].split(" ")
+            used_mem, free_mem = int(r[1].replace("M", "")), int(r[5].replace("M", ""))
+            return False, {"total_memory": used_mem + free_mem, "used_memory": used_mem, "free_memory": free_mem}
+        except Exception:
+            return True, {"msg": error_info(sys.exc_info())[0]}
+
+    return True, {"msg": "Unknown operating system"}
+
 
 '''
 def rss_memory_used(pid):
