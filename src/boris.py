@@ -3421,10 +3421,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 preferencesWindow.rb_save_frames_on_disk.setChecked(True)
 
             preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
-            '''
-            preferencesWindow.lb_memory_in_use.setText((f"Memory used by BORIS: "
-                                                        f"{utilities.rss_memory_percent_used(self.pid):.1f} % of total memory"))
-            '''
+
+            r, mem = utilities.mem_info()
+            if not r:
+                preferencesWindow.lb_memory_info.setText((f"Total memory: {mem.get('total_memory', 'Not available')} Mb"
+                                                          f"  Free memory: {mem.get('free_memory', 'Not available')} Mb"))
+            else:
+                preferencesWindow.lb_memory_info.setText("Memory information not available")
 
             preferencesWindow.sbFrameResize.setValue(self.frame_resize)
             mem_frame_resize = self.frame_resize
@@ -3639,6 +3642,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         frame_resize: int,
                         number_of_seconds: int) -> dict:
 
+        """
+        extract frmaes from video to a QBuffer and save references (start and size) in dictionary
+        """
 
         def toQImage(frame, copy=False):
             if frame is None:
@@ -3665,7 +3671,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
 
-        #d = {current_media_path: {}}
+        # go to buffer end
+        self.frames_buffer.seek(self.frames_buffer.size())
         frame_idx = start_frame
         while True:
             raw_image = pipe.stdout.read(new_v_resolution * new_h_resolution * 3)
@@ -3801,52 +3808,70 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if current_media_full_path not in self.frames_cache:
                         self.frames_cache[current_media_full_path] = {}
 
-                    self.statusbar.showMessage("Extracting frames", 0)
+                    # check free mem size
+                    r, mem = utilities.mem_info()
+                    if not r:
+                        # no free mem
+                        if mem.get("free_memory", 0) < 200:
+                            # reset buffer
+                            #del self.frames_buffer
 
-                    print("frame_viewer size", player.frame_viewer.size().width(), player.frame_viewer.size().height())
-                    print("videoframe resolution", player.videoframe.h_resolution, player.videoframe.v_resolution)
+                            logging.debug(f"free memory < 200 Mb. Reset buffer")
+
+                            self.frames_buffer = QBuffer()
+                            self.frames_buffer.open(QIODevice.ReadWrite)
+                            self.frames_cache[current_media_full_path] = {}
+
+                            if mem.get("free_memory", 0) < 200:
+                                self.statusbar.showMessage(("The free memory is very low.\n"
+                                                            "You should change the frame-by-frame mode from memory to disk.\n"
+                                                            "See File > Preferences"), 0)
+                                return
+                        # check buffer size
+                        if self.frames_buffer.size() > self.config_param[MEMORY_FOR_FRAMES] * 1024 * 1024:
+                            # reset buffer
+                            #del self.frames_buffer
+                            logging.debug(f"buffer size > {self.config_param[MEMORY_FOR_FRAMES] * 1024 * 1024}. Reset buffer")
+                            self.frames_buffer = QBuffer()
+                            self.frames_buffer.open(QIODevice.ReadWrite)
+                            self.frames_cache[current_media_full_path] = {}
+
+                    else:
+                        self.statusbar.showMessage(f"Free memory not available ({mem.get('msg', '')})", 0)
+
+                    self.statusbar.showMessage(f"Extracting frames... {int(self.frames_buffer.size()/1024/1024)}", 0)
+                    app.processEvents()
+
+                    logging.debug(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
+                    logging.debug(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
 
                     if not self.frame_resize:
                         frame_resize = player.frame_viewer.size().width()
                     else:
                         frame_resize = self.frame_resize
 
-                    self.extract_frames_mem(
-                                                     #self.frames_buffer,
-                                                     #self.frames_cache[current_media_full_path].keys(),
-                                                     #self.ffmpeg_bin,
-                                                     frameCurrentMedia,
-                                                     (frameCurrentMedia - 1) / self.fps,
-                                                     current_media_full_path,
-                                                     round(self.fps),
-                                                     (player.videoframe.h_resolution, player.videoframe.v_resolution),
-                                                     frame_resize,
-                                                     self.fbf_cache_size)
+                    self.extract_frames_mem(frameCurrentMedia,
+                                            (frameCurrentMedia - 1) / self.fps,
+                                            current_media_full_path,
+                                            round(self.fps),
+                                            (player.videoframe.h_resolution, player.videoframe.v_resolution),
+                                            frame_resize,
+                                            self.fbf_cache_size)
 
-                    # self.frames_cache[current_media_full_path] = {**self.frames_cache[current_media_full_path], **d[current_media_full_path]}
-
+                    '''
                     print(f"frames buffer size: {self.frames_buffer.size()/1024/1024}")
                     print(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
-
-                    '''
-                    if current_media_full_path not in self.frames_cache:
-                        self.frames_cache[current_media_full_path] = {}
-                    for idx, frame in enumerate(extracted_frames):
-                        self.frames_cache[current_media_full_path][frameCurrentMedia + idx] = frame
-                    '''
-
-                    '''
-                    extracted_frames.clear()
                     '''
 
                     self.statusbar.showMessage("", 0)
 
-                '''player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frameCurrentMedia].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))'''
-
-                self.frames_buffer.seek(self.frames_cache[current_media_full_path][frameCurrentMedia][0])
-                px = QPixmap()
-                px.loadFromData(self.frames_buffer.read(self.frames_cache[current_media_full_path][frameCurrentMedia][1]))
-                player.frame_viewer.setPixmap(px)
+                if frameCurrentMedia in self.frames_cache[current_media_full_path]:
+                    self.frames_buffer.seek(self.frames_cache[current_media_full_path][frameCurrentMedia][0])
+                    px = QPixmap()
+                    px.loadFromData(self.frames_buffer.read(self.frames_cache[current_media_full_path][frameCurrentMedia][1]))
+                    player.frame_viewer.setPixmap(px)
+                else:
+                    self.statusbar.showMessage(f"Error for frame #{frameCurrentMedia}", 0)
 
             # redraw measurements from previous frames
 

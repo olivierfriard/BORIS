@@ -56,7 +56,7 @@ class Preferences(QDialog, Ui_prefDialog):
         """
         change where extracted frames will be saved: disk or memory
         """
-        for w in [self.lb_memory_frames, self.sb_frames_memory_size]:
+        for w in [self.lb_memory_frames, self.sb_frames_memory_size, self.lb_memory_unit, self.lb_memory_info]:
             w.setEnabled(self.rb_save_frames_in_mem.isChecked())
 
         for w in [self.lb_bitmap_quality, self.cbFrameBitmapFormat, self.lb_storage_dir]:

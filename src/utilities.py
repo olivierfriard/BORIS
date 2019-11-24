@@ -609,6 +609,7 @@ def extract_frames_mem_old(ffmpeg_bin: str,
     return frames, (new_h_resolution, new_v_resolution)
 
 
+'''
 def extract_frames_mem(buffer,
                        frames_idx_list: dict,
                        ffmpeg_bin: str,
@@ -658,9 +659,6 @@ def extract_frames_mem(buffer,
         np_array = np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))
         qimage = toQImage(np_array)
         pixmap = QPixmap.fromImage(qimage)
-        '''
-        pixmap = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))))
-        '''
         start = buffer.pos()
         pixmap.save(buffer, "jpg", quality)
 
@@ -668,7 +666,7 @@ def extract_frames_mem(buffer,
         frame_idx += 1
 
     return d
-
+'''
 
 def decimal_default(obj):
     if isinstance(obj, Decimal):
@@ -771,14 +769,14 @@ def mem_info():
 
     Returns:
         bool: True if error
-        dict: values
+        dict: values ("total_memory", "used_memory", "free_memory")
     """
     if sys.platform.startswith("linux"):
         try:
             process = subprocess.Popen(["free", "-m"], stdout=subprocess.PIPE)
             out, err = process.communicate()
             _, tot_mem, used_mem, free_mem, *_ = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
-            return False, {"total_memory": tot_mem, "used_memory": used_mem, "free_memory": free_mem}
+            return False, {"total_memory": int(tot_mem), "used_memory": int(used_mem), "free_memory": int(free_mem)}
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
 
