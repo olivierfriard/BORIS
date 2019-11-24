@@ -471,6 +471,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     processes = []  # list of QProcess processes
     frames_cache = {}
+    frames_buffer = QBuffer()
+    frames_buffer.open(QIODevice.ReadWrite)
 
     saved_state = None
 
@@ -3260,7 +3262,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # subtitles
                 st_track_number = 0 if self.config_param[DISPLAY_SUBTITLES] else -1
                 for player in self.dw_player:
-                     player.mediaplayer.video_set_spu(st_track_number)
+                    player.mediaplayer.video_set_spu(st_track_number)
 
             if hasattr(self, "spectro"):
                 self.spectro.memChunk = -1
@@ -3404,7 +3406,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # pause before add event
             preferencesWindow.cb_pause_before_addevent.setChecked(self.pause_before_addevent)
 
-            preferencesWindow.cb_compact_time_budget.setChecked(self.config_param.get(TIME_BUDGET_FORMAT, DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT)
+            preferencesWindow.cb_compact_time_budget.setChecked(self.config_param.get(TIME_BUDGET_FORMAT,
+                                                                                      DEFAULT_TIME_BUDGET_FORMAT) == COMPACT_TIME_BUDGET_FORMAT)
 
             # FFmpeg for frame by frame mode
             preferencesWindow.lbFFmpegPath.setText(f"FFmpeg path: {self.ffmpeg_bin}")
@@ -3412,9 +3415,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.sbFFmpegCacheDirMaxSize.setValue(self.ffmpeg_cache_dir_max_size)
 
             # frame-by-frame mode
-            if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+            if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == MEMORY:
                 preferencesWindow.rb_save_frames_in_mem.setChecked(True)
-            if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+            if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
                 preferencesWindow.rb_save_frames_on_disk.setChecked(True)
 
             preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
@@ -3529,7 +3532,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
 
                 # frame-by-frame
-                self.config_param[SAVE_FRAMES] = DISK
+                self.config_param[SAVE_FRAMES] = DEFAULT_FRAME_MODE
                 if preferencesWindow.rb_save_frames_in_mem.isChecked():
                     self.config_param[SAVE_FRAMES] = MEMORY
                 if preferencesWindow.rb_save_frames_on_disk.isChecked():
@@ -3539,17 +3542,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.frame_resize = preferencesWindow.sbFrameResize.value()
 
                 # clear frames memory cache if frames saved on disk
-                if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+                if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
                     self.frames_cache.clear()
 
                 # frames cache
                 # clear cache (mem or files) if frame_resize changed
                 if self.frame_resize != mem_frame_resize:
 
-                    if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+                    if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == MEMORY:
                         self.frames_cache.clear()
 
-                    if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+                    if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
                         # check temp dir for images from ffmpeg
                         self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
@@ -3625,6 +3628,65 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if other:
             size = sum(stat.size for stat in other)
         total = sum(stat.size for stat in top_stats)
+
+
+    def extract_frames_mem(self,
+                       start_frame: int,
+                        second: float,
+                        current_media_path,
+                        fps: float,
+                        resolution: tuple,
+                        frame_resize: int,
+                        number_of_seconds: int) -> dict:
+
+
+        def toQImage(frame, copy=False):
+            if frame is None:
+                return QImage()
+            im = np.asarray(frame)
+            return QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_RGB888)
+
+        if frame_resize:
+            new_h_resolution = frame_resize
+            new_v_resolution = round(resolution[1] * (frame_resize / resolution[0]))
+        else:
+            new_h_resolution, new_v_resolution = resolution
+
+        quality = 100
+
+        command = [self.ffmpeg_bin,
+                    '-i', current_media_path,
+                    "-ss", str((start_frame - 1) / fps),
+                    '-vframes', str(int(fps * number_of_seconds)),
+                    '-vf', f'scale={new_h_resolution}:-1',
+                    '-f', 'image2pipe',
+                    '-pix_fmt', 'rgb24',
+                    '-vcodec', 'rawvideo', '-']
+
+        pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+
+        #d = {current_media_path: {}}
+        frame_idx = start_frame
+        while True:
+            raw_image = pipe.stdout.read(new_v_resolution * new_h_resolution * 3)
+            if not raw_image:
+                return
+            if frame_idx in self.frames_cache[current_media_path]:
+                frame_idx += 1
+                continue
+            np_array = np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))
+            qimage = toQImage(np_array)
+            pixmap = QPixmap.fromImage(qimage)
+            '''
+            pixmap = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))))
+            '''
+            start = self.frames_buffer.pos()
+            pixmap.save(self.frames_buffer, "jpg", quality)
+
+            self.frames_cache[current_media_path][frame_idx] = (start, self.frames_buffer.size() - start)
+            frame_idx += 1
+
+        return
 
 
     def ffmpeg_timer_out(self):
@@ -3733,79 +3795,58 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 logging.debug(f"frame current media: {frameCurrentMedia}")
 
-                if not (current_media_full_path in self.frames_cache
-                        and frameCurrentMedia in self.frames_cache[current_media_full_path]):
+                if (current_media_full_path not in self.frames_cache
+                        or frameCurrentMedia not in self.frames_cache[current_media_full_path]):
+
+                    if current_media_full_path not in self.frames_cache:
+                        self.frames_cache[current_media_full_path] = {}
 
                     self.statusbar.showMessage("Extracting frames", 0)
-                    app.processEvents()
 
-                    '''
                     print("frame_viewer size", player.frame_viewer.size().width(), player.frame_viewer.size().height())
                     print("videoframe resolution", player.videoframe.h_resolution, player.videoframe.v_resolution)
-                    '''
-                    # check if cache memory is below the limit
 
+                    if not self.frame_resize:
+                        frame_resize = player.frame_viewer.size().width()
+                    else:
+                        frame_resize = self.frame_resize
 
-                    if ((utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
-                        or (psutil.virtual_memory().percent > 95)):
-
-                        logging.debug((f"clear memory cache {utilities.rss_memory_percent_used(self.pid)}"
-                                       f" used of {self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES)} allowed"))
-
-                        self.frames_cache.clear()
-
-                        '''
-                        dist_idx = sorted([(abs(frameCurrentMedia - idx), idx) for idx in self.frames_cache[current_media_full_path]], reverse=True)
-                        while dist_idx and ((utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
-                        or (psutil.virtual_memory().percent > 95)):
-                            print(f"deleting 1 {dist_idx[0]}")
-                            del self.frames_cache[current_media_full_path][dist_idx[0][1]]   # clear
-                            del dist_idx[0]
-                        '''
-
-                    extracted_frames, new_resolution = utilities.extract_frames_mem(self.ffmpeg_bin,
+                    self.extract_frames_mem(
+                                                     #self.frames_buffer,
+                                                     #self.frames_cache[current_media_full_path].keys(),
+                                                     #self.ffmpeg_bin,
                                                      frameCurrentMedia,
                                                      (frameCurrentMedia - 1) / self.fps,
                                                      current_media_full_path,
                                                      round(self.fps),
                                                      (player.videoframe.h_resolution, player.videoframe.v_resolution),
-                                                     self.frame_resize,
+                                                     frame_resize,
                                                      self.fbf_cache_size)
 
-                    if not extracted_frames:
-                        self.statusbar.showMessage("Error during frames extraction", 5000)
-                        return
+                    # self.frames_cache[current_media_full_path] = {**self.frames_cache[current_media_full_path], **d[current_media_full_path]}
 
+                    print(f"frames buffer size: {self.frames_buffer.size()/1024/1024}")
+                    print(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
+
+                    '''
                     if current_media_full_path not in self.frames_cache:
                         self.frames_cache[current_media_full_path] = {}
                     for idx, frame in enumerate(extracted_frames):
                         self.frames_cache[current_media_full_path][frameCurrentMedia + idx] = frame
+                    '''
 
+                    '''
                     extracted_frames.clear()
-
                     '''
-                    dist_idx = sorted([(abs(frameCurrentMedia - idx), idx) for idx in self.frames_cache[current_media_full_path]], reverse=True)
-                    while dist_idx and ((utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory >= self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
-                    or (psutil.virtual_memory().percent > 95)):
-                        print("used %", utilities.rss_memory_percent_used(self.pid) - self.init_percent_memory)
-                        print("tot mem percent", psutil.virtual_memory().percent)
-                        print(f"deleting 2 {dist_idx[0]}")
-                        # del self.frames_cache[current_media_full_path][dist_idx[0][1]]   # clear
-                        self.frames_cache[current_media_full_path].pop(dist_idx[0][1])
-                        del dist_idx[0]
-                    '''
-
-
-                    logging.debug(f"frames cache mem size: {sum([len(self.frames_cache[k]) * 3 * new_resolution[0] * new_resolution[1] for k in self.frames_cache])}")
 
                     self.statusbar.showMessage("", 0)
 
-                logging.debug(f"number of frames in memory for {current_media_full_path}: {len(self.frames_cache[current_media_full_path])}")
+                '''player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frameCurrentMedia].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))'''
 
-                logging.debug(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
-
-                player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frameCurrentMedia].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
-
+                self.frames_buffer.seek(self.frames_cache[current_media_full_path][frameCurrentMedia][0])
+                px = QPixmap()
+                px.loadFromData(self.frames_buffer.read(self.frames_cache[current_media_full_path][frameCurrentMedia][1]))
+                player.frame_viewer.setPixmap(px)
 
             # redraw measurements from previous frames
 

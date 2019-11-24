@@ -308,6 +308,7 @@ MEMORY_FOR_FRAMES = "memory_for_frames"
 DEFAULT_MEMORY_FOR_FRAMES = 80  # % total memory
 DISK = "disk"
 MEMORY = "memory"
+DEFAULT_FRAME_MODE = DISK
 
 MEDIA_FILE_INFO = "media_file_info"
 MEDIA_INFO = "media_info"

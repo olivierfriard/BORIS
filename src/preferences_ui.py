@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.1
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -191,7 +191,7 @@ class Ui_prefDialog(object):
         self.horizontalLayout_5.addWidget(self.sbFrameResize)
         self.verticalLayout_6.addLayout(self.horizontalLayout_5)
         self.rb_save_frames_in_mem = QtWidgets.QRadioButton(self.tab_3)
-        self.rb_save_frames_in_mem.setEnabled(False)
+        self.rb_save_frames_in_mem.setEnabled(True)
         self.rb_save_frames_in_mem.setChecked(True)
         self.rb_save_frames_in_mem.setObjectName("rb_save_frames_in_mem")
         self.verticalLayout_6.addWidget(self.rb_save_frames_in_mem)
@@ -305,7 +305,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_5.addLayout(self.verticalLayout_2)
 
         self.retranslateUi(prefDialog)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(prefDialog)
 
     def retranslateUi(self, prefDialog):

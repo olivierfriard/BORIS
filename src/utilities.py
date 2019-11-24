@@ -530,11 +530,11 @@ def extract_frames(ffmpeg_bin: str,
             logging.debug(f"ffmpeg error: {error}")
 
 
-def extract_frames_mem(ffmpeg_bin: str,
+def extract_frames_mem_old(ffmpeg_bin: str,
                        start_frame: int,
                        second: float,
                        current_media_path,
-                       fps: int,
+                       fps: float,
                        resolution: tuple,
                        frame_resize: int,
                        number_of_seconds: int) -> (list, tuple):
@@ -607,6 +607,67 @@ def extract_frames_mem(ffmpeg_bin: str,
         frames.append(QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3)))))
 
     return frames, (new_h_resolution, new_v_resolution)
+
+
+def extract_frames_mem(buffer,
+                       frames_idx_list: dict,
+                       ffmpeg_bin: str,
+                       start_frame: int,
+                       second: float,
+                       current_media_path,
+                       fps: float,
+                       resolution: tuple,
+                       frame_resize: int,
+                       number_of_seconds: int) -> dict:
+
+
+    def toQImage(frame, copy=False):
+        if frame is None:
+            return QImage()
+        im = np.asarray(frame)
+        return QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_RGB888)
+
+    if frame_resize:
+        new_h_resolution = frame_resize
+        new_v_resolution = round(resolution[1] * (frame_resize / resolution[0]))
+    else:
+        new_h_resolution, new_v_resolution = resolution
+
+    quality = 100
+
+    command = [ffmpeg_bin,
+                '-i', current_media_path,
+                "-ss", str((start_frame - 1) / fps),
+                '-vframes', str(int(fps * number_of_seconds)),
+                '-vf', f'scale={new_h_resolution}:-1',
+                '-f', 'image2pipe',
+                '-pix_fmt', 'rgb24',
+                '-vcodec', 'rawvideo', '-']
+
+    pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+
+    d = {current_media_path: {}}
+    frame_idx = start_frame
+    while True:
+        raw_image = pipe.stdout.read(new_v_resolution * new_h_resolution * 3)
+        if not raw_image:
+            return d
+        if frame_idx in frames_idx_list:
+            frame_idx += 1
+            continue
+        np_array = np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))
+        qimage = toQImage(np_array)
+        pixmap = QPixmap.fromImage(qimage)
+        '''
+        pixmap = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))))
+        '''
+        start = buffer.pos()
+        pixmap.save(buffer, "jpg", quality)
+
+        d[current_media_path][frame_idx] = (start, buffer.size() - start)
+        frame_idx += 1
+
+    return d
 
 
 def decimal_default(obj):
@@ -729,6 +790,9 @@ def mem_info():
             return False, {"total_memory": used_mem + free_mem, "used_memory": used_mem, "free_memory": free_mem}
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
+
+    if sys.platform.startswith("darwin"):
+        return True, {"msg": "Not yet implemented"}
 
     return True, {"msg": "Unknown operating system"}
 
