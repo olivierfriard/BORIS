@@ -441,7 +441,7 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Maximum amount of memory</string>
+              <string>Maximum amount of memory (Mb)</string>
              </property>
             </widget>
            </item>
@@ -461,16 +461,6 @@
              </property>
              <property name="value">
               <number>1000</number>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="lb_memory_unit">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>Mb</string>
              </property>
             </widget>
            </item>

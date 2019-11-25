@@ -304,7 +304,6 @@ class Click_label(QLabel):
         QLabel.__init__(self, parent)
         self.id_ = id_
 
-
     def mousePressEvent(self, event):
         """
         label clicked
@@ -381,7 +380,6 @@ class Video_frame(QFrame):
 
         self.video_frame_signal.emit("clicked", button)
 
-
     def resizeEvent(self, dummy):
         """
         emits signal when video resized
@@ -392,8 +390,7 @@ class Video_frame(QFrame):
         self.video_frame_signal.emit("resized", 0)
 
 
-
-class DW(QDockWidget):
+class DW_old(QDockWidget):
 
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
@@ -422,8 +419,6 @@ class DW(QDockWidget):
         self.volume_slider = QSlider(Qt.Vertical, self)
         self.volume_slider.setMaximum(100)
         self.volume_slider.setValue(50)
-        # self.volume_slider.setToolTip("Volume")
-
         self.volume_slider.sliderMoved.connect(self.volume_slider_moved)
 
         self.hlayout.addWidget(self.volume_slider)
@@ -438,6 +433,66 @@ class DW(QDockWidget):
 
         self.w.layout().addWidget(self.frame_viewer)
         self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
+
+
+
+class DW(QDockWidget):
+
+    key_pressed_signal = pyqtSignal(QEvent)
+    volume_slider_moved_signal = pyqtSignal(int, int)
+    view_signal = pyqtSignal(int, str, int)
+
+    def __init__(self, id_, parent=None):
+        super().__init__(parent)
+        self.id_ = id_
+        self.zoomed = False
+        self.setWindowTitle(f"Player #{id_ + 1}")
+        self.setObjectName(f"player{id_ + 1}")
+
+        self.stack1 = QWidget()
+        self.hlayout = QHBoxLayout()
+        self.videoframe = Video_frame()
+        self.videoframe.video_frame_signal.connect(self.view_signal_triggered)
+        self.palette = self.videoframe.palette()
+        self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
+        self.videoframe.setPalette(self.palette)
+        self.videoframe.setAutoFillBackground(True)
+        self.hlayout.addWidget(self.videoframe)
+        self.volume_slider = QSlider(Qt.Vertical, self)
+        self.volume_slider.setMaximum(100)
+        self.volume_slider.setValue(50)
+        self.volume_slider.sliderMoved.connect(self.volume_slider_moved)
+        self.hlayout.addWidget(self.volume_slider)
+        self.stack1.setLayout(self.hlayout)
+
+        self.stack2 = QWidget()
+        self.hlayout2 = QHBoxLayout()
+        #self.frame_viewer = Click_label(id_)
+        self.frame_viewer = QLabel("TEST")
+        #self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
+        self.frame_viewer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.frame_viewer.setAlignment(Qt.AlignCenter)
+        self.frame_viewer.setStyleSheet("QLabel {background-color: black;}")
+        #self.frame_viewer.setPixmap(QPixmap(""))
+
+        self.hlayout2.addWidget(self.frame_viewer)
+        self.stack2.setLayout(self.hlayout2)
+
+        self.stack = QStackedWidget(self)
+        self.stack.addWidget (self.stack1)
+        self.stack.addWidget(self.stack2)
+
+        self.setWidget(self.stack)
+        #self.stack.setCurrentIndex(1)
+
+        '''
+        self.hlayout0 = QHBoxLayout()
+        self.hlayout0.addWidget(self.stack)
+        self.setLayout(self.hlayout0)
+        '''
+
 
 
     def volume_slider_moved(self):
@@ -3394,7 +3449,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             preferencesWindow.cbConfirmSound.setChecked(self.confirmSound)
             # beep every
             preferencesWindow.sbBeepEvery.setValue(self.beep_every)
-
             # alert no focal subject
             preferencesWindow.cbAlertNoFocalSubject.setChecked(self.alertNoFocalSubject)
             # tracking cursor above event
@@ -3419,6 +3473,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 preferencesWindow.rb_save_frames_in_mem.setChecked(True)
             if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
                 preferencesWindow.rb_save_frames_on_disk.setChecked(True)
+            for w in [preferencesWindow.lb_memory_frames, preferencesWindow.sb_frames_memory_size, preferencesWindow.lb_memory_info]:
+                w.setEnabled(preferencesWindow.rb_save_frames_in_mem.isChecked())
+            for w in [preferencesWindow.lb_bitmap_quality, preferencesWindow.cbFrameBitmapFormat, preferencesWindow.lb_storage_dir]:
+                w.setEnabled(preferencesWindow.rb_save_frames_on_disk.isChecked())
 
             preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
 
@@ -3643,7 +3701,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         number_of_seconds: int) -> dict:
 
         """
-        extract frmaes from video to a QBuffer and save references (start and size) in dictionary
+        extract frames from video to a QBuffer and save references (start and size) in dictionary
         """
 
         def toQImage(frame, copy=False):
@@ -3704,7 +3762,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.debug("ffmpeg_timer_out function")
-
         logging.debug(f"fps {self.fps}")
 
         frameMs = 1000 / self.fps
@@ -3714,7 +3771,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         requiredFrame = self.FFmpegGlobalFrame + 1
 
         logging.debug(f"required frame 1: {requiredFrame}")
-
         logging.debug(f"sum self.duration1 {sum(self.dw_player[0].media_durations)}")
 
         # check if end of last media
@@ -3743,7 +3799,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             for idx in self.plot_data:
                 self.timer_plot_data_out(self.plot_data[idx])
 
-            if self.config_param.get(SAVE_FRAMES, DISK) == DISK:
+            if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
 
                 md5FileName = hashlib.md5(current_media_full_path.encode("utf-8")).hexdigest()
 
@@ -3765,10 +3821,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.iw.resize(350, 200)
                     self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-                    logging.debug(f"Extracting frame")
+                    logging.debug(f"Extracting frame to disk")
 
-                    self.iw.setWindowTitle("Extracting frames...")
-                    self.iw.label.setText("Extracting frames... This operation can be long. Be patient...")
+                    self.iw.setWindowTitle("Extracting frames to disk...")
+                    self.iw.label.setText("Extracting frames to disk... This operation can be long. Be patient...")
                     self.iw.show()
                     app.processEvents()
 
@@ -3798,7 +3854,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 player.frame_viewer.setPixmap(self.pixmap.scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
 
 
-            if self.config_param.get(SAVE_FRAMES, DISK) == MEMORY:
+            if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == MEMORY:
 
                 logging.debug(f"frame current media: {frameCurrentMedia}")
 
@@ -3842,22 +3898,41 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.statusbar.showMessage(f"Extracting frames... {int(self.frames_buffer.size()/1024/1024)}", 0)
                     app.processEvents()
 
-                    logging.debug(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
-                    logging.debug(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
-
+                    print(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
+                    print(f"videoframe size: {player.videoframe.size().width()}x{player.videoframe.size().height()}")
+                    print(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
+                    
+                    frame_height = player.videoframe.size().height()
+                    frame_width = round(player.videoframe.size().height() * (player.videoframe.h_resolution / player.videoframe.v_resolution))
+                    '''
                     if not self.frame_resize:
                         frame_resize = player.frame_viewer.size().width()
                     else:
                         frame_resize = self.frame_resize
+                    '''
+
+                    # message
+                    self.iw = dialog.Info_widget()
+                    self.iw.lwi.setVisible(False)
+                    self.iw.resize(350, 100)
+                    self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+                    logging.debug(f"Extracting frame tp memory")
+
+                    self.iw.setWindowTitle("Extracting frames to memory...")
+                    self.iw.label.setText("Extracting frames to memory... This operation can be long. Be patient...")
+                    self.iw.show()
+                    app.processEvents()
 
                     self.extract_frames_mem(frameCurrentMedia,
                                             (frameCurrentMedia - 1) / self.fps,
                                             current_media_full_path,
                                             round(self.fps),
-                                            (player.videoframe.h_resolution, player.videoframe.v_resolution),
-                                            frame_resize,
+                                            (frame_width, frame_height),
+                                            self.frame_resize,
                                             self.fbf_cache_size)
 
+                    self.iw.hide()
                     '''
                     print(f"frames buffer size: {self.frames_buffer.size()/1024/1024}")
                     print(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
@@ -4342,7 +4417,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].setVisible(True)
 
             # for receiving mouse event from frame viewer
-            self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
+            ### 2019-11-25 self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
             # for receiving event from volume slider
@@ -5286,7 +5361,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except:
                 pass
         '''
-
+        try:
+            del self.iw
+        except Exception:
+            pass
 
         try:
             del self.tb
@@ -8465,9 +8543,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if (str(n_player + 1) not in self.pj[OBSERVATIONS][self.observationId][FILE]
                    or not self.pj[OBSERVATIONS][self.observationId][FILE][str(n_player + 1)]):
                     continue
+                player.frame_viewer.clear()
+                player.stack.setCurrentIndex(0)
+                '''
                 player.frame_viewer.setVisible(False)
                 player.videoframe.setVisible(True)
                 player.volume_slider.setVisible(True)
+                '''
 
             self.FFmpegTimer.stop()
 
@@ -8504,17 +8586,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # make visible frame viewer(s)
             for player in self.dw_player:
+                player.stack.setCurrentIndex(1)
+                '''
                 player.frame_viewer.setVisible(True)
                 player.videoframe.setVisible(False)
                 player.volume_slider.setVisible(False)
+                '''
+
 
             # check temp dir for images from ffmpeg
-            '''
-            if not self.ffmpeg_cache_dir:
-                self.imageDirectory = tempfile.gettempdir()
-            else:
-                self.imageDirectory = self.ffmpeg_cache_dir
-            '''
             self.imageDirectory = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
 
             globalTime = (sum(
@@ -8535,7 +8615,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ffmpeg_timer_out()
 
             # set thread for cleaning temp directory
-            if self.config_param.get(SAVE_FRAMES, DISK) == DISK and self.ffmpeg_cache_dir_max_size:
+            if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK and self.ffmpeg_cache_dir_max_size:
                 self.cleaningThread.exiting = False
                 self.cleaningThread.ffmpeg_cache_dir_max_size = self.ffmpeg_cache_dir_max_size * 1024 * 1024
                 self.cleaningThread.tempdir = self.imageDirectory + os.sep
@@ -9488,6 +9568,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # highlight current event in tw events and scroll event list
             self.get_events_current_row()
 
+            '''
+            FIXME 2019-11-25
             if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                 self.dw_player[0].frame_viewer.setVisible(True)
                 self.dw_player[0].videoframe.setVisible(False)
@@ -9496,6 +9578,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[0].frame_viewer.setVisible(False)
                 self.dw_player[0].videoframe.setVisible(True)
                 self.dw_player[0].volume_slider.setVisible(True)
+            '''
 
             t0 = mediaTime
             ct0 = self.getLaps() * 1000

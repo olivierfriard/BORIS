@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'preferences.ui'
 #
-# Created by: PyQt5 UI code generator 5.13.0
+# Created by: PyQt5 UI code generator 5.13.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -205,7 +205,7 @@ class Ui_prefDialog(object):
         self.verticalLayout_6.addLayout(self.horizontalLayout_8)
         self.rb_save_frames_in_mem = QtWidgets.QRadioButton(self.tab_3)
         self.rb_save_frames_in_mem.setEnabled(True)
-        self.rb_save_frames_in_mem.setChecked(True)
+        self.rb_save_frames_in_mem.setChecked(False)
         self.rb_save_frames_in_mem.setObjectName("rb_save_frames_in_mem")
         self.verticalLayout_6.addWidget(self.rb_save_frames_in_mem)
         self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
@@ -222,16 +222,13 @@ class Ui_prefDialog(object):
         self.sb_frames_memory_size.setProperty("value", 1000)
         self.sb_frames_memory_size.setObjectName("sb_frames_memory_size")
         self.horizontalLayout_6.addWidget(self.sb_frames_memory_size)
-        self.lb_memory_unit = QtWidgets.QLabel(self.tab_3)
-        self.lb_memory_unit.setEnabled(False)
-        self.lb_memory_unit.setObjectName("lb_memory_unit")
-        self.horizontalLayout_6.addWidget(self.lb_memory_unit)
         self.verticalLayout_6.addLayout(self.horizontalLayout_6)
         self.lb_memory_info = QtWidgets.QLabel(self.tab_3)
         self.lb_memory_info.setEnabled(False)
         self.lb_memory_info.setObjectName("lb_memory_info")
         self.verticalLayout_6.addWidget(self.lb_memory_info)
         self.rb_save_frames_on_disk = QtWidgets.QRadioButton(self.tab_3)
+        self.rb_save_frames_on_disk.setChecked(True)
         self.rb_save_frames_on_disk.setObjectName("rb_save_frames_on_disk")
         self.verticalLayout_6.addWidget(self.rb_save_frames_on_disk)
         self.lb_storage_dir = QtWidgets.QLabel(self.tab_3)
@@ -343,8 +340,7 @@ class Ui_prefDialog(object):
         self.cbFrameBitmapFormat.setItemText(0, _translate("prefDialog", "JPG"))
         self.cbFrameBitmapFormat.setItemText(1, _translate("prefDialog", "PNG"))
         self.rb_save_frames_in_mem.setText(_translate("prefDialog", "Save frames in memory"))
-        self.lb_memory_frames.setText(_translate("prefDialog", "Maximum amount of memory"))
-        self.lb_memory_unit.setText(_translate("prefDialog", "Mb"))
+        self.lb_memory_frames.setText(_translate("prefDialog", "Maximum amount of memory (Mb)"))
         self.lb_memory_info.setText(_translate("prefDialog", "Memory information"))
         self.rb_save_frames_on_disk.setText(_translate("prefDialog", "Save frames on disk"))
         self.lb_storage_dir.setText(_translate("prefDialog", "The cache directory of FFmpeg framework will be used for the frames storage"))

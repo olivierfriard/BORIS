@@ -800,7 +800,10 @@ def angle(p1, p2, p3):
 
 def mem_info():
     """
-    get info about total mem, used mem and available mem using the free utility (on Linux)
+    get info about total mem, used mem and available mem using:
+       "free -m" command on Linux
+       "top -l 1 -s 0" command in MacOS
+       "systeminfo" command on Windows
 
     Returns:
         bool: True if error
