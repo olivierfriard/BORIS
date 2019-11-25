@@ -302,6 +302,39 @@ def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
     return current_states
 
 
+def get_current_states_modifiers_by_subject_2(state_behaviors_codes: list,
+                                              events: list,
+                                              subjects: dict,
+                                              time: Decimal) -> dict:
+    """
+    get current states and modifiers for subjects at given time
+    differs from get_current_states_modifiers_by_subject in the output format: [behavior, modifiers]
+
+    Args:
+        state_behaviors_codes (list): list of behavior codes defined as STATE event
+        events (list): list of events
+        subjects (dict): dictionary of subjects
+        time (Decimal): time
+        include_modifiers (bool): include modifier if True (default: False)
+
+    Returns:
+        dict: current states by subject. dict of list
+    """
+    current_states = {}
+    for idx in subjects:
+        current_states[idx] = []
+        for sbc in state_behaviors_codes:
+            bl = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
+                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx][SUBJECT_NAME]
+                    and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+                    and x[EVENT_TIME_FIELD_IDX] <= time]
+
+            if len(bl) % 2:  # test if odd
+                current_states[idx].append(bl[-1])
+
+    return current_states
+
+
 def get_current_points_by_subject(point_behaviors_codes: list,
                                   events: list,
                                   subjects: dict,
@@ -322,25 +355,27 @@ def get_current_points_by_subject(point_behaviors_codes: list,
     Returns:
         dict: current point behaviors by subject. dict of list
     """
+
     current_points = {}
     for idx in subjects:
         current_points[idx] = []
         for sbc in point_behaviors_codes:
-            if include_modifiers:
-                point_events = [[x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]] for x in events
-                                if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
-                                and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
-                                # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
-                                and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
-            else:
-                point_events = [x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+            #if include_modifiers:
+            point_events = [(x[EVENT_BEHAVIOR_FIELD_IDX], x[EVENT_MODIFIER_FIELD_IDX]) for x in events
                                 if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
                                 and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
                                 # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
                                 and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
 
+            #else:
+            #    point_events = [x[EVENT_BEHAVIOR_FIELD_IDX] for x in events
+            #                    if x[EVENT_SUBJECT_FIELD_IDX] == subjects[idx]["name"]
+            #                    and x[EVENT_BEHAVIOR_FIELD_IDX] == sbc
+            #                   # and abs(x[EVENT_TIME_FIELD_IDX] - time) <= tolerance
+            #                    and time <= x[EVENT_TIME_FIELD_IDX] < (time + tolerance)]
             for point_event in point_events:
                 current_points[idx].append(point_event)
+
 
     return current_points
 
@@ -765,7 +800,7 @@ def angle(p1, p2, p3):
 
 def mem_info():
     """
-    get info about total mem, used mem and free mem using the free utility (on Linux)
+    get info about total mem, used mem and available mem using the free utility (on Linux)
 
     Returns:
         bool: True if error
@@ -775,8 +810,8 @@ def mem_info():
         try:
             process = subprocess.Popen(["free", "-m"], stdout=subprocess.PIPE)
             out, err = process.communicate()
-            _, tot_mem, used_mem, free_mem, *_ = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
-            return False, {"total_memory": int(tot_mem), "used_memory": int(used_mem), "free_memory": int(free_mem)}
+            _, tot_mem, used_mem, _, _, _, available_mem = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
+            return False, {"total_memory": int(tot_mem), "used_memory": int(used_mem), "free_memory": int(available_mem)}
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
 
@@ -789,7 +824,7 @@ def mem_info():
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
 
-    if sys.platform.startswith("darwin"):
+    if sys.platform.startswith("win"):
         return True, {"msg": "Not yet implemented"}
 
     return True, {"msg": "Unknown operating system"}

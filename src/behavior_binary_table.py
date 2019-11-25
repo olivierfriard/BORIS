@@ -85,11 +85,12 @@ def create_behavior_binary_table(pj: dict,
                         behav_modif_list.append((behav, ""))
 
             behav_modif_set = set(behav_modif_list)
-
+            observed_behav = [(x[0], x[1]) for x in sorted(behav_modif_set)]
             if parameters_obs[INCLUDE_MODIFIERS]:
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "")
                                                                                  for x in sorted(behav_modif_set)])
             else:
+                #observed_behav = [x[0] for x in sorted(behav_modif_set)]
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [x[0] for x in sorted(behav_modif_set)])
 
             if subject == NO_FOCAL_SUBJECT:
@@ -102,27 +103,36 @@ def create_behavior_binary_table(pj: dict,
             while t < parameters_obs[END_TIME]:
 
                 # state events
-                current_states = utilities.get_current_states_modifiers_by_subject(state_behavior_codes,
+                current_states = utilities.get_current_states_modifiers_by_subject_2(state_behavior_codes,
                                                                                    pj[OBSERVATIONS][obs_id][EVENTS],
                                                                                    sel_subject_dict,
-                                                                                   t,
-                                                                                   include_modifiers=parameters_obs[INCLUDE_MODIFIERS])
+                                                                                   t
+                                                                                   #include_modifiers=parameters_obs[INCLUDE_MODIFIERS]
+                                                                                   )
 
                 # point events
                 current_point = utilities.get_current_points_by_subject(point_behavior_codes,
                                                                         pj[OBSERVATIONS][obs_id][EVENTS],
                                                                         sel_subject_dict,
                                                                         t,
-                                                                        time_interval,
-                                                                        include_modifiers=parameters_obs[INCLUDE_MODIFIERS])
+                                                                        time_interval
+                                                                        #include_modifiers=parameters_obs[INCLUDE_MODIFIERS]
+                                                                        )
 
                 cols = [float(t)]  # time
 
-                for behav in results_df[obs_id][subject].headers[1:]:  # skip time
-                    if behav in state_behavior_codes:
+                #for behav in results_df[obs_id][subject].headers[1:]:  # skip time
+                for behav in observed_behav:
+                    '''
+                    if parameters_obs[INCLUDE_MODIFIERS]:
+                        behav_wo_modif = behav[0]
+                    else:
+                        behav_wo_modif = behav
+                    '''
+                    if behav[0] in state_behavior_codes:
                         cols.append(int(behav in current_states[list(current_states.keys())[0]]))
 
-                    if behav in point_behavior_codes:
+                    if behav[0] in point_behavior_codes:
                         cols.append(current_point[list(current_point.keys())[0]].count(behav))
                             #int(behav in current_point[list(current_point.keys())[0]]))
 
