@@ -835,7 +835,7 @@ def mem_info():
                                                  if b"Available Physical Memory" in x][0].split(":")[1]
             free_mem = int(free_mem.strip(" ").split(" ")[0].replace(",", ""))
             
-            return True, {"total_memory": tot_mem, "free_memory": free_mem}
+            return False, {"total_memory": tot_mem, "free_memory": free_mem}
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
 
