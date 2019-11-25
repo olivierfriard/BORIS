@@ -825,7 +825,19 @@ def mem_info():
             return True, {"msg": error_info(sys.exc_info())[0]}
 
     if sys.platform.startswith("win"):
-        return True, {"msg": "Not yet implemented"}
+        try:
+            output = subprocess.check_output(("systeminfo"))
+            tot_mem = [x.decode("utf-8").strip() for x in output.split(b"\n")
+                                                     if b"Total Physical Memory" in x][0].split(":")[1]
+            tot_mem = int(tot_mem.strip(" ").split(" ")[0].replace(",", ""))
+
+            free_mem = [x.decode("utf-8").strip() for x in output.split(b"\n")
+                                                 if b"Available Physical Memory" in x][0].split(":")[1]
+            free_mem = int(free_mem.strip(" ").split(" ")[0].replace(",", ""))
+            
+            return True, {"total_memory": tot_mem, "free_memory": free_mem}
+        except Exception:
+            return True, {"msg": error_info(sys.exc_info())[0]}
 
     return True, {"msg": "Unknown operating system"}
 
