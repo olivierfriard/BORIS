@@ -246,7 +246,7 @@ class Test_get_current_points_by_subject(object):
                                   time=Decimal("22.000"),
                                   tolerance=Decimal("1"),
                                   include_modifiers=True)
-        assert r == {'0': [['p', '']]}
+        assert r == {'0': [('p', '')]}
 
 
     def test_events_with_modifiers2(self):
@@ -271,7 +271,7 @@ class Test_get_current_points_by_subject(object):
                                   time=Decimal("8.000"),
                                   tolerance=Decimal("5"),
                                   include_modifiers=True)
-        assert r == {'0': [['q', 'm1'], ['q', 'm2']]}
+        assert r == {'0': [('q', 'm1'), ('q', 'm2')]}
 
 
     def test_events_without_modifiers1(self):
@@ -283,7 +283,7 @@ class Test_get_current_points_by_subject(object):
                                   time=Decimal("22.000"),
                                   tolerance=Decimal("1"),
                                   include_modifiers=False)
-        assert r == {'0': ['p']}
+        assert r == {'0': [('p', '')]}
 
     def test_events_without_modifiers2(self):
         pj_float = json.loads(open("files/test.boris").read())

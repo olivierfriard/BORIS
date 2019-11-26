@@ -389,7 +389,7 @@ class Video_frame(QFrame):
 
         self.video_frame_signal.emit("resized", 0)
 
-
+'''
 class DW_old(QDockWidget):
 
     key_pressed_signal = pyqtSignal(QEvent)
@@ -433,7 +433,7 @@ class DW_old(QDockWidget):
 
         self.w.layout().addWidget(self.frame_viewer)
         self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-
+'''
 
 
 
@@ -3483,9 +3483,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             r, mem = utilities.mem_info()
             if not r:
                 preferencesWindow.lb_memory_info.setText((f"Total memory: {mem.get('total_memory', 'Not available')} Mb"
-                                                          f"  Free memory: {mem.get('free_memory', 'Not available')} Mb"))
+                                                          f"<br>Free memory: {mem.get('free_memory', 'Not available')} Mb"))
             else:
                 preferencesWindow.lb_memory_info.setText("Memory information not available")
+
+            # frames buffer
+            preferencesWindow.lb_memory_info.setText((f"{preferencesWindow.lb_memory_info.text()} "
+                                                      f"<br>Frames buffer size {self.frames_buffer.size()/1024/1024:.1f} Mb"
+                                                     )
+                                                    )
 
             preferencesWindow.sbFrameResize.setValue(self.frame_resize)
             mem_frame_resize = self.frame_resize
@@ -3593,25 +3599,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_cache_dir_max_size = preferencesWindow.sbFFmpegCacheDirMaxSize.value()
 
                 # frame-by-frame
+                if preferencesWindow.flag_reset_frames_memory:
+                    self.initialize_frames_buffer()
                 self.config_param[SAVE_FRAMES] = DEFAULT_FRAME_MODE
                 if preferencesWindow.rb_save_frames_in_mem.isChecked():
                     self.config_param[SAVE_FRAMES] = MEMORY
                 if preferencesWindow.rb_save_frames_on_disk.isChecked():
                     self.config_param[SAVE_FRAMES] = DISK
                 self.config_param[MEMORY_FOR_FRAMES] = preferencesWindow.sb_frames_memory_size.value()
+                if self.frames_buffer.size() / 1048576 > self.config_param[MEMORY_FOR_FRAMES]:
+                    self.initialize_frames_buffer()
 
                 self.frame_resize = preferencesWindow.sbFrameResize.value()
 
                 # clear frames memory cache if frames saved on disk
                 if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
-                    self.frames_cache.clear()
+                    self.initialize_frames_buffer()
 
                 # frames cache
                 # clear cache (mem or files) if frame_resize changed
                 if self.frame_resize != mem_frame_resize:
 
                     if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == MEMORY:
-                        self.frames_cache.clear()
+                        self.initialize_frames_buffer()
 
                     if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
                         # check temp dir for images from ffmpeg
@@ -3753,6 +3763,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         return
 
+    def initialize_frames_buffer(self):
+        """
+        initialize the memory buffer for saving frames
+        """
+        self.frames_buffer = QBuffer()
+        self.frames_buffer.open(QIODevice.ReadWrite)
+        self.frames_cache = {}
+
+
 
     def ffmpeg_timer_out(self):
         """
@@ -3874,8 +3893,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             logging.debug(f"free memory < 200 Mb. Reset buffer")
 
-                            self.frames_buffer = QBuffer()
-                            self.frames_buffer.open(QIODevice.ReadWrite)
+                            self.initialize_frames_buffer()
                             self.frames_cache[current_media_full_path] = {}
 
                             if mem.get("free_memory", 0) < 200:
@@ -3888,10 +3906,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             # reset buffer
                             #del self.frames_buffer
                             logging.debug(f"buffer size > {self.config_param[MEMORY_FOR_FRAMES] * 1024 * 1024}. Reset buffer")
-                            self.frames_buffer = QBuffer()
-                            self.frames_buffer.open(QIODevice.ReadWrite)
+                            self.initialize_frames_buffer()
                             self.frames_cache[current_media_full_path] = {}
-
                     else:
                         self.statusbar.showMessage(f"Free memory not available ({mem.get('msg', '')})", 0)
 
@@ -3902,14 +3918,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     print(f"videoframe size: {player.videoframe.size().width()}x{player.videoframe.size().height()}")
                     print(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
                     
-                    frame_height = player.videoframe.size().height()
-                    frame_width = round(player.videoframe.size().height() * (player.videoframe.h_resolution / player.videoframe.v_resolution))
-                    '''
-                    if not self.frame_resize:
-                        frame_resize = player.frame_viewer.size().width()
+                    # check frame size
+                    ratio = player.videoframe.h_resolution / player.videoframe.v_resolution
+                    if (player.videoframe.size().width() / player.videoframe.size().height()) <= ratio:
+                        frame_width = player.videoframe.size().width()
+                        frame_height = round(player.videoframe.size().width() / ratio)
                     else:
-                        frame_resize = self.frame_resize
-                    '''
+                        frame_height = player.videoframe.size().height()
+                        frame_width = round(player.videoframe.size().height() * ratio)
 
                     # message
                     self.iw = dialog.Info_widget()
@@ -3917,7 +3933,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.iw.resize(350, 100)
                     self.iw.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-                    logging.debug(f"Extracting frame tp memory")
+                    logging.debug(f"Extracting frame to memory")
 
                     self.iw.setWindowTitle("Extracting frames to memory...")
                     self.iw.label.setText("Extracting frames to memory... This operation can be long. Be patient...")
@@ -5484,7 +5500,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
             results = dialog.Results_dialog()
-            results.setWindowTitle(programName + " - Check selected observations")
+            results.setWindowTitle(f"{programName} - Check selected observations")
             results.ptText.setReadOnly(True)
             results.ptText.appendHtml(out)
             results.pbSave.setVisible(False)
@@ -5537,16 +5553,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.actionFrame_by_frame.setChecked(False)
             self.playMode = VLC
 
+            ''' TO BE DELETED 2019-11-26
             try:
                 self.spectro.close()
                 del self.spectro
             except Exception:
                 pass
+            '''
 
             try:
-                # self.ffmpegLayout.deleteLater()
-                self.lbFFmpeg.deleteLater()
-                self.ffmpegTab.deleteLater()
                 self.FFmpegTimer.stop()
                 self.FFmpegGlobalFrame = 0
             except Exception:
@@ -5554,7 +5569,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.observationId = ""
 
-        self.frames_cache.clear()
+        # buffer no more deleted when observation is closed
+        # self.initialize_frames_buffer()
 
         self.statusbar.showMessage("", 0)
 
@@ -9425,15 +9441,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                    ["offset"][str(n_player + 1)] * 1000) > sum(
                                                        self.dw_player[n_player].media_durations)):
                                 # hide video if required time > video time + offset
+                                '''
                                 self.dw_player[n_player].frame_viewer.setVisible(True)
                                 self.dw_player[n_player].videoframe.setVisible(False)
                                 self.dw_player[n_player].volume_slider.setVisible(False)
+                                '''
+                                self.dw_player[n_player].stack.setCurrentIndex(1)
 
                             else:
 
+                                '''
                                 self.dw_player[n_player].frame_viewer.setVisible(False)
                                 self.dw_player[n_player].videoframe.setVisible(True)
                                 self.dw_player[n_player].volume_slider.setVisible(True)
+                                '''
+                                self.dw_player[n_player].stack.setCurrentIndex(0)
                                 self.dw_player[n_player].mediaplayer.set_time(
                                     new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                        ["offset"][str(n_player + 1)] * 1000))
@@ -9444,13 +9466,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                ["offset"][str(n_player + 1)] * 1000) > sum(
                                                    self.dw_player[n_player].media_durations)):
                             # hide video if required time > video time + offset
+                            '''
                             self.dw_player[n_player].frame_viewer.setVisible(True)
                             self.dw_player[n_player].videoframe.setVisible(False)
                             self.dw_player[n_player].volume_slider.setVisible(False)
+                            '''
+                            self.dw_player[n_player].stack.setCurrentIndex(1)
                         else:
+                            '''
                             self.dw_player[n_player].frame_viewer.setVisible(False)
                             self.dw_player[n_player].videoframe.setVisible(True)
                             self.dw_player[n_player].volume_slider.setVisible(True)
+                            '''
+                            self.dw_player[n_player].stack.setCurrentIndex(0)
 
                             self.dw_player[n_player].mediaplayer.set_time(
                                 new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
