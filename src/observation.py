@@ -658,11 +658,12 @@ class Observation(QDialog, Ui_Form):
 
         Returns:
              bool: True if file is media else False
+             str: error message or empty string
         """
 
         r = utilities.accurate_media_analysis(self.ffmpeg_bin, file_path)
         if "error" in r:
-            return False
+            return False, r["error"]
         else:
             if r["duration"] > 0:
                 if not flag_path:
@@ -672,9 +673,9 @@ class Observation(QDialog, Ui_Form):
                 self.mediaHasVideo[file_path] = r["has_video"]
                 self.mediaHasAudio[file_path] = r["has_audio"]
                 self.add_media_to_listview(n_player, file_path)
-                return True
+                return True, ""
             else:
-                return False
+                return False, "duration not available"
 
 
     def add_media(self, n_player, flag_path):
@@ -707,9 +708,10 @@ class Observation(QDialog, Ui_Form):
 
         if file_paths:
             for file_path in file_paths:
-                if not self.check_media(n_player, file_path, flag_path):
+                r, msg = self.check_media(n_player, file_path, flag_path)
+                if not r:
                     QMessageBox.critical(self, programName,
-                                         f"The <b>{file_path}</b> file does not seem to be a media file.")
+                                         f"<b>{file_path}</b>. {msg}")
 
         for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
                   self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
@@ -738,10 +740,11 @@ class Observation(QDialog, Ui_Form):
         if dir_name:
             r = ""
             for file_path in glob.glob(dir_name + os.sep + "*"):
-                if not self.check_media(n_player, file_path, flag_path):
+                r, msg = self.check_media(n_player, file_path, flag_path)
+                if not r:
                     if r != "Skip all non media files":
                         r = dialog.MessageDialog(programName,
-                                                 f"The <b>{file_path}</b> file does not seem to be a media file.",
+                                                 f"<b>{file_path}</b> {msg}",
                                                  ["Continue", "Skip all non media files", "Cancel"])
                         if r == "Cancel":
                             break

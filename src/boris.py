@@ -1693,7 +1693,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 r = utilities.accurate_media_analysis(self.ffmpeg_bin, fileNames[0])
                 if "error" in r:
-                    QMessageBox.warning(self, programName, f"{fileNames[0]} does not seem a media file")
+                    QMessageBox.warning(self, programName, f"{fileNames[0]}. {r['error']}")
                 elif r["has_video"]:
                     try:
                         current_bitrate = r["bitrate"]

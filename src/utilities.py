@@ -1166,7 +1166,7 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
                     resolution = re_results.group(0)
                 break
     except Exception:
-        hasVideo = None
+        hasVideo = False
         resolution = None
 
     # check for audio stream
@@ -1177,9 +1177,10 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
                 hasAudio = True
                 break
     except Exception:
-        hasAudio = None
+        hasAudio = False
 
-    if duration == 0 or bitrate == -1:
+    #if duration == 0 or bitrate == -1:
+    if not hasVideo and not hasAudio:
         return {"error": "This file do not seem to be a media file"}
 
     return {"frames_number": int(fps * duration),
