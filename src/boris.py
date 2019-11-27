@@ -3475,7 +3475,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 preferencesWindow.rb_save_frames_on_disk.setChecked(True)
             for w in [preferencesWindow.lb_memory_frames, preferencesWindow.sb_frames_memory_size, preferencesWindow.lb_memory_info]:
                 w.setEnabled(preferencesWindow.rb_save_frames_in_mem.isChecked())
-            for w in [preferencesWindow.lb_bitmap_quality, preferencesWindow.cbFrameBitmapFormat, preferencesWindow.lb_storage_dir]:
+            for w in [preferencesWindow.lb_storage_dir]:
                 w.setEnabled(preferencesWindow.rb_save_frames_on_disk.isChecked())
 
             preferencesWindow.sb_frames_memory_size.setValue(self.config_param.get(MEMORY_FOR_FRAMES, DEFAULT_MEMORY_FOR_FRAMES))
@@ -3702,13 +3702,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def extract_frames_mem(self,
-                       start_frame: int,
-                        second: float,
-                        current_media_path,
-                        fps: float,
-                        resolution: tuple,
-                        frame_resize: int,
-                        number_of_seconds: int) -> dict:
+                           start_frame: int,
+                           second: float,
+                           current_media_path,
+                           fps: float,
+                           resolution: tuple,
+                           bitmap_format: str,
+                           frame_resize: int,
+                           number_of_seconds: int,
+                           bitmap_quality: int = 100) -> dict:
 
         """
         extract frames from video to a QBuffer and save references (start and size) in dictionary
@@ -3720,48 +3722,53 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             im = np.asarray(frame)
             return QImage(im.data, im.shape[1], im.shape[0], im.strides[0], QImage.Format_RGB888)
 
-        if frame_resize:
-            new_h_resolution = frame_resize
-            new_v_resolution = round(resolution[1] * (frame_resize / resolution[0]))
-        else:
+        try:
             new_h_resolution, new_v_resolution = resolution
+            new_h_resolution = 1544
+            new_v_resolution = 868
 
-        quality = 100
+            # print(f"new_h_resolution x new_v_resolution: {new_h_resolution}x{new_v_resolution}")
 
-        command = [self.ffmpeg_bin,
-                    '-i', current_media_path,
-                    "-ss", str((start_frame - 1) / fps),
-                    '-vframes', str(int(fps * number_of_seconds)),
-                    '-vf', f'scale={new_h_resolution}:-1',
-                    '-f', 'image2pipe',
-                    '-pix_fmt', 'rgb24',
-                    '-vcodec', 'rawvideo', '-']
+            command = [self.ffmpeg_bin,
+                        '-i', current_media_path,
+                        "-ss", str((start_frame - 1) / fps),
+                        '-vframes', str(int(fps * number_of_seconds)),
+                        '-vf', f'scale={new_h_resolution}:-1',
+                        '-f', 'image2pipe',
+                        '-pix_fmt', 'rgb24',
+                        '-vcodec', 'rawvideo', '-']
 
-        pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+            pipe = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
 
-        # go to buffer end
-        self.frames_buffer.seek(self.frames_buffer.size())
-        frame_idx = start_frame
-        while True:
-            raw_image = pipe.stdout.read(new_v_resolution * new_h_resolution * 3)
-            if not raw_image:
-                return
-            if frame_idx in self.frames_cache[current_media_path]:
+            # go to buffer end
+            self.frames_buffer.seek(self.frames_buffer.size())
+            frame_idx = start_frame
+            while True:
+                raw_image = pipe.stdout.read(new_v_resolution * new_h_resolution * 3)
+                if not raw_image:
+                    return False, ""
+                if frame_idx in self.frames_cache[current_media_path]:
+                    frame_idx += 1
+                    continue
+                np_array = np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))
+                qimage = toQImage(np_array)
+                pixmap = QPixmap.fromImage(qimage)
+                '''
+                pixmap = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))))
+                '''
+                start = self.frames_buffer.pos()
+
+                pixmap.save(self.frames_buffer, bitmap_format, bitmap_quality)
+
+                self.frames_cache[current_media_path][frame_idx] = (start, self.frames_buffer.size() - start)
                 frame_idx += 1
-                continue
-            np_array = np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))
-            qimage = toQImage(np_array)
-            pixmap = QPixmap.fromImage(qimage)
-            '''
-            pixmap = QPixmap.fromImage(toQImage(np.fromstring(raw_image, dtype="uint8").reshape((new_v_resolution, new_h_resolution, 3))))
-            '''
-            start = self.frames_buffer.pos()
-            pixmap.save(self.frames_buffer, "jpg", quality)
 
-            self.frames_cache[current_media_path][frame_idx] = (start, self.frames_buffer.size() - start)
-            frame_idx += 1
+        except Exception:
 
-        return
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Error during frame extraction: {error_type} {error_file_name} {error_lineno}")
+            return True, sys.exc_info()
+
 
     def initialize_frames_buffer(self):
         """
@@ -3770,7 +3777,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.frames_buffer = QBuffer()
         self.frames_buffer.open(QIODevice.ReadWrite)
         self.frames_cache = {}
-
 
 
     def ffmpeg_timer_out(self):
@@ -3914,18 +3920,35 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.statusbar.showMessage(f"Extracting frames... {int(self.frames_buffer.size()/1024/1024)}", 0)
                     app.processEvents()
 
+
+                    '''
                     print(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
                     print(f"videoframe size: {player.videoframe.size().width()}x{player.videoframe.size().height()}")
                     print(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
-                    
-                    # check frame size
-                    ratio = player.videoframe.h_resolution / player.videoframe.v_resolution
-                    if (player.videoframe.size().width() / player.videoframe.size().height()) <= ratio:
-                        frame_width = player.videoframe.size().width()
-                        frame_height = round(player.videoframe.size().width() / ratio)
+                    '''
+
+
+                    if self.frame_resize:
+                        frame_width = self.frame_resize
+                        frame_height = int(player.videoframe.v_resolution * (self.frame_resize / player.videoframe.h_resolution) + 0.5)
                     else:
-                        frame_height = player.videoframe.size().height()
-                        frame_width = round(player.videoframe.size().height() * ratio)
+                        # check frame size
+                        ratio = player.videoframe.h_resolution / player.videoframe.v_resolution
+                        '''
+                        if (player.frame_viewer.size().width() / player.frame_viewer.size().height()) <= ratio:
+                            frame_width = player.frame_viewer.size().width()
+                            frame_height = round(player.frame_viewer.size().width() / ratio)
+                        else:
+                            frame_height = player.frame_viewer.size().height()
+                            frame_width = round(player.frame_viewer.size().height() * ratio)
+                        '''
+                        if (player.frame_viewer.size().width() / player.frame_viewer.size().height()) <= ratio:
+                            frame_width = player.frame_viewer.size().width()
+                            frame_height = int(player.frame_viewer.size().width() / ratio + 0.5)
+                        else:
+                            frame_height = player.frame_viewer.size().height()
+                            frame_width = int(player.frame_viewer.size().height() * ratio + 0.5)
+
 
                     # message
                     self.iw = dialog.Info_widget()
@@ -3940,15 +3963,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.iw.show()
                     app.processEvents()
 
-                    self.extract_frames_mem(frameCurrentMedia,
-                                            (frameCurrentMedia - 1) / self.fps,
+                    r, msg = self.extract_frames_mem(frameCurrentMedia,
+                                                     (frameCurrentMedia - 1) / self.fps,
                                             current_media_full_path,
                                             round(self.fps),
                                             (frame_width, frame_height),
-                                            self.frame_resize,
-                                            self.fbf_cache_size)
+                                            self.frame_bitmap_format.lower(),
+                                            0,
+                                            self.fbf_cache_size,
+                                            bitmap_quality=100)
 
                     self.iw.hide()
+                    if r:
+                        dialog.error_message(" frame extraction in memory", msg)
+                        return
                     '''
                     print(f"frames buffer size: {self.frames_buffer.size()/1024/1024}")
                     print(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")

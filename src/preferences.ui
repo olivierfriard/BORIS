@@ -394,7 +394,7 @@
            <item>
             <widget class="QLabel" name="lb_bitmap_quality">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>Frame bitmap format (JPG: Low quality  PNG: High quality)</string>
@@ -404,7 +404,7 @@
            <item>
             <widget class="QComboBox" name="cbFrameBitmapFormat">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <item>
               <property name="text">
@@ -469,7 +469,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_11">
            <item>
-            <widget class="QPushButton" name="pb_reset_frames_memory">
+            <widget class="QCheckBox" name="cb_reset_frames_memory">
              <property name="text">
               <string>Reset frames memory</string>
              </property>

@@ -42,7 +42,7 @@ class Preferences(QDialog, Ui_prefDialog):
         self.pbBrowseFFmpegCacheDir.clicked.connect(self.browseFFmpegCacheDir)
         self.rb_save_frames_in_mem.toggled.connect(self.rb_frames_mem_disk)
         self.rb_save_frames_on_disk.toggled.connect(self.rb_frames_mem_disk)
-        self.pb_reset_frames_memory.clicked.connect(self.reset_frames_memory)
+        self.cb_reset_frames_memory.clicked.connect(self.reset_frames_memory)
 
         self.pb_reset_colors.clicked.connect(self.reset_colors)
 
@@ -61,14 +61,17 @@ class Preferences(QDialog, Ui_prefDialog):
         for w in [self.lb_memory_frames, self.sb_frames_memory_size, self.lb_memory_info]:
             w.setEnabled(self.rb_save_frames_in_mem.isChecked())
 
-        for w in [self.lb_bitmap_quality, self.cbFrameBitmapFormat, self.lb_storage_dir]:
+        for w in [self.lb_storage_dir]:
             w.setEnabled(self.rb_save_frames_on_disk.isChecked())
+
 
     def reset_frames_memory(self):
         """
-        reset memory used for frames storage
+        reset memory used for frames storage.
+        Reset is done after closing the Preferences window.
         """
-        self.flag_reset_frames_memory = True
+        self.flag_reset_frames_memory = self.cb_reset_frames_memory.isChecked()
+
 
     def refresh_preferences(self):
         """
