@@ -11789,8 +11789,11 @@ if __name__ == "__main__":
     observation_to_open = ""
     if options.project:
         project_to_open = options.project
+        # hook for Mac bundle created with pyinstaller
+        if "sn_0_" in project_to_open:
+            project_to_open = ""
 
-    QMessageBox.critical(window, programName, f"options.project: #{options.project}#")
+    # QMessageBox.critical(window, programName, f"options.project: #{options.project}#")
 
     logging.debug(f"args: {args}")
 
@@ -11812,8 +11815,6 @@ if __name__ == "__main__":
             sys.exit()
         observation_to_open = args[1]
     '''
-
-    
 
     if project_to_open:
 
