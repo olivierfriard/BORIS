@@ -113,8 +113,8 @@ parser.add_option("-d", "--debug", action="store", default="", dest="debug",
                   help="one: log to BORIS.log, new: log to new file")
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
-parser.add_option("-p", "--project", action="store", help="Project file")
-parser.add_option("-o", "--observation", action="store", help="Observation id")
+parser.add_option("-p", "--project", action="store", default="", help="Project file")
+parser.add_option("-o", "--observation", action="store", default="", help="Observation id")
 
 (options, args) = parser.parse_args()
 
@@ -11790,6 +11790,8 @@ if __name__ == "__main__":
     if options.project:
         project_to_open = options.project
 
+    QMessageBox.critical(window, programName, f"options.project: #{options.project}#")
+
     logging.debug(f"args: {args}")
 
     '''
@@ -11811,7 +11813,7 @@ if __name__ == "__main__":
         observation_to_open = args[1]
     '''
 
-    QMessageBox.critical(window, programName, f"project to open: #{project_to_open}#")
+    
 
     if project_to_open:
 
