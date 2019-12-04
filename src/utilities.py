@@ -1179,9 +1179,9 @@ def accurate_media_analysis(ffmpeg_bin, file_name):
     except Exception:
         hasAudio = False
 
-    #if duration == 0 or bitrate == -1:
-    if not hasVideo and not hasAudio:
-        return {"error": "This file do not seem to be a media file"}
+    if duration == 0 or bitrate == -1:
+    #if not hasVideo and not hasAudio:
+        return {"error": "This file does not seem to be a media file"}
 
     return {"frames_number": int(fps * duration),
             "duration_ms": duration * 1000,

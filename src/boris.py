@@ -877,7 +877,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             w.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # statusbar labels
-        for w in [self.lbTimeOffset, self.lbSpeed]:
+        for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
             w.setVisible(self.playerType == VLC)
 
 
@@ -2198,10 +2198,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     flag_no_video = True
 
                                 if flag_no_video:
-                                    logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
+                                    logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} does not have video")
                                     flag_no_video = True
                                     response = dialog.MessageDialog(programName,
-                                                                    ("The following media file do not have video.<br>"
+                                                                    ("The following media file does not have video.<br>"
                                                                      f"{self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}"),
                                                                     [OK, "Abort"])
                                     if response == OK:
@@ -2461,7 +2461,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         extension = ".mp4"
                                     else:
                                         extension = ".wav"
-                                        logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} do not have video")
+                                        logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} does not have video")
                                 except Exception:
                                     logging.debug(f"has_video not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
                                     continue
@@ -5616,11 +5616,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for i in range(self.twSubjects.rowCount()):
             self.twSubjects.item(i, len(subjectsFields)).setText("")
 
-        self.lbTimeOffset.clear()
-        self.play_rate = 1
-        self.lbSpeed.clear()
-        self.lb_obs_time_interval.clear()
-        self.playerType = ""
+        for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
+            w.clear()
+        self.play_rate, self.playerType = 1, ""
 
         self.menu_options()
 
@@ -5642,12 +5640,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         read config file
         """
 
-        logging.debug("read config file")
+        iniFilePath = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
 
-        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
+        logging.debug(f"read config file: {iniFilePath}")
 
-        if os.path.isfile(iniFilePath):
-            settings = QSettings(iniFilePath, QSettings.IniFormat)
+        if iniFilePath.is_file():
+            settings = QSettings(str(iniFilePath), QSettings.IniFormat)
 
             try:
                 self.config_param = settings.value("config")
@@ -5935,10 +5933,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save config file
         """
 
-        logging.debug("function: save config file")
+        iniFilePath = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
 
-        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris")
-        settings = QSettings(iniFilePath, QSettings.IniFormat)
+        logging.debug(f"save config file: {iniFilePath}")
+
+        settings = QSettings(str(iniFilePath), QSettings.IniFormat)
 
         settings.setValue("config", self.config_param)
 
@@ -9011,8 +9010,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 QMessageBox.warning(self,
                                     programName,
-                                    "The subject <b>{}</b> does not exist more in the subject's list".format(
-                                        self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX])
+                                    (f"The subject <b>{self.pj[OBSERVATIONS][self.observationId][EVENTS][row][EVENT_SUBJECT_FIELD_IDX]}</b> "
+                                     "does not exist more in the subject's list")
                                     )
                 editWindow.cobSubject.setCurrentIndex(0)
 
@@ -10860,7 +10859,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             length.append(len(l.split("\t")))
             content.append(l.split("\t"))
         if set(length) != set([5]):
-            QMessageBox.warning(self, programName, ("The clipboard do not contain events!\n"
+            QMessageBox.warning(self, programName, ("The clipboard does not contain events!\n"
                                                     "Events must be organized in 5 columns separated by TAB character"))
             return
 

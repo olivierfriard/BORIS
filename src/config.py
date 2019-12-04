@@ -89,6 +89,7 @@ POINT_EVENT_PLOT_COLOR = "black"
 CHAR_FORBIDDEN_IN_MODIFIERS = "(|),`~"
 
 ADAPT_FAST_JUMP = "adapt_fast_jump"
+ADAPT_FAST_JUMP_DEFAULT = False
 
 subjects_config = ["key", "id"]
 
@@ -560,7 +561,6 @@ EMPTY_PROJECT = {
     CONVERTERS: {},
 }
 
-ADAPT_FAST_JUMP_DEFAULT = False
 
 INIT_PARAM = {DISPLAY_SUBTITLES: False,
               SAVE_FRAMES: DISK,
