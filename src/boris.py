@@ -5660,26 +5660,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     
                 logging.debug(f"{DISPLAY_SUBTITLES}: {self.config_param[DISPLAY_SUBTITLES]}")
 
-                # frame-by-frame
-                '''
-                try:
-                    self.config_param[SAVE_FRAMES] = settings.value(SAVE_FRAMES)
-                    if not self.config_param[SAVE_FRAMES]:
-                        self.config_param[SAVE_FRAMES] = DISK
-                except Exception:
-                    self.config_param[SAVE_FRAMES] = DISK
-    
-                logging.debug(f"save frame on {self.config_param[SAVE_FRAMES]}")
-    
-                try:
-                    self.config_param[MEMORY_FOR_FRAMES] = int(settings.value(MEMORY_FOR_FRAMES))
-                except Exception:
-                    self.config_param[MEMORY_FOR_FRAMES] = DEFAULT_MEMORY_FOR_FRAMES
-    
-                logging.debug(f"memory for frames: {self.config_param[MEMORY_FOR_FRAMES]}")
-                '''
-
-
             try:
                 logging.debug("restore geometry")
 
@@ -11812,7 +11792,8 @@ if __name__ == "__main__":
     # splashscreen
     if (not options.nosplashscreen):
         start = time.time()
-        splash = QSplashScreen(QPixmap(os.path.dirname(os.path.realpath(__file__)) + "/splash.png"))
+        datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
+        splash = QSplashScreen(QPixmap(f"{datadir}/splash.png"))
         splash.show()
         splash.raise_()
         while time.time() - start < 1:
