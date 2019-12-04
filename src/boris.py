@@ -11803,14 +11803,14 @@ if __name__ == "__main__":
             app.processEvents()
         '''
         app.processEvents()
-    '''
+
     # check VLC
     if vlc.dll is None:
         msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(1)
-
+    '''
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
         msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
                "Go to http://www.videolan.org/vlc to update it")
