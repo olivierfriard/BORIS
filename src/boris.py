@@ -11808,6 +11808,8 @@ if __name__ == "__main__":
             sys.exit()
         observation_to_open = args[1]
 
+    QMessageBox.critical(window, programName, f"project to open: #{project_to_open}#")
+
     '''
     if project_to_open:
 
