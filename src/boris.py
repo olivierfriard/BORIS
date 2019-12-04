@@ -3724,9 +3724,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             new_h_resolution, new_v_resolution = resolution
-            new_h_resolution = 1544
-            new_v_resolution = 868
-
             # print(f"new_h_resolution x new_v_resolution: {new_h_resolution}x{new_v_resolution}")
 
             command = [self.ffmpeg_bin,
