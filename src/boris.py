@@ -11795,6 +11795,7 @@ if __name__ == "__main__":
     if args and len(args) > 0:
         project_to_open = args[0]
 
+    '''
     if options.observation:
         if not project_to_open:
             print("No project file!")
@@ -11829,6 +11830,7 @@ if __name__ == "__main__":
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
+    '''
 
     window.show()
     window.raise_()
