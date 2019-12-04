@@ -11784,7 +11784,7 @@ if __name__ == "__main__":
     window = MainWindow(ffmpeg_bin)
 
     # open project/start observation on command line
-    '''
+
     project_to_open = ""
     observation_to_open = ""
     if options.project:
@@ -11829,7 +11829,7 @@ if __name__ == "__main__":
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-    '''
+
     window.show()
     window.raise_()
 
@@ -11839,6 +11839,5 @@ if __name__ == "__main__":
     
     if not options.nosplashscreen:
         splash.finish(window)
-    
 
     sys.exit(app.exec_())
