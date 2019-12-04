@@ -11814,7 +11814,7 @@ if __name__ == "__main__":
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(2)
-
+    '''
     # check FFmpeg
     ret, msg = check_ffmpeg_path()
     if not ret:
@@ -11823,7 +11823,7 @@ if __name__ == "__main__":
         sys.exit(3)
     else:
         ffmpeg_bin = msg
-    '''
+
     app.setApplicationName(programName)
     window = MainWindow(ffmpeg_bin)
 
