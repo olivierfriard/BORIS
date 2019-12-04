@@ -11810,14 +11810,14 @@ if __name__ == "__main__":
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(1)
-    '''
+    
     if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
         msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
                "Go to http://www.videolan.org/vlc to update it")
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(2)
-    '''
+    
     # check FFmpeg
     ret, msg = check_ffmpeg_path()
     if not ret:
