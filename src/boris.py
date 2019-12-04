@@ -11792,9 +11792,10 @@ if __name__ == "__main__":
 
     logging.debug(f"args: {args}")
 
+    '''
     if args and len(args) > 0:
         project_to_open = args[0]
-
+    '''
 
     if options.observation:
         if not project_to_open:
@@ -11802,15 +11803,16 @@ if __name__ == "__main__":
             sys.exit()
         observation_to_open = options.observation
 
+    '''
     if args and len(args) > 1:
         if not project_to_open:
             print("No project file!")
             sys.exit()
         observation_to_open = args[1]
+    '''
 
     QMessageBox.critical(window, programName, f"project to open: #{project_to_open}#")
 
-    '''
     if project_to_open:
 
         project_path, project_changed, pj, msg = project_functions.open_project_json(project_to_open)
@@ -11822,7 +11824,6 @@ if __name__ == "__main__":
             if msg:
                 QMessageBox.information(window, programName, msg)
             window.load_project(project_path, project_changed, pj)
-    '''
     
     if observation_to_open and "error" not in pj:
         r = window.load_observation(observation_to_open)
