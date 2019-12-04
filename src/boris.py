@@ -113,8 +113,8 @@ parser.add_option("-d", "--debug", action="store", default="", dest="debug",
                   help="one: log to BORIS.log, new: log to new file")
 parser.add_option("-v", "--version", action="store_true", default=False, dest="version", help="Print version")
 parser.add_option("-n", "--nosplashscreen", action="store_true", default=False, help="No splash screen")
-parser.add_option("-p", "--project", action="store", default="", help="Project file")
-parser.add_option("-o", "--observation", action="store", default="", help="Observation id")
+parser.add_option("-p", "--project", action="store", default="", dest="project", help="Project file")
+parser.add_option("-o", "--observation", action="store", default="", dest="observation", help="Observation id")
 
 (options, args) = parser.parse_args()
 
