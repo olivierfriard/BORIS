@@ -11798,7 +11798,7 @@ if __name__ == "__main__":
         splash.raise_()
         while time.time() - start < 1:
             time.sleep(0.001)
-            app.processEvents()
+            #app.processEvents()
 
     # check VLC
     if vlc.dll is None:
