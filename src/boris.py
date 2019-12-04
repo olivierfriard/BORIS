@@ -11790,6 +11790,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # splashscreen
+    '''
     if (not options.nosplashscreen):
         start = time.time()
         datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
@@ -11798,7 +11799,7 @@ if __name__ == "__main__":
         splash.raise_()
         while time.time() - start < 1:
             time.sleep(0.001)
-            #app.processEvents()
+            app.processEvents()
 
     # check VLC
     if vlc.dll is None:
@@ -11822,17 +11823,12 @@ if __name__ == "__main__":
         sys.exit(3)
     else:
         ffmpeg_bin = msg
-
+    '''
     app.setApplicationName(programName)
     window = MainWindow(ffmpeg_bin)
 
-    #window.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
-    #window.setWindowFlags(Qt.WindowTitleHint | Qt.CustomizeWindowHint)
-    #window.setWindowFlags(Qt.WindowFlags() & ~Qt.WindowMaximizeButtonHint)
-
-    #window.setWindowFlags(QtCore.Qt.WindowCloseButtonHint | QtCore.Qt.WindowMinimizeButtonHint)
-
     # open project/start observation on command line
+    '''
     project_to_open = ""
     observation_to_open = ""
     if options.project:
@@ -11877,14 +11873,16 @@ if __name__ == "__main__":
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-
+    '''
     window.show()
     window.raise_()
 
     # connect events filter when app focus changes
     app.focusChanged.connect(window.changedFocusSlot)
 
+    '''
     if not options.nosplashscreen:
         splash.finish(window)
+    '''
 
     sys.exit(app.exec_())
