@@ -11808,7 +11808,7 @@ if __name__ == "__main__":
             sys.exit()
         observation_to_open = args[1]
 
-
+    '''
     if project_to_open:
 
         project_path, project_changed, pj, msg = project_functions.open_project_json(project_to_open)
@@ -11820,8 +11820,8 @@ if __name__ == "__main__":
             if msg:
                 QMessageBox.information(window, programName, msg)
             window.load_project(project_path, project_changed, pj)
-
     '''
+    
     if observation_to_open and "error" not in pj:
         r = window.load_observation(observation_to_open)
         if r:
@@ -11832,7 +11832,7 @@ if __name__ == "__main__":
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-    '''
+    
 
     window.show()
     window.raise_()
