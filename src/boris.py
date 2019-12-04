@@ -389,53 +389,6 @@ class Video_frame(QFrame):
 
         self.video_frame_signal.emit("resized", 0)
 
-'''
-class DW_old(QDockWidget):
-
-    key_pressed_signal = pyqtSignal(QEvent)
-    volume_slider_moved_signal = pyqtSignal(int, int)
-    view_signal = pyqtSignal(int, str, int)
-
-    def __init__(self, id_, parent=None):
-        super().__init__(parent)
-        self.id_ = id_
-        self.zoomed = False
-        self.setWindowTitle(f"Player #{id_ + 1}")
-        self.setObjectName(f"player{id_ + 1}")
-
-        self.w = QtWidgets.QWidget()
-
-        self.hlayout = QHBoxLayout()
-
-        self.videoframe = Video_frame()
-        self.videoframe.video_frame_signal.connect(self.view_signal_triggered)
-        self.palette = self.videoframe.palette()
-        self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
-        self.videoframe.setPalette(self.palette)
-        self.videoframe.setAutoFillBackground(True)
-
-        self.hlayout.addWidget(self.videoframe)
-
-        self.volume_slider = QSlider(Qt.Vertical, self)
-        self.volume_slider.setMaximum(100)
-        self.volume_slider.setValue(50)
-        self.volume_slider.sliderMoved.connect(self.volume_slider_moved)
-
-        self.hlayout.addWidget(self.volume_slider)
-
-        self.frame_viewer = Click_label(id_)
-        self.frame_viewer.setVisible(False)
-
-        self.setWidget(self.w)
-        self.w.setLayout(QVBoxLayout())
-
-        self.w.layout().addLayout(self.hlayout)
-
-        self.w.layout().addWidget(self.frame_viewer)
-        self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-'''
-
-
 
 class DW(QDockWidget):
 
@@ -11796,12 +11749,12 @@ if __name__ == "__main__":
         datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
         splash = QSplashScreen(QPixmap(f"{datadir}/splash.png"))
         splash.show()
-        '''
+        
         splash.raise_()
         while time.time() - start < 1:
             time.sleep(0.001)
             app.processEvents()
-        '''
+        
         app.processEvents()
 
     # check VLC
