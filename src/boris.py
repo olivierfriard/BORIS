@@ -11790,17 +11790,20 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # splashscreen
-    '''
+
     if (not options.nosplashscreen):
         start = time.time()
         datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
         splash = QSplashScreen(QPixmap(f"{datadir}/splash.png"))
         splash.show()
+        '''
         splash.raise_()
         while time.time() - start < 1:
             time.sleep(0.001)
             app.processEvents()
-
+        '''
+        app.processEvents()
+    '''
     # check VLC
     if vlc.dll is None:
         msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
@@ -11880,9 +11883,9 @@ if __name__ == "__main__":
     # connect events filter when app focus changes
     app.focusChanged.connect(window.changedFocusSlot)
 
-    '''
+    
     if not options.nosplashscreen:
         splash.finish(window)
-    '''
+    
 
     sys.exit(app.exec_())
