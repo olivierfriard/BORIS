@@ -3608,10 +3608,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.saveConfigFile()
 
-        except:
+        except Exception:
             error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
             logging.critical(f"Error in Preferences function: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Error ", sys.exc_info())
+
 
     def getCurrentMediaByFrame(self, player: str, requiredFrame: int, fps: float):
         """
@@ -3632,26 +3633,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 frameCurrentMedia = requiredFrame - sum(self.dw_player[int(player) - 1].media_durations[0:idx]) / frameMs
                 break
         return currentMedia, round(frameCurrentMedia)
-
-
-    def display_top(self, snapshot, key_type='filename', limit=3):
-
-        snapshot = snapshot.filter_traces((
-            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-            tracemalloc.Filter(False, "<unknown>"),
-        ))
-        top_stats = snapshot.statistics(key_type, True)
-
-        for index, stat in enumerate(top_stats[:limit], 1):
-            frame = stat.traceback[0]
-            # replace "/path/to/module/file.py" with "module/file.py"
-            filename = os.sep.join(frame.filename.split(os.sep)[-2:])
-            line = linecache.getline(frame.filename, frame.lineno).strip()
-
-        other = top_stats[limit:]
-        if other:
-            size = sum(stat.size for stat in other)
-        total = sum(stat.size for stat in top_stats)
 
 
     def extract_frames_mem(self,
@@ -11790,7 +11771,7 @@ if __name__ == "__main__":
     if options.project:
         project_to_open = options.project
         # hook for Mac bundle created with pyinstaller
-        if "sn_0_" in project_to_open:
+        if sys.platform == "darwin" and "sn_0_" in project_to_open:
             project_to_open = ""
 
     # QMessageBox.critical(window, programName, f"options.project: #{options.project}#")
@@ -11827,7 +11808,7 @@ if __name__ == "__main__":
             if msg:
                 QMessageBox.information(window, programName, msg)
             window.load_project(project_path, project_changed, pj)
-    
+
     if observation_to_open and "error" not in pj:
         r = window.load_observation(observation_to_open)
         if r:
@@ -11838,7 +11819,6 @@ if __name__ == "__main__":
                 QMessageBox.Ok | QMessageBox.Default,
                 QMessageBox.NoButton,
             )
-    
 
     window.show()
     window.raise_()
