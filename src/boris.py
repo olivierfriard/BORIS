@@ -3150,10 +3150,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         logging.debug(f"seek mediaplayer in player #{player} to {new_time}")
 
+        if self.dw_player[player].mediaplayer.get_state() == vlc.State.Stopped:
+            # if video is stopped play and pause it
+            self.dw_player[player].mediaplayer.play()
+            while True:
+                if self.dw_player[player].mediaplayer.get_state() == vlc.State.Playing:
+                    break
+            self.dw_player[player].mediaplayer.pause()
+            while True:
+                if self.dw_player[player].mediaplayer.get_state() == vlc.State.Paused:
+                    break
+
         if self.dw_player[player].media_list.count() == 1:
 
             if new_time < self.dw_player[player].mediaplayer.get_length():
                 self.dw_player[player].mediaplayer.set_time(new_time)
+
+                if player == 0:
+                    try:
+                        self.video_slider.setValue(self.dw_player[0].mediaplayer.get_time() / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+                    except Exception:
+                        pass
+
             else:
                 QMessageBox.warning(self, programName,
                                     ("The indicated position is behind the end of media "
@@ -3186,6 +3204,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         break
                     tot += d
+                if player == 0:
+                    try:
+                        self.video_slider.setValue(self.dw_player[0].mediaplayer.get_time() / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
+                    except Exception:
+                        pass
+
             else:
                 QMessageBox.warning(self, programName,
                                     ("The indicated position is behind the total media duration "
@@ -3842,7 +3866,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if self.frames_buffer.size() > self.config_param[MEMORY_FOR_FRAMES] * 1024 * 1024:
                             # reset buffer
                             #del self.frames_buffer
+
                             logging.debug(f"buffer size > {self.config_param[MEMORY_FOR_FRAMES] * 1024 * 1024}. Reset buffer")
+
                             self.initialize_frames_buffer()
                             self.frames_cache[current_media_full_path] = {}
                     else:
@@ -3851,13 +3877,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.statusbar.showMessage(f"Extracting frames... {int(self.frames_buffer.size()/1024/1024)}", 0)
                     app.processEvents()
 
-
                     '''
                     print(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
                     print(f"videoframe size: {player.videoframe.size().width()}x{player.videoframe.size().height()}")
                     print(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
                     '''
-
 
                     if self.frame_resize:
                         frame_width = self.frame_resize
@@ -9619,6 +9643,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if media_list_player_state == vlc.State.Paused:
                         msg += " (paused)"
 
+                else:  # player ended
+                    self.timer.stop()
+                    self.timer_sound_signal.stop()
+                    self.dw_player[0].mediaplayer.stop()
+
+                    # stop all timer for plotting data
+                    for data_timer in self.ext_data_timer_list:
+                        data_timer.stop()
+
+                    self.actionPlay.setIcon(QIcon(":/play"))
+
+
                 if msg:
                     # show time
                     self.lb_current_media_time.setText(msg)
@@ -9626,6 +9662,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # set video scroll bar
                     if scroll_slider:
                         self.video_slider.setValue(mediaTime / mediaplayer_length * (slider_maximum - 1))
+
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
@@ -10134,7 +10171,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             if self.playMode == VLC:
-                flag_is_playing = self.dw_player[0].mediaListPlayer.get_state() != vlc.State.Paused
+                flag_is_playing = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing
             if self.playMode == FFMPEG:
                 flag_is_playing = self.FFmpegTimer.isActive()
             return flag_is_playing
@@ -10386,7 +10423,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not self.currentSubject and self.alertNoFocalSubject:
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
-                            if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing]:
+                            if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing:
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
@@ -11531,7 +11568,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.FFmpegTimer.start()
                 self.actionPlay.setIcon(QIcon(":/pause"))
                 return True
-            else:
+            elif self.playMode == VLC:
                 # check if player 1 is ended
                 if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
@@ -11562,7 +11599,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.playerType == VLC:
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.stop()
-            else:
+            elif self.playMode == VLC:
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                             and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -11578,7 +11615,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             player.mediaListPlayer.pause()
                             # wait until video is paused or ended
                             while True:
-                                if player.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                if player.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended, vlc.State.Stopped]:
                                     break
 
                 time.sleep(1)
