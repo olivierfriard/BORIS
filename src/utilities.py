@@ -811,8 +811,9 @@ def mem_info():
     """
     if sys.platform.startswith("linux"):
         try:
-            process = subprocess.Popen(["free", "-m"], stdout=subprocess.PIPE)
-            out, err = process.communicate()
+            process = subprocess.run(["free", "-m"], stdout=subprocess.PIPE)
+            #out, err = process.communicate()
+            out = process.stdout
             _, tot_mem, used_mem, _, _, _, available_mem = [x.decode("utf-8") for x in out.split(b"\n")[1].split(b" ") if x != b""]
             return False, {"total_memory": int(tot_mem), "used_memory": int(used_mem), "free_memory": int(available_mem)}
         except Exception:
@@ -828,6 +829,7 @@ def mem_info():
             return True, {"msg": error_info(sys.exc_info())[0]}
 
     if sys.platform.startswith("win"):
+        '''
         try:
             output = subprocess.check_output(("systeminfo"))
             tot_mem = [x.decode("utf-8").strip() for x in output.split(b"\n")
@@ -839,6 +841,19 @@ def mem_info():
             free_mem = int(free_mem.strip(" ").split(" ")[0].replace(",", ""))
             
             return False, {"total_memory": tot_mem, "free_memory": free_mem}
+        except Exception:
+            return True, {"msg": error_info(sys.exc_info())[0]}
+        '''
+        try:
+            output = subprocess.run(["wmic", "computersystem", "get", "TotalPhysicalMemory", "/", "Value"],
+                                    stdout=subprocess.PIPE)
+            tot_mem = int(output.stdout.strip().split(b"=")[-1].decode("utf-8")) / 1024 / 1024
+
+            output = subprocess.run(["wmic", "OS", "get", "FreePhysicalMemory", "/", "Value"],
+                                             stdout=subprocess.PIPE)
+            free_mem = int(output.stdout.strip().split(b"=")[-1].decode("utf-8")) / 1024
+            return False, {"total_memory": tot_mem, "free_memory": free_mem}
+
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
 

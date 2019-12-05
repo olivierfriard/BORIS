@@ -11730,13 +11730,12 @@ if __name__ == "__main__":
         datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
         splash = QSplashScreen(QPixmap(f"{datadir}/splash.png"))
         splash.show()
-        
         splash.raise_()
+        app.processEvents()
         while time.time() - start < 1:
             time.sleep(0.001)
-            app.processEvents()
-        
-        app.processEvents()
+            #app.processEvents()
+        #app.processEvents()
 
     # check VLC
     if vlc.dll is None:
@@ -11826,7 +11825,6 @@ if __name__ == "__main__":
     # connect events filter when app focus changes
     app.focusChanged.connect(window.changedFocusSlot)
 
-    
     if not options.nosplashscreen:
         splash.finish(window)
 
