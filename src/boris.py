@@ -3149,37 +3149,71 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
         logging.debug(f"seek mediaplayer in player #{player} to {new_time}")
+        logging.debug(f"self.dw_player[player].mediaplayer.get_state() #{player} {self.dw_player[player].mediaplayer.get_state()}")
 
-        if self.dw_player[player].mediaplayer.get_state() == vlc.State.Stopped:
+        
+        if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Ended:
             # if video is stopped play and pause it
-            self.dw_player[player].mediaplayer.play()
+            self.dw_player[player].mediaListPlayer.play()
+            time.sleep(0.5)
+
+            logging.debug(f"self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+
             while True:
-                if self.dw_player[player].mediaplayer.get_state() == vlc.State.Playing:
+                if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Playing:
                     break
-            self.dw_player[player].mediaplayer.pause()
+
+            logging.debug(f"after play self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+
+            self.dw_player[player].mediaListPlayer.pause()
             while True:
-                if self.dw_player[player].mediaplayer.get_state() == vlc.State.Paused:
+                if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused:
                     break
+            logging.debug(f"after pause self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+        
+
+        flag_paused = (self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
+        print(f"paused? {flag_paused}")
 
         if self.dw_player[player].media_list.count() == 1:
 
             if new_time < self.dw_player[player].mediaplayer.get_length():
+                self.dw_player[player].stack.setCurrentIndex(0)
                 self.dw_player[player].mediaplayer.set_time(new_time)
+
+                if flag_paused:
+                    self.dw_player[player].mediaListPlayer.play()
+                    while True:
+                        if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            break
+                    time.sleep(0.2)
+                    self.dw_player[player].mediaplayer.set_time(new_time)
+
+                    self.dw_player[player].mediaListPlayer.pause()
+                    while True:
+                        if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                            break
+                    self.dw_player[player].mediaplayer.set_time(new_time)
 
                 if player == 0:
                     try:
                         self.video_slider.setValue(self.dw_player[0].mediaplayer.get_time() / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
                     except Exception:
                         pass
+                        #dialog.error_message("set video slider value", sys.exc_info())
 
             else:
+                self.dw_player[player].stack.setCurrentIndex(1)
+                '''
                 QMessageBox.warning(self, programName,
                                     ("The indicated position is behind the end of media "
                                      f"({seconds2time(self.dw_player[player].mediaplayer.get_length() / 1000)})"))
+                '''
 
         elif self.dw_player[player].media_list.count() > 1:
 
             if new_time < sum(self.dw_player[player].media_durations):
+                self.dw_player[player].stack.setCurrentIndex(0)
 
                 # remember if player paused (go previous will start playing)
                 flagPaused = self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused
@@ -3188,19 +3222,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx, d in enumerate(self.dw_player[player].media_durations):
                     if new_time >= tot and new_time < tot + d:
                         self.dw_player[player].mediaListPlayer.play_item_at_index(idx)
-
+                        self.dw_player[player].mediaListPlayer.play()
                         # wait until media is played
                         while True:
                             if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                                 break
-
-                        if flagPaused:
-                            self.dw_player[player].mediaListPlayer.pause()
-
+                        time.sleep(0.2)
                         self.dw_player[player].mediaplayer.set_time(
                             new_time - sum(
                                 self.dw_player[player].media_durations[0: self.dw_player[player].media_list.index_of_item(
                                     self.dw_player[player].mediaplayer.get_media())]))
+
+                        if flagPaused:
+                            time.sleep(0.2)
+                            self.dw_player[player].mediaListPlayer.pause()
+                            while True:
+                                if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                    break
+                            self.dw_player[player].mediaplayer.set_time(
+                                new_time
+                                - sum(
+                                    self.dw_player[player].media_durations[
+                                        0 : self.dw_player[player].media_list.index_of_item(self.dw_player[player].mediaplayer.get_media())
+                                    ]
+                                )
+                            )
 
                         break
                     tot += d
@@ -3209,11 +3255,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.video_slider.setValue(self.dw_player[0].mediaplayer.get_time() / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
                     except Exception:
                         pass
-
+                        #dialog.error_message("set video slider value", sys.exc_info())
+            
             else:
+                self.dw_player[player].stack.setCurrentIndex(1)
+                '''
                 QMessageBox.warning(self, programName,
                                     ("The indicated position is behind the total media duration "
                                      f"({seconds2time(sum(self.dw_player[player].media_durations) / 1000)})"))
+                '''
 
 
     def jump_to(self):
@@ -4642,8 +4692,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.waveform.show()
             self.timer_sound_signal.start()
 
-
-
         # external data plot
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
 
@@ -5970,6 +6018,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.lb_obs_time_interval.setText(("Observation time interval: "
                                                        f"{start_time} - {stop_time}"))
+                else:
+                    self.lb_obs_time_interval.clear()
             else:
                 self.lb_obs_time_interval.clear()
         except Exception:
@@ -9384,7 +9434,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             n_player (int): player
             new_time (int): new time in ms
         """
-
+        print("sync time")
         if self.dw_player[n_player].media_list.count() == 1:
 
                 # try:
@@ -9394,33 +9444,31 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if new_time < self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] * 1000:
                             # hide video if time < offset
-                            self.dw_player[n_player].frame_viewer.setVisible(True)
-                            self.dw_player[n_player].videoframe.setVisible(False)
-                            self.dw_player[n_player].volume_slider.setVisible(False)
+                            print("time < offset hide video")
+                            self.dw_player[n_player].stack.setCurrentIndex(1)
                         else:
 
                             if (new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                    ["offset"][str(n_player + 1)] * 1000) > sum(
                                                        self.dw_player[n_player].media_durations)):
                                 # hide video if required time > video time + offset
-                                '''
-                                self.dw_player[n_player].frame_viewer.setVisible(True)
-                                self.dw_player[n_player].videoframe.setVisible(False)
-                                self.dw_player[n_player].volume_slider.setVisible(False)
-                                '''
+                                print("required time > video time + offset hide video")
                                 self.dw_player[n_player].stack.setCurrentIndex(1)
-
                             else:
-
-                                '''
-                                self.dw_player[n_player].frame_viewer.setVisible(False)
-                                self.dw_player[n_player].videoframe.setVisible(True)
-                                self.dw_player[n_player].volume_slider.setVisible(True)
-                                '''
+                                # show video 
+                                print("show video")
                                 self.dw_player[n_player].stack.setCurrentIndex(0)
+
+
+                                self.seek_mediaplayer(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
+                                                       ["offset"][str(n_player + 1)] * 1000),
+                                                       player=n_player)
+
+                                ''' disabled 2019-12-11
                                 self.dw_player[n_player].mediaplayer.set_time(
                                     new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                        ["offset"][str(n_player + 1)] * 1000))
+                                '''
 
                     elif self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] < 0:
 
@@ -9428,27 +9476,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                ["offset"][str(n_player + 1)] * 1000) > sum(
                                                    self.dw_player[n_player].media_durations)):
                             # hide video if required time > video time + offset
-                            '''
-                            self.dw_player[n_player].frame_viewer.setVisible(True)
-                            self.dw_player[n_player].videoframe.setVisible(False)
-                            self.dw_player[n_player].volume_slider.setVisible(False)
-                            '''
                             self.dw_player[n_player].stack.setCurrentIndex(1)
                         else:
-                            '''
-                            self.dw_player[n_player].frame_viewer.setVisible(False)
-                            self.dw_player[n_player].videoframe.setVisible(True)
-                            self.dw_player[n_player].volume_slider.setVisible(True)
-                            '''
                             self.dw_player[n_player].stack.setCurrentIndex(0)
 
+                            self.seek_mediaplayer(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
+                                                   ["offset"][str(n_player + 1)] * 1000),
+                                                    player=n_player)
+
+                            ''' disabled 2019-12-11
                             self.dw_player[n_player].mediaplayer.set_time(
                                 new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                    ["offset"][str(n_player + 1)] * 1000))
+                            ''' 
 
-                else:
-
+                else:  # no offset
+                    print("no offset")
+                    self.seek_mediaplayer(new_time, player=n_player)
+                    ''' disabled 2019-12-11
                     self.dw_player[n_player].mediaplayer.set_time(new_time)
+                    '''
 
 
         elif self.dw_player[n_player].media_list.count() > 1:
@@ -9537,7 +9584,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # current media time
             try:
                 mediaTime = self.dw_player[0].mediaplayer.get_time()  # time of FIRST media player
-                '''
+                ''' improvement of displayed time
                 if self.play_rate == 1:
                     interpolated_media_time = mediaTime
                     time_ms = round(time.time()*1000)
@@ -9574,6 +9621,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ct0 = self.getLaps() * 1000
 
             if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
+                # FIXME enumerate(self.dw_player)
                 for i in range(1, N_PLAYER):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                             and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
@@ -9583,7 +9631,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if abs(ct0 -
                                (ct + Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                              ["offset"][str(i + 1)]) * 1000)) >= 300:
+                            
                             self.sync_time(i, ct0)
+                            #self.seek_mediaplayer(ct0, player=i)
 
             currentTimeOffset = Decimal(currentTime / 1000 + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
@@ -9646,7 +9696,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 else:  # player ended
                     self.timer.stop()
                     self.timer_sound_signal.stop()
-                    self.dw_player[0].mediaplayer.stop()
+                    #self.dw_player[0].mediaplayer.stop()
 
                     # stop all timer for plotting data
                     for data_timer in self.ext_data_timer_list:
@@ -9666,7 +9716,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 self.statusbar.showMessage("Media length not available now", 0)
 
-            '''
+            ''' # stop behaviors between media files
             # DISABLED because it is not working well
             if ((self.memMedia and mediaName != self.memMedia)
                     or (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive())):
@@ -10163,7 +10213,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def is_playing(self):
         """
-        check if media file is playing for VLC or FFMPEG modes
+        check if first media player is playing for VLC or FFMPEG modes
 
         Returns:
             bool: True if playing else False
@@ -10171,10 +10221,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             if self.playMode == VLC:
-                flag_is_playing = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing
+                return self.dw_player[0].mediaplayer.get_state() == vlc.State.Playing
             if self.playMode == FFMPEG:
-                flag_is_playing = self.FFmpegTimer.isActive()
-            return flag_is_playing
+                return self.FFmpegTimer.isActive()
+            # FIXME exit without return value
         else:
             return False
 
@@ -10490,9 +10540,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.seek_mediaplayer(newTime)
 
                 '''
-                flag_pause = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused])
-
+                flag_paused = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
                 if len(self.dw_player[0].media_durations) == 1:
+
                     if (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and
                        time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000):
 
@@ -10501,21 +10551,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                                 break
 
-                        if flag_pause:
+                        if flag_paused:
                             self.dw_player[0].mediaListPlayer.pause()
                             while True:
                                 if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
                                     break
 
-                    if time_ >= self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
-                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_media().get_duration() - 100)
-                    else:
+                    if time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
                         self.dw_player[0].mediaplayer.set_time(int(newTime))
+                    else:
+                        self.dw_player[0].mediaplayer.set_time(self.dw_player[0].mediaplayer.get_media().get_duration() - 100)
 
                 else:  # more media in player 1
-
-                    # remember if player paused (go previous will start playing)
-                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
 
                     tot = 0
                     for idx, d in enumerate(self.dw_player[0].media_durations):
@@ -10527,7 +10574,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
                                     break
 
-                            if flagPaused:
+                            if flag_paused:
                                 self.dw_player[0].mediaListPlayer.pause()
 
                             self.dw_player[0].mediaplayer.set_time(newTime - sum(
@@ -10537,8 +10584,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             break
 
                         tot += d
-                '''
 
+                '''
                 self.update_visualizations()
 
 
@@ -11562,17 +11609,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         play video
         check if first player ended
         """
+        logging.debug(f"player #0 state: {self.dw_player[0].mediaplayer.get_state()}")
+        logging.debug(f"position: {self.getLaps()}")
 
         if self.playerType == VLC:
+
             if self.playMode == FFMPEG:
                 self.FFmpegTimer.start()
                 self.actionPlay.setIcon(QIcon(":/pause"))
                 return True
+
             elif self.playMode == VLC:
                 # check if player 1 is ended
+                '''  disabled 2019-12-11
                 if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
                     return False
+                '''
 
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -11632,6 +11685,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         button 'play' activated
         """
+
         if self.observationId and self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
             if not self.is_playing():
                 self.play_video()
