@@ -687,10 +687,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
-        # for memory checking
+
         '''
-        self.pid = os.getpid()
-        self.init_percent_memory = utilities.rss_memory_percent_used(self.pid)
+        self.dwEthogram.sendEventSignal = pyqtSignal(QEvent)
+        print(self.dwEthogram.sendEventSignal)
         '''
 
 
@@ -4601,13 +4601,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.lbSpeed.setText(f"x{self.play_rate:.3f}")
 
+        ''' 2019-12-12
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
+        '''
 
-        '''
-        if app.focusWidget():
-            app.focusWidget().installEventFilter(self)
-        '''
 
         # spectrogram
         if (VISUALIZE_SPECTROGRAM in self.pj[OBSERVATIONS][self.observationId] and
@@ -4865,7 +4863,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.dw_player[id_].zoomed:
                 self.dw_player[id_].mediaplayer.video_set_crop_geometry(f"{right}x{bottom}+{left}+{top}")
 
-
+    ''' 2019-12-12
     def eventFilter(self, source, event):
         """
         send event from widget to mainwindow
@@ -4873,13 +4871,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         #logging.debug("event filter {}".format(event.type()))
 
+        
         if event.type() == QtCore.QEvent.KeyPress:
             key = event.key()
             if key in [Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right, Qt.Key_PageDown, Qt.Key_PageUp]:
                 self.keyPressEvent(event)
 
         return QMainWindow.eventFilter(self, source, event)
-
+    '''
 
     def loadEventsInTW(self, obs_id):
         """
@@ -10354,7 +10353,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # previous media file (page down)
             if ek == Qt.Key_PageDown:
+
                 logging.debug("previous media file")
+
                 self.previous_media_file()
 
 
@@ -11801,14 +11802,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.update_visualizations()
 
-
+    ''' 2019-12-12
     def changedFocusSlot(self, old, now):
         """
         connect events filter when app gains focus
         """
         if window.focusWidget():
             window.focusWidget().installEventFilter(self)
-
+    '''
 
 if __name__ == "__main__":
 
@@ -11914,7 +11915,9 @@ if __name__ == "__main__":
     window.raise_()
 
     # connect events filter when app focus changes
+    '''2019-12-12
     app.focusChanged.connect(window.changedFocusSlot)
+    '''
 
     if not options.nosplashscreen:
         splash.finish(window)
