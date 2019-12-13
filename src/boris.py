@@ -3170,7 +3170,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
 
         flag_paused = (self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
-        print(f"paused? {flag_paused}")
+        
+        logging.debug(f"paused? {flag_paused}")
 
         if self.dw_player[player].media_list.count() == 1:
 
@@ -3729,7 +3730,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         try:
             new_h_resolution, new_v_resolution = resolution
-            # print(f"new_h_resolution x new_v_resolution: {new_h_resolution}x{new_v_resolution}")
 
             command = [self.ffmpeg_bin,
                         '-i', current_media_path,
@@ -3925,9 +3925,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     app.processEvents()
 
                     '''
-                    print(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
-                    print(f"videoframe size: {player.videoframe.size().width()}x{player.videoframe.size().height()}")
-                    print(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
+                    logging.debug(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
+                    logging.debug(f"videoframe size: {player.videoframe.size().width()}x{player.videoframe.size().height()}")
+                    logging.debug(f"videoframe resolution: {player.videoframe.h_resolution}x{player.videoframe.v_resolution}")
                     '''
 
                     if self.frame_resize:
@@ -3936,14 +3936,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         # check frame size
                         ratio = player.videoframe.h_resolution / player.videoframe.v_resolution
-                        '''
-                        if (player.frame_viewer.size().width() / player.frame_viewer.size().height()) <= ratio:
-                            frame_width = player.frame_viewer.size().width()
-                            frame_height = round(player.frame_viewer.size().width() / ratio)
-                        else:
-                            frame_height = player.frame_viewer.size().height()
-                            frame_width = round(player.frame_viewer.size().height() * ratio)
-                        '''
                         if (player.frame_viewer.size().width() / player.frame_viewer.size().height()) <= ratio:
                             frame_width = player.frame_viewer.size().width()
                             frame_height = int(player.frame_viewer.size().width() / ratio + 0.5)
@@ -3980,8 +3972,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         dialog.error_message(" frame extraction in memory", msg)
                         return
                     '''
-                    print(f"frames buffer size: {self.frames_buffer.size()/1024/1024}")
-                    print(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
+                    logging.debug(f"frames buffer size: {self.frames_buffer.size()/1024/1024}")
+                    logging.debug(f"frames # {sorted(list(self.frames_cache[current_media_full_path].keys()))}")
                     '''
 
                     self.statusbar.showMessage("", 0)
@@ -4076,163 +4068,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # show tracking cursor
         self.get_events_current_row()
 
-
-    '''
-    def ffmpeg_timer_out_disabled(self):
-        """
-        triggered when frame-by-frame mode is activated:
-        read next frame and update image
-        frames are loaded from dictionary
-        """
-
-        logging.debug("ffmpeg_timer_out function")
-
-        logging.debug("fps {}".format(self.fps))
-
-        frameMs = 1000 / self.fps
-
-        logging.debug("frame Ms {}".format(frameMs))
-
-        requiredFrame = self.FFmpegGlobalFrame + 1
-
-        logging.debug("required frame: {}".format(requiredFrame))
-
-        # logging.debug("sum self.duration {}".format(sum(self.dw_player[0].media_durations)))
-
-        # check if end of last media
-        if requiredFrame * frameMs >= sum(self.dw_player[0].media_durations):
-            logging.debug("end of last media 1 frame: {}".format(requiredFrame))
-            return
-
-        for i, player in enumerate(self.dw_player):
-            n_player = str(i + 1)
-            if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
-               or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
-                continue
-
-            currentMedia, frame_current_media = self.getCurrentMediaByFrame(n_player, requiredFrame, self.fps)
-
-            current_media_full_path = project_functions.media_full_path(currentMedia, self.projectFileName)
-
-            logging.debug("current media: {}".format(currentMedia))
-            logging.debug("frame current media: {}".format(frame_current_media))
-
-            # update spectro plot
-            self.timer_sound_signal_out()
-            # update data plot
-            for idx in self.plot_data:
-                self.timer_plot_data_out(self.plot_data[idx])
-
-            logging.debug(f"frame current media: {frame_current_media}")
-
-            if not (current_media_full_path in self.frames_cache
-                    and frame_current_media in self.frames_cache[current_media_full_path]):
-
-                self.statusbar.showMessage("Extracting frames", 0)
-                app.processEvents()
-
-                print(player.frame_viewer.size().width(), player.frame_viewer.size().height())
-                print(player.videoframe.h_resolution, player.videoframe.v_resolution)
-
-                r = utilities.extract_frames_mem(self.ffmpeg_bin,
-                                         frame_current_media,
-                                         (frame_current_media - 1) / self.fps,
-                                         current_media_full_path,
-                                         round(self.fps),
-                                         #(player.frame_viewer.size().width(), player.frame_viewer.size().height()),
-                                         (player.videoframe.h_resolution, player.videoframe.v_resolution),
-                                         self.fbf_cache_size)
-
-                if current_media_full_path not in self.frames_cache:
-                    self.frames_cache[current_media_full_path] =  {}
-                for idx, f in enumerate(r):
-                    self.frames_cache[current_media_full_path][frame_current_media + idx] = f
-
-                print("frames cache mem size:", sum([len(self.frames_cache[k].keys()) * 3 * player.videoframe.h_resolution * player.videoframe.v_resolution for k in self.frames_cache]))
-
-                self.statusbar.showMessage("", 0)
-
-
-            print(list(self.frames_cache[current_media_full_path].keys()))
-
-            player.frame_viewer.setPixmap(self.frames_cache[current_media_full_path][frame_current_media].scaled(player.frame_viewer.size(), Qt.KeepAspectRatio))
-
-            # redraw measurements from previous frames
-
-            if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
-                if self.measurement_w.cbPersistentMeasurements.isChecked():
-                    logging.debug("Redraw measurements")
-                    for frame in self.measurement_w.draw_mem:
-
-                        if frame == self.FFmpegGlobalFrame + 1:
-                            elementsColor = ACTIVE_MEASUREMENTS_COLOR
-                        else:
-                            elementsColor = PASSIVE_MEASUREMENTS_COLOR
-
-                        for element in self.measurement_w.draw_mem[frame]:
-                            if element[0] == i:
-                                if element[1] == "line":
-                                    x1, y1, x2, y2 = element[2:]
-                                    self.draw_line(x1, y1, x2, y2, elementsColor, n_player=i)
-                                    self.draw_point(x1, y1, elementsColor, n_player=i)
-                                    self.draw_point(x2, y2, elementsColor, n_player=i)
-                                if element[1] == "angle":
-                                    x1, y1 = element[2][0]
-                                    x2, y2 = element[2][1]
-                                    x3, y3 = element[2][2]
-                                    self.draw_line(x1, y1, x2, y2, elementsColor, n_player=i)
-                                    self.draw_line(x1, y1, x3, y3, elementsColor, n_player=i)
-                                    self.draw_point(x1, y1, elementsColor, n_player=i)
-                                    self.draw_point(x2, y2, elementsColor, n_player=i)
-                                    self.draw_point(x3, y3, elementsColor, n_player=i)
-                                if element[1] == "polygon":
-                                    polygon = QPolygon()
-                                    for point in element[2]:
-                                        polygon.append(QPoint(point[0], point[1]))
-                                    painter = QPainter()
-                                    painter.begin(self.dw_player[i].frame_viewer.pixmap())
-                                    painter.setPen(QColor(elementsColor))
-                                    painter.drawPolygon(polygon)
-                                    painter.end()
-                                    self.dw_player[i].frame_viewer.update()
-                else:
-                    self.measurement_w.draw_mem = []
-
-        self.FFmpegGlobalFrame = requiredFrame
-
-        currentTime = self.getLaps() * 1000
-
-        time_str = (f"{os.path.basename(currentMedia)}: "
-                    f"<b>{self.convertTime(currentTime / 1000)} / "
-                    f"{self.convertTime(self.dw_player[0].mediaplayer.get_length() / 1000)}</b> "
-                    f"frame: <b>{round(self.FFmpegGlobalFrame)}</b>")
-
-        self.lb_current_media_time.setText(time_str)
-
-        # video slider
-        self.video_slider.setValue(currentTime / self.dw_player[0].mediaplayer.get_length() * (slider_maximum - 1))
-
-        # extract State events
-        StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
-
-        self.currentStates = {}
-        self.currentStates = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
-                                                                             self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                                                                             dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                                             currentTime / 1000,
-                                                                             include_modifiers=True)
-
-
-        # show current states
-        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
-        self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
-
-        # show selected subjects
-        self.show_current_states_in_subjects_table()
-
-        # show tracking cursor
-        self.get_events_current_row()
-    '''
 
     def close_measurement_widget(self):
         self.measurement_w.close()
@@ -9158,7 +8993,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.bcm.deleteLater()
             #del self.bcm
             '''
-            """TO DO: fix this"""
+            """FIXME: fix this"""
             print('hasattr(self, "bcm")', hasattr(self, "bcm"))
 
 
@@ -9427,7 +9262,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             n_player (int): player
             new_time (int): new time in ms
         """
-        print("sync time")
+
         if self.dw_player[n_player].media_list.count() == 1:
 
                 # try:
@@ -9437,7 +9272,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         if new_time < self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] * 1000:
                             # hide video if time < offset
-                            print("time < offset hide video")
                             self.dw_player[n_player].stack.setCurrentIndex(1)
                         else:
 
@@ -9445,23 +9279,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                    ["offset"][str(n_player + 1)] * 1000) > sum(
                                                        self.dw_player[n_player].media_durations)):
                                 # hide video if required time > video time + offset
-                                print("required time > video time + offset hide video")
                                 self.dw_player[n_player].stack.setCurrentIndex(1)
                             else:
                                 # show video 
-                                print("show video")
                                 self.dw_player[n_player].stack.setCurrentIndex(0)
 
 
                                 self.seek_mediaplayer(new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
                                                        ["offset"][str(n_player + 1)] * 1000),
                                                        player=n_player)
-
-                                ''' disabled 2019-12-11
-                                self.dw_player[n_player].mediaplayer.set_time(
-                                    new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
-                                                       ["offset"][str(n_player + 1)] * 1000))
-                                '''
 
                     elif self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][str(n_player + 1)] < 0:
 
@@ -9477,18 +9303,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                    ["offset"][str(n_player + 1)] * 1000),
                                                     player=n_player)
 
-                            ''' disabled 2019-12-11
-                            self.dw_player[n_player].mediaplayer.set_time(
-                                new_time - Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
-                                                   ["offset"][str(n_player + 1)] * 1000))
-                            ''' 
-
                 else:  # no offset
-                    print("no offset")
                     self.seek_mediaplayer(new_time, player=n_player)
-                    ''' disabled 2019-12-11
-                    self.dw_player[n_player].mediaplayer.set_time(new_time)
-                    '''
 
 
         elif self.dw_player[n_player].media_list.count() > 1:
@@ -9901,11 +9717,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         modifiers_external_data[idx]["selected"] = self.plot_data[idx2].lb_value.text()
                             else:  # edit
                                 original_modifiers_list = event.get("original_modifiers", "").split("|")
-                                '''print("original_modifiers_list", original_modifiers_list)'''
                                 modifiers_external_data[idx] = dict(event["modifiers"][idx])
                                 modifiers_external_data[idx]["selected"] = original_modifiers_list[int(idx)]
-
-                    '''print(f"modifiers_external_data: {modifiers_external_data}")'''
 
                     # check if modifiers are in single, multiple or numeric
                     if [x for x in event["modifiers"] if event["modifiers"][x]["type"] != EXTERNAL_DATA_MODIFIER]:
@@ -9923,9 +9736,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         self.pause_video()
 
                         # check if editing (original_modifiers key)
-                        '''currentModifiers = event["original_modifiers"] if "original_modifiers" in event else ""'''
                         currentModifiers = event.get("original_modifiers", "")
-                        '''print("currentModifiers", currentModifiers)'''
 
                         modifiers_selector = select_modifiers.ModifiersList(event["code"], eval(str(event["modifiers"])), currentModifiers)
 
@@ -9954,7 +9765,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if all_modifiers[idx]["type"] in [SINGLE_SELECTION, MULTI_SELECTION]:
                             modifier_str += ",".join(all_modifiers[idx].get("selected", ""))
                         if all_modifiers[idx]["type"] in [NUMERIC_MODIFIER, EXTERNAL_DATA_MODIFIER]:
-                            print(all_modifiers[idx])
                             modifier_str += all_modifiers[idx].get("selected", "NA")
 
             else:
