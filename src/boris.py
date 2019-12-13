@@ -636,6 +636,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # start with dock widget invisible
         for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
             w.setVisible(False)
+            w.keyPressEvent = self.keyPressEvent
+
 
         # if BORIS is running on Mac lock all dockwidget features
         # because Qdockwidgets may have a strange behavior
@@ -687,11 +689,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.connections()
         self.readConfigFile()
 
-
-        '''
-        self.dwEthogram.sendEventSignal = pyqtSignal(QEvent)
-        print(self.dwEthogram.sendEventSignal)
-        '''
 
 
     def menu_options(self):
@@ -4427,16 +4424,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.playerType = VIEWER
             self.playMode = ""
-            self.dwObservations.setVisible(True)
-            self.dwEthogram.setVisible(True)
-            self.dwSubjects.setVisible(True)
+            for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+                dw.setVisible(True)
             return True
 
         self.playerType, self.playMode = VLC, VLC
         self.fps = 0
-        self.dwObservations.setVisible(True)
-        self.dwEthogram.setVisible(True)
-        self.dwSubjects.setVisible(True)
+        for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+            dw.setVisible(True)
 
         self.w_obs_info.setVisible(True)
         self.w_live.setVisible(False)
@@ -5679,9 +5674,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             logging.debug(f"saved state: {self.saved_state}")
 
-            self.dwEthogram.setVisible(False)
-            self.dwSubjects.setVisible(False)
-            self.dwObservations.setVisible(False)
+            for dw in [self.dwEthogram, self.dwSubjects, self.dwObservations]:
+                dw.setVisible(False)
 
             self.timeFormat = HHMMSS
             try:
