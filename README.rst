@@ -54,7 +54,7 @@ Licence
 
 Distributed with a `GPL license <COPYING.TXT>`_::
 
-Copyright (C) 2012-2019 Olivier Friard
+Copyright (C) 2012-2020 Olivier Friard
 
 
 

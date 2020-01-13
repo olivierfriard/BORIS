@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2019 Olivier Friard
+Copyright 2012-2020 Olivier Friard
 
 This file is part of BORIS.
 
@@ -3148,25 +3148,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         logging.debug(f"seek mediaplayer in player #{player} to {new_time}")
         logging.debug(f"self.dw_player[player].mediaplayer.get_state() #{player} {self.dw_player[player].mediaplayer.get_state()}")
 
-        
-        if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Ended:
-            # if video is stopped play and pause it
-            self.dw_player[player].mediaListPlayer.play()
-            time.sleep(0.5)
 
-            logging.debug(f"self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+        if sys.platform != "darwin":  # for MacOS
+            if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Ended:
+                # if video is stopped play and pause it
+                self.dw_player[player].mediaListPlayer.play()
+                time.sleep(0.5)
 
-            while True:
-                if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Playing:
-                    break
+                logging.debug(f"self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
 
-            logging.debug(f"after play self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+                while True:
+                    if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Playing:
+                        break
 
-            self.dw_player[player].mediaListPlayer.pause()
-            while True:
-                if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused:
-                    break
-            logging.debug(f"after pause self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+                logging.debug(f"after play self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
+
+                self.dw_player[player].mediaListPlayer.pause()
+                while True:
+                    if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused:
+                        break
+                logging.debug(f"after pause self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
         
 
         flag_paused = (self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
@@ -3179,19 +3180,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[player].stack.setCurrentIndex(0)
                 self.dw_player[player].mediaplayer.set_time(new_time)
 
-                if flag_paused:
-                    self.dw_player[player].mediaListPlayer.play()
-                    while True:
-                        if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                            break
-                    time.sleep(0.2)
-                    self.dw_player[player].mediaplayer.set_time(new_time)
+                if sys.platform != "darwin":  # for MacOS
+                    if flag_paused:
+                        self.dw_player[player].mediaListPlayer.play()
+                        while True:
+                            if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                break
+                        time.sleep(0.2)
+                        self.dw_player[player].mediaplayer.set_time(new_time)
 
-                    self.dw_player[player].mediaListPlayer.pause()
-                    while True:
-                        if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
-                            break
-                    self.dw_player[player].mediaplayer.set_time(new_time)
+                        self.dw_player[player].mediaListPlayer.pause()
+                        while True:
+                            if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                break
+                        self.dw_player[player].mediaplayer.set_time(new_time)
 
                 if player == 0:
                     try:
@@ -3231,20 +3233,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 self.dw_player[player].media_durations[0: self.dw_player[player].media_list.index_of_item(
                                     self.dw_player[player].mediaplayer.get_media())]))
 
-                        if flagPaused:
-                            time.sleep(0.2)
-                            self.dw_player[player].mediaListPlayer.pause()
-                            while True:
-                                if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
-                                    break
-                            self.dw_player[player].mediaplayer.set_time(
-                                new_time
-                                - sum(
-                                    self.dw_player[player].media_durations[
-                                        0 : self.dw_player[player].media_list.index_of_item(self.dw_player[player].mediaplayer.get_media())
-                                    ]
+                        if sys.platform != "darwin":  # for MacOS
+                            if flagPaused:
+                                time.sleep(0.2)
+                                self.dw_player[player].mediaListPlayer.pause()
+                                while True:
+                                    if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                        break
+                                self.dw_player[player].mediaplayer.set_time(
+                                    new_time
+                                    - sum(
+                                        self.dw_player[player].media_durations[
+                                            0 : self.dw_player[player].media_list.index_of_item(self.dw_player[player].mediaplayer.get_media())
+                                        ]
+                                    )
                                 )
-                            )
 
                         break
                     tot += d
@@ -9070,7 +9073,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         about_dialog.setInformativeText((
             f"<b>{programName}</b> v. {__version__} - {__version_date__}"
-            "<p>Copyright &copy; 2012-2019 Olivier Friard - Marco Gamba<br>"
+            "<p>Copyright &copy; 2012-2020 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
             "<br>"

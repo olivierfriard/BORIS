@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2019 Olivier Friard
+Copyright 2012-2020 Olivier Friard
 
 module for testing db_functions.py
 
