@@ -720,7 +720,8 @@ def events_start_stop(ethogram, events):
     return events_flagged
 
 
-def extract_observed_subjects(pj, selected_observations):
+def extract_observed_subjects(pj: dict,
+                              selected_observations: list) -> list:
     """
     extract unique subjects present in observations list
 

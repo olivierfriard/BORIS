@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 
 import datetime
-import glob
 import hashlib
 import json
 import logging
@@ -31,8 +30,6 @@ import pathlib
 import platform
 import re
 import socket
-import sqlite3
-import statistics
 import subprocess
 import sys
 import tempfile
@@ -421,12 +418,13 @@ class DW(QDockWidget):
 
         self.stack2 = QWidget()
         self.hlayout2 = QHBoxLayout()
-        #self.frame_viewer = Click_label(id_)
-        self.frame_viewer = QLabel("TEST")
+        self.frame_viewer = Click_label(id_)
+        #self.frame_viewer = QLabel("TEST")
         #self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.frame_viewer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.frame_viewer.setAlignment(Qt.AlignCenter)
+        #self.frame_viewer.setAlignment(Qt.AlignCenter)
+        self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.frame_viewer.setStyleSheet("QLabel {background-color: black;}")
         #self.frame_viewer.setPixmap(QPixmap(""))
 
@@ -3168,7 +3166,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused:
                         break
                 logging.debug(f"after pause self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
-        
 
         flag_paused = (self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
         
@@ -3788,7 +3785,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         triggered when frame-by-frame mode is activated:
         read next frame and update image
-        frames are read from disk
+        frames are read from disk or from memory
         """
 
         logging.debug("ffmpeg_timer_out function")
@@ -3811,23 +3808,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         for i, player in enumerate(self.dw_player):
+
             n_player = str(i + 1)
+
             if (n_player not in self.pj[OBSERVATIONS][self.observationId][FILE]
                or not self.pj[OBSERVATIONS][self.observationId][FILE][n_player]):
                 continue
 
-            currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(n_player, requiredFrame, self.fps)
+            # check if an offset is set on player n_player
+            if self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][n_player]:
+                requiredFrame_w_offset = int(requiredFrame - self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]["offset"][n_player] * self.fps)
+                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(n_player, requiredFrame_w_offset, self.fps)
+                if frameCurrentMedia <= 0:
+                    player.frame_viewer.setPixmap(QPixmap(""))
+                    continue
+            else:
+                currentMedia, frameCurrentMedia = self.getCurrentMediaByFrame(n_player, requiredFrame, self.fps)
 
             current_media_full_path = project_functions.media_full_path(currentMedia, self.projectFileName)
 
             logging.debug(f"current media 1: {currentMedia}")
             logging.debug(f"frame current media 1: {frameCurrentMedia}")
-
-            # update spectro plot
-            self.timer_sound_signal_out()
-            # update data plot
-            for idx in self.plot_data:
-                self.timer_plot_data_out(self.plot_data[idx])
 
             if self.config_param.get(SAVE_FRAMES, DEFAULT_FRAME_MODE) == DISK:
 
@@ -3990,7 +3991,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.statusbar.showMessage(f"Error for frame #{frameCurrentMedia}", 0)
 
             # redraw measurements from previous frames
-
             if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
                 if self.measurement_w.cbPersistentMeasurements.isChecked():
                     logging.debug("Redraw measurements")
@@ -4029,6 +4029,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     self.dw_player[i].frame_viewer.update()
                 else:
                     self.measurement_w.draw_mem = []
+
+
+        # update spectro plot
+        self.timer_sound_signal_out()
+        # update data plot
+        for idx in self.plot_data:
+            self.timer_plot_data_out(self.plot_data[idx])
+
 
         self.FFmpegGlobalFrame = requiredFrame
 
@@ -4299,7 +4307,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].setVisible(True)
 
             # for receiving mouse event from frame viewer
-            ### 2019-11-25 self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
+            self.dw_player[i].frame_viewer.mouse_pressed_signal.connect(self.getPoslbFFmpeg)
             # for receiving key event from dock widget
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
             # for receiving event from volume slider
@@ -4383,14 +4391,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].mediaListPlayer.play_item_at_index(0)
 
             # play mediaListPlayer for a while to obtain media information
-            while True:
-                if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
-                    break
+            if sys.platform != "darwin":
+                while True:
+                    if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                        break
 
             self.dw_player[i].mediaListPlayer.pause()
-            while True:
-                if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
-                    break
+
+            if sys.platform != "darwin":
+                while True:
+                    if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                        break
 
             # position media
             if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:

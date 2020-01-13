@@ -24,12 +24,13 @@ Copyright 2012-2020 Olivier Friard
 """
 
 
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAbstractItemView
 
 import observations_list
-from config import *
+from config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT,
+                    TYPE, MEDIA, FILE, LIVE, OPEN, VIEW, EDIT,
+                    SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT)
 import utilities
 import project_functions
 
@@ -63,11 +64,12 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         descr = utilities.eol2space(pj[OBSERVATIONS][obs][DESCRIPTION])
 
         # subjects
-        observedSubjects = project_functions.extract_observed_subjects(pj, [obs])
+        observedSubjects = [NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])]
 
-        # remove when No focal subject
+        ''' removed 2020-01-13
         if "" in observedSubjects:
             observedSubjects.remove("")
+        '''
         subjectsList = ", ".join(observedSubjects)
 
         mediaList = []
@@ -96,7 +98,9 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
 
         data.append([obs, date, descr, subjectsList, media] + indepvar)
 
-    obsList = observations_list.observationsList_widget(data, header=obsListFields + indepVarHeader, column_type=column_type)
+    obsList = observations_list.observationsList_widget(data,
+                                                        header=obsListFields + indepVarHeader,
+                                                        column_type=column_type)
     if windows_title:
         obsList.setWindowTitle(windows_title)
 
