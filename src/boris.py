@@ -3219,7 +3219,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for idx, d in enumerate(self.dw_player[player].media_durations):
                     if new_time >= tot and new_time < tot + d:
                         self.dw_player[player].mediaListPlayer.play_item_at_index(idx)
-                        self.dw_player[player].mediaListPlayer.play()
+                        time.sleep(0.2)
                         # wait until media is played
                         while True:
                             if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
@@ -4286,6 +4286,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         font.setPointSize(15)
         self.lb_current_media_time.setFont(font)
 
+        # initialize video slider
+        self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
+        self.video_slider.setFocusPolicy(Qt.NoFocus)
+        self.video_slider.setMaximum(slider_maximum)
+        self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
+        self.video_slider.sliderReleased.connect(self.video_slider_sliderReleased)
+        self.verticalLayout_3.addWidget(self.video_slider)
+
         # add all media files to media lists
         self.setDockOptions(QMainWindow.AnimatedDocks | QMainWindow.AllowNestedDocks)
         self.dw_player = []
@@ -4413,15 +4421,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             (self.dw_player[i].videoframe.h_resolution,
              self.dw_player[i].videoframe.v_resolution) = self.dw_player[i].mediaplayer.video_get_size(0)
 
-
-        # self.initialize_video_tab()
-        # initialize video slider
-        self.video_slider = QSlider(QtCore.Qt.Horizontal, self)
-        self.video_slider.setFocusPolicy(Qt.NoFocus)
-        self.video_slider.setMaximum(slider_maximum)
-        self.video_slider.sliderMoved.connect(self.video_slider_sliderMoved)
-        self.video_slider.sliderReleased.connect(self.video_slider_sliderReleased)
-        self.verticalLayout_3.addWidget(self.video_slider)
 
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.ffmpeg_timer_out)
