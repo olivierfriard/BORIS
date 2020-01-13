@@ -4148,6 +4148,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mem_player = n_player
         if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
             x, y = event.pos().x(), event.pos().y()
+            print(x,y)
+            print(self.dw_player[0].frame_viewer.height())
+            print(self.dw_player[0].frame_viewer.pixmap().height())
 
             # distance
             if self.measurement_w.rbDistance.isChecked():
