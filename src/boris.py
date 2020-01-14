@@ -423,8 +423,8 @@ class DW(QDockWidget):
         #self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.frame_viewer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        #self.frame_viewer.setAlignment(Qt.AlignCenter)
-        self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.frame_viewer.setAlignment(Qt.AlignCenter)
+        # self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.frame_viewer.setStyleSheet("QLabel {background-color: black;}")
         #self.frame_viewer.setPixmap(QPixmap(""))
 
@@ -4148,9 +4148,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mem_player = n_player
         if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
             x, y = event.pos().x(), event.pos().y()
-            print(x,y)
-            print(self.dw_player[0].frame_viewer.height())
-            print(self.dw_player[0].frame_viewer.pixmap().height())
+            '''
+            print("x, y", x, y)
+            print("label", self.dw_player[0].frame_viewer.height())
+            print("pixmap", self.dw_player[0].frame_viewer.pixmap().height())
+            '''
+
+            # convert label coordinates in pixmap coordinates
+            x = int(x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2)
+            y = int(y - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2)
+            '''
+            print("converted x, y", x, y)
+            '''
 
             # distance
             if self.measurement_w.rbDistance.isChecked():
@@ -4312,6 +4321,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[-1].setVisible(False)
             self.dw_player[-1].setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
 
+            # place 4 players at the top of the main window and 4 at the bottom
             if i < 4:
                 self.addDockWidget(Qt.TopDockWidgetArea if i < 4 else Qt.BottomDockWidgetArea, self.dw_player[-1])
 
@@ -4428,9 +4438,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.FFmpegTimer = QTimer(self)
         self.FFmpegTimer.timeout.connect(self.ffmpeg_timer_out)
         try:
-            self.FFmpegTimerTick = int(1000 / self.fps)
+            '''self.FFmpegTimerTick = int(1000 / self.fps)'''
+            fps_list = list(set(self.dw_player[0].fps.values()))
+            if not fps_list:
+                raise Exception
+            self.FFmpegTimerTick = round(1000 / fps_list[0])
+
         except Exception:
             # default value 40 ms (25 frames / s)
+            logging.error(f"FPS not available. Set ffmpegtimer to default value (40 ms)")
             self.FFmpegTimerTick = 40
 
         self.FFmpegTimer.setInterval(self.FFmpegTimerTick)
