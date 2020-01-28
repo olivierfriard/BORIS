@@ -2300,9 +2300,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not results.exec_():
                 return
 
-        # remove live  observations
+        # remove live observations
         selected_observations = [x for x in selected_observations if x not in live_obs_list]
         if not selected_observations:
+            return
+
+        parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=0,
+                                                         flagShowIncludeModifiers=False,
+                                                         flagShowExcludeBehaviorsWoEvents=False)
+
+        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
             return
 
         # check if state events are paired
@@ -2315,13 +2322,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                               self.timeFormat)
 
             if not r:
-                out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
-                not_paired_obs_list.append(obsId)
+                # check if unpaired behavior is included in behaviors to extract
+                for behav in parameters[SELECTED_BEHAVIORS]:
+                    if f"behavior <b>{behav}</b>" in msg:
+                        out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
+                        not_paired_obs_list.append(obsId)
 
         if out:
             out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
             results = dialog.Results_dialog()
-            results.setWindowTitle(f"{programName} - Check selected observations")
+            results.setWindowTitle(f"{programName} - Check selected observations and selected behaviors")
             results.ptText.setReadOnly(True)
             results.ptText.appendHtml(out)
             results.pbSave.setVisible(False)
@@ -2335,12 +2345,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
 
-        parameters = self.choose_obs_subj_behav_category(selected_observations, maxTime=0,
-                                                         flagShowIncludeModifiers=False,
-                                                         flagShowExcludeBehaviorsWoEvents=False)
 
-        if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-            return
 
         # Ask for time interval around the event
         while True:
@@ -2353,6 +2358,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 break
             except Exception:
                 QMessageBox.warning(self, programName, f"<b>{text}</b> is not recognized as time")
+
+        # ask for video / audio extraction
+        items_to_extract, ok = QInputDialog.getItem(self, "Tracks to extract", 
+                                                    "Tracks",
+                                                    ("Video and audio", "Only video", "Only audio"),
+                                                    0, False)
+        if not ok:
+            return
 
         exportDir = QFileDialog().getExistingDirectory(self, "Choose a directory to extract events",
                                                            os.path.expanduser("~"),
@@ -2369,7 +2382,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                 parameters[SELECTED_BEHAVIORS],
                                                 time_interval=TIME_FULL_OBS)
 
-        ffmpeg_extract_command = ('"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} -acodec copy -vcodec copy '
+        ffmpeg_extract_command = ('"{ffmpeg_bin}" -i "{input_}" -y -ss {start} -to {stop} {codecs} '
                                   ' "{dir_}{sep}{obsId}_{player}_{subject}_{behavior}_{globalStart}'
                                   '-{globalStop}{extension}" ')
 
@@ -2406,12 +2419,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 # check if media has video
                                 try:
                                     if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][HAS_VIDEO][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
-                                        extension = ".mp4"
+                                        codecs = "-acodec copy -vcodec copy"
+                                        # extract extension from video file
+                                        extension = pathlib.Path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]).suffix
+                                        if not extension:
+                                            extension = ".mp4"
                                     else:
+                                        codecs = "-vn"
                                         extension = ".wav"
+
                                         logging.debug(f"Media {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]} does not have video")
+
                                 except Exception:
+
                                     logging.debug(f"has_video not found for: {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
+
                                     continue
 
                                 globalStart = Decimal("0.000") if row["occurence"] < timeOffset else round(
@@ -2440,6 +2462,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                  self.projectFileName),
                                         start=start,
                                         stop=stop,
+                                        codecs=codecs,
                                         globalStart=globalStart,
                                         globalStop=globalStop,
                                         dir_=exportDir,
@@ -2463,8 +2486,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         if mediaFileIdx != [idx1 for idx1, x in enumerate(duration1)
                                                             if rows[idx + 1]["occurence"] >= sum(duration1[0:idx1])][-1]:
                                             response = dialog.MessageDialog(programName,
-                                                                ("The event extends on 2 video. "
-                                                                 " At the moment it no possible to extract this type of event.<br>"),
+                                                                ("The event extends on 2 successive video. "
+                                                                 " At the moment it is not possible to extract this type of event.<br>"),
                                                                 [OK, "Abort"])
                                             if response == OK:
                                                 continue
@@ -2489,6 +2512,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                      self.projectFileName),
                                             start=start,
                                             stop=stop,
+                                            codecs=codecs,
                                             globalStart=globalStart,
                                             globalStop=globalStop,
                                             dir_=exportDir,
@@ -8120,13 +8144,48 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selectedObservations:
             return
 
-        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations, maxTime=0, flagShowIncludeModifiers=False,
+        plot_parameters = self.choose_obs_subj_behav_category(selectedObservations,
+                                                              maxTime=0,
+                                                              flagShowIncludeModifiers=False,
                                                               flagShowExcludeBehaviorsWoEvents=False)
 
         if not plot_parameters[SELECTED_SUBJECTS] or not plot_parameters[SELECTED_BEHAVIORS]:
             return
 
-        exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as TextGrid", os.path.expanduser('~'),
+        # check if state events are paired
+        out = ""
+        not_paired_obs_list = []
+        for obsId in selectedObservations:
+            r, msg = project_functions.check_state_events_obs(obsId,
+                                                              self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obsId],
+                                                              self.timeFormat)
+
+            if not r:
+                # check if unpaired behavior is included in behaviors to extract
+                for behav in plot_parameters[SELECTED_BEHAVIORS]:
+                    if f"behavior <b>{behav}</b>" in msg:
+                        out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
+                        not_paired_obs_list.append(obsId)
+
+        if out:
+            out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
+            results = dialog.Results_dialog()
+            results.setWindowTitle(f"{programName} - Check selected observations and selected behaviors")
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(out)
+            results.pbSave.setVisible(False)
+            results.pbCancel.setVisible(True)
+
+            if not results.exec_():
+                return
+
+        # remove observations with unpaired state events
+        selectedObservations = [x for x in selectedObservations if x not in not_paired_obs_list]
+        if not selectedObservations:
+            return
+
+        exportDir = QFileDialog(self).getExistingDirectory(self, "Export events as Praat TextGrid", os.path.expanduser('~'),
                                                            options=QFileDialog(self).ShowDirsOnly)
         if not exportDir:
             return

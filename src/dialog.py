@@ -153,7 +153,7 @@ class Video_overlay_dialog(QDialog):
 
 class Input_dialog(QDialog):
     """
-    dialog for user input. Elements can be checkbox, lineedit
+    dialog for user input. Elements can be checkbox, lineedit or spinbox
 
     """
 

@@ -160,8 +160,8 @@ def check_state_events_obs(obsId: str, ethogram: dict, observation: dict, time_f
 
                     for event in lst:
                         out += (
-                            """The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject"""
-                            """ "<b>{subject}</b>" at <b>{time}</b><br>"""
+                            'The behavior <b>{behavior}</b> {modifier} is not PAIRED for subject'
+                            ' "<b>{subject}</b>" at <b>{time}</b><br>'
                         ).format(
                             behavior=behavior,
                             modifier=("(modifier " + event[1] + ") ") if event[1] else "",
