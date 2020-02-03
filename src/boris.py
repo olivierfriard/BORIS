@@ -432,11 +432,11 @@ class DW(QDockWidget):
         self.stack2.setLayout(self.hlayout2)
 
         self.stack = QStackedWidget(self)
-        self.stack.addWidget (self.stack1)
+        self.stack.addWidget(self.stack1)
         self.stack.addWidget(self.stack2)
 
         self.setWidget(self.stack)
-        #self.stack.setCurrentIndex(1)
+        # self.stack.setCurrentIndex(1)
 
         '''
         self.hlayout0 = QHBoxLayout()
@@ -926,7 +926,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShow_spectrogram.triggered.connect(lambda: self.show_sound_signal_widget("spectrogram"))
         self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_sound_signal_widget("waveform"))
         self.actionShow_data_files.triggered.connect(self.show_data_files)
-        self.actionDistance.triggered.connect(self.distance)
+        self.actionDistance.triggered.connect(self.geometric_measurements)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
 
         self.actionCoding_pad.triggered.connect(self.show_coding_pad)
@@ -2162,7 +2162,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
                                         mediafile_fps = float2decimal(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
                                 except Exception:
-                                        mediafile_fps = 0
+                                    mediafile_fps = 0
 
                                 if not mediafile_fps:
                                     logging.debug(f"FPS not found for {self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]}")
@@ -2195,7 +2195,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                       f'-ss {start:.3f} '
                                                       f'-i "{media_path}" '
                                                       f'-vframes {vframes} '
-                                                      #f'-vf scale=1024{frame_resize}:-1 '
+                                                      # f'-vf scale=1024{frame_resize}:-1 '
                                                       f'"{exportDir}{os.sep}'
                                                       f'{utilities.safeFileName(obsId)}'
                                                       f'_PLAYER{nplayer}'
@@ -2246,20 +2246,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             continue
 
                                         media_path = project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
-                                                                                     self.projectFileName)
+                                                                                       self.projectFileName)
 
                                         extension = "png"
                                         vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
                                         ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
-                                                              f'-i "{media_path}" '
-                                                              f'-vframes {vframes} '
-                                                              #f'-vf scale=1024{frame_resize}:-1 '
-                                                              f'"{exportDir}{os.sep}'
-                                                              f'{utilities.safeFileName(obsId)}'
-                                                              f'_PLAYER{nplayer}'
-                                                              f'_{utilities.safeFileName(subject)}'
-                                                              f'_{utilities.safeFileName(behavior)}'
-                                                              f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
+                                                          f'-i "{media_path}" '
+                                                          f'-vframes {vframes} '
+                                                          # f'-vf scale=1024{frame_resize}:-1 '
+                                                          f'"{exportDir}{os.sep}'
+                                                          f'{utilities.safeFileName(obsId)}'
+                                                          f'_PLAYER{nplayer}'
+                                                          f'_{utilities.safeFileName(subject)}'
+                                                          f'_{utilities.safeFileName(behavior)}'
+                                                          f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
 
                                         logging.debug(f"ffmpeg command: {ffmpeg_command}")
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -4017,7 +4017,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # redraw measurements from previous frames
             if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
                 if self.measurement_w.cbPersistentMeasurements.isChecked():
+
                     logging.debug("Redraw measurements")
+
                     for frame in self.measurement_w.draw_mem:
 
                         if frame == self.FFmpegGlobalFrame + 1:
@@ -4027,6 +4029,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                         for element in self.measurement_w.draw_mem[frame]:
                             if element[0] == i:
+                                if element[1] == "point":
+                                    x, y = element[2:]
+                                    self.draw_point(x, y, elementsColor, n_player=i)
+
                                 if element[1] == "line":
                                     x1, y1, x2, y2 = element[2:]
                                     self.draw_line(x1, y1, x2, y2, elementsColor, n_player=i)
@@ -4114,12 +4120,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.ffmpeg_timer_out()
 
 
-    def distance(self):
+    def geometric_measurements(self):
         """
-        active the geometric measurement window
+        active the geometric measurement widget
         """
 
-        self.measurement_w = measurement_widget.wgMeasurement(logging.getLogger().getEffectiveLevel())
+        self.measurement_w = measurement_widget.wgMeasurement()
         self.measurement_w.draw_mem = {}
         self.measurement_w.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.measurement_w.closeSignal.connect(self.close_measurement_widget)
@@ -4162,7 +4168,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Args:
             n_player (int): id of clicked player
             event (Qevent): event (mousepressed)
-
         """
 
         if self.mem_player != -1 and n_player != self.mem_player:
@@ -4172,18 +4177,23 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.mem_player = n_player
         if hasattr(self, "measurement_w") and self.measurement_w is not None and self.measurement_w.isVisible():
             x, y = event.pos().x(), event.pos().y()
-            '''
-            print("x, y", x, y)
-            print("label", self.dw_player[0].frame_viewer.height())
-            print("pixmap", self.dw_player[0].frame_viewer.pixmap().height())
-            '''
 
             # convert label coordinates in pixmap coordinates
             x = int(x - (self.dw_player[n_player].frame_viewer.width() - self.dw_player[n_player].frame_viewer.pixmap().width()) / 2)
             y = int(y - (self.dw_player[n_player].frame_viewer.height() - self.dw_player[n_player].frame_viewer.pixmap().height()) / 2)
-            '''
-            print("converted x, y", x, y)
-            '''
+
+            # point
+            if self.measurement_w.rbPoint.isChecked():
+                if event.button() == 1:   # left
+                    self.draw_point(x, y, ACTIVE_MEASUREMENTS_COLOR, n_player)
+                    if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append([n_player, "point", x, y])
+                    else:
+                        self.measurement_w.draw_mem[self.FFmpegGlobalFrame] = [[n_player, "point", x, y]]
+
+                    self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
+                                                            f"Frame: {self.FFmpegGlobalFrame}\tPoint: {x},{y}"))
+
 
             # distance
             if self.measurement_w.rbDistance.isChecked():
@@ -4208,11 +4218,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                              "Check reference and pixel values! Values must be numeric.",
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-                    self.measurement_w.pte.appendPlainText(("Time: {time}\tPlayer: {player}\t"
-                                                            "Frame: {frame}\tDistance: {distance}").format(time=self.getLaps(),
-                                                                                                           frame=self.FFmpegGlobalFrame,
-                                                                                                           distance=round(d, 1),
-                                                                                                           player=n_player + 1))
+                    self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
+                                                            f"Frame: {self.FFmpegGlobalFrame}\tDistance: {round(d, 1)}"))
                     self.measurement_w.flagSaved = False
                     self.memx, self.memy = -1, -1
 
@@ -4230,11 +4237,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     if len(self.memPoints) == 3:
                         self.measurement_w.pte.appendPlainText(
-                            "Time: {time}\tPlayer: {player}\tFrame: {frame}\tAngle: {angle}".format(
-                                time=self.getLaps(),
-                                frame=self.FFmpegGlobalFrame,
-                                angle=round(angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1),
-                                player=n_player))
+                            (f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
+                             f"Frame: {self.FFmpegGlobalFrame}\t"
+                             f"Angle: {round(angle(self.memPoints[0], self.memPoints[1], self.memPoints[2]), 1)}"))
                         self.measurement_w.flagSaved = False
                         if self.FFmpegGlobalFrame in self.measurement_w.draw_mem:
                             self.measurement_w.draw_mem[self.FFmpegGlobalFrame].append([n_player, "angle", self.memPoints])
@@ -4271,13 +4276,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                              "Check reference and pixel values! Values must be numeric.",
                                              QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
-                    self.measurement_w.pte.appendPlainText(("Time: {time}\tPlayer: {player}\t"
-                                                            "Frame: {frame}\tArea: {area}").format(
-                        time=self.getLaps(),
-                        frame=self.FFmpegGlobalFrame,
-                        area=round(a, 1),
-                        player=n_player))
-
+                    self.measurement_w.pte.appendPlainText((f"Time: {self.getLaps()}\tPlayer: {n_player + 1}\t"
+                                                            f"Frame: {self.FFmpegGlobalFrame}\tArea: {round(a, 1)}"))
                     self.memPoints = []
 
         else:  # no measurements
@@ -5028,22 +5028,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         except Exception:
                             observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 1, QTableWidgetItem("0.0"))
 
+                        # duration and FPS
                         try:
+                            item = QTableWidgetItem(seconds2time(
+                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile]))
+                            item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, 3, QTableWidgetItem(seconds2time(
-                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO][LENGTH][mediaFile])))
+                                observationWindow.twVideo1.rowCount() - 1, 3, item)
+
+                            item = QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][mediaFile]))
+                            item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, 4, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][mediaFile])))
+                                observationWindow.twVideo1.rowCount() - 1, 4, item)
                         except Exception:
                             pass
+
+                        # has_video has_audio
                         try:
+                            item = QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasVideo"][mediaFile]))
+                            item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, 5, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasVideo"][mediaFile])))
+                                observationWindow.twVideo1.rowCount() - 1, 5, item)
+
+                            item = QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"][mediaFile]))
+                            item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(
-                                observationWindow.twVideo1.rowCount() - 1, 6, QTableWidgetItem("{}".format(
-                                    self.pj[OBSERVATIONS][obsId][MEDIA_INFO]["hasAudio"][mediaFile])))
+                                observationWindow.twVideo1.rowCount() - 1, 6, item)
                         except Exception:
                             pass
 
@@ -5118,7 +5128,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 )
 
             # disabled due to problem when video goes back
-            # observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(True)
             # if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
             #    observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
 
@@ -7589,12 +7598,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # warning
         if mode == EDIT and self.pj[OBSERVATIONS]:
-            QMessageBox.warning(self, programName,
-                                ("Please note that editing the project may interfere with the coded events in your previous observations.<br>"
+
+            if dialog.MessageDialog(programName,
+                                 ("Please note that editing the project may interfere with the coded events in your previous observations.<br>"
                                  "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
                                  "can unvalidate your previous observations.<br>"
-                                 "Remember to make a backup of your project."))
-
+                                 "Remember to make a backup of your project."),
+                                 [CANCEL, "Edit"]) == CANCEL:
+                return
 
         if newProjectWindow.exec_():  # button OK returns True
 

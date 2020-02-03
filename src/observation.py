@@ -144,6 +144,7 @@ class Observation(QDialog, Ui_Form):
         self.cbVisualizeSpectrogram.setEnabled(False)
         self.cb_visualize_waveform.setEnabled(False)
         self.cb_observation_time_interval.setEnabled(True)
+
         # disabled due to problem when video goes back
         self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
@@ -693,7 +694,6 @@ class Observation(QDialog, Ui_Form):
                                                      "if the project is not saved"))
             return
 
-
         # check if more media in player1 before adding media to player2
         if n_player == PLAYER2 and self.twVideo1.rowCount() > 1:
             QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
@@ -716,6 +716,9 @@ class Observation(QDialog, Ui_Form):
         for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
                   self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
             w.setEnabled(self.twVideo1.rowCount() > 0)
+
+        # disabled for problems
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
 
     def add_media_from_dir(self, n_player, flag_path):
@@ -752,6 +755,9 @@ class Observation(QDialog, Ui_Form):
         for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
                   self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
             w.setEnabled(self.twVideo1.rowCount() > 0)
+
+        # disabled for problems
+        self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
 
     def add_media_to_listview(self, nPlayer, fileName):
@@ -815,6 +821,9 @@ class Observation(QDialog, Ui_Form):
             for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
                       self.cb_observation_time_interval, self.cbCloseCurrentBehaviorsBetweenVideo]:
                 w.setEnabled(self.twVideo1.rowCount() > 0)
+
+            # disabled for problems
+            self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
         else:
             QMessageBox.warning(self, programName, "No media file selected")

@@ -40,12 +40,15 @@ class wgMeasurement(QWidget):
     flagSaved = True
     draw_mem = []
 
-    def __init__(self, log_level):
+    def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Geometric measurement")
 
         vbox = QVBoxLayout(self)
+
+        self.rbPoint = QRadioButton("Point (left click)")
+        vbox.addWidget(self.rbPoint)
 
         self.rbDistance = QRadioButton("Distance (start: left click, end: right click)")
         vbox.addWidget(self.rbDistance)
@@ -89,20 +92,17 @@ class wgMeasurement(QWidget):
 
         hbox3 = QHBoxLayout()
 
-        self.pbClear = QPushButton("Clear measurements")
+        self.pbClear = QPushButton("Clear measurements", clicked=self.pbClear_clicked)
         hbox3.addWidget(self.pbClear)
 
-        self.pbSave = QPushButton("Save results")
+        self.pbSave = QPushButton("Save results", clicked=self.pbSave_clicked)
         hbox3.addWidget(self.pbSave)
 
-        self.pbClose = QPushButton("Close")
+        self.pbClose = QPushButton("Close", clicked=self.pbClose_clicked)
         hbox3.addWidget(self.pbClose)
 
         vbox.addLayout(hbox3)
 
-        self.pbClear.clicked.connect(self.pbClear_clicked)
-        self.pbClose.clicked.connect(self.pbClose_clicked)
-        self.pbSave.clicked.connect(self.pbSave_clicked)
 
     def pbClear_clicked(self):
         """
