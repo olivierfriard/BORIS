@@ -43,9 +43,6 @@ from config import *
 from observation_ui import Ui_Form
 from utilities import *
 
-out = ""
-fps = 0
-
 
 class AssignConverter(QDialog):
     """
@@ -99,7 +96,6 @@ class Observation(QDialog, Ui_Form):
             tmp_dir (str): path of temporary directory
             project_path (str): path of project
             converters (dict): converters dictionary
-
         """
 
         super().__init__()
@@ -116,18 +112,17 @@ class Observation(QDialog, Ui_Form):
         self.obs_time_offset = duration_widget.Duration_widget(0)
         self.horizontalLayout_6.insertWidget(1, self.obs_time_offset)
 
-        self.pbAddVideo.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=True))
-        self.pb_add_media_without_path.clicked.connect(lambda: self.add_media(PLAYER1, flag_path=False))
+        self.pbAddVideo.clicked.connect(lambda: self.add_media(flag_path=True))
+        self.pb_add_media_without_path.clicked.connect(lambda: self.add_media(flag_path=False))
         self.pbRemoveVideo.clicked.connect(self.remove_media)
-        self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=True))
-        self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(PLAYER1, flag_path=False))
+        self.pbAddMediaFromDir.clicked.connect(lambda: self.add_media_from_dir(flag_path=True))
+        self.pb_add_all_media_from_dir_without_path.clicked.connect(lambda: self.add_media_from_dir(flag_path=False))
 
         self.pb_add_data_file.clicked.connect(lambda: self.add_data_file(flag_path=True))
         self.pb_add_data_file_wo_path.clicked.connect(lambda: self.add_data_file(flag_path=False))
         self.pb_remove_data_file.clicked.connect(self.remove_data_file)
         self.pb_view_data_head.clicked.connect(self.view_data_file_head)
         self.pb_plot_data.clicked.connect(self.plot_data_file)
-
 
         self.cbVisualizeSpectrogram.clicked.connect(self.extract_wav)
         self.cb_visualize_waveform.clicked.connect(self.extract_wav)
@@ -156,6 +151,7 @@ class Observation(QDialog, Ui_Form):
         """
         ask user a time interval for limiting the media observation
         """
+
         if self.cb_observation_time_interval.isChecked():
             time_interval_dialog = dialog.Ask_time(self.time_format)
             time_interval_dialog.time_widget.set_time(0)
@@ -296,7 +292,7 @@ class Observation(QDialog, Ui_Form):
         # limit to 2 files
         if self.tw_data_files.rowCount() >= 2:
             QMessageBox.warning(self, programName, ("It is not yet possible to plot more than 2 external data sources"
-                                                     "This limitation will be removed in future"))
+                                                    "This limitation will be removed in future"))
             return
 
         fd = QFileDialog()
@@ -325,7 +321,7 @@ class Observation(QDialog, Ui_Form):
             if header:
                 w = dialog.View_data_head()
                 w.setWindowTitle(f"Data file: {Path(file_name).name}")
-                w.setWindowFlags(Qt.WindowStaysOnTopHint)
+                #w.setWindowFlags(Qt.WindowStaysOnTopHint)
 
                 w.tw.setColumnCount(r["fields number"])
                 w.tw.setRowCount(len(header))
@@ -514,6 +510,7 @@ class Observation(QDialog, Ui_Form):
 
         return True if everything OK else False
         """
+
         def is_numeric(s):
             """
             check if s is numeric (float)
@@ -530,6 +527,15 @@ class Observation(QDialog, Ui_Form):
             except ValueError:
                 return False
 
+        # check if observation id not empty
+        if not self.leObservationId.text():
+            self.qm = QMessageBox()
+            self.qm.setIcon(QMessageBox.Critical)
+            self.qm.setText("The <b>observation id</b> is mandatory and must be unique!")
+            self.qm.exec_()
+            return False
+
+
         if self.tabProjectType.currentIndex() == 0:  # observation based on media file
             # check player number
             players_list = []
@@ -544,9 +550,8 @@ class Observation(QDialog, Ui_Form):
                     players[int(self.twVideo1.cellWidget(row, 0).currentText())].append(
                         utilities.time2seconds(self.twVideo1.item(row, 3).text()))
 
-            # check if player#1 used
+            # check if player #1 is used
             if not players_list or min(players_list) > 1:
-                # self.qm = QMessageBox.critical(self, programName , "A media file must be loaded in player #1")
                 self.qm = QMessageBox()
                 self.qm.setIcon(QMessageBox.Critical)
                 self.qm.setText("A media file must be loaded in player #1")
@@ -555,28 +560,49 @@ class Observation(QDialog, Ui_Form):
 
             # check if players are used in crescent order
             if set(list(range(min(players_list), max(players_list) + 1))) != set(players_list):
-                # QMessageBox.critical(self, programName , "Some player are not used. Please reorganize your media files")
                 self.qm = QMessageBox()
                 self.qm.setIcon(QMessageBox.Critical)
                 self.qm.setText("Some player are not used. Please reorganize your media files")
                 self.qm.exec_()
                 return False
 
-            # check that longuest media is in player #1
+            # check if more media in player #1 and media in other players
+            if len(players[1]) > 1 and set(players.keys()) != {1}:
+                self.qm = QMessageBox()
+                self.qm.setIcon(QMessageBox.Critical)
+                self.qm.setText(("It is not possible to play another media synchronously "
+                                 "when many media are queued in the first media player"))
+                self.qm.exec_()
+                return False
+
+            # check that the longuest media is in player #1
             durations = []
-            for i in players:
+            for i in sorted(list(players.keys())):
                 durations.append(sum(players[i]))
             if [x for x in durations[1:] if x > durations[0]]:
                 QMessageBox.critical(self, programName, "The longuest media file(s) must be loaded in player #1")
                 return False
 
-        # check time offset
-        '''
-        if not is_numeric(self.leTimeOffset.text()):
-            QMessageBox.critical(self, programName ,
-                                 f"<b>{self.leTimeOffset.text()}</b> is not recognized as a valid time offset format")
-            return False
-        '''
+            # check offset for media files
+            for row in range(self.twVideo1.rowCount()):
+                if not is_numeric(self.twVideo1.item(row, 1).text()):
+                    QMessageBox.critical(self, programName,
+                                         ("The offset value "
+                                          f"<b>{self.twVideo1.item(row, 1).text()}</b>"
+                                          " is not recognized as a numeric value.<br>"
+                                          "Use decimal number of seconds (e.g. -58.5 or 32)"))
+                    return False
+
+            # check offset for external data files
+            for row in range(self.tw_data_files.rowCount()):
+                if not is_numeric(self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()):
+                    QMessageBox.critical(self, programName,
+                                         ("The external data file start value "
+                                          f"<b>{self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()}</b>"
+                                          " is not recognized as a numeric value.<br>"
+                                          "Use decimal number of seconds (e.g. -58.5 or 32)"))
+                    return False
+
 
         # check if indep variables are correct type
         for row in range(self.twIndepVariables.rowCount()):
@@ -585,14 +611,6 @@ class Observation(QDialog, Ui_Form):
                     QMessageBox.critical(self, programName,
                                          f"The <b>{self.twIndepVariables.item(row, 0).text()}</b> variable must be numeric!")
                     return False
-
-        # check if observation id not empty
-        if not self.leObservationId.text():
-            self.qm = QMessageBox()
-            self.qm.setIcon(QMessageBox.Critical)
-            self.qm.setText("The <b>observation id</b> is mandatory and must be unique!")
-            self.qm.exec_()
-            return False
 
         # check if new obs and observation id already present or if edit obs and id changed
         if (self.mode == "new") or (self.mode == "edit" and self.leObservationId.text() != self.mem_obs_id):
@@ -603,20 +621,7 @@ class Observation(QDialog, Ui_Form):
                                       f"{self.pj[OBSERVATIONS][self.leObservationId.text()]['date']}"))
                 return False
 
-        # check if media list #2 populated and media list #1 empty
-        if self.tabProjectType.currentIndex() == 0 and not self.twVideo1.rowCount():
-            QMessageBox.critical(self, programName, "Add a media file in the first media player!")
-            return False
 
-        # check offset for external data files
-        for row in range(self.tw_data_files.rowCount()):
-            if not is_numeric(self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()):
-                QMessageBox.critical(self, programName,
-                                     ("The external data file start value "
-                                      f"<b>{self.tw_data_files.item(row, PLOT_DATA_TIMEOFFSET_IDX).text()}</b>"
-                                      " is not recognized as a numeric value.<br>"
-                                      "Use decimal number of seconds (e.g. -58.5 or 32)"))
-                return False
 
         for row in range(self.twIndepVariables.rowCount()):
             if self.twIndepVariables.item(row, 1).text() == NUMERIC:
@@ -648,12 +653,11 @@ class Observation(QDialog, Ui_Form):
             self.state = "refused"
 
 
-    def check_media(self, n_player, file_path, flag_path):
+    def check_media(self, file_path, flag_path):
         """
         check media and add them to list view if duration > 0
 
         Args:
-            n_player (str): player to add media
             file_path (str): media file path to be checked
             flag_path (bool): True include full path of media else only basename
 
@@ -673,18 +677,17 @@ class Observation(QDialog, Ui_Form):
                 self.mediaFPS[file_path] = float(r["fps"])
                 self.mediaHasVideo[file_path] = r["has_video"]
                 self.mediaHasAudio[file_path] = r["has_audio"]
-                self.add_media_to_listview(n_player, file_path)
+                self.add_media_to_listview(file_path)
                 return True, ""
             else:
                 return False, "duration not available"
 
 
-    def add_media(self, n_player, flag_path):
+    def add_media(self, flag_path):
         """
-        add media in player nPlayer
+        add media
 
         Args:
-            n_player (str): player
             flag_path (bool): if True include full path of media else only basename
         """
 
@@ -695,10 +698,12 @@ class Observation(QDialog, Ui_Form):
             return
 
         # check if more media in player1 before adding media to player2
+        '''
         if n_player == PLAYER2 and self.twVideo1.rowCount() > 1:
             QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
                                                      "when more media are loaded in the first media player"))
             return
+        '''
 
         fd = QFileDialog()
         fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
@@ -708,7 +713,7 @@ class Observation(QDialog, Ui_Form):
 
         if file_paths:
             for file_path in file_paths:
-                r, msg = self.check_media(n_player, file_path, flag_path)
+                r, msg = self.check_media(file_path, flag_path)
                 if not r:
                     QMessageBox.critical(self, programName,
                                          f"<b>{file_path}</b>. {msg}")
@@ -721,12 +726,11 @@ class Observation(QDialog, Ui_Form):
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
 
-    def add_media_from_dir(self, n_player, flag_path):
+    def add_media_from_dir(self, flag_path):
         """
         add all media from a selected directory
 
         Args:
-            n_player (str): player
             flag_path (bool): True include full path of media else only basename
         """
 
@@ -741,15 +745,15 @@ class Observation(QDialog, Ui_Form):
 
         dir_name = fd.getExistingDirectory(self, "Select directory")
         if dir_name:
-            r = ""
+            r, response = "", ""
             for file_path in glob.glob(dir_name + os.sep + "*"):
-                r, msg = self.check_media(n_player, file_path, flag_path)
+                r, msg = self.check_media(file_path, flag_path)
                 if not r:
-                    if r != "Skip all non media files":
-                        r = dialog.MessageDialog(programName,
+                    if response != "Skip all non media files":
+                        response = dialog.MessageDialog(programName,
                                                  f"<b>{file_path}</b> {msg}",
                                                  ["Continue", "Skip all non media files", "Cancel"])
-                        if r == "Cancel":
+                        if response == "Cancel":
                             break
 
         for w in [self.cbVisualizeSpectrogram, self.cb_visualize_waveform,
@@ -760,7 +764,7 @@ class Observation(QDialog, Ui_Form):
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
 
-    def add_media_to_listview(self, nPlayer, fileName):
+    def add_media_to_listview(self, file_name):
         """
         add media file path to list widget
         """
@@ -769,11 +773,11 @@ class Observation(QDialog, Ui_Form):
 
         for col_idx, s in enumerate([None,
                                      0,
-                                     fileName,
-                                     seconds2time(self.mediaDurations[fileName]),
-                                     f"{self.mediaFPS[fileName]:.3f}",
-                                     self.mediaHasVideo[fileName],
-                                     self.mediaHasAudio[fileName]]):
+                                     file_name,
+                                     seconds2time(self.mediaDurations[file_name]),
+                                     f"{self.mediaFPS[file_name]:.2f}",
+                                     self.mediaHasVideo[file_name],
+                                     self.mediaHasAudio[file_name]]):
             if col_idx == 0:  # player combobox
                 combobox = QComboBox()
                 combobox.addItems(ALL_PLAYERS)

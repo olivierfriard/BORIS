@@ -5029,7 +5029,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         combobox.setCurrentIndex(int(player) - 1)
                         observationWindow.twVideo1.setCellWidget(observationWindow.twVideo1.rowCount() - 1, 0, combobox)
 
-                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, QTableWidgetItem(mediaFile))
+                        item = QTableWidgetItem(mediaFile)
+                        item.setFlags(Qt.ItemIsEnabled)
+                        observationWindow.twVideo1.setItem(observationWindow.twVideo1.rowCount() - 1, 2, item)
 
                         # set offset
                         try:
@@ -5047,7 +5049,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 3, item)
 
-                            item = QTableWidgetItem(str(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][mediaFile]))
+                            item = QTableWidgetItem(f"{self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][mediaFile]:.2f}")
                             item.setFlags(Qt.ItemIsEnabled)
                             observationWindow.twVideo1.setItem(
                                 observationWindow.twVideo1.rowCount() - 1, 4, item)
@@ -5141,7 +5143,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # disabled due to problem when video goes back
             # if CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][obsId]:
             #    observationWindow.cbCloseCurrentBehaviorsBetweenVideo.setChecked(self.pj[OBSERVATIONS][obsId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS])
-
 
         rv = observationWindow.exec_()
 
