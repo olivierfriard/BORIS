@@ -3871,6 +3871,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if self.pixmap.isNull():
                         self.frame_bitmap_format = "PNG"
                 else:
+                    ''' disabled because change focus when it closes
                     self.iw = dialog.Info_widget()
                     self.iw.lwi.setVisible(False)
                     self.iw.resize(350, 200)
@@ -3881,6 +3882,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.iw.setWindowTitle("Extracting frames to disk...")
                     self.iw.label.setText("Extracting frames to disk... This operation can be long. Be patient...")
                     self.iw.show()
+                    app.processEvents()
+                    '''
+                    self.statusbar.showMessage("Extracting frames to disk", 0)
                     app.processEvents()
 
                     utilities.extract_frames(self.ffmpeg_bin,
@@ -3893,7 +3897,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                              self.frame_bitmap_format.lower(),
                                              self.frame_resize,
                                              self.fbf_cache_size)
+                    '''
                     self.iw.hide()
+                    '''
+                    self.statusbar.showMessage("", 0)
 
                     if not os.path.isfile(frame_image_path):
 
@@ -3949,7 +3956,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.statusbar.showMessage(f"Free memory not available ({mem.get('msg', '')})", 0)
 
-                    self.statusbar.showMessage(f"Extracting frames... {int(self.frames_buffer.size()/1024/1024)}", 0)
+                    self.statusbar.showMessage(f"Extracting frames in memory {int(self.frames_buffer.size()/1024/1024)}", 0)
                     app.processEvents()
 
                     '''
@@ -3973,6 +3980,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
                     # message
+                    '''
                     self.iw = dialog.Info_widget()
                     self.iw.lwi.setVisible(False)
                     self.iw.resize(350, 100)
@@ -3984,6 +3992,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.iw.label.setText("Extracting frames to memory... This operation can be long. Be patient...")
                     self.iw.show()
                     app.processEvents()
+                    '''
 
                     r, msg = self.extract_frames_mem(frameCurrentMedia,
                                                      (frameCurrentMedia - 1) / self.fps,
@@ -3995,7 +4004,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             self.fbf_cache_size,
                                             bitmap_quality=100)
 
+                    '''
                     self.iw.hide()
+                    '''
                     if r:
                         dialog.error_message(" frame extraction in memory", msg)
                         return
@@ -11722,8 +11733,9 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     # splashscreen
+    # no splashscreen for Mac because it can mask the first use dialog box
 
-    if (not options.nosplashscreen):
+    if (not options.nosplashscreen) and (sys.platform != "darwin"):
         start = time.time()
         datadir = os.path.dirname(sys.path[0]) if os.path.isfile(sys.path[0]) else sys.path[0]
         splash = QSplashScreen(QPixmap(f"{datadir}/splash.png"))
@@ -11825,7 +11837,7 @@ if __name__ == "__main__":
     app.focusChanged.connect(window.changedFocusSlot)
     '''
 
-    if not options.nosplashscreen:
+    if not options.nosplashscreen and (sys.platform != "darwin"):
         splash.finish(window)
 
     sys.exit(app.exec_())
