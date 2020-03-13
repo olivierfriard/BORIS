@@ -3,4 +3,4 @@
 build
 dist
 *.gnbs.conf
-vscode
+.vscode

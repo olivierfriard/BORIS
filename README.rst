@@ -52,7 +52,7 @@ following BibTex entry
 Licence
 -------
 
-Distributed with a `GPL license <COPYING.TXT>`_::
+Distributed with a `GPL v.3 license <LICENSE.TXT>`_::
 
 Copyright (C) 2012-2020 Olivier Friard
 
