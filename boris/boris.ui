@@ -1,0 +1,1423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1381</width>
+    <height>604</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>BORIS</string>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowNestedDocks|QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QWidget" name="w_logo" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout_8">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QLabel" name="lbLogoBoris">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="scaledContents">
+                <bool>false</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbLogoUnito">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="textFormat">
+                <enum>Qt::AutoText</enum>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QWidget" name="w_obs_info" native="true">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_10">
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_9">
+             <item>
+              <widget class="QLabel" name="lb_current_media_time">
+               <property name="text">
+                <string>lb_current_media_time</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbFocalSubject">
+               <property name="text">
+                <string>lbFocalSubject</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbCurrentStates">
+               <property name="text">
+                <string>lbCurrentStates</string>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QWidget" name="w_live" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_11">
+              <item>
+               <widget class="QPushButton" name="pb_live_obs">
+                <property name="text">
+                 <string>PushButton</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1381</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionUser_guide"/>
+    <addaction name="actionCheckUpdate"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <widget class="QMenu" name="menuRecent_projects">
+     <property name="title">
+      <string>Recent projects</string>
+     </property>
+     <addaction name="separator"/>
+    </widget>
+    <widget class="QMenu" name="menuImport_project">
+     <property name="title">
+      <string>Import project from...</string>
+     </property>
+     <addaction name="actionNoldus_Observer_template"/>
+    </widget>
+    <addaction name="actionNew_project"/>
+    <addaction name="actionOpen_project"/>
+    <addaction name="menuRecent_projects"/>
+    <addaction name="menuImport_project"/>
+    <addaction name="actionEdit_project"/>
+    <addaction name="actionSave_project"/>
+    <addaction name="actionSave_project_as"/>
+    <addaction name="actionClose_project"/>
+    <addaction name="separator"/>
+    <addaction name="actionCheck_project"/>
+    <addaction name="actionRemove_path_from_media_files"/>
+    <addaction name="actionSend_project"/>
+    <addaction name="separator"/>
+    <addaction name="actionPreferences"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuObservations">
+    <property name="title">
+     <string>Observations</string>
+    </property>
+    <widget class="QMenu" name="menuCreate_transitions_matrix">
+     <property name="title">
+      <string>Create transitions matrix</string>
+     </property>
+     <addaction name="actionAll_transitions"/>
+     <addaction name="actionFrequencies_of_transitions_after_behaviors"/>
+     <addaction name="actionNumber_of_transitions"/>
+    </widget>
+    <widget class="QMenu" name="menuExport_events">
+     <property name="title">
+      <string>Export events</string>
+     </property>
+     <widget class="QMenu" name="menuas_behavioural_sequences">
+      <property name="title">
+       <string>as behavioural sequences</string>
+      </property>
+      <addaction name="actionseparated_subjects"/>
+      <addaction name="actiongrouped_subjects"/>
+     </widget>
+     <addaction name="actionExportEvents_2"/>
+     <addaction name="actionExport_aggregated_events"/>
+     <addaction name="menuas_behavioural_sequences"/>
+     <addaction name="actionExport_events_as_Praat_TextGrid"/>
+     <addaction name="actionJWatcher"/>
+     <addaction name="action_behavior_binary_table"/>
+    </widget>
+    <addaction name="actionNew_observation"/>
+    <addaction name="actionOpen_observation"/>
+    <addaction name="actionView_observation"/>
+    <addaction name="actionEdit_observation_2"/>
+    <addaction name="actionObservationsList"/>
+    <addaction name="actionOpen_observation_2"/>
+    <addaction name="actionEdit_observation"/>
+    <addaction name="separator"/>
+    <addaction name="actionClose_observation"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_observations_file"/>
+    <addaction name="actionExport_observations_list"/>
+    <addaction name="separator"/>
+    <addaction name="actionAdd_event"/>
+    <addaction name="actionEdit_selected_events"/>
+    <addaction name="actionEdit_event_time"/>
+    <addaction name="separator"/>
+    <addaction name="actionExplore_project"/>
+    <addaction name="actionFind_events"/>
+    <addaction name="actionFind_replace_events"/>
+    <addaction name="actionCheckStateEvents"/>
+    <addaction name="actionClose_unpaired_events"/>
+    <addaction name="actionSelect_observations"/>
+    <addaction name="separator"/>
+    <addaction name="actionDelete_selected_observations"/>
+    <addaction name="actionDelete_all_observations"/>
+    <addaction name="separator"/>
+    <addaction name="menuExport_events"/>
+    <addaction name="separator"/>
+    <addaction name="menuCreate_subtitles_2"/>
+    <addaction name="actionExtract_events_from_media_files"/>
+    <addaction name="actionExtract_frames_from_media_files"/>
+    <addaction name="separator"/>
+    <addaction name="menuCreate_transitions_matrix"/>
+   </widget>
+   <widget class="QMenu" name="menuAnalyze">
+    <property name="title">
+     <string>Analysis</string>
+    </property>
+    <widget class="QMenu" name="menuPlot_events">
+     <property name="title">
+      <string>Plot</string>
+     </property>
+     <addaction name="actionPlot_events2"/>
+     <addaction name="actionBehavior_bar_plot"/>
+    </widget>
+    <widget class="QMenu" name="menuInter_rater_reliability">
+     <property name="title">
+      <string>Inter-rater reliability</string>
+     </property>
+     <addaction name="actionCohen_s_kappa"/>
+    </widget>
+    <widget class="QMenu" name="menuSimilarities">
+     <property name="title">
+      <string>Similarities</string>
+     </property>
+     <addaction name="actionNeedleman_Wunsch"/>
+    </widget>
+    <addaction name="actionTime_budget"/>
+    <addaction name="actionTime_budget_report"/>
+    <addaction name="actionTime_budget_by_behaviors_category"/>
+    <addaction name="menuPlot_events"/>
+    <addaction name="menuInter_rater_reliability"/>
+    <addaction name="menuSimilarities"/>
+    <addaction name="action_advanced_event_filtering"/>
+   </widget>
+   <widget class="QMenu" name="menuPlayback">
+    <property name="title">
+     <string>Playback</string>
+    </property>
+    <widget class="QMenu" name="menuZoom1">
+     <property name="title">
+      <string>Zoom player #1</string>
+     </property>
+     <addaction name="actionZoom1_fitwindow"/>
+     <addaction name="actionZoom1_1_4"/>
+     <addaction name="actionZoom1_1_2"/>
+     <addaction name="actionZoom1_1_1"/>
+     <addaction name="actionZoom1_2_1"/>
+    </widget>
+    <widget class="QMenu" name="menuZoom2">
+     <property name="title">
+      <string>Zoom player #2</string>
+     </property>
+     <addaction name="actionZoom2_fitwindow"/>
+     <addaction name="actionZoom2_1_4"/>
+     <addaction name="actionZoom2_1_2"/>
+     <addaction name="actionZoom2_1_1"/>
+     <addaction name="actionZoom2_2_1"/>
+    </widget>
+    <addaction name="actionJumpForward"/>
+    <addaction name="actionJumpBackward"/>
+    <addaction name="actionJumpTo"/>
+    <addaction name="separator"/>
+    <addaction name="menuZoom1"/>
+    <addaction name="menuZoom2"/>
+    <addaction name="separator"/>
+    <addaction name="actionPlay"/>
+    <addaction name="actionPause"/>
+    <addaction name="actionPrevious"/>
+    <addaction name="actionNext"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <widget class="QMenu" name="menuTransitions_flow_diagram">
+     <property name="title">
+      <string>Transitions flow diagram</string>
+     </property>
+     <addaction name="actionCreate_transitions_flow_diagram"/>
+     <addaction name="actionCreate_transitions_flow_diagram_2"/>
+    </widget>
+    <widget class="QMenu" name="menu_coding_map_creator">
+     <property name="title">
+      <string>Create a coding map</string>
+     </property>
+     <addaction name="action_create_behaviors_coding_map"/>
+     <addaction name="action_create_modifiers_coding_map"/>
+    </widget>
+    <widget class="QMenu" name="menuImage_overlay_on_video">
+     <property name="title">
+      <string>Image overlay on video</string>
+     </property>
+     <addaction name="actionAdd_image_overlay_on_video"/>
+     <addaction name="actionRemove_image_overlay"/>
+    </widget>
+    <addaction name="action_block_dockwidgets"/>
+    <addaction name="actionShow_spectrogram"/>
+    <addaction name="actionShow_the_sound_waveform"/>
+    <addaction name="actionShow_data_files"/>
+    <addaction name="actionDistance"/>
+    <addaction name="actionBehaviors_coding_map"/>
+    <addaction name="actionCoding_pad"/>
+    <addaction name="actionSubjects_pad"/>
+    <addaction name="menuImage_overlay_on_video"/>
+    <addaction name="separator"/>
+    <addaction name="menu_coding_map_creator"/>
+    <addaction name="actionRecode_resize_video"/>
+    <addaction name="actionRotate_video"/>
+    <addaction name="actionMedia_file_information_2"/>
+    <addaction name="menuTransitions_flow_diagram"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuObservations"/>
+   <addaction name="menuPlayback"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuAnalyze"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="action_obs_list"/>
+   <addaction name="actionPlay"/>
+   <addaction name="actionReset"/>
+   <addaction name="actionJumpBackward"/>
+   <addaction name="actionJumpForward"/>
+   <addaction name="actionNormalSpeed"/>
+   <addaction name="actionFaster"/>
+   <addaction name="actionSlower"/>
+   <addaction name="actionPrevious"/>
+   <addaction name="actionNext"/>
+   <addaction name="actionSnapshot"/>
+   <addaction name="actionFrame_by_frame"/>
+   <addaction name="actionFrame_backward"/>
+   <addaction name="actionFrame_forward"/>
+   <addaction name="actionCloseObs"/>
+   <addaction name="actionPlot_current_observation"/>
+   <addaction name="actionFind_in_current_obs"/>
+  </widget>
+  <widget class="QDockWidget" name="dwEthogram">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Ethogram</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QVBoxLayout" name="verticalLayout_5">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QTableWidget" name="twEthogram">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+         <property name="sortingEnabled">
+          <bool>true</bool>
+         </property>
+         <column>
+          <property name="text">
+           <string>Key</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Code</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Type</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Description</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Category</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Modifiers</string>
+          </property>
+         </column>
+         <column>
+          <property name="text">
+           <string>Excluded</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="sizeGripEnabled">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QDockWidget" name="dwObservations">
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Events</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QVBoxLayout" name="verticalLayout_7">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QTableWidget" name="twEvents">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
+         <property name="autoScroll">
+          <bool>false</bool>
+         </property>
+         <property name="editTriggers">
+          <set>QAbstractItemView::NoEditTriggers</set>
+         </property>
+         <property name="tabKeyNavigation">
+          <bool>false</bool>
+         </property>
+         <property name="showDropIndicator" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="dragDropOverwriteMode">
+          <bool>false</bool>
+         </property>
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::ExtendedSelection</enum>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dwSubjects">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Subjects</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <widget class="QTableWidget" name="twSubjects">
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="selectionBehavior">
+        <enum>QAbstractItemView::SelectRows</enum>
+       </property>
+       <column>
+        <property name="text">
+         <string>Key</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Name</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Description</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Current state(s)</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <action name="actionDocumentation">
+   <property name="text">
+    <string>Documentation</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionPause">
+   <property name="text">
+    <string>Pause</string>
+   </property>
+   <property name="toolTip">
+    <string>Pause</string>
+   </property>
+  </action>
+  <action name="actionPlay">
+   <property name="text">
+    <string>Play</string>
+   </property>
+  </action>
+  <action name="actionOpen_video_file">
+   <property name="text">
+    <string>Open media file</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+  </action>
+  <action name="actionFaster">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Faster</string>
+   </property>
+  </action>
+  <action name="actionSlower">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Slower</string>
+   </property>
+  </action>
+  <action name="actionJumpForward">
+   <property name="text">
+    <string>Jump forward</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionLoad_configuration">
+   <property name="text">
+    <string>Load configuration</string>
+   </property>
+  </action>
+  <action name="actionDelete_selected_observations">
+   <property name="text">
+    <string>Delete selected events</string>
+   </property>
+  </action>
+  <action name="actionDelete_all_observations">
+   <property name="text">
+    <string>Delete all events</string>
+   </property>
+  </action>
+  <action name="actionSort_observations">
+   <property name="text">
+    <string>Sort events</string>
+   </property>
+  </action>
+  <action name="actionLoad_observations_file">
+   <property name="text">
+    <string>Import observations</string>
+   </property>
+  </action>
+  <action name="actionSelect_observations">
+   <property name="text">
+    <string>Select events from interval</string>
+   </property>
+  </action>
+  <action name="actionConfigure_states_and_events">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Configure states and events</string>
+   </property>
+  </action>
+  <action name="actionEdit_event">
+   <property name="text">
+    <string>Edit event</string>
+   </property>
+  </action>
+  <action name="actionLoad_configuration_file">
+   <property name="text">
+    <string>Load state and events configuration file</string>
+   </property>
+  </action>
+  <action name="actionMedia_file_information">
+   <property name="text">
+    <string>Media file information</string>
+   </property>
+  </action>
+  <action name="actionStart_live_observation">
+   <property name="text">
+    <string>Start observation without media file</string>
+   </property>
+  </action>
+  <action name="actionNew_project">
+   <property name="text">
+    <string>New project</string>
+   </property>
+  </action>
+  <action name="actionTime_budget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Time budget</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionSave_project">
+   <property name="text">
+    <string>Save project</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionOpen_project">
+   <property name="text">
+    <string>Open project</string>
+   </property>
+  </action>
+  <action name="actionSet_offset">
+   <property name="text">
+    <string>Set time offset</string>
+   </property>
+  </action>
+  <action name="actionEdit_project">
+   <property name="text">
+    <string>Edit project</string>
+   </property>
+  </action>
+  <action name="actionSave_project_as">
+   <property name="text">
+    <string>Save project as ...</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionNew_observation">
+   <property name="text">
+    <string>New observation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionSave_observation">
+   <property name="text">
+    <string>Save current observation</string>
+   </property>
+  </action>
+  <action name="actionClose_observation">
+   <property name="text">
+    <string>Close observation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionEdit_current_observation">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit current observation</string>
+   </property>
+  </action>
+  <action name="actionOpen_observation_2">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Open observation</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionAdd_event">
+   <property name="text">
+    <string>Add event</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionDeselectCurrentSubject">
+   <property name="text">
+    <string>Deselect current subject</string>
+   </property>
+  </action>
+  <action name="actionNext">
+   <property name="text">
+    <string>Next</string>
+   </property>
+   <property name="toolTip">
+    <string>Next media file</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionPrevious">
+   <property name="text">
+    <string>Previous</string>
+   </property>
+   <property name="toolTip">
+    <string>Previous media file</string>
+   </property>
+  </action>
+  <action name="actionJumpTo">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Jump to specific time</string>
+   </property>
+  </action>
+  <action name="actionJumpBackward">
+   <property name="text">
+    <string>Jump backward</string>
+   </property>
+   <property name="toolTip">
+    <string>Jump backward</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
+   </property>
+  </action>
+  <action name="actionEdit_observation">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit observation</string>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionCheckUpdate">
+   <property name="text">
+    <string>Check for updates and news</string>
+   </property>
+  </action>
+  <action name="actionClose_project">
+   <property name="text">
+    <string>Close project</string>
+   </property>
+  </action>
+  <action name="actionObservationsList">
+   <property name="text">
+    <string>Observations list</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="actionNormalSpeed">
+   <property name="text">
+    <string>Normal speed</string>
+   </property>
+  </action>
+  <action name="actionSnapshot">
+   <property name="text">
+    <string>Snapshot</string>
+   </property>
+  </action>
+  <action name="actionFrame_by_frame">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Frame by frame</string>
+   </property>
+  </action>
+  <action name="actionAggregatedEventsTabularFormat">
+   <property name="text">
+    <string>Tab Separated Values (tsv)</string>
+   </property>
+  </action>
+  <action name="actionOpen_observation">
+   <property name="text">
+    <string>Start observation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionAaaa">
+   <property name="text">
+    <string>aaaa</string>
+   </property>
+  </action>
+  <action name="menuCreate_subtitles_2">
+   <property name="text">
+    <string>Create subtitles</string>
+   </property>
+  </action>
+  <action name="actionUser_guide">
+   <property name="text">
+    <string>User guide</string>
+   </property>
+  </action>
+  <action name="actionEdit_observation_2">
+   <property name="text">
+    <string>Edit observation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionCheckStateEvents">
+   <property name="text">
+    <string>Check state events</string>
+   </property>
+  </action>
+  <action name="actionRunEventOutside">
+   <property name="text">
+    <string>Run external program with selected event(s)</string>
+   </property>
+  </action>
+  <action name="actionEdit_selected_events">
+   <property name="text">
+    <string>Edit selected event(s)</string>
+   </property>
+  </action>
+  <action name="actionShow_spectrogram">
+   <property name="text">
+    <string>Show the sound spectrogram</string>
+   </property>
+  </action>
+  <action name="actionExport_events_as_Praat_TextGrid">
+   <property name="text">
+    <string>as Praat TextGrid</string>
+   </property>
+  </action>
+  <action name="actionExtract_events_from_media_files">
+   <property name="text">
+    <string>Extract sequences from media files</string>
+   </property>
+  </action>
+  <action name="actionDistance">
+   <property name="text">
+    <string>Geometric measurement</string>
+   </property>
+  </action>
+  <action name="actionFrame_forward">
+   <property name="text">
+    <string>Frame forward</string>
+   </property>
+  </action>
+  <action name="actionFrame_backward">
+   <property name="text">
+    <string>frame backward</string>
+   </property>
+  </action>
+  <action name="actionFilterBehaviors">
+   <property name="text">
+    <string>Filter behaviors</string>
+   </property>
+  </action>
+  <action name="actionShowAllBehaviors">
+   <property name="text">
+    <string>Show all behaviors</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all behaviors</string>
+   </property>
+  </action>
+  <action name="actionExport_aggregated_events">
+   <property name="text">
+    <string>Aggregated events</string>
+   </property>
+  </action>
+  <action name="actionCoding_pad">
+   <property name="text">
+    <string>Coding pad</string>
+   </property>
+  </action>
+  <action name="actionTime_budget_by_behaviors_category">
+   <property name="text">
+    <string>Time budget by behavioral category</string>
+   </property>
+  </action>
+  <action name="actionExport_events_as_SDIS_file">
+   <property name="text">
+    <string>Export events as SDIS file</string>
+   </property>
+  </action>
+  <action name="actionRecode_resize_video">
+   <property name="text">
+    <string>Re-encode/resize video</string>
+   </property>
+  </action>
+  <action name="actionMedia_file_information_2">
+   <property name="text">
+    <string>Media file information</string>
+   </property>
+  </action>
+  <action name="actionCreate_transitions_flow_diagram">
+   <property name="text">
+    <string>Create transitions DOT script</string>
+   </property>
+  </action>
+  <action name="actionCreate_transitions_flow_diagram_2">
+   <property name="text">
+    <string>Create transitions flow diagram</string>
+   </property>
+  </action>
+  <action name="actionAll_transitions">
+   <property name="text">
+    <string>Frequencies of transitions</string>
+   </property>
+  </action>
+  <action name="actionNumber_of_transitions">
+   <property name="text">
+    <string>Number of transitions</string>
+   </property>
+  </action>
+  <action name="actionFrequencies_of_transitions_after_behaviors">
+   <property name="text">
+    <string>Frequencies of transitions after behaviors</string>
+   </property>
+  </action>
+  <action name="actionFind_replace_events">
+   <property name="text">
+    <string>Find/replace in events</string>
+   </property>
+  </action>
+  <action name="actionFind_events">
+   <property name="text">
+    <string>Find in events</string>
+   </property>
+   <property name="toolTip">
+    <string>Find</string>
+   </property>
+  </action>
+  <action name="actionHow_to_cite_BORIS">
+   <property name="text">
+    <string>How to cite BORIS</string>
+   </property>
+  </action>
+  <action name="actionZoom1_1_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:1 Original</string>
+   </property>
+  </action>
+  <action name="actionZoom1_2_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>2:1 Double</string>
+   </property>
+  </action>
+  <action name="actionZoom1_1_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:2 Half</string>
+   </property>
+  </action>
+  <action name="actionZoom1_1_4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:4 Quarter</string>
+   </property>
+  </action>
+  <action name="actionZoom1_fitwindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fit to window</string>
+   </property>
+  </action>
+  <action name="actionZoom2_fitwindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fit to window</string>
+   </property>
+  </action>
+  <action name="actionZoom2_1_4">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:4 Quarter</string>
+   </property>
+  </action>
+  <action name="actionZoom2_1_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:2 Half</string>
+   </property>
+  </action>
+  <action name="actionZoom2_1_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1:1 Original</string>
+   </property>
+  </action>
+  <action name="actionZoom2_2_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>2:1 Double</string>
+   </property>
+  </action>
+  <action name="actionFilterSubjects">
+   <property name="text">
+    <string>Filter subjects</string>
+   </property>
+   <property name="toolTip">
+    <string>Filter subjects</string>
+   </property>
+  </action>
+  <action name="actionShowAllSubjects">
+   <property name="text">
+    <string>Show all subjects</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all subjects</string>
+   </property>
+  </action>
+  <action name="actionSend_project">
+   <property name="text">
+    <string>Project server</string>
+   </property>
+  </action>
+  <action name="actionViewBehavior">
+   <property name="text">
+    <string>View behavior</string>
+   </property>
+   <property name="toolTip">
+    <string>View behavior</string>
+   </property>
+  </action>
+  <action name="actionBehaviors_coding_map">
+   <property name="text">
+    <string>Behaviors coding map</string>
+   </property>
+  </action>
+  <action name="action_create_behaviors_coding_map">
+   <property name="text">
+    <string>for behaviors</string>
+   </property>
+  </action>
+  <action name="action_create_modifiers_coding_map">
+   <property name="text">
+    <string>for modifiers</string>
+   </property>
+  </action>
+  <action name="actionPlot_events1">
+   <property name="text">
+    <string>Plot events (back compatibility)</string>
+   </property>
+  </action>
+  <action name="actionPlot_events2">
+   <property name="text">
+    <string>Plot events</string>
+   </property>
+  </action>
+  <action name="actionCohen_s_kappa">
+   <property name="text">
+    <string>Cohen's kappa (time-unit)</string>
+   </property>
+  </action>
+  <action name="actionTime_budget_report">
+   <property name="text">
+    <string>Synthetic time budget</string>
+   </property>
+  </action>
+  <action name="actionCheckStateEventsSingleObs">
+   <property name="text">
+    <string>Check state events</string>
+   </property>
+  </action>
+  <action name="actionSubjects_pad">
+   <property name="text">
+    <string>Subjects pad</string>
+   </property>
+  </action>
+  <action name="actionShow_data_files">
+   <property name="text">
+    <string>Show data files</string>
+   </property>
+  </action>
+  <action name="actionConverters_manager">
+   <property name="text">
+    <string>Time converters manager</string>
+   </property>
+  </action>
+  <action name="actionView_observation">
+   <property name="text">
+    <string>View observation</string>
+   </property>
+  </action>
+  <action name="actionRemove_path_from_media_files">
+   <property name="text">
+    <string>Remove path from media files</string>
+   </property>
+  </action>
+  <action name="actionCheck_project">
+   <property name="text">
+    <string>Check project integrity</string>
+   </property>
+  </action>
+  <action name="actionBehavior_bar_plot">
+   <property name="text">
+    <string>Plot time budget</string>
+   </property>
+  </action>
+  <action name="action_obs_list">
+   <property name="text">
+    <string>Obs list</string>
+   </property>
+   <property name="toolTip">
+    <string>Observations list</string>
+   </property>
+  </action>
+  <action name="actionTest">
+   <property name="text">
+    <string>test</string>
+   </property>
+  </action>
+  <action name="actionTest_stb2">
+   <property name="text">
+    <string>test stb2</string>
+   </property>
+  </action>
+  <action name="actionClose_unpaired_events">
+   <property name="text">
+    <string>Fix unpaired events</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
+   </property>
+  </action>
+  <action name="actionRotate_video">
+   <property name="text">
+    <string>Rotate video</string>
+   </property>
+  </action>
+  <action name="actionExport_observations_list">
+   <property name="text">
+    <string>Export observations list</string>
+   </property>
+  </action>
+  <action name="actionExportEvents_2">
+   <property name="text">
+    <string>Tabular events</string>
+   </property>
+  </action>
+  <action name="actionJWatcher">
+   <property name="text">
+    <string>for analysis with JWatcher</string>
+   </property>
+  </action>
+  <action name="actionCloseObs">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Close observation</string>
+   </property>
+  </action>
+  <action name="actionFilter_events">
+   <property name="text">
+    <string>Filter events</string>
+   </property>
+  </action>
+  <action name="actionShow_all_events">
+   <property name="text">
+    <string>Show all events</string>
+   </property>
+   <property name="toolTip">
+    <string>Show all events</string>
+   </property>
+  </action>
+  <action name="actionEdit_event_time">
+   <property name="text">
+    <string>Shift time of selected event(s)</string>
+   </property>
+  </action>
+  <action name="actionCopy_events">
+   <property name="text">
+    <string>Copy events</string>
+   </property>
+  </action>
+  <action name="actionPaste_events">
+   <property name="text">
+    <string>Paste events</string>
+   </property>
+  </action>
+  <action name="actionNoldus_Observer_template">
+   <property name="text">
+    <string>Noldus Observer XT template</string>
+   </property>
+  </action>
+  <action name="actionExplore_project">
+   <property name="text">
+    <string>Explore project</string>
+   </property>
+  </action>
+  <action name="actionShow_the_sound_waveform">
+   <property name="text">
+    <string>Show the sound waveform</string>
+   </property>
+  </action>
+  <action name="actionNeedleman_Wunsch">
+   <property name="text">
+    <string>Needleman - Wunsch</string>
+   </property>
+  </action>
+  <action name="actionExtract_frames_from_media_files">
+   <property name="text">
+    <string>Extract frames from media files</string>
+   </property>
+  </action>
+  <action name="actionAdd_image_overlay_on_video">
+   <property name="text">
+    <string>Add an image overlay</string>
+   </property>
+  </action>
+  <action name="actionRemove_image_overlay">
+   <property name="text">
+    <string>Remove</string>
+   </property>
+  </action>
+  <action name="action_behavior_binary_table">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>as behaviors binary table</string>
+   </property>
+  </action>
+  <action name="actionPlot_current_observation">
+   <property name="text">
+    <string>Plot current observation</string>
+   </property>
+  </action>
+  <action name="actionFind_in_current_obs">
+   <property name="text">
+    <string>Find in events</string>
+   </property>
+  </action>
+  <action name="action_advanced_event_filtering">
+   <property name="text">
+    <string>Advanced event filtering</string>
+   </property>
+  </action>
+  <action name="action_block_dockwidgets">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Lock dockwidgets</string>
+   </property>
+  </action>
+  <action name="actionseparated_subjects">
+   <property name="text">
+    <string>separated subjects</string>
+   </property>
+  </action>
+  <action name="actiongrouped_subjects">
+   <property name="text">
+    <string>grouped subjects</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

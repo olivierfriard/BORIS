@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleVersion</key>
+	<string>1.23</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.23</string>
+	<key>CFBundleIconFile</key>
+	<string>BORIS-logo.icns</string>
+	<key>CFBundleExecutable</key>
+	<string>MacOS/boris</string>
+	<key>CFBundleName</key>
+	<string>BORIS</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleDisplayName</key>
+	<string>BORIS</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>boris</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>BORIS-logo</string>
+			<key>CFBundleTypeName</key>
+			<string>BORIS Project File</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+		</dict>
+	</array>
+	<key>LSBackgroundOnly</key>
+	<string>YES</string>
+</dict>
+</plist>
