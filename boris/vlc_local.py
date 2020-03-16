@@ -39,8 +39,8 @@ def find_local_libvlc():
     p = pathlib.Path(sys.argv[0])
     parent_dir = p.resolve().parent
 
-    if sys.platform.startswith('win'):
-        libname = 'libvlc.dll'
+    if sys.platform.startswith("win"):
+        libname = "libvlc.dll"
 
         lib_path = parent_dir / libname
         if lib_path.exists():
@@ -67,5 +67,5 @@ def find_local_libvlc():
     return dll, plugin_path
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print(find_local_libvlc())
