@@ -4,3 +4,4 @@ build
 dist
 *.gnbs.conf
 .vscode
+tests/output
