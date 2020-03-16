@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import *
 import json
 import binascii
 import os
-import config
+from boris import config
 
 codeSeparator = ","
 penWidth = 0

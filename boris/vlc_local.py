@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2018 Olivier Friard
+Copyright 2012-2020 Olivier Friard
 
 This file is part of BORIS.
 
@@ -28,10 +28,10 @@ import ctypes
 import os
 
 def find_local_libvlc():
-    
+
     dll = None
     plugin_path = ""
-    
+
     if sys.platform.startswith("linux"):
         # for Linux VLC must be installed
         return dll, plugin_path

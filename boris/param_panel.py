@@ -31,7 +31,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog
 
 from boris import duration_widget
-from config import *
+from boris.config import *
 from boris.param_panel_ui import Ui_Dialog
 
 

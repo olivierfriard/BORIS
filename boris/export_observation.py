@@ -28,7 +28,7 @@ import pathlib
 from boris import dialog
 from decimal import Decimal
 
-from config import *
+from boris.config import *
 from boris import utilities
 from boris import project_functions
 from boris import db_functions

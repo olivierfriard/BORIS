@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-   name='boris-behav-obsr',
+   name='boris-behav-obs',
    version=[x for x in open("boris/version.py","r").read().split("\n") if "__version__" in x][0].split(" = ")[1].replace('"', ''),
    description='BORIS',
    author='Olivier Friard - Marco Gamba',

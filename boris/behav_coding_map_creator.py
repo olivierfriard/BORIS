@@ -32,7 +32,7 @@ import binascii
 import os
 import io
 
-from config import *
+from boris.config import *
 from boris import dialog
 
 designColor = QColor(255, 0, 0, 128)  # red opacity: 50%
