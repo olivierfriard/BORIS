@@ -609,6 +609,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
         self.actionCloseObs.setIcon(QIcon(":/close_observation"))
+        self.actionCurrent_Time_Budget.setIcon(QIcon(":/time_budget"))
         self.actionPlot_current_observation.setIcon(QIcon(":/plot_current"))
         self.actionFind_in_current_obs.setIcon(QIcon(":/find"))
 
