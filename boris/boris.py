@@ -803,9 +803,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_by_frame.setEnabled(self.playerType == VLC)
         self.actionFrame_backward.setEnabled(flagObs and (self.playMode == FFMPEG))
         self.actionFrame_forward.setEnabled(flagObs and (self.playMode == FFMPEG))
-        self.actionCloseObs.setEnabled(flagObs)
-        self.actionPlot_current_observation.setEnabled(flagObs)
-        self.actionFind_in_current_obs.setEnabled(flagObs)
+
+        for w in [self.actionCloseObs, self.actionCurrent_Time_Budget,
+                  self.actionPlot_current_observation, self.actionFind_in_current_obs]:
+            w.setEnabled(flagObs)
 
         # Tools
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
@@ -948,8 +949,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionCreate_transitions_flow_diagram_2.triggered.connect(self.transitions_flow_diagram)
 
         # menu Analysis
-        self.actionTime_budget.triggered.connect(lambda: self.time_budget("by_behavior"))
-        self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget("by_category"))
+        self.actionTime_budget.triggered.connect(lambda: self.time_budget(mode="by_behavior"))
+        self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget(mode="by_category"))
 
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
 
@@ -1001,6 +1002,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFrame_backward.triggered.connect(self.frame_backward)
         self.actionFrame_forward.triggered.connect(self.frame_forward)
         self.actionCloseObs.triggered.connect(self.close_observation)
+        self.actionCurrent_Time_Budget.triggered.connect(lambda: self.time_budget(mode="by_behavior", mode2="current"))
         self.actionPlot_current_observation.triggered.connect(lambda: self.plot_events_triggered(mode="current"))
         self.actionFind_in_current_obs.triggered.connect(self.find_events)
 
@@ -6357,7 +6359,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return max_obs_length, selectedObsTotalMediaLength
 
 
-    def time_budget(self, mode: str):
+    def time_budget(self, mode:str, mode2:str = "list"):
         """
         time budget (by behavior or category)
 
@@ -6365,9 +6367,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mode (str): ["by_behavior", "by_category"]
         """
 
-        result, selectedObservations = self.selectObservations(MULTIPLE)
-        if not selectedObservations:
-            return
+        if mode2 == "current" and self.observationId:
+            selectedObservations = [self.observationId]
+        if mode2 == "list":
+            result, selectedObservations = self.selectObservations(MULTIPLE)
+            if not selectedObservations:
+                return
 
         # check if coded behaviors are defined in ethogram
         ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}

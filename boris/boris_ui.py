@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'boris.ui'
+# Form implementation generated from reading ui file 'boris/boris.ui'
 #
 # Created by: PyQt5 UI code generator 5.13.0
 #
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1381, 604)
+        MainWindow.resize(1441, 604)
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks|QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
         MainWindow.setUnifiedTitleAndToolBarOnMac(False)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -80,7 +80,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.addLayout(self.horizontalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1381, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1441, 22))
         self.menubar.setObjectName("menubar")
         self.menuHelp = QtWidgets.QMenu(self.menubar)
         self.menuHelp.setObjectName("menuHelp")
@@ -519,6 +519,8 @@ class Ui_MainWindow(object):
         self.actionseparated_subjects.setObjectName("actionseparated_subjects")
         self.actiongrouped_subjects = QtWidgets.QAction(MainWindow)
         self.actiongrouped_subjects.setObjectName("actiongrouped_subjects")
+        self.actionCurrent_Time_Budget = QtWidgets.QAction(MainWindow)
+        self.actionCurrent_Time_Budget.setObjectName("actionCurrent_Time_Budget")
         self.menuHelp.addAction(self.actionUser_guide)
         self.menuHelp.addAction(self.actionCheckUpdate)
         self.menuHelp.addSeparator()
@@ -660,6 +662,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.actionFrame_backward)
         self.toolBar.addAction(self.actionFrame_forward)
         self.toolBar.addAction(self.actionCloseObs)
+        self.toolBar.addAction(self.actionCurrent_Time_Budget)
         self.toolBar.addAction(self.actionPlot_current_observation)
         self.toolBar.addAction(self.actionFind_in_current_obs)
 
@@ -875,3 +878,4 @@ class Ui_MainWindow(object):
         self.action_block_dockwidgets.setText(_translate("MainWindow", "Lock dockwidgets"))
         self.actionseparated_subjects.setText(_translate("MainWindow", "separated subjects"))
         self.actiongrouped_subjects.setText(_translate("MainWindow", "grouped subjects"))
+        self.actionCurrent_Time_Budget.setText(_translate("MainWindow", "Current Time Budget"))

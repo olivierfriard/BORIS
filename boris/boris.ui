@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1381</width>
+    <width>1441</width>
     <height>604</height>
    </rect>
   </property>
@@ -144,7 +144,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1381</width>
+     <width>1441</width>
      <height>22</height>
     </rect>
    </property>
@@ -401,6 +401,7 @@
    <addaction name="actionFrame_backward"/>
    <addaction name="actionFrame_forward"/>
    <addaction name="actionCloseObs"/>
+   <addaction name="actionCurrent_Time_Budget"/>
    <addaction name="actionPlot_current_observation"/>
    <addaction name="actionFind_in_current_obs"/>
   </widget>
@@ -1415,6 +1416,11 @@
   <action name="actiongrouped_subjects">
    <property name="text">
     <string>grouped subjects</string>
+   </property>
+  </action>
+  <action name="actionCurrent_Time_Budget">
+   <property name="text">
+    <string>Current Time Budget</string>
    </property>
   </action>
  </widget>
