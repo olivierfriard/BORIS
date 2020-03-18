@@ -1091,21 +1091,23 @@ def check_ffmpeg_path():
 
     if sys.platform.startswith("win"):
 
-        r = False
-        if os.path.exists(os.path.abspath(os.path.join(syspath, os.pardir)) + "\\FFmpeg\\ffmpeg.exe"):
-            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "\\FFmpeg\\ffmpeg.exe"
-            r, msg = test_ffmpeg_path(ffmpeg_bin)
-            if r:
-                return True, ffmpeg_bin
 
-        if os.path.exists(syspath + "\\ffmpeg.exe"):
-            ffmpeg_bin = syspath + "\\ffmpeg.exe"
-            r, msg = test_ffmpeg_path(ffmpeg_bin)
-            if r:
-                return True, ffmpeg_bin
-            else:
-                logging.critical("FFmpeg is not available")
-                return False, "FFmpeg is not available"
+        ffmpeg_path = pathlib.Path("")
+        if sys.argv[0].endswith("start_behatrix.py"):
+            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg.exe"
+
+        if sys.argv[0].endswith("__main__.py"):
+            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg.exe"
+
+        print(f"ffmpeg_path: {ffmpeg_path}")
+        if not ffmpeg_path.is_file():
+            print("The ffmpeg framework was not found!")
+            return True, ""
+
+        ffmpeg_bin = str(ffmpeg_path)
+        r, msg = test_ffmpeg_path(ffmpeg_bin)
+        if r:
+            return True, ffmpeg_bin
 
     return False, "FFmpeg is not available"
 
