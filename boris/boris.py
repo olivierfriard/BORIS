@@ -46,7 +46,7 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
 import tablib
-from boris import vlc
+#from boris import vlc
 from matplotlib import dates
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -147,7 +147,7 @@ logging.debug("")
 logging.debug("========================================================")
 logging.debug("BORIS started")
 logging.debug(f"BORIS version {__version__} release date: {__version_date__}")
-logging.debug(f"VLC version {vlc.libvlc_get_version().decode('utf-8')}")
+#logging.debug(f"VLC version {vlc.libvlc_get_version().decode('utf-8')}")
 
 video, live = 0, 1
 
@@ -419,14 +419,10 @@ class DW(QDockWidget):
         self.stack2 = QWidget()
         self.hlayout2 = QHBoxLayout()
         self.frame_viewer = Click_label(id_)
-        #self.frame_viewer = QLabel("TEST")
-        #self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.frame_viewer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.frame_viewer.setAlignment(Qt.AlignCenter)
-        # self.frame_viewer.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.frame_viewer.setStyleSheet("QLabel {background-color: black;}")
-        #self.frame_viewer.setPixmap(QPixmap(""))
 
         self.hlayout2.addWidget(self.frame_viewer)
         self.stack2.setLayout(self.hlayout2)
@@ -436,14 +432,6 @@ class DW(QDockWidget):
         self.stack.addWidget(self.stack2)
 
         self.setWidget(self.stack)
-        # self.stack.setCurrentIndex(1)
-
-        '''
-        self.hlayout0 = QHBoxLayout()
-        self.hlayout0.addWidget(self.stack)
-        self.setLayout(self.hlayout0)
-        '''
-
 
 
     def volume_slider_moved(self):
@@ -469,8 +457,10 @@ class DW(QDockWidget):
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
+    print("sys.argv (mainwindow)", sys.argv)
 
-    instance = vlc.Instance()   # "--avcodec-hw=none"
+    # 2020-03-18
+    #instance = vlc.Instance()   # "--avcodec-hw=none"
 
     pj = dict(EMPTY_PROJECT)
     project = False
@@ -583,6 +573,30 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self, ffmpeg_bin, parent=None):
 
+        # 2020-03-18
+        print("init")
+        from boris import vlc
+
+        if vlc.dll is None:
+            msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
+            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            logging.critical(msg)
+            sys.exit(1)
+
+        if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
+            msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
+                "Go to http://www.videolan.org/vlc to update it")
+            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            logging.critical(msg)
+            sys.exit(2)
+
+        self.instance = vlc.Instance()   # "--avcodec-hw=none"
+        self.vlc_paused = vlc.State.Paused
+        self.vlc_ended = vlc.State.Ended
+        self.vlc_playing = vlc.State.Playing
+        self.vlc_NothingSpecial = vlc.State.NothingSpecial
+        self.vlc_stopped = vlc.State.Stopped
+
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
@@ -615,20 +629,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.setWindowTitle(f"{programName} ({__version__})")
 
-        if os.path.isfile(sys.path[0]):  # for pyinstaller
-            datadir = os.path.dirname(sys.path[0])
-        else:
-            datadir = sys.path[0]
-
         self.w_obs_info.setVisible(False)
 
-        #self.lbLogoBoris.setPixmap(QPixmap(f"{datadir}/logo_boris_500px.png"))
         self.lbLogoBoris.setPixmap(QPixmap(":/logo"))
 
         self.lbLogoBoris.setScaledContents(False)
         self.lbLogoBoris.setAlignment(Qt.AlignCenter)
 
-        #self.lbLogoUnito.setPixmap(QPixmap(f"{datadir}/dbios_unito.png"))
         self.lbLogoUnito.setPixmap(QPixmap(":/dbios_unito"))
         self.lbLogoUnito.setScaledContents(False)
         self.lbLogoUnito.setAlignment(Qt.AlignCenter)
@@ -639,7 +646,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for w in [self.dwObservations, self.dwEthogram, self.dwSubjects]:
             w.setVisible(False)
             w.keyPressEvent = self.keyPressEvent
-
 
         # if BORIS is running on Mac lock all dockwidget features
         # because Qdockwidgets may have a strange behavior
@@ -690,7 +696,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.menu_options()
         self.connections()
         self.readConfigFile()
-
 
 
     def menu_options(self):
@@ -2598,7 +2603,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # remember if player paused
                 if self.playerType == VLC and self.playMode == VLC:
-                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == self.vlc_paused
 
                 self.pause_video()
 
@@ -2648,7 +2653,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 # remember if player paused
                 if self.playerType == VLC and self.playMode == VLC:
-                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == self.vlc_paused
 
                 self.pause_video()
 
@@ -2713,7 +2718,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # remember if player paused
             if self.playerType == VLC and self.playMode == VLC:
-                flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+                flagPaused = self.dw_player[0].mediaListPlayer.get_state() == self.vlc_paused
 
             self.pause_video()
 
@@ -3178,7 +3183,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
         if sys.platform != "darwin":  # for MacOS
-            if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Ended:
+            if self.dw_player[player].mediaListPlayer.get_state() == self.vlc_ended:
                 # if video is stopped play and pause it
                 self.dw_player[player].mediaListPlayer.play()
                 time.sleep(0.5)
@@ -3186,18 +3191,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug(f"self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
 
                 while True:
-                    if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Playing:
+                    if self.dw_player[player].mediaListPlayer.get_state() == self.vlc_playing:
                         break
 
                 logging.debug(f"after play self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
 
                 self.dw_player[player].mediaListPlayer.pause()
                 while True:
-                    if self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused:
+                    if self.dw_player[player].mediaListPlayer.get_state() == self.vlc_paused:
                         break
                 logging.debug(f"after pause self.dw_player[player].mediaListPlayer.get_state() #{player} {self.dw_player[player].mediaListPlayer.get_state()}")
 
-        flag_paused = (self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
+        flag_paused = (self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended])
 
         logging.debug(f"paused? {flag_paused}")
 
@@ -3211,14 +3216,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if flag_paused:
                         self.dw_player[player].mediaListPlayer.play()
                         while True:
-                            if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            if self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                                 break
                         time.sleep(0.2)
                         self.dw_player[player].mediaplayer.set_time(new_time)
 
                         self.dw_player[player].mediaListPlayer.pause()
                         while True:
-                            if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                            if self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended]:
                                 break
                         self.dw_player[player].mediaplayer.set_time(new_time)
 
@@ -3243,7 +3248,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.dw_player[player].stack.setCurrentIndex(0)
 
                 # remember if player paused (go previous will start playing)
-                flagPaused = self.dw_player[player].mediaListPlayer.get_state() == vlc.State.Paused
+                flagPaused = self.dw_player[player].mediaListPlayer.get_state() == self.vlc_paused
 
                 tot = 0
                 for idx, d in enumerate(self.dw_player[player].media_durations):
@@ -3252,7 +3257,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         time.sleep(0.2)
                         # wait until media is played
                         while True:
-                            if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            if self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                                 break
                         time.sleep(0.2)
                         self.dw_player[player].mediaplayer.set_time(
@@ -3265,7 +3270,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 time.sleep(0.2)
                                 self.dw_player[player].mediaListPlayer.pause()
                                 while True:
-                                    if self.dw_player[player].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                    if self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended]:
                                         break
                                 self.dw_player[player].mediaplayer.set_time(
                                     new_time
@@ -3350,11 +3355,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if self.dw_player[0].media_list.index_of_item(self.dw_player[0].mediaplayer.get_media()) > 0:
 
                     # remember if player paused (go previous will start playing)
-                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == self.vlc_paused
                     self.dw_player[0].mediaListPlayer.previous()
 
                     while True:
-                        if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                        if self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                             break
 
                     if flagPaused:
@@ -3403,13 +3408,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         len(self.pj[OBSERVATIONS][self.observationId][FILE][PLAYER1]) - 1):
 
                     # remember if player paused (go previous will start playing)
-                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Paused
+                    flagPaused = self.dw_player[0].mediaListPlayer.get_state() == self.vlc_paused
 
                     self.dw_player[0].mediaListPlayer.next()
 
                     # wait until media is played
                     while True:
-                        if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                        if self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                             break
 
                     if flagPaused:
@@ -4455,14 +4460,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # play mediaListPlayer for a while to obtain media information
             if sys.platform != "darwin":
                 while True:
-                    if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                    if self.dw_player[i].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                         break
 
             self.dw_player[i].mediaListPlayer.pause()
 
             if sys.platform != "darwin":
                 while True:
-                    if self.dw_player[i].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                    if self.dw_player[i].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended]:
                         break
 
             # position media
@@ -5974,6 +5979,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def choose_obs_subj_behav_category(self,
                                        selected_observations,
+                                       min_time=0,
                                        maxTime=0,
                                        flagShowIncludeModifiers=True,
                                        flagShowExcludeBehaviorsWoEvents=True,
@@ -6021,22 +6027,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.frm_time_interval.setEnabled(False)
         paramPanelWindow.start_time.set_format(self.timeFormat)
         paramPanelWindow.end_time.set_format(self.timeFormat)
-        paramPanelWindow.start_time.set_time(0)
+        paramPanelWindow.start_time.set_time(min_time)
         paramPanelWindow.end_time.set_time(maxTime)
-
-        '''
-        if self.timeFormat == HHMMSS:
-            paramPanelWindow.teStartTime.setTime(QtCore.QTime.fromString("00:00:00.000", "hh:mm:ss.zzz"))
-            paramPanelWindow.teEndTime.setTime(QtCore.QTime.fromString(seconds2time(maxTime), "hh:mm:ss.zzz"))
-            paramPanelWindow.dsbStartTime.setVisible(False)
-            paramPanelWindow.dsbEndTime.setVisible(False)
-
-        if self.timeFormat == S:
-            paramPanelWindow.dsbStartTime.setValue(0.0)
-            paramPanelWindow.dsbEndTime.setValue(maxTime)
-            paramPanelWindow.teStartTime.setVisible(False)
-            paramPanelWindow.teEndTime.setVisible(False)
-            '''
 
         # hide max time
         if not maxTime:
@@ -6365,6 +6357,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         Args:
             mode (str): ["by_behavior", "by_category"]
+            mode2 (str): must be in ["list", "current"]
         """
 
         if mode2 == "current" and self.observationId:
@@ -8508,7 +8501,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if globalCurrentTime < sum(self.dw_player[0].media_durations[0:idx + 1]):
                     self.dw_player[0].mediaListPlayer.play_item_at_index(idx)
                     while True:
-                        if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                        if self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                             break
                     self.dw_player[0].mediaListPlayer.pause()
                     currentMediaTime = int(globalCurrentTime - sum(self.dw_player[0].media_durations[0:idx]))
@@ -8739,7 +8732,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.pause_video()
                     elif self.playMode == VLC:
                         memState = self.dw_player[0].mediaListPlayer.get_state()
-                        if memState == vlc.State.Playing:
+                        if memState == self.vlc_playing:
                             self.pause_video()
 
         laps = self.getLaps()
@@ -8801,7 +8794,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         if memState:
                             self.play_video()
                     else:
-                        if memState == vlc.State.Playing:
+                        if memState == self.vlc_playing:
                             self.play_video()
 
 
@@ -9162,9 +9155,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         programs_versions = ["VLC media player"]
-        programs_versions.append(f"version {bytes_to_str(vlc.libvlc_get_version())}")
-        if vlc.plugin_path:
-            programs_versions.append(f"VLC libraries path: {vlc.plugin_path}")
+        from boris.vlc import libvlc_get_version, plugin_path
+        programs_versions.append(f"version {bytes_to_str(libvlc_get_version())}")
+        
+        if plugin_path:
+            programs_versions.append(f"VLC libraries path: {plugin_path}")
 
         # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
@@ -9449,7 +9444,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     logging.debug(f"{n_player + 1} not correct media")
 
-                    flagPaused = self.dw_player[n_player].mediaListPlayer.get_state() == vlc.State.Paused
+                    flagPaused = self.dw_player[n_player].mediaListPlayer.get_state() == self.vlc_paused
                     tot = 0
                     for idx, d in enumerate(self.dw_player[n_player].media_durations):
                         if tot <= new_time < tot + d:
@@ -9457,7 +9452,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             app.processEvents()
                             # wait until media is played
                             while True:
-                                if self.dw_player[n_player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                if self.dw_player[n_player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                                     break
 
                             if flagPaused:
@@ -9478,7 +9473,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 app.processEvents()
                 # wait until media is played
                 while True:
-                    if self.dw_player[n_player].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                    if self.dw_player[n_player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                         break
                 self.dw_player[n_player].mediaplayer.set_time(self.dw_player[n_player].media_durations[-1])
 
@@ -9539,7 +9534,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             '''
             FIXME 2019-11-25
-            if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
+            if self.dw_player[0].mediaplayer.get_state() == self.vlc_ended:
                 self.dw_player[0].frame_viewer.setVisible(True)
                 self.dw_player[0].videoframe.setVisible(False)
                 self.dw_player[0].volume_slider.setVisible(False)
@@ -9552,7 +9547,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             t0 = mediaTime
             ct0 = self.getLaps() * 1000
 
-            if self.dw_player[0].mediaplayer.get_state() != vlc.State.Ended:
+            if self.dw_player[0].mediaplayer.get_state() != self.vlc_ended:
                 # FIXME enumerate(self.dw_player)
                 for i in range(1, N_PLAYER):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
@@ -9603,7 +9598,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # update media info
                 msg = ""
                 media_list_player_state = self.dw_player[0].mediaListPlayer.get_state()
-                if media_list_player_state in [vlc.State.Playing, vlc.State.Paused]:
+                if media_list_player_state in [self.vlc_playing, self.vlc_paused]:
 
                     msg = (f"{mediaName}: <b>{self.convertTime(mediaTime / 1000)} / "
                            f"{self.convertTime(self.mediaTotalLength)}</b>")
@@ -9622,7 +9617,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         msg += (f" | total: <b>{self.convertTime(currentTime / 1000)} / "
                                 f"{self.convertTime(totalGlobalTime / 1000)}</b>")
 
-                    if media_list_player_state == vlc.State.Paused:
+                    if media_list_player_state == self.vlc_paused:
                         msg += " (paused)"
 
                 else:  # player ended
@@ -9651,7 +9646,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             ''' # stop behaviors between media files
             # DISABLED because it is not working well
             if ((self.memMedia and mediaName != self.memMedia)
-                    or (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and self.timer.isActive())):
+                    or (self.dw_player[0].mediaListPlayer.get_state() == self.vlc_ended and self.timer.isActive())):
 
                 if (CLOSE_BEHAVIORS_BETWEEN_VIDEOS in self.pj[OBSERVATIONS][self.observationId]
                         and self.pj[OBSERVATIONS][self.observationId][CLOSE_BEHAVIORS_BETWEEN_VIDEOS]):
@@ -9855,7 +9850,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         self.pause_video()
                                 elif self.playMode == VLC:
                                     memState = self.dw_player[0].mediaListPlayer.get_state()
-                                    if memState == vlc.State.Playing:
+                                    if memState == self.vlc_playing:
                                         self.pause_video()
 
                         # check if editing (original_modifiers key)
@@ -9874,7 +9869,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                     if memState:
                                         self.play_video()
                                 else:
-                                    if memState == vlc.State.Playing:
+                                    if memState == self.vlc_playing:
                                         self.play_video()
                         if not r:  # cancel button pressed
                             return
@@ -10077,7 +10072,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                 if self.playerType == VLC:
                     memState = self.dw_player[0].mediaListPlayer.get_state()
-                    if memState == vlc.State.Playing:
+                    if memState == self.vlc_playing:
                         self.pause_video()
 
             self.codingMapWindow = modifiers_coding_map.ModifiersCodingMapWindowClass(
@@ -10097,7 +10092,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # restart media
             if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                 if self.playerType == VLC:
-                    if memState == vlc.State.Playing:
+                    if memState == self.vlc_playing:
                         self.play_video()
 
         return event
@@ -10147,7 +10142,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC:
             if self.playMode == VLC:
-                return self.dw_player[0].mediaplayer.get_state() == vlc.State.Playing
+                return self.dw_player[0].mediaplayer.get_state() == self.vlc_playing
             if self.playMode == FFMPEG:
                 return self.FFmpegTimer.isActive()
             # FIXME exit without return value
@@ -10192,7 +10187,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if media ever played
 
         if self.playerType == VLC:
-            if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.NothingSpecial:
+            if self.dw_player[0].mediaListPlayer.get_state() == self.vlc_NothingSpecial:
                 return
 
         ek, ek_text = event.key(), event.text()
@@ -10401,7 +10396,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if not self.currentSubject and self.alertNoFocalSubject:
                     if self.pj[OBSERVATIONS][self.observationId][TYPE] in [MEDIA]:
                         if self.playerType == VLC:
-                            if self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Playing:
+                            if self.dw_player[0].mediaListPlayer.get_state() == self.vlc_playing:
                                 flagPlayerPlaying = True
                                 self.pause_video()
 
@@ -10468,21 +10463,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.seek_mediaplayer(newTime)
 
                 '''
-                flag_paused = (self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended])
+                flag_paused = (self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended])
                 if len(self.dw_player[0].media_durations) == 1:
 
-                    if (self.dw_player[0].mediaListPlayer.get_state() == vlc.State.Ended and
+                    if (self.dw_player[0].mediaListPlayer.get_state() == self.vlc_ended and
                        time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000):
 
                         self.dw_player[0].mediaListPlayer.play()
                         while True:
-                            if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                            if self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                                 break
 
                         if flag_paused:
                             self.dw_player[0].mediaListPlayer.pause()
                             while True:
-                                if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended]:
+                                if self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended]:
                                     break
 
                     if time_ < self.dw_player[0].mediaplayer.get_media().get_duration() / 1000:
@@ -10499,7 +10494,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                             # wait until media is played
                             while True:
-                                if self.dw_player[0].mediaListPlayer.get_state() in [vlc.State.Playing, vlc.State.Ended]:
+                                if self.dw_player[0].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                                     break
 
                             if flag_paused:
@@ -11550,7 +11545,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             elif self.playMode == VLC:
                 # check if player 1 is ended
                 '''  disabled 2019-12-11
-                if self.dw_player[0].mediaplayer.get_state() == vlc.State.Ended:
+                if self.dw_player[0].mediaplayer.get_state() == self.vlc_ended:
                     QMessageBox.information(self, programName, "The media file is ended, Use reset to play it again")
                     return False
                 '''
@@ -11584,7 +11579,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
                             and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                        if player.mediaListPlayer.get_state() != vlc.State.Paused:
+                        if player.mediaListPlayer.get_state() != self.vlc_paused:
 
                             self.timer.stop()
                             self.timer_sound_signal.stop()
@@ -11596,7 +11591,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             player.mediaListPlayer.pause()
                             # wait until video is paused or ended
                             while True:
-                                if player.mediaListPlayer.get_state() in [vlc.State.Paused, vlc.State.Ended, vlc.State.Stopped]:
+                                if player.mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended, self.vlc_stopped]:
                                     break
 
                 time.sleep(1)
@@ -11757,7 +11752,11 @@ def main():
             #app.processEvents()
         #app.processEvents()
 
+    print("sys.argv (main)", sys.argv)
+
+    #from boris import vlc
     # check VLC
+    '''
     if vlc.dll is None:
         msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
@@ -11770,7 +11769,7 @@ def main():
         QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         logging.critical(msg)
         sys.exit(2)
-
+    '''
     # check FFmpeg
     ret, msg = check_ffmpeg_path()
     if not ret:

@@ -29,6 +29,8 @@ import os
 
 def find_local_libvlc():
 
+    print("sys.argv (vlc local)", sys.argv)
+
     dll = None
     plugin_path = ""
 

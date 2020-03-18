@@ -199,6 +199,7 @@ def find_lib():
 
     return (dll, plugin_path)
 
+
 # MODIFIED BY OF #
 from boris import vlc_local
 dll, plugin_path = vlc_local.find_local_libvlc()
@@ -206,6 +207,10 @@ if dll is None:
     # plugin_path used on win32 and MacOS in override.py
     dll, plugin_path  = find_lib()
 # END OF MODIF #
+
+
+
+
 
 class VLCException(Exception):
     """Exception raised by libvlc methods.
@@ -8227,6 +8232,7 @@ def libvlc_media_list_player_set_playback_mode(p_mlp, e_mode):
 def callbackmethod(callback):
     """Now obsolete @callbackmethod decorator."""
     return callback
+
 
 # libvlc_free is not present in some versions of libvlc. If it is not
 # in the library, then emulate it by calling libc.free
