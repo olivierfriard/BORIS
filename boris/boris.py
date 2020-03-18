@@ -9158,8 +9158,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         from boris.vlc import libvlc_get_version, plugin_path
         programs_versions.append(f"version {bytes_to_str(libvlc_get_version())}")
         
-        if plugin_path:
-            programs_versions.append(f"VLC libraries path: {plugin_path}")
+        #if plugin_path:
+        programs_versions.append(f"VLC plugin path: {plugin_path}")
 
         # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):

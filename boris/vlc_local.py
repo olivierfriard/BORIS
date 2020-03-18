@@ -41,16 +41,21 @@ def find_local_libvlc():
     p = pathlib.Path(sys.argv[0])
     parent_dir = p.resolve().parent
 
-    if sys.platform.startswith("win"):
-        libname = "libvlc.dll"
+    vlc_dll_path = pathlib.Path("")
+    if sys.argv[0].endswith("start_behatrix.py"):
+        vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "libvlc.dll"
 
-        lib_path = parent_dir / libname
-        if lib_path.exists():
-            mem_dir = os.getcwd()
-            os.chdir(str(parent_dir))
-            dll = ctypes.CDLL(libname)
-            os.chdir(mem_dir)
-            plugin_path = str(parent_dir)
+    if sys.argv[0].endswith("__main__.py"):
+        vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "libvlc.dll"
+
+    print(f"vlc_dll_path: {vlc_dll_path}")
+    if not vlc_dll_path.is_file():
+        print("The vlc dll was not found!")
+        return dll, plugin_path
+
+    if sys.platform.startswith("win"):
+        dll = ctypes.CDLL(libname)
+        plugin_path = str(pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "plugins")
 
     if sys.platform.startswith("darwin"):
 
