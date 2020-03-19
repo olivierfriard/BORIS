@@ -65,11 +65,11 @@ def find_local_libvlc():
     if sys.platform.startswith("darwin"):
 
         if sys.argv[0].endswith("start_boris.py"):
-            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
+            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlc.dylib"
             plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "plugins"
 
         if sys.argv[0].endswith("__main__.py"):
-            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "lib" / "libvlccore.dylib"
+            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "lib" / "libvlc.dylib"
             plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "plugins"
 
         if vlc_dll_path.is_file():
