@@ -38,38 +38,44 @@ def find_local_libvlc():
         # for Linux VLC must be installed
         return dll, plugin_path
 
+    '''
     p = pathlib.Path(sys.argv[0])
     parent_dir = p.resolve().parent
+    '''
 
     vlc_dll_path = pathlib.Path("")
-    if sys.argv[0].endswith("start_behatrix.py"):
-        vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "libvlc.dll"
-
-    if sys.argv[0].endswith("__main__.py"):
-        vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "libvlc.dll"
-
-    print(f"vlc_dll_path: {vlc_dll_path}")
-    if not vlc_dll_path.is_file():
-        print("The vlc dll was not found!")
-        return dll, plugin_path
 
     if sys.platform.startswith("win"):
+        
+        if sys.argv[0].endswith("start_boris.py"):
+            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "libvlc.dll"
+
+        if sys.argv[0].endswith("__main__.py"):
+            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "libvlc.dll"
+
+        print(f"vlc_dll_path: {vlc_dll_path}")
+        if not vlc_dll_path.is_file():
+            print("The vlc dll was not found!")
+            return dll, plugin_path
+
         dll = ctypes.CDLL(str(vlc_dll_path))
         plugin_path = str(pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "plugins")
 
+
     if sys.platform.startswith("darwin"):
 
-        libvlccore_path = parent_dir / "VLC" / "lib" / "libvlccore.dylib"
-        libvlc_path = parent_dir / "VLC" / "lib" / "libvlc.dylib"
+        if sys.argv[0].endswith("start_boris.py"):
+            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
+            plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "plugins"
 
-        if libvlccore_path.exists():
-            ctypes.CDLL(str(libvlccore_path))
-        if libvlc_path.exists():
-            dll = ctypes.CDLL(str(libvlc_path))
+        if sys.argv[0].endswith("__main__.py"):
+            vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "lib" / "libvlccore.dylib"
+            plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "plugins"
 
-        plugin_path = parent_dir / "VLC" / "plugins"
-        if plugin_path.exists():
-            plugin_path = str(plugin_path)
+        if vlc_dll_path.is_file():
+            dll = ctypes.CDLL(str(vlc_dll_path))
+
+        return dll, str(plugin_path)
 
     return dll, plugin_path
 

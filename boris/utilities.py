@@ -1053,19 +1053,35 @@ def test_ffmpeg_path(FFmpegPath):
 def check_ffmpeg_path():
     """
     check for ffmpeg path
+    firstly search for embedded version
+    if not found search for system wide version (must be in the path)
 
     Returns:
         bool: True if ffmpeg path found else False
         str: if bool True returns ffmpegpath else returns error message
     """
 
-    if os.path.isfile(sys.path[0]):  # pyinstaller
-        syspath = os.path.dirname(sys.path[0])
-    else:
-        syspath = sys.path[0]
-
     if sys.platform.startswith("linux") or sys.platform.startswith("darwin"):
 
+        ffmpeg_path = pathlib.Path("")
+        # search embedded ffmpeg
+        if sys.argv[0].endswith("start_boris.py"):
+            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg"
+        if sys.argv[0].endswith("__main__.py"):
+            ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg"
+
+        if not ffmpeg_path.is_file():
+            # search global ffmpeg
+            ffmpeg_path = "ffmpeg"
+
+        # test ffmpeg
+        r, msg = test_ffmpeg_path(str(ffmpeg_path))
+        if r:
+            return True, str(ffmpeg_path)
+        else:
+            return False, "FFmpeg is not available"
+
+        '''
         r = False
         if os.path.exists(os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"):
             ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"
@@ -1088,18 +1104,19 @@ def check_ffmpeg_path():
         else:
             logging.critical("FFmpeg is not available")
             return False, "FFmpeg is not available"
+        '''
 
     if sys.platform.startswith("win"):
 
         ffmpeg_path = pathlib.Path("")
         # search embedded ffmpeg
-        if sys.argv[0].endswith("start_behatrix.py"):
+        if sys.argv[0].endswith("start_boris.py"):
             ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg.exe"
         if sys.argv[0].endswith("__main__.py"):
             ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg.exe"
 
         if not ffmpeg_path.is_file():
-            # search gloabl ffmpeg
+            # search global ffmpeg
             ffmpeg_path = "ffmpeg"
 
         # test ffmpeg
