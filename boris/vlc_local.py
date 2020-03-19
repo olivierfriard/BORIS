@@ -64,15 +64,22 @@ def find_local_libvlc():
 
     if sys.platform.startswith("darwin"):
 
+        libvlccore_path = pathlib.Path("")
         if sys.argv[0].endswith("start_boris.py"):
+            libvlccore_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlccore.dylib"
             vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "lib" / "libvlc.dylib"
             plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "VLC" / "plugins"
 
         if sys.argv[0].endswith("__main__.py"):
+            libvlccore_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "lib" / "libvlccore.dylib"
             vlc_dll_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "lib" / "libvlc.dylib"
             plugin_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "VLC" / "plugins"
 
         if vlc_dll_path.is_file():
+            if libvlccore_path.is_file():
+                ctypes.CDLL(str(libvlccore_path))
+            else:
+                print(f"libvlc core not found: {vlc_dll_path}")
             dll = ctypes.CDLL(str(vlc_dll_path))
 
         return dll, str(plugin_path)
