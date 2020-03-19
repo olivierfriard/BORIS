@@ -1091,25 +1091,23 @@ def check_ffmpeg_path():
 
     if sys.platform.startswith("win"):
 
-
         ffmpeg_path = pathlib.Path("")
+        # search embedded ffmpeg
         if sys.argv[0].endswith("start_behatrix.py"):
             ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "boris" / "misc" / "ffmpeg.exe"
-
         if sys.argv[0].endswith("__main__.py"):
             ffmpeg_path = pathlib.Path(sys.argv[0]).resolve().parent / "misc" / "ffmpeg.exe"
 
-        print(f"ffmpeg_path: {ffmpeg_path}")
         if not ffmpeg_path.is_file():
-            print("The ffmpeg framework was not found!")
-            return True, ""
+            # search gloabl ffmpeg
+            ffmpeg_path = "ffmpeg"
 
-        ffmpeg_bin = str(ffmpeg_path)
-        r, msg = test_ffmpeg_path(ffmpeg_bin)
+        # test ffmpeg
+        r, msg = test_ffmpeg_path(str(ffmpeg_path))
         if r:
-            return True, ffmpeg_bin
-
-    return False, "FFmpeg is not available"
+            return True, str(ffmpeg_path)
+        else:
+            return False, "FFmpeg is not available"
 
 
 def accurate_media_analysis(ffmpeg_bin, file_name):
