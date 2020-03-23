@@ -1,9 +1,14 @@
+#!python3
+
 """
 BORIS
-Behavioral Observation Research Interactive Software
-Copyright 2012-2020 Olivier Friard
+Behavioral Sequences Analysis (BSA).
 
-This file is part of BORIS.
+Behavioral sequences analysis with permutations test
+
+Copyright 2017-2020 Olivier Friard
+
+This file is part of Behatrix.
 
   BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,5 +25,4 @@ This file is part of BORIS.
 
 """
 
-__version__ = "7.9.9"
-__version_date__ = "2020-03-19"
+import boris.__main__

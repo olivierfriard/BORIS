@@ -38,11 +38,6 @@ def find_local_libvlc():
         # for Linux VLC must be installed
         return dll, plugin_path
 
-    '''
-    p = pathlib.Path(sys.argv[0])
-    parent_dir = p.resolve().parent
-    '''
-
     vlc_dll_path = pathlib.Path("")
 
     if sys.platform.startswith("win"):
