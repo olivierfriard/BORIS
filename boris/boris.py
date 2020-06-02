@@ -39,6 +39,7 @@ import urllib.parse
 import urllib.request
 from decimal import *
 from optparse import OptionParser
+import gzip
 
 import matplotlib
 matplotlib.use("Qt5Agg")
@@ -46,7 +47,6 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
 import tablib
-#from boris import vlc
 from matplotlib import dates
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -1572,7 +1572,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.w.setWindowTitle("Project server")
             self.w.label.setText("")
             self.w.show()
-            app.processEvents()
+            QApplication.processEvents()
 
             cp_project = dict(self.pj)
             if include_obs == NO:
@@ -3896,7 +3896,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     app.processEvents()
                     '''
                     self.statusbar.showMessage("Extracting frames to disk", 0)
-                    app.processEvents()
+                    QApplication.processEvents()
 
                     utilities.extract_frames(self.ffmpeg_bin,
                                              frameCurrentMedia,
@@ -3968,7 +3968,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.statusbar.showMessage(f"Free memory not available ({mem.get('msg', '')})", 0)
 
                     self.statusbar.showMessage(f"Extracting frames in memory {int(self.frames_buffer.size()/1024/1024)}", 0)
-                    app.processEvents()
+                    QApplication.processEvents()
 
                     '''
                     logging.debug(f"frame_viewer size: {player.frame_viewer.size().width()}x{player.frame_viewer.size().height()}")
@@ -7277,7 +7277,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 return
 
         if action.text() == "Open project":
-            fn = QFileDialog().getOpenFileName(self, "Open project", "", "Project files (*.boris);;All files (*)")
+            fn = QFileDialog().getOpenFileName(self, "Open project", "",
+                                               ("Project files (*.boris *.boris.gz);;"
+                                                "All files (*)")
+                                              )
             file_name = fn[0] if type(fn) is tuple else fn
 
         else:  # recent project
@@ -7680,6 +7683,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.debug(f"init save_project_json function {projectFileName}")
+
         if self.save_project_json_started:
             logging.warning(f"Function save_project_json already launched")
             return
@@ -7689,9 +7693,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.pj["project_format_version"] = project_format_version
 
         try:
-            f = open(projectFileName, "w")
-            f.write(json.dumps(self.pj, indent=1, separators=(",", ":"), default=decimal_default))
-            f.close()
+            if projectFileName.endswith(".boris.gz"):
+                with gzip.open(projectFileName, mode="wt", encoding="utf-8") as f_out:
+                    f_out.write(json.dumps(self.pj, default=decimal_default))
+            else:  # .boris and other extensions
+                with open(projectFileName, "w") as f_out:
+                    # f_out.write(json.dumps(self.pj, indent=1, separators=(",", ":"), default=decimal_default))
+                    f_out.write(json.dumps(self.pj, default=decimal_default))
 
             self.projectChanged = False
             self.save_project_json_started = False
@@ -7715,16 +7723,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         logging.debug("function: save_project_as_activated")
 
-        project_new_file_name, filtr = QFileDialog().getSaveFileName(self, "Save project as", os.path.dirname(self.projectFileName),
-                                                                     "Projects file (*.boris);;All files (*)")
+        project_new_file_name, filtr = QFileDialog().getSaveFileName(self,
+                                                                     "Save project as",
+                                                                     os.path.dirname(self.projectFileName),
+                                                                     ("Project files (*.boris);;"
+                                                                     "Compressed project files (*.boris.gz);;"
+                                                                     "All files (*)")
+                                                                    )
 
         if not project_new_file_name:
             return "Not saved"
         else:
 
-            # add .boris if filter = 'Projects file (*.boris)'
-            if filtr == "Projects file (*.boris)" and os.path.splitext(project_new_file_name)[1] != ".boris":
+            # add .boris if filter is .boris
+            if filtr == "Project files (*.boris)" and os.path.splitext(project_new_file_name)[1] != ".boris":
+                if project_new_file_name.endswith(".boris.gz"):
+                    project_new_file_name = os.path.splitext(os.path.splitext(project_new_file_name)[0])[0]
                 project_new_file_name += ".boris"
+                # check if file name with extension already exists
+                if pathlib.Path(project_new_file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            f"The file {project_new_file_name} already exists.",
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return "Not saved"
+            # add .boris.gz if filter is .boris.gz
+            if filtr == "Compressed project files (*.boris.gz)" and os.path.splitext(project_new_file_name)[1] != ".boris.gz":
+                if project_new_file_name.endswith(".boris"):
+                    project_new_file_name = os.path.splitext(project_new_file_name)[0]
+                project_new_file_name += ".boris.gz"
                 # check if file name with extension already exists
                 if pathlib.Path(project_new_file_name).is_file():
                     if dialog.MessageDialog(programName,
@@ -7751,14 +7777,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             os.chdir(os.path.expanduser("~"))
 
             self.projectFileName, filtr = QFileDialog().getSaveFileName(self, "Save project", txt,
-                                                                        "Projects file (*.boris);;All files (*)")
+                                                                        ("Project files (*.boris);;"
+                                                                         "Compressed project files (*.boris.gz);;"
+                                                                         "All files (*)")
+                                                                        )
 
             if not self.projectFileName:
                 return "not saved"
 
             # add .boris if filter = 'Projects file (*.boris)'
-            if filtr == "Projects file (*.boris)" and os.path.splitext(self.projectFileName)[1] != ".boris":
+            if filtr == "Project files (*.boris)" and os.path.splitext(self.projectFileName)[1] != ".boris":
+                if self.projectFileName.endswith(".boris.gz"):
+                    self.projectFileName = os.path.splitext(os.path.splitext(self.projectFileName)[0])[0]
                 self.projectFileName += ".boris"
+                # check if file name with extension already exists
+                if pathlib.Path(self.projectFileName).is_file():
+                    if dialog.MessageDialog(programName,
+                                            f"The file {self.projectFileName} already exists.",
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        self.projectFileName = ""
+                        return ""
+
+            # add .boris.gz if filter is .boris.gz
+            if filtr == "Compressed project files (*.boris.gz)" and os.path.splitext(self.projectFileName)[1] != ".boris.gz":
+                if self.projectFileName.endswith(".boris"):
+                    self.projectFileName = os.path.splitext(self.projectFileName)[0]
+
+                self.projectFileName += ".boris.gz"
                 # check if file name with extension already exists
                 if pathlib.Path(self.projectFileName).is_file():
                     if dialog.MessageDialog(programName,
@@ -8025,10 +8070,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 QMessageBox.critical(None, programName, str(errorMsg), QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
-        header = ["Observation id", "Observation date", "Media file", "Total length", "FPS"]
+        header = ["Observation id", "Observation date", "Description", "Media file", "Total length", "FPS"]
         if INDEPENDENT_VARIABLES in self.pj:
             for idx in sorted_keys(self.pj[INDEPENDENT_VARIABLES]):
                 header.append(self.pj[INDEPENDENT_VARIABLES][idx]["label"])
+
         header.extend(["Subject", "Behavior", "Behavioral category"])
         header.extend(["Modifiers"])
         header.extend(["Behavior type", "Start (s)", "Stop (s)", "Duration (s)", "Comment start", "Comment stop"])
@@ -9449,7 +9495,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     for idx, d in enumerate(self.dw_player[n_player].media_durations):
                         if tot <= new_time < tot + d:
                             self.dw_player[n_player].mediaListPlayer.play_item_at_index(idx)
-                            app.processEvents()
+                            QApplication.processEvents()
                             # wait until media is played
                             while True:
                                 if self.dw_player[n_player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
@@ -9470,7 +9516,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.debug(f"{n_player + 1} end of media")
 
                 self.dw_player[n_player].mediaListPlayer.play_item_at_index(len(self.dw_player[n_player].media_durations) - 1)
-                app.processEvents()
+                QApplication.processEvents()
                 # wait until media is played
                 while True:
                     if self.dw_player[n_player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
@@ -11749,10 +11795,7 @@ def main():
         app.processEvents()
         while time.time() - start < 1:
             time.sleep(0.001)
-            #app.processEvents()
-        #app.processEvents()
 
-    print("sys.argv (main)", sys.argv)
 
     #from boris import vlc
     # check VLC

@@ -543,6 +543,9 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
     data = tablib.Dataset()
     observation = pj[OBSERVATIONS][obsId]
 
+    # obs description
+    obs_description = observation["description"]
+
     duration1 = []   # in seconds
     if observation[TYPE] in [MEDIA]:
         try:
@@ -647,6 +650,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                         row_data = []
                         row_data.extend([obsId,
                                          observation["date"].replace("T", " "),
+                                         obs_description,
                                          mediaFileString,
                                          f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA",
                                          fpsString])
@@ -677,6 +681,7 @@ def export_aggregated_events(pj: dict, parameters: dict, obsId: str):
                             row_data = []
                             row_data.extend([obsId,
                                              observation["date"].replace("T", " "),
+                                             obs_description,
                                              mediaFileString,
                                              f"{obs_length:.3f}" if obs_length != Decimal("-1") else "NA",
                                              fpsString])

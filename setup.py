@@ -13,6 +13,9 @@ setup(
    url="http://www.boris.unito.it",
    python_requires=">=3.6",
    classifiers=[
+        "Topic :: Scientific/Engineering",
+        "Intended Audience :: Science/Research",
+        "Intended Audience :: Education",
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -29,11 +32,11 @@ setup(
           "pyqt5"
       ],
 
-    include_package_data=True,
 
-    # package_data={
-    # 'behatrix': ['behatrix.qrc', 'behatrix.ui', 'LICENSE.TXT', 'README.TXT'],
-    # },
+    package_data={
+    'boris': ['boris.qrc', 'boris.ui'],
+     "": ["README.TXT", "LICENSE.TXT"],
+    },
 
     entry_points={
         'console_scripts': [

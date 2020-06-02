@@ -27,6 +27,7 @@ import pathlib
 import sys
 from decimal import *
 from shutil import copyfile
+import gzip
 
 from boris import db_functions
 from boris import dialog
@@ -741,7 +742,7 @@ def extract_observed_subjects(pj: dict,
 
 def open_project_json(projectFileName: str) -> tuple:
     """
-    open project json
+    open BORIS project file in json format or GZ compressed json format
 
     Args:
         projectFileName (str): path of project
@@ -762,14 +763,18 @@ def open_project_json(projectFileName: str) -> tuple:
         return projectFileName, projectChanged, {"error": f"File {projectFileName} not found"}, msg
 
     try:
-        s = open(projectFileName, "r").read()
+        if projectFileName.endswith(".boris.gz"):
+            file_in = gzip.open(projectFileName, mode="rt", encoding="utf-8")
+        else:
+            file_in = open(projectFileName, "r")
+        file_content = file_in.read()
     except PermissionError:
         return projectFileName, projectChanged, {f"error": f"File {projectFileName}: Permission denied"}, msg
     except Exception:
         return projectFileName, projectChanged, {f"error": f"Error on file {projectFileName}: {sys.exc_info()[1]}"}, msg
 
     try:
-        pj = json.loads(s)
+        pj = json.loads(file_content)
     except json.decoder.JSONDecodeError:
         return projectFileName, projectChanged, {"error": "This project file seems corrupted"}, msg
     except Exception:
