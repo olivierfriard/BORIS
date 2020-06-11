@@ -5416,28 +5416,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         logging.info(f"Close observation {self.playerType}")
 
-        self.saved_state = self.saveState()
-
-        if self.playerType == VLC:
-            self.timer.stop()
-            self.FFmpegTimer.stop()
-            self.timer_sound_signal.stop()
-
-            for i, player in enumerate(self.dw_player):
-                if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
-                        and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                    player.mediaplayer.stop()
-
-            self.verticalLayout_3.removeWidget(self.video_slider)
-            self.video_slider.deleteLater()
-            self.video_slider = None
-
-        if self.playerType == LIVE:
-            self.liveTimer.stop()
-            self.w_live.setVisible(False)
-            self.liveObservationStarted = False
-            self.liveStartTime = None
-
         # check observation events
         flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
                                                                 self.pj[ETHOGRAM],
@@ -5481,6 +5459,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         return
                 else:
                     return
+
+        self.saved_state = self.saveState()
+
+        if self.playerType == VLC:
+            self.timer.stop()
+            self.FFmpegTimer.stop()
+            self.timer_sound_signal.stop()
+
+            for i, player in enumerate(self.dw_player):
+                if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
+                        and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
+                    player.mediaplayer.stop()
+
+            self.verticalLayout_3.removeWidget(self.video_slider)
+
+            self.video_slider.deleteLater()
+            self.video_slider = None
+
+        if self.playerType == LIVE:
+            self.liveTimer.stop()
+            self.w_live.setVisible(False)
+            self.liveObservationStarted = False
+            self.liveStartTime = None
 
         if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
             for x in self.ext_data_timer_list:
