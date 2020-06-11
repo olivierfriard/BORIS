@@ -1126,20 +1126,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         QMessageBox.warning(self, programName,
-                            ("This function is experimental.<br>Please test it and report bugs on<br>"
-                             "https://github.com/olivierfriard/BORIS/issues"))
+                            ("Depending of the length of your observations "
+                            "the execution of this function may be very long.<br>"
+                            "The program interface may freeze, be patient. <br>"
+                             ))
 
         behavior_binary_table.behavior_binary_table(self.pj)
 
 
     def advanced_event_filtering(self):
         """
-
+        advanced filter for coded event
         """
-
-        QMessageBox.warning(self, programName,
-                            ("This function is experimental.<br>Please test it and report bugs on<br>"
-                             "https://github.com/olivierfriard/BORIS/issues"))
 
         advanced_event_filtering.event_filtering(self.pj)
 
@@ -1731,7 +1729,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 if action == "rotate":
 
                     # check bitrate
-                    r = accurate_media_analysis(ffmpeg_bin, file_name)
+                    r = accurate_media_analysis(self.ffmpeg_bin, file_name)
                     if "error" not in r and r["bitrate"] != -1:
                         video_quality = r["bitrate"]
                     else:
@@ -1755,7 +1753,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 f"{file_name}.rotated180.avi"
                                 ]
 
-                self.processes.append([QProcess(self), [ffmpeg_bin, args, file_name]])
+                self.processes.append([QProcess(self), [self.ffmpeg_bin, args, file_name]])
                 self.processes[-1][0].setProcessChannelMode(QProcess.MergedChannels)
                 self.processes[-1][0].readyReadStandardOutput.connect(lambda: readStdOutput(len(self.processes)))
                 self.processes[-1][0].readyReadStandardError.connect(lambda: readStdOutput(len(self.processes)))
@@ -2202,7 +2200,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                                    self.projectFileName)
 
                                     vframes = 1 if not time_interval else int(mediafile_fps * time_interval * 2)
-                                    ffmpeg_command = (f'"{ffmpeg_bin}" '
+                                    ffmpeg_command = (f'"{self.ffmpeg_bin}" '
                                                       f'-ss {start:.3f} '
                                                       f'-i "{media_path}" '
                                                       f'-vframes {vframes} '
@@ -2261,7 +2259,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                                         extension = "png"
                                         vframes = int((stop - start) * mediafile_fps + time_interval * mediafile_fps * 2)
-                                        ffmpeg_command = (f'"{ffmpeg_bin}" -ss {start:.3f} '
+                                        ffmpeg_command = (f'"{self.ffmpeg_bin}" -ss {start:.3f} '
                                                           f'-i "{media_path}" '
                                                           f'-vframes {vframes} '
                                                           # f'-vf scale=1024{frame_resize}:-1 '
@@ -2273,6 +2271,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                           f'_{start:.3f}_%08d.{self.frame_bitmap_format.lower()}"')
 
                                         logging.debug(f"ffmpeg command: {ffmpeg_command}")
+
                                         p = subprocess.Popen(ffmpeg_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                                              shell=True)
                                         out, error = p.communicate()
@@ -2281,7 +2280,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
             logging.critical(f"Error during frame extraction: {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message("Export during frame extraction", sys.exc_info())
+            dialog.error_message_box("Export during frame extraction", error_type, error_file_name, error_lineno)
 
 
     def extract_events(self):
@@ -2468,7 +2467,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                  3)
 
                                     ffmpeg_command = ffmpeg_extract_command.format(
-                                        ffmpeg_bin=ffmpeg_bin,
+                                        ffmpeg_bin=self.ffmpeg_bin,
                                         input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                                                                  self.projectFileName),
                                         start=start,
@@ -2518,7 +2517,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             continue
 
                                         ffmpeg_command = ffmpeg_extract_command.format(
-                                            ffmpeg_bin=ffmpeg_bin,
+                                            ffmpeg_bin=self.ffmpeg_bin,
                                             input_=project_functions.media_full_path(self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx],
                                                                                      self.projectFileName),
                                             start=start,
@@ -5415,133 +5414,138 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.info(f"Close observation {self.playerType}")
+        try:
+            # check observation events
+            flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
+                                                                    self.pj[ETHOGRAM],
+                                                                    self.pj[OBSERVATIONS][self.observationId],
+                                                                    time_format=HHMMSS)
 
-        # check observation events
-        flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
-                                                                self.pj[ETHOGRAM],
-                                                                self.pj[OBSERVATIONS][self.observationId],
-                                                                time_format=HHMMSS)
+            if not flag_ok:
 
-        if not flag_ok:
+                out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
+                results = dialog.Results_dialog()
+                results.setWindowTitle(f"{programName} - Check selected observations")
+                results.ptText.setReadOnly(True)
+                results.ptText.appendHtml(out)
+                results.pbSave.setVisible(False)
+                results.pbCancel.setText("Close observation")
+                results.pbCancel.setVisible(True)
+                results.pbOK.setText("Fix unpaired state events")
 
-            out = f"The current observation has state event(s) that are not PAIRED:<br><br>{msg}"
-            results = dialog.Results_dialog()
-            results.setWindowTitle(f"{programName} - Check selected observations")
-            results.ptText.setReadOnly(True)
-            results.ptText.appendHtml(out)
-            results.pbSave.setVisible(False)
-            results.pbCancel.setText("Close observation")
-            results.pbCancel.setVisible(True)
-            results.pbOK.setText("Fix unpaired state events")
+                if results.exec_():  # fix events
 
-            if results.exec_():  # fix events
+                    w = dialog.Ask_time(self.timeFormat)
+                    w.setWindowTitle("Fix UNPAIRED state events")
+                    w.label.setText("Fix UNPAIRED events at time")
 
-                w = dialog.Ask_time(self.timeFormat)
-                w.setWindowTitle("Fix UNPAIRED state events")
-                w.label.setText("Fix UNPAIRED events at time")
+                    if w.exec_():
+                        fix_at_time = w.time_widget.get_time()
+                        events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
+                                                                                    self.pj[ETHOGRAM],
+                                                                                    self.pj[OBSERVATIONS][self.observationId],
+                                                                                    fix_at_time - Decimal("0.001")
+                                                                                    )
+                        if events_to_add:
+                            self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
+                            self.projectChanged = True
+                            self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
 
-                if w.exec_():
-                    fix_at_time = w.time_widget.get_time()
-                    events_to_add = project_functions.fix_unpaired_state_events(self.observationId,
-                                                                                self.pj[ETHOGRAM],
-                                                                                self.pj[OBSERVATIONS][self.observationId],
-                                                                                fix_at_time - Decimal("0.001")
-                                                                                )
-                    if events_to_add:
-                        self.pj[OBSERVATIONS][self.observationId][EVENTS].extend(events_to_add)
-                        self.projectChanged = True
-                        self.pj[OBSERVATIONS][self.observationId][EVENTS].sort()
-
-                        self.loadEventsInTW(self.observationId)
-                        item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-                                                   if t[0] == fix_at_time][0], 0)
-                        self.twEvents.scrollToItem(item)
+                            self.loadEventsInTW(self.observationId)
+                            item = self.twEvents.item([i for i, t in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                                                    if t[0] == fix_at_time][0], 0)
+                            self.twEvents.scrollToItem(item)
+                            return
+                    else:
                         return
-                else:
-                    return
 
-        self.saved_state = self.saveState()
+            self.saved_state = self.saveState()
 
-        if self.playerType == VLC:
-            self.timer.stop()
-            self.FFmpegTimer.stop()
-            self.timer_sound_signal.stop()
-
-            for i, player in enumerate(self.dw_player):
-                if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
-                        and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
-                    player.mediaplayer.stop()
-
-            self.verticalLayout_3.removeWidget(self.video_slider)
-
-            self.video_slider.deleteLater()
-            self.video_slider = None
-
-        if self.playerType == LIVE:
-            self.liveTimer.stop()
-            self.w_live.setVisible(False)
-            self.liveObservationStarted = False
-            self.liveStartTime = None
-
-        if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
-            for x in self.ext_data_timer_list:
-                x.stop()
-            for pd in self.plot_data:
-                self.plot_data[pd].close_plot()
-
-        self.close_tool_windows()
-
-        if self.playerType == VLC:
-
-            for i, player in enumerate(self.dw_player):
-                player.setVisible(False)
-                player.deleteLater()
-
-            self.dw_player = []
-
-            self.actionFrame_by_frame.setChecked(False)
-            self.playMode = VLC
-
-            ''' TO BE DELETED 2019-11-26
-            try:
-                self.spectro.close()
-                del self.spectro
-            except Exception:
-                pass
-            '''
-
-            try:
+            if self.playerType == VLC:
+                self.timer.stop()
                 self.FFmpegTimer.stop()
-                self.FFmpegGlobalFrame = 0
-            except Exception:
-                pass
+                self.timer_sound_signal.stop()
 
-        self.observationId = ""
+                for i, player in enumerate(self.dw_player):
+                    if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE]
+                            and self.pj[OBSERVATIONS][self.observationId][FILE][str(i + 1)]):
+                        player.mediaplayer.stop()
 
-        # buffer no more deleted when observation is closed
-        # self.initialize_frames_buffer()
+                self.verticalLayout_3.removeWidget(self.video_slider)
 
-        self.statusbar.showMessage("", 0)
+                self.video_slider.deleteLater()
+                self.video_slider = None
 
-        self.dwObservations.setVisible(False)
+            if self.playerType == LIVE:
+                self.liveTimer.stop()
+                self.w_live.setVisible(False)
+                self.liveObservationStarted = False
+                self.liveStartTime = None
 
-        self.w_obs_info.setVisible(False)
+            if PLOT_DATA in self.pj[OBSERVATIONS][self.observationId] and self.pj[OBSERVATIONS][self.observationId][PLOT_DATA]:
+                for x in self.ext_data_timer_list:
+                    x.stop()
+                for pd in self.plot_data:
+                    self.plot_data[pd].close_plot()
 
-        self.twEvents.setRowCount(0)
+            self.close_tool_windows()
 
-        self.lb_current_media_time.clear()
-        self.currentSubject = ""
-        self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
+            if self.playerType == VLC:
 
-        # clear current state(s) column in subjects table
-        for i in range(self.twSubjects.rowCount()):
-            self.twSubjects.item(i, len(subjectsFields)).setText("")
+                for i, player in enumerate(self.dw_player):
+                    player.setVisible(False)
+                    player.deleteLater()
 
-        for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
-            w.clear()
-        self.play_rate, self.playerType = 1, ""
+                self.dw_player = []
 
-        self.menu_options()
+                self.actionFrame_by_frame.setChecked(False)
+                self.playMode = VLC
+
+                ''' TO BE DELETED 2019-11-26
+                try:
+                    self.spectro.close()
+                    del self.spectro
+                except Exception:
+                    pass
+                '''
+
+                try:
+                    self.FFmpegTimer.stop()
+                    self.FFmpegGlobalFrame = 0
+                except Exception:
+                    pass
+
+            self.observationId = ""
+
+            # buffer no more deleted when observation is closed
+            # self.initialize_frames_buffer()
+
+            self.statusbar.showMessage("", 0)
+
+            self.dwObservations.setVisible(False)
+
+            self.w_obs_info.setVisible(False)
+
+            self.twEvents.setRowCount(0)
+
+            self.lb_current_media_time.clear()
+            self.currentSubject = ""
+            self.lbFocalSubject.setText(NO_FOCAL_SUBJECT)
+
+            # clear current state(s) column in subjects table
+            for i in range(self.twSubjects.rowCount()):
+                self.twSubjects.item(i, len(subjectsFields)).setText("")
+
+            for w in [self.lbTimeOffset, self.lbSpeed, self.lb_obs_time_interval]:
+                w.clear()
+            self.play_rate, self.playerType = 1, ""
+
+            self.menu_options()
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Close observation: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("Close observation", error_type, error_file_name, error_lineno)
 
 
     def set_recent_projects_menu(self):
@@ -5550,10 +5554,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.menuRecent_projects.clear()
         for project_file_path in self.recent_projects:
-            action = QAction(self, visible=False, triggered=self.open_project_activated)
-            action.setText(project_file_path)
-            action.setVisible(True)
-            self.menuRecent_projects.addAction(action)
+            if pathlib.Path(project_file_path).is_file():
+                action = QAction(self, visible=False, triggered=self.open_project_activated)
+                action.setText(project_file_path)
+                action.setVisible(True)
+                self.menuRecent_projects.addAction(action)
 
 
     def readConfigFile(self):
@@ -5570,7 +5575,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             try:
                 self.config_param = settings.value("config")
-            except:
+            except Exception:
+                self.config_param = None
                 pass
             if self.config_param is None:
                 self.config_param = INIT_PARAM
@@ -7128,10 +7134,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         bar plot of behaviors durations
         """
 
-        QMessageBox.warning(self, programName,
-                            ("This function is experimental.<br>Please test it and report bugs on<br>"
-                             "https://github.com/olivierfriard/BORIS/issues"))
-
         result, selected_observations = self.selectObservations(MULTIPLE)
         if not selected_observations:
             return
@@ -7447,221 +7449,228 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             mode (str): new/edit
         """
 
-        # ask if current observation should be closed to edit the project
-        if self.observationId:
-            response = dialog.MessageDialog(programName,
-                                            "The current observation will be closed. Do you want to continue?",
-                                            [YES, NO])
-            if response == NO:
-                return
-            else:
-                self.close_observation()
-
-        if mode == NEW:
-            if self.projectChanged:
-                response = dialog.MessageDialog(programName, "What to do with the current unsaved project?",
-                                                [SAVE, DISCARD, CANCEL])
-
-                if response == SAVE:
-                    self.save_project_activated()
-
-                if response == CANCEL:
+        try:
+            # ask if current observation should be closed to edit the project
+            if self.observationId:
+                response = dialog.MessageDialog(programName,
+                                                "The current observation will be closed. Do you want to continue?",
+                                                [YES, NO])
+                if response == NO:
                     return
-
-            # empty main window tables
-            for w in [self.twEthogram, self.twSubjects, self.twEvents]:
-                w.setRowCount(0)   # behaviors
-
-        newProjectWindow = projectDialog()
-
-        # pass copy of self.pj
-        newProjectWindow.pj = dict(self.pj)
-
-        if self.projectWindowGeometry:
-            newProjectWindow.restoreGeometry(self.projectWindowGeometry)
-        else:
-            newProjectWindow.resize(800, 400)
-
-        newProjectWindow.setWindowTitle(mode + " project")
-        newProjectWindow.tabProject.setCurrentIndex(0)   # project information
-
-        newProjectWindow.obs = newProjectWindow.pj[ETHOGRAM]
-        newProjectWindow.subjects_conf = newProjectWindow.pj[SUBJECTS]
-
-        newProjectWindow.rbSeconds.setChecked(newProjectWindow.pj[TIME_FORMAT] == S)
-        newProjectWindow.rbHMS.setChecked(newProjectWindow.pj[TIME_FORMAT] == HHMMSS)
-
-        if mode == NEW:
-            newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
-            newProjectWindow.lbProjectFilePath.setText("")
-
-        if mode == EDIT:
-
-            if newProjectWindow.pj[PROJECT_NAME]:
-                newProjectWindow.leProjectName.setText(newProjectWindow.pj[PROJECT_NAME])
-
-            newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName)
-
-            if newProjectWindow.pj[PROJECT_DESCRIPTION]:
-                newProjectWindow.teDescription.setPlainText(newProjectWindow.pj[PROJECT_DESCRIPTION])
-
-            if newProjectWindow.pj[PROJECT_DATE]:
-                newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE],
-                                                     "yyyy-MM-ddThh:mm:ss"))
-            else:
-                newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
-
-            # load subjects in editor
-            if newProjectWindow.pj[SUBJECTS]:
-                for idx in sorted_keys(newProjectWindow.pj[SUBJECTS]):
-                    newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
-                    for i, field in enumerate(subjectsFields):
-                        item = QTableWidgetItem(newProjectWindow.pj[SUBJECTS][idx][field])
-                        newProjectWindow.twSubjects.setItem(newProjectWindow.twSubjects.rowCount() - 1, i, item)
-
-                newProjectWindow.twSubjects.resizeColumnsToContents()
-
-            # load observation in project window
-            newProjectWindow.twObservations.setRowCount(0)
-
-            if newProjectWindow.pj[OBSERVATIONS]:
-
-                for obs in sorted(newProjectWindow.pj[OBSERVATIONS].keys()):
-
-                    newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
-
-                    # observation id
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
-                                                            0,
-                                                            QTableWidgetItem(obs))
-                    # observation date
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
-                                                            1,
-                                                            QTableWidgetItem(
-                                                                newProjectWindow.pj[OBSERVATIONS][obs]["date"].replace("T", " ")))
-                    # observation description
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
-                                                            2,
-                                                            QTableWidgetItem(
-                                                                utilities.eol2space(newProjectWindow.pj[OBSERVATIONS][obs][DESCRIPTION])))
-
-                    mediaList = []
-                    if newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
-                        for idx in newProjectWindow.pj[OBSERVATIONS][obs][FILE]:
-                            for media in newProjectWindow.pj[OBSERVATIONS][obs][FILE][idx]:
-                                mediaList.append(f"#{idx}: {media}")
-
-                    elif newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
-                        mediaList = [LIVE]
-
-                    media_separator = " " if len(mediaList) > 8 else "\n"
-                    newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
-                                                            3,
-                                                            QTableWidgetItem(media_separator.join(mediaList)))
-
-                newProjectWindow.twObservations.resizeColumnsToContents()
-                newProjectWindow.twObservations.resizeRowsToContents()
-
-            # configuration of behaviours
-            if newProjectWindow.pj[ETHOGRAM]:
-                for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):
-                    newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
-                    for field in behavioursFields:
-                        item = QTableWidgetItem()
-                        if field == TYPE:
-                            item.setText(DEFAULT_BEHAVIOR_TYPE)
-                        if field in newProjectWindow.pj[ETHOGRAM][i]:
-                            item.setText(str(newProjectWindow.pj[ETHOGRAM][i][field]))  # str for modifiers dict
-                        else:
-                            item.setText("")
-                        if field in [TYPE, "category", "excluded", "coding map", "modifiers"]:
-                            item.setFlags(Qt.ItemIsEnabled)
-                            item.setBackground(QColor(230, 230, 230))
-
-                        newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1,
-                                                             behavioursFields[field], item)
-
-            # load independent variables
-            if INDEPENDENT_VARIABLES in newProjectWindow.pj:
-                for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):
-                    newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
-                    for idx, field in enumerate(tw_indVarFields):
-                        item = QTableWidgetItem("")
-                        if field in newProjectWindow.pj[INDEPENDENT_VARIABLES][i]:
-                            item.setText(newProjectWindow.pj[INDEPENDENT_VARIABLES][i][field])
-
-                        newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
-
-                newProjectWindow.twVariables.resizeColumnsToContents()
-
-            # behaviors coding map
-            if BEHAVIORS_CODING_MAP in newProjectWindow.pj:
-                for bcm in newProjectWindow.pj[BEHAVIORS_CODING_MAP]:
-                    newProjectWindow.twBehavCodingMap.setRowCount(newProjectWindow.twBehavCodingMap.rowCount() + 1)
-                    newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 0,
-                                                              QTableWidgetItem(bcm["name"]))
-                    codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
-                    newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1,
-                                                              QTableWidgetItem(codes))
-
-            # time converters
-            if CONVERTERS in newProjectWindow.pj:
-                newProjectWindow.converters = newProjectWindow.pj[CONVERTERS]
-                newProjectWindow.load_converters_in_table()
-
-        newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
-
-        if mode == NEW:
-            newProjectWindow.pj = dict(EMPTY_PROJECT)
-
-        # warning
-        if mode == EDIT and self.pj[OBSERVATIONS]:
-
-            if dialog.MessageDialog(programName,
-                                 ("Please note that editing the project may interfere with the coded events in your previous observations.<br>"
-                                 "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
-                                 "can unvalidate your previous observations.<br>"
-                                 "Remember to make a backup of your project."),
-                                 [CANCEL, "Edit"]) == CANCEL:
-                return
-
-        if newProjectWindow.exec_():  # button OK returns True
+                else:
+                    self.close_observation()
 
             if mode == NEW:
-                self.projectFileName = ""
-                self.projectChanged = True
+                if self.projectChanged:
+                    response = dialog.MessageDialog(programName, "What to do with the current unsaved project?",
+                                                    [SAVE, DISCARD, CANCEL])
+
+                    if response == SAVE:
+                        self.save_project_activated()
+
+                    if response == CANCEL:
+                        return
+
+                # empty main window tables
+                for w in [self.twEthogram, self.twSubjects, self.twEvents]:
+                    w.setRowCount(0)   # behaviors
+
+            newProjectWindow = projectDialog()
+
+            # pass copy of self.pj
+            newProjectWindow.pj = dict(self.pj)
+
+            if self.projectWindowGeometry:
+                newProjectWindow.restoreGeometry(self.projectWindowGeometry)
+            else:
+                newProjectWindow.resize(800, 400)
+
+            newProjectWindow.setWindowTitle(mode + " project")
+            newProjectWindow.tabProject.setCurrentIndex(0)   # project information
+
+            newProjectWindow.obs = newProjectWindow.pj[ETHOGRAM]
+            newProjectWindow.subjects_conf = newProjectWindow.pj[SUBJECTS]
+
+            newProjectWindow.rbSeconds.setChecked(newProjectWindow.pj[TIME_FORMAT] == S)
+            newProjectWindow.rbHMS.setChecked(newProjectWindow.pj[TIME_FORMAT] == HHMMSS)
+
+            if mode == NEW:
+                newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
+                newProjectWindow.lbProjectFilePath.setText("")
 
             if mode == EDIT:
-                if not self.projectChanged:
-                    self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
 
-            # retrieve project dict from window
-            self.pj = dict(newProjectWindow.pj)
-            self.project = True
+                if newProjectWindow.pj[PROJECT_NAME]:
+                    newProjectWindow.leProjectName.setText(newProjectWindow.pj[PROJECT_NAME])
 
-            # time format
-            if newProjectWindow.rbSeconds.isChecked():
-                self.timeFormat = S
+                newProjectWindow.lbProjectFilePath.setText("Project file path: " + self.projectFileName)
 
-            if newProjectWindow.rbHMS.isChecked():
-                self.timeFormat = HHMMSS
+                if newProjectWindow.pj[PROJECT_DESCRIPTION]:
+                    newProjectWindow.teDescription.setPlainText(newProjectWindow.pj[PROJECT_DESCRIPTION])
 
-            # configuration
-            if newProjectWindow.lbObservationsState.text() != "":
-                QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
-            else:
-                # ethogram
-                self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
-                # subjects
-                self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
+                if newProjectWindow.pj[PROJECT_DATE]:
+                    newProjectWindow.dteDate.setDateTime(QDateTime.fromString(newProjectWindow.pj[PROJECT_DATE],
+                                                        "yyyy-MM-ddThh:mm:ss"))
+                else:
+                    newProjectWindow.dteDate.setDateTime(QDateTime.currentDateTime())
 
-            self.initialize_new_project()
+                # load subjects in editor
+                if newProjectWindow.pj[SUBJECTS]:
+                    for idx in sorted_keys(newProjectWindow.pj[SUBJECTS]):
+                        newProjectWindow.twSubjects.setRowCount(newProjectWindow.twSubjects.rowCount() + 1)
+                        for i, field in enumerate(subjectsFields):
+                            item = QTableWidgetItem(newProjectWindow.pj[SUBJECTS][idx][field])
+                            newProjectWindow.twSubjects.setItem(newProjectWindow.twSubjects.rowCount() - 1, i, item)
 
-            self.menu_options()
+                    newProjectWindow.twSubjects.resizeColumnsToContents()
 
-        self.projectWindowGeometry = newProjectWindow.saveGeometry()
+                # load observation in project window
+                newProjectWindow.twObservations.setRowCount(0)
 
-        del newProjectWindow
+                if newProjectWindow.pj[OBSERVATIONS]:
+
+                    for obs in sorted(newProjectWindow.pj[OBSERVATIONS].keys()):
+
+                        newProjectWindow.twObservations.setRowCount(newProjectWindow.twObservations.rowCount() + 1)
+
+                        # observation id
+                        newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                                0,
+                                                                QTableWidgetItem(obs))
+                        # observation date
+                        newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                                1,
+                                                                QTableWidgetItem(
+                                                                    newProjectWindow.pj[OBSERVATIONS][obs]["date"].replace("T", " ")))
+                        # observation description
+                        newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                                2,
+                                                                QTableWidgetItem(
+                                                                    utilities.eol2space(newProjectWindow.pj[OBSERVATIONS][obs][DESCRIPTION])))
+
+                        mediaList = []
+                        if newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
+                            for idx in newProjectWindow.pj[OBSERVATIONS][obs][FILE]:
+                                for media in newProjectWindow.pj[OBSERVATIONS][obs][FILE][idx]:
+                                    mediaList.append(f"#{idx}: {media}")
+
+                        elif newProjectWindow.pj[OBSERVATIONS][obs][TYPE] in [LIVE]:
+                            mediaList = [LIVE]
+
+                        media_separator = " " if len(mediaList) > 8 else "\n"
+                        newProjectWindow.twObservations.setItem(newProjectWindow.twObservations.rowCount() - 1,
+                                                                3,
+                                                                QTableWidgetItem(media_separator.join(mediaList)))
+
+                    newProjectWindow.twObservations.resizeColumnsToContents()
+                    newProjectWindow.twObservations.resizeRowsToContents()
+
+                # configuration of behaviours
+                if newProjectWindow.pj[ETHOGRAM]:
+                    for i in sorted_keys(newProjectWindow.pj[ETHOGRAM]):
+                        newProjectWindow.twBehaviors.setRowCount(newProjectWindow.twBehaviors.rowCount() + 1)
+                        for field in behavioursFields:
+                            item = QTableWidgetItem()
+                            if field == TYPE:
+                                item.setText(DEFAULT_BEHAVIOR_TYPE)
+                            if field in newProjectWindow.pj[ETHOGRAM][i]:
+                                item.setText(str(newProjectWindow.pj[ETHOGRAM][i][field]))  # str for modifiers dict
+                            else:
+                                item.setText("")
+                            if field in [TYPE, "category", "excluded", "coding map", "modifiers"]:
+                                item.setFlags(Qt.ItemIsEnabled)
+                                item.setBackground(QColor(230, 230, 230))
+
+                            newProjectWindow.twBehaviors.setItem(newProjectWindow.twBehaviors.rowCount() - 1,
+                                                                behavioursFields[field], item)
+
+                # load independent variables
+                if INDEPENDENT_VARIABLES in newProjectWindow.pj:
+                    for i in sorted_keys(newProjectWindow.pj[INDEPENDENT_VARIABLES]):
+                        newProjectWindow.twVariables.setRowCount(newProjectWindow.twVariables.rowCount() + 1)
+                        for idx, field in enumerate(tw_indVarFields):
+                            item = QTableWidgetItem("")
+                            if field in newProjectWindow.pj[INDEPENDENT_VARIABLES][i]:
+                                item.setText(newProjectWindow.pj[INDEPENDENT_VARIABLES][i][field])
+
+                            newProjectWindow.twVariables.setItem(newProjectWindow.twVariables.rowCount() - 1, idx, item)
+
+                    newProjectWindow.twVariables.resizeColumnsToContents()
+
+                # behaviors coding map
+                if BEHAVIORS_CODING_MAP in newProjectWindow.pj:
+                    for bcm in newProjectWindow.pj[BEHAVIORS_CODING_MAP]:
+                        newProjectWindow.twBehavCodingMap.setRowCount(newProjectWindow.twBehavCodingMap.rowCount() + 1)
+                        newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 0,
+                                                                QTableWidgetItem(bcm["name"]))
+                        codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
+                        newProjectWindow.twBehavCodingMap.setItem(newProjectWindow.twBehavCodingMap.rowCount() - 1, 1,
+                                                                QTableWidgetItem(codes))
+
+                # time converters
+                if CONVERTERS in newProjectWindow.pj:
+                    newProjectWindow.converters = newProjectWindow.pj[CONVERTERS]
+                    newProjectWindow.load_converters_in_table()
+
+            newProjectWindow.dteDate.setDisplayFormat("yyyy-MM-dd hh:mm:ss")
+
+            if mode == NEW:
+                newProjectWindow.pj = dict(EMPTY_PROJECT)
+
+            # warning
+            if mode == EDIT and self.pj[OBSERVATIONS]:
+
+                if dialog.MessageDialog(programName,
+                                    ("Please note that editing the project may interfere with the coded events in your previous observations.<br>"
+                                    "For example modifying a behavior code, renaming a subject or modifying the modifiers sets "
+                                    "can unvalidate your previous observations.<br>"
+                                    "Remember to make a backup of your project."),
+                                    [CANCEL, "Edit"]) == CANCEL:
+                    return
+
+            if newProjectWindow.exec_():  # button OK returns True
+
+                if mode == NEW:
+                    self.projectFileName = ""
+                    self.projectChanged = True
+
+                if mode == EDIT:
+                    if not self.projectChanged:
+                        self.projectChanged = dict(self.pj) != dict(newProjectWindow.pj)
+
+                # retrieve project dict from window
+                self.pj = dict(newProjectWindow.pj)
+                self.project = True
+
+                # time format
+                if newProjectWindow.rbSeconds.isChecked():
+                    self.timeFormat = S
+
+                if newProjectWindow.rbHMS.isChecked():
+                    self.timeFormat = HHMMSS
+
+                # configuration
+                if newProjectWindow.lbObservationsState.text() != "":
+                    QMessageBox.warning(self, programName, newProjectWindow.lbObservationsState.text())
+                else:
+                    # ethogram
+                    self.load_behaviors_in_twEthogram([self.pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in self.pj[ETHOGRAM]])
+                    # subjects
+                    self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
+
+                self.initialize_new_project()
+
+                self.menu_options()
+
+            self.projectWindowGeometry = newProjectWindow.saveGeometry()
+
+            del newProjectWindow
+
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Close observation: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("Close observation", error_type, error_file_name, error_lineno)
 
 
     def new_project_activated(self):
@@ -7709,10 +7718,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return ""
 
         except Exception:
-
             error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
             logging.critical(f"The project file can not be saved: {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message("The project file can not be saved.", sys.exc_info())
+
+            dialog.error_message_box("The project file can not be saved.", error_type, error_file_name, error_lineno)
 
             self.save_project_json_started = False
             return "not saved"

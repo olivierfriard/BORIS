@@ -43,7 +43,9 @@ from boris import export_observation
 from boris import param_panel
 from boris.config import *
 from boris.project_ui import Ui_dlgProject
-from boris.utilities import sorted_keys
+import boris.utilities as utilities
+import boris.dialog as dialog
+import boris.project_functions as project_functions
 
 
 class ExclusionMatrix(QDialog):
@@ -392,89 +394,100 @@ class projectDialog(QDialog, Ui_dlgProject):
         convert behaviors key to lower case to help to migrate to v. 7
         """
 
-        if not self.twBehaviors.rowCount():
-            QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            return
-
-        # check if some keys will be duplicated after conversion
         try:
-            all_keys = [self.twBehaviors.item(row, behavioursFields["key"]).text() for row in range(self.twBehaviors.rowCount())]
-        except Exception:
-            pass
-        if all_keys == [x.lower() for x in all_keys]:
-            QMessageBox.information(self, programName, "All keys are already lower case")
-            return
-
-        if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
-            return
-
-        if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-            if dialog.MessageDialog(programName,
-                                    "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+            if not self.twBehaviors.rowCount():
+                QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
-        for row in range(self.twBehaviors.rowCount()):
-            if self.twBehaviors.item(row, behavioursFields["key"]).text():
-                self.twBehaviors.item(row, behavioursFields["key"]).setText(self.twBehaviors.item(row,
-                                                                                                  behavioursFields["key"]).text().lower())
+            # check if some keys will be duplicated after conversion
+            try:
+                all_keys = [self.twBehaviors.item(row, behavioursFields["key"]).text() for row in range(self.twBehaviors.rowCount())]
+            except Exception:
+                pass
+            if all_keys == [x.lower() for x in all_keys]:
+                QMessageBox.information(self, programName, "All keys are already lower case")
+                return
 
-            # convert modifier shortcuts
-            if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
+            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
+                return
 
-                modifiers_dict = (
-                    eval(
-                        self.twBehaviors.item(
+            if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
+                if dialog.MessageDialog(programName,
+                                        "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+                    return
+
+            for row in range(self.twBehaviors.rowCount()):
+                if self.twBehaviors.item(row, behavioursFields["key"]).text():
+                    self.twBehaviors.item(row, behavioursFields["key"]).setText(self.twBehaviors.item(row,
+                                                                                                    behavioursFields["key"]).text().lower())
+
+                # convert modifier shortcuts
+                if self.twBehaviors.item(row, behavioursFields["modifiers"]).text():
+
+                    modifiers_dict = (
+                        eval(
+                            self.twBehaviors.item(
+                                row, behavioursFields["modifiers"]
+                            ).text()
+                        )
+                        if self.twBehaviors.item(
                             row, behavioursFields["modifiers"]
                         ).text()
+                        else {}
                     )
-                    if self.twBehaviors.item(
-                        row, behavioursFields["modifiers"]
-                    ).text()
-                    else {}
-                )
 
-                for modifier_set in modifiers_dict:
-                    try:
-                        for idx2, value in enumerate(modifiers_dict[modifier_set]["values"]):
-                            if re.findall(r'\((\w+)\)', value):
-                                modifiers_dict[modifier_set]["values"][idx2] = value.split("(")[
-                                                                                                   0] + "(" + \
-                                                                                               re.findall(r'\((\w+)\)',
-                                                                                                          value)[
-                                                                                                   0].lower() + ")" + \
-                                                                                               value.split(")")[-1]
-                    except Exception:
-                        logging.warning("error during conversion of modifier short cut to lower case")
+                    for modifier_set in modifiers_dict:
+                        try:
+                            for idx2, value in enumerate(modifiers_dict[modifier_set]["values"]):
+                                if re.findall(r'\((\w+)\)', value):
+                                    modifiers_dict[modifier_set]["values"][idx2] = value.split("(")[
+                                                                                                    0] + "(" + \
+                                                                                                re.findall(r'\((\w+)\)',
+                                                                                                            value)[
+                                                                                                    0].lower() + ")" + \
+                                                                                                value.split(")")[-1]
+                        except Exception:
+                            logging.warning("error during conversion of modifier short cut to lower case")
 
-                self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(str(modifiers_dict))
+                    self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(str(modifiers_dict))
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"convert_behaviors_keys_to_lower_case: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("convert_behaviors_keys_to_lower_case", error_type, error_file_name, error_lineno)
 
 
     def convert_subjects_keys_to_lower_case(self):
         """
         convert subjects key to lower case to help to migrate to v. 7
         """
-
-        # check if some keys will be duplicated after conversion
         try:
-            all_keys = [self.twSubjects.item(row, subjectsFields.index("key")).text() for row in range(self.twSubjects.rowCount())]
-        except Exception:
-            pass
-        if all_keys == [x.lower() for x in all_keys]:
-            QMessageBox.information(self, programName, "All keys are already lower case")
-            return
-
-        if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
-            return
-
-        if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
-            if dialog.MessageDialog(programName,
-                                    "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+            # check if some keys will be duplicated after conversion
+            try:
+                all_keys = [self.twSubjects.item(row, subjectsFields.index("key")).text() for row in range(self.twSubjects.rowCount())]
+            except Exception:
+                pass
+            if all_keys == [x.lower() for x in all_keys]:
+                QMessageBox.information(self, programName, "All keys are already lower case")
                 return
 
-        for row in range(self.twSubjects.rowCount()):
-            if self.twSubjects.item(row, subjectsFields.index("key")).text():
-                self.twSubjects.item(row, subjectsFields.index("key")).setText(
-                    self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
+            if dialog.MessageDialog(programName, "Confirm the conversion of key to lower case.", [YES, CANCEL]) == CANCEL:
+                return
+
+            if len([x.lower() for x in all_keys]) != len(set([x.lower() for x in all_keys])):
+                if dialog.MessageDialog(programName,
+                                        "Some keys will be duplicated after conversion. Proceed?", [YES, CANCEL]) == CANCEL:
+                    return
+
+            for row in range(self.twSubjects.rowCount()):
+                if self.twSubjects.item(row, subjectsFields.index("key")).text():
+                    self.twSubjects.item(row, subjectsFields.index("key")).setText(
+                        self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"convert subjects keys to lower case: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("convert subjects keys to lower case", error_type, error_file_name, error_lineno)
 
 
     def add_behaviors_coding_map(self):
@@ -482,40 +495,46 @@ class projectDialog(QDialog, Ui_dlgProject):
         Add a behaviors coding map from file
         """
 
-        fn = QFileDialog().getOpenFileName(self, "Open a behaviors coding map",
-                                           "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
-        if fileName:
-            try:
-                bcm = json.loads(open(fileName, "r").read())
-            except Exception:
-                QMessageBox.critical(self, programName, f"The file {fileName} seems not a behaviors coding map...")
-                return
+        try:
+            fn = QFileDialog().getOpenFileName(self, "Open a behaviors coding map",
+                                            "", "Behaviors coding map (*.behav_coding_map);;All files (*)")
+            fileName = fn[0] if type(fn) is tuple else fn
+            if fileName:
+                try:
+                    bcm = json.loads(open(fileName, "r").read())
+                except Exception:
+                    QMessageBox.critical(self, programName, f"The file {fileName} seems not a behaviors coding map...")
+                    return
 
-            if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
-                QMessageBox.critical(self, programName, f"The file {fileName} seems not a BORIS behaviors coding map...")
+                if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
+                    QMessageBox.critical(self, programName, f"The file {fileName} seems not a BORIS behaviors coding map...")
 
-            if BEHAVIORS_CODING_MAP not in self.pj:
-                self.pj[BEHAVIORS_CODING_MAP] = []
+                if BEHAVIORS_CODING_MAP not in self.pj:
+                    self.pj[BEHAVIORS_CODING_MAP] = []
 
-            bcm_code_not_found = []
-            existing_codes = [self.pj[ETHOGRAM][key]["code"] for key in self.pj[ETHOGRAM]]
-            for code in [bcm["areas"][key]["code"] for key in bcm["areas"]]:
-                if code not in existing_codes:
-                    bcm_code_not_found.append(code)
+                bcm_code_not_found = []
+                existing_codes = [self.pj[ETHOGRAM][key]["code"] for key in self.pj[ETHOGRAM]]
+                for code in [bcm["areas"][key]["code"] for key in bcm["areas"]]:
+                    if code not in existing_codes:
+                        bcm_code_not_found.append(code)
 
-            if bcm_code_not_found:
-                QMessageBox.warning(self, programName,
-                                    ("The following behavior{} are not defined in the ethogram:<br>"
-                                     "{}").format("s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)))
+                if bcm_code_not_found:
+                    QMessageBox.warning(self, programName,
+                                        ("The following behavior{} are not defined in the ethogram:<br>"
+                                        "{}").format("s" if len(bcm_code_not_found) > 1 else "", ",".join(bcm_code_not_found)))
 
-            self.pj[BEHAVIORS_CODING_MAP].append(dict(bcm))
+                self.pj[BEHAVIORS_CODING_MAP].append(dict(bcm))
 
-            self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
+                self.twBehavCodingMap.setRowCount(self.twBehavCodingMap.rowCount() + 1)
 
-            self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
-            codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
-            self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
+                self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 0, QTableWidgetItem(bcm["name"]))
+                codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
+                self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"add behaviors coding map: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("add behaviors coding map", error_type, error_file_name, error_lineno)
 
 
     def remove_behaviors_coding_map(self):
@@ -885,54 +904,63 @@ class projectDialog(QDialog, Ui_dlgProject):
         import independent variables from another project
         """
 
-        fn = QFileDialog(self).getOpenFileName(self, "Import independent variables from project file", "",
-                                               "Project files (*.boris);;All files (*)")
-        fileName = fn[0] if type(fn) is tuple else fn
+        try:
+            fn = QFileDialog().getOpenFileName(self, "Import independent variables from project file", "",
+                                            ("Project files (*.boris *.boris.gz);;"
+                                                "All files (*)")
+                                            )
 
-        if fileName:
-            with open(fileName, "r") as infile:
-                s = infile.read()
-            try:
-                project = json.loads(s)
-            except Exception:
-                QMessageBox.warning(None, programName, "Error while reading independent variables from selected file",
-                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return
+            file_name = fn[0] if type(fn) is tuple else fn
 
-            # independent variables
-            if project[INDEPENDENT_VARIABLES]:
+            if file_name:
 
-                # check if variables are already present
-                existing_var = []
+                _, _, project, _ = project_functions.open_project_json(file_name)
 
-                for r in range(self.twVariables.rowCount()):
-                    existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
+                if "error" in project:
+                    logging.debug(project["error"])
+                    QMessageBox.critical(self, programName, project["error"])
+                    return
 
-                for i in sorted_keys(project[INDEPENDENT_VARIABLES]):
+                # independent variables
+                if INDEPENDENT_VARIABLES in project and project[INDEPENDENT_VARIABLES]:
 
-                    self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
-                    flag_renamed = False
-                    for idx, field in enumerate(tw_indVarFields):
-                        item = QTableWidgetItem()
-                        if field in project[INDEPENDENT_VARIABLES][i]:
-                            if field == "label":
-                                txt = project[INDEPENDENT_VARIABLES][i]["label"].strip()
-                                while txt.upper() in existing_var:
-                                    txt += "_2"
-                                    flag_renamed = True
+                    # check if variables are already present
+                    existing_var = []
+
+                    for r in range(self.twVariables.rowCount()):
+                        existing_var.append(self.twVariables.item(r, 0).text().strip().upper())
+
+                    for i in utilities.sorted_keys(project[INDEPENDENT_VARIABLES]):
+
+                        self.twVariables.setRowCount(self.twVariables.rowCount() + 1)
+                        flag_renamed = False
+                        for idx, field in enumerate(tw_indVarFields):
+                            item = QTableWidgetItem()
+                            if field in project[INDEPENDENT_VARIABLES][i]:
+                                if field == "label":
+                                    txt = project[INDEPENDENT_VARIABLES][i]["label"].strip()
+                                    while txt.upper() in existing_var:
+                                        txt += "_2"
+                                        flag_renamed = True
+                                else:
+                                    txt = project[INDEPENDENT_VARIABLES][i][field].strip()
+                                item.setText(txt)
                             else:
-                                txt = project[INDEPENDENT_VARIABLES][i][field].strip()
-                            item.setText(txt)
-                        else:
-                            item.setText("")
-                        self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
+                                item.setText("")
+                            self.twVariables.setItem(self.twVariables.rowCount() - 1, idx, item)
 
-                self.twVariables.resizeColumnsToContents()
-                if flag_renamed:
-                    QMessageBox.information(self, programName, "Some variables already present were renamed")
+                    self.twVariables.resizeColumnsToContents()
+                    if flag_renamed:
+                        QMessageBox.information(self, programName, "Some variables already present were renamed")
 
-            else:
-                QMessageBox.warning(self, programName, "No independent variables found in project")
+                else:
+                    QMessageBox.warning(self, programName, "No independent variables found in project")
+
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Import independent variable from project: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("Import independent variable from project", error_type, error_file_name, error_lineno)
 
 
     def pbImportSubjectsFromProject_clicked(self):
@@ -940,55 +968,56 @@ class projectDialog(QDialog, Ui_dlgProject):
         import subjects from another project
         """
 
-        fileName, _ = QFileDialog().getOpenFileName(self, "Import subjects from project file", "",
-                                                    "Project files (*.boris);;All files (*)")
+        try:
+            fn = QFileDialog().getOpenFileName(self, "Import subjects from project file", "",
+                                            ("Project files (*.boris *.boris.gz);;"
+                                                "All files (*)")
+                                            )
+            file_name = fn[0] if type(fn) is tuple else fn
 
-        if fileName:
-            try:
-                with open(fileName, "r") as infile:
-                    project = json.loads(infile.read())
-            except Exception:
-                QMessageBox.warning(None, programName, "Error while reading subjects from selected file",
-                                    QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                return
+            if file_name:
+                _, _, project, _ = project_functions.open_project_json(file_name)
 
-            # configuration of behaviours
-            if project[SUBJECTS]:
+                if "error" in project:
+                    logging.debug(project["error"])
+                    QMessageBox.critical(self, programName, project["error"])
+                    return
 
-                if self.twSubjects.rowCount():
-                    response = dialog.MessageDialog(programName,
-                                                    ("There are subjects already configured. "
-                                                     "Do you want to append subjects or replace them?"),
-                                                    ['Append', 'Replace', 'Cancel'])
+                # configuration of behaviours
+                if SUBJECTS in project and project[SUBJECTS]:
 
-                    if response == "Replace":
-                        self.twSubjects.setRowCount(0)
+                    if self.twSubjects.rowCount():
+                        response = dialog.MessageDialog(programName,
+                                                        ("There are subjects already configured. "
+                                                        "Do you want to append subjects or replace them?"),
+                                                        ['Append', 'Replace', 'Cancel'])
 
-                    if response == CANCEL:
-                        return
+                        if response == "Replace":
+                            self.twSubjects.setRowCount(0)
 
-                '''
-                subjects_to_import = self.select_behaviors(title="Select the subjects to import",
-                                                           text="Subjects",
-                                                           behavioral_categories=[],
-                                                           ethogram=dict(project[SUBJECTS]))
-                '''
+                        if response == CANCEL:
+                            return
 
-                for idx in sorted_keys(project[SUBJECTS]):
+                    for idx in utilities.sorted_keys(project[SUBJECTS]):
 
-                    self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
+                        self.twSubjects.setRowCount(self.twSubjects.rowCount() + 1)
 
-                    for idx2, sbjField in enumerate(subjectsFields):
+                        for idx2, sbjField in enumerate(subjectsFields):
 
-                        if sbjField in project[SUBJECTS][idx]:
-                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2,
-                                                    QTableWidgetItem(project[SUBJECTS][idx][sbjField]))
-                        else:
-                            self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
+                            if sbjField in project[SUBJECTS][idx]:
+                                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2,
+                                                        QTableWidgetItem(project[SUBJECTS][idx][sbjField]))
+                            else:
+                                self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx2, QTableWidgetItem(""))
 
-                self.twSubjects.resizeColumnsToContents()
-            else:
-                QMessageBox.warning(self, programName, "No subjects configuration found in project")
+                    self.twSubjects.resizeColumnsToContents()
+                else:
+                    QMessageBox.warning(self, programName, "No subjects configuration found in project")
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"Import subjects from project: {error_type} {error_file_name} {error_lineno}")
+
+            dialog.error_message_box("Import subjects from project", error_type, error_file_name, error_lineno)
 
 
     def select_behaviors(self, title="Record value from external data file",
@@ -1045,7 +1074,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
             # check if behavior type must be shown
-            for behavior in [ethogram[x][BEHAVIOR_CODE] for x in sorted_keys(ethogram)]:
+            for behavior in [ethogram[x][BEHAVIOR_CODE] for x in utilities.sorted_keys(ethogram)]:
 
                 if ((categories == ["###no category###"]) or
                    (behavior in [ethogram[x][BEHAVIOR_CODE] for x in ethogram
@@ -1076,24 +1105,22 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         try:
-            fn = QFileDialog().getOpenFileName(self, "Import behaviors from project file", "", "Project files (*.boris);;All files (*)")
-            fileName = fn[0] if type(fn) is tuple else fn
 
-            if fileName:
-                try:
-                    with open(fileName, "r") as infile:
-                        project = json.loads(infile.read())
-                except Exception:
-                    QMessageBox.warning(None, programName, "Error while reading behaviors from selected file",
-                                        QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-                    return
+            fn = QFileDialog().getOpenFileName(self, "Import behaviors from project file", "",
+                                               ("Project files (*.boris *.boris.gz);;"
+                                               "All files (*)")
+                                              )
+            file_name = fn[0] if type(fn) is tuple else fn
+
+            if file_name:
+                _, _, project, _ = project_functions.open_project_json(file_name)
 
                 # import behavioral_categories
                 if BEHAVIORAL_CATEGORIES in project:
                     self.pj[BEHAVIORAL_CATEGORIES] = list(project[BEHAVIORAL_CATEGORIES])
 
                 # configuration of behaviours
-                if project[ETHOGRAM]:
+                if ETHOGRAM in project and project[ETHOGRAM]:
                     if self.twBehaviors.rowCount():
                         response = dialog.MessageDialog(programName,
                                                         ("Some behaviors are already configured. "
@@ -1110,7 +1137,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                                 ethogram=dict(project[ETHOGRAM]),
                                                                 behavior_type=[STATE_EVENT, POINT_EVENT])
 
-                    for i in sorted_keys(project[ETHOGRAM]):
+                    for i in utilities.sorted_keys(project[ETHOGRAM]):
 
                         if project[ETHOGRAM][i][BEHAVIOR_CODE] not in behaviors_to_import:
                             continue
@@ -1150,8 +1177,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                     QMessageBox.warning(self, programName, "No behaviors configuration found in project")
 
         except Exception:
-            logging.critical("Error during importing behaviors from a BORIS project")
-            dialog.error_message("importing behaviors from a BORIS project", sys.exc_info())
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+            logging.critical(f"importing behaviors from a BORIS project: {error_type} {error_file_name} {error_lineno}")
+            dialog.error_message_box("importing behaviors from a BORIS project",
+                                     error_type, error_file_name, error_lineno)
 
 
     def pbExclusionMatrix_clicked(self):
@@ -1905,7 +1934,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
     def pbCancel_clicked(self):
         if self.flag_modified:
-            if dialog.MessageDialog("BORIS", "The converters were modified. Are you sure to cancel?", [CANCEL, OK]) == OK:
+            if dialog.MessageDialog("BORIS", "The converters were modified. Are you sure to cancel?",
+                                    [CANCEL, OK]) == OK:
                 self.reject()
         else:
             self.reject()

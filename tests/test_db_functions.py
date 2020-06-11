@@ -12,7 +12,7 @@ import os
 import sys
 import json
 
-sys.path.append("../src")
+sys.path.append("/home/olivier/projects/BORIS/boris")
 import db_functions
 
 

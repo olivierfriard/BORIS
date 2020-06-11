@@ -51,21 +51,26 @@ def MessageDialog(title, text, buttons):
     return message.clickedButton().text()
 
 
-def error_message(task: str, exc_info: tuple) -> None:
-    """
-    show details about the error
-
-    """
-    error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
+def error_message_box(task, error_type, error_file_name, error_lineno):
     QMessageBox.critical(None, programName,
                          (f"An error occured during {task}.<br>"
                           f"BORIS version: {version.__version__}<br>"
                           f"Error: {error_type}<br>"
                           f"in {error_file_name} "
                           f"at line # {error_lineno}<br><br>"
-                          "Please report this problem to improve the software at:<br>"
-                          '<a href="https://github.com/olivierfriard/BORIS/issues">https://github.com/olivierfriard/BORIS/issues</a>'
+                          "to improve the software please report this problem at:<br>"
+                          '<a href="https://github.com/olivierfriard/BORIS/issues">'
+                          'https://github.com/olivierfriard/BORIS/issues</a><br>'
+                          "or by email (See the About page on the BORIS web site."
                           ))
+
+
+def error_message(task: str, exc_info: tuple) -> None:
+    """
+    Show details about the error in a message box
+    """
+    error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
+    error_message_box(task, error_type, error_file_name, error_lineno)
 
 
 class Info_widget(QWidget):
