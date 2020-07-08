@@ -686,10 +686,10 @@ class projectDialog(QDialog, Ui_dlgProject):
 
         if column == behavioursFields["modifiers"]:
             # check if behavior has coding map
-            if self.twBehaviors.item(row, behavioursFields["coding map"]).text():
-                QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
+            if (self.twBehaviors.item(row, behavioursFields["coding map"]) is not None 
+                and self.twBehaviors.item(row, behavioursFields["coding map"]).text()):
+                    QMessageBox.warning(self, programName, "Use the coding map to set/modify the areas")
             else:
-
                 subjects_list = []
                 for subject_row in range(self.twSubjects.rowCount()):
                     key = self.twSubjects.item(subject_row, 0).text() if self.twSubjects.item(subject_row, 0) else ""
