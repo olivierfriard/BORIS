@@ -1675,6 +1675,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
             dialog.error_message("cloning a behavior", sys.exc_info())
 
+
     def pbRemoveBehavior_clicked(self):
         """
         remove behavior
