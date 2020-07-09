@@ -1031,6 +1031,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # Actions for twSubjects context menu
         self.twSubjects.setContextMenuPolicy(Qt.ActionsContextMenu)
+        self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
         self.actionFilterSubjects.triggered.connect(self.filter_subjects)
         self.twSubjects.addAction(self.actionFilterSubjects)
 
@@ -1142,27 +1143,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         advanced_event_filtering.event_filtering(self.pj)
 
 
-    def twEthogram_sorted(self):
+    def twEthogram_sorted(self, index, order):
         """
-        Ethogram widget sorted
+        Sort ethogram widget
         """
-        pass
 
-        # disabled because ethogram can be filtered
-        '''
-        new_ethogram = {}
-        new_idx = 0
-        not_in_ethogram_widget = []
-        for idx in self.pj[ETHOGRAM]:
-            for row in range(self.twEthogram.rowCount()):
-                code = self.twEthogram.item(row, 1).text()
-                if self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] == code:
-                    new_ethogram[str(row)] = dict(self.pj[ETHOGRAM][idx])
-            else:
-                not_in_ethogram_widget.append(self.pj[ETHOGRAM][idx][BEHAVIOR_CODE])
+        self.twEthogram.sortItems(index, order)
 
-        self.pj[ETHOGRAM] = dict(new_ethogram)
-        '''
+
+    def sort_twSubjects(self, index, order):
+        """
+        Sort subjects widget
+        """
+
+        self.twSubjects.sortItems(index, order)
 
 
     def export_observations_list_clicked(self):

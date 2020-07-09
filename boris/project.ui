@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabProject">
        <property name="currentIndex">
-        <number>1</number>
+        <number>6</number>
        </property>
        <widget class="QWidget" name="tabInformation">
         <attribute name="title">
@@ -129,10 +129,10 @@
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="sortingEnabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-                <bool>true</bool>
+                <bool>false</bool>
                </attribute>
                <attribute name="verticalHeaderShowSortIndicator" stdset="0">
                 <bool>false</bool>
@@ -324,7 +324,7 @@ from a BORIS project</string>
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="sortingEnabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <column>
                 <property name="text">
@@ -452,10 +452,10 @@ from a BORIS project</string>
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="sortingEnabled">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-                <bool>true</bool>
+                <bool>false</bool>
                </attribute>
                <column>
                 <property name="text">
@@ -823,7 +823,7 @@ from a BORIS project</string>
               <enum>QAbstractItemView::SelectRows</enum>
              </property>
              <property name="sortingEnabled">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
              <column>
               <property name="text">
@@ -898,7 +898,7 @@ from a BORIS project</string>
               <enum>QAbstractItemView::SelectRows</enum>
              </property>
              <property name="sortingEnabled">
-              <bool>true</bool>
+              <bool>false</bool>
              </property>
              <column>
               <property name="text">

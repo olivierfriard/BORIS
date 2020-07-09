@@ -388,6 +388,23 @@ class projectDialog(QDialog, Ui_dlgProject):
                        self.leSetValues]:
             widget.setEnabled(False)
 
+        self.twBehaviors.horizontalHeader().sortIndicatorChanged.connect(self.sort_twBehaviors)
+        self.twSubjects.horizontalHeader().sortIndicatorChanged.connect(self.sort_twSubjects)
+        self.twVariables.horizontalHeader().sortIndicatorChanged.connect(self.sort_twVariables)
+
+
+    def sort_twBehaviors(self, index, order):
+        """order ethogram table"""
+        self.twBehaviors.sortItems(index, order)
+
+    def sort_twSubjects(self, index, order):
+        """order subjects table"""
+        self.twSubjects.sortItems(index, order)
+
+    def sort_twVariables(self, index, order):
+        """order variables table"""
+        self.twVariables.sortItems(index, order)
+
 
     def convert_behaviors_keys_to_lower_case(self):
         """
@@ -1640,19 +1657,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
         clone the selected configuration
         """
-        if not self.twBehaviors.selectedIndexes():
-            QMessageBox.about(self, programName, "First select a behavior")
-        else:
-            self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
+        try:
+            if not self.twBehaviors.selectedIndexes():
+                QMessageBox.about(self, programName, "First select a behavior")
+            else:
+                self.twBehaviors.setRowCount(self.twBehaviors.rowCount() + 1)
 
-            row = self.twBehaviors.selectedIndexes()[0].row()
-            for field in behavioursFields:
-                item = QTableWidgetItem(self.twBehaviors.item(row, behavioursFields[field]))
-                self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
-                if field in [TYPE, "category", "excluded", "coding map", "modifiers"]:
-                    item.setFlags(Qt.ItemIsEnabled)
-                    item.setBackground(QColor(230, 230, 230))
-
+                row = self.twBehaviors.selectedIndexes()[0].row()
+                for field in behavioursFields:
+                    item = QTableWidgetItem(self.twBehaviors.item(row, behavioursFields[field]))
+                    self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field], item)
+                    if field in [TYPE, "category", "excluded", "coding map", "modifiers"]:
+                        item.setFlags(Qt.ItemIsEnabled)
+                        item.setBackground(QColor(230, 230, 230))
+            self.twBehaviors.scrollToBottom()
+        except Exception:
+            logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
+            dialog.error_message("cloning a behavior", sys.exc_info())
 
     def pbRemoveBehavior_clicked(self):
         """
@@ -1689,14 +1710,15 @@ class projectDialog(QDialog, Ui_dlgProject):
                 item = QTableWidgetItem()
                 if field_type == TYPE:
                     item.setText("Point event")
-
-                if field_type in [TYPE, "category", "excluded", "coding map", "modifiers"]:
+                # no manual editing, gray back ground
+                if field_type in [TYPE, "category", "modifiers", "excluded", "coding map"]:
                     item.setFlags(Qt.ItemIsEnabled)
                     item.setBackground(QColor(230, 230, 230))
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
         except Exception:
             logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
             dialog.error_message("adding a new behavior", sys.exc_info())
+        self.twBehaviors.scrollToBottom()
 
 
     def behaviorTypeChanged(self, row):
@@ -1723,8 +1745,8 @@ class projectDialog(QDialog, Ui_dlgProject):
                 # add modifiers from coding map areas
                 modifstr = str({"0": {"name": new_map["name"], "type": MULTI_SELECTION, "values": list(sorted(new_map['areas'].keys()))}})
 
-                self.twBehaviors.item(row, behavioursFields['modifiers']).setText(modifstr)
-                self.twBehaviors.item(row, behavioursFields['coding map']).setText(new_map["name"])
+                self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(modifstr)
+                self.twBehaviors.item(row, behavioursFields["coding map"]).setText(new_map["name"])
 
             else:
                 # if coding map already exists do not reset the behavior type if no filename selected
@@ -1748,6 +1770,7 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
             dialog.error_message("adding a new subject", sys.exc_info())
+        self.twSubjects.scrollToBottom()
 
 
     def pbRemoveSubject_clicked(self):
