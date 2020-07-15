@@ -53,15 +53,16 @@ def MessageDialog(title, text, buttons):
 
 def error_message_box(task, error_type, error_file_name, error_lineno):
     QMessageBox.critical(None, programName,
-                         (f"An error occured during {task}.<br>"
-                          f"BORIS version: {version.__version__}<br>"
+                         (f"BORIS version: {version.__version__}<br>"
+                          f"An error occured during the execution of: <b>{task}</b>.<br>"
                           f"Error: {error_type}<br>"
                           f"in {error_file_name} "
                           f"at line # {error_lineno}<br><br>"
                           "to improve the software please report this problem at:<br>"
                           '<a href="https://github.com/olivierfriard/BORIS/issues">'
                           'https://github.com/olivierfriard/BORIS/issues</a><br>'
-                          "or by email (See the About page on the BORIS web site."
+                          "or by email (See the About page on the BORIS web site.<br><br>"
+                          "Thank you for your collaboration!"
                           ))
 
 
