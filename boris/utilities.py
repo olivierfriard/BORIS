@@ -140,8 +140,8 @@ def file_content_md5(file_name: str) -> str:
 def txt2np_array(file_name: str,
                  columns_str: str,
                  substract_first_value: str,
-                 converters={},
-                 column_converter={}):
+                 converters=None,
+                 column_converter=None):
     """
     read a txt file (tsv or csv) and return np array with passed columns
 
@@ -158,6 +158,10 @@ def txt2np_array(file_name: str,
         numpy array: data. Empty if not data failed to be loaded
 
     """
+    if converters is None:
+        converters = {}
+    if column_converter is None:
+        column_converter = {}
 
     # check columns
     try:
