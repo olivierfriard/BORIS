@@ -57,15 +57,16 @@ def error_message_box(task, error_type, error_file_name, error_lineno):
     do not use this function directly, use error_message
     """
     QMessageBox.critical(None, programName,
-                         (f"An error occured during {task}.<br>"
-                          f"BORIS version: {version.__version__}<br>"
+                         (f"BORIS version: {version.__version__}<br>"
+                          f"An error occured during the execution of: <b>{task}</b>.<br>"
                           f"Error: {error_type}<br>"
                           f"in {error_file_name} "
                           f"at line # {error_lineno}<br><br>"
                           "to improve the software please report this problem at:<br>"
                           '<a href="https://github.com/olivierfriard/BORIS/issues">'
                           'https://github.com/olivierfriard/BORIS/issues</a><br>'
-                          "or by email (See the About page on the BORIS web site."
+                          "or by email (See the About page on the BORIS web site.<br><br>"
+                          "Thank you for your collaboration!"
                           ))
 
 
@@ -76,6 +77,7 @@ def error_message(task: str, exc_info: tuple) -> None:
     """
     error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
     logging.critical(f"Error during {task}: {error_type} in {error_file_name} at line #{error_lineno}")
+    #logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
     error_message_box(task, error_type, error_file_name, error_lineno)
 
 
