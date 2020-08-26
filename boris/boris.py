@@ -556,7 +556,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     close_the_same_current_event = False
     tcp_port = 0
     cleaningThread = TempDirCleanerThread()
-    bcm_dict = {}
+    bcm_dict = {}  # handle behavior coding map
     recent_projects = []
 
     filtered_subjects = []
@@ -2866,7 +2866,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def behaviors_coding_map_creator(self):
         """
-        show behaviors coding map creator window and hide program main window
+        show behaviors coding map creator window
         """
 
         if not self.project:
@@ -2880,6 +2880,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             codes_list.append(self.pj[ETHOGRAM][key][BEHAVIOR_CODE])
 
         self.mapCreatorWindow = behav_coding_map_creator.BehaviorsMapCreatorWindow(codes_list)
+        # behaviors coding map list
+        self.mapCreatorWindow.bcm_list = [x["name"].upper() for x in self.pj.get(BEHAVIORS_CODING_MAP, [])]
         self.mapCreatorWindow.signal_add_to_project.connect(self.behaviors_coding_map_creator_signal_addtoproject)
         self.mapCreatorWindow.move(self.pos())
         self.mapCreatorWindow.resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H)
@@ -5396,10 +5398,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             except Exception:
                 pass
 
-        for idx in self.bcm_dict:
-            self.bcm_dict[idx].close()
-            if idx in self.bcm_dict:
-                del self.bcm_dict[idx]
+        # delete behavior coding map
+        try:
+            for idx in self.bcm_dict:
+                if self.bcm_dict[idx] is not None:
+                    self.bcm_dict[idx].close()
+                self.bcm_dict[idx] = None
+        except Exception:
+            dialog.error_message(f"closing behavior coding map: {idx}", sys.exc_info())
+
 
 
     def close_observation(self):
@@ -5408,6 +5415,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         logging.info(f"Close observation {self.playerType}")
+
         try:
             # check observation events
             flag_ok, msg = project_functions.check_state_events_obs(self.observationId,
@@ -5467,8 +5475,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.verticalLayout_3.removeWidget(self.video_slider)
 
-                self.video_slider.deleteLater()
-                self.video_slider = None
+                if self.video_slider is not None:
+                    self.video_slider.deleteLater()
+                    self.video_slider = None
 
             if self.playerType == LIVE:
                 self.liveTimer.stop()
@@ -9143,24 +9152,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         self.keyPressEvent(event)
 
-
+    '''
     def close_behaviors_coding_map(self, coding_map_name):
 
-        del self.bcm_dict[coding_map_name]
+        try:
 
-        if hasattr(self, "bcm"):
-            '''
-            print("del bcm")
+            logging.debug(f"deleting behavior coding map: {coding_map_name} {self.bcm_dict[coding_map_name]}")
 
-            self.bcm.clickSignal.disconnect()
-            self.bcm.keypressSignal.disconnect()
-            self.bcm.close_signal.disconnect()
-
-            self.bcm.deleteLater()
-            #del self.bcm
-            '''
-            """FIXME: fix this"""
-            print('hasattr(self, "bcm")', hasattr(self, "bcm"))
+            # del self.bcm_dict[coding_map_name]
+            self.bcm_dict[coding_map_name].deleteLater()
+        except Exception:
+            dialog.error_message("deleting behavior coding map", sys.exc_info())
+    '''
 
 
     def show_behaviors_coding_map(self):
@@ -9182,7 +9185,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else:
                 return
 
-        if coding_map_name in self.bcm_dict:
+        if self.bcm_dict.get(coding_map_name, None) is not None:
+        #if coding_map_name in self.bcm_dict and :
             self.bcm_dict[coding_map_name].show()
         else:
             self.bcm_dict[coding_map_name] = behaviors_coding_map.BehaviorsCodingMapWindowClass(
@@ -9192,7 +9196,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.bcm_dict[coding_map_name].clickSignal.connect(self.click_signal_from_behaviors_coding_map)
 
-            self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
+            # self.bcm_dict[coding_map_name].close_signal.connect(self.close_behaviors_coding_map)
 
             self.bcm_dict[coding_map_name].resize(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_W)
             self.bcm_dict[coding_map_name].setWindowFlags(Qt.WindowStaysOnTopHint)

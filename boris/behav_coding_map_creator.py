@@ -256,7 +256,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btColor = QPushButton()
         self.btColor.clicked.connect(self.chooseColor)
         self.btColor.setVisible(False)
-        self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.areaColor.name()))
+        self.btColor.setStyleSheet(f"QWidget {{background-color:{self.areaColor.name()}}}")
         hlayout_area.addWidget(self.btColor)
 
         self.slAlpha = QSlider(Qt.Horizontal)
@@ -299,6 +299,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.statusBar().showMessage("")
 
+
     def add_to_project(self, item):
         """
         add coding map to project
@@ -306,8 +307,6 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         mapDict = self.make_coding_map_dict()
         self.signal_add_to_project.emit(mapDict)
-
-
 
 
     def area_list_item_click(self, item):
@@ -337,14 +336,11 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.btDeleteArea.setVisible(True)
 
         self.areaColor = self.selectedPolygon.brush().color()
-        self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.selectedPolygon.brush().color().name()))
+        self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
         self.btColor.setVisible(True)
 
         self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
         self.slAlpha.setVisible(True)
-
-
-
 
 
     def edit_area_code(self):
@@ -369,12 +365,13 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
             self.update_area_list()
 
+
     def slAlpha_changed(self, val):
         """
         opacity slider value changed
         """
 
-        self.btColor.setText("Opacity: {} %".format(val))
+        self.btColor.setText(f"Opacity: {val} %")
         self.areaColor.setAlpha(int(val / 100 * 255))
 
         if self.selectedPolygon:
@@ -475,7 +472,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
                     self.btDeleteArea.setVisible(True)
 
                     self.areaColor = self.selectedPolygon.brush().color()
-                    self.btColor.setStyleSheet("QWidget {{background-color:{}}}".format(self.selectedPolygon.brush().color().name()))
+                    self.btColor.setStyleSheet(f"QWidget {{background-color:{self.selectedPolygon.brush().color().name()}}}")
                     self.btColor.setVisible(True)
 
                     self.slAlpha.setValue(int(self.selectedPolygon.brush().color().alpha() / 255 * 100))
@@ -585,13 +582,27 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
     def mapName_clicked(self):
         """
-        change map name
+        Edit map name
         """
-        text, ok = QInputDialog.getText(self, "Behaviors coding map name", "Enter a name for the coding map",
-                                        QLineEdit.Normal, self.mapName)
-        if ok:
-            self.mapName = text
-            self.setWindowTitle("{} - Modifiers map creator tool - {}".format(programName, self.mapName))
+
+        while True:
+            map_name, ok = QInputDialog.getText(self, "Behaviors coding map name",
+                                                "Enter a name for the coding map",
+                                                QLineEdit.Normal, self.mapName)
+            if map_name.upper() in self.bcm_list:
+                QMessageBox.critical(self, "",
+                                ("The name for the new coding map already exists.<br>"
+                                f"{', '.join(self.bcm_list)} are already defined.<br>"
+                                "To reuse the same name the existing coding map must be deleted (File > Edit project)"
+                                )
+                                    )
+            if ok and map_name and map_name.upper() not in self.bcm_list:
+                self.mapName = map_name
+                self.setWindowTitle(f"{programName} - Behaviors coding map creator - {self.mapName}")
+                break
+            if not ok:
+                return
+
 
     def newMap(self):
         """
@@ -600,7 +611,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         if self.flagMapChanged:
 
-            response = dialog.MessageDialog(programName + " - Modifiers map creator",
+            response = dialog.MessageDialog(programName + " - Behaviors coding map creator",
                                             "What to do about the current unsaved coding map?",
                                             [SAVE, DISCARD, CANCEL])
 
@@ -613,17 +624,29 @@ class BehaviorsMapCreatorWindow(QMainWindow):
 
         self.cancelMap()
 
-        text, ok = QInputDialog.getText(self, "Behaviors coding map name", "Enter a name for the new coding map")
-        if ok:
-            self.mapName = text
-        else:
-            return
+        while True:
+            map_name, ok = QInputDialog.getText(self, "Behaviors coding map name",
+                                                "Enter a name for the new coding map")
+            if map_name.upper() in self.bcm_list:
+                QMessageBox.critical(self, "",
+                                ("The name for the new coding map already exists.<br>"
+                                f"{', '.join(self.bcm_list)} are already defined.<br>"
+                                "To reuse the same name the existing coding map must be deleted (File > Edit project)"
+                                )
+                                    )
+            if ok and map_name and map_name.upper() not in self.bcm_list:
+                self.mapName = map_name
+                break
+            if not ok:
+                return
 
+        '''
         if not self.mapName:
             QMessageBox.critical(self, "", "You must define a name for the new coding map")
             return
+        '''
 
-        self.setWindowTitle("{} - Behaviors coding map creator tool - {}".format(programName, self.mapName))
+        self.setWindowTitle(f"{programName} - Behaviors coding map creator tool - {self.mapName}")
 
         self.btLoad.setVisible(True)
         self.statusBar().showMessage('Click "Load bitmap" button to select and load a bitmap into the viewer')
@@ -654,23 +677,23 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             try:
                 self.codingMap = json.loads(open(fileName, "r").read())
             except Exception:
-                QMessageBox.critical(self, programName, "The file {} seems not a behaviors coding map...".format(fileName))
+                QMessageBox.critical(self, programName, f"The file {fileName} is not a behaviors coding map.")
                 return
 
             if "coding_map_type" not in self.codingMap or self.codingMap["coding_map_type"] != "BORIS behaviors coding map":
-                QMessageBox.critical(self, programName, "The file {} seems not a BORIS behaviors coding map...".format(fileName))
+                QMessageBox.critical(self, programName, f"The file {fileName} is not a BORIS behaviors coding map.")
 
             self.cancelMap()
 
             self.mapName = self.codingMap["name"]
 
-            self.setWindowTitle("{} - Behaviors coding map creator - {}".format(programName, self.mapName))
+            self.setWindowTitle(f"{programName} - Behaviors coding map creator - {self.mapName}")
 
             self.bitmapFileName = True
 
             self.fileName = fileName
 
-            bitmapContent = binascii.a2b_base64(self.codingMap['bitmap'])
+            bitmapContent = binascii.a2b_base64(self.codingMap["bitmap"])
 
             self.pixmap.loadFromData(bitmapContent)
 
@@ -900,7 +923,7 @@ class BehaviorsMapCreatorWindow(QMainWindow):
         self.area_list.clear()
         for idx, area in enumerate(self.polygonsList2):
             ac, pg = area
-            self.area_list.addItem("{} #{}".format(ac, idx))
+            self.area_list.addItem(f"{ac} #{idx}")
 
 
 
@@ -981,9 +1004,8 @@ class BehaviorsMapCreatorWindow(QMainWindow):
             if self.pixmap.size().width() > CODING_MAP_RESIZE_W or self.pixmap.size().height() > CODING_MAP_RESIZE_H:
                 self.pixmap = self.pixmap.scaled(CODING_MAP_RESIZE_W, CODING_MAP_RESIZE_H, Qt.KeepAspectRatio)
                 QMessageBox.information(self, programName,
-                                        ("The bitmap was resized to {}x{} pixels\n"
-                                         "The original file was not modified").format(self.pixmap.size().width(),
-                                                                                      self.pixmap.size().height()))
+                    (f"The bitmap was resized to {self.pixmap.size().width()}x{self.pixmap.size().height()} pixels\n"
+                        "The original file was not modified"))
 
             self.view.setSceneRect(0, 0, self.pixmap.size().width(), self.pixmap.size().height())
             pixitem = QGraphicsPixmapItem(self.pixmap)

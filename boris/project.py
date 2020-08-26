@@ -41,122 +41,13 @@ from boris import add_modifier
 from boris import dialog
 from boris import export_observation
 from boris import param_panel
+from boris import exclusion_matrix
 from boris.config import *
+
 from boris.project_ui import Ui_dlgProject
 import boris.utilities as utilities
 import boris.dialog as dialog
 import boris.project_functions as project_functions
-
-
-class ExclusionMatrix(QDialog):
-
-    def __init__(self):
-        super().__init__()
-
-        # self.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-        hbox = QVBoxLayout(self)
-
-        self.label = QLabel()
-        self.label.setText("Check behaviors excluded by")
-        hbox.addWidget(self.label)
-
-        self.twExclusions = QTableWidget()
-        self.twExclusions.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.twExclusions.setAlternatingRowColors(True)
-        self.twExclusions.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        hbox.addWidget(self.twExclusions)
-
-        hbox2 = QHBoxLayout()
-        spacer_item = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        hbox2.addItem(spacer_item)
-
-        self.pb_select_all = QPushButton("Check all")
-        self.pb_select_all.clicked.connect(lambda: self.pb_cb_selection("select"))
-        hbox2.addWidget(self.pb_select_all)
-
-        self.pb_unselect_all = QPushButton("Uncheck all")
-        self.pb_unselect_all.clicked.connect(lambda: self.pb_cb_selection("unselect"))
-        hbox2.addWidget(self.pb_unselect_all)
-
-        self.pb_revert_selection = QPushButton("Revert check")
-        self.pb_revert_selection.clicked.connect(lambda: self.pb_cb_selection("revert"))
-        hbox2.addWidget(self.pb_revert_selection)
-
-        self.pb_check_selected = QPushButton("Check selected")
-        self.pb_check_selected.clicked.connect(lambda: self.pb_selected(True))
-        hbox2.addWidget(self.pb_check_selected)
-
-        self.pb_uncheck_selected = QPushButton("Uncheck selected")
-        self.pb_uncheck_selected.clicked.connect(lambda: self.pb_selected(False))
-        hbox2.addWidget(self.pb_uncheck_selected)
-
-        self.pbCancel = QPushButton("Cancel")
-        self.pbCancel.clicked.connect(self.reject)
-        hbox2.addWidget(self.pbCancel)
-
-        self.pbOK = QPushButton("OK", clicked=self.accept)
-        '''self.pbOK.clicked.connect(self.accept)'''
-        hbox2.addWidget(self.pbOK)
-
-        hbox.addLayout(hbox2)
-        self.setLayout(hbox)
-
-        self.setWindowTitle("Behaviors exclusion matrix")
-        self.setGeometry(100, 100, 600, 400)
-
-
-    def pb_selected(self, to_check: bool):
-        """
-        check/uncheck the checkbox in selected cells
-
-        Args:
-            to_check (boolean): True to check else False
-        """
-        for selected_range in self.twExclusions.selectedRanges():
-            for row in range(selected_range.topRow(), selected_range.bottomRow() + 1):
-                for column in range(self.twExclusions.columnCount()):
-                    try:
-                        self.twExclusions.cellWidget(row, column).setChecked(to_check)
-                    except Exception:
-                        pass
-        self.cb_clicked()
-
-
-    def pb_cb_selection(self, mode):
-        """
-        button for checkbox selection/deselection and revert selection
-
-        Args:
-            mode (str): select, unselect, revert
-
-        """
-
-        for r in range(self.twExclusions.rowCount()):
-            for c in range(self.twExclusions.columnCount()):
-                if mode == "select":
-                    state = True
-                if mode == "unselect":
-                    state = False
-                try:
-                    if mode == "revert":
-                        state = not self.twExclusions.cellWidget(r, c).isChecked()
-                    self.twExclusions.cellWidget(r, c).setChecked(state)
-                except Exception:
-                    pass
-
-
-    def cb_clicked(self):
-        """
-        de/select the corresponding checkbox
-        """
-        for r, r_name in enumerate(self.allBehaviors):
-            for c, c_name in enumerate(self.stateBehaviors):
-                if c_name != r_name:
-                    try:
-                        self.checkboxes[f"{c_name}|{r_name}"].setChecked(self.checkboxes[f"{r_name}|{c_name}"].isChecked())
-                    except Exception:
-                        pass
 
 
 class BehavioralCategories(QDialog):
@@ -397,9 +288,11 @@ class projectDialog(QDialog, Ui_dlgProject):
         """order ethogram table"""
         self.twBehaviors.sortItems(index, order)
 
+
     def sort_twSubjects(self, index, order):
         """order subjects table"""
         self.twSubjects.sortItems(index, order)
+
 
     def sort_twVariables(self, index, order):
         """order variables table"""
@@ -468,10 +361,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     self.twBehaviors.item(row, behavioursFields["modifiers"]).setText(str(modifiers_dict))
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"convert_behaviors_keys_to_lower_case: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("convert_behaviors_keys_to_lower_case", error_type, error_file_name, error_lineno)
+            dialog.error_message("convert behaviors keys to lower case", sys.exc_info())
 
 
     def convert_subjects_keys_to_lower_case(self):
@@ -501,10 +391,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     self.twSubjects.item(row, subjectsFields.index("key")).setText(
                         self.twSubjects.item(row, subjectsFields.index("key")).text().lower())
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"convert subjects keys to lower case: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("convert subjects keys to lower case", error_type, error_file_name, error_lineno)
+            dialog.error_message("convert subjects keys to lower case", sys.exc_info())
 
 
     def add_behaviors_coding_map(self):
@@ -520,11 +407,11 @@ class projectDialog(QDialog, Ui_dlgProject):
                 try:
                     bcm = json.loads(open(fileName, "r").read())
                 except Exception:
-                    QMessageBox.critical(self, programName, f"The file {fileName} seems not a behaviors coding map...")
+                    QMessageBox.critical(self, programName, f"The file {fileName} is not a behaviors coding map.")
                     return
 
                 if "coding_map_type" not in bcm or bcm["coding_map_type"] != "BORIS behaviors coding map":
-                    QMessageBox.critical(self, programName, f"The file {fileName} seems not a BORIS behaviors coding map...")
+                    QMessageBox.critical(self, programName, f"The file {fileName} is not a BORIS behaviors coding map.")
 
                 if BEHAVIORS_CODING_MAP not in self.pj:
                     self.pj[BEHAVIORS_CODING_MAP] = []
@@ -548,10 +435,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 codes = ", ".join([bcm["areas"][idx]["code"] for idx in bcm["areas"]])
                 self.twBehavCodingMap.setItem(self.twBehavCodingMap.rowCount() - 1, 1, QTableWidgetItem(codes))
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"add behaviors coding map: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("add behaviors coding map", error_type, error_file_name, error_lineno)
+            dialog.error_message("add behaviors coding map", sys.exc_info())
 
 
     def remove_behaviors_coding_map(self):
@@ -805,9 +689,10 @@ class projectDialog(QDialog, Ui_dlgProject):
                                                      self.twVariables.cellWidget(row, tw_indVarFields.index("type")).currentIndex()):
                 QMessageBox.warning(self,
                                     programName + " - Independent variables error",
-                                    "The default value ({0}) of variable <b>{1}</b> is not compatible with variable type".format(
-                                        self.twVariables.item(row, tw_indVarFields.index("default value")).text(),
-                                        self.twVariables.item(row, tw_indVarFields.index("label")).text()))
+                    (f"The default value ({self.twVariables.item(row, tw_indVarFields.index('default value')).text()}) "
+                        f"of variable <b>{self.twVariables.item(row, tw_indVarFields.index('label')).text()}</b> "
+                        "is not compatible with variable type")
+                                   )
 
 
     def check_indep_var_config(self):
@@ -974,10 +859,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     QMessageBox.warning(self, programName, "No independent variables found in project")
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Import independent variable from project: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("Import independent variable from project", error_type, error_file_name, error_lineno)
+            dialog.error_message("Import independent variable from project", sys.exc_info())
 
 
     def pbImportSubjectsFromProject_clicked(self):
@@ -1031,10 +913,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                 else:
                     QMessageBox.warning(self, programName, "No subjects configuration found in project")
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Import subjects from project: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("Import subjects from project", error_type, error_file_name, error_lineno)
+            dialog.error_message("Import subjects from project", sys.exc_info())
 
 
     def select_behaviors(self, title="Record value from external data file",
@@ -1194,10 +1073,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     QMessageBox.warning(self, programName, "No behaviors configuration found in project")
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"importing behaviors from a BORIS project: {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box("importing behaviors from a BORIS project",
-                                     error_type, error_file_name, error_lineno)
+            dialog.error_message("importing behaviors from a BORIS project", sys.exc_info())
 
 
     def pbExclusionMatrix_clicked(self):
@@ -1206,7 +1082,8 @@ class projectDialog(QDialog, Ui_dlgProject):
         """
 
         if not self.twBehaviors.rowCount():
-            QMessageBox.critical(None, programName, "The ethogram is empty", QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            QMessageBox.critical(None, programName, "The ethogram is empty",
+            QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         for row in range(self.twBehaviors.rowCount()):
@@ -1215,24 +1092,30 @@ class projectDialog(QDialog, Ui_dlgProject):
                                      QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
                 return
 
-        ex = ExclusionMatrix()
+        ex = exclusion_matrix.ExclusionMatrix()
 
-        stateBehaviors, allBehaviors, excl, new_excl = [], [], {}, {}
+        state_behaviors, point_behaviors, allBehaviors, excl, new_excl = [], [], [], {}, {}
 
-        flag_point_event_present = False
-        includePointEvents = NO
-        for r in range(0, self.twBehaviors.rowCount()):
+        # list of point events
+        for r in range(self.twBehaviors.rowCount()):
             if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
                 if "Point" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
-                    includePointEvents = dialog.MessageDialog(programName, "Do you want to include point events?", [YES, NO])
-                    break
+                    point_behaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
+
+        # check if point are present and if user want to include them in exclusion matrix
+        include_point_events = NO
+        if point_behaviors:
+            include_point_events = dialog.MessageDialog(programName,
+                                                  "Do you want to include the point events in the exclusion matrix?",
+                                                        [YES, NO])
+
 
         for r in range(self.twBehaviors.rowCount()):
 
             if self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]):
 
-                if (includePointEvents == YES
-                        or (includePointEvents == NO and "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text())):
+                if (include_point_events == YES
+                        or (include_point_events == NO and "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text())):
                     allBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
 
                 excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = self.twBehaviors.item(
@@ -1240,55 +1123,66 @@ class projectDialog(QDialog, Ui_dlgProject):
                 new_excl[self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text()] = []
 
                 if "State" in self.twBehaviors.item(r, behavioursFields[TYPE]).text():
-                    stateBehaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
+                    state_behaviors.append(self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text())
 
-        logging.debug(f"all behaviors: {allBehaviors}")
-        logging.debug(f"stateBehaviors: {stateBehaviors}")
+        logging.debug(f"point behaviors: {point_behaviors}")
+        logging.debug(f"state behaviors: {state_behaviors}")
 
-        if not stateBehaviors:
-            QMessageBox.critical(None, programName, "State events not found in behaviors list!",
+        if not state_behaviors:
+            QMessageBox.critical(None, programName, "No state events were defined in ethogram",
                                  QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         logging.debug(f"exclusion matrix {excl}")
 
         # first row contain state events
-        ex.twExclusions.setColumnCount(len(stateBehaviors))
-        ex.twExclusions.setHorizontalHeaderLabels(stateBehaviors)
+        ex.twExclusions.setColumnCount(len(state_behaviors))
+        ex.twExclusions.setHorizontalHeaderLabels(state_behaviors)
+        ex.twExclusions.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
 
-        # first column contains all events
-        ex.twExclusions.setRowCount(len(allBehaviors))
-        ex.twExclusions.setVerticalHeaderLabels(allBehaviors)
+        # first column contains all events: point + state
+        ex.twExclusions.setRowCount(len(point_behaviors + state_behaviors))
+        for idx, header in enumerate(point_behaviors + state_behaviors):
+            item = QTableWidgetItem(header)
+            if header in point_behaviors:
+                item.setBackground(QColor(0, 200, 200))
+            ex.twExclusions.setVerticalHeaderItem(idx, item)
+        ex.twExclusions.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        #ex.twExclusions.setVerticalHeaderLabels(point_behaviors + state_behaviors)
 
         ex.allBehaviors = allBehaviors
-        ex.stateBehaviors = stateBehaviors
+        ex.stateBehaviors = state_behaviors
+        ex.point_behaviors = point_behaviors
 
         ex.checkboxes = {}
 
-        for c, c_name in enumerate(stateBehaviors):
+        for c, c_name in enumerate(state_behaviors):
             flag_left_bottom = False
-            for r, r_name in enumerate(allBehaviors):
+            for r, r_name in enumerate(point_behaviors + state_behaviors):
                 if c_name == r_name:
                     flag_left_bottom = True
 
                 if c_name != r_name:
                     ex.checkboxes[f"{r_name}|{c_name}"] = QCheckBox()
+                    ex.checkboxes[f"{r_name}|{c_name}"].setStyleSheet("text-align: center; margin-left:50%; margin-right:50%;")
 
                     if flag_left_bottom:
                         # hide if cell in left-bottom part of table
                         ex.checkboxes[f"{r_name}|{c_name}"].setEnabled(False)
 
+                    # connect function when a CB is clicked
                     ex.checkboxes[f"{r_name}|{c_name}"].clicked.connect(ex.cb_clicked)
                     if c_name in excl[r_name]:
                         ex.checkboxes[f"{r_name}|{c_name}"].setChecked(True)
                     ex.twExclusions.setCellWidget(r, c, ex.checkboxes[f"{r_name}|{c_name}"])
 
+        ex.twExclusions.resizeColumnsToContents()
         # check corresponding checkbox
         ex.cb_clicked()
 
         if ex.exec_():
-            for c, c_name in enumerate(stateBehaviors):
-                for r, r_name in enumerate(allBehaviors):
+            for c, c_name in enumerate(state_behaviors):
+                for r, r_name in enumerate(point_behaviors + state_behaviors):
                     if c_name != r_name:
                         if ex.twExclusions.cellWidget(r, c).isChecked():
                             if c_name not in new_excl[r_name]:
@@ -1298,8 +1192,8 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             # update excluded field
             for r in range(self.twBehaviors.rowCount()):
-                if (includePointEvents == YES
-                         or (includePointEvents == NO and "State" in self.twBehaviors.item(r, 0).text())):
+                if (include_point_events == YES
+                         or (include_point_events == NO and "State" in self.twBehaviors.item(r, 0).text())):
                     for e in excl:
                         if e == self.twBehaviors.item(r, behavioursFields[BEHAVIOR_CODE]).text():
                             item = QTableWidgetItem(",".join(new_excl[e]))
@@ -1567,7 +1461,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                         self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
         except Exception:
-            logging.critical("Error during importing behaviors from clipboard")
             dialog.error_message("importing behaviors from clipboard", sys.exc_info())
 
 
@@ -1620,7 +1513,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                         item = QTableWidgetItem(subject.get(field_name, ""))
                         self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
         except Exception:
-            logging.critical("Error during importing subjects from clipboard")
             dialog.error_message("importing subjects from clipboard", sys.exc_info())
 
 
@@ -1672,7 +1564,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                         item.setBackground(QColor(230, 230, 230))
             self.twBehaviors.scrollToBottom()
         except Exception:
-            logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
             dialog.error_message("cloning a behavior", sys.exc_info())
 
 
@@ -1717,7 +1608,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                     item.setBackground(QColor(230, 230, 230))
                 self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
         except Exception:
-            logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
             dialog.error_message("adding a new behavior", sys.exc_info())
         self.twBehaviors.scrollToBottom()
 
@@ -1769,7 +1659,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 item = QTableWidgetItem("")
                 self.twSubjects.setItem(self.twSubjects.rowCount() - 1, col, item)
         except Exception:
-            logging.critical(f"Error:<br><b>{sys.exc_info()[1]}</b>")
             dialog.error_message("adding a new subject", sys.exc_info())
         self.twSubjects.scrollToBottom()
 
@@ -1809,7 +1698,6 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                     self.twSubjects_cellChanged(0, 0)
         except Exception:
-            logging.critical(f"Error removing subject: {sys.exc_info()[1]}")
             dialog.error_message("removing subject", sys.exc_info())
 
 
@@ -1859,7 +1747,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                         else:   # remove without asking
                             self.twSubjects.removeRow(row_mem[nameToDelete])
         except Exception:
-            logging.critical(f"Error removing all subjects: {sys.exc_info()[1]}")
             dialog.error_message("removing all subjects", sys.exc_info())
 
 
@@ -1918,7 +1805,6 @@ class projectDialog(QDialog, Ui_dlgProject):
                 self.cbType.clear()
             return
 
-
         # enable widget for indep var setting
         for widget in [self.leLabel, self.leDescription, self.cbType, self.lePredefined, self.dte_default_date, self.leSetValues]:
             widget.setEnabled(True)
@@ -1940,20 +1826,23 @@ class projectDialog(QDialog, Ui_dlgProject):
         remove all selected observations
         """
 
-        if not self.twObservations.selectedIndexes():
-            QMessageBox.warning(self, programName, "No selected observation")
-        else:
-            response = dialog.MessageDialog(programName, "Are you sure to remove all the selected observation?", [YES, CANCEL])
-            if response == YES:
-                rows_to_delete = []
-                for index in self.twObservations.selectedIndexes():
-                    rows_to_delete.append(index.row())
-                    obs_id = self.twObservations.item(index.row(), 0).text()
-                    if obs_id in self.pj[OBSERVATIONS]:
-                        del self.pj[OBSERVATIONS][obs_id]
+        try:
+            if not self.twObservations.selectedIndexes():
+                QMessageBox.warning(self, programName, "No selected observation")
+            else:
+                response = dialog.MessageDialog(programName, "Are you sure to remove all the selected observation?", [YES, CANCEL])
+                if response == YES:
+                    rows_to_delete = []
+                    for index in self.twObservations.selectedIndexes():
+                        rows_to_delete.append(index.row())
+                        obs_id = self.twObservations.item(index.row(), 0).text()
+                        if obs_id in self.pj[OBSERVATIONS]:
+                            del self.pj[OBSERVATIONS][obs_id]
 
-                for row in sorted(set(rows_to_delete), reverse=True):
-                    self.twObservations.removeRow(row)
+                    for row in sorted(set(rows_to_delete), reverse=True):
+                        self.twObservations.removeRow(row)
+        except Exception:
+            dialog.error_message("removing observation", sys.exc_info())
 
 
     def pbCancel_clicked(self):
@@ -2263,23 +2152,26 @@ class projectDialog(QDialog, Ui_dlgProject):
     def modify_converter(self):
         """Modifiy the selected converter"""
 
-        if not self.tw_converters.selectedIndexes():
-            QMessageBox.warning(self, programName, "Select a converter in the table")
-            return
+        try:
+            if not self.tw_converters.selectedIndexes():
+                QMessageBox.warning(self, programName, "Select a converter in the table")
+                return
 
-        for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
-            w.setEnabled(True)
+            for w in [self.le_converter_name, self.le_converter_description, self.pteCode, self.pb_save_converter, self.pb_cancel_converter]:
+                w.setEnabled(True)
 
-        # disable buttons
-        for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
-                  self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
-            w.setEnabled(False)
+            # disable buttons
+            for w in [self.pb_add_converter, self.pb_modify_converter, self.pb_delete_converter,
+                    self.pb_load_from_file, self.pb_load_from_repo, self.tw_converters]:
+                w.setEnabled(False)
 
-        self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
-        self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
-        self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
+            self.le_converter_name.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 0).text())
+            self.le_converter_description.setText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 1).text())
+            self.pteCode.setPlainText(self.tw_converters.item(self.tw_converters.selectedIndexes()[0].row(), 2).text().replace("@", "\n"))
 
-        self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
+            self.row_in_modification = self.tw_converters.selectedIndexes()[0].row()
+        except Exception:
+            dialog.error_message("modifying a converter", sys.exc_info())
 
 
     def code_2_func(self, name, code):
@@ -2328,7 +2220,6 @@ class projectDialog(QDialog, Ui_dlgProject):
         except Exception:
             QMessageBox.critical(self, "BORIS", f"The code produces an error:<br><b>{sys.exc_info()[1]}</b>")
             return
-
 
         if self.row_in_modification == -1:
             self.tw_converters.setRowCount(self.tw_converters.rowCount() + 1)
@@ -2500,12 +2391,3 @@ class projectDialog(QDialog, Ui_dlgProject):
                 [self.tw_converters.resizeColumnToContents(idx) for idx in [0, 1]]
 
 
-
-
-if __name__ == '__main__':
-
-    app = QApplication(sys.argv)
-    w = projectDialog()
-    w.show()
-    w.exec_()
-    sys.exit()
