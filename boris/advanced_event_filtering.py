@@ -25,7 +25,8 @@ import re
 import statistics
 import sys
 
-import intervals as Interval  # python-intervals (https://pypi.org/project/python-intervals)
+#import intervals as Interval  # python-intervals (https://pypi.org/project/python-intervals)
+import portion as Interval    # replace python-intervals (https://pypi.org/project/portion/)
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -208,7 +209,7 @@ class Advanced_event_filtering_dialog(QDialog):
             try:
                 eval_result = eval(logic)
                 for i in eval_result:
-                    if not i.is_empty():
+                    if not i.empty:
                         self.out.append([obs_id, "", f"{i.lower}", f"{i.upper}", f"{i.upper - i.lower:.3f}"])
             except KeyError:
                 self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])

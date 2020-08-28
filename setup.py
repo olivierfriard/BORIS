@@ -28,7 +28,7 @@ setup(
           "matplotlib",
           "numpy",
           "tablib",
-          "python-intervals",
+          "portion",
           "pyqt5"
       ],
 
