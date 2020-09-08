@@ -27,6 +27,11 @@ setup(
     install_requires=[
           "matplotlib",
           "numpy",
+          "odfpy",
+          "openpyxl",
+          "xlrd",
+          "xlwt",
+          "MarkupPy",
           "tablib",
           "portion",
           "pyqt5"
