@@ -29,14 +29,14 @@
      <item>
       <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>Date</string>
+        <string>Date and time</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QDateTimeEdit" name="dteDate">
        <property name="displayFormat">
-        <string>yyyy-MM-dd hh:mm</string>
+        <string>yyyy-MM-dd hh:mm:ss</string>
        </property>
        <property name="calendarPopup">
         <bool>true</bool>
@@ -554,6 +554,29 @@
               <widget class="QCheckBox" name="cb_start_from_current_time">
                <property name="text">
                 <string>Start from current time</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="rb_day_time">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Day time</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="rb_epoch_time">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Epoch time (seconds since 1970-01-01)</string>
                </property>
               </widget>
              </item>

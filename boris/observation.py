@@ -144,8 +144,17 @@ class Observation(QDialog, Ui_Form):
         self.cbCloseCurrentBehaviorsBetweenVideo.setChecked(False)
         self.cbCloseCurrentBehaviorsBetweenVideo.setEnabled(False)
 
+        self.cb_start_from_current_time.stateChanged.connect(self.cb_start_from_current_time_changed)
+
         self.tabWidget.setCurrentIndex(0)
 
+
+    def cb_start_from_current_time_changed(self):
+        """
+        enable/disable radiobox for type of time selection
+        """
+        self.rb_day_time.setEnabled(self.cb_start_from_current_time.isChecked())
+        self.rb_epoch_time.setEnabled(self.cb_start_from_current_time.isChecked())
 
     def limit_time_interval(self):
         """

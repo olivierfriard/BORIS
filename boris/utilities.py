@@ -970,6 +970,11 @@ def seconds2time(sec):
     Returns:
         str: time in format hh:mm:ss
     """
+
+    if sec > 1_600_000_000: # epoch time
+        t = datetime.datetime.fromtimestamp(sec)
+        return f"{t:%Y-%m-%d %H:%M:%S}.{t.microsecond/1000:03.0f}"
+
     neg_sign = "-" * (sec < 0)
     abs_sec = abs(sec)
 

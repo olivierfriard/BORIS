@@ -4709,6 +4709,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
             current_time = utilities.seconds_of_day(datetime.datetime.now())
+        elif self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_EPOCH_TIME, False):
+            current_time = time.mktime(datetime.datetime.now().timetuple())
         else:
             current_time = 0
 
@@ -4923,9 +4925,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
                 observationWindow.tabProjectType.setCurrentIndex(live)
                 # sampling time
-                observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId].get("scan_sampling_time", 0))
+                observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId].get(SCAN_SAMPLING_TIME, 0))
                 # start from current time
-                observationWindow.cb_start_from_current_time.setChecked(self.pj[OBSERVATIONS][obsId].get("start_from_current_time", False))
+                observationWindow.cb_start_from_current_time.setChecked(self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False) 
+                                                                        or self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_EPOCH_TIME, False))
+                # day/epoch time
+                observationWindow.rb_day_time.setChecked(self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_TIME, False))
+                observationWindow.rb_epoch_time.setChecked(self.pj[OBSERVATIONS][obsId].get(START_FROM_CURRENT_EPOCH_TIME, False))
 
             # spectrogram
             observationWindow.cbVisualizeSpectrogram.setEnabled(True)
@@ -5086,7 +5092,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             if self.pj[OBSERVATIONS][new_obs_id][TYPE] in [LIVE]:
                 self.pj[OBSERVATIONS][new_obs_id][SCAN_SAMPLING_TIME] = observationWindow.sbScanSampling.value()
-                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_TIME] = observationWindow.cb_start_from_current_time.isChecked()
+                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_TIME] = (observationWindow.cb_start_from_current_time.isChecked() 
+                                                                              and observationWindow.rb_day_time.isChecked())
+                self.pj[OBSERVATIONS][new_obs_id][START_FROM_CURRENT_EPOCH_TIME] = (observationWindow.cb_start_from_current_time.isChecked() 
+                                                                              and observationWindow.rb_epoch_time.isChecked())
 
             # media file
             self.pj[OBSERVATIONS][new_obs_id][FILE] = {}
@@ -7282,7 +7291,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return f"{sec:.3f}"
 
         if self.timeFormat == HHMMSS:
-            return seconds2time(sec)
+            return utilities.seconds2time(sec)
 
 
     def edit_project(self, mode: str):
@@ -7680,6 +7689,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
             current_time = utilities.seconds_of_day(datetime.datetime.now())
+        elif self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_EPOCH_TIME, False):
+            current_time = time.time()
         else:
             current_time = self.getLaps()
 
@@ -7738,6 +7749,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.timeFormat == HHMMSS:
                 if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
                     self.lb_current_media_time.setText(datetime.datetime.now().isoformat(" ").split(" ")[1][:12])
+                elif self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_EPOCH_TIME, False):
+                    self.lb_current_media_time.setText(datetime.datetime.fromtimestamp(time.time()))
                 else:
                     self.lb_current_media_time.setText("00:00:00.000")
 
@@ -10202,6 +10215,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             else: # no scan sampling
                 if self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_TIME, False):
                     memLaps = Decimal(str(utilities.seconds_of_day(datetime.datetime.now())))
+                elif self.pj[OBSERVATIONS][self.observationId].get(START_FROM_CURRENT_EPOCH_TIME, False):
+                    memLaps = Decimal(time.time())
                 else:
                     memLaps = self.getLaps()
 
