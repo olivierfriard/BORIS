@@ -54,7 +54,7 @@ def MessageDialog(title, text, buttons):
 def error_message_box(task, error_type, error_file_name, error_lineno):
     """
     show a critical dialog
-    do not use this function directly, use error_message
+    do NOT use this function directly, use error_message function
     """
     QMessageBox.critical(None, programName,
                          (f"BORIS version: {version.__version__}<br>"

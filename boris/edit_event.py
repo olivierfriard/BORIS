@@ -30,7 +30,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from boris import duration_widget
-from boris.config import HHMMSS, HHMMSSZZZ, S
+from boris.config import HHMMSS, HHMMSSZZZ, S, programName
 from boris.edit_event_ui import Ui_Form
 from boris.utilities import seconds2time
 
@@ -144,12 +144,12 @@ class EditSelectedEvents(QDialog):
 
     def pbOK_clicked(self):
         if not self.rbSubject.isChecked() and not self.rbBehavior.isChecked() and not self.rbComment.isChecked():
-            QMessageBox.warning(None, config.programName, "You must select a field to be edited",
+            QMessageBox.warning(None, programName, "You must select a field to be edited",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 
         if (self.rbSubject.isChecked() or self.rbBehavior.isChecked()) and self.newText.selectedItems() == []:
-            QMessageBox.warning(None, config.programName, "You must select a new value from the list",
+            QMessageBox.warning(None, programName, "You must select a new value from the list",
                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
             return
 

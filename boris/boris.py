@@ -6113,6 +6113,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not synth_tb_param[SELECTED_SUBJECTS] or not synth_tb_param[SELECTED_BEHAVIORS]:
             return
 
+        # ask for excluding behaviors durations from total time
+        synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+                                                                   text=("The duration of the selected behaviors will "
+                                                                         "be subtracted from the total time"),
+                                                                   table="",
+                                                                   behavior_type=[STATE_EVENT])
+
         extended_file_formats = ["Tab Separated Values (*.tsv)",
                                  "Comma Separated Values (*.csv)",
                                  "Open Document Spreadsheet ODS (*.ods)",
@@ -6133,13 +6140,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             f"The file {file_name} already exists.",
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return
-
-        # ask for excluding behaviors durations from total time
-        synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
-                                                                   text=("The duration of the selected behaviors will "
-                                                                         "be subtracted from the total time"),
-                                                                   table="",
-                                                                   behavior_type=[STATE_EVENT])
 
         ok, msg, data_report = time_budget_functions.synthetic_time_budget(self.pj,
                                                                            selected_observations,

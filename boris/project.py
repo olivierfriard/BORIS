@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 """
 
-
 import json
 import logging
 import pathlib
