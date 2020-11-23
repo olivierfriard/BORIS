@@ -20,6 +20,7 @@ This file is part of BORIS.
 
 """
 
+print("hello from boris2")
 
 import datetime
 import hashlib

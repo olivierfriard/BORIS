@@ -22,9 +22,9 @@ This file is part of BORIS.
 
 """
 
-import sys
-
+# from .core import main
 from boris import main
 
 main()
+
 

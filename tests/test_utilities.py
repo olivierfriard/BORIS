@@ -20,11 +20,11 @@ import json
 import datetime
 import numpy as np
 
-sys.path.append("../src")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import utilities
-import config
 
+from boris import utilities
+from boris import config
 
 @pytest.fixture()
 def before():

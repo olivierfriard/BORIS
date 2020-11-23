@@ -13,12 +13,16 @@ import sys
 import json
 import os
 from openpyxl import load_workbook
-
-sys.path.append("../src")
-from config import *
-import export_observation
 import tablib
 
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from boris import config
+from boris import export_observation
+
+
+SELECTED_SUBJECTS = config.SELECTED_SUBJECTS
+SELECTED_BEHAVIORS= config.SELECTED_BEHAVIORS
 
 @pytest.fixture()
 def before():
@@ -40,8 +44,8 @@ class Test_export_events(object):
 
         r, msg = export_observation.export_events(parameters,
                                                   obs_id,
-                                                  pj[OBSERVATIONS][obs_id],
-                                                  pj[ETHOGRAM],
+                                                  pj[config.OBSERVATIONS][obs_id],
+                                                  pj[config.ETHOGRAM],
                                                   "output/" + file_name,
                                                   output_format)
 
@@ -60,8 +64,8 @@ class Test_export_events(object):
 
         r, msg = export_observation.export_events(parameters,
                                                   obs_id,
-                                                  pj[OBSERVATIONS][obs_id],
-                                                  pj[ETHOGRAM],
+                                                  pj[config.OBSERVATIONS][obs_id],
+                                                  pj[config.ETHOGRAM],
                                                   "output/" + file_name, output_format)
 
         assert open("files/test_export_events_tabular.csv").read() == open("output/test_export_events_tabular.csv").read()
@@ -78,8 +82,8 @@ class Test_export_events(object):
 
         r, msg = export_observation.export_events(parameters,
                                                   obs_id,
-                                                  pj[OBSERVATIONS][obs_id],
-                                                  pj[ETHOGRAM],
+                                                  pj[config.OBSERVATIONS][obs_id],
+                                                  pj[config.ETHOGRAM],
                                                   "output/" + file_name,
                                                   output_format)
 
@@ -98,8 +102,8 @@ class Test_export_events(object):
 
         r, msg = export_observation.export_events(parameters,
                                                   obs_id,
-                                                  pj[OBSERVATIONS][obs_id],
-                                                  pj[ETHOGRAM],
+                                                  pj[config.OBSERVATIONS][obs_id],
+                                                  pj[config.ETHOGRAM],
                                                   "output/" + file_name,
                                                   output_format)
 
@@ -136,10 +140,10 @@ class Test_export_aggregated_events(object):
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #2"
         parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
-                      "selected behaviors": ["p", "s"],
-                      "time": TIME_FULL_OBS,
-                      START_TIME: 0,
-                      END_TIME: 9*60}
+                      SELECTED_BEHAVIORS: ["p", "s"],
+                      "time": config.TIME_FULL_OBS,
+                      config.START_TIME: 0,
+                      config.END_TIME: 9*60}
 
         tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
         tablib_dataset_tsv = tablib_dataset.tsv
@@ -250,7 +254,7 @@ class Test_export_aggregated_events(object):
         obs_id = "observation #2"
         parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
                       "selected behaviors": ["s", "p"],
-                      "time": TIME_ARBITRARY_INTERVAL,
+                      "time": config.TIME_ARBITRARY_INTERVAL,
                       START_TIME: 0,
                       END_TIME: 1 * 60}
 
@@ -278,9 +282,9 @@ class Test_export_aggregated_events(object):
         obs_id = "observation #2"
         parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
                       "selected behaviors": ["s", "p"],
-                      "time": TIME_ARBITRARY_INTERVAL,
-                      START_TIME: 5,
-                      END_TIME: 30}
+                      "time": config.TIME_ARBITRARY_INTERVAL,
+                      config.START_TIME: 5,
+                      config.END_TIME: 30}
 
         tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
         tablib_dataset_tsv = tablib_dataset.tsv
@@ -304,11 +308,11 @@ class Test_export_aggregated_events(object):
         """
         pj = json.loads(open("files/test.boris").read())
         obs_id = "observation #2"
-        parameters = {"selected subjects": ["subject1", "subject2", "No focal subject"],
-                      "selected behaviors": ["s", "p"],
-                      "time": TIME_ARBITRARY_INTERVAL,
-                      START_TIME: 60,
-                      END_TIME: 180}
+        parameters = {SELECTED_SUBJECTS: ["subject1", "subject2", "No focal subject"],
+                      SELECTED_BEHAVIORS: ["s", "p"],
+                      "time": config.TIME_ARBITRARY_INTERVAL,
+                      config.START_TIME: 60,
+                      config.END_TIME: 180}
 
         tablib_dataset = export_observation.export_aggregated_events(pj, parameters, obs_id)
         tablib_dataset_tsv = tablib_dataset.tsv
@@ -331,15 +335,15 @@ class Test_export_events_jwatcher(object):
         pj = json.loads(open("files/test.boris").read())
 
         obs_id = "observation #1"
-        parameters = {"selected subjects": ["subject1"],
-                      "selected behaviors": ["p", "s"]}
+        parameters = {SELECTED_SUBJECTS: ["subject1"],
+                      SELECTED_BEHAVIORS: ["p", "s"]}
         file_name = "test_jwatcher"
         output_format  = ""
 
         r, msg = export_observation.export_events_jwatcher(parameters,
                                                            obs_id,
                                                            pj["observations"][obs_id],
-                                                           pj[ETHOGRAM],
+                                                           pj[config.ETHOGRAM],
                                                            "output/" + file_name,
                                                            output_format)
 
@@ -365,12 +369,12 @@ class Test_events_to_behavioral_sequences(object):
 
         obs_id = "observation #1"
         subject = "subject1"
-        parameters = {"selected subjects": ["subject1"],
-                      "selected behaviors": ["p", "s"],
-                      INCLUDE_MODIFIERS: False,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+        parameters = {SELECTED_SUBJECTS: ["subject1"],
+                      SELECTED_BEHAVIORS: ["p", "s"],
+                      config.INCLUDE_MODIFIERS: False,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "|"
 
@@ -390,12 +394,12 @@ class Test_events_to_behavioral_sequences(object):
 
         obs_id = "observation #1"
         subject = "subject1"
-        parameters = {"selected subjects": ["subject1"],
-                      "selected behaviors": ["p", "s"],
-                      INCLUDE_MODIFIERS: False,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+        parameters = {SELECTED_SUBJECTS: ["subject1"],
+                      SELECTED_BEHAVIORS: ["p", "s"],
+                      config.INCLUDE_MODIFIERS: False,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "£"
 
@@ -415,11 +419,11 @@ class Test_events_to_behavioral_sequences(object):
         obs_id = "observation #1"
         subject = "subject1"
         parameters = {SELECTED_SUBJECTS: ["subject2"],
-                      "selected behaviors": ["p"],
-                      INCLUDE_MODIFIERS: False,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+                      SELECTED_BEHAVIORS: ["p"],
+                      config.INCLUDE_MODIFIERS: False,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "|"
 
@@ -440,11 +444,11 @@ class Test_events_to_behavioral_sequences(object):
         obs_id = "modifiers"
         subject = ""
         parameters = {SELECTED_SUBJECTS: [""],
-                      "selected behaviors": ["q", "r"],
-                      INCLUDE_MODIFIERS: True,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+                      SELECTED_BEHAVIORS: ["q", "r"],
+                      config.INCLUDE_MODIFIERS: True,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "|"
 
@@ -466,11 +470,11 @@ class Test_events_to_behavioral_sequences(object):
         obs_id = "live not paired"
         subject = ""
         parameters = {SELECTED_SUBJECTS: [""],
-                      "selected behaviors": ["p", "s"],
-                      INCLUDE_MODIFIERS: False,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+                      SELECTED_BEHAVIORS: ["p", "s"],
+                      config.INCLUDE_MODIFIERS: False,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "|"
 
@@ -491,11 +495,11 @@ class Test_events_to_behavioral_sequences(object):
 
         observations = ["live export behavioral sequences"]
         parameters = {SELECTED_SUBJECTS: [""],
-                      "selected behaviors": ["p", "s"],
-                      INCLUDE_MODIFIERS: False,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+                      SELECTED_BEHAVIORS: ["p", "s"],
+                      config.INCLUDE_MODIFIERS: False,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "|"
 
@@ -524,11 +528,11 @@ class Test_events_to_behavioral_sequences(object):
 
         observations = ["live export behavioral sequences", "observation #1"]
         parameters = {SELECTED_SUBJECTS: ["", "subject1", "subject2"],
-                      "selected behaviors": ["p", "s"],
-                      INCLUDE_MODIFIERS: False,
-                      EXCLUDE_BEHAVIORS: False,
-                      "start time": 0,
-                      "end time": 100.0}
+                      SELECTED_BEHAVIORS: ["p", "s"],
+                      config.INCLUDE_MODIFIERS: False,
+                      config.EXCLUDE_BEHAVIORS: False,
+                      config.START_TIME: 0,
+                      config.END_TIME: 100.0}
 
         behav_seq_separator = "|"
 
@@ -552,4 +556,5 @@ open("1", "w").write(out)
 a= Test_export_events()
 a.test_export_tabular_xlsx()
 '''
+
 

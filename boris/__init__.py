@@ -21,6 +21,7 @@ This file is part of BORIS.
 
 """
 
-from .boris import main
+
+from .core import main
 
 name = "BORIS"

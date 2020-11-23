@@ -11,9 +11,9 @@ pytest -vv test_db_functions.py
 import os
 import sys
 import json
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-sys.path.append("/home/olivier/projects/BORIS/boris")
-import db_functions
+from boris import db_functions
 
 
 class Test_load_events_in_db(object):

@@ -8,12 +8,14 @@ import pytest
 import sys
 import json
 import os
-sys.path.append("../src")
-
-import irr
-import db_functions
-from config import *
 import decimal
+
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from boris import irr
+from boris import db_functions
+from boris import config 
 
 
 class Test_irr(object):
@@ -22,7 +24,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #1"]
         selected_subjects = ["subject1", "subject2"]
 
@@ -48,7 +50,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #2"]
         selected_subjects = ["subject1", "subject2"]
 
@@ -73,7 +75,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -97,7 +99,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -121,7 +123,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -145,7 +147,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -169,7 +171,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation without events"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -193,7 +195,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #1"]
         selected_subjects = ["subject1", "subject2"]
 
@@ -220,7 +222,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1", "observation #2"]
         selected_subjects = ["subject1", "subject2"]
 
@@ -245,7 +247,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -270,7 +272,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -295,7 +297,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 
@@ -319,7 +321,7 @@ class Test_irr(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2", "observation #2 (copy)"]
         selected_subjects = ["No focal subject", "subject1", "subject2"]
 

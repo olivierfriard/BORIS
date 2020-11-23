@@ -88,9 +88,9 @@ class StdevFunc:
 
 
 def synthetic_time_budget_bin(pj: dict,
-                          selected_observations: list,
-                          parameters_obs: dict,
-                          time_bin_width:float=10):
+                              selected_observations: list,
+                              parameters_obs: dict,
+                              time_bin_width: float=10):
     """
     create a synthetic time budget divised in time bin
 
@@ -169,12 +169,6 @@ def synthetic_time_budget_bin(pj: dict,
                     behav_header.append(behavior)
                     modif_header.append(modifiers)
                     param_header.append(param[1])
-
-        '''
-        if parameters_obs["group observations"]:
-            cursor.execute("UPDATE aggregated_events SET observation = 'all' " )
-            #selected_observations = ["all"]
-        '''
 
         data_report.append(subj_header)
         data_report.append(behav_header)
