@@ -20,8 +20,6 @@ This file is part of BORIS.
 
 """
 
-print("hello from boris2")
-
 import datetime
 import hashlib
 import json
@@ -7569,16 +7567,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.save_project_json_started = False
 
             logging.debug(f"end save_project_json function")
-            return ""
+            return 0
+
+        except PermissionError:
+            QMessageBox.critical(None, programName, f"Permission denied to save the project file. Try another directory",
+                                 QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
+            self.save_project_json_started = False
+            return 1
 
         except Exception:
             error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"The project file can not be saved: {error_type} {error_file_name} {error_lineno}")
+            logging.critical(f"save_project_json: {error_type} {error_file_name} {error_lineno}")
 
-            dialog.error_message_box("The project file can not be saved.", error_type, error_file_name, error_lineno)
+            dialog.error_message_box("save_project_json", error_type, error_file_name, error_lineno)
 
             self.save_project_json_started = False
-            return "not saved"
+            return 2
 
 
     def save_project_as_activated(self):
@@ -7598,7 +7602,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not project_new_file_name:
             return "Not saved"
         else:
-
             # add .boris if filter is .boris
             if filtr == "Project files (*.boris)" and os.path.splitext(project_new_file_name)[1] != ".boris":
                 if project_new_file_name.endswith(".boris.gz"):
@@ -7622,8 +7625,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return "Not saved"
 
-            self.projectFileName = project_new_file_name
-            self.save_project_json(self.projectFileName)
+
+            if self.save_project_json(project_new_file_name) == 0:
+                self.projectFileName = project_new_file_name
+            else:
+                return "Not saved"
 
 
     def save_project_activated(self):

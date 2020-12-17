@@ -22,7 +22,6 @@ This file is part of BORIS.
 
 """
 
-# from .core import main
 from boris import main
 
 main()
