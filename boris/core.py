@@ -2001,6 +2001,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         return
 
                                 # check FPS
+                                mediafile_fps = 0
                                 try:
                                     if self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]]:
                                         mediafile_fps = float2decimal(self.pj[OBSERVATIONS][obsId][MEDIA_INFO][FPS][self.pj[OBSERVATIONS][obsId][FILE][nplayer][mediaFileIdx]])
@@ -2111,10 +2112,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         out, error = p.communicate()
 
         except Exception:
-
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error during frame extraction: {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box("Export during frame extraction", error_type, error_file_name, error_lineno)
+            dialog.error_message("Export during frame extraction", sys.exc_info())
 
 
     def extract_events(self):
@@ -2373,9 +2371,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         out, error = p.communicate()
 
         except Exception:
-
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error during subvideo extraction: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Error during subvideo extraction", sys.exc_info())
 
 
@@ -3551,8 +3546,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.saveConfigFile()
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in Preferences function: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Error ", sys.exc_info())
 
 
@@ -5394,10 +5387,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.menu_options()
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Close observation: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("Close observation", error_type, error_file_name, error_lineno)
+            dialog.error_message("Close observation", sys.exc_info())
 
 
     def set_recent_projects_menu(self):
@@ -7519,10 +7509,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             del newProjectWindow
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Close observation: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("Close observation", error_type, error_file_name, error_lineno)
+            dialog.error_message("Close observation", sys.exc_info())
 
 
     def new_project_activated(self):
@@ -7576,10 +7563,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return 1
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"save_project_json: {error_type} {error_file_name} {error_lineno}")
-
-            dialog.error_message_box("save_project_json", error_type, error_file_name, error_lineno)
+            dialog.error_message("save_project_json", sys.exc_info())
 
             self.save_project_json_started = False
             return 2
@@ -7682,7 +7666,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.projectFileName = ""
                         return ""
 
-            return self.save_project_json(self.projectFileName)
+            r = self.save_project_json(self.projectFileName)
+            if r:
+                self.projectFileName = ""
+                return r
         else:
             return self.save_project_json(self.projectFileName)
 
@@ -8265,14 +8252,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
 
                 except Exception:
-                    error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                    logging.critical(f"Error in export textgrid function: {error_type} {error_file_name} {error_lineno}")
                     dialog.error_message("Export textGrid", sys.exc_info())
 
         except Exception:
-
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in export textgrid function: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Export textGrid", sys.exc_info())
 
 
@@ -8904,8 +8886,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         break
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in edit_event function: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("editing the event", sys.exc_info())
 
 
@@ -9688,9 +9668,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message("update_events_start_stop", sys.exc_info())
 
 
     def checkSameEvent(self, obsId: str, time: Decimal, subject: str, code: str):
@@ -9894,9 +9872,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.projectChanged = True
         except Exception:
-
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Event can not be recorded: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Event can not be recorded", sys.exc_info())
 
 
@@ -11255,9 +11230,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     out += f"<b>{fileName}.gv</b> created<br>"
 
         except Exception:
-
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error during dot script creation: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Error during dot script creation", sys.exc_info())
 
         if out:
@@ -11302,9 +11274,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         out += f"Problem with <b>{fileName}</b><br>"
         except Exception:
-
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error during flow diagram creation: {error_type} {error_file_name} {error_lineno}")
             dialog.error_message("Error during flow diagram creation", sys.exc_info())
 
         if out:

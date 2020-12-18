@@ -450,9 +450,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     del self.pj[BEHAVIORS_CODING_MAP][self.twBehavCodingMap.selectedIndexes()[0].row()]
                     self.twBehavCodingMap.removeRow(self.twBehavCodingMap.selectedIndexes()[0].row())
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def export_ethogram(self):
@@ -495,9 +493,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if not ok:
                 QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def leLabel_changed(self):
@@ -505,9 +501,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 0).setText(self.leLabel.text())
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def leDescription_changed(self):
@@ -515,9 +509,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 1).setText(self.leDescription.text())
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def lePredefined_changed(self):
@@ -529,9 +521,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if not r:
                         QMessageBox.warning(self, f"{programName} - Independent variables error", msg)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def leSetValues_changed(self):
@@ -539,9 +529,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 4).setText(self.leSetValues.text())
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def dte_default_date_changed(self):
@@ -549,9 +537,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if self.selected_twvariables_row != -1:
                 self.twVariables.item(self.selected_twvariables_row, 3).setText(self.dte_default_date.dateTime().toString(Qt.ISODate))
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def pbBehaviorsCategories_clicked(self):
@@ -587,9 +573,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             if self.twBehaviors.item(row, behavioursFields["category"]).text() == bc.renamed[0]:
                                 self.twBehaviors.item(row, behavioursFields["category"]).setText(bc.renamed[1])
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def twBehaviors_cellDoubleClicked(self, row, column):
@@ -644,9 +628,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     if addModifierWindow.exec_():
                         self.twBehaviors.item(row, column).setText(addModifierWindow.getModifiers())
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def behavior_type_doubleclicked(self, row):
@@ -667,9 +649,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
                 self.behaviorTypeChanged(row)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def category_doubleclicked(self, row):
@@ -692,9 +672,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                     category = ""
                 self.twBehaviors.item(row, behavioursFields["category"]).setText(category)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def check_variable_default_value(self, txt, varType):
@@ -743,9 +721,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                         "is not compatible with variable type")
                                    )
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def check_indep_var_config(self):
@@ -782,9 +758,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             return True, "OK"
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def cbtype_changed(self):
@@ -798,9 +772,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             self.lePredefined.setVisible(self.cbType.currentText() != TIMESTAMP)
             self.label_4.setVisible(self.cbType.currentText() != TIMESTAMP)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def cbtype_activated(self):
@@ -825,9 +797,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             if not r:
                 QMessageBox.warning(self, f"{programName} - Independent variables error", msg)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def pbAddVariable_clicked(self):
@@ -851,9 +821,7 @@ class projectDialog(QDialog, Ui_dlgProject):
 
             self.twVariables_cellClicked(self.twVariables.rowCount() - 1, 0)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def pbRemoveVariable_clicked(self):
@@ -874,9 +842,7 @@ class projectDialog(QDialog, Ui_dlgProject):
             else:
                 self.twVariables_cellClicked(-1, 0)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def pbImportVarFromProject_clicked(self):
@@ -1071,9 +1037,7 @@ class projectDialog(QDialog, Ui_dlgProject):
                             self.twBehaviors.removeRow(row_mem[codeToDelete])
 
                 except Exception:
-                    error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-                    logging.critical(f"Error in function '{sys._getframe().f_code.co_name}': {error_type} {error_file_name} {error_lineno}")
-                    dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+                    dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
     def pbImportFromJWatcher_clicked(self):

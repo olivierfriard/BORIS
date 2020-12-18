@@ -107,9 +107,7 @@ def import_from_text_file(self):
 
                         self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-            logging.critical(f"Error in function '{sys._getframe().f_code.co_name}': {error_type} {error_file_name} {error_lineno}")
-            dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+            dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 def import_behaviors_from_clipboard(self):
@@ -176,9 +174,7 @@ def import_behaviors_from_clipboard(self):
 
                     self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Error in function '{sys._getframe().f_code.co_name}': {error_type} {error_file_name} {error_lineno}")
-        dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+        dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 
@@ -232,9 +228,7 @@ def import_from_JWatcher(self):
 
                         self.twBehaviors.setItem(self.twBehaviors.rowCount() - 1, behavioursFields[field_type], item)
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-        dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+        dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 def import_subjects_from_clipboard(self):
@@ -286,9 +280,7 @@ def import_subjects_from_clipboard(self):
                     item = QTableWidgetItem(subject.get(field_name, ""))
                     self.twSubjects.setItem(self.twSubjects.rowCount() - 1, idx, item)
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Error in function '{sys._getframe().f_code.co_name}': {error_type} {error_file_name} {error_lineno}")
-        dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+        dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 def select_behaviors(title="Record value from external data file",
@@ -370,9 +362,7 @@ def select_behaviors(title="Record value from external data file",
 
         return []
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Error in function '{sys._getframe().f_code.co_name}'': {error_type} {error_file_name} {error_lineno}")
-        dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+        dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 def import_behaviors_from_project(self):
@@ -449,10 +439,7 @@ def import_behaviors_from_project(self):
                 QMessageBox.warning(self, programName, "No behaviors configuration found in project")
 
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Error in function '{sys._getframe().f_code.co_name}': {error_type} {error_file_name} {error_lineno}")
-        dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
-
+        dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 def import_subjects_from_project(self):
@@ -506,9 +493,7 @@ def import_subjects_from_project(self):
             else:
                 QMessageBox.warning(self, programName, "No subjects configuration found in project")
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Error in function '{sys._getframe().f_code.co_name}': {error_type} {error_file_name} {error_lineno}")
-        dialog.error_message_box(sys._getframe().f_code.co_name, error_type, error_file_name, error_lineno)
+        dialog.error_message(sys._getframe().f_code.co_name, sys.exc_info())
 
 
 
@@ -570,7 +555,4 @@ def import_indep_variables_from_project(self):
                 QMessageBox.warning(self, programName, "No independent variables found in project")
 
     except Exception:
-        error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
-        logging.critical(f"Import independent variable from project: {error_type} {error_file_name} {error_lineno}")
-
-        dialog.error_message_box("Import independent variable from project", error_type, error_file_name, error_lineno)
+        dialog.error_message("Import independent variable from project", sys.exc_info())
