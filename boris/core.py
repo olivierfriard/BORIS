@@ -2658,6 +2658,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for idx in self.plot_data:
             self.plot_data[idx].show()
 
+    def hide_data_files(self):
+        """
+        hide plot of data files (if any)
+        """
+        for idx in self.plot_data:
+            self.plot_data[idx].hide()
+
 
     def modifiers_coding_map_creator(self):
         """
@@ -2781,10 +2788,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if current observation must be closed to open a new one
         if self.observationId:
+
+            self.hide_data_files()
             response = dialog.MessageDialog(programName,
                                             "The current observation will be closed. Do you want to continue?",
                                             [YES, NO])
             if response == NO:
+                self.show_data_files()
                 return ""
             else:
                 self.close_observation()
@@ -2807,9 +2817,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # check if current observation must be closed to open a new one
         if self.observationId:
+            # hide data plot
+            self.hide_data_files()
             if dialog.MessageDialog(programName,
                                     "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
+                self.show_data_files()
                 return
             else:
                 self.close_observation()
@@ -2952,8 +2965,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.close_observation()
         # check if an observation is running
         if self.observationId:
+            # hide data plot
+            self.hide_data_files()
             if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
+                
+                self.show_data_files()                                    
                 return
             else:
                 self.close_observation()
@@ -3044,17 +3061,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 if sys.platform != "darwin":  # for MacOS
                     if flag_paused:
+
+                        logging.debug(f"play")
+
                         self.dw_player[player].mediaListPlayer.play()
                         while True:
                             if self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_playing, self.vlc_ended]:
                                 break
+
+                        logging.debug(f"time sleep")
+
                         time.sleep(0.2)
                         self.dw_player[player].mediaplayer.set_time(new_time)
 
                         self.dw_player[player].mediaListPlayer.pause()
+
+                        logging.debug(f"pause")
+
                         while True:
                             if self.dw_player[player].mediaListPlayer.get_state() in [self.vlc_paused, self.vlc_ended]:
                                 break
+
+                        logging.debug(f"set new time")
+
                         self.dw_player[player].mediaplayer.set_time(new_time)
 
                 if player == 0:
@@ -4461,9 +4490,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     if w1.error_msg:
                         QMessageBox.critical(
                             self, programName,
-                            "Impossible to plot data from file {}:\n{}".format(
-                                os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]["file_path"]),
-                                w1.error_msg))
+                            (f"Impossible to plot data from file {os.path.basename(self.pj[OBSERVATIONS][self.observationId][PLOT_DATA][idx]['file_path'])}:\n"
+                             f"{w1.error_msg}"))
                         del w1
                         return False
 
@@ -4523,7 +4551,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     # self.ext_data_timer_list[-1].start()
 
                     self.plot_data[count] = w2
-
 
                 count += 1
 
@@ -4747,8 +4774,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         # check if current observation must be closed to create a new one
         if mode == NEW and self.observationId:
+            # hide data plot
+            self.hide_data_files()
             if dialog.MessageDialog(programName, "The current observation will be closed. Do you want to continue?",
                                     [YES, NO]) == NO:
+
+                # show data plot 
+                self.show_data_files()
                 return
             else:
                 self.close_observation()
@@ -7294,10 +7326,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         try:
             # ask if current observation should be closed to edit the project
             if self.observationId:
+                # hide data plot
+                self.hide_data_files()
                 response = dialog.MessageDialog(programName,
                                                 "The current observation will be closed. Do you want to continue?",
                                                 [YES, NO])
                 if response == NO:
+                    self.show_data_files()
                     return
                 else:
                     self.close_observation()
