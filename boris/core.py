@@ -9139,6 +9139,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                    f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
                    f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}{n}"
+                  )
 
         r, memory = utilities.mem_info()
         if not r:
