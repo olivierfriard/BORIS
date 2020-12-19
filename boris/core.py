@@ -9156,8 +9156,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         r, memory = utilities.mem_info()
         if not r:
-            details += (f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available')} Mb  "
-                        f"Free: {memory.get('free_memory', 'Not available')} Mb\n\n")
+            details += (f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
+                        f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb\n\n")
 
         details += n.join(programs_versions)
         '''
