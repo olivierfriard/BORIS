@@ -156,6 +156,20 @@ logging.debug("BORIS started")
 logging.debug(f"BORIS version {__version__} release date: {__version_date__}")
 #logging.debug(f"VLC version {vlc.libvlc_get_version().decode('utf-8')}")
 
+current_system = platform.uname()
+
+logging.debug(f"Operating system: {current_system.system} {current_system.release} {current_system.version}")
+logging.debug(f"CPU: {current_system.machine} {current_system.processor}")
+logging.debug(f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})")
+logging.debug(f"Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}")
+
+r, memory = utilities.mem_info()
+if not r:
+    logging.debug((f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available')} Mb  "
+                   f"Free: {memory.get('free_memory', 'Not available')} Mb")
+                 )
+
+
 video, live = 0, 1
 
 
@@ -9135,16 +9149,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         n = "\n"
         current_system = platform.uname()
         details = (f"Operating system: {current_system.system} {current_system.release} {current_system.version} \n"
-                   f"CPU: {current_system.machine} {current_system.processor}\n"
-
+                   f"CPU: {current_system.machine} {current_system.processor}\n\n"
                    f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
-                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}{n}"
+                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}\n\n"
                   )
 
         r, memory = utilities.mem_info()
         if not r:
-            details += (f"Total memory: {memory.get('total_memory', 'Not available')} Mb\n"
-                        f"Free memory: {memory.get('free_memory', 'Not available')} Mb\n\n")
+            details += (f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available')} Mb  "
+                        f"Free: {memory.get('free_memory', 'Not available')} Mb\n\n")
 
         details += n.join(programs_versions)
         '''
