@@ -9133,9 +9133,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             '<a href="http://onlinelibrary.wiley.com/doi/10.1111/2041-210X.12584/abstract">DOI:10.1111/2041-210X.12584</a>'
         ))
         n = "\n"
-        details = (f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
-                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR} on {platform.system()}{n}"
-                   f"CPU type: {platform.machine()}{n}\n")
+        current_system = platform.uname()
+        details = (f"Operating system: {current_system.system} {current_system.release} {current_system.version} \n"
+                   f"CPU: {current_system.machine} {current_system.processor}\n"
+
+                   f"Python {platform.python_version()} ({'64-bit' if sys.maxsize > 2**32 else '32-bit'})"
+                   f" - Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}{n}"
 
         r, memory = utilities.mem_info()
         if not r:
