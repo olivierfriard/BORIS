@@ -165,8 +165,8 @@ logging.debug(f"Qt {QT_VERSION_STR} - PyQt{PYQT_VERSION_STR}")
 
 r, memory = utilities.mem_info()
 if not r:
-    logging.debug((f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available')} Mb  "
-                   f"Free: {memory.get('free_memory', 'Not available')} Mb")
+    logging.debug((f"Memory (RAM)  Total: {memory.get('total_memory', 'Not available'):.2f} Mb  "
+                   f"Free: {memory.get('free_memory', 'Not available'):.2f} Mb")
                  )
 
 
