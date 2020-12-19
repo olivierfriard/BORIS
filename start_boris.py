@@ -2,11 +2,8 @@
 
 """
 BORIS
-Behavioral Sequences Analysis (BSA).
-
-Behavioral sequences analysis with permutations test
-
-Copyright 2017-2020 Olivier Friard
+Behavioral Observation Research Interactive Software
+Copyright 2012-2020 Olivier Friard
 
 This file is part of Behatrix.
 
