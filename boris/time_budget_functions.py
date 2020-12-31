@@ -25,8 +25,10 @@ import math
 import statistics
 import sys
 import time
+from decimal import Decimal as dec
 
 import tablib
+import portion as I
 
 from boris import db_functions, project_functions, utilities
 from boris.config import *
@@ -89,8 +91,8 @@ class StdevFunc:
 
 def synthetic_time_budget_bin(pj: dict,
                               selected_observations: list,
-                              parameters_obs: dict,
-                              time_bin_width: float=10):
+                              parameters_obs: dict
+                              ):
     """
     create a synthetic time budget divised in time bin
 
@@ -98,20 +100,52 @@ def synthetic_time_budget_bin(pj: dict,
         pj (dict): project dictionary
         selected_observations (list): list of observations to include in time budget
         parameters_obs (dict):
-        time_bin_width (float): time bin width in seconds
 
     Returns:
         bool: True if everything OK
         str: message
         tablib.Dataset: dataset containing synthetic time budget data
     """
+
+    def interval_len(interval):
+        if interval.empty:
+            return dec(0)
+        else:
+            return sum([x.upper-x.lower for x in interval])
+
+    def interval_number(interval):
+        if interval.empty:
+            return dec(0)
+        else:
+            return len(interval)
+
+
+    def interval_mean(interval):
+        if interval.empty:
+            return dec(0)
+        else:
+            return sum([x.upper-x.lower for x in interval])/len(interval)
+
+    def interval_std_dev(interval):
+        if interval.empty:
+            return "NA"
+        else:
+            try:
+                return statistics.stdev([x.upper-x.lower for x in interval])
+            except:
+                return "NA"
+
+
     try:
         selected_subjects = parameters_obs[SELECTED_SUBJECTS]
         selected_behaviors = parameters_obs[SELECTED_BEHAVIORS]
         include_modifiers = parameters_obs[INCLUDE_MODIFIERS]
-        interval = parameters_obs["time"]
-        start_time = parameters_obs["start time"]
-        end_time = parameters_obs["end time"]
+        time_interval = parameters_obs["time"]
+        start_time = parameters_obs[START_TIME]
+        end_time = parameters_obs[END_TIME]
+        time_bin_size = dec(parameters_obs[TIME_BIN_SIZE])
+        
+
 
         parameters = [["duration", "Total duration"],
                       ["number", "Number of occurrences"],
@@ -121,9 +155,9 @@ def synthetic_time_budget_bin(pj: dict,
                       ]
 
         data_report = tablib.Dataset()
-        data_report.title = "Synthetic time budget"
+        data_report.title = "Synthetic binned time budget"
 
-
+        '''
         ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
                                                                           selected_subjects,
                                                                           selected_observations,
@@ -134,14 +168,27 @@ def synthetic_time_budget_bin(pj: dict,
 
         db_connector.create_aggregate("stdev", 1, StdevFunc)
         cursor = db_connector.cursor()
+        '''
 
         # modifiers
+        '''
         if include_modifiers:
             cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
             distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
         else:
             cursor.execute("SELECT distinct behavior FROM aggregated_events")
             distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
+
+        print("distinct_behav_modif", distinct_behav_modif)
+        '''
+        distinct_behav_modif = []
+        for obs_id in selected_observations:
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+                if [event[EVENT_BEHAVIOR_FIELD_IDX], ""] not in distinct_behav_modif:
+                    distinct_behav_modif.append([event[EVENT_BEHAVIOR_FIELD_IDX], ""])
+        distinct_behav_modif.sort()
+        #print("distinct_behav_modif", distinct_behav_modif)
+        
 
         # add selected behaviors that are not observed
         for behav in selected_behaviors:
@@ -154,7 +201,7 @@ def synthetic_time_budget_bin(pj: dict,
                                      include_modifiers,
                                      parameters)
 
-        param_header = ["Observations id", "Total length (s)"]
+        param_header = ["Observations id", "Total length (s)", "Time interval (s)"]
         subj_header, behav_header, modif_header = [""] * len(param_header), [""] * len(param_header), [""] * len(param_header)
         subj_header[1] = "Subjects:"
         behav_header[1] = "Behaviors:"
@@ -176,125 +223,148 @@ def synthetic_time_budget_bin(pj: dict,
             data_report.append(modif_header)
         data_report.append(param_header)
 
+
+        state_events_list = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM] if STATE in pj[ETHOGRAM][x][TYPE].upper()]
         # select time interval
         for obs_id in selected_observations:
 
-            ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                              selected_subjects,
-                                                                              [obs_id],
-                                                                              selected_behaviors)
-
-            if not ok:
-                return False, msg, None
-
-            db_connector.create_aggregate("stdev", 1, StdevFunc)
-            cursor = db_connector.cursor()
-
-            # if modifiers not to be included set modifiers to ""
-            if not include_modifiers:
-                cursor.execute("UPDATE aggregated_events SET modifiers = ''")
-
-            # time
             obs_length = project_functions.observation_total_length(pj[OBSERVATIONS][obs_id])
+
             if obs_length == -1:
                 obs_length = 0
+            if time_interval == TIME_FULL_OBS:
+                min_time = dec(0)
+                max_time = dec(obs_length)
 
-            if interval == TIME_FULL_OBS:
-                min_time = float(0)
-                max_time = float(obs_length)
-
-            if interval == TIME_EVENTS:
+            if time_interval == TIME_EVENTS:
                 try:
-                    min_time = float(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                    min_time = dec(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
                 except Exception:
-                    min_time = float(0)
+                    min_time = dec(0)
                 try:
-                    max_time = float(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                    max_time = dec(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
                 except Exception:
-                    max_time = float(obs_length)
+                    max_time = dec(obs_length)
 
-            if interval == TIME_ARBITRARY_INTERVAL:
-                min_time = float(start_time)
-                max_time = float(end_time)
-
-            # adapt start and stop to the selected time interval
-            cursor.execute("UPDATE aggregated_events SET start = ? WHERE observation = ? AND start < ? AND stop BETWEEN ? AND ?",
-                           (min_time, obs_id, min_time, min_time, max_time, ))
-            cursor.execute("UPDATE aggregated_events SET stop = ? WHERE observation = ? AND stop > ? AND start BETWEEN ? AND ?",
-                           (max_time, obs_id, max_time, min_time, max_time, ))
-
-            cursor.execute("UPDATE aggregated_events SET start = ?, stop = ? WHERE observation = ? AND start < ? AND stop > ?",
-                           (min_time, max_time, obs_id, min_time, max_time, ))
-
-            cursor.execute("DELETE FROM aggregated_events WHERE observation = ? AND (start < ? AND stop < ?) OR (start > ? AND stop > ?)",
-                           (obs_id, min_time, min_time, max_time, max_time, ))
-
-            for subject in selected_subjects:
-
-                # check if behaviors are to exclude from total time
-                time_to_subtract = 0
-                if EXCLUDED_BEHAVIORS in parameters_obs:
-                    for excluded_behav in parameters_obs[EXCLUDED_BEHAVIORS]:
-                        cursor.execute(("SELECT SUM(stop-start) "
-                                        "FROM aggregated_events "
-                                        "WHERE observation = ? AND subject = ? AND behavior = ? "),
-                                       (obs_id, subject, excluded_behav,))
-                        for row in cursor.fetchall():
-                            if row[0] is not None:
-                                time_to_subtract += row[0]
-
-                for behavior_modifiers in distinct_behav_modif:
-                    behavior, modifiers = behavior_modifiers
-                    behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
-
-                    cursor.execute(("SELECT SUM(stop-start), COUNT(*), AVG(stop-start), stdev(stop-start) "
-                                    "FROM aggregated_events "
-                                    "WHERE observation = ? AND subject = ? AND behavior = ? AND modifiers = ? "),
-                                   (obs_id, subject, behavior, modifiers,))
+            if time_interval == TIME_ARBITRARY_INTERVAL:
+                min_time = dec(start_time)
+                max_time = dec(end_time)
 
 
-                    for row in cursor.fetchall():
-                        behaviors[subject][behavior_modifiers_str]["duration"] = (0 if row[0] is None
-                                                                                  else f"{row[0]:.3f}")
+            #print("observation:", obs_id)
+            events_interval = {}
+            mem_events_interval = {}
 
-                        behaviors[subject][behavior_modifiers_str]["number"] = 0 if row[1] is None else row[1]
-                        behaviors[subject][behavior_modifiers_str]["duration mean"] = (0 if row[2] is None
-                                                                                       else f"{row[2]:.3f}")
-                        behaviors[subject][behavior_modifiers_str]["duration stdev"] = (0 if row[3] is None
-                                                                                        else f"{row[3]:.3f}")
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+                if event[EVENT_SUBJECT_FIELD_IDX] not in selected_subjects:
+                    continue
+                if event[EVENT_SUBJECT_FIELD_IDX] not in events_interval:
+                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
+                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
 
-                        if behavior not in parameters_obs[EXCLUDED_BEHAVIORS]:
-                            try:
-                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
-                                    0 if row[0] is None
-                                    else f"{row[0] / ((max_time - min_time) - time_to_subtract):.3f}")
-                            except ZeroDivisionError:
-                                behaviors[subject][behavior_modifiers_str]["proportion of time"] = "-"
+                if [event[EVENT_BEHAVIOR_FIELD_IDX], ""] not in distinct_behav_modif:
+                    continue
+                if event[EVENT_BEHAVIOR_FIELD_IDX] not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
+                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = I.empty()
+                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
+
+                if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
+                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]].append(event[EVENT_TIME_FIELD_IDX])
+                    if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]]) == 2:
+                        events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= \
+                                I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][0],
+                                            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][1])
+                        mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
+                else:
+                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
+
+            #print(events_interval)
+
+            time_bin_start = min_time
+
+            if time_bin_size:
+                time_bin_end = time_bin_start + time_bin_size
+                if time_bin_end > max_time:
+                    time_bin_end = max_time
+            else:
+                time_bin_end = max_time
+            '''
+            print("time_bin_start type", type(time_bin_start))
+            '''
+            while True:
+                for subject in events_interval:
+
+                    # check behavior to exclude from total time
+                    time_to_subtract = 0
+                    if EXCLUDED_BEHAVIORS in parameters_obs:
+                        for behav in events_interval[subject]:
+                            if behav in parameters_obs[EXCLUDED_BEHAVIORS]:
+                                interval_intersec = events_interval[subject][behav] & I.closed(time_bin_start, time_bin_end)
+                                time_to_subtract += interval_len(interval_intersec)
+                                
+                    for behav in events_interval[subject]:
+
+                        interval_intersec = events_interval[subject][behav] & I.closed(time_bin_start, time_bin_end)
+
+
+
+                        dur = interval_len(interval_intersec)
+                        nocc = interval_number(interval_intersec)
+                        mean = interval_mean(interval_intersec)
+                        '''
+                        print(interval_intersec)
+                        print(subject, behav)
+
+                        print("duration", dur)
+                        print("n. occ", nocc)
+                        print("mean", mean)
+                        print("std dev", interval_std_dev(interval_intersec))
+
+                        print(time_bin_start)
+                        print(time_bin_end)
+                        print(time_to_subtract)
+                        '''
+                        if behav in parameters_obs.get(EXCLUDED_BEHAVIORS, []):
+                            proportion = dur / ((time_bin_end - time_bin_start))
                         else:
-                            # behavior subtracted
-                            behaviors[subject][behavior_modifiers_str]["proportion of time"] = (
-                                0 if row[0] is None
-                                else f"{row[0] / (max_time - min_time):.3f}")
+                            proportion = dur / ((time_bin_end - time_bin_start) - time_to_subtract)
 
-            columns = [obs_id, f"{max_time - min_time:0.3f}"]
-            for subj in selected_subjects:
-                for behavior_modifiers in distinct_behav_modif:
-                    behavior, modifiers = behavior_modifiers
-                    behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
+                        behaviors[subject][behav]["duration"] = dur
+                        behaviors[subject][behav]["number"] = nocc
+                        behaviors[subject][behav]["duration mean"] = mean
+                        behaviors[subject][behav]["duration stdev"] = interval_std_dev(interval_intersec)
+                        behaviors[subject][behav]["proportion of time"] = f"{proportion:.3f}"
 
-                    for param in parameters:
-                        columns.append(behaviors[subj][behavior_modifiers_str][param[0]])
+                columns = [obs_id, f"{max_time - min_time:0.3f}", f"{time_bin_start:.3f}-{time_bin_end:.3f}"]
+                for subject in selected_subjects:
+                    for behavior_modifiers in distinct_behav_modif:
+                        behavior, modifiers = behavior_modifiers
+                        behavior_modifiers_str = "|".join(behavior_modifiers) if modifiers else behavior
 
-            data_report.append(columns)
+                        for param in parameters:
+                            #columns.append(behaviors[subject][behavior_modifiers_str][param[0]])
+                            columns.append(behaviors[subject][behavior][param[0]])
+
+                data_report.append(columns)
+
+                time_bin_start = time_bin_end
+                time_bin_end = time_bin_start + time_bin_size
+                if time_bin_end > max_time:
+                    time_bin_end = max_time
+                #print(f"start: {time_bin_start} end: {time_bin_end}  max time: {max_time}")
+
+                if time_bin_start == time_bin_end:
+                    break
 
     except Exception:
-        dialog.error_message("synthetic_time_budget", sys.exc_info())
+        raise
+        dialog.error_message("synthetic_time_budget_bin", sys.exc_info())
 
         return (False,
-                msg,
                 tablib.Dataset())
 
-    return True, msg, data_report
+    return True, data_report
+    
 
 
 

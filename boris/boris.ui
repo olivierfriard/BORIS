@@ -279,8 +279,9 @@
      <addaction name="actionNeedleman_Wunsch"/>
     </widget>
     <addaction name="actionTime_budget"/>
-    <addaction name="actionTime_budget_report"/>
     <addaction name="actionTime_budget_by_behaviors_category"/>
+    <addaction name="actionTime_budget_report"/>
+    <addaction name="actionSynthetic_binned_time_budget"/>
     <addaction name="menuPlot_events"/>
     <addaction name="menuInter_rater_reliability"/>
     <addaction name="menuSimilarities"/>
@@ -1421,6 +1422,11 @@
   <action name="actionCurrent_Time_Budget">
    <property name="text">
     <string>Current Time Budget</string>
+   </property>
+  </action>
+  <action name="actionSynthetic_binned_time_budget">
+   <property name="text">
+    <string>Synthetic binned time budget</string>
    </property>
   </action>
  </widget>

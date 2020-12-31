@@ -24,18 +24,16 @@ Copyright 2012-2020 Olivier Friard
 """
 
 
-import os
-
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import (QTableWidgetItem, QLabel, QLineEdit,
+                             QTableWidget, QAbstractItemView, QComboBox,
+                             QGridLayout, QHBoxLayout, QSpacerItem,
+                             QPushButton)
 
 from boris import config
 from boris import dialog
 from boris.utilities import *
 
 commands_index = {"Start": 2, "Edit": 3, "View": 4}
-
 
 class MyTableWidgetItem(QTableWidgetItem):
     def __init__(self, text, sortKey):
@@ -139,7 +137,7 @@ class observationsList_widget(QDialog):
         self.comboBox.addItems(header)
 
         self.view.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.label.setText("{} observation{}".format(self.view.rowCount(), "s" * (self.view.rowCount() > 1)))
+        self.label.setText(f"{self.view.rowCount()} observation{'s' * (self.view.rowCount() > 1)}")
 
 
     def view_doubleClicked(self, index):

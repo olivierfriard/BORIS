@@ -812,6 +812,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionTime_budget_by_behaviors_category.triggered.connect(lambda: self.time_budget(mode="by_category"))
 
         self.actionTime_budget_report.triggered.connect(self.synthetic_time_budget)
+        self.actionSynthetic_binned_time_budget.triggered.connect(self.synthetic_binned_time_budget)
 
         self.actionBehavior_bar_plot.triggered.connect(self.behaviors_bar_plot)
         self.actionBehavior_bar_plot.setVisible(True)
@@ -1060,7 +1061,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not ib.exec_():
             return
 
-        msg = project_functions.check_project_integrity(self.pj, self.timeFormat, self.projectFileName,
+        msg = project_functions.check_project_integrity(self.pj,
+                                                        self.timeFormat,
+                                                        self.projectFileName,
                                                         media_file_available=ib.elements["Test media file accessibility"].isChecked())
         if msg:
             msg = f"Some issues were found in the project<br><br>{msg}"
@@ -5483,7 +5486,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                 self.restoreGeometry(settings.value("geometry"))
             except Exception:
-                logging.warning("Error trying to restore geometry")
+                logging.warning("Error restoring geometry")
                 pass
 
             self.saved_state = settings.value("dockwidget_positions")
@@ -5879,7 +5882,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                        flagShowIncludeModifiers=True,
                                        flagShowExcludeBehaviorsWoEvents=True,
                                        by_category=False,
-                                       show_time=False):
+                                       show_time=False,
+                                       show_time_bin_size=False):
 
         """
         show window for:
@@ -5888,6 +5892,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         - selection of time interval
         - inclusion/exclusion of modifiers
         - inclusion/exclusion of behaviors without events (flagShowExcludeBehaviorsWoEvents == True)
+        - selection of time bin size (show_time_bin_size == True)
 
         Returns:
             dict: {"selected subjects": selectedSubjects,
@@ -5899,7 +5904,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "end time": endTime
                 }
 
-
         """
 
         paramPanelWindow = param_panel.Param_panel()
@@ -5909,10 +5913,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.pj = self.pj
         paramPanelWindow.extract_observed_behaviors = self.extract_observed_behaviors
 
-        if not flagShowIncludeModifiers:
-            paramPanelWindow.cbIncludeModifiers.setVisible(False)
-        if not flagShowExcludeBehaviorsWoEvents:
-            paramPanelWindow.cbExcludeBehaviors.setVisible(False)
+        paramPanelWindow.cbIncludeModifiers.setVisible(flagShowIncludeModifiers)
+        paramPanelWindow.cbExcludeBehaviors.setVisible(flagShowExcludeBehaviorsWoEvents)
+        # show_time_bin_size:
+        paramPanelWindow.frm_time_bin_size.setVisible(show_time_bin_size)
 
         if by_category:
             paramPanelWindow.cbIncludeModifiers.setVisible(False)
@@ -6059,7 +6063,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 EXCLUDE_BEHAVIORS: paramPanelWindow.cbExcludeBehaviors.isChecked(),
                 "time": time_param,
                 START_TIME: startTime,
-                END_TIME: endTime
+                END_TIME: endTime,
+                TIME_BIN_SIZE: paramPanelWindow.sb_time_bin_size.value()
                 }
 
 
@@ -6180,7 +6185,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                                            selected_observations,
                                                                            synth_tb_param
                                                                            )
-
         if not ok:
             results = dialog.Results_dialog()
             results.setWindowTitle("Synthetic time budget")
@@ -6196,6 +6200,143 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if output_format in ["ods", "xlsx", "xls"]:
             with open(file_name, "wb") as f:
                 f.write(data_report.export(output_format))
+
+
+    def synthetic_binned_time_budget(self):
+        """
+        Synthetic binned_time budget
+        """
+
+        result, selected_observations = self.selectObservations(MULTIPLE)
+        if not selected_observations:
+            return
+
+        out = ""
+        # check if coded behaviors are defined in ethogram
+        ethogram_behavior_codes = {self.pj[ETHOGRAM][idx][BEHAVIOR_CODE] for idx in self.pj[ETHOGRAM]}
+        behaviors_not_defined = []
+        out = "" # will contain the output
+        for obs_id in selected_observations:
+            for event in self.pj[OBSERVATIONS][obs_id][EVENTS]:
+                if event[EVENT_BEHAVIOR_FIELD_IDX] not in ethogram_behavior_codes:
+                    behaviors_not_defined.append(event[EVENT_BEHAVIOR_FIELD_IDX])
+        if set(sorted(behaviors_not_defined)):
+            out += f"The following behaviors are not defined in the ethogram: <b>{', '.join(set(sorted(behaviors_not_defined)))}</b><br><br>"
+
+        # check if state events are paired
+        not_paired_obs_list = []
+        for obs_id in selected_observations:
+            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obs_id],
+                                                              self.timeFormat)
+            if not r:
+                out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
+                not_paired_obs_list.append(obs_id)
+
+        if out:
+            if not_paired_obs_list:
+                out += "<br>The observations with UNPAIRED state events will be removed from the analysis"
+            self.results = dialog.Results_dialog()
+            self.results.setWindowTitle(programName + " - Check selected observations")
+            self.results.ptText.setReadOnly(True)
+            self.results.ptText.appendHtml(out)
+            self.results.pbSave.setVisible(False)
+            self.results.pbCancel.setVisible(True)
+
+            if not self.results.exec_():
+                return
+
+        selected_observations = [x for x in selected_observations if x not in not_paired_obs_list]
+        if not selected_observations:
+            return
+
+        selectedObsTotalMediaLength = Decimal("0.0")
+        max_obs_length = 0
+        for obsId in selected_observations:
+            obs_length = project_functions.observation_total_length(self.pj[OBSERVATIONS][obsId])
+
+            logging.debug(f"media length for {obsId}: {obs_length}")
+
+            if obs_length in [0, -1]:
+                selectedObsTotalMediaLength = -1
+                break
+            max_obs_length = max(max_obs_length, obs_length)
+            selectedObsTotalMediaLength += obs_length
+
+        # an observation media length is not available
+        if selectedObsTotalMediaLength == -1:
+            # propose to user to use max event time
+            if dialog.MessageDialog(programName, "A media length is not available.<br>Use last event time as media length?",
+                                    [YES, NO]) == YES:
+                maxTime = 0  # max length for all events all subjects
+                for obsId in selected_observations:
+                    if self.pj[OBSERVATIONS][obsId][EVENTS]:
+                        maxTime += max(self.pj[OBSERVATIONS][obsId][EVENTS])[0]
+
+                logging.debug(f"max time all events all subjects: {maxTime}")
+
+                selectedObsTotalMediaLength = maxTime
+            else:
+                selectedObsTotalMediaLength = 0
+
+        synth_tb_param = self.choose_obs_subj_behav_category(selected_observations,
+                                                             maxTime=max_obs_length,
+                                                             flagShowExcludeBehaviorsWoEvents=False,
+                                                             by_category=False,
+                                                             show_time_bin_size=True)
+
+        if not synth_tb_param[SELECTED_SUBJECTS] or not synth_tb_param[SELECTED_BEHAVIORS]:
+            return
+
+        # ask for excluding behaviors durations from total time
+        synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+                                                                   text=("The duration of the selected behaviors will "
+                                                                         "be subtracted from the total time"),
+                                                                   table="",
+                                                                   behavior_type=[STATE_EVENT])
+
+        extended_file_formats = ["Tab Separated Values (*.tsv)",
+                                 "Comma Separated Values (*.csv)",
+                                 "Open Document Spreadsheet ODS (*.ods)",
+                                 "Microsoft Excel Spreadsheet XLSX (*.xlsx)",
+                                 "Legacy Microsoft Excel Spreadsheet XLS (*.xls)",
+                                 "HTML (*.html)"]
+        file_formats = ["tsv", "csv", "ods", "xlsx", "xls", "html"]
+
+        file_name, filter_ = QFileDialog().getSaveFileName(self, "Synthetic time budget", "", ";;".join(extended_file_formats))
+        if not file_name:
+            return
+
+        output_format = file_formats[extended_file_formats.index(filter_)]
+        if pathlib.Path(file_name).suffix != "." + output_format:
+            file_name = str(pathlib.Path(file_name)) + "." + output_format
+            if pathlib.Path(file_name).is_file():
+                    if dialog.MessageDialog(programName,
+                                            f"The file {file_name} already exists.",
+                                            [CANCEL, OVERWRITE]) == CANCEL:
+                        return
+
+            ok, data_report = time_budget_functions.synthetic_time_budget_bin(self.pj,
+                                                                           selected_observations,
+                                                                           synth_tb_param
+                                                                           )
+
+        if not ok:
+            results = dialog.Results_dialog()
+            results.setWindowTitle("Synthetic binned time budget")
+            results.ptText.clear()
+            results.ptText.setReadOnly(True)
+            results.ptText.appendHtml(msg.replace("\n", "<br>"))
+            results.exec_()
+            return
+
+        if output_format in ["tsv", "csv", "html"]:
+            with open(file_name, "wb") as f:
+                f.write(str.encode(data_report.export(output_format)))
+        if output_format in ["ods", "xlsx", "xls"]:
+            with open(file_name, "wb") as f:
+                f.write(data_report.export(output_format))
+
 
 
     def observation_length(self, selected_observations: list) -> tuple:

@@ -23,12 +23,14 @@ Copyright 2012-2020 Olivier Friard
 
 """
 
-
-from PyQt5.QtCore import Qt
+import os
+import pathlib
+import logging
+from PyQt5.QtCore import Qt, QSettings
 from PyQt5.QtWidgets import QAbstractItemView
 
 from boris import observations_list
-from boris.config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT,
+from boris.config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT, NUMERIC,
                     TYPE, MEDIA, FILE, LIVE, OPEN, VIEW, EDIT,
                     SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT)
 from boris import utilities
@@ -42,7 +44,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
 
     Args:
         pj (dict): BORIS project dictionary
-        mode (str): mode foe selection: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
+        mode (str): mode for selection: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
         windows_title (str): title for windows
 
     Returns:
@@ -50,8 +52,8 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         list: list of selected observations
     """
 
-    obsListFields = ["id", "date", "description", "subjects", "media"]
-    indepVarHeader, column_type = [], [TEXT] * len(obsListFields)
+    obsListFields = ["id", "date", "description", "subjects", "observation duration", "media"]
+    indepVarHeader, column_type = [], [TEXT, TEXT, TEXT, TEXT, NUMERIC, TEXT]
 
     if INDEPENDENT_VARIABLES in pj:
         for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
@@ -66,12 +68,13 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         # subjects
         observedSubjects = [NO_FOCAL_SUBJECT if x == "" else x for x in project_functions.extract_observed_subjects(pj, [obs])]
 
-        ''' removed 2020-01-13
-        if "" in observedSubjects:
-            observedSubjects.remove("")
-        '''
         subjectsList = ", ".join(observedSubjects)
 
+        # observed time
+        interval = project_functions.observed_interval(pj[OBSERVATIONS][obs])
+        observed_interval_str = str(interval[1] - interval[0]) 
+
+        # media
         mediaList = []
         if pj[OBSERVATIONS][obs][TYPE] in [MEDIA]:
             if pj[OBSERVATIONS][obs][FILE]:
@@ -96,7 +99,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
                 else:
                     indepvar.append("")
 
-        data.append([obs, date, descr, subjectsList, media] + indepvar)
+        data.append([obs, date, descr, subjectsList, observed_interval_str, media] + indepvar)
 
     obsList = observations_list.observationsList_widget(data,
                                                         header=obsListFields + indepVarHeader,
@@ -141,21 +144,38 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOk.setVisible(True)
 
-    obsList.resize(900, 600)
+
+    # restore window geometry
+
+    ini_file_path = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
+    if ini_file_path.is_file():
+        settings = QSettings(str(ini_file_path), QSettings.IniFormat)
+        try:
+            obsList.restoreGeometry(settings.value("observations list geometry"))
+        except Exception:
+            logging.debug("error during restoring observations list geometry")
+            obsList.resize(900, 600)
 
     obsList.view.sortItems(0, Qt.AscendingOrder)
     for row in range(obsList.view.rowCount()):
         obsList.view.resizeRowToContents(row)
 
-    selectedObs = []
+    selected_observations = []
 
     result = obsList.exec_()
+
+    # saving window geometry in ini file
+    try:
+        settings.setValue("observations list geometry", obsList.saveGeometry())
+    except Exception:
+        logging.debug("error during saving observations list geometry")
+
 
     if result:
         if obsList.view.selectedIndexes():
             for idx in obsList.view.selectedIndexes():
                 if idx.column() == 0:   # first column
-                    selectedObs.append(idx.data())
+                    selected_observations.append(idx.data())
 
     if result == 0:  # cancel
         resultStr = ""
@@ -168,4 +188,4 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     if result == 4:   # view
         resultStr = VIEW
 
-    return resultStr, selectedObs
+    return resultStr, selected_observations

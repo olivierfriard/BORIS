@@ -5,7 +5,7 @@ BORIS
 Behavioral Observation Research Interactive Software
 Copyright 2012-2020 Olivier Friard
 
-This file is part of Behatrix.
+This file is part of BORIS.
 
   BORIS is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

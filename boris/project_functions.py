@@ -25,7 +25,7 @@ import logging
 import os
 import pathlib
 import sys
-from decimal import *
+from decimal import Decimal as dec
 from shutil import copyfile
 import gzip
 
@@ -183,8 +183,8 @@ def check_project_integrity(pj: dict,
     check project integrity
     check if behaviors in observations are in ethogram
     check unpaired state events
-    check if behavior belong to behavioral category that do not more exists
-    check for leading and trialing spaces and special chars in modifiers
+    check if behavior belong to behavioral category that do not more exist
+    check for leading and trailing spaces and special chars in modifiers
     check if media file are available
     check if media length available
 
@@ -558,6 +558,22 @@ def media_full_path(media_file: str, project_file_name: str) -> str:
             return ""
 
 
+def observed_interval(observation: dict):
+    """
+    Observed interval for observation
+
+    Args:
+        observation (dict): observation dictionary
+
+    Returns:
+        List of 2 Decimals: time of first observed event, time of last observed event
+    """
+    if observation[EVENTS]:
+        return (min(observation[EVENTS])[EVENT_TIME_FIELD_IDX], max(observation[EVENTS])[EVENT_TIME_FIELD_IDX])
+    else:
+        return (dec("0.0"), dec("0.0"))
+
+
 def observation_total_length(observation: dict):
     """
     Total length of media file(s) for observation
@@ -581,11 +597,11 @@ def observation_total_length(observation: dict):
         if observation[EVENTS]:
             obs_length = max(observation[EVENTS])[EVENT_TIME_FIELD_IDX]
         else:
-            obs_length = Decimal("0.0")
+            obs_length = dec("0.0")
         return obs_length
 
     if observation[TYPE] == MEDIA:
-        media_max_total_length = Decimal("0.0")
+        media_max_total_length = dec("0.0")
 
         media_total_length = {}
 
@@ -593,12 +609,12 @@ def observation_total_length(observation: dict):
             if not observation[FILE][nplayer]:
                 continue
 
-            media_total_length[nplayer] = Decimal("0.0")
+            media_total_length[nplayer] = dec("0.0")
             for mediaFile in observation[FILE][nplayer]:
                 mediaLength = 0
                 try:
                     mediaLength = observation[MEDIA_INFO][LENGTH][mediaFile]
-                    media_total_length[nplayer] += Decimal(mediaLength)
+                    media_total_length[nplayer] += dec(mediaLength)
                 except Exception:
                     logging.critical(f"media length not found for {mediaFile}")
                     mediaLength = -1
@@ -606,7 +622,7 @@ def observation_total_length(observation: dict):
                     break
 
         if -1 in [media_total_length[x] for x in media_total_length]:
-            return Decimal("-1")
+            return dec("-1")
 
         # totalMediaLength = max([total_media_length[x] for x in total_media_length])
 
@@ -620,7 +636,7 @@ def observation_total_length(observation: dict):
 
     logging.critical("observation not LIVE nor MEDIA")
 
-    return Decimal("0.0")
+    return dec("0.0")
 
 
 def observation_length(pj, selected_observations: list) -> tuple:
@@ -635,11 +651,11 @@ def observation_length(pj, selected_observations: list) -> tuple:
         float: maximum media length for all observations
         float: total media length for all observations
     """
-    selectedObsTotalMediaLength = Decimal("0.0")
+    selectedObsTotalMediaLength = dec("0.0")
     max_obs_length = 0
     for obs_id in selected_observations:
         obs_length = observation_total_length(pj[OBSERVATIONS][obs_id])
-        if obs_length in [Decimal("0"), Decimal("-1")]:
+        if obs_length in [dec("0"), dec("-1")]:
             selectedObsTotalMediaLength = -1
             break
         max_obs_length = max(max_obs_length, obs_length)
@@ -666,7 +682,7 @@ def observation_length(pj, selected_observations: list) -> tuple:
 
         else:
             max_obs_length = -1
-            selectedObsTotalMediaLength = Decimal("-1")
+            selectedObsTotalMediaLength = dec("-1")
 
     return max_obs_length, selectedObsTotalMediaLength
 
@@ -796,7 +812,7 @@ def open_project_json(projectFileName: str) -> tuple:
                 projectChanged = True
 
     # check if project file version is newer than current BORIS project file version
-    if "project_format_version" in pj and Decimal(pj["project_format_version"]) > Decimal(project_format_version):
+    if "project_format_version" in pj and dec(pj["project_format_version"]) > dec(project_format_version):
         return (
             projectFileName,
             projectChanged,
@@ -1030,7 +1046,7 @@ def fix_unpaired_state_events(obsId, ethogram, observation, fix_at_time):
                     last_event_time = max([fix_at_time] + [x[0] for x in closing_events_to_add])
 
                     closing_events_to_add.append(
-                        [last_event_time + Decimal("0.001"), subject, behavior, event[1], ""]  # modifiers  # comment
+                        [last_event_time + dec("0.001"), subject, behavior, event[1], ""]  # modifiers  # comment
                     )
 
     return closing_events_to_add
