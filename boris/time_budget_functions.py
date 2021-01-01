@@ -119,7 +119,6 @@ def synthetic_time_budget_bin(pj: dict,
         else:
             return len(interval)
 
-
     def interval_mean(interval):
         if interval.empty:
             return dec(0)
@@ -157,19 +156,6 @@ def synthetic_time_budget_bin(pj: dict,
         data_report = tablib.Dataset()
         data_report.title = "Synthetic binned time budget"
 
-        '''
-        ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                          selected_subjects,
-                                                                          selected_observations,
-                                                                          selected_behaviors)
-
-        if not ok:
-            return False, msg, None
-
-        db_connector.create_aggregate("stdev", 1, StdevFunc)
-        cursor = db_connector.cursor()
-        '''
-
         # modifiers
         '''
         if include_modifiers:
@@ -188,7 +174,6 @@ def synthetic_time_budget_bin(pj: dict,
                     distinct_behav_modif.append([event[EVENT_BEHAVIOR_FIELD_IDX], ""])
         distinct_behav_modif.sort()
         #print("distinct_behav_modif", distinct_behav_modif)
-        
 
         # add selected behaviors that are not observed
         for behav in selected_behaviors:
@@ -223,7 +208,6 @@ def synthetic_time_budget_bin(pj: dict,
             data_report.append(modif_header)
         data_report.append(param_header)
 
-
         state_events_list = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM] if STATE in pj[ETHOGRAM][x][TYPE].upper()]
         # select time interval
         for obs_id in selected_observations:
@@ -249,7 +233,6 @@ def synthetic_time_budget_bin(pj: dict,
             if time_interval == TIME_ARBITRARY_INTERVAL:
                 min_time = dec(start_time)
                 max_time = dec(end_time)
-
 
             #print("observation:", obs_id)
             events_interval = {}
@@ -305,8 +288,6 @@ def synthetic_time_budget_bin(pj: dict,
                     for behav in events_interval[subject]:
 
                         interval_intersec = events_interval[subject][behav] & I.closed(time_bin_start, time_bin_end)
-
-
 
                         dur = interval_len(interval_intersec)
                         nocc = interval_number(interval_intersec)

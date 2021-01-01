@@ -31,8 +31,9 @@ from PyQt5.QtWidgets import QAbstractItemView
 
 from boris import observations_list
 from boris.config import (INDEPENDENT_VARIABLES, OBSERVATIONS, DESCRIPTION, TEXT, NUMERIC,
-                    TYPE, MEDIA, FILE, LIVE, OPEN, VIEW, EDIT,
-                    SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT)
+                          TYPE, MEDIA, FILE, LIVE, OPEN, VIEW, EDIT, ETHOGRAM, EVENTS,
+                          SINGLE, MULTIPLE, SELECT1, NO_FOCAL_SUBJECT, HHMMSS,
+                          STATE, BEHAVIOR_CODE)
 from boris import utilities
 from boris import project_functions
 
@@ -52,8 +53,8 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         list: list of selected observations
     """
 
-    obsListFields = ["id", "date", "description", "subjects", "observation duration", "media"]
-    indepVarHeader, column_type = [], [TEXT, TEXT, TEXT, TEXT, NUMERIC, TEXT]
+    obsListFields = ["id", "date", "description", "subjects", "observation duration", "exhaustivity %", "media"]
+    indepVarHeader, column_type = [], [TEXT, TEXT, TEXT, TEXT, NUMERIC, NUMERIC, TEXT]
 
     if INDEPENDENT_VARIABLES in pj:
         for idx in utilities.sorted_keys(pj[INDEPENDENT_VARIABLES]):
@@ -61,6 +62,8 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
             column_type.append(pj[INDEPENDENT_VARIABLES][idx]["type"])
 
     data = []
+    not_paired = []
+    state_events_list = [pj[ETHOGRAM][x][BEHAVIOR_CODE] for x in pj[ETHOGRAM] if STATE in pj[ETHOGRAM][x][TYPE].upper()]
     for obs in sorted(list(pj[OBSERVATIONS].keys())):
         date = pj[OBSERVATIONS][obs]["date"].replace("T", " ")
         descr = utilities.eol2space(pj[OBSERVATIONS][obs][DESCRIPTION])
@@ -99,11 +102,33 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
                 else:
                     indepvar.append("")
 
-        data.append([obs, date, descr, subjectsList, observed_interval_str, media] + indepvar)
+
+        # check unpaired events
+        ok, _ = project_functions.check_state_events_obs(obs, pj[ETHOGRAM], pj[OBSERVATIONS][obs], HHMMSS)
+        if not ok:
+            not_paired.append(obs)
+
+        # check exhaustivity of observation 
+        
+        '''
+        print()
+        print()
+        print(obs)
+        print("=============")
+        '''
+        exhaustivity = project_functions.check_observation_exhaustivity(pj[OBSERVATIONS][obs][EVENTS],
+                                                                     [],
+                                                                     state_events_list
+                                                                     )
+
+
+        data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
+
 
     obsList = observations_list.observationsList_widget(data,
                                                         header=obsListFields + indepVarHeader,
-                                                        column_type=column_type)
+                                                        column_type=column_type,
+                                                        not_paired=not_paired)
     if windows_title:
         obsList.setWindowTitle(windows_title)
 

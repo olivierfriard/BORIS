@@ -28,6 +28,7 @@ import sys
 from decimal import Decimal as dec
 from shutil import copyfile
 import gzip
+import portion as I
 
 from boris import db_functions
 from boris import dialog
@@ -35,6 +36,89 @@ from boris import select_observations
 import tablib
 from boris import utilities
 from boris.config import *
+
+
+def check_observation_exhaustivity(events:list,
+                                   ethogram: list,
+                                   state_events_list: list=[]):
+    """
+    check if observation is continous
+    if ethogram not empty state events list is determined else 
+    """
+
+    def interval_len(interval):
+        if interval.empty:
+            return dec(0)
+        else:
+            return sum([x.upper-x.lower for x in interval])
+
+    def interval_number(interval):
+        if interval.empty:
+            return dec(0)
+        else:
+            return len(interval)
+
+    if ethogram:
+        state_events_list = [ethogram[x][BEHAVIOR_CODE] for x in ethogram if STATE in ethogram[x][TYPE].upper()]
+
+    events_interval = {}
+    mem_events_interval = {}
+
+    for event in events:
+        if event[EVENT_SUBJECT_FIELD_IDX] not in events_interval:
+            events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
+            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
+
+        
+        if event[EVENT_BEHAVIOR_FIELD_IDX] not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
+            events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = I.empty()
+            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
+        
+        if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
+            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]].append(event[EVENT_TIME_FIELD_IDX])
+            if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]]) == 2:
+                events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= \
+                        I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][0],
+                                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]][1])
+                mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] = []
+        else:
+            events_interval[event[EVENT_SUBJECT_FIELD_IDX]][event[EVENT_BEHAVIOR_FIELD_IDX]] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
+
+    if events:
+        obs_theo_dur = max(events)[EVENT_TIME_FIELD_IDX] - min(events)[EVENT_TIME_FIELD_IDX]
+    else:
+        obs_theo_dur = dec("0")
+
+    count = 0
+    total_duration = 0
+    for subject in events_interval:
+        '''
+        print("\n\nsubject", subject)
+        '''
+
+        tot_behav_for_subject = I.empty()
+        for behav in events_interval[subject]:
+            tot_behav_for_subject |= events_interval[subject][behav]
+        '''
+        print(f"tot\n{tot_behav_for_subject}")
+        '''
+
+        obs_real_dur = interval_len(tot_behav_for_subject)
+
+        if obs_real_dur >= obs_theo_dur:
+            obs_real_dur = obs_theo_dur
+        
+        total_duration += obs_real_dur
+       
+        '''
+        print(f"theo dur: {obs_theo_dur}  real: {obs_real_dur}  exhaustiv %: {obs_real_dur/obs_theo_dur}")
+        '''
+
+    '''
+    print(f"  {total_duration/(len(events_interval) * obs_theo_dur) } ")
+    '''
+
+    return round(total_duration/(len(events_interval) * obs_theo_dur) * 100, 1)
 
 
 def behavior_category(ethogram: dict) -> dict:

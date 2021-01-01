@@ -23,7 +23,7 @@ Copyright 2012-2020 Olivier Friard
 
 """
 
-
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QTableWidgetItem, QLabel, QLineEdit,
                              QTableWidget, QAbstractItemView, QComboBox,
                              QGridLayout, QHBoxLayout, QSpacerItem,
@@ -47,11 +47,17 @@ class MyTableWidgetItem(QTableWidgetItem):
 
 class observationsList_widget(QDialog):
 
-    def __init__(self, data: list, header: list, column_type: list, parent=None):
+    def __init__(self,
+                 data: list,
+                 header: list,
+                 column_type: list,
+                 not_paired: list=[],
+                 parent=None):
 
         super(observationsList_widget, self).__init__(parent)
 
         self.data = data
+        self.not_paired = not_paired
         self.column_type = column_type
 
         self.setWindowTitle(f"Observations list - {config.programName}")
@@ -200,6 +206,13 @@ class observationsList_widget(QDialog):
                 item = MyTableWidgetItem(self.data[r][c], 0)
         else:
             item = MyTableWidgetItem(self.data[r][c], self.data[r][c])
+        
+        # if obs_id in not_paired -> set background color to red 
+        if c == 0 and self.data[r][c] in self.not_paired:
+            item.setBackground(QColor(255, 0, 0, 128))
+            # item.setForeground(QBrush(QColor(0, 255, 0)))
+
+        
         return item
 
 
