@@ -6316,14 +6316,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                             [CANCEL, OVERWRITE]) == CANCEL:
                         return
 
-            ok, data_report = time_budget_functions.synthetic_time_budget_bin(self.pj,
+        ok, data_report = time_budget_functions.synthetic_time_budget_bin(self.pj,
                                                                            selected_observations,
                                                                            synth_tb_param
                                                                            )
 
         if not ok:
             results = dialog.Results_dialog()
-            results.setWindowTitle("Synthetic binned time budget")
+            results.setWindowTitle("Synthetic time budget with time bin")
             results.ptText.clear()
             results.ptText.setReadOnly(True)
             results.ptText.appendHtml(msg.replace("\n", "<br>"))

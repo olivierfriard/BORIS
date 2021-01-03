@@ -117,8 +117,12 @@ def check_observation_exhaustivity(events:list,
     '''
     print(f"  {total_duration/(len(events_interval) * obs_theo_dur) } ")
     '''
+    if len(events_interval) and obs_theo_dur:
+        exhausivity_percent = total_duration / (len(events_interval) * obs_theo_dur) * 100
+    else:
+        exhausivity_percent = 0
 
-    return round(total_duration/(len(events_interval) * obs_theo_dur) * 100, 1)
+    return round(exhausivity_percent, 1)
 
 
 def behavior_category(ethogram: dict) -> dict:
