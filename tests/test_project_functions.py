@@ -11,10 +11,10 @@ import sys
 import json
 from decimal import Decimal
 
-sys.path.append("../src")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import project_functions
-from config import *
+from boris import project_functions
+from boris import config
 
 @pytest.fixture()
 def before():
@@ -26,7 +26,7 @@ class Test_behavior_category(object):
 
     def test_1(self):
         pj = json.loads(open("files/test.boris").read())
-        assert project_functions.behavior_category(pj[ETHOGRAM]) == {'p': '', 's': '', 'q': '', 'r': '', 'm': ''}
+        assert project_functions.behavior_category(pj[config.ETHOGRAM]) == {'p': '', 's': '', 'q': '', 'r': '', 'm': ''}
 
 
 class Test_check_coded_behaviors(object):
@@ -41,13 +41,13 @@ class Test_check_if_media_available(object):
     def test_media_not_available(self):
         pj = json.loads(open("files/test.boris").read())
 
-        assert project_functions.check_if_media_available(pj[OBSERVATIONS]["offset positif"],
+        assert project_functions.check_if_media_available(pj[config.OBSERVATIONS]["offset positif"],
                                                           'files/test.boris') == (False, 'Media file <b>video_test_25fps_360s.mp4</b> not found')
 
     def test_live_observation(self):
         pj = json.loads(open("files/test.boris").read())
 
-        assert project_functions.check_if_media_available(pj[OBSERVATIONS]["live"],
+        assert project_functions.check_if_media_available(pj[config.OBSERVATIONS]["live"],
                                                           'files/test.boris') == (True, "")
 
     '''
@@ -69,7 +69,7 @@ class Test_check_project_integrity(object):
         pj = json.loads(open("files/test.boris").read())
 
         results = project_functions.check_project_integrity(pj,
-                                                            HHMMSS,
+                                                            config.HHMMSS,
                                                            'files/test.boris',
                                                             media_file_available=False)
 
@@ -84,7 +84,7 @@ class Test_check_project_integrity(object):
         pj = json.loads(open("files/test_with_leading_trailing_spaces_in_modifiers.boris").read())
 
         results = project_functions.check_project_integrity(pj,
-                                                            HHMMSS,
+                                                            config.HHMMSS,
                                                            "files/test_with_leading_trailing_spaces_in_modifiers.boris",
                                                             media_file_available=False)
 
@@ -98,9 +98,9 @@ class Test_check_state_events_obs(object):
         pj = json.loads(open("files/test.boris").read())
 
         results = project_functions.check_state_events_obs("offset positif",
-                                                            pj[ETHOGRAM],
-                                                            pj[OBSERVATIONS]["offset positif"],
-                                                            HHMMSS)
+                                                            pj[config.ETHOGRAM],
+                                                            pj[config.OBSERVATIONS]["offset positif"],
+                                                            config.HHMMSS)
         # print(results)
 
         assert results == (True, 'No problem detected')
@@ -110,9 +110,9 @@ class Test_check_state_events_obs(object):
         pj = json.loads(open("files/test.boris").read())
 
         results = project_functions.check_state_events_obs("live not paired",
-                                                            pj[ETHOGRAM],
-                                                            pj[OBSERVATIONS]["live not paired"],
-                                                            HHMMSS)
+                                                            pj[config.ETHOGRAM],
+                                                            pj[config.OBSERVATIONS]["live not paired"],
+                                                            config.HHMMSS)
         # print(results)
 
         assert results == (False, 'The behavior <b>s</b>  is not PAIRED for subject "<b>No focal subject</b>" at <b>00:00:26.862</b><br>')
@@ -123,7 +123,7 @@ class Test_export_observations_list(object):
     @pytest.mark.usefixtures("before")
     def test1(self):
         pj = json.loads(open("files/test2.boris").read())
-        selected_observations = [x for x in pj[OBSERVATIONS]]
+        selected_observations = [x for x in pj[config.OBSERVATIONS]]
 
         result = project_functions.export_observations_list(pj=pj,
                                                             file_name="output/export_observations_list_test1.tsv",

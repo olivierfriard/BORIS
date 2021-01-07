@@ -10,11 +10,10 @@ import sys
 import os
 from PyQt5.QtCore import *
 
-sys.path.append("../src")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import observation
-import config
-
+from boris import observation
+from boris import config
 
 def test_no_media_loaded(qtbot):
 

@@ -6,12 +6,13 @@ https://realpython.com/python-continuous-integration/
 pytest -s -vv test_otx_parser.py
 """
 
+import os
 import pytest
 import sys
 import json
 
-sys.path.append("../src")
-import otx_parser
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from boris import otx_parser
 
 @pytest.fixture()
 def before():

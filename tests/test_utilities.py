@@ -7,7 +7,7 @@ module for testing utilities.py
 
 https://realpython.com/python-continuous-integration/
 
-pytest -s -vv test_utilities.py
+pytest test_utilities.py
 """
 
 import pytest
@@ -21,7 +21,6 @@ import datetime
 import numpy as np
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 from boris import utilities
 from boris import config

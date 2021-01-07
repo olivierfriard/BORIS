@@ -8,11 +8,11 @@ import pytest
 import sys
 import json
 import os
-sys.path.append("../src")
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import time_budget_functions
-import db_functions
-from config import *
+from boris import time_budget_functions
+from boris import db_functions
+from boris import config
 
 
 @pytest.fixture()
@@ -71,21 +71,21 @@ class Test_time_budget(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #1"]
         parameters = {
-            SELECTED_SUBJECTS: ["subject1", "subject2"],
-            SELECTED_BEHAVIORS: ["p", "s"],
-            INCLUDE_MODIFIERS: False,
-            EXCLUDE_BEHAVIORS: False,
+            config.SELECTED_SUBJECTS: ["subject1", "subject2"],
+            config.SELECTED_BEHAVIORS: ["p", "s"],
+            config.INCLUDE_MODIFIERS: False,
+            config.EXCLUDE_BEHAVIORS: False,
             "start time": 0,
             "end time": 100.0
         }
 
         cursor = db_functions.load_events_in_db(pj,
-                                                parameters[SELECTED_SUBJECTS],
+                                                parameters[config.SELECTED_SUBJECTS],
                                                 selected_observations,
-                                                parameters[SELECTED_BEHAVIORS])
+                                                parameters[config.SELECTED_BEHAVIORS])
 
         out, categories = time_budget_functions.time_budget_analysis(
             ethogram,
@@ -123,21 +123,21 @@ class Test_time_budget(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2"]
         parameters = {
-            SELECTED_SUBJECTS: ["subject1", "subject2"],
-            SELECTED_BEHAVIORS: ["p"],
-            INCLUDE_MODIFIERS: False,
-            EXCLUDE_BEHAVIORS: False,
+            config.SELECTED_SUBJECTS: ["subject1", "subject2"],
+            config.SELECTED_BEHAVIORS: ["p"],
+            config.INCLUDE_MODIFIERS: False,
+            config.EXCLUDE_BEHAVIORS: False,
             "start time": 0,
             "end time": 100.0
         }
 
         cursor = db_functions.load_events_in_db(pj,
-                                                parameters[SELECTED_SUBJECTS],
+                                                parameters[config.SELECTED_SUBJECTS],
                                                 selected_observations,
-                                                parameters[SELECTED_BEHAVIORS])
+                                                parameters[config.SELECTED_BEHAVIORS])
 
         out, categories = time_budget_functions.time_budget_analysis(
             ethogram,
@@ -176,21 +176,21 @@ class Test_time_budget(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["observation #2"]
         parameters = {
-            SELECTED_SUBJECTS: ["No focal subject"],
-            SELECTED_BEHAVIORS: ["s", "p"],
-            INCLUDE_MODIFIERS: True,
-            EXCLUDE_BEHAVIORS: True,
+            config.SELECTED_SUBJECTS: ["No focal subject"],
+            config.SELECTED_BEHAVIORS: ["s", "p"],
+            config.INCLUDE_MODIFIERS: True,
+            config.EXCLUDE_BEHAVIORS: True,
             "start time": 0,
             "end time": 320.0
         }
 
         cursor = db_functions.load_events_in_db(pj,
-                                                parameters[SELECTED_SUBJECTS],
+                                                parameters[config.SELECTED_SUBJECTS],
                                                 selected_observations,
-                                                parameters[SELECTED_BEHAVIORS])
+                                                parameters[config.SELECTED_BEHAVIORS])
 
         out, categories = time_budget_functions.time_budget_analysis(
             ethogram,
@@ -229,21 +229,21 @@ class Test_time_budget(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["live not paired"]
         parameters = {
-            SELECTED_SUBJECTS: ["No focal subject"],
-            SELECTED_BEHAVIORS: ["s", "p"],
-            INCLUDE_MODIFIERS: True,
-            EXCLUDE_BEHAVIORS: True,
+            config.SELECTED_SUBJECTS: ["No focal subject"],
+            config.SELECTED_BEHAVIORS: ["s", "p"],
+            config.INCLUDE_MODIFIERS: True,
+            config.EXCLUDE_BEHAVIORS: True,
             "start time": 0,
             "end time": 26.862
         }
 
         cursor = db_functions.load_events_in_db(pj,
-                                                parameters[SELECTED_SUBJECTS],
+                                                parameters[config.SELECTED_SUBJECTS],
                                                 selected_observations,
-                                                parameters[SELECTED_BEHAVIORS])
+                                                parameters[config.SELECTED_BEHAVIORS])
 
         out, categories = time_budget_functions.time_budget_analysis(
             ethogram,
@@ -315,23 +315,23 @@ class Test_time_budget(object):
 
         pj = json.loads(open("files/test.boris").read())
 
-        ethogram = pj[ETHOGRAM]
+        ethogram = pj[config.ETHOGRAM]
         selected_observations = ["modifiers"]
         parameters = {
-            SELECTED_SUBJECTS: ["No focal subject"],
-            SELECTED_BEHAVIORS: ["q", "r"],
-            INCLUDE_MODIFIERS: True,
-            EXCLUDE_BEHAVIORS: False,
+            config.SELECTED_SUBJECTS: ["No focal subject"],
+            config.SELECTED_BEHAVIORS: ["q", "r"],
+            config.INCLUDE_MODIFIERS: True,
+            config.EXCLUDE_BEHAVIORS: False,
             "start time": 0,
             "end time": 180
         }
 
         cursor = db_functions.load_events_in_db(
             pj,
-            parameters[SELECTED_SUBJECTS],
+            parameters[config.SELECTED_SUBJECTS],
             selected_observations,
-            parameters[SELECTED_BEHAVIORS],
-            time_interval=TIME_ARBITRARY_INTERVAL)
+            parameters[config.SELECTED_BEHAVIORS],
+            time_interval=config.TIME_ARBITRARY_INTERVAL)
 
         out, categories = time_budget_functions.time_budget_analysis(
             ethogram,
