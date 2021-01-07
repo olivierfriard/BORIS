@@ -883,4 +883,4 @@ class Ui_MainWindow(object):
         self.actionseparated_subjects.setText(_translate("MainWindow", "separated subjects"))
         self.actiongrouped_subjects.setText(_translate("MainWindow", "grouped subjects"))
         self.actionCurrent_Time_Budget.setText(_translate("MainWindow", "Current Time Budget"))
-        self.actionSynthetic_binned_time_budget.setText(_translate("MainWindow", "Synthetic binned time budget"))
+        self.actionSynthetic_binned_time_budget.setText(_translate("MainWindow", "Synthetic time budget with time bin"))
