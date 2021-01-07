@@ -9325,7 +9325,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             'BORIS is released under the <a href="http://www.gnu.org/copyleft/gpl.html">GNU General Public License</a><br>'
             'See <a href="http://www.boris.unito.it">www.boris.unito.it</a> for more details.<br>'
             "<br>"
-            "The authors would like to acknowledge Sergio Castellano, Valentina Matteucci and Laura Ozella for their precious help."
+            "The authors would like to acknowledge Valentina Matteucci for her precious help."
             "<hr>"
             "How to cite BORIS:<br>"
             "Friard, O. and Gamba, M. (2016), BORIS: a free, versatile open-source event-logging software for video/audio "
