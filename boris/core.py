@@ -3486,7 +3486,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.plot_colors = BEHAVIORS_PLOT_COLORS
             preferencesWindow.te_plot_colors.setPlainText("\n".join(self.plot_colors))
 
+            gui_utilities.restore_geometry(preferencesWindow, "preferences", (700, 500))
+
             if preferencesWindow.exec_():
+
+                gui_utilities.save_geometry(preferencesWindow, "preferences")
 
                 if preferencesWindow.flag_refresh:
                     # refresh preferences remove the config file
@@ -6447,7 +6451,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # check if state events are paired
         not_paired_obs_list = []
         for obs_id in selectedObservations:
-            r, msg = project_functions.check_state_events_obs(obs_id, self.pj[ETHOGRAM], self.pj[OBSERVATIONS][obs_id], self.timeFormat)
+            r, msg = project_functions.check_state_events_obs(obs_id,
+                                                              self.pj[ETHOGRAM],
+                                                              self.pj[OBSERVATIONS][obs_id],
+                                                              self.timeFormat)
 
             if not r:
                 out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -6467,7 +6474,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         flagGroup = False
         if len(selectedObservations) > 1:
-            flagGroup = dialog.MessageDialog(programName, "Group observations in one time budget analysis?", [YES, NO]) == YES
+            flagGroup = dialog.MessageDialog(programName,
+                                             "Group observations in one time budget analysis?",
+                                             [YES, NO]) == YES
 
         max_obs_length, selectedObsTotalMediaLength = self.observation_length(selectedObservations)
         if max_obs_length == -1: # media length not available, user choose to not use events
@@ -6483,7 +6492,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for excluding behaviors durations from total time
-        cancel_pressed = parameters[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+        cancel_pressed, parameters[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
                                                                    text=("The duration of the selected behaviors will "
                                                                          "be subtracted from the total time"),
                                                                    table="",
@@ -6709,7 +6718,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             self.tb.twTB.setItem(self.tb.twTB.rowCount() - 1, column, item)
 
             self.tb.twTB.resizeColumnsToContents()
+
+            gui_utilities.restore_geometry(self.tb, "time budget", (0, 0))
+
             self.tb.show()
+
 
 
         if len(selectedObservations) > 1 and not flagGroup:

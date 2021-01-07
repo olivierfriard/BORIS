@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -33,6 +31,7 @@ from PyQt5.QtWidgets import *
 
 from boris import dialog
 from boris.config import *
+from boris import gui_utilities
 from boris.utilities import intfloatstr
 
 
@@ -57,7 +56,7 @@ class timeBudgetResults(QWidget):
         hbox.addWidget(self.label)
 
         self.lw = QListWidget()
-        self.lw.setEnabled(False)
+        #self.lw.setEnabled(False)
         self.lw.setMaximumHeight(100)
         hbox.addWidget(self.lw)
 
@@ -79,13 +78,20 @@ class timeBudgetResults(QWidget):
         spacerItem = QSpacerItem(241, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         hbox2.addItem(spacerItem)
 
-        self.pbClose = QPushButton("Close", clicked=self.close)
+        self.pbClose = QPushButton("Close", clicked=self.close_clicked)
         hbox2.addWidget(self.pbClose)
 
         hbox.addLayout(hbox2)
 
         self.setWindowTitle("Time budget")
 
+
+    def close_clicked(self):
+        """
+        save geometry of widget and close it
+        """
+        gui_utilities.save_geometry(self, "time budget")
+        self.close()
 
 
     def pbSave_clicked(self):

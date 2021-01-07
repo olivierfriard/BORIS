@@ -373,12 +373,12 @@ def synthetic_time_budget_bin(pj: dict,
 
     return True, data_report
     
-
+"""
 def synthetic_time_budget_bin_old(pj: dict,
                               selected_observations: list,
                               parameters_obs: dict
                               ):
-    """
+    '''
     create a synthetic time budget divised in time bin
 
     Args:
@@ -390,7 +390,7 @@ def synthetic_time_budget_bin_old(pj: dict,
         bool: True if everything OK
         str: message
         tablib.Dataset: dataset containing synthetic time budget data
-    """
+    '''
 
     def interval_len(interval):
         if interval.empty:
@@ -439,16 +439,7 @@ def synthetic_time_budget_bin_old(pj: dict,
         data_report.title = "Synthetic binned time budget"
 
         # modifiers
-        '''
-        if include_modifiers:
-            cursor.execute("SELECT distinct behavior, modifiers FROM aggregated_events")
-            distinct_behav_modif = [[rows["behavior"], rows["modifiers"]] for rows in cursor.fetchall()]
-        else:
-            cursor.execute("SELECT distinct behavior FROM aggregated_events")
-            distinct_behav_modif = [[rows["behavior"], ""] for rows in cursor.fetchall()]
-
-        print("distinct_behav_modif", distinct_behav_modif)
-        '''
+        
         distinct_behav_modif = []
         for obs_id in selected_observations:
             for event in pj[OBSERVATIONS][obs_id][EVENTS]:
@@ -627,7 +618,7 @@ def synthetic_time_budget_bin_old(pj: dict,
                 tablib.Dataset())
 
     return True, data_report
-
+"""
 
 def synthetic_time_budget(pj: dict,
                           selected_observations: list,
