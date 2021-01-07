@@ -176,7 +176,7 @@ def select_observations(pj: dict,
     result = obsList.exec_()
 
     # saving window geometry in ini file
-    gui_utilities.save(obsList, "observations list")
+    gui_utilities.save_geometry(obsList, "observations list")
 
     if result:
         if obsList.view.selectedIndexes():
