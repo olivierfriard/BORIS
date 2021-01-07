@@ -21,7 +21,6 @@ def test_ok(qtbot):
     w = preferences.Preferences()
 
     qtbot.addWidget(w)
-
     
     def handle_dialog():
         qtbot.mouseClick(w.pbOK, Qt.LeftButton)

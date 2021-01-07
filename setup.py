@@ -24,19 +24,14 @@ setup(
         "Operating System :: OS Independent",
     ],
     packages=['boris'],  #same as name
-   
+
     install_requires=[
           "matplotlib",
           "numpy==1.19.3",
-          "odfpy",
-          "openpyxl",
-          "xlrd",
-          "xlwt",
-          "MarkupPy",
-          "tablib",
+          "tablib[html, ods, xls, xlsx]",
+          "portion",
           "pyqt5"
       ],
-
 
     package_data={
     'boris': ['boris.qrc', 'boris.ui'],
@@ -49,3 +44,19 @@ setup(
         ],
     }
  )
+
+
+'''
+install_requires=[
+        "matplotlib",
+        "numpy==1.19.3",
+        "odfpy",
+        "openpyxl",
+        "xlrd",
+        "xlwt",
+        "MarkupPy",
+        "tablib",
+        "portion",
+        "pyqt5"
+    ],
+'''

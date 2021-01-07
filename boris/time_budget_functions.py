@@ -153,7 +153,7 @@ def synthetic_time_budget_bin(pj: dict,
             return "NA"
         else:
             try:
-                return statistics.stdev([x.upper-x.lower for x in interval])
+                return round(statistics.stdev([x.upper-x.lower for x in interval]), 3)
             except:
                 return "NA"
 
@@ -188,14 +188,18 @@ def synthetic_time_budget_bin(pj: dict,
 
         distinct_behav_modif.sort()
 
+        '''
         print("distinct_behav_modif", distinct_behav_modif)
+        '''
 
         # add selected behaviors that are not observed
         for behav in selected_behaviors:
             if [x for x in distinct_behav_modif if x[0] == behav] == []:
                 distinct_behav_modif.append([behav, ""])
 
+        '''
         print("distinct_behav_modif with not observed behav", distinct_behav_modif)
+        '''
 
         behaviors = init_behav_modif_bin(pj[ETHOGRAM],
                                      selected_subjects,
@@ -203,7 +207,11 @@ def synthetic_time_budget_bin(pj: dict,
                                      include_modifiers,
                                      parameters)
 
+        '''
         print("init behaviors", behaviors)
+
+        print(f"selected subjects: {selected_subjects}")
+        '''
 
         param_header = ["Observations id", "Total length (s)", "Time interval (s)"]
         subj_header, behav_header, modif_header = [""] * len(param_header), [""] * len(param_header), [""] * len(param_header)
@@ -258,11 +266,16 @@ def synthetic_time_budget_bin(pj: dict,
             mem_events_interval = {}
 
             for event in pj[OBSERVATIONS][obs_id][EVENTS]:
-                if event[EVENT_SUBJECT_FIELD_IDX] not in selected_subjects:
+                if event[EVENT_SUBJECT_FIELD_IDX] == "":
+                    current_subject = NO_FOCAL_SUBJECT
+                else:
+                    current_subject = event[EVENT_SUBJECT_FIELD_IDX]
+
+                if current_subject not in selected_subjects:
                     continue
-                if event[EVENT_SUBJECT_FIELD_IDX] not in events_interval:
-                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
-                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]] = {}
+                if current_subject not in events_interval:
+                    events_interval[current_subject] = {}
+                    mem_events_interval[current_subject] = {}
 
                 if include_modifiers:
                     modif = event[EVENT_MODIFIER_FIELD_IDX]
@@ -271,22 +284,24 @@ def synthetic_time_budget_bin(pj: dict,
                 if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in distinct_behav_modif:
                     continue
 
-                if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
-                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = I.empty()
-                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
+                if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in events_interval[current_subject]:
+                    events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = I.empty()
+                    mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
 
                 if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
-                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)].append(event[EVENT_TIME_FIELD_IDX])
-                    if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)]) == 2:
-                        events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= \
-                                I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][0],
-                                            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][1])
-                        mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
+                    mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)].append(event[EVENT_TIME_FIELD_IDX])
+                    if len(mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)]) == 2:
+                        events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= \
+                                I.closedopen(mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][0],
+                                            mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][1])
+                        mem_events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX],
                                                                              modif)] = []
                 else:
-                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
+                    events_interval[current_subject][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
 
-            print("\n\n events interval",events_interval)
+            '''
+            print("\n\n events interval", events_interval)
+            '''
 
             time_bin_start = min_time
 
@@ -365,9 +380,7 @@ def synthetic_time_budget_bin(pj: dict,
                     break
 
     except Exception:
-        raise
         dialog.error_message("synthetic_time_budget_bin", sys.exc_info())
-
         return (False,
                 tablib.Dataset())
 
