@@ -34,7 +34,6 @@ setup(
           "xlwt",
           "MarkupPy",
           "tablib",
-          "portion",
           "pyqt5"
       ],
 
