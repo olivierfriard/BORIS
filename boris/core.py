@@ -1760,7 +1760,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         paramPanelWindow.lbBehaviors.setText(text)
         for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
                   paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
-                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
+                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time, paramPanelWindow.frm_time_bin_size]:
             w.setVisible(False)
 
         # behaviors filtered

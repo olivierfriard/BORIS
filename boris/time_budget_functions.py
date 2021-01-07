@@ -187,19 +187,23 @@ def synthetic_time_budget_bin(pj: dict,
                         distinct_behav_modif.append((event[EVENT_BEHAVIOR_FIELD_IDX], ""))
 
         distinct_behav_modif.sort()
-        #print("distinct_behav_modif", distinct_behav_modif)
+
+        print("distinct_behav_modif", distinct_behav_modif)
 
         # add selected behaviors that are not observed
         for behav in selected_behaviors:
             if [x for x in distinct_behav_modif if x[0] == behav] == []:
                 distinct_behav_modif.append([behav, ""])
 
+        print("distinct_behav_modif with not observed behav", distinct_behav_modif)
+
         behaviors = init_behav_modif_bin(pj[ETHOGRAM],
                                      selected_subjects,
                                      distinct_behav_modif,
                                      include_modifiers,
                                      parameters)
-        print("behaviors", behaviors)
+
+        print("init behaviors", behaviors)
 
         param_header = ["Observations id", "Total length (s)", "Time interval (s)"]
         subj_header, behav_header, modif_header = [""] * len(param_header), [""] * len(param_header), [""] * len(param_header)
@@ -264,34 +268,25 @@ def synthetic_time_budget_bin(pj: dict,
                     modif = event[EVENT_MODIFIER_FIELD_IDX]
                 else:
                     modif = ""
-                if [event[EVENT_BEHAVIOR_FIELD_IDX], modif] not in distinct_behav_modif:
+                if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in distinct_behav_modif:
                     continue
 
-                if (event[EVENT_BEHAVIOR_FIELD_IDX],
-                     event[EVENT_MODIFIER_FIELD_IDX]) not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
-                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                     event[EVENT_MODIFIER_FIELD_IDX])] = I.empty()
-                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                         event[EVENT_MODIFIER_FIELD_IDX])] = []
+                if (event[EVENT_BEHAVIOR_FIELD_IDX], modif) not in events_interval[event[EVENT_SUBJECT_FIELD_IDX]]:
+                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = I.empty()
+                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] = []
 
                 if event[EVENT_BEHAVIOR_FIELD_IDX] in state_events_list:
-                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                         event[EVENT_MODIFIER_FIELD_IDX])].append(event[EVENT_TIME_FIELD_IDX])
-                    if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                     event[EVENT_MODIFIER_FIELD_IDX])]) == 2:
-                        events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                         event[EVENT_MODIFIER_FIELD_IDX])] |= \
-                                I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                                                  event[EVENT_MODIFIER_FIELD_IDX])][0],
-                                            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                                                 event[EVENT_MODIFIER_FIELD_IDX])][1])
+                    mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)].append(event[EVENT_TIME_FIELD_IDX])
+                    if len(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)]) == 2:
+                        events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= \
+                                I.closedopen(mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][0],
+                                            mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)][1])
                         mem_events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                             event[EVENT_MODIFIER_FIELD_IDX])] = []
+                                                                             modif)] = []
                 else:
-                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX],
-                                                                     event[EVENT_MODIFIER_FIELD_IDX])] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
+                    events_interval[event[EVENT_SUBJECT_FIELD_IDX]][(event[EVENT_BEHAVIOR_FIELD_IDX], modif)] |= I.singleton(event[EVENT_TIME_FIELD_IDX])
 
-            #print(events_interval)
+            print("\n\n events interval",events_interval)
 
             time_bin_start = min_time
 
@@ -305,6 +300,7 @@ def synthetic_time_budget_bin(pj: dict,
             print("time_bin_start type", type(time_bin_start))
             '''
             while True:
+
                 for subject in events_interval:
 
                     # check behavior to exclude from total time
@@ -378,8 +374,7 @@ def synthetic_time_budget_bin(pj: dict,
     return True, data_report
     
 
-
-def synthetic_time_budget_bin2(pj: dict,
+def synthetic_time_budget_bin_old(pj: dict,
                               selected_observations: list,
                               parameters_obs: dict
                               ):
@@ -632,8 +627,6 @@ def synthetic_time_budget_bin2(pj: dict,
                 tablib.Dataset())
 
     return True, data_report
-
-
 
 
 def synthetic_time_budget(pj: dict,

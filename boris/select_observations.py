@@ -38,7 +38,10 @@ from boris import utilities
 from boris import project_functions
 
 
-def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
+def select_observations(pj: dict,
+                        mode: str,
+                        windows_title: str = ""
+                        ) -> tuple:
     """
     allow user to select observations
     mode: accepted values: OPEN, EDIT, SINGLE, MULTIPLE, SELECT1
@@ -73,7 +76,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
 
         subjectsList = ", ".join(observedSubjects)
 
-        # observed time
+        # observed time interval
         interval = project_functions.observed_interval(pj[OBSERVATIONS][obs])
         observed_interval_str = str(interval[1] - interval[0]) 
 
@@ -102,29 +105,21 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
                 else:
                     indepvar.append("")
 
-
         # check unpaired events
         ok, _ = project_functions.check_state_events_obs(obs, pj[ETHOGRAM], pj[OBSERVATIONS][obs], HHMMSS)
         if not ok:
             not_paired.append(obs)
 
         # check exhaustivity of observation 
-        
-        '''
-        print()
-        print()
-        print(obs)
-        print("=============")
-        '''
         exhaustivity = project_functions.check_observation_exhaustivity(pj[OBSERVATIONS][obs][EVENTS],
-                                                                     [],
-                                                                     state_events_list
-                                                                     )
+                                                                        [],
+                                                                        state_events_list
+                                                                       )
 
 
         data.append([obs, date, descr, subjectsList, observed_interval_str, str(exhaustivity), media] + indepvar)
 
-
+    
     obsList = observations_list.observationsList_widget(data,
                                                         header=obsListFields + indepVarHeader,
                                                         column_type=column_type,
@@ -148,7 +143,6 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbView.setVisible(True)
 
-
     if mode == EDIT:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbEdit.setVisible(True)
@@ -169,9 +163,7 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
         obsList.view.setSelectionMode(QAbstractItemView.SingleSelection)
         obsList.pbOk.setVisible(True)
 
-
     # restore window geometry
-
     ini_file_path = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
     if ini_file_path.is_file():
         settings = QSettings(str(ini_file_path), QSettings.IniFormat)
@@ -192,9 +184,9 @@ def select_observations(pj: dict, mode: str, windows_title: str = "") -> tuple:
     # saving window geometry in ini file
     try:
         settings.setValue("observations list geometry", obsList.saveGeometry())
+        # settings.setValue("observations data", data)
     except Exception:
         logging.debug("error during saving observations list geometry")
-
 
     if result:
         if obsList.view.selectedIndexes():
