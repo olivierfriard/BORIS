@@ -28,7 +28,7 @@ import sys
 from decimal import Decimal as dec
 from shutil import copyfile
 import gzip
-import portion as I
+from boris import portion as I
 
 from boris import db_functions
 from boris import dialog

@@ -25,8 +25,7 @@ import re
 import statistics
 import sys
 
-#import intervals as Interval  # python-intervals (https://pypi.org/project/python-intervals)
-import portion as Interval    # replace python-intervals (https://pypi.org/project/portion/)
+from boris import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon

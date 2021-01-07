@@ -28,7 +28,7 @@ import time
 from decimal import Decimal as dec
 
 import tablib
-import portion as I
+from boris import portion as I
 
 from boris import db_functions, project_functions, utilities
 from boris.config import *
