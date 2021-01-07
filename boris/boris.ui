@@ -1426,7 +1426,7 @@
   </action>
   <action name="actionSynthetic_binned_time_budget">
    <property name="text">
-    <string>Synthetic binned time budget</string>
+    <string>Synthetic time budget with time bin</string>
    </property>
   </action>
  </widget>

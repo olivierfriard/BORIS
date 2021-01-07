@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2020 Olivier Friard
+Copyright 2012-2021 Olivier Friard
 
 This file is part of BORIS.
 
@@ -6610,8 +6610,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # observations list
             self.tb.label.setText("Selected observations")
-            for obs in selectedObservations:
-                self.tb.lw.addItem(obs)
+            for obs_id in selectedObservations:
+                # self.tb.lw.addItem(f"{obs_id}  {self.pj[OBSERVATIONS][obs_id]['date']}  {self.pj[OBSERVATIONS][obs_id]['description']}")
+                self.tb.lw.addItem(obs_id)
 
             # media length
             if len(selectedObservations) > 1:
@@ -9317,7 +9318,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         about_dialog.setInformativeText((
             f"<b>{programName}</b> v. {__version__} - {__version_date__}"
-            "<p>Copyright &copy; 2012-2020 Olivier Friard - Marco Gamba<br>"
+            "<p>Copyright &copy; 2012-2021 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
             "<br>"

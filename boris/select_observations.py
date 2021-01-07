@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2020 Olivier Friard
+Copyright 2012-2021 Olivier Friard
 
 
   This program is free software; you can redistribute it and/or modify

@@ -3,7 +3,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2020 Olivier Friard
+Copyright 2012-2021 Olivier Friard
 
 This file is part of BORIS.
 
