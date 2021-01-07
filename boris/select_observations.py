@@ -166,16 +166,6 @@ def select_observations(pj: dict,
 
     # restore window geometry
     gui_utilities.restore_geometry(obsList, "observations list", (900, 600))
-    '''
-    ini_file_path = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
-    if ini_file_path.is_file():
-        settings = QSettings(str(ini_file_path), QSettings.IniFormat)
-        try:
-            obsList.restoreGeometry(settings.value("observations list geometry"))
-        except Exception:
-            logging.debug("error during restoring observations list geometry")
-            obsList.resize(900, 600)
-    '''
 
     obsList.view.sortItems(0, Qt.AscendingOrder)
     for row in range(obsList.view.rowCount()):
@@ -186,11 +176,7 @@ def select_observations(pj: dict,
     result = obsList.exec_()
 
     # saving window geometry in ini file
-    try:
-        settings.setValue("observations list geometry", obsList.saveGeometry())
-        # settings.setValue("observations data", data)
-    except Exception:
-        logging.debug("error during saving observations list geometry")
+    gui_utilities.save(obsList, "observations list")
 
     if result:
         if obsList.view.selectedIndexes():
