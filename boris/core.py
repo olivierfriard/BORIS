@@ -687,7 +687,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Analysis
         for w in [self.actionTime_budget, self.actionTime_budget_by_behaviors_category, self.actionTime_budget_report,
                   self.action_behavior_binary_table, self.action_advanced_event_filtering, self.menuPlot_events,
-                  self.menuInter_rater_reliability, self.menuSimilarities, self.menuCreate_transitions_matrix]:
+                  self.menuInter_rater_reliability, self.menuSimilarities, self.menuCreate_transitions_matrix,
+                  self.actionSynthetic_binned_time_budget]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # statusbar labels
