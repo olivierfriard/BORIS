@@ -21,6 +21,7 @@ This file is part of BORIS.
 """
 
 import datetime
+
 import hashlib
 import json
 import logging
@@ -58,6 +59,7 @@ from boris import coding_pad
 from boris import db_functions
 from boris import dialog
 from boris import export_observation
+from boris import gui_utilities
 from boris import behavior_binary_table
 from boris import irr
 from boris import map_creator
@@ -1736,17 +1738,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.load_subjects_in_twSubjects([self.pj[SUBJECTS][x][SUBJECT_NAME] for x in self.pj[SUBJECTS]])
 
 
-    def filter_behaviors(self, title="Select the behaviors to show in the ethogram table",
+
+
+    def filter_behaviors(self,
+                         title="Select the behaviors to show in the ethogram table",
                          text="Behaviors to show in ethogram list",
                          table=ETHOGRAM,
                          behavior_type=[STATE_EVENT, POINT_EVENT]):
         """
-        allow user to filter behaviors in ethogram widget
+        allow user to:
+            filter behaviors in ethogram widget
+            or
+            select behaviors to remove from the total time 
 
         Args:
             title (str): title of dialog box
             text (str): text of dialog box
             table (str): table where behaviors will be filtered
+
+        Returns:
+            (None if table = ETHOGRAM)
+            boolean: True if Cancel button pressed else False
+            list: list of selected behaviors
         """
 
         if not self.pj[ETHOGRAM]:
@@ -1755,13 +1768,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         behavior_type = [x.upper() for x in behavior_type]
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.resize(800, 600)
         paramPanelWindow.setWindowTitle(title)
         paramPanelWindow.lbBehaviors.setText(text)
         for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
                   paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
                   paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time, paramPanelWindow.frm_time_bin_size]:
             w.setVisible(False)
+
+        gui_utilities.restore_geometry(paramPanelWindow, "filter behaviors", (800, 600))
 
         # behaviors filtered
         if table == ETHOGRAM:
@@ -1827,16 +1841,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_behaviors):
                 self.projectChanged = True
 
+            gui_utilities.save_geometry(paramPanelWindow, "filter behaviors")
+
             if table == ETHOGRAM:
                 self.load_behaviors_in_twEthogram(paramPanelWindow.selectedBehaviors)
                 # update coding pad
                 if hasattr(self, "codingpad"):
                     self.codingpad.filtered_behaviors = [self.twEthogram.item(i, 1).text() for i in range(self.twEthogram.rowCount())]
                     self.codingpad.compose()
+                return None
             else:
-                return paramPanelWindow.selectedBehaviors
-
-        return []
+                return False, paramPanelWindow.selectedBehaviors
+        else:
+            return True, []
 
 
     def filter_subjects(self):
@@ -1845,14 +1862,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.resize(800, 600)
         paramPanelWindow.setWindowTitle("Select the subjects to show in the subjects list")
         paramPanelWindow.lbBehaviors.setText("Subjects")
 
         for w in [paramPanelWindow.lwSubjects, paramPanelWindow.pbSelectAllSubjects, paramPanelWindow.pbUnselectAllSubjects,
                   paramPanelWindow.pbReverseSubjectsSelection, paramPanelWindow.lbSubjects, paramPanelWindow.cbIncludeModifiers,
-                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time]:
+                  paramPanelWindow.cbExcludeBehaviors, paramPanelWindow.frm_time, paramPanelWindow.frm_time_bin_size]:
             w.setVisible(False)
+
+        gui_utilities.restore_geometry(paramPanelWindow, "filter subjects", (800, 600))
 
         # subjects filtered
         filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text() for i in range(self.twSubjects.rowCount())]
@@ -1871,6 +1889,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if self.observationId and set(paramPanelWindow.selectedBehaviors) != set(filtered_subjects):
                 self.projectChanged = True
             self.load_subjects_in_twSubjects(paramPanelWindow.selectedBehaviors)
+
+            gui_utilities.save_geometry(paramPanelWindow, "filter subjects")
+
             # update subjects pad
             if hasattr(self, "subjects_pad"):
                 self.subjects_pad.filtered_subjects = [self.twSubjects.item(i, SUBJECT_NAME_FIELD_IDX).text()
@@ -3476,8 +3497,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.close()
                     # check if refresh canceled for not saved project
                     if "refresh_preferences" in self.config_param:
-                        if (pathlib.Path(os.path.expanduser("~")) / ".boris").exists():
-                            os.remove(pathlib.Path(os.path.expanduser("~")) / ".boris")
+                        if (pathlib.Path.home() / ".boris").exists():
+                            os.remove(pathlib.Path.home() / ".boris")
                         sys.exit()
 
                 if preferencesWindow.cbTimeFormat.currentIndex() == 0:
@@ -5457,7 +5478,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         read config file
         """
 
-        iniFilePath = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
+        iniFilePath = pathlib.Path.home() / pathlib.Path(".boris")
 
         logging.debug(f"read config file: {iniFilePath}")
 
@@ -5711,7 +5732,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # recent projects
         logging.info("read recent projects")
-        iniFilePath = str(pathlib.Path(os.path.expanduser("~")) / ".boris_recent_projects")
+        iniFilePath = str(pathlib.Path.home() / ".boris_recent_projects")
         if os.path.isfile(iniFilePath):
             settings = QSettings(iniFilePath, QSettings.IniFormat)
             try:
@@ -5730,7 +5751,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         save config file
         """
 
-        iniFilePath = pathlib.Path(os.path.expanduser("~")) / pathlib.Path(".boris")
+        iniFilePath = pathlib.Path.home() / pathlib.Path(".boris")
 
         logging.debug(f"save config file: {iniFilePath}")
 
@@ -5907,7 +5928,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         paramPanelWindow = param_panel.Param_panel()
-        paramPanelWindow.resize(600, 500)
+        #paramPanelWindow.resize(600, 500)
         paramPanelWindow.setWindowTitle("Select subjects and behaviors")
         paramPanelWindow.selectedObservations = selected_observations
         paramPanelWindow.pj = self.pj
@@ -6024,10 +6045,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     paramPanelWindow.lwBehaviors.addItem(paramPanelWindow.item)
 
+        gui_utilities.restore_geometry(paramPanelWindow, "param panel", (600, 500))
 
         if not paramPanelWindow.exec_():
             return {"selected subjects": [],
                     "selected behaviors": []}
+
+        gui_utilities.save_geometry(paramPanelWindow, "param panel")
 
         selectedSubjects = paramPanelWindow.selectedSubjects
         selectedBehaviors = paramPanelWindow.selectedBehaviors
@@ -6154,11 +6178,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for excluding behaviors durations from total time
-        synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
-                                                                   text=("The duration of the selected behaviors will "
-                                                                         "be subtracted from the total time"),
-                                                                   table="",
-                                                                   behavior_type=[STATE_EVENT])
+        cancel_pressed, synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+                                                                                   text=("The duration of the selected behaviors will "
+                                                                                         "be subtracted from the total time"),
+                                                                                   table="",
+                                                                                   behavior_type=[STATE_EVENT])
+
+        if cancel_pressed:
+            return
 
         extended_file_formats = ["Tab Separated Values (*.tsv)",
                                  "Comma Separated Values (*.csv)",
@@ -6289,11 +6316,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for excluding behaviors durations from total time
-        synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
-                                                                   text=("The duration of the selected behaviors will "
-                                                                         "be subtracted from the total time"),
-                                                                   table="",
-                                                                   behavior_type=[STATE_EVENT])
+        cancel_pressed, synth_tb_param[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+                                                                      text=("The duration of the selected behaviors will "
+                                                                            "be subtracted from the total time"),
+                                                                      table="",
+                                                                      behavior_type=[STATE_EVENT])
+        if cancel_pressed:
+            return
 
         extended_file_formats = ["Tab Separated Values (*.tsv)",
                                  "Comma Separated Values (*.csv)",
@@ -6454,11 +6483,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         # ask for excluding behaviors durations from total time
-        parameters[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
-                                                               text=("The duration of the selected behaviors will "
-                                                                     "be subtracted from the total time"),
-                                                               table="",
-                                                               behavior_type=[STATE_EVENT])
+        cancel_pressed = parameters[EXCLUDED_BEHAVIORS] = self.filter_behaviors(title="Select behaviors to exclude",
+                                                                   text=("The duration of the selected behaviors will "
+                                                                         "be subtracted from the total time"),
+                                                                   table="",
+                                                                   behavior_type=[STATE_EVENT])
+        if cancel_pressed:
+            return
 
         # check if time_budget window must be used
         if flagGroup or len(selectedObservations) == 1:

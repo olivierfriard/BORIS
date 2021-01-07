@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -29,7 +27,7 @@ import os
 from boris.config import (BEHAVIORS_PLOT_COLORS, CANCEL)
 from boris.dialog import MessageDialog
 from boris.preferences_ui import Ui_prefDialog
-from PyQt5.QtWidgets import QDialog, QFileDialog
+from PyQt5.QtWidgets import (QDialog, QFileDialog)
 
 
 class Preferences(QDialog, Ui_prefDialog):
