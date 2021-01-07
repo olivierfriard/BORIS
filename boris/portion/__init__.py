@@ -2,7 +2,10 @@ from .const import Bound, inf
 from .interval import Interval, open, closed, openclosed, closedopen, empty, singleton
 from .func import iterate
 from .io import from_string, to_string, from_data, to_data
-from .dict import IntervalDict
+
+# disabled because BORIS does not need IntervalDict 
+# so the sortedcontainers module is not required
+#from .dict import IntervalDict
 
 
 __all__ = [
