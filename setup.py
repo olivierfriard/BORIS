@@ -26,15 +26,16 @@ setup(
     packages=['boris'],  #same as name
 
     install_requires=[
-          "matplotlib",
           "numpy==1.19.3",
+          "matplotlib",
           "tablib[html, ods, xls, xlsx]",
-          "portion",
+          # "portion",
           "pyqt5"
       ],
 
     package_data={
-    'boris': ['boris.qrc', 'boris.ui'],
+    #'boris': ['boris.qrc', 'boris.ui'],
+    'boris': ['boris.qrc', 'boris.ui', 'portion/*.py'],
      "": ["README.TXT", "LICENSE.TXT"],
     },
 
