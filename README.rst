@@ -13,6 +13,8 @@ The BORIS paper has more than 400 citations in scientific publications with peer
 See http://www.boris.unito.it
 
 
+.. image:: https://img.shields.io/pypi/l/boris_behav_obs   :alt: PyPI - License
+
 .. image:: https://img.shields.io/pypi/l/boris-behav-obs   :alt: PyPI - License
 
 .. image:: https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
