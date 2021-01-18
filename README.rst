@@ -15,7 +15,7 @@ See http://www.boris.unito.it
 
 
 
-.. image:: https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Downloads
+.. image:: https://static.pepy.tech/personalized-badge/boris-behav-obs?period=total&units=international_system&left_color=black&right_color=orange&left_text=Total downloads
  :target: https://pepy.tech/project/boris-behav-obs
 
 
