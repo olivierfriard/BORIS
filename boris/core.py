@@ -98,7 +98,7 @@ __version_date__ = version.__version_date__
 
 
 if platform.python_version() < "3.6":
-    logging.critical("BORIS requires Python 3.6+! You are using v. {}")
+    logging.critical(f"BORIS requires Python 3.6+! You are using Python v. {platform.python_version()}")
     sys.exit()
 
 if sys.platform == "darwin":  # for MacOS
