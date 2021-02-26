@@ -986,11 +986,11 @@ def open_project_json(projectFileName: str) -> tuple:
 
                 for media_file_path in pj[OBSERVATIONS][obs]["file"][player]:
                     # FIX: ffmpeg path
-                    ret, msg = utilities.check_ffmpeg_path()
+                    ret, ffmpeg_path = utilities.check_ffmpeg_path()
                     if not ret:
                         return projectFileName, projectChanged, {"error": "FFmpeg path not found"}, ""
                     else:
-                        ffmpeg_bin = msg
+                        ffmpeg_bin = ffmpeg_path
 
                     r = utilities.accurate_media_analysis(ffmpeg_bin, media_file_path)
 

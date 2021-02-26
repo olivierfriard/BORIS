@@ -1090,31 +1090,6 @@ def check_ffmpeg_path():
         else:
             return False, "FFmpeg is not available"
 
-        '''
-        r = False
-        if os.path.exists(os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"):
-            ffmpeg_bin = os.path.abspath(os.path.join(syspath, os.pardir)) + "/FFmpeg/ffmpeg"
-            r, msg = test_ffmpeg_path(ffmpeg_bin)
-            if r:
-                return True, ffmpeg_bin
-
-        # check if ffmpeg in same directory than boris.py
-        if os.path.exists(syspath + "/ffmpeg"):
-            ffmpeg_bin = syspath + "/ffmpeg"
-            r, msg = test_ffmpeg_path(ffmpeg_bin)
-            if r:
-                return True, ffmpeg_bin
-
-        # check for ffmpeg in system path
-        ffmpeg_bin = "ffmpeg"
-        r, msg = test_ffmpeg_path(ffmpeg_bin)
-        if r:
-            return True, ffmpeg_bin
-        else:
-            logging.critical("FFmpeg is not available")
-            return False, "FFmpeg is not available"
-        '''
-
     if sys.platform.startswith("win"):
 
         ffmpeg_path = pathlib.Path("")
