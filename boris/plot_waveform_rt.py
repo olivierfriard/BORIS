@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSignal, QEvent
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import matplotlib.ticker as mticker
 
 Y_MIN = 0
 Y_MAX = 20000
@@ -47,7 +48,7 @@ class Plot_waveform_RT(QWidget):
         try:
             wav = wave.open(wav_file, "r")
             frames = wav.readframes(-1)
-            signal = np.fromstring(frames, "Int16")
+            signal = np.fromstring(frames, dtype=np.int16)
             frame_rate = wav.getframerate()
             wav.close()
             return signal, frame_rate
@@ -63,6 +64,7 @@ class Plot_waveform_RT(QWidget):
         self.cursor_color = "red"
 
         self.figure = Figure()
+        self.ax = self.figure.add_subplot(1, 1, 1)
 
         self.canvas = FigureCanvas(self.figure)
         layout = QVBoxLayout()
@@ -122,90 +124,64 @@ class Plot_waveform_RT(QWidget):
 
         self.time_mem = current_time
 
-        ax = self.figure.add_subplot(1, 1, 1)
-
-        ax.clear()
+        self.ax.clear()
 
         # start
         if current_time <= self.interval / 2:
 
-            '''
-            Pxx, freqs, bins, im = ax.specgram(self.sound_info[: int((self.interval) * self.frame_rate)],
-                                               mode = 'psd' ,
-                                               NFFT=1024,
-                                               Fs=self.frame_rate,
-                                               noverlap=900,
-                                               vmin=VMIN)
-            '''
-
             time_ = np.linspace(0, len(self.sound_info[: int((self.interval) * self.frame_rate)]) / self.frame_rate, num=len(self.sound_info[: int((self.interval) * self.frame_rate)]))
-            ax.plot(time_, self.sound_info[: int((self.interval) * self.frame_rate)])
+            self.ax.plot(time_, self.sound_info[: int((self.interval) * self.frame_rate)])
 
-            ax.set_xlim( current_time - self.interval / 2  , current_time + self.interval / 2)
+            self.ax.set_xlim( current_time - self.interval / 2  , current_time + self.interval / 2)
 
             #ax.set_ylim(Y_MIN, Y_MAX)
 
             # cursor
-            ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
+            self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
 
         elif current_time >= self.media_length - self.interval / 2:
 
             i = int(round(len(self.sound_info) - (self.interval * self.frame_rate), 0))
 
-            '''
-            Pxx, freqs, bins, im = ax.specgram(self.sound_info[i : ],
-                                               mode = "psd",
-                                               NFFT=1024,
-                                               Fs=self.frame_rate,
-                                               noverlap=900,
-                                               vmin=VMIN)
-            '''
-
             time_ = np.linspace(0, len(self.sound_info[i : ])/self.frame_rate, num=len(self.sound_info[i : ]))
-            ax.plot(time_, self.sound_info[i : ])
+            self.ax.plot(time_, self.sound_info[i : ])
 
             lim1 = current_time - (self.media_length - self.interval / 2)
             lim2 = lim1 + self.interval
 
-            ax.set_xlim( lim1  , lim2)
+            self.ax.set_xlim( lim1  , lim2)
 
-            #ax.set_ylim(Y_MIN, Y_MAX)
-
-            ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in ax.get_xticks()])
+            self.ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
 
             # cursor
-            ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
+            self.ax.axvline(x=lim1 + self.interval / 2, color=self.cursor_color, linestyle="-")
 
         # middle
         else:
 
+            '''
             start = (current_time - self.interval/2)* self.frame_rate
             end = (current_time + self.interval/2)* self.frame_rate
+            '''
 
-            '''
-            Pxx, freqs, bins, im = ax.specgram(self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
-                                                               int(round((current_time + self.interval/2) * self.frame_rate, 0))],
-                                           mode = 'psd' ,
-                                           NFFT=1024,
-                                           Fs=self.frame_rate,
-                                           noverlap=900,
-                                               vmin=VMIN)
-            '''
             time_ = np.linspace(0, len(self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
                                                                int(round((current_time + self.interval/2) * self.frame_rate, 0))])/self.frame_rate, num=len(self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
                                                                int(round((current_time + self.interval/2) * self.frame_rate, 0))]))
-            ax.plot(time_, self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
+            self.ax.plot(time_, self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
                                                                int(round((current_time + self.interval/2) * self.frame_rate, 0))])
 
-            #ax.set_ylim(Y_MIN, Y_MAX)
 
-            ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in ax.get_xticks()])
+            #ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in ax.get_xticks()])
+
+            ticks_loc = self.ax.get_xticks().tolist()
+            self.ax.xaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
+            self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
 
             # cursor
-            ax.axvline(x=self.interval/2 , color=self.cursor_color, linestyle="-")
+            self.ax.axvline(x=self.interval/2 , color=self.cursor_color, linestyle="-")
 
-        self.figure.subplots_adjust(wspace=0, hspace=0)
+        '''self.figure.subplots_adjust(wspace=0, hspace=0)'''
 
         self.canvas.draw()
 

@@ -22,14 +22,10 @@ This file is part of BORIS.
 
 
 import glob
-import hashlib
 import logging
 import os
-import tempfile
-import time
 from pathlib import Path
 
-import numpy
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -105,6 +101,7 @@ class Observation(QDialog, Ui_Form):
         self.converters = converters
         self.time_format = time_format
         self.observation_time_interval = [0, 0]
+        self.mem_dir = ""
 
         self.setupUi(self)
 
@@ -155,6 +152,7 @@ class Observation(QDialog, Ui_Form):
         """
         self.rb_day_time.setEnabled(self.cb_start_from_current_time.isChecked())
         self.rb_epoch_time.setEnabled(self.cb_start_from_current_time.isChecked())
+
 
     def limit_time_interval(self):
         """
@@ -706,21 +704,17 @@ class Observation(QDialog, Ui_Form):
                                                      "if the project is not saved"))
             return
 
-        # check if more media in player1 before adding media to player2
-        '''
-        if n_player == PLAYER2 and self.twVideo1.rowCount() > 1:
-            QMessageBox.critical(self, programName, ("It is not yet possible to play a second media "
-                                                     "when more media are loaded in the first media player"))
-            return
-        '''
-
         fd = QFileDialog()
-        fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
+        if self.mem_dir:
+            fd.setDirectory(self.mem_dir if flag_path else str(Path(self.project_path).parent))
+        else:
+            fd.setDirectory(os.path.expanduser("~") if flag_path else str(Path(self.project_path).parent))
 
         fn = fd.getOpenFileNames(self, "Add media file(s)", "", "All files (*)")
         file_paths = fn[0] if type(fn) is tuple else fn
 
         if file_paths:
+            self.mem_dir = str(Path(file_paths[0]).parent)
             for file_path in file_paths:
                 r, msg = self.check_media(file_path, flag_path)
                 if not r:
@@ -823,11 +817,11 @@ class Observation(QDialog, Ui_Form):
                 self.twVideo1.removeRow(row)
                 if media_path not in [self.twVideo1.item(idx, MEDIA_FILE_PATH_IDX).text() for idx in range(self.twVideo1.rowCount())]:
                     try:
-                        del self.mediaDurations[mediaPath]
+                        del self.mediaDurations[media_path]
                     except NameError:
                         pass
                     try:
-                        del self.mediaFPS[mediaPath]
+                        del self.mediaFPS[media_path]
                     except NameError:
                         pass
 

@@ -1,7 +1,7 @@
 """
 BORIS
 Behavioral Observation Research Interactive Software
-Copyright 2012-2020 Olivier Friard
+Copyright 2012-2021 Olivier Friard
 
 This file is part of BORIS.
 
@@ -20,20 +20,19 @@ This file is part of BORIS.
 
 """
 
+import mpv
 from PyQt5.QtWidgets import (QLabel, QFrame, QDockWidget, QWidget,
-                             QHBoxLayout, QSlider, QSizePolicy, QStackedWidget,
-                             QMessageBox
+                             QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
                              )
 from PyQt5.QtCore import (pyqtSignal, QEvent, Qt, QSize)
 from PyQt5.QtGui import (QPalette, QColor)
 
 import logging
-from boris.config import programName
 
 
-class Click_label(QLabel):
+class Clickable_label(QLabel):
     """
-    QLabel class for visualiziong frames (frame-by-frame mode)
+    QLabel class for visualiziong frames for geometric measurments
     Label emits a signal when clicked
     """
     mouse_pressed_signal = pyqtSignal(int, QEvent)
@@ -46,12 +45,16 @@ class Click_label(QLabel):
         """
         label clicked
         """
+
+        logging.debug(f"mousepress event: label {self.id_} clicked")
+
         self.mouse_pressed_signal.emit(self.id_, event)
 
 
+'''
 class Video_frame(QFrame):
     """
-    QFrame class for visualizing video with VLC
+    QFrame class for visualizing video with MPV
     Frame emits a signal when clicked or resized
     """
 
@@ -60,11 +63,6 @@ class Video_frame(QFrame):
 
     def sizeHint(self):
         return QSize(150, 200)
-
-
-    # def mouseDoubleClickEvent(self, QMouseEvent):
-    #    """handle double click on video frame""""
-
 
     def mousePressEvent(self, QMouseEvent):
         """
@@ -126,9 +124,9 @@ class Video_frame(QFrame):
         logging.debug("video frame resized")
 
         self.video_frame_signal.emit("resized", 0)
+'''
 
-
-class DW(QDockWidget):
+class DW2(QDockWidget):
 
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
@@ -143,23 +141,34 @@ class DW(QDockWidget):
 
         self.stack1 = QWidget()
         self.hlayout = QHBoxLayout()
-        self.videoframe = Video_frame()
-        self.videoframe.video_frame_signal.connect(self.view_signal_triggered)
-        self.palette = self.videoframe.palette()
-        self.palette.setColor(QPalette.Window, QColor(0, 0, 0))
-        self.videoframe.setPalette(self.palette)
-        self.videoframe.setAutoFillBackground(True)
+
+        #self.docked_widget = QWidget(self)
+
+        self.videoframe = QWidget(self)
+
+        self.player = mpv.MPV(wid=str(int(self.videoframe.winId())),
+                              #vo='x11', # You may not need this
+                              log_handler=None,
+                              loglevel="debug")
+
+        self.player.screenshot_format = "png"
         self.hlayout.addWidget(self.videoframe)
+        
         self.volume_slider = QSlider(Qt.Vertical, self)
+        self.volume_slider.setFocusPolicy(Qt.NoFocus)
         self.volume_slider.setMaximum(100)
         self.volume_slider.setValue(50)
         self.volume_slider.sliderMoved.connect(self.volume_slider_moved)
+
         self.hlayout.addWidget(self.volume_slider)
+
+        #self.docked_widget.setLayout(self.hlayout)
+        
         self.stack1.setLayout(self.hlayout)
 
         self.stack2 = QWidget()
         self.hlayout2 = QHBoxLayout()
-        self.frame_viewer = Click_label(id_)
+        self.frame_viewer = Clickable_label(id_)
 
         self.frame_viewer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.frame_viewer.setAlignment(Qt.AlignCenter)
@@ -173,6 +182,9 @@ class DW(QDockWidget):
         self.stack.addWidget(self.stack2)
 
         self.setWidget(self.stack)
+        self.stack.setCurrentIndex(0)
+        
+        #self.setWidget(self.docked_widget)
 
 
     def volume_slider_moved(self):

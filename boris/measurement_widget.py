@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 BORIS
 Behavioral Observation Research Interactive Software
@@ -29,7 +27,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from boris import dialog
-from boris.config import *
+from boris.config import YES, NO, CANCEL, programName
 
 
 class wgMeasurement(QWidget):
@@ -103,6 +101,8 @@ class wgMeasurement(QWidget):
 
         vbox.addLayout(hbox3)
 
+    def closeEvent(self, event):
+        self.pbClose_clicked()
 
     def pbClear_clicked(self):
         """
@@ -115,7 +115,8 @@ class wgMeasurement(QWidget):
 
     def pbClose_clicked(self):
         if not self.flagSaved:
-            response = dialog.MessageDialog(programName, "The current results are not saved. Do you want to save results before closing?",
+            response = dialog.MessageDialog(programName, 
+                                            "The current results are not saved. Do you want to save results before closing?",
                                             [YES, NO, CANCEL])
             if response == YES:
                 self.pbSave_clicked()
@@ -129,7 +130,8 @@ class wgMeasurement(QWidget):
         save results
         """
         if self.pte.toPlainText():
-            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "", "Text files (*.txt);;All files (*)")
+            fileName, _ = QFileDialog().getSaveFileName(self, "Save measurement results", "", 
+                                                        "Text files (*.txt);;All files (*)")
             if fileName:
                 with open(fileName, "w") as f:
                     f.write(self.pte.toPlainText())
