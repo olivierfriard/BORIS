@@ -31,7 +31,9 @@ from PyQt5.QtWidgets import *
 
 from boris import dialog
 from boris.add_modifier_ui import Ui_Dialog
+# to be modified
 from boris.config import *
+
 from boris.utilities import sorted_keys
 
 
