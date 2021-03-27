@@ -26,7 +26,9 @@ from PyQt5.QtWidgets import QWidget
 
 def save_geometry(widget:QWidget,
                   widget_name:str):
-    """save window geometry in ini file"""
+    """
+    save window geometry in ini file
+    """
 
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")
@@ -40,7 +42,9 @@ def save_geometry(widget:QWidget,
 def restore_geometry(widget:QWidget,
                      widget_name:str,
                      default_geometry):
-    """restore window geometry in ini file"""
+    """
+    restore window geometry in ini file
+    """
 
     try:
         ini_file_path = pl.Path.home() / pl.Path(".boris")
