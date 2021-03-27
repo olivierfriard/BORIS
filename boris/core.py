@@ -278,8 +278,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     frame_bitmap_format = FRAME_DEFAULT_BITMAP_FORMAT
 
-    fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
-
     alertNoFocalSubject = False        # if True an alert will show up if no focal subject
     trackingCursorAboveEvent = False   # if True the cursor will appear above the current event in events table
     checkForNewVersion = False         # if True BORIS will check for new version every 15 days
@@ -336,8 +334,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ffmpeg_bin = ""
     ffmpeg_cache_dir = ""
     ffmpeg_cache_dir_max_size = 0
-    frame_resize = 0
-
+    
     # dictionary for FPS storing
     fps = 0
 
@@ -1931,7 +1928,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                                       f'-ss {start:.3f} '
                                                       f'-i "{media_path}" '
                                                       f'-vframes {vframes} '
-                                                      # f'-vf scale=1024{frame_resize}:-1 '
                                                       f'"{exportDir}{os.sep}'
                                                       f'{utilities.safeFileName(obsId)}'
                                                       f'_PLAYER{nplayer}'
@@ -1989,7 +1985,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                         ffmpeg_command = (f'"{self.ffmpeg_bin}" -ss {start:.3f} '
                                                           f'-i "{media_path}" '
                                                           f'-vframes {vframes} '
-                                                          # f'-vf scale=1024{frame_resize}:-1 '
                                                           f'"{exportDir}{os.sep}'
                                                           f'{utilities.safeFileName(obsId)}'
                                                           f'_PLAYER{nplayer}'
@@ -3151,10 +3146,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # frames buffer
             preferencesWindow.lb_memory_info.setText(f"{preferencesWindow.lb_memory_info.text()}")
 
-            preferencesWindow.sbFrameResize.setValue(self.frame_resize)
-            mem_frame_resize = self.frame_resize
-            # frame-by-frame cache size (in seconds)
-            preferencesWindow.sb_fbf_cache_size.setValue(self.fbf_cache_size)
 
 
             preferencesWindow.cbFrameBitmapFormat.clear()
@@ -4968,14 +4959,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.ffmpeg_cache_dir_max_size = 0
             logging.debug(f"ffmpeg_cache_dir_max_size: {self.ffmpeg_cache_dir_max_size}")
 
-            try:
-                self.frame_resize = int(settings.value("frame_resize"))
-                if not self.frame_resize:
-                    self.frame_resize = 0
-            except Exception:
-                self.frame_resize = 0
-
-            logging.debug(f"frame_resize: {self.frame_resize}")
 
             try:
                 self.frame_bitmap_format = settings.value("frame_bitmap_format")
@@ -4986,14 +4969,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             logging.debug(f"frame_bitmap_format: {self.frame_bitmap_format}")
 
-            try:
-                self.fbf_cache_size = int(settings.value("frame_cache_size"))
-                if not self.fbf_cache_size:
-                    self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
-            except Exception:
-                self.fbf_cache_size = FRAME_DEFAULT_CACHE_SIZE
-
-            logging.debug(f"frame_cache_size: {self.fbf_cache_size}")
 
             # spectrogram
             self.spectrogramHeight = 80
@@ -5098,9 +5073,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             settings.setValue(value, self.config_param[value])
         '''
 
-        settings.setValue("frame_resize", self.frame_resize)
+
         settings.setValue("frame_bitmap_format", self.frame_bitmap_format)
-        settings.setValue("frame_cache_size", self.fbf_cache_size)
         # spectrogram
         settings.setValue("spectrogram_color_map", self.spectrogram_color_map)
         settings.setValue("spectrogram_time_interval", self.spectrogram_time_interval)
@@ -10857,28 +10831,15 @@ def main():
         if sys.platform == "darwin" and "sn_0_" in project_to_open:
             project_to_open = ""
 
-    # QMessageBox.critical(window, programName, f"options.project: #{options.project}#")
 
     logging.debug(f"args: {args}")
 
-    '''
-    if args and len(args) > 0:
-        project_to_open = args[0]
-    '''
 
     if options.observation:
         if not project_to_open:
             print("No project file!")
             sys.exit()
         observation_to_open = options.observation
-
-    '''
-    if args and len(args) > 1:
-        if not project_to_open:
-            print("No project file!")
-            sys.exit()
-        observation_to_open = args[1]
-    '''
 
     if project_to_open:
 
@@ -10918,6 +10879,5 @@ def main():
 
 
 if __name__ == "__main__":
-
 
     main()
