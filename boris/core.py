@@ -373,29 +373,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def __init__(self, ffmpeg_bin, parent=None):
 
-        # 2020-03-18
-        from boris import vlc
-
-        if vlc.dll is None:
-            msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
-            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            logging.critical(msg)
-            sys.exit(1)
-
-        if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-            msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
-                "Go to http://www.videolan.org/vlc to update it")
-            QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-            logging.critical(msg)
-            sys.exit(2)
-
-        self.instance = vlc.Instance()   # "--avcodec-hw=none"
-        self.vlc_paused = vlc.State.Paused
-        self.vlc_ended = vlc.State.Ended
-        self.vlc_playing = vlc.State.Playing
-        self.vlc_NothingSpecial = vlc.State.NothingSpecial
-        self.vlc_stopped = vlc.State.Stopped
-
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
