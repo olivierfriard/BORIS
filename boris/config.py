@@ -34,7 +34,7 @@ N_PLAYER = 8
 
 NA = "NA"
 
-VLC_TIMER_OUT = 200
+VLC_TIMER_OUT = 100
 SPECTRO_TIMER = 200
 
 
@@ -144,6 +144,8 @@ BEHAVIOR_CODE = "code"
 BEHAVIOR_KEY = "key"
 BEHAVIOR_CATEGORY = "category"
 
+ZOOM_LEVEL = "zoom level"
+DISPLAY_MEDIA_SUBTITLES = "display subtitles"
 
 # fields for event configuration
 fields = {
@@ -306,6 +308,7 @@ CLOSE_BEHAVIORS_BETWEEN_VIDEOS = "close_behaviors_between_videos"
 
 VLC = "vlc"
 FFMPEG = "ffmpeg"
+MPV = "MPV"
 
 SAVE_FRAMES = "save_frames"
 MEMORY_FOR_FRAMES = "memory_for_frames"
