@@ -129,7 +129,6 @@ if options.version:
 
 logging.debug("BORIS started")
 logging.debug(f"BORIS version {__version__} release date: {__version_date__}")
-#logging.debug(f"VLC version {vlc.libvlc_get_version().decode('utf-8')}")
 
 current_system = platform.uname()
 
@@ -255,9 +254,6 @@ class StyledItemDelegateTriangle(QStyledItemDelegate):
 
 
 class MainWindow(QMainWindow, Ui_MainWindow):
-
-    # 2020-03-18
-    #instance = vlc.Instance()   # "--avcodec-hw=none"
 
     pj = dict(EMPTY_PROJECT)
     project = False
@@ -10839,22 +10835,6 @@ def main():
             time.sleep(0.001)
 
 
-    #from boris import vlc
-    # check VLC
-    '''
-    if vlc.dll is None:
-        msg = "This program requires the VLC media player.\nGo to http://www.videolan.org/vlc"
-        QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical(msg)
-        sys.exit(1)
-
-    if vlc.libvlc_get_version().decode("utf-8") < VLC_MIN_VERSION:
-        msg = (f"The VLC media player seems very old ({vlc.libvlc_get_version()}). "
-               "Go to http://www.videolan.org/vlc to update it")
-        QMessageBox.critical(None, programName, msg, QMessageBox.Ok | QMessageBox.Default, QMessageBox.NoButton)
-        logging.critical(msg)
-        sys.exit(2)
-    '''
     # check FFmpeg
     ret, msg = check_ffmpeg_path()
     if not ret:
