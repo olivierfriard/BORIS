@@ -179,15 +179,18 @@ class Input_dialog(QDialog):
 
         self.elements = {}
         for element in elements_list:
+
             if element[0] == "cb":
                 self.elements[element[1]] = QCheckBox(element[1])
                 self.elements[element[1]].setChecked(element[2])
                 hbox.addWidget(self.elements[element[1]])
+
             if element[0] == "le":
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
                 self.elements[element[1]] = QLineEdit()
                 hbox.addWidget(self.elements[element[1]])
+
             if element[0] == "sb":
                 lb = QLabel(element[1])
                 hbox.addWidget(lb)
@@ -196,6 +199,18 @@ class Input_dialog(QDialog):
                 self.elements[element[1]].setSingleStep(element[4])
                 self.elements[element[1]].setValue(element[5])
                 hbox.addWidget(self.elements[element[1]])
+
+            if element[0] == "il":  # items list
+                lb = QLabel(element[1])
+                hbox.addWidget(lb)
+                self.elements[element[1]] = QComboBox()
+                self.elements[element[1]].addItems([x[0] for x in element[2]])  # take first element of tuple
+                try:
+                    self.elements[element[1]].setCurrentIndex([idx for idx, x in enumerate(element[2]) if x[1] == "selected"][0])
+                except:
+                    self.elements[element[1]].setCurrentIndex(0)
+                hbox.addWidget(self.elements[element[1]])
+
 
         hbox2 = QHBoxLayout()
 
