@@ -27,15 +27,15 @@ setup(
 
     install_requires=[
           "numpy==1.19.3",
-          "matplotlib",
+          "matplotlib==3.3.3",
           "tablib[html, ods, xls, xlsx]",
-          # "portion",
-          "pyqt5"
+          "pyqt5==5.15.4",
+          "python-mpv"
       ],
 
     package_data={
-    #'boris': ['boris.qrc', 'boris.ui'],
-    'boris': ['boris.qrc', 'boris.ui', 'portion/*.py'],
+    'boris': ['core.qrc', 'core.ui', 'add_modifier.ui', 'converters.ui', 'edit_event.ui', 'observation.ui', 'param_panel.ui', 'preferences.ui', 'project.ui',
+              'portion/*.py'],
      "": ["README.TXT", "LICENSE.TXT"],
     },
 

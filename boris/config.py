@@ -146,6 +146,7 @@ BEHAVIOR_CATEGORY = "category"
 
 ZOOM_LEVEL = "zoom level"
 DISPLAY_MEDIA_SUBTITLES = "display subtitles"
+OVERLAY = "video overlay"
 
 # fields for event configuration
 fields = {

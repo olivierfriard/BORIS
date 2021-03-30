@@ -52,7 +52,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtMultimedia import QSound
 from PyQt5.QtWidgets import *
-from PIL.ImageQt import ImageQt
+from PIL.ImageQt import ImageQt, Image
 
 from boris import behav_coding_map_creator
 from boris import behaviors_coding_map
@@ -77,7 +77,7 @@ from boris import plot_spectrogram_rt
 from boris import plot_waveform_rt
 from boris import preferences
 from boris import project_functions
-from boris import qrc_boris
+from boris import core_qrc
 from boris import select_modifiers
 from boris import select_observations
 from boris import subjects_pad
@@ -262,6 +262,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     time_observer_signal = pyqtSignal(float)
 
     processes = []  # list of QProcess processes
+    overlays = {}  # dict for storing video overlays
 
     saved_state = None
 
@@ -388,7 +389,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionSnapshot.setIcon(QIcon(":/snapshot"))
 
-        '''self.actionFrame_by_frame.setIcon(QIcon(":/frame_mode"))'''
         self.actionFrame_backward.setIcon(QIcon(":/frame_backward"))
         self.actionFrame_forward.setIcon(QIcon(":/frame_forward"))
         self.actionCloseObs.setIcon(QIcon(":/close_observation"))
@@ -538,11 +538,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
         self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
         self.actionShow_data_files.setEnabled(self.playerType == VLC)
-        self.menuImage_overlay_on_video.setEnabled(self.playerType == VLC)
-        '''
+        self.menuImage_overlay_on_video_2.setEnabled(self.playerType == VLC)
+
         self.actionAdd_image_overlay_on_video.setEnabled(self.playerType == VLC)
         self.actionRemove_image_overlay.setEnabled(self.playerType == VLC)
-        '''
+
         # geometric measurements
         self.action_geometric_measurements.setEnabled(flagObs and self.geometric_measurements_mode == False)
         self.actionCoding_pad.setEnabled(flagObs)
@@ -3627,6 +3627,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.dw_player[i].key_pressed_signal.connect(self.signal_from_widget)
             # for receiving event from volume slider
             self.dw_player[i].volume_slider_moved_signal.connect(self.set_volume)
+            # for receiving resize event from dock widget
+            self.dw_player[i].resize_signal.connect(self.resize_dw)
 
             '''
             # for receiving event resize and clicked (Zoom - crop)
@@ -3699,6 +3701,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # restore subtitle visibility
             if DISPLAY_MEDIA_SUBTITLES in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
                 self.dw_player[i].player.sub_visibility = self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][DISPLAY_MEDIA_SUBTITLES].get(n_player, True)
+
+            # restore overlays
+            if OVERLAY in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
+                if n_player in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY]:
+                    self.overlays[i] = self.dw_player[i].player.create_image_overlay()
+                    self.resize_dw(i)
 
 
         self.menu_options()
@@ -3933,6 +3941,60 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         receive signal from widget
         """
         self.keyPressEvent(event)
+
+
+    def resize_dw(self, dw_id):
+        """
+        dockwidget was resized. Adpat overlay if any
+        """
+        try:            
+            img = Image.open(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["file name"])
+        except:
+            return
+
+        w = self.dw_player[dw_id].player.width
+        h = self.dw_player[dw_id].player.height
+
+        fw = self.dw_player[dw_id].videoframe.size().width()
+        fh = self.dw_player[dw_id].videoframe.size().height()
+
+        if fw/fh <= w/h:
+            w_r = fw
+            h_r = w_r / (w/h)
+            x1 = 0
+            y1 = int((fh - h_r) / 2)
+            x2 = int(w_r)
+            y2 = int(y1 + h_r)
+
+        if fw/fh > w/h:
+            h_r = fh
+            w_r = h_r * (w/h)
+            x1 = int((fw - w_r) / 2)
+            y1 = 0
+            x2 = int(x1 + w_r)
+            y2 = int(h_r)
+
+        img_resized = img.resize((x2 - x1, y2 - y1))
+        # disabled due to a problem setting trasnparency to 0% with an image with transparent background
+        # and img_resized.putalpha(int((100 - self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["transparency"]) * 2.55))  # 0 means 100% transparency
+
+        # check position
+        x_offset, y_offset = 0, 0
+        if self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["overlay position"]:
+            try:
+                x_offset = int(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["overlay position"].split(",")[0].strip())
+                y_offset = int(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["overlay position"].split(",")[1].strip())
+            except Exception:
+                logging.warning(f"error in overlay position")
+
+        try:
+            self.overlays[dw_id].remove()
+        except:
+            logging.debug("error removing overlay")
+        try:
+            self.overlays[dw_id].update(img_resized, pos=(x1 + x_offset, y1 + y_offset))
+        except:
+            logging.debug("error updating overlay")
 
 
     def signal_from_dw(self, id_, msg, button):
@@ -8566,25 +8628,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not w.exec_():
                 return
 
-            file_name = w.le_file_path.text()
-            overlay_position = w.le_overlay_position.text()
-
             idx = w.cb_player.currentIndex()
 
-            self.dw_player[idx].mediaplayer.video_set_logo_string(1, str(pathlib.Path(file_name)))
-
-            # overlay position
-            if overlay_position:
-                try:
-                    self.dw_player[idx].mediaplayer.video_set_logo_int(2, int(overlay_position.split(",")[0].strip()))
-                    self.dw_player[idx].mediaplayer.video_set_logo_int(3, int(overlay_position.split(",")[1].strip()))
-                except Exception:
-                    logging.warning(f"error in overlay position")
-                    pass
-
-            self.dw_player[idx].mediaplayer.video_set_logo_int(6, w.sb_overlay_transparency.value())
-
-            self.dw_player[idx].mediaplayer.video_set_logo_int(0, 1)
+            if OVERLAY not in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]:
+                self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY] = {}
+            self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(idx + 1)] = {"file name": w.le_file_path.text(),
+                                                                                            "overlay position": w.le_overlay_position.text(),
+                                                                                            "transparency": w.sb_overlay_transparency.value()}
+            self.overlays[idx] = self.dw_player[idx].player.create_image_overlay()
+            self.projectChanged = True
+            self.resize_dw(idx)
 
         except Exception:
             logging.debug("error in add_image_overlay function")
@@ -8594,9 +8647,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         remove image overlay from all players
         """
-        for i, _ in enumerate(self.dw_player):
-            self.dw_player[i].mediaplayer.video_set_logo_int(0, 0)
-
+        keys_to_delete = []
+        for n_player in self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO].get(OVERLAY, {}):
+            keys_to_delete.append(n_player)
+            try:
+                self.overlays[int(n_player) - 1].remove()
+            except:
+                logging.debug("error removing overlay")
+        for n_player in keys_to_delete:
+            del self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][n_player]
 
     def video_slider_sliderMoved(self):
         """
@@ -8613,11 +8672,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 sliderPos = self.video_slider.value() / (slider_maximum - 1)
                 videoPosition = sliderPos * self.dw_player[0].player.duration
                 self.dw_player[0].player.command('seek', str(videoPosition), 'absolute')
-
-                '''
-                self.update_visualizations(scroll_slider=False)
-                '''
-
 
 
     def video_slider_sliderReleased(self):
@@ -10653,7 +10707,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 data_timer.start()
 
             self.actionPlay.setIcon(QIcon(":/pause"))
-            '''self.actionFrame_by_frame.setChecked(False)'''
+            self.actionPlay.setText("Pause")
+
             self.frame_mode = False
 
             return True
@@ -10689,6 +10744,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 self.timer_plot_data_out(self.plot_data[idx])
 
             self.actionPlay.setIcon(QIcon(":/play"))
+            self.actionPlay.setText("Play")
 
 
     def play_activated(self):
@@ -10881,3 +10937,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+

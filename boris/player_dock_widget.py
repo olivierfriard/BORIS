@@ -19,13 +19,13 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
-
+import os
+os.environ["PATH"] = os.path.dirname(__file__) + os.path.sep + os.environ["PATH"]
 import mpv
-from PyQt5.QtWidgets import (QLabel, QFrame, QDockWidget, QWidget,
+from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget,
                              QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
                              )
-from PyQt5.QtCore import (pyqtSignal, QEvent, Qt, QSize)
-from PyQt5.QtGui import (QPalette, QColor)
+from PyQt5.QtCore import (pyqtSignal, QEvent, Qt)
 
 import logging
 
@@ -131,6 +131,8 @@ class DW2(QDockWidget):
     key_pressed_signal = pyqtSignal(QEvent)
     volume_slider_moved_signal = pyqtSignal(int, int)
     view_signal = pyqtSignal(int, str, int)
+    resize_signal = pyqtSignal(int)
+
 
     def __init__(self, id_, parent=None):
         super().__init__(parent)
@@ -141,8 +143,6 @@ class DW2(QDockWidget):
 
         self.stack1 = QWidget()
         self.hlayout = QHBoxLayout()
-
-        #self.docked_widget = QWidget(self)
 
         self.videoframe = QWidget(self)
 
@@ -162,8 +162,6 @@ class DW2(QDockWidget):
 
         self.hlayout.addWidget(self.volume_slider)
 
-        #self.docked_widget.setLayout(self.hlayout)
-        
         self.stack1.setLayout(self.hlayout)
 
         self.stack2 = QWidget()
@@ -184,8 +182,6 @@ class DW2(QDockWidget):
         self.setWidget(self.stack)
         self.stack.setCurrentIndex(0)
         
-        #self.setWidget(self.docked_widget)
-
 
     def volume_slider_moved(self):
         """
@@ -201,8 +197,18 @@ class DW2(QDockWidget):
         self.key_pressed_signal.emit(event)
 
 
+    '''
     def view_signal_triggered(self, msg, button):
         """
         transmit signal received by video frame
         """
         self.view_signal.emit(self.id_, msg, button)
+    '''
+
+
+    def resizeEvent(self, dummy):
+        """
+        emits signal when dockwidget resized
+        """
+
+        self.resize_signal.emit(self.id_)

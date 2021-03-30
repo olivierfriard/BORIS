@@ -298,6 +298,16 @@
     <property name="title">
      <string>Playback</string>
     </property>
+    <widget class="QMenu" name="menuImage_overlay_on_video_2">
+     <property name="title">
+      <string>Image overlay on video</string>
+     </property>
+     <addaction name="actionAdd_image_overlay_on_video"/>
+     <addaction name="actionRemove_image_overlay"/>
+    </widget>
+    <addaction name="actionPlay"/>
+    <addaction name="actionPrevious"/>
+    <addaction name="actionNext"/>
     <addaction name="actionJumpForward"/>
     <addaction name="actionJumpBackward"/>
     <addaction name="actionJumpTo"/>
@@ -306,10 +316,7 @@
     <addaction name="separator"/>
     <addaction name="actionDisplay_subtitles"/>
     <addaction name="separator"/>
-    <addaction name="actionPlay"/>
-    <addaction name="actionPause"/>
-    <addaction name="actionPrevious"/>
-    <addaction name="actionNext"/>
+    <addaction name="menuImage_overlay_on_video_2"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -329,13 +336,6 @@
      <addaction name="action_create_behaviors_coding_map"/>
      <addaction name="action_create_modifiers_coding_map"/>
     </widget>
-    <widget class="QMenu" name="menuImage_overlay_on_video">
-     <property name="title">
-      <string>Image overlay on video</string>
-     </property>
-     <addaction name="actionAdd_image_overlay_on_video"/>
-     <addaction name="actionRemove_image_overlay"/>
-    </widget>
     <addaction name="action_block_dockwidgets"/>
     <addaction name="actionShow_spectrogram"/>
     <addaction name="actionShow_the_sound_waveform"/>
@@ -344,7 +344,6 @@
     <addaction name="actionBehaviors_coding_map"/>
     <addaction name="actionCoding_pad"/>
     <addaction name="actionSubjects_pad"/>
-    <addaction name="menuImage_overlay_on_video"/>
     <addaction name="separator"/>
     <addaction name="menu_coding_map_creator"/>
     <addaction name="actionRecode_resize_video"/>
@@ -1359,16 +1358,6 @@
     <string>Extract frames from media files</string>
    </property>
   </action>
-  <action name="actionAdd_image_overlay_on_video">
-   <property name="text">
-    <string>Add an image overlay</string>
-   </property>
-  </action>
-  <action name="actionRemove_image_overlay">
-   <property name="text">
-    <string>Remove</string>
-   </property>
-  </action>
   <action name="action_behavior_binary_table">
    <property name="enabled">
     <bool>true</bool>
@@ -1428,6 +1417,16 @@
   <action name="actionDisplay_subtitles">
    <property name="text">
     <string>Display subtitles</string>
+   </property>
+  </action>
+  <action name="actionAdd_image_overlay_on_video">
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </action>
+  <action name="actionRemove_image_overlay">
+   <property name="text">
+    <string>Remove</string>
    </property>
   </action>
  </widget>
