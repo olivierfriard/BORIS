@@ -87,6 +87,7 @@ from boris import utilities
 from boris import version
 from boris.core_ui import *
 from boris.config import *
+import boris.config as cfg
 from boris.edit_event import DlgEditEvent, EditSelectedEvents
 from boris.project import *
 from boris.time_budget_widget import timeBudgetResults
@@ -836,7 +837,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         create behavior binary table
         """
 
-        QMessageBox.warning(self, programName,
+        QMessageBox.warning(self, cfg.programName,
                             ("Depending of the length of your observations "
                             "the execution of this function may be very long.<br>"
                             "The program interface may freeze, be patient. <br>"
@@ -895,13 +896,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 file_name = str(pathlib.Path(file_name)) + "." + output_format
                 # check if file name with extension already exists
                 if pathlib.Path(file_name).is_file():
-                    if dialog.MessageDialog(programName,
+                    if dialog.MessageDialog(cfg.programName,
                                             f"The file {file_name} already exists.",
-                                            [CANCEL, OVERWRITE]) == CANCEL:
+                                            [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                         return
 
             if not project_functions.export_observations_list(self.pj, selected_observations, file_name, output_format):
-                QMessageBox.warning(self, programName, "File not created due to an error")
+                QMessageBox.warning(self, cfg.programName, "File not created due to an error")
 
 
     def check_project_integrity(self):
@@ -928,7 +929,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.results.ptText.appendHtml(msg)
             self.results.show()
         else:
-            QMessageBox.information(self, programName, "The current project has no issues")
+            QMessageBox.information(self, cfg.programName, "The current project has no issues")
 
 
     def remove_media_files_path(self):
@@ -936,7 +937,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         remove path of media files
         """
 
-        if dialog.MessageDialog(programName,
+        if dialog.MessageDialog(cfg.programName,
                                 ("Removing the path of media files from the project file is irreversible.<br>"
                                  "Are you sure to continue?"),
                                 [YES, NO]) == NO:
@@ -957,7 +958,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not selected_observations:
             return
         if len(selected_observations) < 2:
-            QMessageBox.information(self, programName, "Select almost 2 observations for IRR analysis")
+            QMessageBox.information(self, cfg.programName, "Select almost 2 observations for IRR analysis")
             return
 
         # check if state events are paired
@@ -976,7 +977,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if out:
             out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
             results = dialog.Results_dialog()
-            results.setWindowTitle(programName + " - Check selected observations")
+            results.setWindowTitle(cfg.programName + " - Check selected observations")
             results.ptText.setReadOnly(True)
             results.ptText.appendHtml(out)
             results.pbSave.setVisible(False)
@@ -1078,7 +1079,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if out:
             out = "The observations with UNPAIRED state events will be removed from the analysis<br><br>" + out
             results = dialog.Results_dialog()
-            results.setWindowTitle(programName + " - Check selected observations")
+            results.setWindowTitle(f"{cfg.programName} - Check selected observations")
             results.ptText.setReadOnly(True)
             results.ptText.appendHtml(out)
             results.pbSave.setVisible(False)
@@ -8540,7 +8541,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         programs_versions = ["MPV media player"]
 
-
         # ffmpeg
         if self.ffmpeg_bin == "ffmpeg" and sys.platform.startswith("linux"):
             ffmpeg_true_path = subprocess.getoutput("which ffmpeg")
@@ -8561,13 +8561,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         about_dialog = QMessageBox()
         about_dialog.setIconPixmap(QPixmap(":/small_logo"))
 
-        about_dialog.setWindowTitle("About " + programName)
+        about_dialog.setWindowTitle("About " + cfg.programName)
         about_dialog.setStandardButtons(QMessageBox.Ok)
         about_dialog.setDefaultButton(QMessageBox.Ok)
         about_dialog.setEscapeButton(QMessageBox.Ok)
 
         about_dialog.setInformativeText((
-            f"<b>{programName}</b> v. {__version__} - {__version_date__}"
+            f"<b>{cfg.programName}</b> v. {__version__} - {__version_date__}"
             "<p>Copyright &copy; 2012-2021 Olivier Friard - Marco Gamba<br>"
             "Department of Life Sciences and Systems Biology<br>"
             "University of Torino - Italy<br>"
