@@ -22,7 +22,7 @@ This file is part of BORIS.
 
 # add misc directory to search path for mpv-1.dll
 import os
-os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.path.sep + os.environ["PATH"]
+os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
 import mpv
 from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget,
