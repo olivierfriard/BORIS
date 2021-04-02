@@ -19,8 +19,11 @@ This file is part of BORIS.
   along with this program; if not see <http://www.gnu.org/licenses/>.
 
 """
+
+# add misc directory to search path for mpv-1.dll
 import os
-os.environ["PATH"] = os.path.dirname(__file__) + os.path.sep + os.environ["PATH"]
+os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.path.sep + os.environ["PATH"]
+
 import mpv
 from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget,
                              QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
