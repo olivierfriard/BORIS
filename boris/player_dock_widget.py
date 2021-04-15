@@ -24,7 +24,7 @@ This file is part of BORIS.
 import os
 os.environ["PATH"] = os.path.dirname(__file__) + os.sep + "misc" + os.pathsep + os.environ["PATH"]
 
-import mpv
+from boris import mpv
 from PyQt5.QtWidgets import (QLabel, QDockWidget, QWidget,
                              QHBoxLayout, QSlider, QSizePolicy, QStackedWidget
                              )
