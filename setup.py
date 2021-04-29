@@ -27,7 +27,7 @@ setup(
 
     install_requires=[
           "numpy==1.19.3",
-          "matplotlib",
+          "matplotlib==3.3.3",
           "tablib[html, ods, xls, xlsx]",
           "pyqt5"
       ],
