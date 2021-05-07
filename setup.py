@@ -45,18 +45,3 @@ setup(
     }
  )
 
-
-'''
-install_requires=[
-        "matplotlib",
-        "numpy==1.19.3",
-        "odfpy",
-        "openpyxl",
-        "xlrd",
-        "xlwt",
-        "MarkupPy",
-        "tablib",
-        "portion",
-        "pyqt5"
-    ],
-'''
