@@ -30,7 +30,6 @@ setup(
           "matplotlib==3.3.3",
           "tablib[html, ods, xls, xlsx]",
           "pyqt5==5.15.4",
-          "python-mpv"
       ],
 
     package_data={
