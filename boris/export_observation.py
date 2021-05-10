@@ -990,6 +990,5 @@ def observation_to_behavioral_sequences(pj,
             return True, ""
 
     except Exception:
-        raise
         error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
         return False, f"{error_type} {error_file_name} {error_lineno}"
