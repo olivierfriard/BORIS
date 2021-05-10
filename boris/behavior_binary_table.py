@@ -23,12 +23,11 @@ import os
 import pathlib
 import re
 import sys
-import time
+from decimal import Decimal as dc
 
 import tablib
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QInputDialog,
-                             QMessageBox)
+from PyQt5.QtWidgets import (QFileDialog, QInputDialog, QMessageBox)
 
 from boris import dialog
 from boris import project_functions
@@ -64,6 +63,28 @@ def create_behavior_binary_table(pj: dict,
 
     for obs_id in selected_observations:
 
+        start_time = parameters_obs[START_TIME]
+        end_time = parameters_obs[END_TIME]
+
+        # check observation interval
+        if parameters_obs["time"] == TIME_FULL_OBS:
+            max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
+            start_time = dc("0.000")
+            end_time = dc(max_obs_length)
+
+        if parameters_obs["time"] == TIME_EVENTS:
+
+            try:
+                start_time = dc(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+            except Exception:
+                start_time = dc("0.000")
+            try:
+                end_time = dc(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+            except Exception:
+                max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
+                end_time = dc(max_obs_length)
+
+
         if obs_id not in results_df:
             results_df[obs_id] = {}
 
@@ -98,8 +119,8 @@ def create_behavior_binary_table(pj: dict,
                 sel_subject_dict = dict([(idx, pj[SUBJECTS][idx]) for idx in pj[SUBJECTS] if pj[SUBJECTS][idx][SUBJECT_NAME] == subject])
 
             row_idx = 0
-            t = parameters_obs[START_TIME]
-            while t < parameters_obs[END_TIME]:
+            t = start_time
+            while t <= end_time:
 
                 # state events
                 current_states = utilities.get_current_states_modifiers_by_subject_2(state_behavior_codes,
@@ -139,9 +160,9 @@ def behavior_binary_table(pj: dict):
     call create_behavior_binary_table
     """
 
-    result, selected_observations = select_observations.select_observations(pj,
-                                                                            MULTIPLE,
-                                                                            "Select observations for the behavior binary table")
+    _, selected_observations = select_observations.select_observations(pj,
+                                                                       MULTIPLE,
+                                                                       "Select observations for the behavior binary table")
 
     if not selected_observations:
         return
@@ -149,7 +170,8 @@ def behavior_binary_table(pj: dict):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
+        r, msg = project_functions.check_state_events_obs(obs_id,
+                                                          pj[ETHOGRAM],
                                                           pj[OBSERVATIONS][obs_id])
 
         if not r:
@@ -171,7 +193,7 @@ def behavior_binary_table(pj: dict):
     if not selected_observations:
         return
 
-    max_obs_length, selectedObsTotalMediaLength = project_functions.observation_length(pj, selected_observations)
+    max_obs_length, _ = project_functions.observation_length(pj, selected_observations)
     if max_obs_length == -1:  # media length not available, user choose to not use events
         return
 
@@ -192,26 +214,10 @@ def behavior_binary_table(pj: dict):
         return
     time_interval = utilities.float2decimal(i)
 
-    '''
-    iw = dialog.Info_widget()
-    iw.lwi.setVisible(False)
-    iw.resize(350, 200)
-    iw.setWindowFlags(Qt.WindowStaysOnTopHint)
-
-    iw.setWindowTitle("Behavior binary table")
-    iw.label.setText("Creating the behavior binary table...")
-    iw.show()
-    QApplication.processEvents()
-    '''
-
     results_df = create_behavior_binary_table(pj,
                                               selected_observations,
                                               parameters,
                                               time_interval)
-
-    '''
-    iw.hide()
-    '''
 
     if "error" in results_df:
         QMessageBox.warning(None, programName, results_df["msg"])
