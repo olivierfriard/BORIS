@@ -580,15 +580,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # project menu
         for w in [self.actionEdit_project, self.actionSave_project, self.actionSave_project_as, self.actionCheck_project,
                   self.actionClose_project, self.actionSend_project, self.actionNew_observation,
-                  self.actionRemove_path_from_media_files, self.action_obs_list, self.actionExport_observations_list,
-                  self.actionExplore_project, self.menuExport_events]:
+                  self.actionRemove_path_from_media_files, self.action_obs_list,
+                  ]:
             w.setEnabled(flag)
 
         # observations
 
         # enabled if observations
         for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation,
-                  self.actionObservationsList, self.action_obs_list]:
+                  self.actionObservationsList, self.action_obs_list, self.actionExport_observations_list,
+                  self.actionCheckStateEvents, self.actionExplore_project, self.actionClose_unpaired_events,
+                  self.menuExport_events, self.menuCreate_subtitles_2, self.actionExtract_events_from_media_files,
+                  self.actionExtract_frames_from_media_files]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # enabled if observation
@@ -606,9 +609,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
         self.actionJWatcher.setEnabled(flag)
 
-        self.actionExtract_events_from_media_files.setEnabled(flag)
-        self.actionExtract_frames_from_media_files.setEnabled(flag)
-
         self.actionDelete_all_observations.setEnabled(flagObs)
         self.actionSelect_observations.setEnabled(flagObs)
         self.actionDelete_selected_observations.setEnabled(flagObs)
@@ -621,14 +621,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionFind_events.setEnabled(flagObs)
         self.actionFind_replace_events.setEnabled(flagObs)
 
-        self.actionCheckStateEvents.setEnabled(flag)
         self.actionCheckStateEventsSingleObs.setEnabled(flag)
-        self.actionClose_unpaired_events.setEnabled(flag)
         self.actionRunEventOutside.setEnabled(flag)
 
         self.actionMedia_file_information.setEnabled(flagObs)
         self.actionMedia_file_information.setEnabled(self.playerType == VLC)
-        self.menuCreate_subtitles_2.setEnabled(flag)
 
         self.actionJumpForward.setEnabled(self.playerType == VLC)
         self.actionJumpBackward.setEnabled(self.playerType == VLC)
@@ -8831,7 +8828,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC and self.playMode == VLC:
 
-            if self.play_rate + self.play_rate_step <= 8:
+            if self.play_rate + self.play_rate_step <= 30:
                 self.play_rate += self.play_rate_step
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and

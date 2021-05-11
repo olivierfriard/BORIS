@@ -25,7 +25,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (QTableWidgetItem, QLabel, QLineEdit,
                              QTableWidget, QAbstractItemView, QComboBox,
                              QGridLayout, QHBoxLayout, QSpacerItem,
-                             QPushButton)
+                             QPushButton, QDialog)
 
 from boris import config
 from boris import dialog
@@ -128,7 +128,8 @@ class observationsList_widget(QDialog):
         self.view.doubleClicked.connect(self.view_doubleClicked)
 
         self.view.setRowCount(len(self.data))
-        self.view.setColumnCount(len(self.data[0]))
+        if self.data:
+            self.view.setColumnCount(len(self.data[0]))
 
         self.view.setHorizontalHeaderLabels(header)
 
