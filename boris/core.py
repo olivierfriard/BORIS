@@ -496,7 +496,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         # enabled if project contain one or more observations
         for w in [self.actionOpen_observation, self.actionEdit_observation_2, self.actionView_observation,
-                  self.actionObservationsList, self.action_obs_list]:
+                  self.actionObservationsList, self.action_obs_list, self.actionExport_observations_list,
+                  self.actionCheckStateEvents, self.actionExplore_project, self.actionClose_unpaired_events,
+                  self.menuExport_events, self.menuCreate_subtitles_2, self.actionExtract_events_from_media_files,
+                  self.actionExtract_frames_from_media_files]:
             w.setEnabled(self.pj[OBSERVATIONS] != {})
 
         # enabled if current observation
@@ -514,16 +517,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionExport_events_as_Praat_TextGrid.setEnabled(flag)
         self.actionJWatcher.setEnabled(flag)
 
-        self.actionExtract_events_from_media_files.setEnabled(flag)
-        self.actionExtract_frames_from_media_files.setEnabled(flag)
-
 
         self.actionCheckStateEvents.setEnabled(flag)
         self.actionCheckStateEventsSingleObs.setEnabled(flag)
         self.actionClose_unpaired_events.setEnabled(flag)
         self.actionRunEventOutside.setEnabled(flag)
-
-        self.menuCreate_subtitles_2.setEnabled(flag)
 
         # enabled if media observation
         for action in (self.actionMedia_file_information,
@@ -8080,7 +8078,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if self.playerType == VLC and self.playMode == MPV:
 
-            if self.play_rate + self.play_rate_step <= 8:
+            if self.play_rate + self.play_rate_step <= 60:
                 self.play_rate += self.play_rate_step
                 for i, player in enumerate(self.dw_player):
                     if (str(i + 1) in self.pj[OBSERVATIONS][self.observationId][FILE] and
@@ -9295,6 +9293,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         """
 
+        if not self.observationId:
+            return Decimal("0")
 
         if self.pj[OBSERVATIONS][self.observationId]["type"] == LIVE:
 
