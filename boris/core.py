@@ -509,7 +509,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                        self.actionEdit_event, self.actionEdit_event_time, self.actionCopy_events, self.actionPaste_events,
                        self.actionFind_events, self.actionFind_replace_events,
                        self.actionCloseObs, self.actionCurrent_Time_Budget,
-                       self.actionPlot_current_observation, self.actionFind_in_current_obs):
+                       self.actionPlot_current_observation, self.actionFind_in_current_obs,
+                       self.actionEdit_selected_events):
             action.setEnabled(self.observationId != "")
 
         # self.actionExportEventString.setEnabled(flag)
@@ -4351,10 +4352,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                             pass
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [MEDIA]:
-                observationWindow.tabProjectType.setCurrentIndex(video)
+                observationWindow.tabProjectType.setCurrentIndex(MEDIA_TAB_IDX)
 
             if self.pj[OBSERVATIONS][obsId]["type"] in [LIVE]:
-                observationWindow.tabProjectType.setCurrentIndex(live)
+                observationWindow.tabProjectType.setCurrentIndex(LIVE_TAB_IDX)
                 # sampling time
                 observationWindow.sbScanSampling.setValue(self.pj[OBSERVATIONS][obsId].get(SCAN_SAMPLING_TIME, 0))
                 # start from current time
@@ -7532,9 +7533,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             data.extend(d)
 
             if not flag_group and outputFormat not in ["sds", "tbs"]:
-                '''
-                fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
-                '''
                 fileName = f"{pathlib.Path(exportDir) / safeFileName(obsId)}.{outputFormat}"
                 # check if file with new extension already exists
                 if mem_command != OVERWRITE_ALL and pathlib.Path(fileName).is_file():
@@ -7588,9 +7586,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 out += "\n"
 
                 if not flag_group:
-                    '''
-                    fileName = str(pathlib.Path(pathlib.Path(exportDir) / safeFileName(obsId)).with suffix("." + outputFormat))
-                    '''
                     fileName = f"{pathlib.Path(exportDir) / safeFileName(obsId)}.{outputFormat}"
                     with open(fileName, "wb") as f:
                         f.write(str.encode(out))
