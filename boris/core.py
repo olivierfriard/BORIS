@@ -336,7 +336,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     ffmpeg_bin = ""
     ffmpeg_cache_dir = ""
     ffmpeg_cache_dir_max_size = 0
-    
+
     # dictionary for FPS storing
     fps = 0
 
@@ -3947,7 +3947,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         dockwidget was resized. Adpat overlay if any
         """
-        try:            
+        try:
             img = Image.open(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO][OVERLAY][str(dw_id + 1)]["file name"])
         except:
             return
@@ -9667,7 +9667,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             time_ -= self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET]
 
             if time_ + self.repositioningTimeOffset >= 0:
-                newTime = (time_ + self.repositioningTimeOffset) * 1000
+                newTime = (time_ + self.repositioningTimeOffset)
             else:
                 newTime = 0
 
@@ -10821,7 +10821,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.pause_video()
 
             if OBSERVATION_TIME_INTERVAL in self.pj[OBSERVATIONS][self.observationId]:
-                self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0] * 1000))
+                self.seek_mediaplayer(int(self.pj[OBSERVATIONS][self.observationId][OBSERVATION_TIME_INTERVAL][0]))
             else:
                 self.seek_mediaplayer(0)
 
