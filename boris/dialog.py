@@ -51,10 +51,11 @@ def MessageDialog(title, text, buttons):
     return message.clickedButton().text()
 
 
-def error_message_box(task, error_type, error_file_name, error_lineno):  # do NOT use this function directly, use error_message function
+def error_message_box(task, error_type, error_file_name, error_lineno):
+    # do NOT use this function directly, use error_message function
     """
     show a critical dialog
-    
+
     """
     QMessageBox.critical(None, programName,
                          (f"BORIS version: {version.__version__}<br>"

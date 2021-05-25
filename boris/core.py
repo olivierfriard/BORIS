@@ -8850,109 +8850,113 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         Time offset is NOT added!
         """
 
-        cumulative_time_pos = self.getLaps()
+        try:
+            cumulative_time_pos = self.getLaps()
 
-        if value is None:
-            current_media_time_pos = 0
-        else:
-            current_media_time_pos = value
+            if value is None:
+                current_media_time_pos = 0
+            else:
+                current_media_time_pos = value
 
-        current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
+            current_media_frame = round(value * self.dw_player[0].player.container_fps) + 1
 
-        # observation time interval
-        if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-            if cumulative_time_pos >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
-                if self.is_playing():
-                    self.pause_video()
+            # observation time interval
+            if self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+                if cumulative_time_pos >= self.pj[OBSERVATIONS][self.observationId].get(OBSERVATION_TIME_INTERVAL, [0, 0])[1]:
+                    if self.is_playing():
+                        self.pause_video()
+                        self.beep("beep")
+
+            if self.beep_every:
+                if cumulative_time_pos % (self.beep_every) <= 1:
                     self.beep("beep")
 
-        if self.beep_every:
-            if cumulative_time_pos % (self.beep_every) <= 1:
-                self.beep("beep")
+            # highlight current event in tw events and scroll event list
+            self.get_events_current_row()
 
-        # highlight current event in tw events and scroll event list
-        self.get_events_current_row()
+            ct0 = cumulative_time_pos
 
-        ct0 = cumulative_time_pos
+            if self.dw_player[0].player.time_pos is not None:
 
-        if self.dw_player[0].player.time_pos is not None:
+                for n_player in range(1, len(self.dw_player)):
 
-            for n_player in range(1, len(self.dw_player)):
+                    ct = self.getLaps(n_player=n_player)
 
-                ct = self.getLaps(n_player=n_player)
+                    # sync players 2..8 if time diff >= 1 s
+                    if abs(ct0 -
+                            (ct + Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
+                                            ["offset"][str(n_player + 1)]) )) >= 1:
+                        self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
 
-                # sync players 2..8 if time diff >= 1 s
-                if abs(ct0 -
-                        (ct + Decimal(self.pj[OBSERVATIONS][self.observationId][MEDIA_INFO]
-                                        ["offset"][str(n_player + 1)]) )) >= 1:
-                    self.sync_time(n_player, ct0)  # self.seek_mediaplayer(ct0, n_player)
+            currentTimeOffset = Decimal(cumulative_time_pos + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
 
-        currentTimeOffset = Decimal(cumulative_time_pos + self.pj[OBSERVATIONS][self.observationId][TIME_OFFSET])
+            all_media_duration = sum(self.dw_player[0].media_durations) / 1000
+            mediaName = ""
+            current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
+            self.mediaTotalLength = current_media_duration
 
-        all_media_duration = sum(self.dw_player[0].media_durations) / 1000
-        mediaName = ""
-        current_media_duration = self.dw_player[0].player.duration  # mediaplayer_length
-        self.mediaTotalLength = current_media_duration
+            # current state(s)
+            # extract State events
+            StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
+            self.currentStates = {}
 
-        # current state(s)
-        # extract State events
-        StateBehaviorsCodes = utilities.state_behavior_codes(self.pj[ETHOGRAM])
-        self.currentStates = {}
+            # index of current subject
+            subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
 
-        # index of current subject
-        subject_idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
+            self.currentStates = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
+                                                                            self.pj[OBSERVATIONS][self.observationId][EVENTS],
+                                                                            dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
+                                                                            currentTimeOffset,
+                                                                            include_modifiers=True)
 
-        self.currentStates = utilities.get_current_states_modifiers_by_subject(StateBehaviorsCodes,
-                                                                        self.pj[OBSERVATIONS][self.observationId][EVENTS],
-                                                                        dict(self.pj[SUBJECTS], **{"": {"name": ""}}),
-                                                                        currentTimeOffset,
-                                                                        include_modifiers=True)
+            self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
 
-        self.lbCurrentStates.setText(", ".join(self.currentStates[subject_idx]))
+            # show current states in subjects table
+            self.show_current_states_in_subjects_table()
 
-        # show current states in subjects table
-        self.show_current_states_in_subjects_table()
+            if self.dw_player[0].player.playlist_pos is not None:
+                current_media_name = pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
+            else:
+                current_media_name = ""
+            playlist_length = len(self.dw_player[0].player.playlist)
 
-        if self.dw_player[0].player.playlist_pos is not None:
-            current_media_name = pathlib.Path(self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"]).name
-        else:
-            current_media_name = ""
-        playlist_length = len(self.dw_player[0].player.playlist)
+            # update media info
+            msg = ""
 
-        # update media info
-        msg = ""
+            if self.dw_player[0].player.time_pos is not None:
 
-        if self.dw_player[0].player.time_pos is not None:
+                msg = (f"{current_media_name}: <b>{self.convertTime(current_media_time_pos)} / "
+                        f"{self.convertTime(current_media_duration)}</b> frame: {current_media_frame}")
 
-            msg = (f"{current_media_name}: <b>{self.convertTime(current_media_time_pos)} / "
-                    f"{self.convertTime(current_media_duration)}</b> frame: {current_media_frame}")
+                if self.dw_player[0].player.playlist_count > 1:
+                    msg += (f"<br>Total: <b>{self.convertTime(cumulative_time_pos)} / "
+                            f"{self.convertTime(all_media_duration)}</b>")
 
-            if self.dw_player[0].player.playlist_count > 1:
-                msg += (f"<br>Total: <b>{self.convertTime(cumulative_time_pos)} / "
-                        f"{self.convertTime(all_media_duration)}</b>")
+                self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
 
-            self.lb_player_status.setText("Player paused" if self.dw_player[0].player.pause else "")
+                msg += f"<br>media #{self.dw_player[0].player.playlist_pos + 1} / {playlist_length}"
 
-            msg += f"<br>media #{self.dw_player[0].player.playlist_pos + 1} / {playlist_length}"
+            else:  # player ended
+                # self.timer.stop()
+                self.timer_sound_signal.stop()
 
-        else:  # player ended
-            # self.timer.stop()
-            self.timer_sound_signal.stop()
+                # stop all timer for plotting data
+                for data_timer in self.ext_data_timer_list:
+                    data_timer.stop()
 
-            # stop all timer for plotting data
-            for data_timer in self.ext_data_timer_list:
-                data_timer.stop()
+                self.actionPlay.setIcon(QIcon(":/play"))
 
-            self.actionPlay.setIcon(QIcon(":/play"))
+            if msg:
+                # show time
+                self.lb_current_media_time.setText(msg)
 
-        if msg:
-            # show time
-            self.lb_current_media_time.setText(msg)
+                # set video scroll bar
+                if scroll_slider and not self.user_move_slider:
+                    self.video_slider.setValue(current_media_time_pos / current_media_duration * (slider_maximum - 1))
 
-            # set video scroll bar
-            if scroll_slider and not self.user_move_slider:
-                self.video_slider.setValue(current_media_time_pos / current_media_duration * (slider_maximum - 1))
-
+        except Exception:
+            error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
+            logging.critical(f"Error during time_out2: {error_type} in {error_file_name} at line #{error_lineno}")
 
 
     def load_behaviors_in_twEthogram(self, behaviorsToShow):
@@ -9793,6 +9797,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if not self.observationId:
             self.no_observation()
             return
+
+        logging.debug("function delete_selected_events")
+
         if not self.twEvents.selectedIndexes():
             QMessageBox.warning(self, programName, "No event selected!")
         else:
@@ -9804,6 +9811,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            if self.timeFormat == HHMMSS else Decimal(self.twEvents.item(row, EVENT_TIME_FIELD_IDX).text()),
                                            self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
                                            self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
+
+                logging.debug(f"rows to delete: {rows_to_delete}")
 
                 self.pj[OBSERVATIONS][self.observationId][EVENTS] = [
                     event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
