@@ -38,7 +38,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from decimal import *
-getcontext().prec = 3
 from optparse import OptionParser
 import gzip
 
