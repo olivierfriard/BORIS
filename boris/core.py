@@ -38,6 +38,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from decimal import *
+getcontext().prec = 3
 from optparse import OptionParser
 import gzip
 
@@ -10190,6 +10191,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                 0:self.dw_player[n_player].media_list.
                                 index_of_item(self.dw_player[n_player].mediaplayer.get_media())]) +
                                 self.dw_player[n_player].mediaplayer.get_time()) / 1000, 3)))
+
+
 
                     return memLaps
 
