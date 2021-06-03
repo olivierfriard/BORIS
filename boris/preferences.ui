@@ -25,7 +25,7 @@
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -116,7 +116,7 @@
             <double>0.100000000000000</double>
            </property>
            <property name="maximum">
-            <double>1.000000000000000</double>
+            <double>10.000000000000000</double>
            </property>
            <property name="singleStep">
             <double>0.100000000000000</double>
