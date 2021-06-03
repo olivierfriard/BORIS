@@ -38,6 +38,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from decimal import *
+# getcontext().prec = 3
 from optparse import OptionParser
 import gzip
 
@@ -9310,14 +9311,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if self.pj[OBSERVATIONS][self.observationId]["type"] == MEDIA:
 
             if self.playerType == VIEWER:
-                return Decimal(0)
+                return Decimal("0.0")
 
             if self.playerType == VLC:
                 # cumulative time
                 mem_laps = sum(self.dw_player[n_player].media_durations[
                                 0:self.dw_player[n_player].player.playlist_pos]) + (0 if self.dw_player[n_player].player.time_pos is None else self.dw_player[n_player].player.time_pos * 1000)
 
-                return Decimal(round(mem_laps/1000, 3))
+                return Decimal(str(round(mem_laps/1000, 3)))
 
 
     def full_event(self, behavior_idx):
@@ -9814,18 +9815,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            self.twEvents.item(row, EVENT_SUBJECT_FIELD_IDX).text(),
                                            self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
 
-                logging.debug(f"rows to delete: {rows_to_delete}")
-                print()
-                print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+                # logging.debug(f"rows to delete: {rows_to_delete}")
 
                 self.pj[OBSERVATIONS][self.observationId][EVENTS] = [
                     event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
                     if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] not in rows_to_delete
                 ]
-
-                print()
-                print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
-
 
                 self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
@@ -9834,7 +9829,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 logging.critical("Critical error during event deletion")
                 QMessageBox.critical(self, programName, "Problem during event deletion")
 
-        logging.debug("end function delete_selected_events")
+        # logging.debug("end function delete_selected_events")
 
 
     def edit_selected_events(self):
