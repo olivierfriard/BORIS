@@ -4062,7 +4062,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             obsId (str): observation to load
         """
 
-        logging.debug("load events from obs: {}".format(obs_id))
+        logging.debug("begin load events from obs: {}".format(obs_id))
 
         self.twEvents.setRowCount(len(self.pj[OBSERVATIONS][obs_id][EVENTS]))
         if self.filtered_behaviors or self.filtered_subjects:
@@ -4096,6 +4096,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             row += 1
 
         self.update_events_start_stop()
+
+        logging.debug("end load events from obs")
 
 
     def selectObservations(self, mode, windows_title=""):
@@ -8955,7 +8957,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.video_slider.setValue(current_media_time_pos / current_media_duration * (slider_maximum - 1))
 
         except Exception:
-            error_type, error_file_name, error_lineno = utilities.error_info(exc_info)
+            error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
             logging.critical(f"Error during time_out2: {error_type} in {error_file_name} at line #{error_lineno}")
 
 
@@ -9798,7 +9800,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.no_observation()
             return
 
-        logging.debug("function delete_selected_events")
+        logging.debug("begin function delete_selected_events")
 
         if not self.twEvents.selectedIndexes():
             QMessageBox.warning(self, programName, "No event selected!")
@@ -9813,16 +9815,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                            self.twEvents.item(row, EVENT_BEHAVIOR_FIELD_IDX).text()])
 
                 logging.debug(f"rows to delete: {rows_to_delete}")
+                print()
+                print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
 
                 self.pj[OBSERVATIONS][self.observationId][EVENTS] = [
                     event for idx, event in enumerate(self.pj[OBSERVATIONS][self.observationId][EVENTS])
                     if [event[EVENT_TIME_FIELD_IDX], event[EVENT_SUBJECT_FIELD_IDX], event[EVENT_BEHAVIOR_FIELD_IDX]] not in rows_to_delete
                 ]
 
+                print()
+                print(self.pj[OBSERVATIONS][self.observationId][EVENTS])
+
+
                 self.projectChanged = True
                 self.loadEventsInTW(self.observationId)
+
             except Exception:
-                QMessageBox.critical(self, programName, "Problem during event deletion!")
+                logging.critical("Critical error during event deletion")
+                QMessageBox.critical(self, programName, "Problem during event deletion")
+
+        logging.debug("end function delete_selected_events")
 
 
     def edit_selected_events(self):
