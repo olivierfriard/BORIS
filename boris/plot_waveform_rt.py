@@ -134,8 +134,6 @@ class Plot_waveform_RT(QWidget):
 
             self.ax.set_xlim( current_time - self.interval / 2  , current_time + self.interval / 2)
 
-            #ax.set_ylim(Y_MIN, Y_MAX)
-
             # cursor
             self.ax.axvline(x=current_time, color=self.cursor_color, linestyle="-")
 
@@ -152,6 +150,7 @@ class Plot_waveform_RT(QWidget):
 
             self.ax.set_xlim( lim1  , lim2)
 
+            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels([str(round(w + self.media_length - self.interval, 1)) for w in self.ax.get_xticks()])
 
             # cursor
@@ -160,22 +159,17 @@ class Plot_waveform_RT(QWidget):
         # middle
         else:
 
-            '''
-            start = (current_time - self.interval/2)* self.frame_rate
-            end = (current_time + self.interval/2)* self.frame_rate
-            '''
 
-            time_ = np.linspace(0, len(self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
-                                                               int(round((current_time + self.interval/2) * self.frame_rate, 0))])/self.frame_rate, num=len(self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
-                                                               int(round((current_time + self.interval/2) * self.frame_rate, 0))]))
-            self.ax.plot(time_, self.sound_info[int(round((current_time - self.interval/2) * self.frame_rate, 0)):
-                                                               int(round((current_time + self.interval/2) * self.frame_rate, 0))])
+            start = (current_time - self.interval/2) * self.frame_rate
+            end = (current_time + self.interval/2) * self.frame_rate
 
+            time_ = np.linspace(0, len(self.sound_info[int(round(start, 0)):
+                                                               int(round(end, 0))])/self.frame_rate, num=len(self.sound_info[int(round(start, 0)):
+                                                               int(round(end, 0))]))
 
-            #ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in ax.get_xticks()])
+            self.ax.plot(time_, self.sound_info[int(round(start, 0)): int(round(end, 0))])
 
-            ticks_loc = self.ax.get_xticks().tolist()
-            self.ax.xaxis.set_major_locator(mticker.FixedLocator(ticks_loc))
+            self.ax.xaxis.set_major_locator(mticker.FixedLocator(self.ax.get_xticks().tolist()))
             self.ax.set_xticklabels([str(round(current_time + w - self.interval / 2, 1)) for w in self.ax.get_xticks()])
 
             # cursor

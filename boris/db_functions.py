@@ -273,6 +273,7 @@ def load_aggregated_events_in_db(pj: dict,
     return True, "", db
 
 
+'''
 def load_aggregated_events_in_intervals(pj: dict,
                                  selected_subjects: list,
                                  selected_observations: list,
@@ -374,3 +375,4 @@ def load_aggregated_events_in_intervals(pj: dict,
     db.commit()
 
     return True, "", db
+'''

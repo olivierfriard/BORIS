@@ -29,11 +29,11 @@ import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QFileDialog, QInputDialog, QMessageBox)
 
-from boris import dialog
-from boris import project_functions
-from boris import select_observations
-from boris import utilities
-from boris.config import *
+from . import dialog
+from . import project_functions
+from . import select_observations
+from . import utilities
+from . import config as cfg
 
 
 def create_behavior_binary_table(pj: dict,
@@ -56,30 +56,30 @@ def create_behavior_binary_table(pj: dict,
 
     results_df = {}
 
-    state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
-    point_behavior_codes = [x for x in utilities.point_behavior_codes(pj[ETHOGRAM]) if x in parameters_obs[SELECTED_BEHAVIORS]]
+    state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]]
+    point_behavior_codes = [x for x in utilities.point_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]]
     if not state_behavior_codes and not point_behavior_codes:
         return {"error": True, "msg": "No state events selected"}
 
     for obs_id in selected_observations:
 
-        start_time = parameters_obs[START_TIME]
-        end_time = parameters_obs[END_TIME]
+        start_time = parameters_obs[cfg.START_TIME]
+        end_time = parameters_obs[cfg.END_TIME]
 
         # check observation interval
-        if parameters_obs["time"] == TIME_FULL_OBS:
+        if parameters_obs["time"] == cfg.TIME_FULL_OBS:
             max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
             start_time = dc("0.000")
             end_time = dc(max_obs_length)
 
-        if parameters_obs["time"] == TIME_EVENTS:
+        if parameters_obs["time"] == cfg.TIME_EVENTS:
 
             try:
-                start_time = dc(pj[OBSERVATIONS][obs_id][EVENTS][0][0])
+                start_time = dc(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][0][0])
             except Exception:
                 start_time = dc("0.000")
             try:
-                end_time = dc(pj[OBSERVATIONS][obs_id][EVENTS][-1][0])
+                end_time = dc(pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS][-1][0])
             except Exception:
                 max_obs_length, _ = project_functions.observation_length(pj, [obs_id])
                 end_time = dc(max_obs_length)
@@ -88,35 +88,35 @@ def create_behavior_binary_table(pj: dict,
         if obs_id not in results_df:
             results_df[obs_id] = {}
 
-        for subject in parameters_obs[SELECTED_SUBJECTS]:
+        for subject in parameters_obs[cfg.SELECTED_SUBJECTS]:
 
             # extract tuple (behavior, modifier)
             behav_modif_list = [(idx[2], idx[3])
-                                for idx in pj[OBSERVATIONS][obs_id][EVENTS] if idx[1] == (subject if subject != NO_FOCAL_SUBJECT else "")
-                                                                               and idx[2] in parameters_obs[SELECTED_BEHAVIORS]]
+                                for idx in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS] if idx[1] == (subject if subject != cfg.NO_FOCAL_SUBJECT else "")
+                                                                               and idx[2] in parameters_obs[cfg.SELECTED_BEHAVIORS]]
 
             # extract observed subjects NOT USED at the moment
-            observed_subjects = [event[EVENT_SUBJECT_FIELD_IDX] for event in pj[OBSERVATIONS][obs_id][EVENTS]]
+            observed_subjects = [event[cfg.EVENT_SUBJECT_FIELD_IDX] for event in pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS]]
 
             # add selected behavior if not found in (behavior, modifier)
-            if not parameters_obs[EXCLUDE_BEHAVIORS]:
+            if not parameters_obs[cfg.EXCLUDE_BEHAVIORS]:
                 #for behav in state_behavior_codes:
-                for behav in parameters_obs[SELECTED_BEHAVIORS]:
+                for behav in parameters_obs[cfg.SELECTED_BEHAVIORS]:
                     if behav not in [x[0] for x in behav_modif_list]:
                         behav_modif_list.append((behav, ""))
 
             behav_modif_set = set(behav_modif_list)
             observed_behav = [(x[0], x[1]) for x in sorted(behav_modif_set)]
-            if parameters_obs[INCLUDE_MODIFIERS]:
+            if parameters_obs[cfg.INCLUDE_MODIFIERS]:
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [f"{x[0]}" + f" ({x[1]})" * (x[1] != "")
                                                                                  for x in sorted(behav_modif_set)])
             else:
                 results_df[obs_id][subject] = tablib.Dataset(headers=["time"] + [x[0] for x in sorted(behav_modif_set)])
 
-            if subject == NO_FOCAL_SUBJECT:
-                sel_subject_dict = {"": {SUBJECT_NAME: ""}}
+            if subject == cfg.NO_FOCAL_SUBJECT:
+                sel_subject_dict = {"": {cfg.SUBJECT_NAME: ""}}
             else:
-                sel_subject_dict = dict([(idx, pj[SUBJECTS][idx]) for idx in pj[SUBJECTS] if pj[SUBJECTS][idx][SUBJECT_NAME] == subject])
+                sel_subject_dict = dict([(idx, pj[cfg.SUBJECTS][idx]) for idx in pj[cfg.SUBJECTS] if pj[cfg.SUBJECTS][idx][cfg.SUBJECT_NAME] == subject])
 
             row_idx = 0
             t = start_time
@@ -124,14 +124,14 @@ def create_behavior_binary_table(pj: dict,
 
                 # state events
                 current_states = utilities.get_current_states_modifiers_by_subject_2(state_behavior_codes,
-                                                                                   pj[OBSERVATIONS][obs_id][EVENTS],
+                                                                                   pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS],
                                                                                    sel_subject_dict,
                                                                                    t
                                                                                    )
 
                 # point events
                 current_point = utilities.get_current_points_by_subject(point_behavior_codes,
-                                                                        pj[OBSERVATIONS][obs_id][EVENTS],
+                                                                        pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS],
                                                                         sel_subject_dict,
                                                                         t,
                                                                         time_interval
@@ -161,7 +161,7 @@ def behavior_binary_table(pj: dict):
     """
 
     _, selected_observations = select_observations.select_observations(pj,
-                                                                       MULTIPLE,
+                                                                       cfg.MULTIPLE,
                                                                        "Select observations for the behavior binary table")
 
     if not selected_observations:
@@ -171,8 +171,8 @@ def behavior_binary_table(pj: dict):
     not_paired_obs_list = []
     for obs_id in selected_observations:
         r, msg = project_functions.check_state_events_obs(obs_id,
-                                                          pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obs_id])
+                                                          pj[cfg.ETHOGRAM],
+                                                          pj[cfg.OBSERVATIONS][obs_id])
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -181,7 +181,7 @@ def behavior_binary_table(pj: dict):
     if out:
         out = f"The observations with UNPAIRED state events will be removed from the analysis<br><br>{out}"
         results = dialog.Results_dialog()
-        results.setWindowTitle(f"{programName} - Check selected observations")
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
         results.ptText.setReadOnly(True)
         results.ptText.appendHtml(out)
         results.pbSave.setVisible(False)
@@ -204,8 +204,8 @@ def behavior_binary_table(pj: dict):
                                                        flagShowExcludeBehaviorsWoEvents=True,
                                                        by_category=False)
 
-    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
+    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
     # ask for time interval
@@ -220,7 +220,7 @@ def behavior_binary_table(pj: dict):
                                               time_interval)
 
     if "error" in results_df:
-        QMessageBox.warning(None, programName, results_df["msg"])
+        QMessageBox.warning(None, cfg.programName, results_df["msg"])
         return
 
     # save results
@@ -248,9 +248,9 @@ def behavior_binary_table(pj: dict):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName,
+                if dialog.MessageDialog(cfg.programName,
                                         f"The file {file_name} already exists.",
-                                        [CANCEL, OVERWRITE]) == CANCEL:
+                                        [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                     return
     else:
         items = ("Tab Separated Values (*.tsv)",
@@ -282,13 +282,13 @@ def behavior_binary_table(pj: dict):
                 file_name_with_subject = str(os.path.splitext(file_name)[0] + utilities.safeFileName("_" + subject)) + "." + output_format
 
             # check if file with new extension already exists
-            if mem_command != OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():
+            if mem_command != cfg.OVERWRITE_ALL and pathlib.Path(file_name_with_subject).is_file():
                 if mem_command == "Skip all":
                     continue
-                mem_command = dialog.MessageDialog(programName,
+                mem_command = dialog.MessageDialog(cfg.programName,
                                                    f"The file {file_name_with_subject} already exists.",
-                                                   [OVERWRITE, OVERWRITE_ALL, "Skip", "Skip all", CANCEL])
-                if mem_command == CANCEL:
+                                                   [cfg.OVERWRITE, cfg.OVERWRITE_ALL, "Skip", "Skip all", cfg.CANCEL])
+                if mem_command == cfg.CANCEL:
                     return
                 if mem_command in ["Skip", "Skip all"]:
                     continue
@@ -307,5 +307,5 @@ def behavior_binary_table(pj: dict):
                 error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
                 logging.critical(f"Error in behavior binary table function: {error_type} {error_file_name} {error_lineno}")
 
-                QMessageBox.critical(None, programName, f"Error saving file: {error_type}")
+                QMessageBox.critical(None, cfg.programName, f"Error saving file: {error_type}")
                 return
