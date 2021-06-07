@@ -24,6 +24,7 @@ import pathlib
 import re
 import sys
 from decimal import Decimal as dc
+import logging
 
 import tablib
 from PyQt5.QtCore import Qt
@@ -59,7 +60,7 @@ def create_behavior_binary_table(pj: dict,
     state_behavior_codes = [x for x in utilities.state_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]]
     point_behavior_codes = [x for x in utilities.point_behavior_codes(pj[cfg.ETHOGRAM]) if x in parameters_obs[cfg.SELECTED_BEHAVIORS]]
     if not state_behavior_codes and not point_behavior_codes:
-        return {"error": True, "msg": "No state events selected"}
+        return {"error": True, "msg": "No events selected"}
 
     for obs_id in selected_observations:
 
@@ -124,10 +125,10 @@ def create_behavior_binary_table(pj: dict,
 
                 # state events
                 current_states = utilities.get_current_states_modifiers_by_subject_2(state_behavior_codes,
-                                                                                   pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS],
-                                                                                   sel_subject_dict,
-                                                                                   t
-                                                                                   )
+                                                                                     pj[cfg.OBSERVATIONS][obs_id][cfg.EVENTS],
+                                                                                     sel_subject_dict,
+                                                                                     t
+                                                                                    )
 
                 # point events
                 current_point = utilities.get_current_points_by_subject(point_behavior_codes,

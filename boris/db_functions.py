@@ -49,9 +49,9 @@ def load_events_in_intervals(pj: dict,
 
     for subject_to_analyze in selected_subjects:
 
-        for obsId in selected_observations:
+        for obs_id in selected_observations:
 
-            for event in pj[OBSERVATIONS][obsId][EVENTS]:
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
 
                 if event[EVENT_BEHAVIOR_FIELD_IDX] in selected_behaviors:
 
@@ -62,7 +62,7 @@ def load_events_in_intervals(pj: dict,
                         r = cursor.execute(("INSERT INTO events "
                                             "(observation, subject, code, type, modifiers, occurence, comment) "
                                             "VALUES (?,?,?,?,?,?,?)"),
-                                           (obsId,
+                                           (obs_id,
                                             NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else event[EVENT_SUBJECT_FIELD_IDX],
                                             event[EVENT_BEHAVIOR_FIELD_IDX],
                                             STATE if event[EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else POINT,
@@ -73,8 +73,6 @@ def load_events_in_intervals(pj: dict,
     db.commit()
     return cursor
 '''
-
-
 
 
 def load_events_in_db(pj: dict,
@@ -128,9 +126,9 @@ def load_events_in_db(pj: dict,
 
     for subject_to_analyze in selected_subjects:
 
-        for obsId in selected_observations:
+        for obs_id in selected_observations:
 
-            for event in pj[OBSERVATIONS][obsId][EVENTS]:
+            for event in pj[OBSERVATIONS][obs_id][EVENTS]:
 
                 if event[EVENT_BEHAVIOR_FIELD_IDX] in selected_behaviors:
 
@@ -141,7 +139,7 @@ def load_events_in_db(pj: dict,
                         r = cursor.execute(("INSERT INTO events "
                                             "(observation, subject, code, type, modifiers, occurence, comment) "
                                             "VALUES (?,?,?,?,?,?,?)"),
-                                           (obsId,
+                                           (obs_id,
                                             NO_FOCAL_SUBJECT if event[EVENT_SUBJECT_FIELD_IDX] == "" else event[EVENT_SUBJECT_FIELD_IDX],
                                             event[EVENT_BEHAVIOR_FIELD_IDX],
                                             STATE if event[EVENT_BEHAVIOR_FIELD_IDX] in state_behaviors_codes else POINT,
@@ -189,12 +187,12 @@ def load_aggregated_events_in_db(pj: dict,
 
     # check if state events are paired
     out = ""
-    for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obsId],
+    for obs_id in selected_observations:
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
+                                                          pj[OBSERVATIONS][obs_id],
                                                           HHMMSS)
         if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
+            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
     if out:
         return False, out, None
 
@@ -232,9 +230,9 @@ def load_aggregated_events_in_db(pj: dict,
 
     # too slow! cursor1 = load_events_in_db(pj, selected_subjects, selected_observations, selected_behaviors)
 
-    for obsId in selected_observations:
+    for obs_id in selected_observations:
 
-        cursor1 = load_events_in_db(pj, selected_subjects, [obsId], selected_behaviors)
+        cursor1 = load_events_in_db(pj, selected_subjects, [obs_id], selected_behaviors)
 
         for subject in selected_subjects:
             for behavior in selected_behaviors:
@@ -257,7 +255,7 @@ def load_aggregated_events_in_db(pj: dict,
                             cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
                                              "                               start, stop, comment, comment_stop) "
                                             "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                            (obsId, subject, behavior, POINT, distinct_modifiers,
+                                            (obs_id, subject, behavior, POINT, distinct_modifiers,
                                              row["occurence"], row["occurence"], row["comment"], "",))
 
                         if behavior in state_behaviors_codes:
@@ -265,7 +263,7 @@ def load_aggregated_events_in_db(pj: dict,
                                 cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
                                                  "                               start, stop, comment, comment_stop) "
                                                 "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                                (obsId, subject, behavior, STATE, distinct_modifiers,
+                                                (obs_id, subject, behavior, STATE, distinct_modifiers,
                                                  row["occurence"], rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
 
     db.commit()
@@ -312,12 +310,12 @@ def load_aggregated_events_in_intervals(pj: dict,
 
     # check if state events are paired
     out = ""
-    for obsId in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obsId, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obsId],
+    for obs_id in selected_observations:
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
+                                                          pj[OBSERVATIONS][obs_id],
                                                           HHMMSS)
         if not r:
-            out += f"Observation: <strong>{obsId}</strong><br>{msg}<br>"
+            out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
     if out:
         return False, out, None
 
@@ -333,9 +331,9 @@ def load_aggregated_events_in_intervals(pj: dict,
 
     db = sqlite3.connect(":memory:")
 
-    for obsId in selected_observations:
+    for obs_id in selected_observations:
 
-        cursor1 = load_events_in_db(pj, selected_subjects, [obsId], selected_behaviors)
+        cursor1 = load_events_in_db(pj, selected_subjects, [obs_id], selected_behaviors)
 
         for subject in selected_subjects:
             intervals[subject] = {}
@@ -361,7 +359,7 @@ def load_aggregated_events_in_intervals(pj: dict,
                             cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers, "
                                              "                               start, stop, comment, comment_stop) "
                                             "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                            (obsId, subject, behavior, POINT, distinct_modifiers,
+                                            (obs_id, subject, behavior, POINT, distinct_modifiers,
                                              row["occurence"], row["occurence"], row["comment"], "",))
 
                         if behavior in state_behaviors_codes:
@@ -369,7 +367,7 @@ def load_aggregated_events_in_intervals(pj: dict,
                                 cursor2.execute(("INSERT INTO aggregated_events (observation, subject, behavior, type, modifiers,"
                                                  "                               start, stop, comment, comment_stop) "
                                                 "VALUES (?,?,?,?,?,?,?,?,?)"),
-                                                (obsId, subject, behavior, STATE, distinct_modifiers,
+                                                (obs_id, subject, behavior, STATE, distinct_modifiers,
                                                  row["occurence"], rows[idx + 1]["occurence"], row["comment"], rows[idx + 1]["comment"]))
 
     db.commit()

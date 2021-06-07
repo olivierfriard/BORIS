@@ -8535,6 +8535,27 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         About dialog
         """
 
+        '''
+        import time
+
+        time1 =time.time()
+
+        for x in range(1, 100):
+            self.update_events_start_stop()
+
+        print(f"1: {time.time() - time1}")
+        '''
+
+
+        time1 =time.time()
+
+        for x in range(1, 100):
+            self.update_events_start_stop_3()
+
+        print(f"2: {time.time() - time1}")
+
+
+
         programs_versions = ["MPV media player"]
 
         # ffmpeg
@@ -9015,7 +9036,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.twSubjects.setItem(self.twSubjects.rowCount() - 1, len(subjectsFields), QTableWidgetItem(""))
 
 
-    def update_events_start_stop(self):
+    def update_events_start_stop_old(self):
         """
         update status start/stop of events in Events table
         take consideration of subject and modifiers
@@ -9054,6 +9075,94 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
         except Exception:
             dialog.error_message("update_events_start_stop", sys.exc_info())
+
+
+
+    def update_events_start_stop(self):
+        """
+        update status start/stop of events in Events table
+        take consideration of subject and modifiers
+        twEvents must be ordered by time asc
+
+        does not return value
+        """
+
+        try:
+            subjects_list = [self.pj[SUBJECTS][idx][SUBJECT_NAME] for idx in self.pj[SUBJECTS]]
+            state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
+            mem_behav = {}
+
+            for row in range(self.twEvents.rowCount()):
+
+                subject = self.twEvents.item(row, tw_obs_fields["subject"]).text()
+                code = self.twEvents.item(row, tw_obs_fields["code"]).text()
+                modifier = self.twEvents.item(row, tw_obs_fields["modifier"]).text()
+
+                # check if code is state
+                if code in state_events_list:
+
+                    if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+                        self.twEvents.item(row, tw_obs_fields[TYPE]).setText(STOP)
+                    else:
+                        self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
+
+                    if f"{subject}|{code}|{modifier}" in mem_behav:
+                        mem_behav[f"{subject}|{code}|{modifier}"] = not mem_behav[f"{subject}|{code}|{modifier}"]
+                    else:
+                        mem_behav[f"{subject}|{code}|{modifier}"] = 1
+
+        except Exception:
+            dialog.error_message("update_events_start_stop", sys.exc_info())
+
+
+    def update_events_start_stop_3(self):
+        """
+        update status start/stop of events in Events table
+        take consideration of subject and modifiers
+
+        does not return value
+        """
+
+        try:
+            subjects_list = [self.pj[SUBJECTS][idx][SUBJECT_NAME] for idx in self.pj[SUBJECTS]]
+            state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
+            mem_behav = {}
+            intervals_behav = {}
+
+
+            for row in range(self.twEvents.rowCount()):
+
+                t = self.twEvents.item(row, tw_obs_fields["time"]).text()
+
+                time_ = time2seconds(t) if ":" in t else Decimal(t)
+
+                subject = self.twEvents.item(row, tw_obs_fields["subject"]).text()
+                code = self.twEvents.item(row, tw_obs_fields["code"]).text()
+                modifier = self.twEvents.item(row, tw_obs_fields["modifier"]).text()
+
+                # check if code is state
+                if code in state_events_list:
+
+                    if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+
+                        #self.twEvents.item(row, tw_obs_fields[TYPE]).setText(STOP)
+
+                        if f"{subject}|{code}|{modifier}" not in intervals_behav:
+                            intervals_behav[f"{subject}|{code}|{modifier}"] = []
+                        intervals_behav[f"{subject}|{code}|{modifier}"].append((mem_behav[f"{subject}|{code}|{modifier}"], time_))
+
+                        mem_behav[f"{subject}|{code}|{modifier}"] = 0
+
+                    else:
+                        #self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
+                        mem_behav[f"{subject}|{code}|{modifier}"] = time_
+
+        except Exception:
+
+            dialog.error_message("update_events_start_stop", sys.exc_info())
+
+        #print(intervals_behav)
+        #print(len(intervals_behav))
 
 
     def checkSameEvent(self, obsId: str, time: Decimal, subject: str, code: str):

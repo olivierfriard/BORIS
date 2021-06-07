@@ -25,7 +25,7 @@ import re
 import statistics
 import sys
 
-from boris import portion as Interval
+from . import portion as Interval
 import tablib
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -34,9 +34,9 @@ from PyQt5.QtWidgets import (QDialog, QFileDialog, QHBoxLayout, QLabel,
                              QRadioButton, QSizePolicy, QSpacerItem,
                              QTableWidget, QTableWidgetItem, QVBoxLayout)
 
-from boris import (db_functions, dialog, project_functions,
+from . import (db_functions, dialog, project_functions,
                    select_observations, utilities)
-from boris.config import *
+from . import config as cfg
 
 
 def icc(i: list):
@@ -164,7 +164,7 @@ class Advanced_event_filtering_dialog(QDialog):
         if self.lw1.currentItem() and self.lw2.currentItem():
             self.logic.insert(f'"{self.lw1.currentItem().text()}|{self.lw2.currentItem().text()}" ')
         else:
-            QMessageBox.warning(self, programName, "Select a subject and a behavior")
+            QMessageBox.warning(self, cfg.programName, "Select a subject and a behavior")
 
 
     def add_logic(self):
@@ -181,7 +181,7 @@ class Advanced_event_filtering_dialog(QDialog):
             if text:
                 self.logic.insert(text)
         else:
-            QMessageBox.warning(self, programName, "Select a logical operator")
+            QMessageBox.warning(self, cfg.programName, "Select a logical operator")
 
 
     def filter(self):
@@ -191,7 +191,7 @@ class Advanced_event_filtering_dialog(QDialog):
         if not self.logic.text():
             return
         if self.logic.text().count('"') % 2:
-            QMessageBox.warning(self, programName, f'Wrong number of double quotes (")')
+            QMessageBox.warning(self, cfg.programName, f'Wrong number of double quotes (")')
             return
 
         sb_list = re.findall('"([^"]*)"', self.logic.text())
@@ -290,9 +290,9 @@ class Advanced_event_filtering_dialog(QDialog):
             file_name = str(pathlib.Path(file_name)) + "." + output_format
             # check if file with new extension already exists
             if pathlib.Path(file_name).is_file():
-                if dialog.MessageDialog(programName,
+                if dialog.MessageDialog(cfg.programName,
                                         f"The file {file_name} already exists.",
-                                        [CANCEL, OVERWRITE]) == CANCEL:
+                                        [cfg.CANCEL, cfg.OVERWRITE]) == cfg.CANCEL:
                     return
 
         if self.rb_details.isChecked():
@@ -313,7 +313,7 @@ class Advanced_event_filtering_dialog(QDialog):
                     f.write(tablib_dataset.export(output_format))
 
         except Exception:
-            QMessageBox.critical(self, programName, f"The file {file_name} can not be saved")
+            QMessageBox.critical(self, cfg.programName, f"The file {file_name} can not be saved")
 
 
 def event_filtering(pj: dict):
@@ -323,7 +323,7 @@ def event_filtering(pj: dict):
     """
 
     result, selected_observations = select_observations.select_observations(pj,
-                                                                            MULTIPLE,
+                                                                            cfg.MULTIPLE,
                                                                             "Select observations for advanced event filtering")
     if not selected_observations:
         return
@@ -332,8 +332,8 @@ def event_filtering(pj: dict):
     out = ""
     not_paired_obs_list = []
     for obs_id in selected_observations:
-        r, msg = project_functions.check_state_events_obs(obs_id, pj[ETHOGRAM],
-                                                          pj[OBSERVATIONS][obs_id])
+        r, msg = project_functions.check_state_events_obs(obs_id, pj[cfg.ETHOGRAM],
+                                                          pj[cfg.OBSERVATIONS][obs_id])
 
         if not r:
             out += f"Observation: <strong>{obs_id}</strong><br>{msg}<br>"
@@ -342,7 +342,7 @@ def event_filtering(pj: dict):
     if out:
         out = f"The observations with UNPAIRED state events will be removed from tha analysis<br><br>{out}"
         results = dialog.Results_dialog()
-        results.setWindowTitle(f"{programName} - Check selected observations")
+        results.setWindowTitle(f"{cfg.programName} - Check selected observations")
         results.ptText.setReadOnly(True)
         results.ptText.appendHtml(out)
         results.pbSave.setVisible(False)
@@ -366,14 +366,14 @@ def event_filtering(pj: dict):
                                                        flagShowExcludeBehaviorsWoEvents=False,
                                                        by_category=False)
 
-    if not parameters[SELECTED_SUBJECTS] or not parameters[SELECTED_BEHAVIORS]:
-        QMessageBox.warning(None, programName, "Select subject(s) and behavior(s) to analyze")
+    if not parameters[cfg.SELECTED_SUBJECTS] or not parameters[cfg.SELECTED_BEHAVIORS]:
+        QMessageBox.warning(None, cfg.programName, "Select subject(s) and behavior(s) to analyze")
         return
 
-    ok, msg, db_connector = db_functions.load_aggregated_events_in_db(pj,
-                                                                      parameters[SELECTED_SUBJECTS],
-                                                                      selected_observations,
-                                                                      parameters[SELECTED_BEHAVIORS])
+    _, _, db_connector = db_functions.load_aggregated_events_in_db(pj,
+                                                                   parameters[cfg.SELECTED_SUBJECTS],
+                                                                   selected_observations,
+                                                                   parameters[cfg.SELECTED_BEHAVIORS])
 
     cursor = db_connector.cursor()
 
@@ -381,28 +381,30 @@ def event_filtering(pj: dict):
     cursor.execute("SELECT observation, subject, behavior, start, stop FROM aggregated_events")
     events = {}
     for row in cursor.fetchall():
-        for event in row:
-            obs, subj, behav, start, stop = row
-            # check if start and stop are in selected time interval
-            if stop < parameters[START_TIME]:
-                continue
-            if start > parameters[END_TIME]:
-                continue
-            if start < parameters[START_TIME]:
-                start = float(parameters[START_TIME])
-            if stop > parameters[END_TIME]:
-                stop = float(parameters[END_TIME])
 
-            if obs not in events:
-                events[obs] = {}
+        obs, subj, behav, start, stop = row
+        # check if start and stop are in selected time interval
+        if stop < parameters[cfg.START_TIME]:
+            continue
+        if start > parameters[cfg.END_TIME]:
+            continue
+        if start < parameters[cfg.START_TIME]:
+            start = float(parameters[cfg.START_TIME])
+        if stop > parameters[cfg.END_TIME]:
+            stop = float(parameters[cfg.END_TIME])
 
-            # use function in base at event (state or point)
-            interval_func = icc if start == stop else ico
+        if obs not in events:
+            events[obs] = {}
 
-            if f"{subj}|{behav}" not in events[obs]:
-                events[obs][f"{subj}|{behav}"] = interval_func([start, stop])
-            else:
-                events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
+        # use function in base at event (state or point)
+        interval_func = icc if start == stop else ico
+
+        if f"{subj}|{behav}" not in events[obs]:
+            # create new interval
+            events[obs][f"{subj}|{behav}"] = interval_func([start, stop])
+        else:
+            # append to existing interval
+            events[obs][f"{subj}|{behav}"] = events[obs][f"{subj}|{behav}"] | interval_func([start, stop])
 
     w = Advanced_event_filtering_dialog(events)
     w.exec_()

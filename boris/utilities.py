@@ -60,7 +60,8 @@ def error_info(exc_info: tuple) -> tuple:
 
     exc_type, exc_obj, exc_tb = exc_info
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    return (exc_obj, fname, exc_tb.tb_lineno)
+
+    return (f"{exc_type}: {exc_obj}", fname, exc_tb.tb_lineno)
 
 
 def return_file_header(file_name: str, row_number: int = 5) -> list:
@@ -843,7 +844,7 @@ def mem_info():
             free_mem = [x.decode("utf-8").strip() for x in output.split(b"\n")
                                                  if b"Available Physical Memory" in x][0].split(":")[1]
             free_mem = int(free_mem.strip(" ").split(" ")[0].replace(",", ""))
-            
+
             return False, {"total_memory": tot_mem, "free_memory": free_mem}
         except Exception:
             return True, {"msg": error_info(sys.exc_info())[0]}
@@ -1006,7 +1007,7 @@ def safe_xl_worksheet_title(title: str,
                             output_format: str):
     """
     sanitize the XLS and XLSX worksheet title
-    
+
     Args:
         title (str): title for worksheet
         output_format (str): xls or xlsx
