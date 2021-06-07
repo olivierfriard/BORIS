@@ -9114,46 +9114,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             dialog.error_message("update_events_start_stop", sys.exc_info())
 
 
-    def update_events_start_stop_3(self):
-        """
-        update status start/stop of events in Events table
-        take consideration of subject and modifiers
-
-        does not return value
-        """
-
-        try:
-            state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
-            mem_behav = {}
-            intervals_behav = {}
-
-            #for row in range(self.twEvents.rowCount()):
-            for event in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
-
-                time_ = event[EVENT_TIME_FIELD_IDX]
-                subject = event[EVENT_SUBJECT_FIELD_IDX]
-                code = event[EVENT_BEHAVIOR_FIELD_IDX]
-                modifier = event[EVENT_MODIFIER_FIELD_IDX]
-
-                # check if code is state
-                if code in state_events_list:
-
-                    if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
-
-                        if f"{subject}|{code}|{modifier}" not in intervals_behav:
-                            intervals_behav[f"{subject}|{code}|{modifier}"] = []
-                        intervals_behav[f"{subject}|{code}|{modifier}"].append((mem_behav[f"{subject}|{code}|{modifier}"], time_))
-
-                        mem_behav[f"{subject}|{code}|{modifier}"] = 0
-                    else:
-                        mem_behav[f"{subject}|{code}|{modifier}"] = time_
-
-        except Exception:
-
-            dialog.error_message("update_events_start_stop", sys.exc_info())
-
-        #print(intervals_behav)
-        #print(len(intervals_behav))
 
 
     def checkSameEvent(self, obsId: str, time: Decimal, subject: str, code: str):

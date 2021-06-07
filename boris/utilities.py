@@ -262,6 +262,48 @@ def point_behavior_codes(ethogram: dict) -> list:
     return [ethogram[x][BEHAVIOR_CODE] for x in ethogram if POINT in ethogram[x][TYPE].upper()]
 
 
+def aggregate_events(pj:dict, obs_id:str) -> dict:
+    """
+    aggregate state events
+    take consideration of subject and modifiers
+
+    return dict
+    """
+
+    try:
+        state_events_list = utilities.state_behavior_codes(pj[ETHOGRAM])
+        mem_behav = {}
+        intervals_behav = {}
+
+        for event in pj[OBSERVATIONS][obs_id][EVENTS]:
+
+            time_ = event[EVENT_TIME_FIELD_IDX]
+            subject = event[EVENT_SUBJECT_FIELD_IDX]
+            code = event[EVENT_BEHAVIOR_FIELD_IDX]
+            modifier = event[EVENT_MODIFIER_FIELD_IDX]
+
+            # check if code is state
+            if code in state_events_list:
+
+                if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
+
+                    if f"{subject}|{code}|{modifier}" not in intervals_behav:
+                        intervals_behav[f"{subject}|{code}|{modifier}"] = []
+                    intervals_behav[f"{subject}|{code}|{modifier}"].append((mem_behav[f"{subject}|{code}|{modifier}"], time_))
+
+                    mem_behav[f"{subject}|{code}|{modifier}"] = 0
+                else:
+                    mem_behav[f"{subject}|{code}|{modifier}"] = time_
+
+        return intervals_behav
+
+    except Exception:
+        return {"error": ""}
+
+
+
+
+
 def get_current_states_modifiers_by_subject(state_behaviors_codes: list,
                                             events: list,
                                             subjects: dict,
