@@ -9088,7 +9088,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         try:
-            subjects_list = [self.pj[SUBJECTS][idx][SUBJECT_NAME] for idx in self.pj[SUBJECTS]]
             state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
             mem_behav = {}
 
@@ -9124,37 +9123,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
 
         try:
-            subjects_list = [self.pj[SUBJECTS][idx][SUBJECT_NAME] for idx in self.pj[SUBJECTS]]
             state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
             mem_behav = {}
             intervals_behav = {}
 
+            #for row in range(self.twEvents.rowCount()):
+            for event in self.pj[OBSERVATIONS][self.observationId][EVENTS]:
 
-            for row in range(self.twEvents.rowCount()):
-
-                t = self.twEvents.item(row, tw_obs_fields["time"]).text()
-
-                time_ = time2seconds(t) if ":" in t else Decimal(t)
-
-                subject = self.twEvents.item(row, tw_obs_fields["subject"]).text()
-                code = self.twEvents.item(row, tw_obs_fields["code"]).text()
-                modifier = self.twEvents.item(row, tw_obs_fields["modifier"]).text()
+                time_ = event[EVENT_TIME_FIELD_IDX]
+                subject = event[EVENT_SUBJECT_FIELD_IDX]
+                code = event[EVENT_BEHAVIOR_FIELD_IDX]
+                modifier = event[EVENT_MODIFIER_FIELD_IDX]
 
                 # check if code is state
                 if code in state_events_list:
 
                     if f"{subject}|{code}|{modifier}" in mem_behav and mem_behav[f"{subject}|{code}|{modifier}"]:
 
-                        #self.twEvents.item(row, tw_obs_fields[TYPE]).setText(STOP)
-
                         if f"{subject}|{code}|{modifier}" not in intervals_behav:
                             intervals_behav[f"{subject}|{code}|{modifier}"] = []
                         intervals_behav[f"{subject}|{code}|{modifier}"].append((mem_behav[f"{subject}|{code}|{modifier}"], time_))
 
                         mem_behav[f"{subject}|{code}|{modifier}"] = 0
-
                     else:
-                        #self.twEvents.item(row, tw_obs_fields[TYPE]).setText(START)
                         mem_behav[f"{subject}|{code}|{modifier}"] = time_
 
         except Exception:
