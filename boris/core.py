@@ -8530,16 +8530,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print(f"1: {time.time() - time1}")
         '''
 
-
-        time1 =time.time()
-
-        for x in range(1, 100):
-            self.update_events_start_stop_3()
-
-        print(f"2: {time.time() - time1}")
-
-
-
         programs_versions = ["MPV media player"]
 
         # ffmpeg
