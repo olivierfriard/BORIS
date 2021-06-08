@@ -26,15 +26,12 @@ import wave
 import matplotlib
 matplotlib.use("Qt5Agg")
 import numpy as np
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout)
 from PyQt5.QtCore import pyqtSignal, QEvent
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
 
-Y_MIN = 0
-Y_MAX = 20000
-VMIN = -40
 
 class Plot_waveform_RT(QWidget):
 

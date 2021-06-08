@@ -76,6 +76,7 @@ from boris import plot_data_module
 from boris import plot_events
 from boris import plot_spectrogram_rt
 from boris import plot_waveform_rt
+from boris import plot_events_rt
 from boris import preferences
 from boris import project_functions
 from boris import core_qrc
@@ -538,6 +539,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Tools
         self.actionShow_spectrogram.setEnabled(self.playerType == VLC)
         self.actionShow_the_sound_waveform.setEnabled(self.playerType == VLC)
+        self.actionPlot_events_in_real_time.setEnabled(flagObs)
+
         self.actionShow_data_files.setEnabled(self.playerType == VLC)
         self.menuImage_overlay_on_video_2.setEnabled(self.playerType == VLC)
 
@@ -661,6 +664,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         self.actionShow_spectrogram.triggered.connect(lambda: self.show_sound_signal_widget("spectrogram"))
         self.actionShow_the_sound_waveform.triggered.connect(lambda: self.show_sound_signal_widget("waveform"))
+        self.actionPlot_events_in_real_time.triggered.connect(lambda: self.show_sound_signal_widget("plot_events"))
+
         self.actionShow_data_files.triggered.connect(self.show_data_files)
         self.action_geometric_measurements.triggered.connect(self.geometric_measurements)
         self.actionBehaviors_coding_map.triggered.connect(self.show_behaviors_coding_map)
@@ -2299,11 +2304,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         """
         show spectrogram window if any
         """
-        if plot_type not in ["waveform", "spectrogram"]:
+        if plot_type not in ["waveform", "spectrogram", "plot_events"]:
             logging.critical("error on plot type")
             return
 
-        if self.playerType in [LIVE, VIEWER]:
+        if self.playerType in [LIVE, VIEWER] and plot_type in ["waveform", "spectrogram"]:
             QMessageBox.warning(self, programName, f"The sound signal visualization is not available in <b>{self.playerType}</b> mode")
             return
 
@@ -2383,7 +2388,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         ).name
 
 
-                    self.waveform = plot_waveform_rt.Plot_waveform_RT()
+                    self.waveform = plot_events_rt.Plot_waveform_RT()
 
                     self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
 
@@ -2401,75 +2406,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
                     self.pj[OBSERVATIONS][self.observationId][VISUALIZE_WAVEFORM] = True
                     self.waveform.sendEvent.connect(self.signal_from_widget)
-                    '''
-                    self.waveform.sb_freq_min.setValue(0)
-                    self.waveform.sb_freq_max.setValue(int(self.spectro.frame_rate / 2))
-                    '''
                     self.waveform.show()
-                    '''self.timer_sound_signal.start()'''
 
                 if self.playerType == VLC and self.playMode == MPV and not flag_paused:
                     self.play_video()
 
-    '''
-    def show_waveform(self):
-        """
-        show waveform window if any
-        """
 
-        raise
-        if self.playerType in [LIVE, VIEWER]:
-            QMessageBox.warning(self, programName, f"The waveform visualization is not available in <b>{self.playerType} mode</b>.")
-            return
+        if plot_type == "plot_events":
+            if hasattr(self, "plot_events"):
+                self.plot_events.show()
+            else:
+                logging.debug("plot_events not shown")
 
-        if hasattr(self, "waveform"):
-            self.waveform.show()
-        else:
-            logging.debug("waveform not shown")
+                self.plot_events = plot_events_rt.Plot_events_RT()
 
-            # remember if player paused
-            if self.playerType == VLC and self.playMode == MPV:
-                flag_paused = not self.is_playing()
+                self.plot_events.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-            self.pause_video()
+                self.plot_events.interval = self.spectrogram_time_interval
+                self.plot_events.cursor_color = "red"
 
-            if dialog.MessageDialog(programName, ("XYou choose to visualize the waveform during this observation.<br>"
-                                                  "Spectrogram generation can take some time for long media, be patient"),
-                                    [YES, NO]) == YES:
+                self.plot_events.state_events_list = utilities.state_behavior_codes(self.pj[ETHOGRAM])
 
-                self.generate_wav_file_from_media()
+                self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
+                self.plot_events.events = self.plot_events.aggregate_events(self.pj[OBSERVATIONS][self.observationId][EVENTS], 0, 60)
 
-                tmp_dir = self.ffmpeg_cache_dir if self.ffmpeg_cache_dir and os.path.isdir(self.ffmpeg_cache_dir) else tempfile.gettempdir()
+                # behavior color
+                colors_list = ['blue', 'red','green','yellow','purple', 'black', 'coral']
+                self.plot_events.behav_color = {}
+                for idx, behav in enumerate(self.plot_events.events.keys()):
+                    self.plot_events.behav_color[behav] = colors_list[idx % len(colors_list)]
+                #print(self.plot_events.behav_color)
 
-                wav_file_path = pathlib.Path(tmp_dir) / pathlib.Path(
-                    self.dw_player[0].player.playlist[self.dw_player[0].player.playlist_pos]["filename"] + ".wav"
-                    ).name
+                self.plot_events.sendEvent.connect(self.signal_from_widget)
+                self.plot_events.show()
 
-                self.waveform = plot_waveform_rt.Plot_waveform_RT()
 
-                self.waveform.setWindowFlags(Qt.WindowStaysOnTopHint)
 
-                self.waveform.interval = self.plot_spectrospectrogram_time_interval
-                self.waveform.cursor_color = "red"
-
-                r = self.waveform.load_wav(str(wav_file_path))
-                if "error" in r:
-                    logging.warning("waveform_load_wav error: {}".format(r["error"]))
-                    QMessageBox.warning(self, programName, "Error in waveform generation: " + r["error"],
-                                        QMessageBox.Ok | QMessageBox.Default,
-                                        QMessageBox.NoButton)
-                    del self.waveform
-                return
-
-                self.pj[OBSERVATIONS][self.observationId][VISUALIZE_SPECTROGRAM] = True
-                self.waveform.sendEvent.connect(self.signal_from_widget)
-                self.waveform.show()
-                self.timer_waveform.start()
-                print("self.timer_waveform.start()")
-
-            if self.playerType == VLC and self.playMode == MPV and not flagPaused:
-                self.play_video()
-    '''
 
     def timer_sound_signal_out(self):
         """
@@ -2482,9 +2454,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
         '''
 
+        print('timer_sound_signal_out')
+
+        '''
         if self.playerType == LIVE:
             QMessageBox.warning(self, programName, "The sound signal visualization is not available for live observations")
             return
+        '''
+
+        if not hasattr(self, "plot_events"):
+            return
+        print("plot events")
+        self.plot_events.events_list = self.pj[OBSERVATIONS][self.observationId][EVENTS]
+        self.plot_events.plot_events(float(self.getLaps()))
+
 
         if self.playerType == VLC:
 
@@ -2499,8 +2482,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # waveform
             if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_WAVEFORM, False):
-
-                print("waveform")
 
                 if not hasattr(self, "waveform"):
                     return
@@ -2517,8 +2498,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # spectrogram
             if self.pj[OBSERVATIONS][self.observationId].get(VISUALIZE_SPECTROGRAM, False):
 
-                print("spectro")
-
                 if not hasattr(self, "spectro"):
                     return
 
@@ -2530,6 +2509,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                         self.spectro.plot_spectro(current_media_time)
                     else:
                         logging.warning("spectro_load_wav error: {}".format(r["error"]))
+
+
+
 
 
     def show_data_files(self):
@@ -7290,6 +7272,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         idx = self.subject_name_index[self.currentSubject] if self.currentSubject else ""
         self.lbCurrentStates.setText(", ".join(self.currentStates[idx]))
         self.show_current_states_in_subjects_table()
+
+        self.timer_sound_signal_out()
 
         # check scan sampling
         if self.pj[OBSERVATIONS][self.observationId].get(SCAN_SAMPLING_TIME, 0):

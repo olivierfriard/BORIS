@@ -214,7 +214,7 @@ class Advanced_event_filtering_dialog(QDialog):
                 self.out.append([obs_id, "subject / behavior not found", "NA", "NA", "NA"])
             except Exception:
                 # out += f"Error in {self.logic.text()}" + "\n"
-                error_type, error_file_name, error_lineno = utilities.error_info(sys.exc_info())
+                error_type, _, _ = utilities.error_info(sys.exc_info())
                 self.out.append([obs_id, f"Error in {self.logic.text()}: {error_type} ", "NA", "NA", "NA"])
                 flag_error = True
 

@@ -271,7 +271,7 @@ def aggregate_events(pj:dict, obs_id:str) -> dict:
     """
 
     try:
-        state_events_list = utilities.state_behavior_codes(pj[ETHOGRAM])
+        state_events_list = state_behavior_codes(pj[ETHOGRAM])
         mem_behav = {}
         intervals_behav = {}
 
