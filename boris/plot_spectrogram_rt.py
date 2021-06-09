@@ -28,6 +28,7 @@ matplotlib.use("Qt5Agg")
 import numpy as np
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSpinBox)
 from PyQt5.QtCore import pyqtSignal, QEvent
+from PyQt5 import QtCore
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.ticker as mticker
@@ -84,6 +85,7 @@ class Plot_spectrogram_RT(QWidget):
         self.setLayout(layout)
 
         self.installEventFilter(self)
+
 
     def eventFilter(self, receiver, event):
         """
@@ -163,6 +165,7 @@ class Plot_spectrogram_RT(QWidget):
 
         Args:
             current_time (float): time for displaying spectrogram
+            force_plot (bool): force plot even if media paused
         """
 
         if not force_plot and current_time == self.time_mem:
@@ -213,11 +216,6 @@ class Plot_spectrogram_RT(QWidget):
 
         # middle
         else:
-
-            '''
-            start = (current_time - self.interval / 2) * self.frame_rate
-            end = (current_time + self.interval / 2) * self.frame_rate
-            '''
 
             self.ax.specgram(self.sound_info[int(round((current_time - self.interval / 2) * self.frame_rate, 0)):
                                              int(round((current_time + self.interval / 2) * self.frame_rate, 0))],

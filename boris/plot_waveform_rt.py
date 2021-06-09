@@ -26,7 +26,7 @@ import wave
 import matplotlib
 matplotlib.use("Qt5Agg")
 import numpy as np
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel)
 from PyQt5.QtCore import pyqtSignal, QEvent
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -47,14 +47,44 @@ class Plot_waveform_RT(QWidget):
 
         self.cursor_color = "red"
 
+        self.spectro_color_map = matplotlib.pyplot.get_cmap("viridis")
+
         self.figure = Figure()
         self.ax = self.figure.add_subplot(1, 1, 1)
 
         self.canvas = FigureCanvas(self.figure)
-        layout = QVBoxLayout()
 
+        layout = QVBoxLayout()
         layout.addWidget(self.canvas)
+
+        hlayout1 = QHBoxLayout()
+        hlayout1.addWidget(QLabel("Time interval"))
+        button_time_inc = QPushButton("+", self)
+        button_time_inc.clicked.connect(lambda: self.time_interval_changed(1))
+        button_time_dec = QPushButton("-", self)
+        button_time_dec.clicked.connect(lambda: self.time_interval_changed(-1))
+        hlayout1.addWidget(button_time_inc)
+        hlayout1.addWidget(button_time_dec)
+        layout.addLayout(hlayout1)
+
+        '''
+        hlayout2 = QHBoxLayout()
+        hlayout2.addWidget(QLabel("Frequency interval"))
+        self.sb_freq_min = QSpinBox()
+        self.sb_freq_min.setRange(0, 200000)
+        self.sb_freq_min.setSingleStep(100)
+        self.sb_freq_min.valueChanged.connect(self.frequency_interval_changed)
+        self.sb_freq_max = QSpinBox()
+        self.sb_freq_max.setRange(0, 200000)
+        self.sb_freq_max.setSingleStep(100)
+        self.sb_freq_max.valueChanged.connect(self.frequency_interval_changed)
+        hlayout2.addWidget(self.sb_freq_min)
+        hlayout2.addWidget(self.sb_freq_max)
+        layout.addLayout(hlayout2)
+        '''
+
         self.setLayout(layout)
+
 
         self.installEventFilter(self)
 
@@ -110,7 +140,20 @@ class Plot_waveform_RT(QWidget):
                 "frame_rate": self.frame_rate}
 
 
-    def plot_waveform(self, current_time: float):
+    def time_interval_changed(self, action: int):
+        """
+        change the time interval for plotting waveform
+
+        Args:
+            action (int): -1 decrease time interval, +1 increase time interval
+        """
+        if action == -1 and self.interval <= 5:
+            return
+        self.interval += (5 * action)
+        self.plot_waveform(current_time=self.time_mem, force_plot=True)
+
+
+    def plot_waveform(self, current_time: float, force_plot: bool=False):
         """
         plot sound waveform centered on the current time
 
@@ -118,7 +161,7 @@ class Plot_waveform_RT(QWidget):
             current_time (float): time for displaying waveform
         """
 
-        if current_time == self.time_mem:
+        if not force_plot and current_time == self.time_mem:
             return
 
         self.time_mem = current_time

@@ -35,7 +35,7 @@ N_PLAYER = 8
 NA = "NA"
 
 VLC_TIMER_OUT = 100
-SPECTRO_TIMER = 200
+SPECTRO_TIMER = 500
 
 
 function_keys = {
